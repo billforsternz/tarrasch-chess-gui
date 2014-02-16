@@ -86,6 +86,7 @@ inline Square& operator++ ( Square& sq )
 #define BKING   0x04    
 #define BQUEEN  0x08
 
+
 // Convert piece, eg 'N' to bitmask in lookup tables. See automatically
 //  PrivateChessDefs.cpp and GeneratedLookupTables.inc for format of
 //  lookup tables

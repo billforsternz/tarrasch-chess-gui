@@ -33,7 +33,7 @@ namespace thc
 //  and release builds use a faster binary convention will be the ultimate
 //  solution. We'll need a new api to convert to ascii convention for display
 //  of board positions etc. if we do this.
-lte to_mask[] =
+extern lte to_mask[]; /* =
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,   // 0x00-0x0f
      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,   // 0x10-0x1f
      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,   // 0x20-0x2f
@@ -42,6 +42,7 @@ lte to_mask[] =
      P,Q,R,0,0,0,0,0,0,0,0,0,0,0,0,0,   // 0x50-0x5f    'P'=0x50, 'Q'=0x51, 'R'=0x52
      0,0,B,0,0,0,0,0,0,0,0,K,0,0,N,0,   // 0x60-0x6f    'b'=0x62, 'k'=0x6b, 'n'=0x6e
      P,Q,R,0,0,0,0,0,0,0,0,0,0,0,0,0};  // 0x70-0x7f    'p'=0x70, 'q'=0x71, 'r'=0x72
+     */
 #undef P
 #undef B
 #undef N
