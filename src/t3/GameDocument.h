@@ -14,7 +14,7 @@
 #else
 #include <memory>
 #endif
-#include "ChessRules.h"
+#include "thc.h"
 #include "MoveTree.h"
 #include "NavigationKey.h"
 #include "GameView.h"

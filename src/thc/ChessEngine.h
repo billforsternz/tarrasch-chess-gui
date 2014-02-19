@@ -6,7 +6,7 @@
  ****************************************************************************/
 #ifndef CHESSENGINE_H
 #define CHESSENGINE_H
-#include "ChessEvaluation.h"
+#include "thc.h"
 
 // TripleHappyChess
 namespace thc

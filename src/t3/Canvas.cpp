@@ -17,7 +17,7 @@
 #include "GraphicBoard.h"
 #include "GameLogic.h"
 #include "CentralWorkSaver.h"
-#include "ChessRules.h"
+#include "thc.h"
 #include "Rybka.h"
 #include "DebugPrintf.h"
 #include "Log.h"

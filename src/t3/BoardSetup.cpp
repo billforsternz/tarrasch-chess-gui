@@ -10,7 +10,7 @@
 #include "Portability.h"
 #include "DebugPrintf.h"
 #include "BoardSetup.h"
-#include "ChessRules.h"
+#include "thc.h"
 
 using namespace std;
 using namespace thc;

@@ -13,7 +13,7 @@
 #include "CtrlChessTxt.h"
 #include "CtrlBox.h"
 #include "CtrlBox2.h"
-#include "ChessPosition.h"
+#include "thc.h"
 class GraphicBoard;
 class PopupControl;
 class CtrlBox;

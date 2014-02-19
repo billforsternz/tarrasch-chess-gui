@@ -1,26 +1,25 @@
 /****************************************************************************
  * Run UCI chess engine, eg Rybka
  *  Author:  Bill Forster
- *  License: MIT license. Full text of license is in associated file LICENSE
- *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
+ *  Licence: See licencing information in ChessPosition.cpp
+ *  Copyright 2010, Triple Happy Ltd.  All rights reserved.
  ****************************************************************************/
 #define _CRT_SECURE_NO_DEPRECATE
 #include <stdio.h>
 #include "Portability.h"
 
-#ifdef THC_MAC
+#ifdef THC_WINDOWS
+#include <windows.h>
+#include <tlhelp32.h>
+#include <conio.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <sys/time.h>
-
+#include <winbase.h>
 #include "Rybka.h"
 #include "DebugPrintf.h"
 #include "Repository.h"
 #include "Objects.h"
 using namespace std;
 using namespace thc;
-
 
 /*
 
@@ -62,16 +61,74 @@ KIBITZING state
     notes: info -> kq[multipv]
 
 */
+extern "C"
+{
+WINBASEAPI
+HANDLE
+WINAPI
+CreateJobObjectA(
+    LPSECURITY_ATTRIBUTES lpJobAttributes,
+    LPCSTR lpName
+    );
+WINBASEAPI
+HANDLE
+WINAPI
+CreateJobObjectW(
+    LPSECURITY_ATTRIBUTES lpJobAttributes,
+    LPCWSTR lpName
+    );
+
+WINBASEAPI
+BOOL
+WINAPI
+SetInformationJobObject(
+    HANDLE hJob,
+    JOBOBJECTINFOCLASS JobObjectInformationClass,
+    LPVOID lpJobObjectInformation,
+    DWORD cbJobObjectInformationLength
+    );
+
+WINBASEAPI
+BOOL
+WINAPI
+AssignProcessToJobObject(
+    HANDLE hJob,
+    HANDLE hProcess
+    );
+}
+
+#ifdef UNICODE
+#define CreateJobObject  CreateJobObjectW
+#else
+#define CreateJobObject  CreateJobObjectA
+#endif // !UNICODE
+
+static HANDLE ghJob;
+static JOBOBJECT_EXTENDED_LIMIT_INFORMATION jeli;
 
 // Doing this "JobObject" stuff is useful because it means that any processes started by
 //  Tarrasch are terminated when Tarrasch terminates - avoids the possibility of zombie
 //  engine processes still running once Tarrasch exits.
 extern void JobBegin()
 {
+    ghJob = CreateJobObject( NULL, NULL /*"The Tarrasch Chess GUI Job Object"*/ ); // GLOBAL
+    if( ghJob == NULL)
+    {
+        DebugPrintfInner( "Could not create job object" );
+    }
+    else
+    {
+        // Configure all child processes associated with the job to terminate when the job closes
+        jeli.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+        if( 0 == SetInformationJobObject( ghJob, JobObjectExtendedLimitInformation, &jeli, sizeof(jeli)))
+            DebugPrintfInner( "Could not SetInformationJobObject" );
+    }
 }
 
 extern void JobEnd()
 {
+    if( ghJob )
+        CloseHandle(ghJob);
 }
 
 
@@ -84,69 +141,33 @@ const char *str_pattern_smart( const char *str, const char *pattern );
 
 static void ErrorMessage( const char *filename_uci_exe, char *str )  //display detailed error info
 {
+    TCHAR *msg;
+    FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+        NULL,
+        GetLastError(),
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+        (LPTSTR) &msg,
+        0,
+        NULL
+    );
+
+    // Convert TCHAR* to char*  
+    char buf[1024];
+    char *msg2 = buf;
+    for( int count=0; count<sizeof(buf)-2 && *msg; count++ )
+        *msg2++ = (char)*msg++;
+    *msg2 = '\0';
+    DebugPrintf(("Error running %s %s: %s\n", filename_uci_exe,
+                                        str, buf ));
+    wxString detail;
+    detail.sprintf("File: %s\nError on %s: %s\n", filename_uci_exe,
+                                        str, buf );
+    wxString caption;
+    caption = "Error running UCI engine";
+    wxMessageBox( detail, caption, wxOK|wxICON_ERROR );
+    LocalFree(msg);
 }
-
-static int mac_fd_read;
-static int mac_fd_write;
-
-static fd_set mac_readfds;
-fd_set *mac_fd = &mac_readfds;
-
-
-unsigned long GetTickCount()
-{
-    static bool have_base;
-    static timeval t1;
-    timeval t2;
-    unsigned long elapsed_time=0;
-    if( !have_base )
-    {
-        gettimeofday(&t1, NULL);
-        have_base = true;
-    }
-    else
-    {
-        gettimeofday(&t2, NULL);
-        elapsed_time = (t2.tv_sec - t1.tv_sec) * 1000;      // sec to ms
-        elapsed_time += (t2.tv_usec - t1.tv_usec) / 1000;   // us to ms
-    }
-    return elapsed_time;
-}
-
-void Sleep( int ms )
-{
-    fd_set fds;
-    fd_set *p = &fds;
-    FD_ZERO(p);
-    struct timeval tv;
-    tv.tv_sec  = ms/1000;
-    tv.tv_usec = (ms%1000)*1000;
-    select( 1, p, NULL, NULL, &tv );
-}
-
-int MacReadNonBlocking( int fd, char *buf, int max )
-{
-    int nbr_bytes = 0;
-    fd_set fds;
-    fd_set *p = &fds;
-    FD_ZERO(p);
-    FD_SET(fd,p);
-    struct timeval tv;
-    tv.tv_sec  = 0;
-    tv.tv_usec = 0;
-    select( fd+1, p, NULL, NULL, &tv );
-    if( FD_ISSET(fd,p) )
-    {
-        nbr_bytes = read(fd,buf,max);
-    }
-    return nbr_bytes;
-}
-
-void MacWrite( int fd, const char *buf )
-{
-    write(fd,buf,strlen(buf));
-}
-
 
 //---------------------------------------------------------------------------
 Rybka::Rybka( const char *filename_uci_exe )
@@ -155,15 +176,10 @@ Rybka::Rybka( const char *filename_uci_exe )
     engine_name[0] = '\0';
 
     // Get nbr of CPUs
-#ifdef WINDOWS_FIX_LATER
     SYSTEM_INFO sysinfo;
     GetSystemInfo( &sysinfo );
     nbr_cpus = sysinfo.dwNumberOfProcessors;
-#else
-    nbr_cpus = 1;
-#endif
 
-   
     kq_engine_to_move.SetDepth(6);  // small number
     bestmove_received = false;
     ponder_received = false;
@@ -197,68 +213,110 @@ Rybka::Rybka( const char *filename_uci_exe )
     gbl_state = INIT;
     debug_trigger = false;
 
+    sa.lpSecurityDescriptor = NULL;
+    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sa.bInheritHandle = true;         //allow inheritable handles
 
-    pid_t nPid;
-    int pipeto[2];      // pipe to feed the exec'ed program input
-    int pipefrom[2];    // pipe to get the exec'ed program output
-    
-    if ( pipe( pipeto ) != 0 )
+    if (!CreatePipe(&newstdin,&write_stdin,&sa,0))   //create stdin pipe
     {
-        perror( "pipe() to" );
-        _exit(255);
+        ErrorMessage(filename_uci_exe,"CreatePipe");
+        return;
     }
-    if ( pipe( pipefrom ) != 0 )
+    if (!CreatePipe(&read_stdout,&newstdout,&sa,0))  //create stdout pipe
     {
-        perror( "pipe() from" );
-        _exit(255);
+        ErrorMessage(filename_uci_exe,"CreatePipe");
+        CloseHandle(newstdin);
+        CloseHandle(write_stdin);
+        return;
     }
-    
-    nPid = fork();
-    if ( nPid < 0 )
-    {
-        perror( "fork() 1" );
-        _exit(255);
-    }
-    
-    //
-    //  fork in the road A) used to fire up the engine
-    //
-    else if ( nPid == 0 )
-    {
-        // dup pipe read/write to stdin/stdout
-        dup2( pipeto[0], STDIN_FILENO );
-        dup2( pipefrom[1], STDOUT_FILENO  );
 
-        // close unnecessary pipe descriptors for a clean environment
-        close( pipeto[0] );
-        close( pipeto[1] );
-        close( pipefrom[0] );
-        close( pipefrom[1] );
-        execlp( "/Users/billforster/Downloads/critter_1.6a_osx/critter-16a", "/Users/billforster/Downloads/critter_1.6a_osx/critter-16a", NULL ); //"/Users/billforster/Downloads/critter_1.6a_osx/critter-16a"
-        perror( "execlp()" );
-        _exit(255);
+    GetStartupInfoA(&si);      //set startupinfo for the spawned process
+      /*
+      The dwFlags member tells CreateProcess how to make the process.
+      STARTF_USESTDHANDLES validates the hStd* members. STARTF_USESHOWWINDOW
+      validates the wShowWindow member.
+      */
+    si.dwFlags = STARTF_USESTDHANDLES|STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;
+    si.hStdOutput = newstdout;
+    si.hStdError = newstdout;     //set the new handles for the child process
+    si.hStdInput = newstdin;
+
+    //spawn the child process
+    int i_okay =  
+    CreateProcessA(filename_uci_exe,NULL,NULL,NULL,TRUE,CREATE_NEW_CONSOLE,
+                       NULL,NULL,&si,&pi);
+    if( !i_okay )  
+    {
+       //DWORD err=GetLastError();
+       ErrorMessage(filename_uci_exe,"CreateProcess");
+       CloseHandle(newstdin);
+       CloseHandle(newstdout);
+       CloseHandle(read_stdout);
+       CloseHandle(write_stdin);
     }
-    
-    //
-    // fork in the road B) our program continues
-    //
     else
     {
-        
-        // Close unused pipe ends. This is especially important for the
-        //  pipefrom[1] write descriptor, otherwise readFromPipe will never
-        //  get an EOF.
-        close( pipeto[0] );
-        close( pipefrom[1] );
-        mac_fd_read  = pipefrom[0];
-        mac_fd_write = pipeto[1];
         okay = true;
+        suspended = false;
+        DebugPrintf(( "Chess engine pid = %d\n", pi.dwProcessId ));
+        if( ghJob )
+        {
+            if( 0 == AssignProcessToJobObject(ghJob,pi.hProcess) )
+                DebugPrintf(( "Could not AssignProcessToObject" ));
+        }
     }
 }
 
 void Rybka::SuspendResume( bool resume )
 { 
-}
+    HANDLE        hThreadSnap = NULL; 
+    THREADENTRY32 te32        = {0}; 
+    if( (suspended&&resume)     ||      // makes sense to ask for resume OR
+        (!suspended&&!resume)           // makes sense to ask for suspend
+      )
+    {
+ 
+        // Take a snapshot of all threads currently in the system. 
+        hThreadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0); 
+        if( hThreadSnap != INVALID_HANDLE_VALUE ) 
+        { 
+            // Fill in the size of the structure before using it. 
+            te32.dwSize = sizeof(THREADENTRY32); 
+         
+            // Walk the thread snapshot to find all threads of the process. 
+            if( Thread32First(hThreadSnap, &te32) ) 
+            { 
+		        if( resume )
+			        DebugPrintfInner( "Chess Engine resuming\n" );
+		        else
+			        DebugPrintfInner( "Chess Engine suspending\n" );
+                do 
+                { 
+                    if( te32.th32OwnerProcessID == pi.dwProcessId )    //@@
+                    {
+				        HANDLE hThread = OpenThread(THREAD_SUSPEND_RESUME, FALSE, te32.th32ThreadID);
+				        if( resume )
+				        {
+					        ResumeThread(hThread);
+                            suspended = false;
+				        }
+				        else
+				        {
+					        SuspendThread(hThread);
+                            suspended = true;
+				        }
+				        CloseHandle(hThread);
+                    } 
+                }
+                while( Thread32Next(hThreadSnap, &te32) ); 
+            } 
+     
+            // Do not forget to clean up the snapshot object. 
+            CloseHandle( hThreadSnap );
+        }
+    }
+} 
 
 
 bool Rybka::Start()
@@ -279,7 +337,7 @@ bool Rybka::Start()
                 okay = false;
                 break;
             }
-            Sleep(0);
+            Sleep(0);    
         }
     }
     return okay;
@@ -512,7 +570,7 @@ void Rybka::Stop()
                 break;
             if( elapsed_time > 20000 )   // 20 seconds
                 break;
-            Sleep(0);  //problem in V2.01 sleep() and Sleep() used!!
+            Sleep(0);    
         }
     }
 }
@@ -520,24 +578,81 @@ void Rybka::Stop()
 bool Rybka::Run()
 {
     bool running;
-    char buf[1024+2];        //i/o buffer
-    //GetExitCodeProcess(pi.hProcess,&exit);      //check the process is running
-    running = true; //(exit==STILL_ACTIVE);
+    char buf[1024];        //i/o buffer
+    unsigned long exit=0;  //process exit code
+    unsigned long bread;   //bytes read
+    unsigned long avail;   //bytes available
+    static const char *read_ptr=NULL;
+    bzero(buf);
+    GetExitCodeProcess(pi.hProcess,&exit);      //check the process is running
+    running = (exit==STILL_ACTIVE);
+    static unsigned long dbg_count = 0;
     if( running )
     {
-        int nbr_bytes = MacReadNonBlocking(mac_fd_read,buf,sizeof(buf)-2);
-        while( nbr_bytes > 0 )
+        PeekNamedPipe(read_stdout,buf,1023,&bread,&avail,NULL);
+        if( avail || bread )
         {
-            DebugPrintfInner( "Read nbr_bytes=%d\n", nbr_bytes );
-            buf[nbr_bytes] = '\0';
-            user_hook_out(buf);
-            nbr_bytes = MacReadNonBlocking(mac_fd_read,buf,sizeof(buf)-2);
+            DebugPrintfInner( "Peek: dbg_count=%lu, avail=%lu, bread=%lu\n", dbg_count, avail, bread );
+            dbg_count = 0;
         }
-        const char *user_ptr = user_hook_in();
-        if( user_ptr )      //check for user input.
+        else
+            dbg_count++;
+        //check to see if there is any data to read from stdout
+        if( bread != 0 )
         {
-            MacWrite(mac_fd_write,user_ptr);
-            MacWrite(mac_fd_write,"\n");
+            //if( debug_trigger )
+            //    DebugPrintf(("avail: %lu\n", avail ));
+            bzero(buf);
+            if( avail > 1023 )
+            {
+                while( bread >= 1023 )
+                {
+                    ReadFile(read_stdout,buf,1023,&bread,NULL);  //read the stdout pipe
+                    DebugPrintfInner( "Read big: avail=%lu, bread=%lu\n", avail, bread );
+                    dbg_count = 0;
+                    user_hook_out(buf);
+                    bzero(buf);
+                }
+            }
+            else
+            {
+                ReadFile(read_stdout,buf,1023,&bread,NULL);
+                DebugPrintfInner( "Read small: avail=%lu, bread=%lu\n", avail, bread );
+                dbg_count = 0;
+                user_hook_out(buf);
+            }
+        }
+        if( read_ptr == NULL )
+            read_ptr = user_hook_in();
+        if( read_ptr )      //check for user input.
+        {
+            #if 1
+            unsigned long temp;
+            WriteFile(write_stdin,read_ptr,strlen(read_ptr),&temp,NULL); //send it to stdin
+            WriteFile(write_stdin,"\r\n",2,&temp,NULL); //send it to stdin
+            if( debug_trigger )
+                DebugPrintf(("sending %s\n", read_ptr ));
+            read_ptr = NULL;
+            #else
+            bzero(buf);
+            *buf = *read_ptr++;
+            if( *buf == '\0' )
+            {
+                *buf = '\r';
+                read_ptr = NULL;
+            }
+            //printf("%c",*buf);
+            if( debug_trigger )
+                DebugPrintf(("sending %c\n", *buf ));
+            WriteFile(write_stdin,buf,1,&bread,NULL); //send it to stdin
+            if (*buf == '\r')
+            {
+                *buf = '\n';
+                //printf("%c",*buf);
+                WriteFile(write_stdin,buf,1,&bread,NULL); //send an extra newline char,
+                                                    //if necessary
+            }
+            #endif
         }
     }
     return running;
@@ -545,6 +660,23 @@ bool Rybka::Run()
 
 Rybka::~Rybka()
 {
+    if( okay )
+    {
+        //SuspendResume(false);   // temp temp temp testing!
+        SuspendResume(true);
+        Stop();
+        CloseHandle(pi.hThread);               //@@
+        /*BOOL x =*/ CloseHandle(pi.hProcess);
+        //DebugPrintf(( "CloseHandle() returns %s\n", x?"true":"false" ));
+        CloseHandle(newstdin);            //clean stuff up
+        CloseHandle(newstdout);
+        CloseHandle(read_stdout);
+        CloseHandle(write_stdin);
+        //x = SafeTerminateProcess( pi.hProcess, -1 );
+        //DebugPrintfInner( "SafeTerminateProcess() returns %s\n", x?"true":"false" );
+        //x = TerminateProcess( pi.hProcess, -1 );
+        //DebugPrintfInner( "TerminateProcess() returns %s\n", x?"true":"false" );
+    }
 }
 
 #define DEPTH 8
@@ -706,9 +838,7 @@ const char *Rybka::user_hook_in()
                             {
                                 custom1_first = false;
                                 found_something_to_send = true;
-                                const char *s1 = rep->m_custom1a.c_str();
-                                const char *s2 = rep->m_custom1b.c_str();
-                                sprintf( option_buf, "setoption name %s value %s", s1, s2  );
+                                sprintf( option_buf, "setoption name %s value %s", rep->m_custom1a.c_str(), rep->m_custom1b.c_str() );
                             }
                         }
                         break;
@@ -722,9 +852,7 @@ const char *Rybka::user_hook_in()
                             {
                                 custom2_first = false;
                                 found_something_to_send = true;
-                                const char *s1 = rep->m_custom2a.c_str();
-                                const char *s2 = rep->m_custom2b.c_str();
-                                sprintf( option_buf, "setoption name %s value %s", s1, s2 );
+                                sprintf( option_buf, "setoption name %s value %s", rep->m_custom2a.c_str(), rep->m_custom2b.c_str() );
                             }
                         }
                         break;
@@ -738,9 +866,7 @@ const char *Rybka::user_hook_in()
                             {
                                 custom3_first = false;
                                 found_something_to_send = true;
-                                const char *s1 = rep->m_custom3a.c_str();
-                                const char *s2 = rep->m_custom3b.c_str();
-                                sprintf( option_buf, "setoption name %s value %s", s1, s2 );
+                                sprintf( option_buf, "setoption name %s value %s", rep->m_custom3a.c_str(), rep->m_custom3b.c_str() );
                             }
                         }
                         break;
@@ -754,9 +880,7 @@ const char *Rybka::user_hook_in()
                             {
                                 custom4_first = false;
                                 found_something_to_send = true;
-                                const char *s1 = rep->m_custom4a.c_str();
-                                const char *s2 = rep->m_custom4b.c_str();
-                                sprintf( option_buf, "setoption name %s value %s", s1, s2 );
+                                sprintf( option_buf, "setoption name %s value %s", rep->m_custom4a.c_str(), rep->m_custom4b.c_str() );
                             }
                         }
                         break;
@@ -780,10 +904,7 @@ const char *Rybka::user_hook_in()
             if( gbl_smoves.Len() == 0 )
                 sprintf( buf, "position %s", gbl_forsyth );
             else
-            {
-                const char *temp = gbl_smoves.c_str();
-                sprintf( buf, "position %s moves%s", gbl_forsyth, temp );
-            }
+                sprintf( buf, "position %s moves%s", gbl_forsyth, gbl_smoves.c_str() );
             s = buf;
             NewState( "user_hook_in()", SEND_PLAY_ENGINE4 );
             break;
@@ -897,9 +1018,7 @@ const char *Rybka::user_hook_in()
                             {
                                 custom1_first = false;
                                 found_something_to_send = true;
-                                const char *s1 = rep->m_custom1a.c_str();
-                                const char *s2 = rep->m_custom1b.c_str();
-                                sprintf( option_buf, "setoption name %s value %s", s1, s2 );
+                                sprintf( option_buf, "setoption name %s value %s", rep->m_custom1a.c_str(), rep->m_custom1b.c_str() );
                             }
                         }
                         break;
@@ -913,9 +1032,7 @@ const char *Rybka::user_hook_in()
                             {
                                 custom2_first = false;
                                 found_something_to_send = true;
-                                const char *s1 = rep->m_custom2a.c_str();
-                                const char *s2 = rep->m_custom2b.c_str();
-                                sprintf( option_buf, "setoption name %s value %s", s1, s2 );
+                                sprintf( option_buf, "setoption name %s value %s", rep->m_custom2a.c_str(), rep->m_custom2b.c_str() );
                             }
                         }
                         break;
@@ -929,9 +1046,7 @@ const char *Rybka::user_hook_in()
                             {
                                 custom3_first = false;
                                 found_something_to_send = true;
-                                const char *s1 = rep->m_custom3a.c_str();
-                                const char *s2 = rep->m_custom3b.c_str();
-                                sprintf( option_buf, "setoption name %s value %s", s1, s2 );
+                                sprintf( option_buf, "setoption name %s value %s", rep->m_custom3a.c_str(), rep->m_custom3b.c_str() );
                             }
                         }
                         break;
@@ -945,9 +1060,7 @@ const char *Rybka::user_hook_in()
                             {
                                 custom4_first = false;
                                 found_something_to_send = true;
-                                const char *s1 = rep->m_custom4a.c_str();
-                                const char *s2 = rep->m_custom4b.c_str();
-                                sprintf( option_buf, "setoption name %s value %s", s1, s2 );
+                                sprintf( option_buf, "setoption name %s value %s", rep->m_custom4a.c_str(), rep->m_custom4b.c_str() );
                             }
                         }
                         break;
@@ -1414,7 +1527,7 @@ const char *str_pattern_smart( const char *str, const char *pattern )
             }
             *dst = '\0';
             bool match;
-            match = (0 == strcmpi(buf_pattern,buf_str));
+            match = (0 == _strcmpi(buf_pattern,buf_str));
             if( match )
                 found_token_in_patterns = true;
             if( c != '|' )
@@ -1506,5 +1619,4 @@ void Rybka::NewState( const char *comment, RYBKA_STATE new_state )
     DebugPrintfInner( "State change %s -> %s (%s)\n", s1, s2, comment );
 }
 
-#endif // THC_MAC
-
+#endif // THC_WINDOWS

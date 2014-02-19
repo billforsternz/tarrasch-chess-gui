@@ -10,7 +10,7 @@
 #include "Repository.h"
 #include "Objects.h"
 #include "DebugPrintf.h"
-#include "ChessRules.h"
+#include "thc.h"
 #include "GameLogic.h"
 #include "Lang.h"
 #include "GameDocument.h"

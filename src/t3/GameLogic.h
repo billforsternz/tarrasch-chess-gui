@@ -10,7 +10,7 @@
 #include "Book.h"
 #include "PopupControl.h"
 #include "GameDocument.h"
-#include "ChessRules.h"
+#include "thc.h"
 #include "GameClock.h"
 #include "GameLifecycle.h"
 #include "Tabs.h"

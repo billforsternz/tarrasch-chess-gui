@@ -8,7 +8,7 @@
 #include "wx/wx.h"
 #include "Appdefs.h"
 #include "GameLogic.h"
-#include "ChessRules.h"
+#include "thc.h"
 #include "DebugPrintf.h"
 #include "Objects.h"
 #include "PopupControl.h"

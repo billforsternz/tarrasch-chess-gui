@@ -9,7 +9,7 @@
 #define GAME_SKELETON_H
 #include <string>
 #include <vector>
-#include "ChessRules.h"
+#include "thc.h"
 #include "MoveTree.h"
 #include "GameView.h"
 #include "GameLifecycle.h"
