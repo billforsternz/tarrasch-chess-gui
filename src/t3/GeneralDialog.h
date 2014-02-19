@@ -7,7 +7,7 @@
 #ifndef GENERAL_DIALOG_H
 #define GENERAL_DIALOG_H
 #include "wx/spinctrl.h"
-#include "ChessRules.h"
+#include "thc.h"
 #include "SuspendEngine.h"
 #include "Repository.h"
 class BoardSetupControl;

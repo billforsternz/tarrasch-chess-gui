@@ -13,7 +13,7 @@
 #include "Appdefs.h"
 #include "Objects.h"
 #include "GameLogic.h"
-#include "ChessRules.h"
+#include "thc.h"
 #include "BoardSetupControl.h"
 #include "Book.h"
 #include "Repository.h"

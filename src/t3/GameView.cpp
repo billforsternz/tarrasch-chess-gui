@@ -5,7 +5,7 @@
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
 #define _CRT_SECURE_NO_DEPRECATE
-#include "ChessRules.h"
+#include "thc.h"
 #include "GameLogic.h"
 #include "Lang.h"
 #include "DebugPrintf.h"

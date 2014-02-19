@@ -6,7 +6,7 @@
  ****************************************************************************/
 #define _CRT_SECURE_NO_DEPRECATE
 #include "MoveTree.h"
-#include "ChessRules.h"
+#include "thc.h"
 using namespace std;
 using namespace thc;
 

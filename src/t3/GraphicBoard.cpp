@@ -14,7 +14,7 @@
 #include "DebugPrintf.h"
 #include "GraphicBoard.h"
 #include "GameLogic.h"
-#include "ChessRules.h"
+#include "thc.h"
 #include "Objects.h"
 #include "BoardBitmap40.h"
 #include "BoardBitmap54.h"

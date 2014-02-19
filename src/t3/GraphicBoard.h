@@ -6,7 +6,7 @@
 #define GRAPHICBOARD_H
 #include "wx/wx.h"
 #include "Portability.h"
-#include "ChessPosition.h"
+#include "thc.h"
 
 class GraphicBoard : public wxControl
 {

@@ -19,7 +19,7 @@
 #endif
 #include "Appdefs.h"
 #include "DebugPrintf.h"
-#include "ChessPosition.h"
+#include "thc.h"
 #include "GameDetailsDialog.h"
 #include "GamePrefixDialog.h"
 #include "GameLogic.h"
@@ -898,8 +898,10 @@ template<typename A, typename B>
 std::multimap<B,A> flip_and_sort_map(const std::map<A,B> &src)
 {
     std::multimap<B,A> dst;
+#ifdef MAC_FIX_LATER    // doesn't compile in Visual C++
     std::transform(src.begin(), src.end(), std::inserter(dst, dst.begin()),
                    flip_pair<A,B>);
+#endif
     return dst;
 }
 

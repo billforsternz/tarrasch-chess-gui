@@ -10,7 +10,7 @@
 #include "wx/image.h"
 #include "wx/file.h"
 #include "Appdefs.h"
-#include "ChessRules.h"
+#include "thc.h"
 #include "DebugPrintf.h"
 #include "BoardSetup.h"
 #include "BoardSetupControl.h"

@@ -12,7 +12,7 @@
 #include "Portability.h"
 #include "Appdefs.h"
 #include "DebugPrintf.h"
-#include "ChessPosition.h"
+#include "thc.h"
 #include "GameDetailsDialog.h"
 #include "GamePrefixDialog.h"
 #include "GameLogic.h"

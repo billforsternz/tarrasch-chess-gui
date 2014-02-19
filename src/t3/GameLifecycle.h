@@ -6,7 +6,7 @@
  ****************************************************************************/
 #ifndef GAMELIFECYCLE_H
 #define GAMELIFECYCLE_H
-#include "ChessRules.h"
+#include "thc.h"
 #include "wx/wx.h"
 
 enum GAME_RESULT

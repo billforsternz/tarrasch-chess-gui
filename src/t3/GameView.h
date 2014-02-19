@@ -10,7 +10,7 @@
 #include <vector>
 #include "Objects.h"
 #include "MoveTree.h"
-#include "ChessRules.h"
+#include "thc.h"
 #include "NavigationKey.h"
 #include "wx/richtext/richtextctrl.h"
 
