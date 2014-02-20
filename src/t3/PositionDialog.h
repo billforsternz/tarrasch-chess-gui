@@ -7,7 +7,7 @@
 #ifndef POSITION_DIALOG_H
 #define POSITION_DIALOG_H
 #include "wx/spinctrl.h"
-#include "ChessRules.h"
+#include "thc.h"
 #include "SuspendEngine.h"
 class BoardSetupControl;
 

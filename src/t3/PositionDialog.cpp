@@ -13,7 +13,7 @@
 #include "Appdefs.h"
 #include "Objects.h"
 #include "GameLogic.h"
-#include "ChessRules.h"
+#include "thc.h"
 #include "BoardSetupControl.h"
 #include "Book.h"
 #include "Repository.h"
@@ -759,7 +759,7 @@ void PositionDialog::OnApplyClick( wxCommandEvent& WXUNUSED(event) )
     bool legal=true;
     ILLEGAL_REASON reason;
     fen = fen_ctrl->GetValue();
-    if( !cr.Forsyth( fen ) )
+    if( !cr.Forsyth( fen.c_str()) )
     {
         legal = false;
         wxMessageDialog md(this,"FEN string is not properly formed", "Error", wxOK|wxICON_ERROR);
@@ -879,7 +879,7 @@ void PositionDialog::OnPredefined( wxCommandEvent& WXUNUSED(event) )
         {
             ChessRules cr;
             wxString fen = fens[i];
-            if( cr.Forsyth(fen) )
+            if( cr.Forsyth(fen.c_str()) )
             {
                 found = true;
                 this->fen = fen;

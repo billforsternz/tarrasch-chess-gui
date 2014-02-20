@@ -9,7 +9,7 @@
 #define MOVE_TREE_H
 #include <string>
 #include <vector>
-#include "ChessRules.h"
+#include "thc.h"
 
 struct GAME_MOVE
 {

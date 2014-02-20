@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E6043C3618B5709300EAB5BD /* thc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6043C3318B5709300EAB5BD /* thc.cpp */; };
+		E6043C3718B5709300EAB5BD /* WinRybka.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6043C3518B5709300EAB5BD /* WinRybka.cpp */; };
 		E65C86F9183D9620008E1266 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E65C86F8183D9620008E1266 /* Cocoa.framework */; };
 		E65C8703183D9620008E1266 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = E65C8701183D9620008E1266 /* InfoPlist.strings */; };
 		E65C8709183D9620008E1266 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = E65C8707183D9620008E1266 /* Credits.rtf */; };
@@ -41,7 +43,6 @@
 		E65C87C9183D97F9008E1266 /* BookDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C8752183D97F9008E1266 /* BookDialog.cpp */; };
 		E65C87CA183D97F9008E1266 /* Canvas.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C8754183D97F9008E1266 /* Canvas.cpp */; };
 		E65C87CB183D97F9008E1266 /* CentralWorkSaver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C8756183D97F9008E1266 /* CentralWorkSaver.cpp */; };
-		E65C87CC183D97F9008E1266 /* ChessEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C8758183D97F9008E1266 /* ChessEngine.cpp */; };
 		E65C87CD183D97F9008E1266 /* ClockDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C875A183D97F9008E1266 /* ClockDialog.cpp */; };
 		E65C87CE183D97F9008E1266 /* CompressMoves.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C875C183D97F9008E1266 /* CompressMoves.cpp */; };
 		E65C87CF183D97F9008E1266 /* CtrlBox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C875E183D97F9008E1266 /* CtrlBox.cpp */; };
@@ -75,7 +76,6 @@
 		E65C87EB183D97F9008E1266 /* PlayerDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C8799183D97F9008E1266 /* PlayerDialog.cpp */; };
 		E65C87EC183D97F9008E1266 /* PopupControl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C879B183D97F9008E1266 /* PopupControl.cpp */; };
 		E65C87ED183D97F9008E1266 /* PositionDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C879D183D97F9008E1266 /* PositionDialog.cpp */; };
-		E65C87EE183D97F9008E1266 /* PrivateChessDefs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C879F183D97F9008E1266 /* PrivateChessDefs.cpp */; };
 		E65C87EF183D97F9008E1266 /* Repository.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C87A0183D97F9008E1266 /* Repository.cpp */; };
 		E65C87F0183D97F9008E1266 /* Session.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C87A3183D97F9008E1266 /* Session.cpp */; };
 		E65C87F1183D97F9008E1266 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = E65C87A5183D97F9008E1266 /* sqlite3.c */; };
@@ -100,6 +100,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		E6043C3118B5709300EAB5BD /* DebugPrintf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DebugPrintf.h; path = ../src/t3/DebugPrintf.h; sourceTree = "<group>"; };
+		E6043C3218B5709300EAB5BD /* Portability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Portability.h; path = ../src/t3/Portability.h; sourceTree = "<group>"; };
+		E6043C3318B5709300EAB5BD /* thc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = thc.cpp; path = ../src/t3/thc.cpp; sourceTree = "<group>"; };
+		E6043C3418B5709300EAB5BD /* thc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = thc.h; path = ../src/t3/thc.h; sourceTree = "<group>"; };
+		E6043C3518B5709300EAB5BD /* WinRybka.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = WinRybka.cpp; path = ../src/t3/WinRybka.cpp; sourceTree = "<group>"; };
 		E65C86F5183D9620008E1266 /* t3.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = t3.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E65C86F8183D9620008E1266 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		E65C86FB183D9620008E1266 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -152,8 +157,6 @@
 		E65C8755183D97F9008E1266 /* Canvas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Canvas.h; path = ../src/t3/Canvas.h; sourceTree = "<group>"; };
 		E65C8756183D97F9008E1266 /* CentralWorkSaver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = CentralWorkSaver.cpp; path = ../src/t3/CentralWorkSaver.cpp; sourceTree = "<group>"; wrapsLines = 0; };
 		E65C8757183D97F9008E1266 /* CentralWorkSaver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CentralWorkSaver.h; path = ../src/t3/CentralWorkSaver.h; sourceTree = "<group>"; };
-		E65C8758183D97F9008E1266 /* ChessEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ChessEngine.cpp; path = ../src/t3/ChessEngine.cpp; sourceTree = "<group>"; };
-		E65C8759183D97F9008E1266 /* ChessEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ChessEngine.h; path = ../src/t3/ChessEngine.h; sourceTree = "<group>"; };
 		E65C875A183D97F9008E1266 /* ClockDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ClockDialog.cpp; path = ../src/t3/ClockDialog.cpp; sourceTree = "<group>"; };
 		E65C875B183D97F9008E1266 /* ClockDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ClockDialog.h; path = ../src/t3/ClockDialog.h; sourceTree = "<group>"; };
 		E65C875C183D97F9008E1266 /* CompressMoves.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CompressMoves.cpp; path = ../src/t3/CompressMoves.cpp; sourceTree = "<group>"; };
@@ -223,7 +226,6 @@
 		E65C879C183D97F9008E1266 /* PopupControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PopupControl.h; path = ../src/t3/PopupControl.h; sourceTree = "<group>"; };
 		E65C879D183D97F9008E1266 /* PositionDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PositionDialog.cpp; path = ../src/t3/PositionDialog.cpp; sourceTree = "<group>"; };
 		E65C879E183D97F9008E1266 /* PositionDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PositionDialog.h; path = ../src/t3/PositionDialog.h; sourceTree = "<group>"; };
-		E65C879F183D97F9008E1266 /* PrivateChessDefs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrivateChessDefs.cpp; path = ../src/t3/PrivateChessDefs.cpp; sourceTree = "<group>"; };
 		E65C87A0183D97F9008E1266 /* Repository.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Repository.cpp; path = ../src/t3/Repository.cpp; sourceTree = "<group>"; };
 		E65C87A1183D97F9008E1266 /* Repository.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Repository.h; path = ../src/t3/Repository.h; sourceTree = "<group>"; };
 		E65C87A2183D97F9008E1266 /* Rybka.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Rybka.h; path = ../src/t3/Rybka.h; sourceTree = "<group>"; };
@@ -352,6 +354,11 @@
 		E65C872C183D97AD008E1266 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				E6043C3118B5709300EAB5BD /* DebugPrintf.h */,
+				E6043C3218B5709300EAB5BD /* Portability.h */,
+				E6043C3318B5709300EAB5BD /* thc.cpp */,
+				E6043C3418B5709300EAB5BD /* thc.h */,
+				E6043C3518B5709300EAB5BD /* WinRybka.cpp */,
 				E6AF48FE18A4881C00463137 /* MaintenanceDialog.cpp */,
 				E6AF48FF18A4881C00463137 /* MaintenanceDialog.h */,
 				E673327F1895F371006B75A5 /* DbMaintenance.h */,
@@ -381,8 +388,6 @@
 				E65C8755183D97F9008E1266 /* Canvas.h */,
 				E65C8756183D97F9008E1266 /* CentralWorkSaver.cpp */,
 				E65C8757183D97F9008E1266 /* CentralWorkSaver.h */,
-				E65C8758183D97F9008E1266 /* ChessEngine.cpp */,
-				E65C8759183D97F9008E1266 /* ChessEngine.h */,
 				E65C875A183D97F9008E1266 /* ClockDialog.cpp */,
 				E65C875B183D97F9008E1266 /* ClockDialog.h */,
 				E65C875C183D97F9008E1266 /* CompressMoves.cpp */,
@@ -452,7 +457,6 @@
 				E65C879C183D97F9008E1266 /* PopupControl.h */,
 				E65C879D183D97F9008E1266 /* PositionDialog.cpp */,
 				E65C879E183D97F9008E1266 /* PositionDialog.h */,
-				E65C879F183D97F9008E1266 /* PrivateChessDefs.cpp */,
 				E65C87A0183D97F9008E1266 /* Repository.cpp */,
 				E65C87A1183D97F9008E1266 /* Repository.h */,
 				E65C87A2183D97F9008E1266 /* Rybka.h */,
@@ -614,8 +618,6 @@
 				E65C87ED183D97F9008E1266 /* PositionDialog.cpp in Sources */,
 				E65C87DF183D97F9008E1266 /* GameView.cpp in Sources */,
 				E65C87DE183D97F9008E1266 /* GameSkeleton.cpp in Sources */,
-				E65C87CC183D97F9008E1266 /* ChessEngine.cpp in Sources */,
-				E65C87EE183D97F9008E1266 /* PrivateChessDefs.cpp in Sources */,
 				E65C87CF183D97F9008E1266 /* CtrlBox.cpp in Sources */,
 				E65C87AE183D97F9008E1266 /* Atom.cpp in Sources */,
 				E65C87CE183D97F9008E1266 /* CompressMoves.cpp in Sources */,
@@ -640,12 +642,14 @@
 				E65C87E7183D97F9008E1266 /* MiniBoard.cpp in Sources */,
 				E65C87E0183D97F9008E1266 /* GeneralDialog.cpp in Sources */,
 				E65C87EB183D97F9008E1266 /* PlayerDialog.cpp in Sources */,
+				E6043C3618B5709300EAB5BD /* thc.cpp in Sources */,
 				E65C87C8183D97F9008E1266 /* Book.cpp in Sources */,
 				E65C87F4183D97F9008E1266 /* Undo.cpp in Sources */,
 				E65C87D4183D97F9008E1266 /* DbDialog.cpp in Sources */,
 				E65C87D8183D97F9008E1266 /* GameDetailsDialog.cpp in Sources */,
 				E65C87C9183D97F9008E1266 /* BookDialog.cpp in Sources */,
 				E65C87D9183D97F9008E1266 /* GameDocument.cpp in Sources */,
+				E6043C3718B5709300EAB5BD /* WinRybka.cpp in Sources */,
 				E6F862F71888DDD30088F2F6 /* DbPrimitives.cpp in Sources */,
 				E65C87EC183D97F9008E1266 /* PopupControl.cpp in Sources */,
 				E65C87D1183D97F9008E1266 /* CtrlBoxBookMoves.cpp in Sources */,

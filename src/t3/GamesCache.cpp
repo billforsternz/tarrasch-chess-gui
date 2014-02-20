@@ -13,7 +13,7 @@
 #include "wx/listctrl.h"
 #include "Appdefs.h"
 #include "DebugPrintf.h"
-#include "ChessPosition.h"
+#include "thc.h"
 #include "GameLogic.h"
 #include "Objects.h"
 #include "Repository.h"

@@ -12,8 +12,7 @@
 #include "wx/filename.h"
 #include "Appdefs.h"
 #include "Canvas.h"
-#include "ChessRules.h"
-#include "ChessEvaluation.h"
+#include "thc.h"
 #include "GraphicBoard.h"
 #include "Book.h"
 #include "GameLogic.h"
@@ -1622,7 +1621,7 @@ bool GameLogic::StartEngine()
     bool okay=true;
     if( objs.rybka == NULL )
     {
-        objs.rybka = new Rybka( objs.repository->engine.m_file );
+        objs.rybka = new Rybka( objs.repository->engine.m_file.c_str());
         okay = objs.rybka->Start();
         memset( engine_name, 0, sizeof(engine_name) );
         if( okay )
@@ -1662,7 +1661,7 @@ void GameLogic::LabelPlayers( bool start_game, bool set_document_player_names )
     {
         gd.white = objs.repository->player.m_white;
         gd.black = objs.repository->player.m_black;
-        canvas->SetPlayers( white, black );
+        canvas->SetPlayers( white.c_str(), black.c_str()  );
     }
 }
 
@@ -2406,7 +2405,7 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
 
         case HUMAN:
         case PONDERING:
-                        stat = reply_to;
+                        stat = reply_to.c_str();
                         b1 = "New Game";        b1_cmd = ID_CMD_NEW_GAME;
                         b2 = "Setup Position";  b2_cmd = ID_CMD_SET_POSITION;
                         b3 = "Swap sides";      b3_cmd = ID_CMD_SWAP_SIDES;

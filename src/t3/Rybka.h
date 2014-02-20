@@ -9,7 +9,7 @@
 #include "Portability.h"
 #include "kibitzq.h"
 #include "Appdefs.h"
-#include "ChessRules.h"
+#include "thc.h"
 #include "wx/wx.h"
 
 class Rybka

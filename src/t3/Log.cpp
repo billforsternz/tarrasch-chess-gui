@@ -43,7 +43,7 @@ void Log::SaveGame( GameDocument *gd, bool editing_log )
                 filetime_before = ::wxFileModificationTime(log_filename);
             if( !editing_log && objs.repository->log.m_enabled )
             {
-                file = fopen( objs.repository->log.m_file, "ab" );
+                file = fopen( objs.repository->log.m_file.c_str(), "ab" );
             }
             if( file )
             {

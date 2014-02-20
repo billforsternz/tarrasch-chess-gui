@@ -11,7 +11,7 @@
 #include "wx/filename.h"
 #include "wx/progdlg.h"
 #include "DebugPrintf.h"
-#include "ChessRules.h"
+#include "thc.h"
 #include <vector>
 #include <algorithm>
 

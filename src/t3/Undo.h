@@ -10,7 +10,7 @@
 #include "GameState.h"
 #include "GameDocument.h"
 #include "GameLifeCycle.h"
-#include "ChessPosition.h"
+#include "thc.h"
 #include "DebugPrintf.h"
 
 struct RestorePoint

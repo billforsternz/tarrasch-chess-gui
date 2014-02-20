@@ -7,20 +7,28 @@
 #ifndef REPOSITORY_H
 #define REPOSITORY_H
 #include "Appdefs.h"
+#include "Portability.h"
 #include "wx/wx.h"
 #include "wx/utils.h"
-#ifdef __VISUALC__
-    #pragma warning ( disable : 4005 )  // refinition of wxUSE_CONFIG_NATIVE is okay
-#endif
-#undef  wxUSE_CONFIG_NATIVE
-#define wxUSE_CONFIG_NATIVE 0
-#include "wx/config.h"      //(to let wxWidgets choose a wxConfig class for your platform)
-#include "wx/confbase.h"    //(base config class)
-#include "wx/fileconf.h"    //(wxFileConfig class)
-#include "wx/msw/regconf.h" //(wxRegConfig class)
-#define wxUSE_CONFIG_NATIVE 0
-#ifdef __VISUALC__
-    #pragma warning ( default : 4005 )
+
+#if TARRASCH_UNIX
+   #include "wx/config.h"      //(to let wxWidgets choose a wxConfig class for your platform)
+   #include "wx/confbase.h"    //(base config class)
+   #include "wx/fileconf.h"    //(wxFileConfig class)
+#else
+   #ifdef __VISUALC__
+     #pragma warning ( disable : 4005 )  // refinition of wxUSE_CONFIG_NATIVE is okay
+   #endif
+   #undef  wxUSE_CONFIG_NATIVE
+   #define wxUSE_CONFIG_NATIVE 0
+   #include "wx/config.h"      //(to let wxWidgets choose a wxConfig class for your platform)
+   #include "wx/confbase.h"    //(base config class)
+   #include "wx/fileconf.h"    //(wxFileConfig class)
+   #include "wx/msw/regconf.h" //(wxRegConfig class)
+   #define wxUSE_CONFIG_NATIVE 0
+   #ifdef __VISUALC__
+       #pragma warning ( default : 4005 )
+   #endif
 #endif
 
 struct BookConfig

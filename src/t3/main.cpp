@@ -21,7 +21,7 @@
 #include "CentralWorkSaver.h"
 #include "Session.h"
 #include "Log.h"
-#include "ChessRules.h"
+#include "thc.h"
 #include "Rybka.h"
 #include "DebugPrintf.h"
 #include "Book.h"
