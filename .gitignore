@@ -1,1 +1,8 @@
 xcuserdata
+ipch
+vc_mswd
+vc_msw
+*.suo 
+*.o
+Tarrasch.sdf
+Tarrasch.vcxproj.user
