@@ -2,6 +2,7 @@ xcuserdata
 ipch
 vc_mswd
 vc_msw
+*.opensdf
 *.suo 
 *.o
 Tarrasch.sdf
