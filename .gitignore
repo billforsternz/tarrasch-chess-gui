@@ -5,5 +5,6 @@ vc_msw
 *.opensdf
 *.suo 
 *.o
+Tarrasch.suo
 Tarrasch.sdf
 Tarrasch.vcxproj.user
