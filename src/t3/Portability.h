@@ -13,13 +13,15 @@
 //#define TARRASCH_WINDOWS 1
 //#define TARRASCH_OSX 1
 
+// This could be simplified/clarified. At the moment TARRASCH_UNIX and
+//  TARRASCH_OSX amount to the same thing. Also THC_WINDOWS and
+//  THC_MAC mean exactly the same as TARRASCH_WINDOWS and TARRASCH_OSX
+//  respectively
 #ifdef WIN32
    #define TARRASCH_WINDOWS 1
 #else
    #define TARRASCH_UNIX 1
 #endif
-
-#include <stdint.h>     // int32_t etc.
 
 #if TARRASCH_UNIX
    #include <string.h>
