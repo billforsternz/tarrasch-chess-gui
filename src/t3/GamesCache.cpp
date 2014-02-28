@@ -23,8 +23,8 @@
 #include <stdio.h>
 using namespace std;
 
-static bool operator < (const smart_ptr<GameDocument>& left,
-                        const smart_ptr<GameDocument>& right)
+static bool operator < (const smart_ptr<GameDocumentBase>& left,
+                        const smart_ptr<GameDocumentBase>& right)
 {
     bool result = ( *left < *right );
     cprintf( "operator <; left->white=%s, right->white=%s, result=%s\n", left->white.c_str(),  right->white.c_str(), result?"true":"false" );
@@ -556,7 +556,8 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
             if( replace_game_details )
             {
                 std::string str;
-                gds[i]->ToFileTxtGameDetails( str );
+                GameDocument temp = *gds[i];
+                temp.ToFileTxtGameDetails( str );
                 fwrite(str.c_str(),1,str.length(),pgn_out);
                 posn += str.length();
             }
@@ -578,7 +579,8 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
             if( replace_moves )
             {
                 std::string str;
-                gds[i]->ToFileTxtGameBody( str );
+                GameDocument temp = *gds[i];
+                temp.ToFileTxtGameBody( str );
                 fwrite(str.c_str(),1,str.length(),pgn_out);
                 posn += str.length();
             }
@@ -761,7 +763,7 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
             int neg_base = -2;
             for( int i=0; i<gds_nbr; i++ )    
             {   
-                const smart_ptr<GameDocument> gd = gds[i];
+                const smart_ptr<GameDocumentBase> gd = gds[i];
                 thc::ChessPosition tmp;
 
                 int publish_options = 0;
@@ -920,7 +922,8 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
                     // Write Game body
                     if( gd->in_memory )
                     {
-                        gd->ToPublishTxtGameBody( s, diagram_base, mv_base, neg_base, publish_options );
+                        GameDocument temp = *gd;
+                        temp.ToPublishTxtGameBody( s, diagram_base, mv_base, neg_base, publish_options );
                         fwrite(s.c_str(),1,s.length(),md_out);
                     }
                     else

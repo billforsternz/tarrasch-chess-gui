@@ -574,7 +574,7 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
         bool have_game = false;
         if( gc.gds.size()==1 && objs.repository->general.m_straight_to_game )
         {
-            smart_ptr<GameDocument> gd_file = gc.gds[0];
+            smart_ptr<GameDocumentBase> gd_file = gc.gds[0];
             have_game = gd_file->in_memory;
             if( !have_game )
             {
@@ -591,7 +591,9 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
                         std::string s(buf,len);
                         thc::ChessRules cr;
                         int nbr_converted;
-                        gd_file->PgnParse(true,nbr_converted,s,cr,NULL);
+                        gd = *gd_file;
+                        gd.PgnParse(true,nbr_converted,s,cr,NULL);
+                        *gd_file = gd;
                         have_game = true;
                     }
                     pf.Close( &gc_clipboard );
@@ -669,7 +671,7 @@ void GameLogic::NextGamePreviousGame( int idx )
     Atomic begin;
     bool editing_log = objs.gl->EditingLog();
     bool have_game = false;
-    smart_ptr<GameDocument> gd_file = gc.gds[idx];
+    smart_ptr<GameDocumentBase> gd_file = gc.gds[idx];
     have_game = gd_file->in_memory;
     if( !have_game )
     {
@@ -686,7 +688,9 @@ void GameLogic::NextGamePreviousGame( int idx )
                 std::string s(buf,len);
                 thc::ChessRules cr;
                 int nbr_converted;
-                gd_file->PgnParse(true,nbr_converted,s,cr,NULL);
+                GameDocument temp = *gd_file;
+                temp.PgnParse(true,nbr_converted,s,cr,NULL);
+                *gd_file = temp;
                 have_game = true;
             }
             pf.Close( &gc_clipboard );
@@ -839,7 +843,7 @@ void trim( std::string &s )
 //  edited document is added to end of session instead)
 void GameLogic::PutBackDocument()
 {
-    smart_ptr<GameDocument> p;
+    smart_ptr<GameDocumentBase> p;
     bool found=false;
     for( int i=0; !found && i<gc.gds.size(); i++ )
     {

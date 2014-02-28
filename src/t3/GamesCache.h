@@ -13,7 +13,7 @@
 class GamesCache
 {    
 public:
-    std::vector< smart_ptr<GameDocument> >  gds;
+    std::vector< smart_ptr<GameDocumentBase> >  gds;
     std::vector<int>           col_flags;
     std::string                pgn_filename;
     int game_nbr;

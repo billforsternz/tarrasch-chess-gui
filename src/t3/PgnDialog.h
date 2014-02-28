@@ -30,17 +30,18 @@ enum
     ID_PGN_DIALOG_DATABASE   = 10010
 };
 
+class wxVirtualPgnListCtrl;
+
+
 // PgnDialog class declaration
 class PgnDialog: public wxDialog
 {    
     DECLARE_CLASS( PgnDialog )
     DECLARE_EVENT_TABLE()
 
-private:
+public:
     GamesCache *gc;
     GamesCache *gc_clipboard;
-
-public:
 
     // Constructors
     PgnDialog
@@ -112,18 +113,20 @@ public:
     bool LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx );
 
     // Helpers
-    GameDocument *GetFocusGame( int &idx );
-    void DeselectOthers( GameDocument *selected_game );
+    GameDocumentBase *GetFocusGame( int &idx );
+    void DeselectOthers( GameDocumentBase *selected_game );
     void OnOk();
 
     // PgnDialog member variables
+public:
+    wxStaticText *player_names;
 private:
-    wxListCtrl  *list_ctrl;
-    GameDocument *selected_game;
+    wxVirtualPgnListCtrl  *list_ctrl;
+    GameDocumentBase *selected_game;
     void         SyncCacheOrderBefore();
     void         SyncCacheOrderAfter();
     void         CopyOrAdd( bool clear_clipboard );
-    std::string  CalculateMovesColumn( GameDocument &gd );
+    std::string  CalculateMovesColumn( GameDocumentBase &gd );
 
     // Data members
     wxWindowID  id;

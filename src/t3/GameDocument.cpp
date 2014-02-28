@@ -17,22 +17,22 @@
 using namespace std;
 using namespace thc;
 
-GameDocument::GameDocument( GameLogic *gl )
-                : gv(gl)
+GameDocumentBase::GameDocumentBase( GameLogic *gl )
 {
     this->gl = gl;
     ChessPosition initial_position;
     Init(initial_position);
 }
 
-GameDocument::GameDocument()
+GameDocumentBase::GameDocumentBase()
 {
     this->gl = objs.gl;
     ChessPosition initial_position;
     Init(initial_position);
 }
 
-void GameDocument::Init( const ChessPosition &start_position )
+// Virtual
+void GameDocumentBase::Init( const ChessPosition &start_position )
 {
     non_zero_start_pos = 0;
     game_details_edited = false;
@@ -56,17 +56,14 @@ void GameDocument::Init( const ChessPosition &start_position )
     white_elo = "";
     black_elo = "";
     this->start_position = start_position;
-    this->master_position = start_position;
     fposn1 = 0;
     fposn2 = 0;
     fposn3 = 0;
     moves_txt = "";
     prefix_txt = "";
-    tree.Init( this->start_position );
-    Rebuild();
 }
 
-void GameDocument::FleshOutDate()
+void GameDocumentBase::FleshOutDate()
 {
     if( date=="" )
     {
@@ -192,6 +189,31 @@ std::string RemoveLineEnds( std::string &s )
         }
     }
     return t;
+}
+
+GameDocument::GameDocument( GameLogic *gl )
+    : GameDocumentBase(gl), gv(gl)
+{
+    ChessPosition initial_position;
+    Init(initial_position);
+}
+
+GameDocument::GameDocument()
+    : gv(objs.gl)
+{
+    this->gl = objs.gl;
+    ChessPosition initial_position;
+    Init(initial_position);
+}
+
+
+// Virtual
+void GameDocument::Init( const ChessPosition &start_position )
+{
+    this->master_position = start_position;
+    GameDocumentBase::Init(start_position);
+    tree.Init( this->start_position );
+    Rebuild();
 }
 
 bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language, int imove )
@@ -814,7 +836,7 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
     return okay;
 }
 
-// Load a GameDocument from a list of moves
+// Load a GameDocumentBase from a list of moves
 void GameDocument::LoadFromMoveList( std::vector<thc::Move> &moves )
 {
     thc::ChessRules cr;

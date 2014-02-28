@@ -17,6 +17,7 @@
 #include "GamePrefixDialog.h"
 #include "GameLogic.h"
 #include "Objects.h"
+#include "MiniBoard.h"
 #include "PgnFiles.h"
 #include "PgnDialog.h"
 #include <iostream>
@@ -50,6 +51,231 @@ BEGIN_EVENT_TABLE( PgnDialog, wxDialog )
     EVT_LIST_ITEM_ACTIVATED(ID_PGN_LISTBOX, PgnDialog::OnListSelected)
     EVT_LIST_COL_CLICK(ID_PGN_LISTBOX, PgnDialog::OnListColClick)
 END_EVENT_TABLE()
+
+
+
+// It's a pity we have these static vars, but unfortunately OnGetItemText() must be const for some reason
+static thc::ChessPosition gbl_updated_position;
+static int gbl_last_item;
+static std::vector< thc::Move > gbl_focus_moves;
+
+static int focus_idx;
+static int focus_offset;
+static MiniBoard *mini_board;
+static int gbl_nbr;
+
+class wxVirtualPgnListCtrl: public wxListCtrl
+{
+    //DECLARE_CLASS( wxVirtualPgnListCtrl )
+    DECLARE_EVENT_TABLE()
+public:
+    wxVirtualPgnListCtrl( wxWindow *parent, wxWindowID id, const wxPoint &pos, const wxSize &size, long style )
+    : wxListCtrl( parent, id, pos, size, wxLC_REPORT|wxLC_VIRTUAL )
+    {
+        focus_idx = 0;
+        focus_offset = 0;
+        gbl_last_item = -1;
+    }
+    //~wxVirtualPgnListCtrl();
+    void OnChar( wxKeyEvent &event );
+    
+public:
+    PgnDialog *data_src;
+    int focus_idx;
+    int focus_offset;
+    int initial_focus_offset;
+    MiniBoard *mini_board;
+    
+    
+    // Focus changes to new item;
+    void ReceiveFocus( int focus_idx )
+    {
+        cprintf( "ListCtrl::ReceiveFocus(%d)\n", focus_idx );
+        this->focus_idx = focus_idx;
+        char buf[1000];
+        char bufw[1000];
+        char bufb[1000];
+        strcpy( bufw, data_src->gc->gds[focus_idx]->white.c_str() );
+        bufw[19] = '\0';
+        strcpy( bufb, data_src->gc->gds[focus_idx]->black.c_str() );
+        bufb[19] = '\0';
+        sprintf( buf, "%s - %s", bufw, bufb );
+        initial_focus_offset = focus_offset = 0; //FIXME db_calculate_move_vector( &data_src->gc->gds[focus_idx], gbl_focus_moves );
+        if( mini_board )
+        {
+            CalculateMoveTxt();
+            //cprintf( "ReceiveFocus(): SetPosition() %s\n", gbl_updated_position.ToDebugStr().c_str()  );
+            mini_board->SetPosition( gbl_updated_position.squares );
+            cprintf( "Setting board label(%d): %s\n", focus_idx, buf );
+            data_src->player_names->SetLabel(wxString(buf));
+        }
+    }
+    
+    std::string CalculateMoveTxt() const
+    {
+        std::string move_txt;
+        thc::ChessRules cr;
+        bool first=true;
+        for( size_t i=0; i<gbl_focus_moves.size(); i++ )
+        {
+            thc::Move mv = gbl_focus_moves[i];
+            if( i >= focus_offset )
+            {
+                std::string s = mv.NaturalOut(&cr);
+                if( i%2 == 0 || first )
+                {
+                    if( first )
+                        gbl_updated_position = cr;
+                    first = false;
+                    char buf[100];
+                    sprintf( buf, "%lu%s", i/2+1, i%2==0?".":"..." );
+                    move_txt += buf;
+                }
+                move_txt += s;
+                move_txt += " ";
+                if( i+1 == gbl_focus_moves.size() )
+                    move_txt += "FIXME RESULT";
+                else if( i < gbl_focus_moves.size()-5 && move_txt.length()>100 )
+                {
+                    move_txt += "...";  // very long lines get over truncated by the list control (sad but true)
+                    break;
+                }
+            }
+            cr.PlayMove(mv);
+        }
+        if( first )
+        {
+            gbl_updated_position = cr;
+            move_txt = "FIXME RESULT";
+        }
+        //cprintf( "CalculateMoveTxt(): [%s]%s\n", move_txt.c_str(), gbl_updated_position.ToDebugStr().c_str() );
+        return move_txt;
+    }
+    
+protected:
+    virtual wxString OnGetItemText( long item, long column) const
+    {
+        char buf[20];
+        buf[0] = '\0';
+        const char *txt = buf;
+        switch( column )
+        {
+            case 0:
+            {
+                sprintf( buf, "%ld", item );
+                GameDocument *pd = objs.tabs->Begin();
+                Undo *pu = objs.tabs->BeginUndo();
+                while( pd && pu )
+                {
+                    bool modified = data_src->gc->gds[item]->modified;
+                    if( data_src->gc->gds[item]->game_being_edited == pd->game_being_edited )
+                        modified = modified || pu->IsModified();
+                    if( modified )
+                    {
+                        sprintf( buf, "*%ld", item );
+                        break;
+                    }
+                    pd = objs.tabs->Next();
+                    pu = objs.tabs->NextUndo();
+                }
+                break;
+            }
+            case 1:
+            {
+                txt = data_src->gc->gds[item]->white.c_str();
+                break;
+            }
+            case 2:
+            {
+                txt = data_src->gc->gds[item]->white_elo.c_str();
+                break;
+            }
+            case 3:
+            {
+                txt = data_src->gc->gds[item]->black.c_str();
+                break;
+            }
+            case 4:
+            {
+                txt = data_src->gc->gds[item]->black_elo.c_str();
+                break;
+            }
+            case 5:
+            {
+                txt = data_src->gc->gds[item]->date.c_str();
+                break;
+            }
+            case 6:
+            {
+                txt = data_src->gc->gds[item]->site.c_str();
+                break;
+            }
+            case 7:
+            {
+                txt = data_src->gc->gds[item]->round.c_str();
+                break;
+            }
+            case 8:
+            {
+                txt = data_src->gc->gds[item]->result=="*"?"":data_src->gc->gds[item]->result.c_str();
+                break;
+            }
+            case 9:
+            {
+                txt = data_src->gc->gds[item]->eco.c_str();
+                break;
+            }
+            case 10:
+            {
+                txt = "1.e2 e4 2.Nf3 Nc6";  //FIXME
+                break;
+            }
+        }
+        wxString ws(txt);
+        return ws;
+    }
+};
+
+
+// DbDialog event table definition
+BEGIN_EVENT_TABLE( wxVirtualPgnListCtrl, wxListCtrl )
+EVT_CHAR(wxVirtualPgnListCtrl::OnChar)
+END_EVENT_TABLE()
+
+void wxVirtualPgnListCtrl::OnChar( wxKeyEvent &event )
+{
+    //cprintf( "OnChar" );
+    switch ( event.GetKeyCode() )
+    {
+        case WXK_LEFT:
+            //cprintf( "WXK_LEFT\n" );
+            if( focus_offset > 0 )
+                focus_offset--;
+            RefreshItem(focus_idx);
+            if( mini_board )
+            {
+                CalculateMoveTxt();
+                //cprintf( "WXK_LEFT: SetPosition() %s\n", gbl_updated_position.ToDebugStr().c_str()  );
+                mini_board->SetPosition( gbl_updated_position.squares );
+            }
+            break;
+        case WXK_RIGHT:
+            //cprintf( "WXK_RIGHT\n" );
+            if( focus_offset < gbl_focus_moves.size() )
+                focus_offset++;
+            RefreshItem(focus_idx);
+            if( mini_board )
+            {
+                CalculateMoveTxt();
+                //cprintf( "WXK_RIGHT: SetPosition() %s\n", gbl_updated_position.ToDebugStr().c_str()  );
+                mini_board->SetPosition( gbl_updated_position.squares );
+            }
+            break;
+        default:
+            event.Skip();
+    }
+}
+
 
 // PgnDialog constructors
 PgnDialog::PgnDialog
@@ -114,7 +340,7 @@ bool PgnDialog::Create( wxWindow* parent,
     return okay;
 }
 
-static smart_ptr<GameDocument> *ptr_gds;
+static smart_ptr<GameDocumentBase> *ptr_gds;
 static int          *ptr_col_flags;
 int wxCALLBACK sort_callback( long item1, long item2, long col )
 {
@@ -209,8 +435,13 @@ void PgnDialog::CreateControls()
         disp_width = 1366;
     sz.x = (disp_width*4)/5;
     sz.y = (disp_height*1)/2;
-    list_ctrl  = new wxListCtrl( this, ID_PGN_LISTBOX, wxDefaultPosition, sz/*wxDefaultSize*/,wxLC_REPORT );
+    list_ctrl  = new wxVirtualPgnListCtrl( this, ID_PGN_LISTBOX, wxDefaultPosition, sz/*wxDefaultSize*/,wxLC_REPORT|wxLC_VIRTUAL );
     int gds_nbr = gc->gds.size();
+    gbl_nbr = gds_nbr;
+    list_ctrl->data_src = this;
+    list_ctrl->SetItemCount(gds_nbr);
+    list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
+    
     list_ctrl->InsertColumn( 0, id==ID_PGN_DIALOG_FILE?"#":" "  );
     list_ctrl->InsertColumn( 1, "White"    );
     list_ctrl->InsertColumn( 2, "Elo W"    );
@@ -290,69 +521,6 @@ void PgnDialog::CreateControls()
     gc->col_flags.push_back(col_flag);
     int top_item;
     bool resuming = gc->IsResumingPreviousWindow(top_item);
-    for( int i=0; i<gds_nbr; i++ )    
-    {                                 
-        wxListItem item;              
-        list_ctrl->InsertItem( i, item );
-        list_ctrl->SetItemData( i, i );
-        char buf[20];
-        int game_nbr;
-        if( resuming )
-        {
-            if( gc->renumber )
-                game_nbr = i+1;
-            else
-                game_nbr = gc->gds[i]->game_nbr;
-        }
-        else 
-        {
-            game_nbr = i+1;
-            gc->gds[i]->game_nbr = game_nbr;
-        }
-        buf[0] = '\0';
-        if( id != ID_PGN_DIALOG_FILE )
-        {
-            //if( modified )
-            //    strcpy( buf, "*" );
-        }
-        else
-        {
-            GameDocument *pd = objs.tabs->Begin();
-            Undo *pu = objs.tabs->BeginUndo();
-            while( pd && pu )
-            {
-                bool modified = gc->gds[i]->modified;
-                if( gc->gds[i]->game_being_edited == pd->game_being_edited )
-                    modified = modified || pu->IsModified();
-                if( modified )
-                    strcpy( buf,"*" );
-                if( game_nbr )
-                {
-    #ifdef WINDOWS_FIX_LATER
-                    itoa( game_nbr, buf, 10 );
-    #else
-                    sprintf( buf, "%d", game_nbr );
-    #endif
-                    if( modified )
-                        strcat( buf, " *" );
-                }
-                pd = objs.tabs->Next();
-                pu = objs.tabs->NextUndo();
-            }
-        }
-        list_ctrl->SetItem( i, 0, buf );
-        list_ctrl->SetItem( i, 1, gc->gds[i]->white );
-        list_ctrl->SetItem( i, 2, gc->gds[i]->white_elo );
-        list_ctrl->SetItem( i, 3, gc->gds[i]->black );
-        list_ctrl->SetItem( i, 4, gc->gds[i]->black_elo );
-        list_ctrl->SetItem( i, 5, gc->gds[i]->date );
-        list_ctrl->SetItem( i, 6, gc->gds[i]->site );
-        list_ctrl->SetItem( i, 7, gc->gds[i]->round );
-        list_ctrl->SetItem( i, 8, gc->gds[i]->result=="*"?"":gc->gds[i]->result );
-        list_ctrl->SetItem( i, 9, gc->gds[i]->eco );
-        std::string s = CalculateMovesColumn(*gc->gds[i]);
-        list_ctrl->SetItem( i, 10, s );
-    }
     bool selections_made = false;
     if( resuming )
     {
@@ -443,14 +611,38 @@ void PgnDialog::CreateControls()
 
     // A dividing line before the buttons
     wxStaticLine* line = new wxStaticLine ( this, wxID_STATIC,
-        wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
+                                           wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
     box_sizer->Add(line, 0, wxGROW|wxALL, 5);
-
+    
+    
+    
+    // Create a panel beneath the list control, containing more sizers
+    wxBoxSizer* hsiz_panel = new wxBoxSizer(wxHORIZONTAL);
+    box_sizer->Add(hsiz_panel, 0, wxALIGN_LEFT|wxALL, 10);
+    wxBoxSizer* vsiz_panel_board = new wxBoxSizer(wxVERTICAL);
+    wxGridSizer* vsiz_panel_buttons = new wxGridSizer(6,2,0,0);
+    wxBoxSizer* vsiz_panel_stats = new wxBoxSizer(wxVERTICAL);
+    hsiz_panel->Add(vsiz_panel_board, 0, wxALIGN_TOP|wxALL, 10);
+    hsiz_panel->Add(vsiz_panel_buttons, 0, wxALIGN_TOP|wxALL, 10);
+    //hsiz_panel->AddSpacer(10);
+    hsiz_panel->Add(vsiz_panel_stats, 0, wxALIGN_TOP|wxALL, 10);
+    
+    mini_board = new MiniBoard(this);
+    list_ctrl->mini_board = mini_board;
+    thc::ChessPosition cr;
+    gbl_updated_position = cr;
+    mini_board->SetPosition( cr.squares );
+    vsiz_panel_board->Add( mini_board, 1, wxALIGN_LEFT|wxALL|wxFIXED_MINSIZE, 5 );
+    player_names = new wxStaticText( this, wxID_ANY, "White - Black",
+                                    wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL );
+    vsiz_panel_board->Add(player_names, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    
     // A pair of horizontal box sizers to contain buttons
     wxBoxSizer* button_box1 = new wxBoxSizer(wxHORIZONTAL);
     box_sizer->Add(button_box1, 0, wxALIGN_LEFT|wxALL, 10);
     wxBoxSizer* button_box2 = new wxBoxSizer(wxHORIZONTAL);
     box_sizer->Add(button_box2, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 10);
+    
 
     // Load / Ok / Game->Board
     wxButton* ok = new wxButton ( this, wxID_OK, wxT("Load"),
@@ -571,7 +763,7 @@ void PgnDialog::CreateControls()
 }
 
 
-std::string PgnDialog::CalculateMovesColumn( GameDocument &gd )
+std::string PgnDialog::CalculateMovesColumn( GameDocumentBase &gd )
 {
     std::string sp = gd.prefix_txt;
     std::string sm = gd.moves_txt;
@@ -713,9 +905,9 @@ void PgnDialog::SyncCacheOrderAfter()
         list_ctrl->SetItemData( i, i );
 }
 
-GameDocument *PgnDialog::GetFocusGame( int &idx )
+GameDocumentBase *PgnDialog::GetFocusGame( int &idx )
 {
-    GameDocument *gd=NULL;
+    GameDocumentBase *gd=NULL;
     if( list_ctrl )
     {
         int sz=gc->gds.size();
@@ -742,9 +934,9 @@ GameDocument *PgnDialog::GetFocusGame( int &idx )
     return gd;
 }
 
-void PgnDialog::DeselectOthers( GameDocument *selected_game )
+void PgnDialog::DeselectOthers( GameDocumentBase *selected_game )
 {
-    GameDocument *gd=NULL;
+    GameDocumentBase *gd=NULL;
     if( list_ctrl && selected_game )
     {
         int sz=gc->gds.size();
@@ -787,7 +979,7 @@ void PgnDialog::OnOk()
             else
                 gc->gds[i]->focus = false;
         }
-        GameDocument *gd = GetFocusGame(file_game_idx);
+        GameDocumentBase *gd = GetFocusGame(file_game_idx);
         if( gd )
         {
             DeselectOthers(gd);
@@ -808,7 +1000,9 @@ void PgnDialog::OnOk()
                         std::string s(buf,len);
                         thc::ChessRules cr;
                         int nbr_converted;
-                        gd->PgnParse(true,nbr_converted,s,cr,NULL);
+                        GameDocument temp = *gd;
+                        temp.PgnParse(true,nbr_converted,s,cr,NULL);
+                        *gd = temp;
                         selected_game = gd;                    
                     }
                     objs.gl->pf.Close( gc_clipboard );
@@ -847,7 +1041,7 @@ void PgnDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
             if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
                 idx_focus = i;
         }
-        std::vector< smart_ptr<GameDocument> >::iterator iter = gc->gds.begin() + idx_focus;
+        std::vector< smart_ptr<GameDocumentBase> >::iterator iter = gc->gds.begin() + idx_focus;
         GameDocument gd = objs.gl->gd;
         gd.modified = true;
         GameDetailsDialog dialog( this );
@@ -905,11 +1099,12 @@ void PgnDialog::OnSelectAll( wxCommandEvent& WXUNUSED(event) )
 void PgnDialog::OnEditGameDetails( wxCommandEvent& WXUNUSED(event) )
 {
     int idx;
-    GameDocument *gd = GetFocusGame(idx);
+    GameDocumentBase *gd = GetFocusGame(idx);
     if( gd )
     {
         GameDetailsDialog dialog( this );
-        if( dialog.Run( *gd ) )
+        GameDocument temp = *gd;
+        if( dialog.Run( temp ) )
         {
             objs.gl->GameRedisplayPlayersResult();
             list_ctrl->SetItem( idx, 1, gc->gds[idx]->white );
@@ -928,11 +1123,12 @@ void PgnDialog::OnEditGameDetails( wxCommandEvent& WXUNUSED(event) )
 void PgnDialog::OnEditGamePrefix( wxCommandEvent& WXUNUSED(event) )
 {
     int idx;
-    GameDocument *gd = GetFocusGame(idx);
+    GameDocumentBase *gd = GetFocusGame(idx);
     if( gd )
     {
         GamePrefixDialog dialog( this );
-        if( dialog.Run( *gd ) )
+        GameDocument temp = *gd;
+        if( dialog.Run( temp ) )
         {
             std::string s = CalculateMovesColumn(*gd);
             list_ctrl->SetItem( idx,10,s);
@@ -1013,8 +1209,8 @@ void PgnDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
     int sz=gc->gds.size();
     if( list_ctrl && list_ctrl->GetItemCount()==sz )
     {
-        std::vector< smart_ptr<GameDocument> >::iterator iter = gc->gds.begin();
-        std::vector< smart_ptr<GameDocument> >::iterator iter_focus;
+        std::vector< smart_ptr<GameDocumentBase> >::iterator iter = gc->gds.begin();
+        std::vector< smart_ptr<GameDocumentBase> >::iterator iter_focus;
         for( int i=0; iter!=gc->gds.end(); )
         {
             if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
@@ -1065,8 +1261,8 @@ void PgnDialog::OnDelete( wxCommandEvent& WXUNUSED(event) )
     int sz=gc->gds.size();
     if( list_ctrl && list_ctrl->GetItemCount()==sz )
     {
-        std::vector< smart_ptr<GameDocument> >::iterator iter = gc->gds.begin();
-        std::vector< smart_ptr<GameDocument> >::iterator iter_focus;
+        std::vector< smart_ptr<GameDocumentBase> >::iterator iter = gc->gds.begin();
+        std::vector< smart_ptr<GameDocumentBase> >::iterator iter_focus;
         for( int i=0; iter!=gc->gds.end(); )
         {
             if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
@@ -1113,7 +1309,7 @@ void PgnDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
         sz = gc_clipboard->gds.size();
         for( int i=sz-1; i>=0; i-- )    
         {                                 
-            std::vector< smart_ptr<GameDocument> >::iterator iter = gc->gds.begin() + idx_focus;
+            std::vector< smart_ptr<GameDocumentBase> >::iterator iter = gc->gds.begin() + idx_focus;
             GameDocument gd = *gc_clipboard->gds[i];
             gd.game_nbr = 0;
             gd.modified = true;
