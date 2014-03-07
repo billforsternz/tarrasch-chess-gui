@@ -113,8 +113,8 @@ public:
     bool LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx );
 
     // Helpers
-    GameDocumentBase *GetFocusGame( int &idx );
-    void DeselectOthers( GameDocumentBase *selected_game );
+    int  GetFocusGame( int &idx );
+    void DeselectOthers( int selected_game );
     void OnOk();
 
     // PgnDialog member variables
@@ -122,7 +122,7 @@ public:
     wxStaticText *player_names;
 private:
     wxVirtualPgnListCtrl  *list_ctrl;
-    GameDocumentBase *selected_game;
+    int          selected_game;
     void         SyncCacheOrderBefore();
     void         SyncCacheOrderAfter();
     void         CopyOrAdd( bool clear_clipboard );

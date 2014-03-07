@@ -322,7 +322,7 @@ void DbDialog::Init()
 {
     list_ctrl_stats = NULL;
     list_ctrl = NULL;
-    selected_game = NULL;
+    selected_game = -1;
     db_game_set = false;
     activated_at_least_once = false;
     transpo_activated = false;

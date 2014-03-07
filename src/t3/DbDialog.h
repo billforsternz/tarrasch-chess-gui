@@ -170,7 +170,7 @@ public:
 
     // Helpers
     GameDocument *GetFocusGame( int &idx );
-    void DeselectOthers( GameDocument *selected_game );
+    void DeselectOthers();
     void OnOk();
 
     // DbDialog member variables
@@ -179,7 +179,7 @@ public:
 private:
     wxVirtualListCtrl  *list_ctrl;
     wxNotebook *notebook;
-    GameDocument *selected_game;
+    int          selected_game;
     void         SyncCacheOrderBefore();
     void         SyncCacheOrderAfter();
     void         CopyOrAdd( bool clear_clipboard );

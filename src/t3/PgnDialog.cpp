@@ -299,7 +299,7 @@ PgnDialog::PgnDialog
 void PgnDialog::Init()
 {
     list_ctrl = NULL;
-    selected_game = NULL;
+    selected_game = -1;
     wxAcceleratorEntry entries[5];
     entries[0].Set(wxACCEL_CTRL,  (int) 'X',     wxID_CUT);
     entries[1].Set(wxACCEL_CTRL,  (int) 'C',     wxID_COPY);
@@ -905,9 +905,9 @@ void PgnDialog::SyncCacheOrderAfter()
         list_ctrl->SetItemData( i, i );
 }
 
-GameDocumentBase *PgnDialog::GetFocusGame( int &idx )
+int PgnDialog::GetFocusGame( int &idx )
 {
-    GameDocumentBase *gd=NULL;
+    int focus_game = -1;
     if( list_ctrl )
     {
         int sz=gc->gds.size();
@@ -915,35 +915,33 @@ GameDocumentBase *PgnDialog::GetFocusGame( int &idx )
         {
             if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
             {
-                idx = i;
-                gd = gc->gds[idx].get();
+                focus_game = i;
                 break;
             }
         }
 
         // If no item currently in focus, take the top item in window
-        if( gd==NULL && sz>0 )
+        if( focus_game==-1 && sz>0 )
         {
             idx = list_ctrl->GetTopItem();
             if( idx >= sz )
                 idx = 0;
             list_ctrl->SetItemState( idx, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
-            gd = gc->gds[idx].get();
+            focus_game = idx;
         }
     }
-    return gd;
+    return focus_game;
 }
 
-void PgnDialog::DeselectOthers( GameDocumentBase *selected_game )
+void PgnDialog::DeselectOthers( int selected_game )
 {
-    GameDocumentBase *gd=NULL;
-    if( list_ctrl && selected_game )
+    if( list_ctrl && selected_game!=-1 )
     {
         int sz=gc->gds.size();
         for( int i=0; i<sz; i++ )
         {
-            gd = gc->gds[i].get();
-            if( gd != selected_game )
+            GameDocumentBase *gd = gc->gds[i].get();
+            if( i != selected_game )
             {
                 if( gd->selected || (wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED)) )
                 {
@@ -962,10 +960,48 @@ void PgnDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
     OnOk();
 }
 
+class Base
+{
+public:
+    virtual void disp() { cprintf("Base class\n"); }
+};
+
+class Derived : public Base
+{
+public:
+    virtual void disp() { cprintf("Derived class\n"); }
+};
+
+static void test( std::vector< std::shared_ptr<Base> > &v )
+{
+    std::shared_ptr<Base> pa( new Base() );
+    std::shared_ptr<Derived> pb( new Derived() );
+    std::shared_ptr<Derived> pc( new Derived() );
+    v.push_back(pa);
+    v.push_back(pb);
+    v[0]->disp();
+    v[1]->disp();
+    v[0] = pb;
+    v[0]->disp();
+    Derived x = * std::dynamic_pointer_cast<Derived>(v[0]);
+    x.disp();
+}
+
+static void test()
+{
+    std::vector< std::shared_ptr<Base> > v;
+    test( v );
+    Derived x = * std::dynamic_pointer_cast<Derived>(v[0]);
+    x.disp();
+    Derived y = * std::dynamic_pointer_cast<Derived>(v[1]);
+    y.disp();
+}
+
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_OK
 void PgnDialog::OnOk()
 {
-    selected_game = NULL;
+    test();
+    selected_game = -1;
     if( list_ctrl )
     {
         gc->PrepareResumePreviousWindow( list_ctrl->GetTopItem() );
@@ -979,13 +1015,12 @@ void PgnDialog::OnOk()
             else
                 gc->gds[i]->focus = false;
         }
-        GameDocumentBase *gd = GetFocusGame(file_game_idx);
-        if( gd )
+        selected_game = GetFocusGame(file_game_idx);
+        if( selected_game != -1  )
         {
-            DeselectOthers(gd);
-            if( gd->in_memory )
-                selected_game = gd;
-            else
+            GameDocumentBase *gd = gc->gds[selected_game].get();
+            DeselectOthers(selected_game);
+            if( !gd->in_memory )
             {
                 FILE *pgn_in = objs.gl->pf.ReopenRead( gd->pgn_handle );
                 if( pgn_in )
@@ -1002,8 +1037,12 @@ void PgnDialog::OnOk()
                         int nbr_converted;
                         GameDocument temp = *gd;
                         temp.PgnParse(true,nbr_converted,s,cr,NULL);
-                        *gd = temp;
-                        selected_game = gd;                    
+                        cprintf( "white = %s, moves = %d\n", temp.white.c_str(), temp.tree.variations[0].size() );
+                        make_smart_ptr(GameDocument,sptr,temp);
+                        gc->gds[selected_game] = sptr;
+                        GameDocument temp2 = * std::dynamic_pointer_cast<GameDocument>(gc->gds[selected_game]);
+                        cprintf( "white = %s, moves = %d\n", temp2.white.c_str(), temp2.tree.variations[0].size() );
+                        gc->gds[selected_game]->in_memory = true;
                     }
                     objs.gl->pf.Close( gc_clipboard );
                     delete[] buf;
@@ -1017,17 +1056,17 @@ void PgnDialog::OnOk()
 
 bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx )
 {
-    if( selected_game )
+    if( selected_game != -1 )
     {
         gl->IndicateNoCurrentDocument();
-        selected_game->game_being_edited = ++objs.gl->game_being_edited_tag;
-        gd = *selected_game;
+        gc->gds[selected_game]->game_being_edited = ++objs.gl->game_being_edited_tag;
+        gd = * std::dynamic_pointer_cast<GameDocument>( gc->gds[selected_game] );
         gd.selected = false;
-        selected_game->selected = true;
+        gc->gds[selected_game]->selected = true;
         if( &gl->gc == gc )
             file_game_idx = this->file_game_idx;    // update this only if loading game from current file
     }
-    return selected_game?true:false;
+    return selected_game != -1;
 }
 
 void PgnDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
@@ -1099,11 +1138,11 @@ void PgnDialog::OnSelectAll( wxCommandEvent& WXUNUSED(event) )
 void PgnDialog::OnEditGameDetails( wxCommandEvent& WXUNUSED(event) )
 {
     int idx;
-    GameDocumentBase *gd = GetFocusGame(idx);
-    if( gd )
+    int focus_idx = GetFocusGame(idx);
+    if( focus_idx != -1  )
     {
         GameDetailsDialog dialog( this );
-        GameDocument temp = *gd;
+        GameDocument temp = *gc->gds[focus_idx];
         if( dialog.Run( temp ) )
         {
             objs.gl->GameRedisplayPlayersResult();
@@ -1123,14 +1162,14 @@ void PgnDialog::OnEditGameDetails( wxCommandEvent& WXUNUSED(event) )
 void PgnDialog::OnEditGamePrefix( wxCommandEvent& WXUNUSED(event) )
 {
     int idx;
-    GameDocumentBase *gd = GetFocusGame(idx);
-    if( gd )
+    int focus_idx = GetFocusGame(idx);
+    if( focus_idx != -1  )
     {
         GamePrefixDialog dialog( this );
-        GameDocument temp = *gd;
+        GameDocument temp = *gc->gds[focus_idx];
         if( dialog.Run( temp ) )
         {
-            std::string s = CalculateMovesColumn(*gd);
+            std::string s = CalculateMovesColumn(temp);
             list_ctrl->SetItem( idx,10,s);
         }
     }
