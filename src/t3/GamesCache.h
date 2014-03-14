@@ -26,7 +26,7 @@ public:
     bool Load( std::string &filename );
     bool Reload() { return Load(pgn_filename); }
     bool Load( FILE *pgn_file );
-    void LoadLine(  GameDocument &gd, int fposn, const char *line );
+    void LoadLine(  GameDocumentBase &gd, int fposn, const char *line );
     bool FileCreate( std::string &filename, GameDocument &gd );
     void FileSave( GamesCache *gc_clipboard );
     void FileSaveAs( std::string &filename, GamesCache *gc_clipboard );
@@ -57,8 +57,8 @@ private:     // Helpers
     int  pgn_handle;
 
     // Check whether text s is a valid header, return true if it is,
-    //  add info to a GameDocument, optionally clearing it first
-    bool Tagline( GameDocument &gd,  const char *s );
+    //  add info to a GameDocumentBase, optionally clearing it first
+    bool Tagline( GameDocumentBase &gd,  const char *s );
 };
 
 #endif    // GAMES_CACHE_H

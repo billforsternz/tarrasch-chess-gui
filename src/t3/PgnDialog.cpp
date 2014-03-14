@@ -48,6 +48,7 @@ BEGIN_EVENT_TABLE( PgnDialog, wxDialog )
     EVT_BUTTON( wxID_SAVE,              PgnDialog::OnSave )
     EVT_BUTTON( wxID_HELP,              PgnDialog::OnHelpClick )
     EVT_MENU( wxID_SELECTALL, PgnDialog::OnSelectAll )
+    EVT_LIST_ITEM_FOCUSED(ID_PGN_LISTBOX, PgnDialog::OnListFocused)
     EVT_LIST_ITEM_ACTIVATED(ID_PGN_LISTBOX, PgnDialog::OnListSelected)
     EVT_LIST_COL_CLICK(ID_PGN_LISTBOX, PgnDialog::OnListColClick)
 END_EVENT_TABLE()
@@ -58,7 +59,7 @@ END_EVENT_TABLE()
 static thc::ChessPosition gbl_updated_position;
 static int gbl_last_item;
 static std::vector< thc::Move > gbl_focus_moves;
-
+static std::string gbl_result;
 static int focus_idx;
 static int focus_offset;
 static MiniBoard *mini_board;
@@ -75,6 +76,7 @@ public:
         focus_idx = 0;
         focus_offset = 0;
         gbl_last_item = -1;
+        mini_board = NULL;
     }
     //~wxVirtualPgnListCtrl();
     void OnChar( wxKeyEvent &event );
@@ -85,6 +87,40 @@ public:
     int focus_offset;
     int initial_focus_offset;
     MiniBoard *mini_board;
+    
+    
+    // Calculate move text for game, not necessarily focussed game
+    std::string CalculateMoveTxt( long item ) const
+    {
+        std::string move_txt;
+        smart_ptr<GameDocumentBase> sptr = data_src->gc->gds[item];
+        GameDocument temp;
+        sptr->GetGameDocument(temp);
+        VARIATION &v = temp.tree.variations[0];
+        thc::ChessRules cr;
+        for( size_t i=0; i<v.size(); i++ )
+        {
+            thc::Move mv = v[i].game_move.move;
+            std::string s = mv.NaturalOut(&cr);
+            if( i%2 == 0 )
+            {
+                char buf[100];
+                sprintf( buf, "%lu%s", i/2+1, i%2==0?".":"..." );
+                move_txt += buf;
+            }
+            move_txt += s;
+            move_txt += " ";
+            if( i+1 == gbl_focus_moves.size() )
+                move_txt += temp.result;
+            else if( i < gbl_focus_moves.size()-5 && move_txt.length()>100 )
+            {
+                move_txt += "...";  // very long lines get over truncated by the list control (sad but true)
+                break;
+            }
+            cr.PlayMove(mv);
+        }
+        return move_txt;
+    }
     
     
     // Focus changes to new item;
@@ -100,10 +136,22 @@ public:
         strcpy( bufb, data_src->gc->gds[focus_idx]->black.c_str() );
         bufb[19] = '\0';
         sprintf( buf, "%s - %s", bufw, bufb );
-        initial_focus_offset = focus_offset = 0; //FIXME db_calculate_move_vector( &data_src->gc->gds[focus_idx], gbl_focus_moves );
+        initial_focus_offset = focus_offset = 0;
+        smart_ptr<GameDocumentBase> sptr = data_src->gc->gds[focus_idx]; //FIXME db_calculate_move_vector( &data_src->gc->gds[focus_idx], gbl_focus_moves );
+        GameDocument temp;
+        sptr->GetGameDocument(temp);
+        cprintf( "white = %s, moves = %d\n", temp.white.c_str(), temp.tree.variations[0].size() );
+        //*std::dynamic_pointer_cast<GameDocument>(sptr) = temp;
+        gbl_result = temp.result;
+        gbl_focus_moves.clear();
+        VARIATION &v = temp.tree.variations[0];
+        for( size_t i=0; i<v.size(); i++ )
+        {
+            gbl_focus_moves.push_back( v[i].game_move.move );
+        }
         if( mini_board )
         {
-            CalculateMoveTxt();
+            RecalculateMoveTxt();
             //cprintf( "ReceiveFocus(): SetPosition() %s\n", gbl_updated_position.ToDebugStr().c_str()  );
             mini_board->SetPosition( gbl_updated_position.squares );
             cprintf( "Setting board label(%d): %s\n", focus_idx, buf );
@@ -111,7 +159,7 @@ public:
         }
     }
     
-    std::string CalculateMoveTxt() const
+    std::string RecalculateMoveTxt() const
     {
         std::string move_txt;
         thc::ChessRules cr;
@@ -134,7 +182,7 @@ public:
                 move_txt += s;
                 move_txt += " ";
                 if( i+1 == gbl_focus_moves.size() )
-                    move_txt += "FIXME RESULT";
+                    move_txt += gbl_result;
                 else if( i < gbl_focus_moves.size()-5 && move_txt.length()>100 )
                 {
                     move_txt += "...";  // very long lines get over truncated by the list control (sad but true)
@@ -146,9 +194,9 @@ public:
         if( first )
         {
             gbl_updated_position = cr;
-            move_txt = "FIXME RESULT";
+            //move_txt = "FIXME RESULT";
         }
-        //cprintf( "CalculateMoveTxt(): [%s]%s\n", move_txt.c_str(), gbl_updated_position.ToDebugStr().c_str() );
+        //cprintf( "RecalculateMoveTxt(): [%s]%s\n", move_txt.c_str(), gbl_updated_position.ToDebugStr().c_str() );
         return move_txt;
     }
     
@@ -162,7 +210,7 @@ protected:
         {
             case 0:
             {
-                sprintf( buf, "%ld", item );
+                sprintf( buf, "%ld", item+1 );
                 GameDocument *pd = objs.tabs->Begin();
                 Undo *pu = objs.tabs->BeginUndo();
                 while( pd && pu )
@@ -172,7 +220,7 @@ protected:
                         modified = modified || pu->IsModified();
                     if( modified )
                     {
-                        sprintf( buf, "*%ld", item );
+                        sprintf( buf, "*%ld", item+1 );
                         break;
                     }
                     pd = objs.tabs->Next();
@@ -227,7 +275,8 @@ protected:
             }
             case 10:
             {
-                txt = "1.e2 e4 2.Nf3 Nc6";  //FIXME
+                std::string s = CalculateMoveTxt(item);
+                txt = s.c_str();
                 break;
             }
         }
@@ -254,7 +303,7 @@ void wxVirtualPgnListCtrl::OnChar( wxKeyEvent &event )
             RefreshItem(focus_idx);
             if( mini_board )
             {
-                CalculateMoveTxt();
+                RecalculateMoveTxt();
                 //cprintf( "WXK_LEFT: SetPosition() %s\n", gbl_updated_position.ToDebugStr().c_str()  );
                 mini_board->SetPosition( gbl_updated_position.squares );
             }
@@ -266,7 +315,7 @@ void wxVirtualPgnListCtrl::OnChar( wxKeyEvent &event )
             RefreshItem(focus_idx);
             if( mini_board )
             {
-                CalculateMoveTxt();
+                RecalculateMoveTxt();
                 //cprintf( "WXK_RIGHT: SetPosition() %s\n", gbl_updated_position.ToDebugStr().c_str()  );
                 mini_board->SetPosition( gbl_updated_position.squares );
             }
@@ -997,6 +1046,18 @@ static void test()
     y.disp();
 }
 
+void PgnDialog::OnListFocused( wxListEvent &event )
+{
+    if( list_ctrl )
+    {
+        int prev = list_ctrl->focus_idx;
+        int idx = event.m_itemIndex;
+        cprintf( "DbDialog::OnListFocused() Prev idx=%d, New idx=%d\n", prev, idx );
+        list_ctrl->ReceiveFocus( idx );
+        list_ctrl->RefreshItem(prev);
+    }
+}
+
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_OK
 void PgnDialog::OnOk()
 {
@@ -1018,7 +1079,7 @@ void PgnDialog::OnOk()
         selected_game = GetFocusGame(file_game_idx);
         if( selected_game != -1  )
         {
-            GameDocumentBase *gd = gc->gds[selected_game].get();
+            smart_ptr<GameDocumentBase> gd = gc->gds[selected_game];
             DeselectOthers(selected_game);
             if( !gd->in_memory )
             {
@@ -1035,7 +1096,7 @@ void PgnDialog::OnOk()
                         std::string s(buf,len);
                         thc::ChessRules cr;
                         int nbr_converted;
-                        GameDocument temp = *gd;
+                        GameDocument temp = * std::dynamic_pointer_cast<GameDocument> (gd);
                         temp.PgnParse(true,nbr_converted,s,cr,NULL);
                         cprintf( "white = %s, moves = %d\n", temp.white.c_str(), temp.tree.variations[0].size() );
                         make_smart_ptr(GameDocument,sptr,temp);
@@ -1349,7 +1410,7 @@ void PgnDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
         for( int i=sz-1; i>=0; i-- )    
         {                                 
             std::vector< smart_ptr<GameDocumentBase> >::iterator iter = gc->gds.begin() + idx_focus;
-            GameDocument gd = *gc_clipboard->gds[i];
+            GameDocument gd = * std::dynamic_pointer_cast<GameDocument> (gc_clipboard->gds[i]);
             gd.game_nbr = 0;
             gd.modified = true;
             make_smart_ptr(GameDocument,new_doc,gd);

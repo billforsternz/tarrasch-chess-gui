@@ -216,6 +216,43 @@ void GameDocument::Init( const ChessPosition &start_position )
     Rebuild();
 }
 
+// Virtual
+void GameDocument::GetGameDocument( GameDocument &doc_copy )
+{
+    doc_copy = *this;
+}
+
+// Virtual
+void GameDocumentBase::GetGameDocument( GameDocument &read_from_file )
+{
+    /* GameDocument doc = * std::dynamic_pointer_cast<GameDocument> (gds[i]); */
+    GameDocument temp = *this;
+    if( !temp.in_memory )
+    {
+        temp.in_memory = true;
+        FILE *pgn_in = gl->pf.ReopenRead( temp.pgn_handle );
+        if( pgn_in )
+        {
+            fseek(pgn_in,temp.fposn2,SEEK_SET);
+            long len = temp.fposn3-temp.fposn2;
+            char *buf = new char [len];
+            if( len == (long)fread(buf,1,len,pgn_in) )
+            {
+                std::string s(buf,len);
+                thc::ChessRules cr;
+                int nbr_converted;
+                temp.PgnParse(true,nbr_converted,s,cr,NULL);
+                cprintf( "white = %s, moves = %d\n", temp.white.c_str(), temp.tree.variations[0].size() );
+            }
+            gl->pf.Close( &gl->gc_clipboard );
+            delete[] buf;
+        }
+    }
+    read_from_file = temp;
+    cprintf( "white = %s, moves = %d\n", read_from_file.white.c_str(), read_from_file.tree.variations[0].size() );
+}
+
+
 bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language, int imove )
 {
 

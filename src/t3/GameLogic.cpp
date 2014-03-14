@@ -571,6 +571,8 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
         wxMessageBox( "Cannot read file", "Error", wxOK|wxICON_ERROR );
     else
     {
+        /* GameDocument doc = * std::dynamic_pointer_cast<GameDocument> (gds[i]); */
+
         bool have_game = false;
         if( gc.gds.size()==1 && objs.repository->general.m_straight_to_game )
         {
@@ -593,7 +595,7 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
                         int nbr_converted;
                         gd = *gd_file;
                         gd.PgnParse(true,nbr_converted,s,cr,NULL);
-                        *gd_file = gd;
+                        * std::dynamic_pointer_cast<GameDocument> (gd_file) = gd;
                         have_game = true;
                     }
                     pf.Close( &gc_clipboard );
@@ -606,7 +608,7 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
                 objs.session->SaveGame(&gd);
                 IndicateNoCurrentDocument();
                 gd_file->game_being_edited = ++game_being_edited_tag;
-                gd = *gd_file;
+                gd = * std::dynamic_pointer_cast<GameDocument> (gd_file);
                 gd_file->selected = true;
                 this->file_game_idx = 0;    // game 0
                 tabs->SetInfile(true);
@@ -688,9 +690,9 @@ void GameLogic::NextGamePreviousGame( int idx )
                 std::string s(buf,len);
                 thc::ChessRules cr;
                 int nbr_converted;
-                GameDocument temp = *gd_file;
+                GameDocument temp = * std::dynamic_pointer_cast<GameDocument> (gd_file);
                 temp.PgnParse(true,nbr_converted,s,cr,NULL);
-                *gd_file = temp;
+                * std::dynamic_pointer_cast<GameDocument> (gd_file) = temp;
                 have_game = true;
             }
             pf.Close( &gc_clipboard );
@@ -704,7 +706,7 @@ void GameLogic::NextGamePreviousGame( int idx )
         objs.session->SaveGame(&gd);
         IndicateNoCurrentDocument();
         gd_file->game_being_edited = ++game_being_edited_tag;
-        gd = *gd_file;
+        gd = * std::dynamic_pointer_cast<GameDocument> (gd_file);
         gd_file->selected = true;
         this->file_game_idx = idx;
         tabs->SetInfile(true);
@@ -865,7 +867,7 @@ void GameLogic::PutBackDocument()
     {
         gd.FleshOutDate();
         gd.FleshOutMoves();
-        *p = gd;
+        * std::dynamic_pointer_cast<GameDocument> (p) = gd;
         p->modified = gd.modified || undo.IsModified();
     }
 }

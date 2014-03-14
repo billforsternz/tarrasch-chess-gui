@@ -125,6 +125,7 @@ public:
         focus_idx = 0;
         focus_offset = 0;
         gbl_last_item = -1;
+        mini_board = 0;
     }
     //~wxVirtualListCtrl();
     void OnChar( wxKeyEvent &event );

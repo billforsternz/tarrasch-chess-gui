@@ -84,6 +84,7 @@ public:
     //void On???Update( wxUpdateUIEvent& event );
 
     void OnListSelected( wxListEvent &event );
+    void OnListFocused( wxListEvent &event );
     void OnListColClick( wxListEvent &event );
 
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_OK

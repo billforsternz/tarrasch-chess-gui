@@ -20,7 +20,9 @@
 #define smart_ptr std::shared_ptr
 #define make_smart_ptr(T,to,from) smart_ptr<T> to; to.reset(new T(from))
 
+                
 class GameLogic;
+class GameDocument;
 class GameDocumentBase
 {
 public:
@@ -42,6 +44,7 @@ public:
 
     void FleshOutDate();
     virtual void Init( const thc::ChessPosition &start_position );
+    virtual void GetGameDocument( GameDocument &gd );
 
     // Data
     unsigned long non_zero_start_pos;
@@ -186,6 +189,7 @@ public:
     }
     
     virtual void Init( const thc::ChessPosition &start_position );
+    virtual void GetGameDocument( GameDocument &gd );
     
     void FleshOutMoves();
     void ToFileTxtGameDetails( std::string &str );

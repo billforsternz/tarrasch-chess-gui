@@ -63,7 +63,7 @@ bool GamesCache::Load( FILE *pgn_file )
 {
     file_irrevocably_modified = false;
     bool ok=true;
-    GameDocument gd;
+    GameDocumentBase gd;
     game_nbr=0;
     int fposn_base = 0;
     gd.fposn0 = fposn_base;
@@ -139,7 +139,7 @@ bool GamesCache::Load( FILE *pgn_file )
     return ok;
 }
             
-void GamesCache::LoadLine( GameDocument &gd, int fposn, const char *line )
+void GamesCache::LoadLine( GameDocumentBase &gd, int fposn, const char *line )
 {            
     bool end_of_game=false;
     if( !line )     // end of file ?
@@ -247,7 +247,7 @@ void GamesCache::LoadLine( GameDocument &gd, int fposn, const char *line )
     }
     if( end_of_game )
     {
-        make_smart_ptr( GameDocument, new_doc, gd );
+        make_smart_ptr( GameDocumentBase, new_doc, gd );
         gds.push_back( new_doc );
         thc::ChessPosition initial_position;
         gd.prefix_txt = "";
@@ -260,7 +260,7 @@ void GamesCache::LoadLine( GameDocument &gd, int fposn, const char *line )
 
 // Check whether text s is a valid header, return true if it is,
 //  add info to a GameDocument, optionally clearing it first
-bool GamesCache::Tagline( GameDocument &gd,  const char *s )
+bool GamesCache::Tagline( GameDocumentBase &gd,  const char *s )
 {
     const char *tag_begin, *tag_end, *val_begin, *val_end;
     bool is_header = false;
@@ -663,7 +663,7 @@ void GamesCache::Debug( const char *intro_message )
     int gds_nbr = gds.size();
     for( int i=0; i<gds_nbr; i++ )    
     {   
-        GameDocument doc = *gds[i];
+        GameDocumentBase doc = *(gds[i]);
         dprintf( "game_nbr=%d, white=%s, moves_txt=%s, pgn_handle=%d\n",
                         doc.game_nbr,
                         doc.white.c_str(),
@@ -922,7 +922,7 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
                     // Write Game body
                     if( gd->in_memory )
                     {
-                        GameDocument temp = *gd;
+                        GameDocument temp = * std::dynamic_pointer_cast<GameDocument> (gd);
                         temp.ToPublishTxtGameBody( s, diagram_base, mv_base, neg_base, publish_options );
                         fwrite(s.c_str(),1,s.length(),md_out);
                     }
@@ -941,7 +941,7 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
                                 std::string s(buf,len);
                                 thc::ChessRules cr;
                                 int nbr_converted;
-                                GameDocument temp = *gd;
+                                GameDocument temp = * std::dynamic_pointer_cast<GameDocument> (gd);
                                 temp.PgnParse(true,nbr_converted,s,cr,NULL);
                                 temp.ToPublishTxtGameBody( s, diagram_base, mv_base, neg_base, publish_options );
                                 objs.gl->atom.NotUndoAble();
