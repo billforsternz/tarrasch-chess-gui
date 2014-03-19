@@ -56,6 +56,7 @@ END_EVENT_TABLE()
 
 
 // It's a pity we have these static vars, but unfortunately OnGetItemText() must be const for some reason
+static std::string gbl_player_name_label( "White - Black") ;
 static thc::ChessPosition gbl_updated_position;
 static int gbl_last_item;
 static std::vector< thc::Move > gbl_focus_moves;
@@ -93,31 +94,14 @@ public:
     std::string CalculateMoveTxt( long item ) const
     {
         std::string move_txt;
-        smart_ptr<GameDocumentBase> sptr = data_src->gc->gds[item];
-        GameDocument temp;
-        sptr->GetGameDocument(temp);
-        VARIATION &v = temp.tree.variations[0];
-        thc::ChessRules cr;
-        for( size_t i=0; i<v.size(); i++ )
+        if( item == focus_idx )
         {
-            thc::Move mv = v[i].game_move.move;
-            std::string s = mv.NaturalOut(&cr);
-            if( i%2 == 0 )
-            {
-                char buf[100];
-                sprintf( buf, "%lu%s", i/2+1, i%2==0?".":"..." );
-                move_txt += buf;
-            }
-            move_txt += s;
-            move_txt += " ";
-            if( i+1 == gbl_focus_moves.size() )
-                move_txt += temp.result;
-            else if( i < gbl_focus_moves.size()-5 && move_txt.length()>100 )
-            {
-                move_txt += "...";  // very long lines get over truncated by the list control (sad but true)
-                break;
-            }
-            cr.PlayMove(mv);
+            move_txt = RecalculateMoveTxt();    
+        }
+        else
+        {
+            smart_ptr<GameDocumentBase> sptr = data_src->gc->gds[item];
+            move_txt = sptr->moves_txt;
         }
         return move_txt;
     }
@@ -144,6 +128,7 @@ public:
         //*std::dynamic_pointer_cast<GameDocument>(sptr) = temp;
         gbl_result = temp.result;
         gbl_focus_moves.clear();
+        gbl_player_name_label = std::string(buf);
         VARIATION &v = temp.tree.variations[0];
         for( size_t i=0; i<v.size(); i++ )
         {
@@ -154,8 +139,7 @@ public:
             RecalculateMoveTxt();
             //cprintf( "ReceiveFocus(): SetPosition() %s\n", gbl_updated_position.ToDebugStr().c_str()  );
             mini_board->SetPosition( gbl_updated_position.squares );
-            cprintf( "Setting board label(%d): %s\n", focus_idx, buf );
-            data_src->player_names->SetLabel(wxString(buf));
+            data_src->player_names->SetLabel( gbl_player_name_label.c_str() );
         }
     }
     
@@ -206,6 +190,7 @@ protected:
         char buf[20];
         buf[0] = '\0';
         const char *txt = buf;
+        std::string s;
         switch( column )
         {
             case 0:
@@ -275,7 +260,7 @@ protected:
             }
             case 10:
             {
-                std::string s = CalculateMoveTxt(item);
+                s = CalculateMoveTxt(item);
                 txt = s.c_str();
                 break;
             }
@@ -300,25 +285,25 @@ void wxVirtualPgnListCtrl::OnChar( wxKeyEvent &event )
             //cprintf( "WXK_LEFT\n" );
             if( focus_offset > 0 )
                 focus_offset--;
-            RefreshItem(focus_idx);
             if( mini_board )
             {
                 RecalculateMoveTxt();
                 //cprintf( "WXK_LEFT: SetPosition() %s\n", gbl_updated_position.ToDebugStr().c_str()  );
                 mini_board->SetPosition( gbl_updated_position.squares );
             }
+            RefreshItem(focus_idx);
             break;
         case WXK_RIGHT:
             //cprintf( "WXK_RIGHT\n" );
             if( focus_offset < gbl_focus_moves.size() )
                 focus_offset++;
-            RefreshItem(focus_idx);
             if( mini_board )
             {
                 RecalculateMoveTxt();
                 //cprintf( "WXK_RIGHT: SetPosition() %s\n", gbl_updated_position.ToDebugStr().c_str()  );
                 mini_board->SetPosition( gbl_updated_position.squares );
             }
+            RefreshItem(focus_idx);
             break;
         default:
             event.Skip();
@@ -456,6 +441,7 @@ int wxCALLBACK sort_callback( long item1, long item2, long col )
 // Control creation for PgnDialog
 void PgnDialog::CreateControls()
 {    
+    gbl_player_name_label = "White - Black";
 
     // A top-level sizer
     wxBoxSizer* top_sizer = new wxBoxSizer(wxVERTICAL);
@@ -682,7 +668,7 @@ void PgnDialog::CreateControls()
     gbl_updated_position = cr;
     mini_board->SetPosition( cr.squares );
     vsiz_panel_board->Add( mini_board, 1, wxALIGN_LEFT|wxALL|wxFIXED_MINSIZE, 5 );
-    player_names = new wxStaticText( this, wxID_ANY, "White - Black",
+    player_names = new wxStaticText( this, wxID_ANY, gbl_player_name_label.c_str(),
                                     wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL );
     vsiz_panel_board->Add(player_names, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     
@@ -1079,36 +1065,13 @@ void PgnDialog::OnOk()
         selected_game = GetFocusGame(file_game_idx);
         if( selected_game != -1  )
         {
-            smart_ptr<GameDocumentBase> gd = gc->gds[selected_game];
             DeselectOthers(selected_game);
-            if( !gd->in_memory )
-            {
-                FILE *pgn_in = objs.gl->pf.ReopenRead( gd->pgn_handle );
-                if( pgn_in )
-                {
-                    long fposn2 = gd->fposn2;
-                    long end    = gd->fposn3;
-                    fseek(pgn_in,fposn2,SEEK_SET);
-                    long len = end-fposn2;
-                    char *buf = new char [len];
-                    if( len == (long)fread(buf,1,len,pgn_in) )
-                    {
-                        std::string s(buf,len);
-                        thc::ChessRules cr;
-                        int nbr_converted;
-                        GameDocument temp = * std::dynamic_pointer_cast<GameDocument> (gd);
-                        temp.PgnParse(true,nbr_converted,s,cr,NULL);
-                        cprintf( "white = %s, moves = %d\n", temp.white.c_str(), temp.tree.variations[0].size() );
-                        make_smart_ptr(GameDocument,sptr,temp);
-                        gc->gds[selected_game] = sptr;
-                        GameDocument temp2 = * std::dynamic_pointer_cast<GameDocument>(gc->gds[selected_game]);
-                        cprintf( "white = %s, moves = %d\n", temp2.white.c_str(), temp2.tree.variations[0].size() );
-                        gc->gds[selected_game]->in_memory = true;
-                    }
-                    objs.gl->pf.Close( gc_clipboard );
-                    delete[] buf;
-                }
-            }
+            smart_ptr<GameDocumentBase> sptr = gc->gds[selected_game];
+            GameDocument gd;
+            sptr->GetGameDocument(gd);
+            gd.in_memory = true;
+            make_smart_ptr(GameDocument,sptr2,gd);
+            gc->gds[selected_game] = sptr2;
         }
     }
     TransferDataToWindow();    

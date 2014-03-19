@@ -242,7 +242,6 @@ void GameDocumentBase::GetGameDocument( GameDocument &read_from_file )
                 thc::ChessRules cr;
                 int nbr_converted;
                 temp.PgnParse(true,nbr_converted,s,cr,NULL);
-                cprintf( "white = %s, moves = %d\n", temp.white.c_str(), temp.tree.variations[0].size() );
             }
             gl->pf.Close( &gl->gc_clipboard );
             delete[] buf;
