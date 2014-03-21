@@ -166,7 +166,7 @@ public:
         bufw[19] = '\0';
         strcpy( bufb, gbl_info.black.c_str() );
         bufb[19] = '\0';
-        sprintf( buf, "%s - %s", bufw, bufb );
+        sprintf( buf, "%s(2200) - %s(2300) Zurich 1953, 1-0 (70 moves), blah blah blah blah blah blah blah blah position after 2.Nf3", bufw, bufb );
         initial_focus_offset = focus_offset = db_calculate_move_vector( &gbl_info, gbl_focus_moves );
         if( mini_board )
         {
@@ -504,25 +504,18 @@ void DbDialog::CreateControls()
         wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
     box_sizer->Add(line, 0, wxGROW|wxALL, 5);
 
-    // Create a panel beneath the list control, containing more sizers
+    // Create a panel beneath the list control, containing everything else
     wxBoxSizer* hsiz_panel = new wxBoxSizer(wxHORIZONTAL);
-    box_sizer->Add(hsiz_panel, 0, wxALIGN_LEFT|wxALL, 10);
-    wxBoxSizer* vsiz_panel_board = new wxBoxSizer(wxVERTICAL);
-    wxGridSizer* vsiz_panel_buttons = new wxGridSizer(6,2,0,0);
-    wxBoxSizer* vsiz_panel_stats = new wxBoxSizer(wxVERTICAL);
-    hsiz_panel->Add(vsiz_panel_board, 0, wxALIGN_TOP|wxALL, 10);
-    hsiz_panel->Add(vsiz_panel_buttons, 0, wxALIGN_TOP|wxALL, 10);
-    //hsiz_panel->AddSpacer(10);
-    hsiz_panel->Add(vsiz_panel_stats, 0, wxALIGN_TOP|wxALL, 10);
+    box_sizer->Add(hsiz_panel, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxTOP, 10);
 
     mini_board = new MiniBoard(this);
     list_ctrl->mini_board = mini_board;
     gbl_updated_position = cr;
     mini_board->SetPosition( cr.squares );
-    vsiz_panel_board->Add( mini_board, 1, wxALIGN_LEFT|wxALL|wxFIXED_MINSIZE, 5 );
-    player_names = new wxStaticText( this, wxID_ANY, "White - Black",
-                                           wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL );
-    vsiz_panel_board->Add(player_names, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+    hsiz_panel->Add( mini_board, 1, wxALIGN_LEFT|wxTOP|wxRIGHT|wxBOTTOM|wxFIXED_MINSIZE, 5 );
+    wxGridSizer* vsiz_panel_buttons = new wxGridSizer(6,2,0,0);
+    hsiz_panel->Add(vsiz_panel_buttons, 0, wxALIGN_TOP|wxALL, 10);
 
     // Load / Ok / Game->Board
     wxButton* ok = new wxButton ( this, wxID_OK, wxT("Load Game"),
@@ -587,14 +580,15 @@ void DbDialog::CreateControls()
 //    sz.y /= 3;
     wxSize sz4 = mini_board->GetSize();
     wxSize sz5 = sz4;
-    sz5.x = (sz4.x*16)/10;
-    sz5.y = (sz4.y*11)/10;
-    sz4.x = (sz4.x*13)/10;
-    sz4.y = (sz4.y*10)/10;
-    notebook = new wxNotebook(this, wxID_ANY, wxDefaultPosition, sz5 );
+    sz5.x = (sz4.x*18)/10;
+    sz5.y = (sz4.y*10)/10;
+    notebook = new wxNotebook(this, wxID_ANY, wxDefaultPosition, /*wxDefaultSize*/ sz5 );
     //wxPanel *notebook_page1 = new wxPanel(notebook, wxID_ANY );
-    vsiz_panel_stats->Add( notebook, 0, wxALIGN_CENTER_VERTICAL|wxGROW|wxALL, 5);
+    hsiz_panel /*vsiz_panel_stats*/->Add( notebook, 0, wxALIGN_TOP|wxGROW|wxALL, 0 );
     
+    player_names = new wxStaticText( this, wxID_ANY, "White - Black",
+                                    wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL );
+    box_sizer->Add(player_names, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxBOTTOM, 10);
 
 }
 

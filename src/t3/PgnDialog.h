@@ -120,7 +120,7 @@ public:
 
     // PgnDialog member variables
 public:
-    wxStaticText *player_names;
+    wxStaticText *game_description;
 private:
     wxVirtualPgnListCtrl  *list_ctrl;
     int          selected_game;

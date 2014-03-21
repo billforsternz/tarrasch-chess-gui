@@ -248,7 +248,7 @@ void GameDocumentBase::GetGameDocument( GameDocument &read_from_file )
         }
     }
     read_from_file = temp;
-    cprintf( "white = %s, moves = %d\n", read_from_file.white.c_str(), read_from_file.tree.variations[0].size() );
+    //cprintf( "white = %s, moves = %d\n", read_from_file.white.c_str(), read_from_file.tree.variations[0].size() );
 }
 
 
