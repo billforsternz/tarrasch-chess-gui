@@ -27,7 +27,9 @@ enum
     ID_SAVE_ALL_TO_A_FILE   = 10007,
     ID_PGN_DIALOG_GAME_PREFIX    = 10008,
     ID_PGN_DIALOG_PUBLISH    = 10009,
-    ID_PGN_DIALOG_DATABASE   = 10010
+    ID_PGN_DIALOG_DATABASE   = 10010,
+    ID_PGN_DIALOG_UTILITY1   = 10011,
+    ID_PGN_DIALOG_UTILITY2   = 10012
 };
 
 class wxVirtualPgnListCtrl;
@@ -103,6 +105,8 @@ public:
     void OnPaste( wxCommandEvent& event );
     void OnSave( wxCommandEvent& event );
     void OnPublish( wxCommandEvent& event );
+    void OnUtility1( wxCommandEvent& event );
+    void OnUtility2( wxCommandEvent& event );
     void OnCancel( wxCommandEvent& event );
     void OnHelpClick( wxCommandEvent& event );
 //  void OnClose( wxCloseEvent& event );

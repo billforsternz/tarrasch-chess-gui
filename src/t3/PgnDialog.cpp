@@ -41,6 +41,8 @@ BEGIN_EVENT_TABLE( PgnDialog, wxDialog )
     EVT_BUTTON( ID_PGN_DIALOG_GAME_DETAILS,   PgnDialog::OnEditGameDetails )
     EVT_BUTTON( ID_PGN_DIALOG_GAME_PREFIX,    PgnDialog::OnEditGamePrefix )
     EVT_BUTTON( ID_PGN_DIALOG_PUBLISH,  PgnDialog::OnPublish )
+    EVT_BUTTON( ID_PGN_DIALOG_UTILITY1,  PgnDialog::OnUtility1 )
+    EVT_BUTTON( ID_PGN_DIALOG_UTILITY2,  PgnDialog::OnUtility2 )
     EVT_BUTTON( wxID_COPY,              PgnDialog::OnCopy )
     EVT_BUTTON( wxID_CUT,               PgnDialog::OnCut )
     EVT_BUTTON( wxID_DELETE,            PgnDialog::OnDelete )
@@ -823,7 +825,7 @@ void PgnDialog::CreateControls()
         vsiz_panel_buttons->Add(write_to_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
 
-    // Write to file
+    // Publish
     if( id==ID_PGN_DIALOG_FILE )
     {
         wxButton* publish = new wxButton ( this, ID_PGN_DIALOG_PUBLISH, wxT("Publish"),
@@ -831,6 +833,22 @@ void PgnDialog::CreateControls()
         vsiz_panel_buttons->Add(publish, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
 
+    // Utility1
+    if( id==ID_PGN_DIALOG_FILE )
+    {
+        wxButton* utility1 = new wxButton ( this, ID_PGN_DIALOG_UTILITY1, wxT("Add all to database"),
+                                          wxDefaultPosition, wxDefaultSize, 0 );
+        vsiz_panel_buttons->Add(utility1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    }
+    
+    // Utility2
+    if( id==ID_PGN_DIALOG_FILE )
+    {
+        wxButton* utility2 = new wxButton ( this, ID_PGN_DIALOG_UTILITY2, wxT("Utility2"),
+                                          wxDefaultPosition, wxDefaultSize, 0 );
+        vsiz_panel_buttons->Add(utility2, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    }
+    
     // The Cancel button
     if( id==ID_PGN_DIALOG_FILE||id==ID_PGN_DIALOG_CLIPBOARD||id==ID_PGN_DIALOG_SESSION )
     {
@@ -1459,6 +1477,14 @@ void PgnDialog::OnSave( wxCommandEvent& WXUNUSED(event) )
 void PgnDialog::OnPublish( wxCommandEvent& WXUNUSED(event) )
 {
     gc->Publish( gc_clipboard );
+}
+
+void PgnDialog::OnUtility1( wxCommandEvent& WXUNUSED(event) )
+{
+}
+
+void PgnDialog::OnUtility2( wxCommandEvent& WXUNUSED(event) )
+{
 }
 
 void PgnDialog::OnCancel( wxCommandEvent& WXUNUSED(event) )
