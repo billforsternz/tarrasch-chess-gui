@@ -13,8 +13,8 @@
 #include "DbMaintenance.h"
 
 //-- Temp - hardwire .pgn file and database name
-#define PGN_FILE        "/Users/billforster/Documents/ChessDatabases/twic_minimal_overlap.pgn"
-#define PGN_OUT_FILE    "/Users/billforster/Documents/ChessDatabases/twic_minimal_overlap.pgn"
+#define PGN_FILE        "/Users/billforster/Documents/ChessDatabases/twic-948-1010.pgn"
+#define PGN_OUT_FILE    "/Users/billforster/Documents/ChessDatabases/twic_minimal_overlap_2.pgn"
 #define QGN_FILE        "/Users/billforster/Documents/ChessDatabases/twic_minimal_overlap.qgn"
 
 static FILE *ifile;

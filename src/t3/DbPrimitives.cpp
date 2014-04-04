@@ -149,39 +149,6 @@ int db_primitive_random_test_program()
 static sqlite3 *handle;
 static int game_id;
 
-void db_primitive_open()
-{
-    printf( "db_primitive_open()\n" );
-
-    // Try to create the database. If it doesnt exist, it would be created
-    //  pass a pointer to the pointer to sqlite3, in short sqlite3**
-    int retval = sqlite3_open(DB_MAINTENANCE_FILE,&handle);
-    
-    // If connection failed, handle returns NULL
-    if(retval)
-    {
-        printf("DATABASE CONNECTION FAILED\n");
-        return;
-    }
-    printf("Connection successful\n");
-    
-    // Create tables if not existing
-    report( "Create games table");
-    retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS games (game_id INTEGER, white TEXT, black TEXT, result TEXT, moves BLOB)",0,0,0);
-    if( retval )
-    {
-        printf("sqlite3_exec(CREATE games) FAILED\n");
-        return;
-    }
-    report( "Create positions table");
-    retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS positions (game_id INTEGER, position_hash INTEGER)",0,0,0);
-    if( retval )
-    {
-        printf("sqlite3_exec(CREATE positions) FAILED\n");
-        return;
-    }
-}
-
 void db_primitive_open_multi()
 {
     printf( "db_primitive_open_multi()\n" );
@@ -197,13 +164,31 @@ void db_primitive_open_multi()
         return;
     }
     printf("Connection successful\n");
-    
+
     // Create tables if not existing
     report( "Create games table");
-    retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS games (game_id INTEGER, white TEXT, black TEXT, result TEXT, moves BLOB)",0,0,0);
+    retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS description (description TEXT, version INTEGER)",0,0,0);
+    if( retval )
+    {
+        printf("sqlite3_exec(CREATE description) FAILED\n");
+        return;
+    }
+    retval = sqlite3_exec(handle,"INSERT INTO description VALUES('Description of database goes here', 1 )",0,0,0);
+    if( retval )
+    {
+        printf("sqlite3_exec(INSERT description) FAILED\n");
+        return;
+    }
+    retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS games (game_id INTEGER, game_hash INT8 UNIQUE, white TEXT, black TEXT, event TEXT, site TEXT, result TEXT, moves BLOB)",0,0,0);
     if( retval )
     {
         printf("sqlite3_exec(CREATE games) FAILED\n");
+        return;
+    }
+    retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS games_duplicates (game_id INTEGER, game_hash INT8, white TEXT, black TEXT, event TEXT, site TEXT, result TEXT, moves BLOB)",0,0,0);
+    if( retval )
+    {
+        printf("sqlite3_exec(CREATE games_duplicates) FAILED\n");
         return;
     }
     report( "Create positions tables");
@@ -318,6 +303,13 @@ void db_primitive_create_extra_indexes()
         printf( "sqlite3_exec() FAILED 1\n" );
         return;
     }
+    report( "Create games(black) index");
+    retval = sqlite3_exec(handle,"CREATE INDEX IF NOT EXISTS idx_black ON games(black)",0,0,0);
+    if( retval )
+    {
+        printf( "sqlite3_exec() FAILED 1\n" );
+        return;
+    }
     //int retval = sqlite3_exec(handle,"DROP INDEX idx_white",0,0,0);
     report( "Create games(white) index end");
     for( int i=0; i<NBR_BUCKETS; i++ )
@@ -345,8 +337,48 @@ void db_primitive_create_extra_indexes()
     }
 }
 
+unsigned int levenshtein_distance(const std::string &s1, const std::string &s2)
+{
+	const size_t len1 = s1.size(), len2 = s2.size();
+    std::vector<unsigned int> col(len2+1), prevCol(len2+1);
+    
+	for (unsigned int i = 0; i < prevCol.size(); i++)
+		prevCol[i] = i;
+	for (unsigned int i = 0; i < len1; i++)
+    {
+		col[0] = i+1;
+		for (unsigned int j = 0; j < len2; j++)
+        {
+			col[j+1] = std::min( std::min(prevCol[1 + j] + 1, col[j] + 1),
+								prevCol[j] + (s1[i]==s2[j] ? 0 : 1) );
+        }
+		col.swap(prevCol);
+	}
+	return prevCol[len2];
+}
+
+static void t( const char *left, const char *right )
+{
+    unsigned int x = levenshtein_distance(left,right);
+    printf( "[%s] [%s] %u\n", left, right, x );
+}
+
+
+
 void db_primitive_speed_tests()
 {
+    t( "Smith", "Smith" );
+    t( "Smith", "Simth" );
+    t( "Smith", "Smithy" );
+    t( "Smith", "Smiths" );
+    t( "Smith", "Smmith" );
+    t( "Smith", "Schmidt" );
+    t( "Smith", "Smithson" );
+    t( "Smith", "PSmith" );
+    t( "Smith", "Brith" );
+    t( "Smith", "Roberts" );
+    t( "Smith", "Jones" );
+    
     printf( "db_primitive_speed_tests()\n" );
     
     // Try to create the database. If it doesnt exist, it would be created
@@ -708,81 +740,24 @@ int db_primitive_count_games()
 }
 
 
-void db_primitive_insert_game( const char *white, const char *black, const char *event, const char *site, const char *result, int nbr_moves, thc::Move *moves, uint32_t *hashes  )
+static void sanitise( const char *in, char *out, int out_siz )
 {
-    //printf( "db_primitive_gameover(%s,%s)\n", white, black );
-    //uint32_t *move_ptr = (uint32_t *)moves;
-    char *errmsg;
-    char insert_buf[2000];
-    char blob_buf[1000];    // about 500 moves each
-    char white_buf[200];
-    char black_buf[200];
-    strcpy( white_buf, white );
-    char *s=white_buf;
-    while( *s )
+    int len=0;
+    while( *in && len<out_siz-3 )
     {
-        if( !isascii(*s) )
-            *s = '_';
-        else if( *s!=' ' && *s!='.' && *s!=',' && !isalnum(*s) )
-            *s = '_';
-        s++;
-    }
-    strcpy( black_buf, black );
-    s=black_buf;
-    while( *s )
-    {
-        if( !isascii(*s) )
-            *s = '_';
-        else if( *s!=' ' && *s!='.' && *s!=',' && !isalnum(*s) )
-            *s = '_';
-        s++;
-    }
-    CompressMoves press;
-    char *put = blob_buf;
-    for( int i=0; i<nbr_moves && put<blob_buf+sizeof(blob_buf)-10; i++ )
-    {
-        char buf[2];
-        thc::Move mv = moves[i];
-        int nbr = press.compress_move( mv, buf );
-     /* std::string s = mv.TerseOut();
-        if( nbr == 1 )
-            printf( "compress temp> %s -> %02x\n", s.c_str(), buf[0]&0xff );
-        else if( nbr == 2 )
-            printf( "compress temp> %s -> %02x,%02x\n", s.c_str(), buf[0]&0xff, buf[1]&0xff );
+        char c = *in++;
+        if( !isascii(c) )
+            *out = '_';
+        else if( c!=' ' && c!='.' && c!=',' && !isalnum(c) )
+            *out = '_';
         else
-            printf( "nbr == 0 ?\n"); */
-        if( nbr == 0 )
-            break;
-        for( int j=0; j<nbr && j<2; j++ )
-        {
-            char c = buf[j];
-            char hi = (c>>4)&0x0f;
-            *put++ = (hi>=10 ? hi-10+'A' : hi+'0');
-            char lo = c&0x0f;
-            *put++ = (lo>=10 ? lo-10+'A' : lo+'0');
-        }
-        //printf( "%s %s\n", (i<nbr_moves?"true":"false"), (put<blob_buf+sizeof(blob_buf-10) ? "true" ? "false") );
+            *out = c;
+        out++;
+        len++;
     }
-    *put = '\0';
-    //printf( "%d %s\n", nbr_moves, blob_buf );
-    sprintf( insert_buf, "INSERT INTO games VALUES(%d,'%s','%s','%s',X'%s')", game_id, white_buf, black_buf, result, blob_buf );
-    //printf( "%s\n", insert_buf );
-    int retval = sqlite3_exec( handle, insert_buf,0,0,&errmsg);
-    if( retval )
-    {
-        printf("sqlite3_exec(INSERT 1) FAILED %s\n", errmsg );
-    }
-    for( int i=0; i<nbr_moves; i++ )
-    {
-        sprintf( insert_buf, "INSERT INTO positions VALUES(%d,%d)", game_id, (int)*hashes++ );
-        retval = sqlite3_exec( handle, insert_buf,0,0,&errmsg);
-        if( retval )
-        {
-            printf("sqlite3_exec(INSERT 3) FAILED %s\n", errmsg );
-        }
-    }
-    game_id++;
+    *out = '\0';
 }
+
 
 std::vector<std::pair<int,int>> buckets[NBR_BUCKETS];
 static void purge_buckets()
@@ -820,69 +795,162 @@ static void purge_bucket( int bucket_idx )
     }
 }
 
+
+// Return true if this game already in database
+bool db_primitive_check_for_duplicate( uint64_t game_hash, const char *white, const char *black, const char *result, const char *blob_moves )
+{
+    for( int table_idx=0; table_idx<2; table_idx++ )
+    {
+        // select matching rows from the table
+        char buf[200];
+        sqlite3_stmt *stmt;    // A prepared statement for fetching tables
+        sprintf( buf, "SELECT white, black, result, moves from %s WHERE game_hash=%lld", table_idx==0?"games":"games_duplicates", game_hash );
+        const char *errmsg;
+        int retval = sqlite3_prepare_v2( handle, buf, -1, &stmt, &errmsg );
+        if( retval )
+        {
+            printf("DB FAIL db_primitive_check_for_duplicate() 1 %s (%s)\n", errmsg, buf );
+            return false;
+        }
+        
+        // Read the game info
+        bool white_match=false;
+        bool black_match=false;
+        bool result_match=false;
+        bool moves_match=false;
+        int cols = sqlite3_column_count(stmt);
+        for(;;)  // Read one row from games, potentially many rows in games_duplicates
+        {
+            retval = sqlite3_step(stmt);
+            if( retval == SQLITE_ROW )
+            {
+                for( int col=0; col<cols; col++ )
+                {
+                    if( col == 0 )
+                    {
+                        const char *val = (const char*)sqlite3_column_text(stmt,col);
+                        if( val )
+                            white_match = (0 == strcmp(white,val));
+                    }
+                    else if( col == 1 )
+                    {
+                        const char *val = (const char*)sqlite3_column_text(stmt,col);
+                        if( val )
+                            black_match = (0 == strcmp(black,val));
+                    }
+                    else if( col == 2 )
+                    {
+                        const char *val = (const char*)sqlite3_column_text(stmt,col);
+                        if( val )
+                            result_match = (0 == strcmp(result,val));
+                    }
+                    else if( col == 3 )
+                    {
+                        int len = sqlite3_column_bytes(stmt,col);
+                        //fprintf(f,"Move len = %d\n",len);
+                        if( len > 10 )
+                            printf( "A real game....\n" );
+                        const char *blob = (const char*)sqlite3_column_blob(stmt,col);
+                        if( blob )
+                            moves_match = (0 == memcmp(blob_moves,blob,len));
+                    }
+                }
+            }
+            else if( retval == SQLITE_DONE )
+            {
+                // All rows finished
+                sqlite3_finalize(stmt);
+                stmt = NULL;
+                if( white_match && black_match && result_match && moves_match )
+                {
+                    printf( "Duplicate game %s-%s %s found\n", white,black,result);
+                    return true;    // duplicate found
+                }
+                break;
+            }
+            else
+            {
+                // Some error encountered
+                printf("DB FAIL db_primitive_check_for_duplicate() 2\n");
+                return false;
+            }
+        }
+    }
+    return false;   // return false unless we explicitly DID find a duplicate
+}
+
 void db_primitive_insert_game_multi( const char *white, const char *black, const char *event, const char *site, const char *result, int nbr_moves, thc::Move *moves, uint64_t *hashes  )
 {
     //printf( "db_primitive_gameover(%s,%s)\n", white, black );
     //uint32_t *move_ptr = (uint32_t *)moves;
     char *errmsg;
     char insert_buf[2000];
-    char blob_buf[1000];    // about 500 moves each
+    char blob_txt_buf[2000];    // about 500 moves each
+    char blob_buf[2000];
     char white_buf[200];
     char black_buf[200];
-    strcpy( white_buf, white );
-    char *s=white_buf;
-    while( *s )
-    {
-        if( !isascii(*s) )
-            *s = '_';
-        else if( *s!=' ' && *s!='.' && *s!=',' && !isalnum(*s) )
-            *s = '_';
-        s++;
-    }
-    strcpy( black_buf, black );
-    s=black_buf;
-    while( *s )
-    {
-        if( !isascii(*s) )
-            *s = '_';
-        else if( *s!=' ' && *s!='.' && *s!=',' && !isalnum(*s) )
-            *s = '_';
-        s++;
-    }
+    char event_buf[200];
+    char site_buf[200];
+    sanitise( white,  white_buf, sizeof(white_buf) );
+    sanitise( black,  black_buf, sizeof(black_buf) );
+    sanitise( event,  event_buf, sizeof(event_buf) );
+    sanitise( site, site_buf,  sizeof(site_buf) );
     CompressMoves press;
+    uint64_t hash = press.cr.Hash64Calculate();
+    uint64_t counter=0, game_hash=hash;
+    char *put_txt = blob_txt_buf;
     char *put = blob_buf;
-    for( int i=0; i<nbr_moves && put<blob_buf+sizeof(blob_buf)-10; i++ )
+    for( int i=0; i<nbr_moves && put_txt<blob_txt_buf+sizeof(blob_txt_buf)-10; i++ )
     {
-        char buf[2];
+        char c;
         thc::Move mv = moves[i];
-        int nbr = press.compress_move( mv, buf );
-        /* std::string s = mv.TerseOut();
-         if( nbr == 1 )
-         printf( "compress temp> %s -> %02x\n", s.c_str(), buf[0]&0xff );
-         else if( nbr == 2 )
-         printf( "compress temp> %s -> %02x,%02x\n", s.c_str(), buf[0]&0xff, buf[1]&0xff );
-         else
-         printf( "nbr == 0 ?\n"); */
+        int nbr = press.compress_move( mv, &c );   // Note: compress_move() now returns 0 or 1 only
         if( nbr == 0 )
             break;
-        for( int j=0; j<nbr && j<2; j++ )
-        {
-            char c = buf[j];
-            char hi = (c>>4)&0x0f;
-            *put++ = (hi>=10 ? hi-10+'A' : hi+'0');
-            char lo = c&0x0f;
-            *put++ = (lo>=10 ? lo-10+'A' : lo+'0');
-        }
-        //printf( "%s %s\n", (i<nbr_moves?"true":"false"), (put<blob_buf+sizeof(blob_buf-10) ? "true" ? "false") );
+        *put++ = c;
+        char hi = (c>>4)&0x0f;
+        *put_txt++ = (hi>=10 ? hi-10+'A' : hi+'0');
+        char lo = c&0x0f;
+        *put_txt++ = (lo>=10 ? lo-10+'A' : lo+'0');
+        hash = press.cr.Hash64Update( hash, mv );
+        game_hash = game_hash ^ hash ^ counter;
+        counter++;
     }
+    *put_txt = '\0';
     *put = '\0';
-    //printf( "%d %s\n", nbr_moves, blob_buf );
-    sprintf( insert_buf, "INSERT INTO games VALUES(%d,'%s','%s','%s',X'%s')", game_id, white_buf, black_buf, result, blob_buf );
-    //printf( "%s\n", insert_buf );
+    bool okay = true;
+    sprintf( insert_buf, "INSERT INTO games VALUES(%d,%lld,'%s','%s','%s','%s','%s',X'%s')", game_id, game_hash, white_buf, black_buf, event_buf, site_buf, result, blob_txt_buf );
     int retval = sqlite3_exec( handle, insert_buf,0,0,&errmsg);
     if( retval )
     {
-        printf("sqlite3_exec(INSERT 1) FAILED %s\n", errmsg );
+        if( !strstr(errmsg,"unique") )
+        {
+            printf("DB_FAIL db_primitive_insert_game_multi() 1 %s (%s)\n", errmsg, insert_buf );
+            return;
+        }
+        printf("Non unique game hash %s (%s)\n", errmsg, insert_buf );
+
+        // Check whether a duplicate of existing game
+        bool is_duplicate = db_primitive_check_for_duplicate( game_hash, white_buf, black_buf, result, blob_buf );
+        
+        // If not, put it into the database
+        if( !is_duplicate )
+        {
+            sprintf( insert_buf, "INSERT INTO games VALUES(%d,NULL,'%s','%s','%s','%s','%s',X'%s')", game_id, white_buf, black_buf, event_buf, site_buf, result, blob_txt_buf );
+            int retval = sqlite3_exec( handle, insert_buf,0,0,&errmsg);
+            if( retval )
+            {
+                printf("DB_FAIL db_primitive_insert_game_multi() 2 %s (%s)\n", errmsg, insert_buf );
+                return;
+            }
+            sprintf( insert_buf, "INSERT INTO games_duplicates VALUES(%d,%lld,'%s','%s','%s','%s','%s',X'%s')", game_id, game_hash, white_buf, black_buf, event_buf, site_buf, result, blob_txt_buf );
+            retval = sqlite3_exec( handle, insert_buf,0,0,&errmsg);
+            if( retval )
+            {
+                printf("DB_FAIL db_primitive_insert_game_multi() 3 %s (%s)\n", errmsg, insert_buf );
+                return;
+            }
+        }
     }
     for( int i=0; i<nbr_moves; i++ )
     {
