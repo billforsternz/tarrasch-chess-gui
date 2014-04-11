@@ -17,7 +17,7 @@
 #include "GameLifecycle.h"
 
 
-#define smart_ptr std::shared_ptr
+#define smart_ptr std::unique_ptr
 #define make_smart_ptr(T,to,from) smart_ptr<T> to; to.reset(new T(from))
 
                 

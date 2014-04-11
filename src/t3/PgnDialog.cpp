@@ -97,8 +97,8 @@ public:
         }
         else
         {
-            smart_ptr<GameDocumentBase> sptr = data_src->gc->gds[item];
-            move_txt = sptr->moves_txt;
+            GameDocumentBase *ptr = data_src->gc->gds[item].get();
+            move_txt = ptr->moves_txt;
         }
         return move_txt;
     }
@@ -110,12 +110,11 @@ public:
         cprintf( "ListCtrl::ReceiveFocus(%d)\n", focus_idx );
         this->focus_idx = focus_idx;
         initial_focus_offset = focus_offset = 0;
-        smart_ptr<GameDocumentBase> sptr = data_src->gc->gds[focus_idx];
         
         // Calculate game description, eg "Carlen(2870) - Kramnik(2800), Paris 2000 1-0 in 43 moves"
         //  This could be refactored as std::string GameDocument.Description()
         GameDocument gd;
-        sptr->GetGameDocument(gd);
+        data_src->gc->gds[focus_idx]->GetGameDocument(gd);
         std::string white = gd.white;
         std::string black = gd.black;
         size_t comma = white.find(',');
@@ -1139,12 +1138,12 @@ void PgnDialog::OnOk()
         if( selected_game != -1  )
         {
             DeselectOthers(selected_game);
-            smart_ptr<GameDocumentBase> sptr = gc->gds[selected_game];
+            GameDocumentBase *ptr = gc->gds[selected_game].get();
             GameDocument gd;
-            sptr->GetGameDocument(gd);
+            ptr->GetGameDocument(gd);
             gd.in_memory = true;
-            make_smart_ptr(GameDocument,sptr2,gd);
-            gc->gds[selected_game] = sptr2;
+            make_smart_ptr(GameDocument,sptr,gd);
+            gc->gds[selected_game] = std::move(sptr);
         }
     }
     TransferDataToWindow();    
@@ -1157,7 +1156,7 @@ bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx )
     {
         gl->IndicateNoCurrentDocument();
         gc->gds[selected_game]->game_being_edited = ++objs.gl->game_being_edited_tag;
-        gd = * std::dynamic_pointer_cast<GameDocument>( gc->gds[selected_game] );
+        gc->gds[selected_game]->GetGameDocument(gd);
         gd.selected = false;
         gc->gds[selected_game]->selected = true;
         if( &gl->gc == gc )
@@ -1188,7 +1187,7 @@ void PgnDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
             gd.modified = true;
             gc->file_irrevocably_modified = true;
             make_smart_ptr( GameDocument, new_doc, gd );
-            gc->gds.insert( iter, new_doc );
+            gc->gds.insert( iter, std::move(new_doc) );
             wxListItem item;              
             list_ctrl->InsertItem( idx_focus, item );
             list_ctrl->SetItem( idx_focus, 0, "" );                     // game_nbr
@@ -1318,7 +1317,7 @@ void PgnDialog::CopyOrAdd( bool clear_clipboard )
                 }
                 GameDocument gd = *gc->gds[i];
                 make_smart_ptr( GameDocument, new_doc, gd );
-                gc_clipboard->gds.push_back(new_doc);
+                gc_clipboard->gds.push_back(std::move(new_doc));
                 nbr_copied++;
             }
         }
@@ -1331,7 +1330,7 @@ void PgnDialog::CopyOrAdd( bool clear_clipboard )
             }
             GameDocument gd = *gc->gds[idx_focus];
             make_smart_ptr( GameDocument, new_doc, gd );
-            gc_clipboard->gds.push_back(new_doc);
+            gc_clipboard->gds.push_back(std::move(new_doc));
             nbr_copied++;
         }
     }
@@ -1363,7 +1362,7 @@ void PgnDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
                 }
                 GameDocument gd = **iter;
                 make_smart_ptr( GameDocument, new_doc, gd );
-                gc_clipboard->gds.push_back(new_doc);
+                gc_clipboard->gds.push_back(std::move(new_doc));
                 list_ctrl->DeleteItem(i);
                 iter = gc->gds.erase(iter);
                 gc->file_irrevocably_modified = true;
@@ -1381,7 +1380,7 @@ void PgnDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
             gc_clipboard->gds.clear();
             GameDocument gd = **iter_focus;
             make_smart_ptr(GameDocument,new_doc,gd);
-            gc_clipboard->gds.push_back(new_doc);
+            gc_clipboard->gds.push_back(std::move(new_doc));
             list_ctrl->DeleteItem(idx_focus);
             iter = gc->gds.erase(iter_focus);
             gc->file_irrevocably_modified = true;
@@ -1446,11 +1445,12 @@ void PgnDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
         for( int i=sz-1; i>=0; i-- )    
         {                                 
             std::vector< smart_ptr<GameDocumentBase> >::iterator iter = gc->gds.begin() + idx_focus;
-            GameDocument gd = * std::dynamic_pointer_cast<GameDocument> (gc_clipboard->gds[i]);
+            GameDocument gd;
+            gc_clipboard->gds[i]->GetGameDocument(gd);
             gd.game_nbr = 0;
             gd.modified = true;
             make_smart_ptr(GameDocument,new_doc,gd);
-            gc->gds.insert( iter, new_doc );
+            gc->gds.insert( iter, std::move(new_doc) );
             gc->file_irrevocably_modified = true;
             wxListItem item;              
             list_ctrl->InsertItem( idx_focus, item );

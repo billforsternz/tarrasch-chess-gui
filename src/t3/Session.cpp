@@ -37,7 +37,7 @@ void Session::SaveGame( GameDocument *gd )
         if( diff )
         {
             make_smart_ptr( GameDocument, new_doc, *gd );
-            objs.gl->gc_session.gds.push_back( new_doc );
+            objs.gl->gc_session.gds.push_back( std::move(new_doc) );
         }
     }
 }
