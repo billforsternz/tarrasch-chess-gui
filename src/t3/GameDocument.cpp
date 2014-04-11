@@ -251,6 +251,66 @@ void GameDocumentBase::GetGameDocument( GameDocument &read_from_file )
     //cprintf( "white = %s, moves = %d\n", read_from_file.white.c_str(), read_from_file.tree.variations[0].size() );
 }
 
+std::string GameDocument::Description()
+{
+    std::string white = this->white;
+    std::string black = this->black;
+    size_t comma = white.find(',');
+    if( comma != std::string::npos )
+        white = white.substr( 0, comma );
+    comma = black.find(',');
+    if( comma != std::string::npos )
+        black = black.substr( 0, comma );
+    int move_cnt = tree.variations[0].size();
+    std::string label = white;
+    if( white_elo != "" )
+    {
+        label += " (";
+        label += white_elo;
+        label += ")";
+    }
+    label += " - ";
+    label += black;
+    if( black_elo != "" )
+    {
+        label += " (";
+        label += black_elo;
+        label += ")";
+    }
+    if( site != "" )
+    {
+        label += ", ";
+        label += site;
+    }
+    else if( event != "" )
+    {
+        label += ", ";
+        label += event;
+    }
+    if( date.length() >= 4 )
+    {
+        label += " ";
+        label += date.substr(0,4);
+    }
+    bool result_or_moves = false;
+    if( result != "*" )
+    {
+        result_or_moves = true;
+        label += ", ";
+        label += result;
+        if( move_cnt > 0 )
+            label += " in";
+    }
+    if( move_cnt > 0 )
+    {
+        if( !result_or_moves )
+            label += ", ";
+        char buf[100];
+        sprintf( buf, " %d moves", (move_cnt+1)/2 );
+        label += std::string(buf);
+    }
+    return label;
+}
 
 bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language, int imove )
 {

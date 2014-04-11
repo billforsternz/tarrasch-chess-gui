@@ -190,6 +190,7 @@ public:
     
     virtual void Init( const thc::ChessPosition &start_position );
     virtual void GetGameDocument( GameDocument &gd );
+    std::string Description();
     
     void FleshOutMoves();
     void ToFileTxtGameDetails( std::string &str );

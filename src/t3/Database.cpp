@@ -190,7 +190,7 @@ static int virtual_dump_game( DB_GAME_INFO *info, int game_id )
     char buf[100];
     sqlite3_stmt *stmt;    // A prepared statement for fetching from games table
     int retval;
-    sprintf( buf, "SELECT white,black,result,moves from games WHERE game_id=%d", game_id );
+    sprintf( buf, "SELECT white,black,event,site,result,date,white_elo,black_elo,moves from games WHERE game_id=%d", game_id );
     retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &stmt, 0 );
     if( retval )
     {
@@ -222,10 +222,40 @@ static int virtual_dump_game( DB_GAME_INFO *info, int game_id )
                 case 2:
                 {
                     const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    info->result = val;
+                    info->event = val;
                     break;
                 }
                 case 3:
+                {
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
+                    info->site = val;
+                    break;
+                }
+                case 4:
+                {
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
+                    info->result = val;
+                    break;
+                }
+                case 5:
+                {
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
+                    info->date = val;
+                    break;
+                }
+                case 6:
+                {
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
+                    info->white_elo = val;
+                    break;
+                }
+                case 7:
+                {
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
+                    info->black_elo = val;
+                    break;
+                }
+                case 8:
                 {
                     int len = sqlite3_column_bytes(stmt,col);
                     //fprintf(f,"Move len = %d\n",len);
@@ -263,10 +293,6 @@ void db_calculate_move_txt( DB_GAME_INFO *info )
         if( triggered )
         {
             std::string s = mv.NaturalOut(&cr);
-            if( first )
-            {
-                info->next_move = s;
-            }
             if( count%2 == 0 || first )
             {
                 first = false;
@@ -458,10 +484,11 @@ int Database::LoadAllGames( std::vector<DB_GAME_INFO> &cache, int nbr_games )
     {
         sprintf( buf,
 #ifdef NO_REVERSE
-                "SELECT games.game_id, games.white, games.black, games.result, games.moves from games, positions_%d WHERE games.game_id = positions_%d.game_id AND %spositions_%d.position_hash=%d",
+//                sprintf( buf, "SELECT white,black,event,site,result,date,white_elo,black_elo,moves from games WHERE game_id=%d", game_id );
+                "SELECT games.game_id, games.white, games.black, games.event, games.site, games.result, games.date, games.white_elo, games.black_elo, games.moves from games, positions_%d WHERE games.game_id = positions_%d.game_id AND %spositions_%d.position_hash=%d",
                 //"SELECT games.game_id, games.white, games.black, games.result, games.moves from games JOIN positions_%d ON games.game_id = positions_%d.game_id WHERE %spositions_%d.position_hash=%d",
 #else
-                "SELECT games.game_id, games.white, games.black, games.result, games.moves from games JOIN positions_%d ON games.game_id = positions_%d.game_id WHERE %spositions_%d.position_hash=%d ORDER BY games.rowid DESC",
+                "SELECT games.game_id, games.white, games.black, games.event, games.site, games.result, games.date, games.white_elo, games.black_elo, games.moves from games JOIN positions_%d ON games.game_id = positions_%d.game_id WHERE %spositions_%d.position_hash=%d ORDER BY games.rowid DESC",
 #endif
                 table_nbr, table_nbr, white_and.c_str(), table_nbr, hash);
     }
@@ -506,9 +533,34 @@ int Database::LoadAllGames( std::vector<DB_GAME_INFO> &cache, int nbr_games )
                 else if( col == 3 )
                 {
                     const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
-                    info.result = val ? std::string(val) : "*";
+                    info.event = val ? std::string(val) : "Whoops";
                 }
                 else if( col == 4 )
+                {
+                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    info.site = val ? std::string(val) : "Whoops";
+                }
+                else if( col == 5 )
+                {
+                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    info.result = val ? std::string(val) : "*";
+                }
+                else if( col == 6 )
+                {
+                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    info.date = val ? std::string(val) : "Whoops";
+                }
+                else if( col == 7 )
+                {
+                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    info.white_elo = val ? std::string(val) : "Whoops";
+                }
+                else if( col == 8 )
+                {
+                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    info.black_elo = val ? std::string(val) : "Whoops";
+                }
+                else if( col == 9 )
                 {
                     int len = sqlite3_column_bytes(gbl_stmt,col);
                     //fprintf(f,"Move len = %d\n",len);

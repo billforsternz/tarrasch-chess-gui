@@ -159,22 +159,14 @@ public:
         cprintf( "ListCtrl::ReceiveFocus(%d)\n", focus_idx );
         this->focus_idx = focus_idx;
         ReadItem(focus_idx);
-        char buf[1000];
-        char bufw[1000];
-        char bufb[1000];
-        strcpy( bufw, gbl_info.white.c_str() );
-        bufw[19] = '\0';
-        strcpy( bufb, gbl_info.black.c_str() );
-        bufb[19] = '\0';
-        sprintf( buf, "%s(2200) - %s(2300) Zurich 1953, 1-0 (70 moves), blah blah blah blah blah blah blah blah position after 2.Nf3", bufw, bufb );
         initial_focus_offset = focus_offset = db_calculate_move_vector( &gbl_info, gbl_focus_moves );
         if( mini_board )
         {
             CalculateMoveTxt();
             //cprintf( "ReceiveFocus(): SetPosition() %s\n", gbl_updated_position.ToDebugStr().c_str()  );
             mini_board->SetPosition( gbl_updated_position.squares );
-            cprintf( "Setting board label(%d): %s\n", focus_idx, buf );
-            data_src->player_names->SetLabel(wxString(buf));
+            std::string desc = gbl_info.Description();
+            data_src->player_names->SetLabel(wxString(desc.c_str()));
         }
     }
 
@@ -228,10 +220,16 @@ protected:
         ReadItem(item);
         switch( column )
         {
-            default: txt =  "";                       break;
+            default: txt =  "";                           break;
             case 1: txt =   gbl_info.white.c_str();       break;
+            case 2: txt =   gbl_info.white_elo.c_str();      break;
             case 3: txt =   gbl_info.black.c_str();       break;
+            case 4: txt =   gbl_info.black_elo.c_str();      break;
+            case 5: txt =   gbl_info.date.c_str();      break;
+            case 6: txt =   gbl_info.site.c_str();      break;
+            //case 7: txt =   gbl_info.round.c_str();      break;
             case 8: txt =   gbl_info.result.c_str();      break;
+            //case 9: txt =   gbl_info.eco.c_str();      break;
             case 10:
             {
                 char buf[1000];
@@ -458,7 +456,7 @@ void DbDialog::CreateControls()
         objs.repository->nv.m_col9 = cols[9] =   5*x/97;    // "ECO"   
         objs.repository->nv.m_col10= cols[10]=  14*x/97;    // "Moves"
     }
-    if(true) //temp temp temp white, black, result, moves only
+ /*   if(true) //temp temp temp white, black, result, moves only
     {
         int x   = (sz.x*98)/100;
         objs.repository->nv.m_col0 = cols[0] =   2*x/97;    // "Game #"
@@ -472,7 +470,7 @@ void DbDialog::CreateControls()
         objs.repository->nv.m_col8 = cols[8] =   8*x/97;    // "Result"
         objs.repository->nv.m_col9 = cols[9] =   2*x/97;    // "ECO"
         objs.repository->nv.m_col10= cols[10]=  45*x/97;    // "Moves"
-    }
+    }  */
     list_ctrl->SetColumnWidth( 0, cols[0] );    // "Game #"
     gc->col_flags.push_back(col_flag);
     list_ctrl->SetColumnWidth( 1, cols[1] );    // "White" 

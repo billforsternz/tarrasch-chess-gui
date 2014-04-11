@@ -115,7 +115,7 @@ public:
         //  This could be refactored as std::string GameDocument.Description()
         GameDocument gd;
         data_src->gc->gds[focus_idx]->GetGameDocument(gd);
-        std::string white = gd.white;
+      /*  std::string white = gd.white;
         std::string black = gd.black;
         size_t comma = white.find(',');
         if( comma != std::string::npos )
@@ -177,7 +177,9 @@ public:
             char buf[100];
             sprintf( buf, " %d moves", (move_cnt+1)/2 );
             label += std::string(buf);
-        }
+        } */
+        gbl_result = gd.result;
+        std::string label = gd.Description();
         gbl_game_description = label;
         
         // Calculate main line move vector

@@ -162,7 +162,7 @@ void hook_gameover( char callback_code, const char *event, const char *site, con
         case 'P': game_to_qgn_file( event, site, date, round, white, black, result, white_elo, black_elo, eco, nbr_moves, moves, hashes );  break;
             
         // Append
-        case 'A': db_primitive_insert_game_multi( white, black, event, site, result, nbr_moves, moves, hashes ); break;
+        case 'A': db_primitive_insert_game_multi( white, black, event, site, result, date, white_elo, black_elo, nbr_moves, moves, hashes ); break;
             
         // Verify
         case 'V': verify_compression_algorithm( nbr_moves, moves ); break;

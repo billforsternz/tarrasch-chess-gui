@@ -179,13 +179,13 @@ void db_primitive_open_multi()
         printf("sqlite3_exec(INSERT description) FAILED\n");
         return;
     }
-    retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS games (game_id INTEGER, game_hash INT8 UNIQUE, white TEXT, black TEXT, event TEXT, site TEXT, result TEXT, moves BLOB)",0,0,0);
+    retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS games (game_id INTEGER, game_hash INT8 UNIQUE, white TEXT, black TEXT, event TEXT, site TEXT, result TEXT, date TEXT, white_elo TEXT, black_elo TEXT, moves BLOB)",0,0,0);
     if( retval )
     {
         printf("sqlite3_exec(CREATE games) FAILED\n");
         return;
     }
-    retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS games_duplicates (game_id INTEGER, game_hash INT8, white TEXT, black TEXT, event TEXT, site TEXT, result TEXT, moves BLOB)",0,0,0);
+    retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS games_duplicates (game_id INTEGER, game_hash INT8, white TEXT, black TEXT, event TEXT, site TEXT, result TEXT, date TEXT, white_elo TEXT, black_elo TEXT, moves BLOB)",0,0,0);
     if( retval )
     {
         printf("sqlite3_exec(CREATE games_duplicates) FAILED\n");
@@ -879,13 +879,15 @@ bool db_primitive_check_for_duplicate( uint64_t game_hash, const char *white, co
     return false;   // return false unless we explicitly DID find a duplicate
 }
 
-void db_primitive_insert_game_multi( const char *white, const char *black, const char *event, const char *site, const char *result, int nbr_moves, thc::Move *moves, uint64_t *hashes  )
+void db_primitive_insert_game_multi( const char *white, const char *black, const char *event, const char *site, const char *result,
+                                    const char *date, const char *white_elo, const char *black_elo,
+                                    int nbr_moves, thc::Move *moves, uint64_t *hashes  )
 {
     //printf( "db_primitive_gameover(%s,%s)\n", white, black );
     //uint32_t *move_ptr = (uint32_t *)moves;
     char *errmsg;
     char insert_buf[2000];
-    char blob_txt_buf[2000];    // about 500 moves each
+    char blob_txt_buf[4000];    // about 500 moves each
     char blob_buf[2000];
     char white_buf[200];
     char black_buf[200];
@@ -918,8 +920,9 @@ void db_primitive_insert_game_multi( const char *white, const char *black, const
     }
     *put_txt = '\0';
     *put = '\0';
-    bool okay = true;
-    sprintf( insert_buf, "INSERT INTO games VALUES(%d,%lld,'%s','%s','%s','%s','%s',X'%s')", game_id, game_hash, white_buf, black_buf, event_buf, site_buf, result, blob_txt_buf );
+    sprintf( insert_buf, "INSERT INTO games VALUES(%d,%lld,'%s','%s','%s','%s','%s','%s','%s','%s',X'%s')",
+                        game_id, game_hash, white_buf, black_buf, event_buf, site_buf, result,
+                        date, white_elo, black_elo, blob_txt_buf );
     int retval = sqlite3_exec( handle, insert_buf,0,0,&errmsg);
     if( retval )
     {
@@ -936,14 +939,18 @@ void db_primitive_insert_game_multi( const char *white, const char *black, const
         // If not, put it into the database
         if( !is_duplicate )
         {
-            sprintf( insert_buf, "INSERT INTO games VALUES(%d,NULL,'%s','%s','%s','%s','%s',X'%s')", game_id, white_buf, black_buf, event_buf, site_buf, result, blob_txt_buf );
+            sprintf( insert_buf, "INSERT INTO games VALUES(%d,NULL,'%s','%s','%s','%s','%s','%s','%s','%s',X'%s')",
+                    game_id, white_buf, black_buf, event_buf, site_buf, result,
+                    date, white_elo, black_elo, blob_txt_buf );
             int retval = sqlite3_exec( handle, insert_buf,0,0,&errmsg);
             if( retval )
             {
                 printf("DB_FAIL db_primitive_insert_game_multi() 2 %s (%s)\n", errmsg, insert_buf );
                 return;
             }
-            sprintf( insert_buf, "INSERT INTO games_duplicates VALUES(%d,%lld,'%s','%s','%s','%s','%s',X'%s')", game_id, game_hash, white_buf, black_buf, event_buf, site_buf, result, blob_txt_buf );
+            sprintf( insert_buf, "INSERT INTO games_duplicates VALUES(%d,%lld,'%s','%s','%s','%s','%s','%s','%s','%s',X'%s')",
+                    game_id, game_hash, white_buf, black_buf, event_buf, site_buf, result,
+                    date, white_elo, black_elo, blob_txt_buf );
             retval = sqlite3_exec( handle, insert_buf,0,0,&errmsg);
             if( retval )
             {
