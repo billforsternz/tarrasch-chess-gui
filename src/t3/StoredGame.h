@@ -16,6 +16,9 @@
 #include "GameLogic.h"
 #include "GameDocument.h"
 
+// For the moment this is purely experimental 
+
+
 class StoredGame
 {
 public:
