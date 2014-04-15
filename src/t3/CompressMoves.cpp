@@ -5,6 +5,7 @@
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
 
+#include <stdlib.h>
 #include "CompressMoves.h"
 
 // Compression method is basically hi nibble indicates one of 16 pieces, lo nibble indicates how piece moves
@@ -68,6 +69,7 @@ CompressMoves::CompressMoves( const CompressMoves& copy_from_me )
 
 CompressMoves & CompressMoves::operator= (const CompressMoves & copy_from_me )
 {
+    evil_queen_mode = copy_from_me.evil_queen_mode;
     cr = copy_from_me.cr;
     for( int i=0; i<16; i++ )
     {
@@ -111,6 +113,7 @@ CompressMoves & CompressMoves::operator= (const CompressMoves & copy_from_me )
 
 void CompressMoves::Init()
 {
+    evil_queen_mode = false;
     cr.Init();
     ((thc::ChessPosition)cr).Init();
     for( int i=0; i<64; i++ )
@@ -223,6 +226,7 @@ bool CompressMoves::Check( bool do_internal_check, const char *description, thc:
 
 int CompressMoves::compress_move( thc::Move mv, char *storage )
 {
+    bool evil_queen_mode_at_entry = evil_queen_mode;
     int nbr_bytes=1;
     int code=0;
     int src = mv.src;
@@ -282,6 +286,7 @@ int CompressMoves::compress_move( thc::Move mv, char *storage )
             code = CODE_SPECIAL_PROMOTION_QUEEN;
             pt->piece = cr.white ? 'Q' : 'q';
             Tracker *shadow = (cr.white ? &white_pieces[15] : &black_pieces[15]);
+            bool found=false;
             for( int i=0; i<16; i++,shadow-- )
             {
                 if( !shadow->in_use )
@@ -289,9 +294,17 @@ int CompressMoves::compress_move( thc::Move mv, char *storage )
                     pt->shadow_rook = shadow;
                     shadow->in_use = true;
                     shadow->shadow_owner = pt;
-                    shadow->piece = cr.white ? 'R' : 'r';  // shadow is a phantom rook, handles rank and file moves for new queen
-                    break; // shadow successfully found, if no shadow available queen move might need two bytes
+                    shadow->piece = cr.white ? 'R' : 'r';   // shadow is a phantom rook, handles rank and file moves for new queen
+                    found = true;
+                    break;                                  // shadow successfully found
                 }
+            }
+            if( !found )
+            {
+                // no shadow available goto evil queen mode
+                extern bool gbl_evil_queen;
+                gbl_evil_queen = true;
+                evil_queen_mode = true;
             }
             break;
         }
@@ -402,6 +415,7 @@ int CompressMoves::compress_move( thc::Move mv, char *storage )
         case 'q':
         case 'Q':
         {
+            extern bool gbl_double_byte;
             if( (src&7) == (dst&7) )                // same file ?
             {
                 if( pt->shadow_rook )
@@ -418,6 +432,7 @@ int CompressMoves::compress_move( thc::Move mv, char *storage )
                 {
                     code = CODE_FALL + (src&7);
                     nbr_bytes = 2;
+                    gbl_double_byte = true;
                 }
             }
             else if( (src&0x38) == (dst&0x38) )     // same rank ?
@@ -436,6 +451,7 @@ int CompressMoves::compress_move( thc::Move mv, char *storage )
                 {
                     code = CODE_FALL + (src&7);
                     nbr_bytes = 2;
+                    gbl_double_byte = true;
                 }
             }
             else
@@ -471,81 +487,265 @@ int CompressMoves::compress_move( thc::Move mv, char *storage )
     pt->sq = (thc::Square)dst;
     trackers[src] = NULL;
     trackers[dst] = pt;
+    if( evil_queen_mode_at_entry )
+    {
+        char ch;
+        compress_move_slow_mode( mv, ch );
+        *storage = ch;
+        nbr_bytes = 1;
+    }
+    else
+    {
+        *storage = (char)(tracker_id + code);
+        if( nbr_bytes > 1 )
+        {
+            storage++;
+            *storage = 0x40 | (dst&0x3f);
+        }
+    }
     cr.PlayMove(mv);
     Check(true,"After compress_moves() tracker check",NULL);
-    *storage = (char)(tracker_id + code);
-    if( nbr_bytes > 1 )
-    {
-        storage++;
-        *storage = 0x40 | (dst&0x3f);
-    }
     return nbr_bytes;
+}
+
+// If an evil queen appears on the board switch to a much slower scheme for
+//  compressing moves into one byte.
+//  Scheme is;
+//  1) Make a list of all legal moves in standard SAN text format, sorted alphabetically
+//  2) Find the move to be compressed in the list
+//  3) Encode the move as one byte, value is 255 - list index (to avoid code 0, '\n' etc)
+//
+//  Why use slow text representation and sorting ? So that a specification for the
+//  whole compression scheme can be published if necessary, without relying on implementation
+//  details like the order that moves come out of the move generator etc.
+//
+//  According to http://www.chess.com/forum/view/fun-with-chess/what-chess-position-has-the-most-number-of-possible-moves
+//  the maximum number of legal moves available in any position is less than 256,
+//  in fact it is 218 in the following position;
+//
+//  "R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1 w - - 0 1"
+//
+void CompressMoves::compress_move_slow_mode( thc::Move in, char &out )
+{
+    thc::ChessRules cr2;
+    cr2.Forsyth("R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1 w - - 0 1");
+    std::vector<thc::Move> moves2;
+    cr2.GenLegalMoveList( moves2 );
+    size_t len2 = moves2.size();
+    printf( "Should be 218 moves, actually it is %u\n", len2 );
+    printf( "By shear coincidence, MAXMOVES is also 218, I think, check: %d\n", MAXMOVES );
+    
+    // Generate a list of all legal moves, in string form, sorted
+    std::vector<thc::Move> moves;
+    cr.GenLegalMoveList( moves );
+    std::vector<std::string> moves_alpha;
+
+    // Coding scheme relies on 255 valid codes and one error code
+    size_t idx=255;  //error code
+    size_t len = moves.size();
+    if( len <= 255 )
+    {
+        for( size_t i=0; i<len; i++ )
+        {
+            std::string s = moves[i].NaturalOut(&cr);
+            moves_alpha.push_back(s);
+        }
+        std::sort( moves_alpha.begin(), moves_alpha.end() );
+        
+        // Find this move in the list
+        std::string the_move = in.NaturalOut(&cr);
+        for( size_t i=0; i<len; i++ )
+        {
+            if( moves_alpha[i] == the_move )
+            {
+                idx = i;
+                break;
+            }
+        }
+    }
+    
+    // char generated is '\xff' for first move in list, '\fe' for second etc
+    // '\x00 is an error
+    out = static_cast<char>( 255-idx );
+}
+
+void CompressMoves::decompress_move_slow_mode( char in, thc::Move &out )
+{
+    // Generate a list of all legal moves, in string form, sorted
+    std::vector<thc::Move> moves;
+    cr.GenLegalMoveList( moves );
+    std::vector<std::string> moves_alpha;
+    
+    // Coding scheme relies on 255 valid codes and one error code
+    size_t len = moves.size();
+    for( size_t i=0; i<len; i++ )
+    {
+        std::string s = moves[i].NaturalOut(&cr);
+        moves_alpha.push_back(s);
+    }
+    std::sort( moves_alpha.begin(), moves_alpha.end() );
+
+    // '\xff' (i.e. 255) is first move in list, '\fe' (i.e. 254) is second etc
+    size_t code = static_cast<size_t>( in );
+    code &= 0xff;
+    size_t idx = 255-code;  // 255->0, 254->1 etc.
+    if( idx >= len )
+        idx = 0;    // all errors resolve to this - take first move from list
+    std::string the_move = moves_alpha[idx];
+    out.NaturalInFast( &cr, the_move.c_str() );
 }
 
 int CompressMoves::decompress_move( const char *storage, thc::Move &mv )
 {
     int nbr_bytes=1;
-    char val = *storage;
-    int lo = val & 0x0f;
-    int hi = 0x0f & (val>>4);
-    int tracker_id = hi;
-    thc::SPECIAL special = thc::NOT_SPECIAL;
-    Tracker *pt = cr.white ? &white_pieces[tracker_id] : &black_pieces[tracker_id];
-    char piece = pt->piece;
-    int src = (int)pt->sq;
-    int dst;
-    if( pt->shadow_owner )
+    
+    // Slow decompression ?
+    if( evil_queen_mode )
     {
-        Tracker *queen = pt->shadow_owner;
-        if( queen->shadow_rook )  // captured piece that handles all rook moves for queen ?
+        char val = *storage;
+        decompress_move_slow_mode( val, mv );
+        nbr_bytes = 1;
+        int src = (int)mv.src;
+        int dst = (int)mv.dst;
+        thc::SPECIAL special = mv.special;
+        Tracker *pt = trackers[src];
+        switch( special )
         {
-            src = queen->sq;
-            if( lo & CODE_SAME_FILE )
+            case thc::SPECIAL_WK_CASTLING:
             {
-                // Same file, so change rank
-                dst = ((lo<<3)&0x38) | (src&7);  // change rank
+                Tracker *rook = &white_pieces[TI_KR];
+                rook->sq = thc::f1;
+                trackers[thc::f1] = rook;
+                trackers[thc::h1] = NULL;
+                break;
             }
-            else
+            case thc::SPECIAL_BK_CASTLING:
             {
-                // Not same file, so change file
-                dst = (src&0x38) | (lo&7);  // change file
+                Tracker *rook = &black_pieces[TI_KR];
+                rook->sq = thc::f8;
+                trackers[thc::f8] = rook;
+                trackers[thc::h8] = NULL;
+                break;
+            }
+            case thc::SPECIAL_WQ_CASTLING:
+            {
+                Tracker *rook = &white_pieces[TI_QR];
+                rook->sq = thc::d1;
+                trackers[thc::d1] = rook;
+                trackers[thc::a1] = NULL;
+                break;
+            }
+            case thc::SPECIAL_BQ_CASTLING:
+            {
+                Tracker *rook = &black_pieces[TI_QR];
+                rook->sq = thc::d8;
+                trackers[thc::d8] = rook;
+                trackers[thc::a8] = NULL;
+                break;
+            }
+            case thc::SPECIAL_PROMOTION_QUEEN:
+            {
+                pt->piece = (pt->piece=='P' ? 'Q' : 'q');
+                break;
+            }
+            case thc::SPECIAL_PROMOTION_ROOK:
+            {
+                pt->piece = (pt->piece=='P' ? 'R' : 'r');
+                break;
+            }
+            case thc::SPECIAL_PROMOTION_BISHOP:
+            {
+                pt->piece = (pt->piece=='P' ? 'B' : 'b');
+                break;
+            }
+            case thc::SPECIAL_PROMOTION_KNIGHT:
+            {
+                pt->piece = (pt->piece=='P' ? 'N' : 'n');
+                break;
+            }
+                
+        }
+        int captured_sq = cr.squares[dst]<'A' ? -1 : dst;
+        if( special == thc::SPECIAL_BEN_PASSANT )
+            captured_sq = NORTH(dst);
+        else if( special == thc::SPECIAL_WEN_PASSANT )
+            captured_sq = SOUTH(dst);
+        char desc[100];
+        sprintf( desc, "pt is NULL; decompress_move() evil queen mode code=%02x, src=%s, dst=%s", val&0xff, SqToStr(src).c_str(), SqToStr(dst).c_str() );
+        if( pt == NULL )
+        {
+            Check( false, desc, NULL );
+        }
+        if( captured_sq >= 0 )
+        {
+            Tracker *captured = trackers[captured_sq];
+            if( captured )
+            {
+                trackers[captured_sq] = NULL;
+                if( !captured->shadow_owner )
+                    captured->in_use = false;
+                if( captured->piece=='Q' ||captured->piece=='q')
+                {
+                    if( captured->shadow_rook )
+                        captured->shadow_rook->shadow_owner = NULL;
+                    if( captured->shadow_rank )
+                        captured->shadow_rank->shadow_owner = NULL;
+                    if( captured->shadow_file )
+                        captured->shadow_file->shadow_owner = NULL;
+                }
             }
         }
-        else if( lo & CODE_N_SHADOW )  // knight that handles rank or file moves for queen ?
-        {
-            src = queen->sq;
-            if( tracker_id == TI_KN )   // Init() sets queen->shadow_rank to KN
-            {
-                // Same file, so change rank
-                dst = ((lo<<3)&0x38) | (src&7);  // change rank
-            }
-            else                        // Init() sets queen->shadow_file to QN
-            {
-                // Not same file, so change file
-                dst = (src&0x38) | (lo&7);  // change file
-            }
-        }
-        else // else must be a non-shadowed knight move
-        {
-            switch( lo )
-            {
-                case CODE_N_VECTOR_0: dst = src - 17;  break;
-                case CODE_N_VECTOR_1: dst = src - 15;  break;
-                case CODE_N_VECTOR_2: dst = src - 10;  break;
-                case CODE_N_VECTOR_3: dst = src - 6;   break;
-                case CODE_N_VECTOR_4: dst = src + 17;  break;
-                case CODE_N_VECTOR_5: dst = src + 15;  break;
-                case CODE_N_VECTOR_6: dst = src + 10;  break;
-                case CODE_N_VECTOR_7: dst = src + 6;   break;
-            }
-        }
+        pt->sq = (thc::Square)dst;
+        trackers[src] = NULL;
+        trackers[dst] = pt;
+        cr.PlayMove(mv);
+        Check( true, desc+12, NULL );
     }
+    
+    // Otherwise normal fast decompression
     else
     {
-        switch( piece )
+        char val = *storage;
+        int lo = val & 0x0f;
+        int hi = 0x0f & (val>>4);
+        int tracker_id = hi;
+        thc::SPECIAL special = thc::NOT_SPECIAL;
+        Tracker *pt = cr.white ? &white_pieces[tracker_id] : &black_pieces[tracker_id];
+        char piece = pt->piece;
+        int src = (int)pt->sq;
+        int dst;
+        if( pt->shadow_owner )
         {
-            case 'N':
-            case 'n':
+            Tracker *queen = pt->shadow_owner;
+            if( queen->shadow_rook )  // captured piece that handles all rook moves for queen ?
+            {
+                src = queen->sq;
+                if( lo & CODE_SAME_FILE )
+                {
+                    // Same file, so change rank
+                    dst = ((lo<<3)&0x38) | (src&7);  // change rank
+                }
+                else
+                {
+                    // Not same file, so change file
+                    dst = (src&0x38) | (lo&7);  // change file
+                }
+            }
+            else if( lo & CODE_N_SHADOW )  // knight that handles rank or file moves for queen ?
+            {
+                src = queen->sq;
+                if( tracker_id == TI_KN )   // Init() sets queen->shadow_rank to KN
+                {
+                    // Same file, so change rank
+                    dst = ((lo<<3)&0x38) | (src&7);  // change rank
+                }
+                else                        // Init() sets queen->shadow_file to QN
+                {
+                    // Not same file, so change file
+                    dst = (src&0x38) | (lo&7);  // change file
+                }
+            }
+            else // else must be a non-shadowed knight move
             {
                 switch( lo )
                 {
@@ -558,271 +758,303 @@ int CompressMoves::decompress_move( const char *storage, thc::Move &mv )
                     case CODE_N_VECTOR_6: dst = src + 10;  break;
                     case CODE_N_VECTOR_7: dst = src + 6;   break;
                 }
-                break;
             }
-            case 'K':
-            case 'k':
+        }
+        else
+        {
+            switch( piece )
             {
-                special = thc::SPECIAL_KING_MOVE;
-                switch( lo )
+                case 'N':
+                case 'n':
                 {
-                    case CODE_K_SPECIAL_WK_CASTLING:
+                    switch( lo )
                     {
-                        special = thc::SPECIAL_WK_CASTLING;
-                        Tracker *rook = &white_pieces[TI_KR];
-                        rook->sq = thc::f1;
-                        trackers[thc::f1] = rook;
-                        trackers[thc::h1] = NULL;
-                        dst = thc::g1;
-                        break;
+                        case CODE_N_VECTOR_0: dst = src - 17;  break;
+                        case CODE_N_VECTOR_1: dst = src - 15;  break;
+                        case CODE_N_VECTOR_2: dst = src - 10;  break;
+                        case CODE_N_VECTOR_3: dst = src - 6;   break;
+                        case CODE_N_VECTOR_4: dst = src + 17;  break;
+                        case CODE_N_VECTOR_5: dst = src + 15;  break;
+                        case CODE_N_VECTOR_6: dst = src + 10;  break;
+                        case CODE_N_VECTOR_7: dst = src + 6;   break;
                     }
-                    case CODE_K_SPECIAL_BK_CASTLING:
-                    {
-                        special = thc::SPECIAL_BK_CASTLING;
-                        Tracker *rook = &black_pieces[TI_KR];
-                        rook->sq = thc::f8;
-                        trackers[thc::f8] = rook;
-                        trackers[thc::h8] = NULL;
-                        dst = thc::g8;
-                        break;
-                    }
-                    case CODE_K_SPECIAL_WQ_CASTLING:
-                    {
-                        special = thc::SPECIAL_WQ_CASTLING;
-                        Tracker *rook = &white_pieces[TI_QR];
-                        rook->sq = thc::d1;
-                        trackers[thc::d1] = rook;
-                        trackers[thc::a1] = NULL;
-                        dst = thc::c1;
-                        break;
-                    }
-                    case CODE_K_SPECIAL_BQ_CASTLING:
-                    {
-                        special = thc::SPECIAL_BQ_CASTLING;
-                        Tracker *rook = &black_pieces[TI_QR];
-                        rook->sq = thc::d8;
-                        trackers[thc::d8] = rook;
-                        trackers[thc::a8] = NULL;
-                        dst = thc::c8;
-                        break;
-                    }
-                    case  CODE_K_VECTOR_0: dst = src - 9; break;
-                    case  CODE_K_VECTOR_1: dst = src - 8; break;
-                    case  CODE_K_VECTOR_2: dst = src - 7; break;
-                    case  CODE_K_VECTOR_3: dst = src - 1; break;
-                    case  CODE_K_VECTOR_4: dst = src + 1; break;
-                    case  CODE_K_VECTOR_5: dst = src + 7; break;
-                    case  CODE_K_VECTOR_6: dst = src + 8; break;
-                    case  CODE_K_VECTOR_7: dst = src + 9; break;
+                    break;
                 }
-                break;
-            }
-            case 'Q':
-            case 'q':
-            case 'B':
-            case 'b':
-            {
-                if( lo & CODE_FALL )
+                case 'K':
+                case 'k':
                 {
-                    // FALL\ + file
-                    int file_delta = (lo&7) - (src&7);
-                    if( file_delta == 0 ) //exception code signals 2 byte mode
+                    special = thc::SPECIAL_KING_MOVE;
+                    switch( lo )
                     {
-                        storage++;
-                        dst = *storage & 0x3f;
-                        nbr_bytes = 2;
+                        case CODE_K_SPECIAL_WK_CASTLING:
+                        {
+                            special = thc::SPECIAL_WK_CASTLING;
+                            Tracker *rook = &white_pieces[TI_KR];
+                            rook->sq = thc::f1;
+                            trackers[thc::f1] = rook;
+                            trackers[thc::h1] = NULL;
+                            dst = thc::g1;
+                            break;
+                        }
+                        case CODE_K_SPECIAL_BK_CASTLING:
+                        {
+                            special = thc::SPECIAL_BK_CASTLING;
+                            Tracker *rook = &black_pieces[TI_KR];
+                            rook->sq = thc::f8;
+                            trackers[thc::f8] = rook;
+                            trackers[thc::h8] = NULL;
+                            dst = thc::g8;
+                            break;
+                        }
+                        case CODE_K_SPECIAL_WQ_CASTLING:
+                        {
+                            special = thc::SPECIAL_WQ_CASTLING;
+                            Tracker *rook = &white_pieces[TI_QR];
+                            rook->sq = thc::d1;
+                            trackers[thc::d1] = rook;
+                            trackers[thc::a1] = NULL;
+                            dst = thc::c1;
+                            break;
+                        }
+                        case CODE_K_SPECIAL_BQ_CASTLING:
+                        {
+                            special = thc::SPECIAL_BQ_CASTLING;
+                            Tracker *rook = &black_pieces[TI_QR];
+                            rook->sq = thc::d8;
+                            trackers[thc::d8] = rook;
+                            trackers[thc::a8] = NULL;
+                            dst = thc::c8;
+                            break;
+                        }
+                        case  CODE_K_VECTOR_0: dst = src - 9; break;
+                        case  CODE_K_VECTOR_1: dst = src - 8; break;
+                        case  CODE_K_VECTOR_2: dst = src - 7; break;
+                        case  CODE_K_VECTOR_3: dst = src - 1; break;
+                        case  CODE_K_VECTOR_4: dst = src + 1; break;
+                        case  CODE_K_VECTOR_5: dst = src + 7; break;
+                        case  CODE_K_VECTOR_6: dst = src + 8; break;
+                        case  CODE_K_VECTOR_7: dst = src + 9; break;
+                    }
+                    break;
+                }
+                case 'Q':
+                case 'q':
+                case 'B':
+                case 'b':
+                {
+                    if( lo & CODE_FALL )
+                    {
+                        // FALL\ + file
+                        int file_delta = (lo&7) - (src&7);
+                        if( file_delta == 0 ) //exception code signals 2 byte mode
+                        {
+                            storage++;
+                            dst = *storage & 0x3f;
+                            nbr_bytes = 2;
+                        }
+                        else
+                            dst = src + 9*file_delta;   // eg src=a8(0), dst=h1(63), file_delta=7  -> 9*7 =63
                     }
                     else
-                        dst = src + 9*file_delta;   // eg src=a8(0), dst=h1(63), file_delta=7  -> 9*7 =63
-                }
-                else
-                {
-                    // RISE/ + file
-                    int file_delta = (lo&7) - (src&7);
-                    dst = src - 7*file_delta;   // eg src=h8(7), dst=a1(56), file_delta=7  -> 7*7 =49
-                }
-                break;
-            }
-            case 'R':
-            case 'r':
-            {
-                if( lo & CODE_SAME_FILE )
-                {
-                    dst = ((lo<<3)&0x38) | (src&7);  // change rank
-                }
-                else
-                {
-                    dst = (src&0x38) | (lo&7);  // change file
-                }
-                break;
-            }
-            case 'P':
-            {
-                if( (src&0x38) == 8 ) // if a7(8) - h7(15)
-                {
-                    switch( lo & 0x0c )
                     {
-                        case CODE_SPECIAL_PROMOTION_QUEEN:
+                        // RISE/ + file
+                        int file_delta = (lo&7) - (src&7);
+                        dst = src - 7*file_delta;   // eg src=h8(7), dst=a1(56), file_delta=7  -> 7*7 =49
+                    }
+                    break;
+                }
+                case 'R':
+                case 'r':
+                {
+                    if( lo & CODE_SAME_FILE )
+                    {
+                        dst = ((lo<<3)&0x38) | (src&7);  // change rank
+                    }
+                    else
+                    {
+                        dst = (src&0x38) | (lo&7);  // change file
+                    }
+                    break;
+                }
+                case 'P':
+                {
+                    if( (src&0x38) == 8 ) // if a7(8) - h7(15)
+                    {
+                        switch( lo & 0x0c )
                         {
-                            special = thc::SPECIAL_PROMOTION_QUEEN;
-                            pt->piece = 'Q';
-                            Tracker *shadow = &white_pieces[15];
-                            for( int i=0; i<16; i++,shadow-- )
+                            case CODE_SPECIAL_PROMOTION_QUEEN:
                             {
-                                if( !shadow->in_use )
+                                special = thc::SPECIAL_PROMOTION_QUEEN;
+                                pt->piece = 'Q';
+                                Tracker *shadow = &white_pieces[15];
+                                bool found=false;
+                                for( int i=0; i<16; i++,shadow-- )
                                 {
-                                    pt->shadow_rook = shadow;
-                                    shadow->in_use = true;
-                                    shadow->shadow_owner = pt;
-                                    shadow->piece = 'R';  // shadow is a phantom rook, handles rank and file moves for new queen
-                                    break;
+                                    if( !shadow->in_use )
+                                    {
+                                        pt->shadow_rook = shadow;
+                                        shadow->in_use = true;
+                                        shadow->shadow_owner = pt;
+                                        shadow->piece = 'R';  // shadow is a phantom rook, handles rank and file moves for new queen
+                                        found = true;
+                                        break;
+                                    }
                                 }
+                                
+                                // If no shadow found we now switch to evil queen mode, starting with next move
+                                if( !found )
+                                    evil_queen_mode = true;  // no need for double byte coding with this
+                                break;
                             }
-                            break;
-                        }
-                        case CODE_SPECIAL_PROMOTION_ROOK:
-                        {
-                            special = thc::SPECIAL_PROMOTION_ROOK;
-                            pt->piece = 'R';
-                            break;
-                        }
-                        case CODE_SPECIAL_PROMOTION_BISHOP:
-                        {
-                            special = thc::SPECIAL_PROMOTION_BISHOP;
-                            pt->piece = 'B';
-                            break;
-                        }
-                        case CODE_SPECIAL_PROMOTION_KNIGHT:
-                        {
-                            special = thc::SPECIAL_PROMOTION_KNIGHT;
-                            pt->piece = 'N';
-                            break;
-                        }
-                    }
-                    
-                }
-                if( (lo&3) == 3 )
-                {
-                    special = thc::SPECIAL_WPAWN_2SQUARES;
-                    dst = src-16;
-                }
-                else
-                {
-                    dst = src-(lo&3)-7; // 2\,1| or 0/ -> -9,-8 or -7
-                    if( !(lo&1) )    // if( 2\ or 0/ )
-                    {
-                        if( cr.squares[dst]==' ' && cr.squares[SOUTH(dst)]=='p' )
-                            special = thc::SPECIAL_WEN_PASSANT;
-                    }
-                }
-                break;
-            }
-                
-            case 'p':
-            {
-                if( (src&0x38) == 0x30 ) // if a2(48) - h2(55)
-                {
-                    switch( lo & 0x0c )
-                    {
-                        case CODE_SPECIAL_PROMOTION_QUEEN:
-                        {
-                            special = thc::SPECIAL_PROMOTION_QUEEN;
-                            pt->piece = 'q';
-                            Tracker *shadow = &black_pieces[15];
-                            for( int i=0; i<16; i++,shadow-- )
+                            case CODE_SPECIAL_PROMOTION_ROOK:
                             {
-                                if( !shadow->in_use )
-                                {
-                                    pt->shadow_rook = shadow;
-                                    shadow->in_use = true;
-                                    shadow->shadow_owner = pt;
-                                    shadow->piece = 'r';  // shadow is a phantom rook, handles rank and file moves for new queen
-                                    break;
-                                }
+                                special = thc::SPECIAL_PROMOTION_ROOK;
+                                pt->piece = 'R';
+                                break;
                             }
-                            break;
+                            case CODE_SPECIAL_PROMOTION_BISHOP:
+                            {
+                                special = thc::SPECIAL_PROMOTION_BISHOP;
+                                pt->piece = 'B';
+                                break;
+                            }
+                            case CODE_SPECIAL_PROMOTION_KNIGHT:
+                            {
+                                special = thc::SPECIAL_PROMOTION_KNIGHT;
+                                pt->piece = 'N';
+                                break;
+                            }
                         }
-                        case CODE_SPECIAL_PROMOTION_ROOK:
-                        {
-                            special = thc::SPECIAL_PROMOTION_ROOK;
-                            pt->piece = 'r';
-                            break;
-                        }
-                        case CODE_SPECIAL_PROMOTION_BISHOP:
-                        {
-                            special = thc::SPECIAL_PROMOTION_BISHOP;
-                            pt->piece = 'b';
-                            break;
-                        }
-                        case CODE_SPECIAL_PROMOTION_KNIGHT:
-                        {
-                            special = thc::SPECIAL_PROMOTION_KNIGHT;
-                            pt->piece = 'n';
-                            break;
-                        }
+                        
                     }
-                    
-                }
-                if( (lo&3) == 3 )
-                {
-                    special = thc::SPECIAL_BPAWN_2SQUARES;
-                    dst = src+16;
-                }
-                else
-                {
-                    dst = src+(lo&3)+7; // 2\,1| or 0/ -> +9,+8 or +7
-                    if( !(lo&1) )    // if( 2\ or 0/ )
+                    if( (lo&3) == 3 )
                     {
-                        if( cr.squares[dst]==' ' && cr.squares[NORTH(dst)]=='P' )
-                            special = thc::SPECIAL_BEN_PASSANT;
+                        special = thc::SPECIAL_WPAWN_2SQUARES;
+                        dst = src-16;
                     }
+                    else
+                    {
+                        dst = src-(lo&3)-7; // 2\,1| or 0/ -> -9,-8 or -7
+                        if( !(lo&1) )    // if( 2\ or 0/ )
+                        {
+                            if( cr.squares[dst]==' ' && cr.squares[SOUTH(dst)]=='p' )
+                                special = thc::SPECIAL_WEN_PASSANT;
+                        }
+                    }
+                    break;
                 }
-                break;
+                    
+                case 'p':
+                {
+                    if( (src&0x38) == 0x30 ) // if a2(48) - h2(55)
+                    {
+                        switch( lo & 0x0c )
+                        {
+                            case CODE_SPECIAL_PROMOTION_QUEEN:
+                            {
+                                special = thc::SPECIAL_PROMOTION_QUEEN;
+                                pt->piece = 'q';
+                                Tracker *shadow = &black_pieces[15];
+                                bool found = false;
+                                for( int i=0; i<16; i++,shadow-- )
+                                {
+                                    if( !shadow->in_use )
+                                    {
+                                        pt->shadow_rook = shadow;
+                                        shadow->in_use = true;
+                                        shadow->shadow_owner = pt;
+                                        shadow->piece = 'r';  // shadow is a phantom rook, handles rank and file moves for new queen
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                                // If no shadow found we now switch to evil queen mode, starting with next move
+                                if( !found )
+                                    evil_queen_mode = true;  // no need for double byte coding with this
+                                break;
+                            }
+                            case CODE_SPECIAL_PROMOTION_ROOK:
+                            {
+                                special = thc::SPECIAL_PROMOTION_ROOK;
+                                pt->piece = 'r';
+                                break;
+                            }
+                            case CODE_SPECIAL_PROMOTION_BISHOP:
+                            {
+                                special = thc::SPECIAL_PROMOTION_BISHOP;
+                                pt->piece = 'b';
+                                break;
+                            }
+                            case CODE_SPECIAL_PROMOTION_KNIGHT:
+                            {
+                                special = thc::SPECIAL_PROMOTION_KNIGHT;
+                                pt->piece = 'n';
+                                break;
+                            }
+                        }
+                        
+                    }
+                    if( (lo&3) == 3 )
+                    {
+                        special = thc::SPECIAL_BPAWN_2SQUARES;
+                        dst = src+16;
+                    }
+                    else
+                    {
+                        dst = src+(lo&3)+7; // 2\,1| or 0/ -> +9,+8 or +7
+                        if( !(lo&1) )    // if( 2\ or 0/ )
+                        {
+                            if( cr.squares[dst]==' ' && cr.squares[NORTH(dst)]=='P' )
+                                special = thc::SPECIAL_BEN_PASSANT;
+                        }
+                    }
+                    break;
+                }
             }
         }
-    }
-    
-    mv.src = (thc::Square)src;
-    mv.dst = (thc::Square)dst;
-    mv.special = special;
-    mv.capture = ' ';
-    int captured_sq = cr.squares[dst]<'A' ? -1 : dst;
-    if( special == thc::SPECIAL_BEN_PASSANT )
-        captured_sq = NORTH(dst);
-    else if( special == thc::SPECIAL_WEN_PASSANT )
-        captured_sq = SOUTH(dst);
-    pt = trackers[src];
-    char desc[100];
-    sprintf( desc, "pt is NULL; decompress_move() code=%02x, src=%s, dst=%s", val&0xff, SqToStr(src).c_str(), SqToStr(dst).c_str() );
-    if( pt == NULL )
-    {
-        Check( false, desc, NULL );
-    }
-    if( captured_sq >= 0 )
-    {
-        mv.capture = cr.squares[captured_sq];
-        Tracker *captured = trackers[captured_sq];
-        if( captured )
+        
+        mv.src = (thc::Square)src;
+        mv.dst = (thc::Square)dst;
+        mv.special = special;
+        mv.capture = ' ';
+        int captured_sq = cr.squares[dst]<'A' ? -1 : dst;
+        if( special == thc::SPECIAL_BEN_PASSANT )
+            captured_sq = NORTH(dst);
+        else if( special == thc::SPECIAL_WEN_PASSANT )
+            captured_sq = SOUTH(dst);
+        pt = trackers[src];
+        char desc[100];
+        sprintf( desc, "pt is NULL; decompress_move() code=%02x, src=%s, dst=%s", val&0xff, SqToStr(src).c_str(), SqToStr(dst).c_str() );
+        if( pt == NULL )
         {
-            trackers[captured_sq] = NULL;
-            if( !captured->shadow_owner )
-                captured->in_use = false;
-            if( captured->piece=='Q' ||captured->piece=='q')
+            Check( false, desc, NULL );
+        }
+        if( captured_sq >= 0 )
+        {
+            mv.capture = cr.squares[captured_sq];
+            Tracker *captured = trackers[captured_sq];
+            if( captured )
             {
-                if( captured->shadow_rook )
-                    captured->shadow_rook->shadow_owner = NULL;
-                if( captured->shadow_rank )
-                    captured->shadow_rank->shadow_owner = NULL;
-                if( captured->shadow_file )
-                    captured->shadow_file->shadow_owner = NULL;
+                trackers[captured_sq] = NULL;
+                if( !captured->shadow_owner )
+                    captured->in_use = false;
+                if( captured->piece=='Q' ||captured->piece=='q')
+                {
+                    if( captured->shadow_rook )
+                        captured->shadow_rook->shadow_owner = NULL;
+                    if( captured->shadow_rank )
+                        captured->shadow_rank->shadow_owner = NULL;
+                    if( captured->shadow_file )
+                        captured->shadow_file->shadow_owner = NULL;
+                }
             }
         }
+        pt->sq = (thc::Square)dst;
+        trackers[src] = NULL;
+        trackers[dst] = pt;
+        cr.PlayMove(mv);
+        Check( true, desc+12, NULL );
     }
-    pt->sq = (thc::Square)dst;
-    trackers[src] = NULL;
-    trackers[dst] = pt;
-    cr.PlayMove(mv);
-    Check( true, desc+12, NULL );
     return nbr_bytes;
 }
 

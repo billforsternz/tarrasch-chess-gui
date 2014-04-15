@@ -248,7 +248,7 @@ void GamesCache::LoadLine( GameDocumentBase &gd, int fposn, const char *line )
     if( end_of_game )
     {
         make_smart_ptr( GameDocumentBase, new_doc, gd );
-        gds.push_back( new_doc );
+        gds.push_back( std::move(new_doc) );
         thc::ChessPosition initial_position;
         gd.prefix_txt = "";
         gd.Init(initial_position);
@@ -348,7 +348,7 @@ bool GamesCache::FileCreate( std::string &filename, GameDocument &gd )
     gd.in_memory = true;
     gd.pgn_handle = 0;
     make_smart_ptr( GameDocument, new_doc, gd );
-    gds.push_back( new_doc );
+    gds.push_back( std::move(new_doc) );
     FILE *pgn_out = objs.gl->pf.OpenCreate( pgn_filename, pgn_handle );
     if( pgn_out )
     {
@@ -763,14 +763,15 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
             int neg_base = -2;
             for( int i=0; i<gds_nbr; i++ )    
             {   
-                const smart_ptr<GameDocumentBase> gd = gds[i];
+                GameDocument gd;
+                gds[i]->GetGameDocument(gd);
                 thc::ChessPosition tmp;
 
                 int publish_options = 0;
                 bool skip_intro = false;
                 bool skip_game = false;
-                std::string white = gd->white;
-                std::string black = gd->black;
+                std::string white = gd.white;
+                std::string black = gd.black;
                 std::string t = black;
                 std::string options = "";
                 bool white_only = (white!="" && white!="?") && (black=="" || black=="?");
@@ -801,7 +802,7 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
                 //<p>Sorry, this was rushed out, I may have time to embellish these brief highlights later. </p>
                 //<h3>Russell Dive - Scott Wastney, Julian Mazur Memorial 2012</h3>
                 std::string s = "";
-                std::string pre = gds[i]->prefix_txt;
+                std::string pre = gd.prefix_txt;
                 if( pre.size()>0 && pre[0] == '#' )
                 {
                     size_t off1 = pre.find_first_not_of("#");
@@ -831,7 +832,7 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
                 }
 #else
                 // Write prefix
-                std::string s = gds[i]->prefix_txt;
+                std::string s = gd.prefix_txt;
                 if( heading )
                 {
                     skip_intro = true;
@@ -903,12 +904,12 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
                         s += white;
                         s += " - ";
                         s += black;
-                        if( gd->event.find('?') == std::string::npos )
+                        if( gd.event.find('?') == std::string::npos )
                         {
                             s += " ";
-                            s += gd->event;
+                            s += gd.event;
                         }
-                        std::string year = gd->date.substr(0,4);
+                        std::string year = gd.date.substr(0,4);
                         if( year.find('?') == std::string::npos )
                         {
                             s += " ";
@@ -920,19 +921,18 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
                     }
 
                     // Write Game body
-                    if( gd->in_memory )
+                    if( gd.in_memory )
                     {
-                        GameDocument temp = * std::dynamic_pointer_cast<GameDocument> (gd);
-                        temp.ToPublishTxtGameBody( s, diagram_base, mv_base, neg_base, publish_options );
+                        gd.ToPublishTxtGameBody( s, diagram_base, mv_base, neg_base, publish_options );
                         fwrite(s.c_str(),1,s.length(),md_out);
                     }
                     else
                     {
-                        FILE *pgn_in = objs.gl->pf.ReopenRead( gd->pgn_handle );
+                        FILE *pgn_in = objs.gl->pf.ReopenRead( gd.pgn_handle );
                         if( pgn_in )
                         {
-                            long fposn2 = gd->fposn2;
-                            long end    = gd->fposn3;
+                            long fposn2 = gd.fposn2;
+                            long end    = gd.fposn3;
                             fseek(pgn_in,fposn2,SEEK_SET);
                             long len = end-fposn2;
                             char *buf = new char [len];
@@ -941,9 +941,8 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
                                 std::string s(buf,len);
                                 thc::ChessRules cr;
                                 int nbr_converted;
-                                GameDocument temp = * std::dynamic_pointer_cast<GameDocument> (gd);
-                                temp.PgnParse(true,nbr_converted,s,cr,NULL);
-                                temp.ToPublishTxtGameBody( s, diagram_base, mv_base, neg_base, publish_options );
+                                gd.PgnParse(true,nbr_converted,s,cr,NULL);
+                                gd.ToPublishTxtGameBody( s, diagram_base, mv_base, neg_base, publish_options );
                                 objs.gl->atom.NotUndoAble();
                                 fwrite(s.c_str(),1,s.length(),md_out);
                             }

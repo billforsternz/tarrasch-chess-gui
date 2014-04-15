@@ -17,11 +17,76 @@ struct DB_GAME_INFO
     int game_id;
     std::string white;
     std::string black;
+    std::string event;
+    std::string site;
     std::string result;
+    std::string date;
+    std::string white_elo;
+    std::string black_elo;
     std::string move_txt;
     std::string str_blob;
-    std::string next_move;
     int transpo_nbr;
+    std::string Description()
+    {
+        std::string white = this->white;
+        std::string black = this->black;
+        size_t comma = white.find(',');
+        if( comma != std::string::npos )
+            white = white.substr( 0, comma );
+        comma = black.find(',');
+        if( comma != std::string::npos )
+            black = black.substr( 0, comma );
+        int move_cnt = str_blob.length();
+        std::string label = white;
+        if( white_elo != "" )
+        {
+            label += " (";
+            label += white_elo;
+            label += ")";
+        }
+        label += " - ";
+        label += black;
+        if( black_elo != "" )
+        {
+            label += " (";
+            label += black_elo;
+            label += ")";
+        }
+        if( site != "" )
+        {
+            label += ", ";
+            label += site;
+        }
+        else if( event != "" )
+        {
+            label += ", ";
+            label += event;
+        }
+        if( date.length() >= 4 )
+        {
+            label += " ";
+            label += date.substr(0,4);
+        }
+        bool result_or_moves = false;
+        if( result != "*" )
+        {
+            result_or_moves = true;
+            label += ", ";
+            label += result;
+            if( move_cnt > 0 )
+                label += " in";
+        }
+        if( move_cnt > 0 )
+        {
+            if( !result_or_moves )
+                label += ", ";
+            char buf[100];
+            sprintf( buf, " %d moves", (move_cnt+1)/2 );
+            label += std::string(buf);
+        }
+        return label;
+    }
+
 };
 
 //FIXME - reorganise these

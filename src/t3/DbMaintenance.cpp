@@ -13,8 +13,8 @@
 #include "DbMaintenance.h"
 
 //-- Temp - hardwire .pgn file and database name
-#define PGN_FILE        "/Users/billforster/Documents/ChessDatabases/twic_minimal_overlap.pgn"
-#define PGN_OUT_FILE    "/Users/billforster/Documents/ChessDatabases/twic_minimal_overlap.pgn"
+#define PGN_FILE        "/Users/billforster/Documents/ChessDatabases/twic-948-1010.pgn"
+#define PGN_OUT_FILE    "/Users/billforster/Documents/ChessDatabases/twic_minimal_overlap_2.pgn"
 #define QGN_FILE        "/Users/billforster/Documents/ChessDatabases/twic_minimal_overlap.qgn"
 
 static FILE *ifile;
@@ -150,6 +150,8 @@ void db_maintenance_create_extra_indexes()
     db_primitive_close();
 }
 
+bool gbl_evil_queen;
+bool gbl_double_byte;
 void hook_gameover( char callback_code, const char *event, const char *site, const char *date, const char *round,
                   const char *white, const char *black, const char *result, const char *white_elo, const char *black_elo, const char *eco,
                   int nbr_moves, thc::Move *moves, uint64_t *hashes )
@@ -160,10 +162,31 @@ void hook_gameover( char callback_code, const char *event, const char *site, con
         case 'P': game_to_qgn_file( event, site, date, round, white, black, result, white_elo, black_elo, eco, nbr_moves, moves, hashes );  break;
             
         // Append
-        case 'A': db_primitive_insert_game_multi( white, black, event, site, result, nbr_moves, moves, hashes ); break;
+        case 'A': db_primitive_insert_game_multi( white, black, event, site, result, date, white_elo, black_elo, nbr_moves, moves, hashes ); break;
             
         // Verify
         case 'V': verify_compression_algorithm( nbr_moves, moves ); break;
+    }
+    if( gbl_evil_queen || gbl_double_byte )
+    {
+        static int evil_queen_count;
+        static int double_byte_count;
+        if( gbl_evil_queen )
+            evil_queen_count++;
+        if( gbl_double_byte )
+            double_byte_count++;
+        printf( "%d evil games, %d double byte games, %s-%s, %s\n",  evil_queen_count, double_byte_count, white, black, gbl_double_byte?"needs double bytes":"doesn't need double bytes");
+        gbl_evil_queen = false;
+        gbl_double_byte = false;
+        thc::ChessRules cr;
+        for( int i=0; i<nbr_moves; i++ )
+        {
+            thc::Move mv = moves[i];
+            std::string s = mv.NaturalOut( &cr );
+            printf( "%s ", s.c_str() );
+            cr.PlayMove(mv);
+        }
+        printf( "\n" );
     }
 }
 

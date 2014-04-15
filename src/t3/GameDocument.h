@@ -18,7 +18,7 @@
 #include "GameLifecycle.h"
 
 
-#define smart_ptr std::shared_ptr
+#define smart_ptr std::unique_ptr
 #define make_smart_ptr(T,to,from) smart_ptr<T> to; to.reset(new T(from))
 
                 
@@ -198,6 +198,7 @@ public:
     
     virtual void Init( const thc::ChessPosition &start_position );
     virtual void GetGameDocument( GameDocument &gd );
+    std::string Description();
     
     void FleshOutMoves();
     void ToFileTxtGameDetails( std::string &str );

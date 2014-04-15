@@ -113,7 +113,7 @@ enum TERMINAL
 
 // Calculate an upper limit to the length of a list of moves   
 #define MAXMOVES (27 + 2*13 + 2*14 + 2*8 + 8 + 8*4  +  3*27)
-                //[Q   2*B    2*R    2*N   K   8*P] +  [3*Q]     
+                //[Q   2*B    2*R    2*N   K   8*P] +  [3*Q]
                 //             ^                         ^       
                 //[calculated practical maximum   ] + [margin]   
 

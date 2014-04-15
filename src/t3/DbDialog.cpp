@@ -159,22 +159,14 @@ public:
         cprintf( "ListCtrl::ReceiveFocus(%d)\n", focus_idx );
         this->focus_idx = focus_idx;
         ReadItem(focus_idx);
-        char buf[1000];
-        char bufw[1000];
-        char bufb[1000];
-        strcpy( bufw, gbl_info.white.c_str() );
-        bufw[19] = '\0';
-        strcpy( bufb, gbl_info.black.c_str() );
-        bufb[19] = '\0';
-        sprintf( buf, "%s - %s", bufw, bufb );
         initial_focus_offset = focus_offset = db_calculate_move_vector( &gbl_info, gbl_focus_moves );
         if( mini_board )
         {
             CalculateMoveTxt();
             //cprintf( "ReceiveFocus(): SetPosition() %s\n", gbl_updated_position.ToDebugStr().c_str()  );
             mini_board->SetPosition( gbl_updated_position.squares );
-            cprintf( "Setting board label(%d): %s\n", focus_idx, buf );
-            data_src->player_names->SetLabel(wxString(buf));
+            std::string desc = gbl_info.Description();
+            data_src->player_names->SetLabel(wxString(desc.c_str()));
         }
     }
 
@@ -228,10 +220,16 @@ protected:
         ReadItem(item);
         switch( column )
         {
-            default: txt =  "";                       break;
+            default: txt =  "";                           break;
             case 1: txt =   gbl_info.white.c_str();       break;
+            case 2: txt =   gbl_info.white_elo.c_str();      break;
             case 3: txt =   gbl_info.black.c_str();       break;
+            case 4: txt =   gbl_info.black_elo.c_str();      break;
+            case 5: txt =   gbl_info.date.c_str();      break;
+            case 6: txt =   gbl_info.site.c_str();      break;
+            //case 7: txt =   gbl_info.round.c_str();      break;
             case 8: txt =   gbl_info.result.c_str();      break;
+            //case 9: txt =   gbl_info.eco.c_str();      break;
             case 10:
             {
                 char buf[1000];
@@ -458,7 +456,7 @@ void DbDialog::CreateControls()
         objs.repository->nv.m_col9 = cols[9] =   5*x/97;    // "ECO"   
         objs.repository->nv.m_col10= cols[10]=  14*x/97;    // "Moves"
     }
-    if(true) //temp temp temp white, black, result, moves only
+ /*   if(true) //temp temp temp white, black, result, moves only
     {
         int x   = (sz.x*98)/100;
         objs.repository->nv.m_col0 = cols[0] =   2*x/97;    // "Game #"
@@ -472,7 +470,7 @@ void DbDialog::CreateControls()
         objs.repository->nv.m_col8 = cols[8] =   8*x/97;    // "Result"
         objs.repository->nv.m_col9 = cols[9] =   2*x/97;    // "ECO"
         objs.repository->nv.m_col10= cols[10]=  45*x/97;    // "Moves"
-    }
+    }  */
     list_ctrl->SetColumnWidth( 0, cols[0] );    // "Game #"
     gc->col_flags.push_back(col_flag);
     list_ctrl->SetColumnWidth( 1, cols[1] );    // "White" 
@@ -504,25 +502,18 @@ void DbDialog::CreateControls()
         wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
     box_sizer->Add(line, 0, wxGROW|wxALL, 5);
 
-    // Create a panel beneath the list control, containing more sizers
+    // Create a panel beneath the list control, containing everything else
     wxBoxSizer* hsiz_panel = new wxBoxSizer(wxHORIZONTAL);
-    box_sizer->Add(hsiz_panel, 0, wxALIGN_LEFT|wxALL, 10);
-    wxBoxSizer* vsiz_panel_board = new wxBoxSizer(wxVERTICAL);
-    wxGridSizer* vsiz_panel_buttons = new wxGridSizer(6,2,0,0);
-    wxBoxSizer* vsiz_panel_stats = new wxBoxSizer(wxVERTICAL);
-    hsiz_panel->Add(vsiz_panel_board, 0, wxALIGN_TOP|wxALL, 10);
-    hsiz_panel->Add(vsiz_panel_buttons, 0, wxALIGN_TOP|wxALL, 10);
-    //hsiz_panel->AddSpacer(10);
-    hsiz_panel->Add(vsiz_panel_stats, 0, wxALIGN_TOP|wxALL, 10);
+    box_sizer->Add(hsiz_panel, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxTOP, 10);
 
     mini_board = new MiniBoard(this);
     list_ctrl->mini_board = mini_board;
     gbl_updated_position = cr;
     mini_board->SetPosition( cr.squares );
-    vsiz_panel_board->Add( mini_board, 1, wxALIGN_LEFT|wxALL|wxFIXED_MINSIZE, 5 );
-    player_names = new wxStaticText( this, wxID_ANY, "White - Black",
-                                           wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL );
-    vsiz_panel_board->Add(player_names, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+    hsiz_panel->Add( mini_board, 1, wxALIGN_LEFT|wxTOP|wxRIGHT|wxBOTTOM|wxFIXED_MINSIZE, 5 );
+    wxGridSizer* vsiz_panel_buttons = new wxGridSizer(6,2,0,0);
+    hsiz_panel->Add(vsiz_panel_buttons, 0, wxALIGN_TOP|wxALL, 10);
 
     // Load / Ok / Game->Board
     wxButton* ok = new wxButton ( this, wxID_OK, wxT("Load Game"),
@@ -587,14 +578,15 @@ void DbDialog::CreateControls()
 //    sz.y /= 3;
     wxSize sz4 = mini_board->GetSize();
     wxSize sz5 = sz4;
-    sz5.x = (sz4.x*16)/10;
-    sz5.y = (sz4.y*11)/10;
-    sz4.x = (sz4.x*13)/10;
-    sz4.y = (sz4.y*10)/10;
-    notebook = new wxNotebook(this, wxID_ANY, wxDefaultPosition, sz5 );
+    sz5.x = (sz4.x*18)/10;
+    sz5.y = (sz4.y*10)/10;
+    notebook = new wxNotebook(this, wxID_ANY, wxDefaultPosition, /*wxDefaultSize*/ sz5 );
     //wxPanel *notebook_page1 = new wxPanel(notebook, wxID_ANY );
-    vsiz_panel_stats->Add( notebook, 0, wxALIGN_CENTER_VERTICAL|wxGROW|wxALL, 5);
+    hsiz_panel /*vsiz_panel_stats*/->Add( notebook, 0, wxALIGN_TOP|wxGROW|wxALL, 0 );
     
+    player_names = new wxStaticText( this, wxID_ANY, "White - Black",
+                                    wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL );
+    box_sizer->Add(player_names, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxBOTTOM, 10);
 
 }
 

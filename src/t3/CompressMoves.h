@@ -88,8 +88,11 @@ public:
     
     
 private:
+    bool evil_queen_mode;
     std::string check_last_success;
     std::string check_last_description;
+    void compress_move_slow_mode( thc::Move mv, char &out );
+    void decompress_move_slow_mode( char in, thc::Move &out );
 };
 
 #endif /* defined(__readquick__CompressMoves__) */

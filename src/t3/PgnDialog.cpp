@@ -41,6 +41,8 @@ BEGIN_EVENT_TABLE( PgnDialog, wxDialog )
     EVT_BUTTON( ID_PGN_DIALOG_GAME_DETAILS,   PgnDialog::OnEditGameDetails )
     EVT_BUTTON( ID_PGN_DIALOG_GAME_PREFIX,    PgnDialog::OnEditGamePrefix )
     EVT_BUTTON( ID_PGN_DIALOG_PUBLISH,  PgnDialog::OnPublish )
+    EVT_BUTTON( ID_PGN_DIALOG_UTILITY1,  PgnDialog::OnUtility1 )
+    EVT_BUTTON( ID_PGN_DIALOG_UTILITY2,  PgnDialog::OnUtility2 )
     EVT_BUTTON( wxID_COPY,              PgnDialog::OnCopy )
     EVT_BUTTON( wxID_CUT,               PgnDialog::OnCut )
     EVT_BUTTON( wxID_DELETE,            PgnDialog::OnDelete )
@@ -56,15 +58,9 @@ END_EVENT_TABLE()
 
 
 // It's a pity we have these static vars, but unfortunately OnGetItemText() must be const for some reason
-static std::string gbl_player_name_label( "White - Black") ;
-static thc::ChessPosition gbl_updated_position;
-static int gbl_last_item;
+static std::string gbl_game_description;
 static std::vector< thc::Move > gbl_focus_moves;
 static std::string gbl_result;
-static int focus_idx;
-static int focus_offset;
-static MiniBoard *mini_board;
-static int gbl_nbr;
 
 class wxVirtualPgnListCtrl: public wxListCtrl
 {
@@ -76,7 +72,6 @@ public:
     {
         focus_idx = 0;
         focus_offset = 0;
-        gbl_last_item = -1;
         mini_board = NULL;
     }
     //~wxVirtualPgnListCtrl();
@@ -96,12 +91,14 @@ public:
         std::string move_txt;
         if( item == focus_idx )
         {
-            move_txt = RecalculateMoveTxt();    
+            std::string     previous_move;
+            thc::ChessRules current_position;
+            RecalculateMoveTxt( previous_move, current_position, move_txt );
         }
         else
         {
-            smart_ptr<GameDocumentBase> sptr = data_src->gc->gds[item];
-            move_txt = sptr->moves_txt;
+            GameDocumentBase *ptr = data_src->gc->gds[item].get();
+            move_txt = ptr->moves_txt;
         }
         return move_txt;
     }
@@ -112,76 +109,146 @@ public:
     {
         cprintf( "ListCtrl::ReceiveFocus(%d)\n", focus_idx );
         this->focus_idx = focus_idx;
-        char buf[1000];
-        char bufw[1000];
-        char bufb[1000];
-        strcpy( bufw, data_src->gc->gds[focus_idx]->white.c_str() );
-        bufw[19] = '\0';
-        strcpy( bufb, data_src->gc->gds[focus_idx]->black.c_str() );
-        bufb[19] = '\0';
-        sprintf( buf, "%s - %s", bufw, bufb );
         initial_focus_offset = focus_offset = 0;
-        smart_ptr<GameDocumentBase> sptr = data_src->gc->gds[focus_idx]; //FIXME db_calculate_move_vector( &data_src->gc->gds[focus_idx], gbl_focus_moves );
-        GameDocument temp;
-        sptr->GetGameDocument(temp);
-        cprintf( "white = %s, moves = %d\n", temp.white.c_str(), temp.tree.variations[0].size() );
-        //*std::dynamic_pointer_cast<GameDocument>(sptr) = temp;
-        gbl_result = temp.result;
-        gbl_focus_moves.clear();
-        gbl_player_name_label = std::string(buf);
-        VARIATION &v = temp.tree.variations[0];
-        for( size_t i=0; i<v.size(); i++ )
+        
+        // Calculate game description, eg "Carlen(2870) - Kramnik(2800), Paris 2000 1-0 in 43 moves"
+        //  This could be refactored as std::string GameDocument.Description()
+        GameDocument gd;
+        data_src->gc->gds[focus_idx]->GetGameDocument(gd);
+      /*  std::string white = gd.white;
+        std::string black = gd.black;
+        size_t comma = white.find(',');
+        if( comma != std::string::npos )
+            white = white.substr( 0, comma );
+        comma = black.find(',');
+        if( comma != std::string::npos )
+            black = black.substr( 0, comma );
+        std::string event = gd.event;
+        std::string site = gd.site;
+        std::string white_elo = gd.white_elo;
+        std::string black_elo = gd.black_elo;
+        std::string result = gd.result;
+        std::string date = gd.date;
+        int move_cnt = gd.tree.variations[0].size();
+        gbl_result = gd.result;
+        std::string label = white;
+        if( white_elo != "" )
         {
-            gbl_focus_moves.push_back( v[i].game_move.move );
+            label += " (";
+            label += white_elo;
+            label += ")";
         }
+        label += " - ";
+        label += black;
+        if( black_elo != "" )
+        {
+            label += " (";
+            label += white_elo;
+            label += ")";
+        }
+        if( site != "" )
+        {
+            label += ", ";
+            label += site;
+        }
+        else if( event != "" )
+        {
+            label += ", ";
+            label += event;
+        }
+        if( date.length() >= 4 )
+        {
+            label += " ";
+            label += date.substr(0,4);
+        }
+        bool result_or_moves = false;
+        if( result != "*" )
+        {
+            result_or_moves = true;
+            label += ", ";
+            label += result;
+            if( move_cnt > 0 )
+                label += " in";
+        }
+        if( move_cnt > 0 )
+        {
+            if( !result_or_moves )
+                label += ", ";
+            char buf[100];
+            sprintf( buf, " %d moves", (move_cnt+1)/2 );
+            label += std::string(buf);
+        } */
+        gbl_result = gd.result;
+        std::string label = gd.Description();
+        gbl_game_description = label;
+        
+        // Calculate main line move vector
+        gbl_focus_moves.clear();
+        VARIATION &v = gd.tree.variations[0];
+        for( size_t i=0; i<v.size(); i++ )
+            gbl_focus_moves.push_back( v[i].game_move.move );
+
+        // Label the game
         if( mini_board )
         {
-            RecalculateMoveTxt();
-            //cprintf( "ReceiveFocus(): SetPosition() %s\n", gbl_updated_position.ToDebugStr().c_str()  );
-            mini_board->SetPosition( gbl_updated_position.squares );
-            data_src->player_names->SetLabel( gbl_player_name_label.c_str() );
+            std::string     previous_move;
+            thc::ChessRules current_position;
+            std::string     remaining_moves;
+            RecalculateMoveTxt( previous_move, current_position, remaining_moves );
+            if( previous_move.length() > 0 )
+                label = label + ", after " + previous_move;
+            mini_board->SetPosition( current_position.squares );
+            data_src->game_description->SetLabel( label.c_str() );
         }
     }
     
-    std::string RecalculateMoveTxt() const
+    void RecalculateMoveTxt( std::string &previous_move, thc::ChessRules &current_position, std::string &remaining_moves ) const
     {
         std::string move_txt;
         thc::ChessRules cr;
-        bool first=true;
+        bool position_updated = false;
+        bool truncated = false;
+        previous_move = "";
         for( size_t i=0; i<gbl_focus_moves.size(); i++ )
         {
             thc::Move mv = gbl_focus_moves[i];
-            if( i >= focus_offset )
+            if( i>=focus_offset || i+1==focus_offset )
             {
+                bool prev_move = (i+1 == focus_offset);
+                bool first_move = (i == focus_offset);
                 std::string s = mv.NaturalOut(&cr);
-                if( i%2 == 0 || first )
+                if( i%2 == 0 || prev_move || first_move )
                 {
-                    if( first )
-                        gbl_updated_position = cr;
-                    first = false;
+                    if( first_move )
+                    {
+                        current_position = cr;
+                        position_updated = true;
+                    }
                     char buf[100];
                     sprintf( buf, "%lu%s", i/2+1, i%2==0?".":"..." );
-                    move_txt += buf;
+                    s = std::string(buf) + s;
                 }
-                move_txt += s;
-                move_txt += " ";
-                if( i+1 == gbl_focus_moves.size() )
-                    move_txt += gbl_result;
-                else if( i < gbl_focus_moves.size()-5 && move_txt.length()>100 )
+                if( prev_move )
+                    previous_move = s;
+                else
                 {
-                    move_txt += "...";  // very long lines get over truncated by the list control (sad but true)
-                    break;
+                    move_txt += s;
+                    move_txt += " ";
+                    if( i < gbl_focus_moves.size()-5 && move_txt.length()>100 )
+                    {
+                        truncated = true;
+                        move_txt += "...";  // very long lines get over truncated by the list control (sad but true)
+                        break;
+                    }
                 }
             }
             cr.PlayMove(mv);
         }
-        if( first )
-        {
-            gbl_updated_position = cr;
-            //move_txt = "FIXME RESULT";
-        }
-        //cprintf( "RecalculateMoveTxt(): [%s]%s\n", move_txt.c_str(), gbl_updated_position.ToDebugStr().c_str() );
-        return move_txt;
+        if( !truncated )
+            move_txt += gbl_result;
+        if( !position_updated )
+            current_position = cr;
+        remaining_moves = move_txt;
     }
     
 protected:
@@ -271,42 +338,50 @@ protected:
 };
 
 
-// DbDialog event table definition
+// PgnDialog event table definition
 BEGIN_EVENT_TABLE( wxVirtualPgnListCtrl, wxListCtrl )
 EVT_CHAR(wxVirtualPgnListCtrl::OnChar)
 END_EVENT_TABLE()
 
 void wxVirtualPgnListCtrl::OnChar( wxKeyEvent &event )
 {
-    //cprintf( "OnChar" );
+    bool update_required = false;
     switch ( event.GetKeyCode() )
     {
         case WXK_LEFT:
-            //cprintf( "WXK_LEFT\n" );
+        {
             if( focus_offset > 0 )
+            {
                 focus_offset--;
-            if( mini_board )
-            {
-                RecalculateMoveTxt();
-                //cprintf( "WXK_LEFT: SetPosition() %s\n", gbl_updated_position.ToDebugStr().c_str()  );
-                mini_board->SetPosition( gbl_updated_position.squares );
+                update_required = true;
             }
-            RefreshItem(focus_idx);
             break;
+        }
         case WXK_RIGHT:
-            //cprintf( "WXK_RIGHT\n" );
+        {
             if( focus_offset < gbl_focus_moves.size() )
-                focus_offset++;
-            if( mini_board )
             {
-                RecalculateMoveTxt();
-                //cprintf( "WXK_RIGHT: SetPosition() %s\n", gbl_updated_position.ToDebugStr().c_str()  );
-                mini_board->SetPosition( gbl_updated_position.squares );
+                focus_offset++;
+                update_required = true;
             }
-            RefreshItem(focus_idx);
             break;
+        }
         default:
             event.Skip();
+    }
+    if( update_required )
+    {
+        std::string     previous_move;
+        thc::ChessRules current_position;
+        std::string     remaining_moves;
+        RecalculateMoveTxt( previous_move, current_position, remaining_moves );
+        std::string label = gbl_game_description;
+        if( previous_move.length() > 0 )
+            label = label + ", after " + previous_move;
+        data_src->game_description->SetLabel( label.c_str() );
+        if( mini_board )
+            mini_board->SetPosition( current_position.squares );
+        RefreshItem(focus_idx);
     }
 }
 
@@ -441,8 +516,6 @@ int wxCALLBACK sort_callback( long item1, long item2, long col )
 // Control creation for PgnDialog
 void PgnDialog::CreateControls()
 {    
-    gbl_player_name_label = "White - Black";
-
     // A top-level sizer
     wxBoxSizer* top_sizer = new wxBoxSizer(wxVERTICAL);
     this->SetSizer(top_sizer);
@@ -472,7 +545,6 @@ void PgnDialog::CreateControls()
     sz.y = (disp_height*1)/2;
     list_ctrl  = new wxVirtualPgnListCtrl( this, ID_PGN_LISTBOX, wxDefaultPosition, sz/*wxDefaultSize*/,wxLC_REPORT|wxLC_VIRTUAL );
     int gds_nbr = gc->gds.size();
-    gbl_nbr = gds_nbr;
     list_ctrl->data_src = this;
     list_ctrl->SetItemCount(gds_nbr);
     list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
@@ -649,47 +721,29 @@ void PgnDialog::CreateControls()
                                            wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
     box_sizer->Add(line, 0, wxGROW|wxALL, 5);
     
-    
-    
-    // Create a panel beneath the list control, containing more sizers
+    // Create a panel beneath the list control, containing everything else
     wxBoxSizer* hsiz_panel = new wxBoxSizer(wxHORIZONTAL);
-    box_sizer->Add(hsiz_panel, 0, wxALIGN_LEFT|wxALL, 10);
-    wxBoxSizer* vsiz_panel_board = new wxBoxSizer(wxVERTICAL);
-    wxGridSizer* vsiz_panel_buttons = new wxGridSizer(6,2,0,0);
-    wxBoxSizer* vsiz_panel_stats = new wxBoxSizer(wxVERTICAL);
-    hsiz_panel->Add(vsiz_panel_board, 0, wxALIGN_TOP|wxALL, 10);
+    box_sizer->Add(hsiz_panel, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxTOP, 10);
+    
+    MiniBoard *mb = new MiniBoard(this);
+    list_ctrl->mini_board = mb;
+    hsiz_panel->Add( mb, 1, wxALIGN_LEFT|wxTOP|wxRIGHT|wxBOTTOM|wxFIXED_MINSIZE, 5 );
+    thc::ChessPosition cp;
+    mb->SetPosition(cp.squares);
+    wxGridSizer* vsiz_panel_buttons = new wxGridSizer(0,5,0,0);
     hsiz_panel->Add(vsiz_panel_buttons, 0, wxALIGN_TOP|wxALL, 10);
-    //hsiz_panel->AddSpacer(10);
-    hsiz_panel->Add(vsiz_panel_stats, 0, wxALIGN_TOP|wxALL, 10);
     
-    mini_board = new MiniBoard(this);
-    list_ctrl->mini_board = mini_board;
-    thc::ChessPosition cr;
-    gbl_updated_position = cr;
-    mini_board->SetPosition( cr.squares );
-    vsiz_panel_board->Add( mini_board, 1, wxALIGN_LEFT|wxALL|wxFIXED_MINSIZE, 5 );
-    player_names = new wxStaticText( this, wxID_ANY, gbl_player_name_label.c_str(),
-                                    wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL );
-    vsiz_panel_board->Add(player_names, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    
-    // A pair of horizontal box sizers to contain buttons
-    wxBoxSizer* button_box1 = new wxBoxSizer(wxHORIZONTAL);
-    box_sizer->Add(button_box1, 0, wxALIGN_LEFT|wxALL, 10);
-    wxBoxSizer* button_box2 = new wxBoxSizer(wxHORIZONTAL);
-    box_sizer->Add(button_box2, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 10);
-    
-
     // Load / Ok / Game->Board
     wxButton* ok = new wxButton ( this, wxID_OK, wxT("Load"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    button_box1->Add(ok, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_buttons->Add(ok, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     // Edit game details
     if( id==ID_PGN_DIALOG_FILE )
     {
         wxButton* edit_game_details = new wxButton ( this, ID_PGN_DIALOG_GAME_DETAILS, wxT("Edit Game Details"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        button_box1->Add(edit_game_details, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(edit_game_details, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
 
     // Edit game prefix
@@ -697,7 +751,7 @@ void PgnDialog::CreateControls()
     {
         wxButton* edit_game_prefix = new wxButton ( this, ID_PGN_DIALOG_GAME_PREFIX, wxT("Edit Game Prefix"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        button_box1->Add(edit_game_prefix, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(edit_game_prefix, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
 
     // Paste game / Board->Game
@@ -705,7 +759,7 @@ void PgnDialog::CreateControls()
     {
         wxButton* board2game = new wxButton ( this, ID_BOARD2GAME, wxT("Paste current game"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        button_box1->Add(board2game, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(board2game, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
 
     // Delete
@@ -713,7 +767,7 @@ void PgnDialog::CreateControls()
     {
         wxButton* delete_ = new wxButton ( this, wxID_DELETE, wxT("Delete"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        button_box1->Add(delete_, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(delete_, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
 
     // Cut
@@ -721,7 +775,7 @@ void PgnDialog::CreateControls()
     {
         wxButton* cut = new wxButton ( this, wxID_CUT, wxT("Cut"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        button_box1->Add(cut, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(cut, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
 
     // Add to clipboard
@@ -729,7 +783,7 @@ void PgnDialog::CreateControls()
     {
         wxButton* add = new wxButton ( this, ID_ADD_TO_CLIPBOARD, wxT("Add to clipboard"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        button_box1->Add(add, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(add, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
 
     // Copy
@@ -737,7 +791,7 @@ void PgnDialog::CreateControls()
     {
         wxButton* copy = new wxButton ( this, wxID_COPY, wxT("Copy"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        button_box1->Add(copy, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(copy, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
 
     // Paste
@@ -745,7 +799,7 @@ void PgnDialog::CreateControls()
     {
         wxButton* paste = new wxButton ( this, wxID_PASTE, wxT("Paste"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        button_box1->Add(paste, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(paste, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
 
     // Save all games to a file
@@ -753,7 +807,7 @@ void PgnDialog::CreateControls()
     {
         wxButton* save_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save all to a file"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        button_box1->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
 
     // Renumber
@@ -761,7 +815,7 @@ void PgnDialog::CreateControls()
     {
         wxCheckBox* reorder = new wxCheckBox ( this, ID_REORDER, wxT("Renumber"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        button_box2->Add(reorder, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(reorder, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
 
     // Write to file
@@ -769,23 +823,39 @@ void PgnDialog::CreateControls()
     {
         wxButton* write_to_file = new wxButton ( this, wxID_SAVE, wxT("Save file"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        button_box2->Add(write_to_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(write_to_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
 
-    // Write to file
+    // Publish
     if( id==ID_PGN_DIALOG_FILE )
     {
         wxButton* publish = new wxButton ( this, ID_PGN_DIALOG_PUBLISH, wxT("Publish"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        button_box2->Add(publish, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(publish, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
 
+    // Utility1
+    if( id==ID_PGN_DIALOG_FILE )
+    {
+        wxButton* utility1 = new wxButton ( this, ID_PGN_DIALOG_UTILITY1, wxT("Add all to database"),
+                                          wxDefaultPosition, wxDefaultSize, 0 );
+        vsiz_panel_buttons->Add(utility1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    }
+    
+    // Utility2
+    if( id==ID_PGN_DIALOG_FILE )
+    {
+        wxButton* utility2 = new wxButton ( this, ID_PGN_DIALOG_UTILITY2, wxT("Utility2"),
+                                          wxDefaultPosition, wxDefaultSize, 0 );
+        vsiz_panel_buttons->Add(utility2, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    }
+    
     // The Cancel button
     if( id==ID_PGN_DIALOG_FILE||id==ID_PGN_DIALOG_CLIPBOARD||id==ID_PGN_DIALOG_SESSION )
     {
         wxButton* cancel = new wxButton ( this, wxID_CANCEL,
             wxT("Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
-        button_box2->Add(cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
 
     // The Help button
@@ -793,8 +863,12 @@ void PgnDialog::CreateControls()
     {
         wxButton* help = new wxButton( this, wxID_HELP, wxT("Help"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        button_box2->Add(help, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);    
+        vsiz_panel_buttons->Add(help, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
+    
+    game_description = new wxStaticText( this, wxID_ANY, gbl_game_description.c_str(),
+                                    wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL );
+    box_sizer->Add(game_description, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxBOTTOM, 10);
 }
 
 
@@ -1038,7 +1112,7 @@ void PgnDialog::OnListFocused( wxListEvent &event )
     {
         int prev = list_ctrl->focus_idx;
         int idx = event.m_itemIndex;
-        cprintf( "DbDialog::OnListFocused() Prev idx=%d, New idx=%d\n", prev, idx );
+        //cprintf( "PgnDialog::OnListFocused() Prev idx=%d, New idx=%d\n", prev, idx );
         list_ctrl->ReceiveFocus( idx );
         list_ctrl->RefreshItem(prev);
     }
@@ -1066,12 +1140,12 @@ void PgnDialog::OnOk()
         if( selected_game != -1  )
         {
             DeselectOthers(selected_game);
-            smart_ptr<GameDocumentBase> sptr = gc->gds[selected_game];
+            GameDocumentBase *ptr = gc->gds[selected_game].get();
             GameDocument gd;
-            sptr->GetGameDocument(gd);
+            ptr->GetGameDocument(gd);
             gd.in_memory = true;
-            make_smart_ptr(GameDocument,sptr2,gd);
-            gc->gds[selected_game] = sptr2;
+            make_smart_ptr(GameDocument,sptr,gd);
+            gc->gds[selected_game] = std::move(sptr);
         }
     }
     TransferDataToWindow();    
@@ -1084,7 +1158,7 @@ bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx )
     {
         gl->IndicateNoCurrentDocument();
         gc->gds[selected_game]->game_being_edited = ++objs.gl->game_being_edited_tag;
-        gd = * std::dynamic_pointer_cast<GameDocument>( gc->gds[selected_game] );
+        gc->gds[selected_game]->GetGameDocument(gd);
         gd.selected = false;
         gc->gds[selected_game]->selected = true;
         if( &gl->gc == gc )
@@ -1115,7 +1189,7 @@ void PgnDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
             gd.modified = true;
             gc->file_irrevocably_modified = true;
             make_smart_ptr( GameDocument, new_doc, gd );
-            gc->gds.insert( iter, new_doc );
+            gc->gds.insert( iter, std::move(new_doc) );
             wxListItem item;              
             list_ctrl->InsertItem( idx_focus, item );
             list_ctrl->SetItem( idx_focus, 0, "" );                     // game_nbr
@@ -1245,7 +1319,7 @@ void PgnDialog::CopyOrAdd( bool clear_clipboard )
                 }
                 GameDocument gd = *gc->gds[i];
                 make_smart_ptr( GameDocument, new_doc, gd );
-                gc_clipboard->gds.push_back(new_doc);
+                gc_clipboard->gds.push_back(std::move(new_doc));
                 nbr_copied++;
             }
         }
@@ -1258,7 +1332,7 @@ void PgnDialog::CopyOrAdd( bool clear_clipboard )
             }
             GameDocument gd = *gc->gds[idx_focus];
             make_smart_ptr( GameDocument, new_doc, gd );
-            gc_clipboard->gds.push_back(new_doc);
+            gc_clipboard->gds.push_back(std::move(new_doc));
             nbr_copied++;
         }
     }
@@ -1290,7 +1364,7 @@ void PgnDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
                 }
                 GameDocument gd = **iter;
                 make_smart_ptr( GameDocument, new_doc, gd );
-                gc_clipboard->gds.push_back(new_doc);
+                gc_clipboard->gds.push_back(std::move(new_doc));
                 list_ctrl->DeleteItem(i);
                 iter = gc->gds.erase(iter);
                 gc->file_irrevocably_modified = true;
@@ -1308,7 +1382,7 @@ void PgnDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
             gc_clipboard->gds.clear();
             GameDocument gd = **iter_focus;
             make_smart_ptr(GameDocument,new_doc,gd);
-            gc_clipboard->gds.push_back(new_doc);
+            gc_clipboard->gds.push_back(std::move(new_doc));
             list_ctrl->DeleteItem(idx_focus);
             iter = gc->gds.erase(iter_focus);
             gc->file_irrevocably_modified = true;
@@ -1373,11 +1447,12 @@ void PgnDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
         for( int i=sz-1; i>=0; i-- )    
         {                                 
             std::vector< smart_ptr<GameDocumentBase> >::iterator iter = gc->gds.begin() + idx_focus;
-            GameDocument gd = * std::dynamic_pointer_cast<GameDocument> (gc_clipboard->gds[i]);
+            GameDocument gd;
+            gc_clipboard->gds[i]->GetGameDocument(gd);
             gd.game_nbr = 0;
             gd.modified = true;
             make_smart_ptr(GameDocument,new_doc,gd);
-            gc->gds.insert( iter, new_doc );
+            gc->gds.insert( iter, std::move(new_doc) );
             gc->file_irrevocably_modified = true;
             wxListItem item;              
             list_ctrl->InsertItem( idx_focus, item );
@@ -1404,6 +1479,14 @@ void PgnDialog::OnSave( wxCommandEvent& WXUNUSED(event) )
 void PgnDialog::OnPublish( wxCommandEvent& WXUNUSED(event) )
 {
     gc->Publish( gc_clipboard );
+}
+
+void PgnDialog::OnUtility1( wxCommandEvent& WXUNUSED(event) )
+{
+}
+
+void PgnDialog::OnUtility2( wxCommandEvent& WXUNUSED(event) )
+{
 }
 
 void PgnDialog::OnCancel( wxCommandEvent& WXUNUSED(event) )
