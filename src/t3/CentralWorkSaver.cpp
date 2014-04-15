@@ -103,6 +103,7 @@ void CentralWorkSaver::AddGameToFile()
     int nbr = gc->gds.size();
     if( nbr > 0 )
         gd->game_nbr = gc->gds[nbr-1]->game_nbr + 1;
+    //? gc->Put( GameDocument, *gd ); 
     make_smart_ptr( GameDocument, new_smart_ptr, *gd );  // smart_ptr event: document->cache
     gc->gds.push_back( new_smart_ptr );
     objs.gl->file_game_idx = gc->gds.size()-1;
@@ -242,6 +243,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                                 // Append copied temp games to newly loaded file
                                 for( int i=0; i<gds_temp.size(); i++ )
                                 {
+                                    //? gc_vecGet( i, GameDocument, doc ); 
                                     GameDocument doc = * std::dynamic_pointer_cast<GameDocument> (gds_temp[i]);
                                     doc.game_nbr = existing_nbr + i;
                                     if( doc.game_being_edited )
@@ -249,6 +251,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                                         gd->game_nbr = doc.game_nbr+1;  // todo: why +1 ?
                                         objs.gl->file_game_idx = doc.game_nbr;
                                     }
+                                    //? gc->Put( GameDocument, doc ); 
                                     make_smart_ptr( GameDocument, new_smart_ptr, doc );
                                     gc->gds.push_back( new_smart_ptr );
                                 }

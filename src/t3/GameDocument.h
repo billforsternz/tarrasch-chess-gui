@@ -11,6 +11,7 @@
 #include <vector>
 #include <memory>
 #include "thc.h"
+#include "DebugPrintf.h"
 #include "MoveTree.h"
 #include "NavigationKey.h"
 #include "GameView.h"
@@ -23,7 +24,14 @@
                 
 class GameLogic;
 class GameDocument;
-class GameDocumentBase
+class MagicBase
+{
+public:
+    ~MagicBase() {}
+    virtual void GetGameDocument( GameDocument &gd ) { dprintf("FIXME DANGER WILL ROBINSON\n"); }
+};
+
+class GameDocumentBase : public MagicBase
 {
 public:
     GameDocumentBase( GameLogic *gl );
