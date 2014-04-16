@@ -337,6 +337,7 @@ void db_primitive_create_extra_indexes()
     }
 }
 
+/*
 unsigned int levenshtein_distance(const std::string &s1, const std::string &s2)
 {
 	const size_t len1 = s1.size(), len2 = s2.size();
@@ -363,11 +364,11 @@ static void t( const char *left, const char *right )
     printf( "[%s] [%s] %u\n", left, right, x );
 }
 
-
+  */
 
 void db_primitive_speed_tests()
 {
-    t( "Smith", "Smith" );
+  /*  t( "Smith", "Smith" );
     t( "Smith", "Simth" );
     t( "Smith", "Smithy" );
     t( "Smith", "Smiths" );
@@ -377,7 +378,7 @@ void db_primitive_speed_tests()
     t( "Smith", "PSmith" );
     t( "Smith", "Brith" );
     t( "Smith", "Roberts" );
-    t( "Smith", "Jones" );
+    t( "Smith", "Jones" ); */
     
     printf( "db_primitive_speed_tests()\n" );
     

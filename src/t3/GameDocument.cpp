@@ -216,13 +216,6 @@ void GameDocument::Init( const ChessPosition &start_position )
     Rebuild();
 }
 
-// Virtual
-void GameDocument::GetGameDocument( GameDocument &doc_copy )
-{
-    doc_copy = *this;
-}
-
-// Virtual
 void GameDocumentBase::GetGameDocument( GameDocument &read_from_file )
 {
     /* GameDocument doc = * std::dynamic_pointer_cast<GameDocument> (gds[i]); */

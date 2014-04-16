@@ -57,8 +57,9 @@ bool CentralWorkSaver::TestFileModified()
         modified = gc->file_irrevocably_modified;
         for( unsigned int i=0; !modified && i<gc->gds.size(); i++ )
         {
-            if( gc->gds[i]->in_memory &&
-                    (gc->gds[i]->game_prefix_edited || gc->gds[i]->game_details_edited || gc->gds[i]->modified)
+            GameDocumentBase *ptr = gc->gds[i]->GetGameDocumentBasePtr();
+            if( ptr && ptr->in_memory &&
+                    (ptr->game_prefix_edited || ptr->game_details_edited || ptr->modified)
               )
             {
                 modified = true;
@@ -79,7 +80,8 @@ bool CentralWorkSaver::TestGameInFile()
     bool in_file=false;
     for( unsigned int i=0; i<gc->gds.size(); i++ )
     {
-        if( gc->gds[i]->game_being_edited  )
+        GameDocumentBase *ptr = gc->gds[i]->GetGameDocumentBasePtr();
+        if( ptr && ptr->game_being_edited  )
         {
             in_file = true;
             break;
@@ -101,10 +103,13 @@ void CentralWorkSaver::AddGameToFile()
     gd->modified = false;           // ...modified=false, which could mean the game
                                     // not getting to log or session later (not satisfactory I know - too many flags)
     int nbr = gc->gds.size();
-    if( nbr > 0 )
-        gd->game_nbr = gc->gds[nbr-1]->game_nbr + 1;
-    //? gc->Put( GameDocument, *gd ); 
-    make_smart_ptr( GameDocument, new_smart_ptr, *gd );  // smart_ptr event: document->cache
+    if( nbr > 0  )
+    {
+        GameDocumentBase *ptr = gc->gds[nbr-1]->GetGameDocumentBasePtr();
+        if( ptr )
+            gd->game_nbr = ptr->game_nbr + 1;
+    }
+    make_smart_ptr( HoldDocument, new_smart_ptr, *gd );  // smart_ptr event: document->cache
     gc->gds.push_back( std::move(new_smart_ptr) );
     objs.gl->file_game_idx = gc->gds.size()-1;
 }
@@ -244,7 +249,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                                 for( int i=0; i<gds_temp.size(); i++ )
                                 {
                                     //? gc_vecGet( i, GameDocument, doc ); 
-                                    GameDocument doc = * std::dynamic_pointer_cast<GameDocument> (gds_temp[i]);
+                                    GameDocument doc; //? = * std::dynamic_pointer_cast<GameDocument> (gds_temp[i]);
                                     doc.game_nbr = existing_nbr + i;
                                     if( doc.game_being_edited )
                                     {
@@ -252,7 +257,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                                         objs.gl->file_game_idx = doc.game_nbr;
                                     }
                                     //? gc->Put( GameDocument, doc ); 
-                                    make_smart_ptr( GameDocument, new_smart_ptr, doc );
+                                    make_smart_ptr( HoldDocument, new_smart_ptr, doc );
                                     gc->gds.push_back( std::move(new_smart_ptr) );
                                 }
                                 gc->FileSave( gc_clipboard );

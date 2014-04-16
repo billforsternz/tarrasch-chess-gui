@@ -5,6 +5,8 @@
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
 
+#include <algorithm>
+#include <vector>
 #include <stdlib.h>
 #include "CompressMoves.h"
 
