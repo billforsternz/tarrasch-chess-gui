@@ -686,7 +686,7 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
 
 void GamesCache::Debug( const char *intro_message )
 {
-    DebugPrintf(( "Cache dump>%s\n", intro_message ));
+/*  DebugPrintf(( "Cache dump>%s\n", intro_message ));
     int gds_nbr = gds.size();
     for( int i=0; i<gds_nbr; i++ )    
     {   
@@ -709,7 +709,7 @@ void GamesCache::Debug( const char *intro_message )
                         doc.selected ? "true":"false",
                         doc.focus ? "true":"false"
                    );
-    }
+    } */
 }
 
 //#define NOMARKDOWN x

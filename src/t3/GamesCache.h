@@ -34,16 +34,16 @@ class HoldGameSummary : public MagicBase
 {
 public:
     GameSummary         the_game;
-    GameSummary         GetGameSummary()                { return the_game; }
-    std::string white()     { return the_game.white; }
-    std::string white_elo() { return the_game.white_elo; }
-    std::string black()     { return the_game.black; }
-    std::string black_elo() { return the_game.black_elo; }
-    std::string date()      { return the_game.date; }
-    std::string site()      { return the_game.site; }
-    //std::string round()     { return the_game.round; }
-    std::string result()    { return the_game.result; }
-    //std::string eco()       { return the_game.eco; }
+	virtual GameSummary         GetGameSummary()                { return the_game; }
+	virtual std::string white()     { return the_game.white; }
+	virtual std::string white_elo() { return the_game.white_elo; }
+	virtual std::string black()     { return the_game.black; }
+	virtual std::string black_elo() { return the_game.black_elo; }
+	virtual std::string date()      { return the_game.date; }
+	virtual std::string site()      { return the_game.site; }
+	//virtual std::string round()     { return the_game.round; }
+    virtual std::string result()    { return the_game.result; }
+    //virtual std::string eco()       { return the_game.eco; }
 };
 
 class HoldDocumentBase : public MagicBase
@@ -51,17 +51,18 @@ class HoldDocumentBase : public MagicBase
 public:
     HoldDocumentBase( GameDocumentBase &doc ) { the_game = doc; }
     GameDocumentBase    the_game;
-    GameDocument        GetGameDocument()               { GameDocument gd; the_game.GetGameDocument(gd); return gd; }
-    GameDocumentBase    *GetGameDocumentBasePtr()       { return &the_game; }
-    std::string white()     { return the_game.white; }
-    std::string white_elo() { return the_game.white_elo; }
-    std::string black()     { return the_game.black; }
-    std::string black_elo() { return the_game.black_elo; }
-    std::string date()      { return the_game.date; }
-    std::string site()      { return the_game.site; }
-    std::string round()     { return the_game.round; }
-    std::string result()    { return the_game.result; }
-    std::string eco()       { return the_game.eco; }
+	virtual void GetGameDocument(GameDocument &gd)				{ the_game.GetGameDocument(gd); }
+	virtual GameDocument        GetGameDocument()               { GameDocument gd; the_game.GetGameDocument(gd); return gd; }
+	virtual GameDocumentBase    *GetGameDocumentBasePtr()       { return &the_game; }
+	virtual std::string white()     { return the_game.white; }
+	virtual std::string white_elo() { return the_game.white_elo; }
+	virtual std::string black()     { return the_game.black; }
+	virtual std::string black_elo() { return the_game.black_elo; }
+	virtual std::string date()      { return the_game.date; }
+	virtual std::string site()      { return the_game.site; }
+	virtual std::string round()     { return the_game.round; }
+	virtual std::string result()    { return the_game.result; }
+    virtual std::string eco()       { return the_game.eco; }
 };
 
 class HoldDocument : public MagicBase
@@ -69,18 +70,19 @@ class HoldDocument : public MagicBase
 public:
     HoldDocument( GameDocument &doc ) { the_game = doc; }
     GameDocument        the_game;
-    GameDocument        GetGameDocument()               { return the_game; }
-    GameDocument        *GetGameDocumentPtr()           { return &the_game; }
-    GameDocumentBase    *GetGameDocumentBasePtr()       { return static_cast<GameDocumentBase *>(&the_game); }
-    std::string white()     { return the_game.white; }
-    std::string white_elo() { return the_game.white_elo; }
-    std::string black()     { return the_game.black; }
-    std::string black_elo() { return the_game.black_elo; }
-    std::string date()      { return the_game.date; }
-    std::string site()      { return the_game.site; }
-    std::string round()     { return the_game.round; }
-    std::string result()    { return the_game.result; }
-    std::string eco()       { return the_game.eco; }
+	virtual void GetGameDocument(GameDocument &gd)				{ the_game.GetGameDocument(gd); }
+	virtual GameDocument        GetGameDocument()               { return the_game; }
+	virtual GameDocument        *GetGameDocumentPtr()           { return &the_game; }
+	virtual GameDocumentBase    *GetGameDocumentBasePtr()       { return static_cast<GameDocumentBase *>(&the_game); }
+	virtual std::string white()     { return the_game.white; }
+	virtual std::string white_elo() { return the_game.white_elo; }
+	virtual std::string black()     { return the_game.black; }
+	virtual std::string black_elo() { return the_game.black_elo; }
+	virtual std::string date()      { return the_game.date; }
+	virtual std::string site()      { return the_game.site; }
+	virtual std::string round()     { return the_game.round; }
+	virtual std::string result()    { return the_game.result; }
+	virtual std::string eco()       { return the_game.eco; }
 };
 
 

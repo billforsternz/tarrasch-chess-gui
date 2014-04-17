@@ -553,7 +553,7 @@ void PgnDialog::CreateControls()
     if( disp_width > 1366 )
         disp_width = 1366;
     sz.x = (disp_width*4)/5;
-    sz.y = (disp_height*1)/2;
+    sz.y = (disp_height*2)/5;
     list_ctrl  = new wxVirtualPgnListCtrl( this, ID_PGN_LISTBOX, wxDefaultPosition, sz/*wxDefaultSize*/,wxLC_REPORT|wxLC_VIRTUAL );
     int gds_nbr = gc->gds.size();
     list_ctrl->data_src = this;
