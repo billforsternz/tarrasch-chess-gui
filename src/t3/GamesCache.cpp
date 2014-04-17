@@ -247,7 +247,7 @@ void GamesCache::LoadLine( GameDocumentBase &gd, int fposn, const char *line )
     }
     if( end_of_game )
     {
-        make_smart_ptr( GameDocumentBase, new_doc, gd );
+        make_smart_ptr( HoldDocumentBase, new_doc, gd );
         gds.push_back( std::move(new_doc) );
         thc::ChessPosition initial_position;
         gd.prefix_txt = "";
@@ -347,7 +347,7 @@ bool GamesCache::FileCreate( std::string &filename, GameDocument &gd )
     gds.clear();
     gd.in_memory = true;
     gd.pgn_handle = 0;
-    make_smart_ptr( GameDocument, new_doc, gd );
+    make_smart_ptr( HoldDocument, new_doc, gd );
     gds.push_back( std::move(new_doc) );
     FILE *pgn_out = objs.gl->pf.OpenCreate( pgn_filename, pgn_handle );
     if( pgn_out )
@@ -378,20 +378,24 @@ void GamesCache::FileSave( GamesCache *gc_clipboard )
         int gds_nbr = gds.size();
         for( int i=0; i<gds_nbr; i++ )    
         {   
-            int handle     = gds[i]->pgn_handle;
-            bool modified  = gds[i]->modified;
-            bool in_memory = gds[i]->in_memory;
-            long fposn0 = gds[i]->fposn0;
-            long fposn1 = gds[i]->fposn1;
-            long fposn2 = gds[i]->fposn2;
-            long fposn3 = gds[i]->fposn3;
-            fprintf( debug, "handle=%d, modified=%d, in_memory=%d\n"
-                            " fposn0=%ld,\n"
-                            " fposn1=%ld,\n"
-                            " fposn2=%ld,\n"
-                            " fposn3=%ld,\n",
-                            handle, modified, in_memory, fposn0,
-                                            fposn1, fposn2, fposn3 );
+            GameDocumentBase *ptr = gds[i]->GetGameDocumentBasePtr();
+            if( ptr )
+            {
+                int handle      = ptr->pgn_handle;
+                bool modified   = ptr->modified;
+                bool in_memory  = ptr->in_memory;
+                long fposn0     = ptr->fposn0;
+                long fposn1     = ptr->fposn1;
+                long fposn2     = ptr->fposn2;
+                long fposn3     = ptr->fposn3;
+                fprintf( debug, "handle=%d, modified=%d, in_memory=%d\n"
+                                " fposn0=%ld,\n"
+                                " fposn1=%ld,\n"
+                                " fposn2=%ld,\n"
+                                " fposn3=%ld,\n",
+                                handle, modified, in_memory, fposn0,
+                                               fposn1, fposn2, fposn3 );
+            }
         }
         FILE *in = fopen( "/Users/Bill/Documents/Tarrasch/bug5b.pgn", "rt" );
         if( in )
@@ -455,20 +459,24 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
         fprintf( debug, "Before: pgn_handle=%d\n", pgn_handle );
         for( int i=0; i<gds_nbr; i++ )    
         {   
-            int handle     = gds[i]->pgn_handle;
-            bool modified  = gds[i]->modified;
-            bool in_memory = gds[i]->in_memory;
-            long fposn0 = gds[i]->fposn0;
-            long fposn1 = gds[i]->fposn1;
-            long fposn2 = gds[i]->fposn2;
-            long fposn3 = gds[i]->fposn3;
-            fprintf( debug, "handle=%d, modified=%d, in_memory=%d\n"
-                            " fposn0=%ld,\n"
-                            " fposn1=%ld,\n"
-                            " fposn2=%ld,\n"
-                            " fposn3=%ld,\n",
-                            handle, modified, in_memory, fposn0,
-                                            fposn1, fposn2, fposn3 );
+            GameDocumentBase *ptr = gds[i]->GetGameDocumentBasePtr();
+            if( ptr )
+            {
+                int handle      = ptr->pgn_handle;
+                bool modified   = ptr->modified;
+                bool in_memory  = ptr->in_memory;
+                long fposn0     = ptr->fposn0;
+                long fposn1     = ptr->fposn1;
+                long fposn2     = ptr->fposn2;
+                long fposn3     = ptr->fposn3;
+                fprintf( debug, "handle=%d, modified=%d, in_memory=%d\n"
+                                " fposn0=%ld,\n"
+                                " fposn1=%ld,\n"
+                                " fposn2=%ld,\n"
+                                " fposn3=%ld,\n",
+                                handle, modified, in_memory, fposn0,
+                                               fposn1, fposn2, fposn3 );
+            }
         }
         fclose(debug);
     }
@@ -477,144 +485,155 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
     {
         for( int i=0; i<gds_nbr; i++ )    
         {   
-            gds[i]->sort_idx = gds[i]->game_nbr;
-            gds[i]->game_nbr = i;
+            GameDocumentBase *ptr = gds[i]->GetGameDocumentBasePtr();
+            if( ptr )
+            {
+                ptr->sort_idx = ptr->game_nbr;
+                ptr->game_nbr = i;
+            }
         }
         sort( gds.begin(), gds.end() );
     }
     long posn=0;
     for( int i=0; i<gds_nbr; i++ )    
     {   
-        gds[i]->modified = false;
-        bool replace_game_prefix = gds[i]->game_prefix_edited || gds[i]->pgn_handle==0;
-        gds[i]->game_prefix_edited = false;
-        bool replace_game_details = gds[i]->game_details_edited || gds[i]->pgn_handle==0;
-        gds[i]->game_details_edited = false;
-        bool replace_moves = gds[i]->in_memory || gds[i]->pgn_handle==0;
-        bool no_replacements = (!replace_moves && !replace_game_details && !replace_game_prefix);
-        bool replace_all     = (replace_moves && replace_game_details && replace_game_prefix);
-
-        //   fposn0
-        //     prefix text
-        //   fposn1
-        //     [game details]
-        //   fposn2
-        //     [game moves]
-        //   fposn3
-        //
-        long fposn0 = gds[i]->fposn0;
-        long fposn1 = gds[i]->fposn1;
-        long fposn2 = gds[i]->fposn2;
-        long fposn3 = gds[i]->fposn3;
-        long len;
-        bool same_file = (gds[i]->pgn_handle==pgn_handle);
-        FILE *pgn = pgn_in;
-        if( !same_file && !replace_all )
+        GameDocumentBase *ptr = gds[i]->GetGameDocumentBasePtr();
+        if( ptr )
         {
-            pgn = objs.gl->pf.ReopenRead( gds[i]->pgn_handle );
-            if( !pgn )
-                continue; // whoops, can't read the game
-        }
-        gds[i]->pgn_handle = pgn_handle;  // irrespective of where it came from, now this
-                                         //  game is in this file
-        gds[i]->fposn0 = posn;            
+            bool replace_game_prefix = true;
+            bool replace_game_details = true;
+            bool replace_moves = true;
+            ptr->modified = false;
+            replace_game_prefix = ptr->game_prefix_edited || ptr->pgn_handle==0;
+            ptr->game_prefix_edited = false;
+            replace_game_details = ptr->game_details_edited || ptr->pgn_handle==0;
+            ptr->game_details_edited = false;
+            replace_moves = ptr->in_memory || ptr->pgn_handle==0;
+            bool no_replacements = (!replace_moves && !replace_game_details && !replace_game_prefix);
+            bool replace_all     = (replace_moves && replace_game_details && replace_game_prefix);
+
+            //   fposn0
+            //     prefix text
+            //   fposn1
+            //     [game details]
+            //   fposn2
+            //     [game moves]
+            //   fposn3
+            //
+            long fposn0 = ptr->fposn0;
+            long fposn1 = ptr->fposn1;
+            long fposn2 = ptr->fposn2;
+            long fposn3 = ptr->fposn3;
+            long len;
+            bool same_file = (ptr->pgn_handle==pgn_handle);
+            FILE *pgn = pgn_in;
+            if( !same_file && !replace_all )
+            {
+                pgn = objs.gl->pf.ReopenRead( ptr->pgn_handle );
+                if( !pgn )
+                    continue; // whoops, can't read the game
+            }
+            ptr->pgn_handle = pgn_handle;  // irrespective of where it came from, now this
+                                             //  game is in this file
+            ptr->fposn0 = posn;            
                                             
-        if( no_replacements )
-        {
-            len = fposn3-fposn0;
-            fseek(pgn,fposn0,SEEK_SET);
-            while( len >= buflen )
+            if( no_replacements )
             {
-                delete[] buf;
-                buflen *= 2;
-                buf = new char [buflen];
-            }
-            fread(buf,1,len,pgn);
-            fwrite(buf,1,len,pgn_out);
-            gds[i]->fposn1 = posn + (fposn1-fposn0);
-            gds[i]->fposn2 = posn + (fposn2-fposn0);
-            posn += len;
-            gds[i]->fposn3 = posn;
-        }
-        else
-        {
-            gds[i]->fposn0 = posn;
-            std::string s = gds[i]->prefix_txt;
-            int len = s.length();
-            if( len > 0 )
-            {
-                if( i != 0 )    // blank line needed before all but first prefix
+                len = fposn3-fposn0;
+                fseek(pgn,fposn0,SEEK_SET);
+                while( len >= buflen )
                 {
+                    delete[] buf;
+                    buflen *= 2;
+                    buf = new char [buflen];
+                }
+                fread(buf,1,len,pgn);
+                fwrite(buf,1,len,pgn_out);
+                ptr->fposn1 = posn + (fposn1-fposn0);
+                ptr->fposn2 = posn + (fposn2-fposn0);
+                posn += len;
+                ptr->fposn3 = posn;
+            }
+            else
+            {
+                ptr->fposn0 = posn;
+                std::string s = ptr->prefix_txt;
+                int len = s.length();
+                if( len > 0 )
+                {
+                    if( i != 0 )    // blank line needed before all but first prefix
+                    {
+                        fwrite( "\r\n", 1, 2 ,pgn_out);
+                        posn += 2;
+                    }
+                    fwrite( s.c_str(),1,len,pgn_out);
                     fwrite( "\r\n", 1, 2 ,pgn_out);
-                    posn += 2;
+                    posn += (len+2);
                 }
-                fwrite( s.c_str(),1,len,pgn_out);
-                fwrite( "\r\n", 1, 2 ,pgn_out);
-                posn += (len+2);
-            }
-            gds[i]->fposn1 = posn;
-            if( replace_game_details )
-            {
-                std::string str;
-                GameDocument temp = *gds[i];
-                temp.ToFileTxtGameDetails( str );
-                fwrite(str.c_str(),1,str.length(),pgn_out);
-                posn += str.length();
-            }
-            else
-            {
-                len = fposn2-fposn1;
-                fseek(pgn,fposn1,SEEK_SET);
-                while( len >= buflen )
+                ptr->fposn1 = posn;
+                if( replace_game_details )
                 {
-                    delete[] buf;
-                    buflen *= 2;
-                    buf = new char [buflen];
+                    std::string str;
+                    GameDocument temp = *ptr;
+                    temp.ToFileTxtGameDetails( str );
+                    fwrite(str.c_str(),1,str.length(),pgn_out);
+                    posn += str.length();
                 }
-                fread(buf,1,len,pgn);
-                fwrite(buf,1,len,pgn_out);
-                posn += len;
-            }
-            gds[i]->fposn2 = posn;
-            if( replace_moves )
-            {
-                std::string str;
-                GameDocument temp = *gds[i];
-                temp.ToFileTxtGameBody( str );
-                fwrite(str.c_str(),1,str.length(),pgn_out);
-                posn += str.length();
-            }
-            else
-            {
-                len = fposn3-fposn2;
-                fseek(pgn,fposn2,SEEK_SET);
-                while( len >= buflen )
+                else
                 {
-                    delete[] buf;
-                    buflen *= 2;
-                    buf = new char [buflen];
+                    len = fposn2-fposn1;
+                    fseek(pgn,fposn1,SEEK_SET);
+                    while( len >= buflen )
+                    {
+                        delete[] buf;
+                        buflen *= 2;
+                        buf = new char [buflen];
+                    }
+                    fread(buf,1,len,pgn);
+                    fwrite(buf,1,len,pgn_out);
+                    posn += len;
                 }
-                fread(buf,1,len,pgn);
-                fwrite(buf,1,len,pgn_out);
-                posn += len;
-            }
-            gds[i]->fposn3 = posn;
+                ptr->fposn2 = posn;
+                if( replace_moves )
+                {
+                    std::string str;
+                    GameDocument temp = *ptr;
+                    temp.ToFileTxtGameBody( str );
+                    fwrite(str.c_str(),1,str.length(),pgn_out);
+                    posn += str.length();
+                }
+                else
+                {
+                    len = fposn3-fposn2;
+                    fseek(pgn,fposn2,SEEK_SET);
+                    while( len >= buflen )
+                    {
+                        delete[] buf;
+                        buflen *= 2;
+                        buf = new char [buflen];
+                    }
+                    fread(buf,1,len,pgn);
+                    fwrite(buf,1,len,pgn_out);
+                    posn += len;
+                }
+                ptr->fposn3 = posn;
 
-            // Fix a nasty bug in T2 up to and including V2.01. A later PutBackDocument()
-            //  was overwriting the correctly calculated values of fposn0 etc. with stale
-            //  values. Fix is to update those stale values here.
-            GameDocument *p = objs.tabs->Begin();
-            while( p )
-            {
-                if( gds[i]->game_being_edited == p->game_being_edited )
+                // Fix a nasty bug in T2 up to and including V2.01. A later PutBackDocument()
+                //  was overwriting the correctly calculated values of fposn0 etc. with stale
+                //  values. Fix is to update those stale values here.
+                GameDocument *p = objs.tabs->Begin();
+                while( p )
                 {
-                    p->fposn0 = gds[i]->fposn0;
-                    p->fposn1 = gds[i]->fposn1;
-                    p->fposn2 = gds[i]->fposn2;
-                    p->fposn3 = gds[i]->fposn3;
-                    p->pgn_handle = gds[i]->pgn_handle;
+                    if( ptr->game_being_edited == p->game_being_edited )
+                    {
+                        p->fposn0 = ptr->fposn0;
+                        p->fposn1 = ptr->fposn1;
+                        p->fposn2 = ptr->fposn2;
+                        p->fposn3 = ptr->fposn3;
+                        p->pgn_handle = ptr->pgn_handle;
+                    }
+                    p = objs.tabs->Next();
                 }
-                p = objs.tabs->Next();
             }
         }
     }
@@ -624,9 +643,13 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
     {
         for( int i=0; i<gds_nbr; i++ )    
         {   
-            int temp = gds[i]->sort_idx;
-            gds[i]->sort_idx = gds[i]->game_nbr;
-            gds[i]->game_nbr = temp;
+            GameDocumentBase *ptr = gds[i]->GetGameDocumentBasePtr();
+            if( ptr )
+            {
+                int temp = ptr->sort_idx;
+                ptr->sort_idx = ptr->game_nbr;
+                ptr->game_nbr = temp;
+            }
         }
         sort( gds.begin(), gds.end() );
     }
@@ -637,20 +660,24 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
         fprintf( debug, "After: pgn_handle=%d\n", pgn_handle );
         for( int i=0; i<gds_nbr; i++ )    
         {   
-            int handle     = gds[i]->pgn_handle;
-            bool modified  = gds[i]->modified;
-            bool in_memory = gds[i]->in_memory;
-            long fposn0 = gds[i]->fposn0;
-            long fposn1 = gds[i]->fposn1;
-            long fposn2 = gds[i]->fposn2;
-            long fposn3 = gds[i]->fposn3;
-            fprintf( debug, "handle=%d, modified=%d, in_memory=%d\n"
-                            " fposn0=%ld,\n"
-                            " fposn1=%ld,\n"
-                            " fposn2=%ld,\n"
-                            " fposn3=%ld,\n",
-                            handle, modified, in_memory, fposn0,
-                                            fposn1, fposn2, fposn3 );
+            GameDocumentBase *ptr = gds[i]->GetGameDocumentBasePtr();
+            if( ptr )
+            {
+                int handle      = ptr->pgn_handle;
+                bool modified   = ptr->modified;
+                bool in_memory  = ptr->in_memory;
+                long fposn0     = ptr->fposn0;
+                long fposn1     = ptr->fposn1;
+                long fposn2     = ptr->fposn2;
+                long fposn3     = ptr->fposn3;
+                fprintf( debug, "handle=%d, modified=%d, in_memory=%d\n"
+                                " fposn0=%ld,\n"
+                                " fposn1=%ld,\n"
+                                " fposn2=%ld,\n"
+                                " fposn3=%ld,\n",
+                                handle, modified, in_memory, fposn0,
+                                               fposn1, fposn2, fposn3 );
+            }
         }
         fclose(debug);
     }
@@ -663,7 +690,7 @@ void GamesCache::Debug( const char *intro_message )
     int gds_nbr = gds.size();
     for( int i=0; i<gds_nbr; i++ )    
     {   
-        GameDocumentBase doc = *(gds[i]);
+        GameDocument doc = gds[i]->GetGameDocument();
         dprintf( "game_nbr=%d, white=%s, moves_txt=%s, pgn_handle=%d\n",
                         doc.game_nbr,
                         doc.white.c_str(),
@@ -750,9 +777,13 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
             if( !renumber )
             {
                 for( int i=0; i<gds_nbr; i++ )    
-                {   
-                    gds[i]->sort_idx = gds[i]->game_nbr;
-                    gds[i]->game_nbr = i;
+                {
+                    GameDocumentBase *ptr = gds[i]->GetGameDocumentBasePtr();
+                    if( ptr )
+                    {
+                        ptr->sort_idx = ptr->game_nbr;
+                        ptr->game_nbr = i;
+                    }
                 }
                 sort( gds.begin(), gds.end() );
             }
@@ -958,9 +989,13 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
             {
                 for( int i=0; i<gds_nbr; i++ )    
                 {   
-                    int temp = gds[i]->sort_idx;
-                    gds[i]->sort_idx = gds[i]->game_nbr;
-                    gds[i]->game_nbr = temp;
+                    GameDocumentBase *ptr = gds[i]->GetGameDocumentBasePtr();
+                    if( ptr )
+                    {
+                        int temp = ptr->sort_idx;
+                        ptr->sort_idx = ptr->game_nbr;
+                        ptr->game_nbr = temp;
+                    }
                 }
                 sort( gds.begin(), gds.end() );
             }

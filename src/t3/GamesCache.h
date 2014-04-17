@@ -9,11 +9,86 @@
 #include "GameDocument.h"
 #include <time.h> // time_t
 
+
+class MagicBase
+{
+public:
+    ~MagicBase() {}
+    virtual void GetGameDocument( GameDocument &gd )    { dprintf("FIXME DANGER WILL ROBINSON 1\n"); }
+    virtual GameDocument GetGameDocument()              { GameDocument doc;     dprintf("FIXME DANGER WILL ROBINSON 2\n"); return doc; }
+    virtual GameSummary  GetGameSummary()               { GameSummary  summary; dprintf("FIXME DANGER WILL ROBINSON 3\n"); return summary; }
+    virtual GameDocumentBase *GetGameDocumentBasePtr()  { return NULL; }
+    virtual GameDocument     *GetGameDocumentPtr()      { return NULL; }
+    virtual std::string white()     { return ""; }
+    virtual std::string white_elo() { return ""; }
+    virtual std::string black()     { return ""; }
+    virtual std::string black_elo() { return ""; }
+    virtual std::string date()      { return ""; }
+    virtual std::string site()      { return ""; }
+    virtual std::string round()     { return ""; }
+    virtual std::string result()    { return ""; }
+    virtual std::string eco()       { return ""; }
+};
+
+class HoldGameSummary : public MagicBase
+{
+public:
+    GameSummary         the_game;
+    GameSummary         GetGameSummary()                { return the_game; }
+    std::string white()     { return the_game.white; }
+    std::string white_elo() { return the_game.white_elo; }
+    std::string black()     { return the_game.black; }
+    std::string black_elo() { return the_game.black_elo; }
+    std::string date()      { return the_game.date; }
+    std::string site()      { return the_game.site; }
+    //std::string round()     { return the_game.round; }
+    std::string result()    { return the_game.result; }
+    //std::string eco()       { return the_game.eco; }
+};
+
+class HoldDocumentBase : public MagicBase
+{
+public:
+    HoldDocumentBase( GameDocumentBase &doc ) { the_game = doc; }
+    GameDocumentBase    the_game;
+    GameDocument        GetGameDocument()               { GameDocument gd; the_game.GetGameDocument(gd); return gd; }
+    GameDocumentBase    *GetGameDocumentBasePtr()       { return &the_game; }
+    std::string white()     { return the_game.white; }
+    std::string white_elo() { return the_game.white_elo; }
+    std::string black()     { return the_game.black; }
+    std::string black_elo() { return the_game.black_elo; }
+    std::string date()      { return the_game.date; }
+    std::string site()      { return the_game.site; }
+    std::string round()     { return the_game.round; }
+    std::string result()    { return the_game.result; }
+    std::string eco()       { return the_game.eco; }
+};
+
+class HoldDocument : public MagicBase
+{
+public:
+    HoldDocument( GameDocument &doc ) { the_game = doc; }
+    GameDocument        the_game;
+    GameDocument        GetGameDocument()               { return the_game; }
+    GameDocument        *GetGameDocumentPtr()           { return &the_game; }
+    GameDocumentBase    *GetGameDocumentBasePtr()       { return static_cast<GameDocumentBase *>(&the_game); }
+    std::string white()     { return the_game.white; }
+    std::string white_elo() { return the_game.white_elo; }
+    std::string black()     { return the_game.black; }
+    std::string black_elo() { return the_game.black_elo; }
+    std::string date()      { return the_game.date; }
+    std::string site()      { return the_game.site; }
+    std::string round()     { return the_game.round; }
+    std::string result()    { return the_game.result; }
+    std::string eco()       { return the_game.eco; }
+};
+
+
 // PgnDialog class declaration
 class GamesCache
 {    
 public:
-    std::vector< smart_ptr<GameDocumentBase> >  gds;
+    std::vector< smart_ptr<MagicBase> >  gds;
     std::vector<int>           col_flags;
     std::string                pgn_filename;
     int game_nbr;

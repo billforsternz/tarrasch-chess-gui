@@ -264,7 +264,8 @@ void PgnFiles::Close( GamesCache *gc_clipboard )
             int sz=gc_clipboard->gds.size();
             for( int i=0; !still_needed && i<sz; i++ )
             {
-                if( gc_clipboard->gds[i]->pgn_handle == it->first )
+                GameDocumentBase *ptr = gc_clipboard->gds[i]->GetGameDocumentBasePtr();
+                if( ptr && ptr->pgn_handle == it->first )
                 {
                     still_needed   = true;
                     handle_replace = it->first;
@@ -321,8 +322,9 @@ void PgnFiles::Close( GamesCache *gc_clipboard )
         int sz=gc_clipboard->gds.size();
         for( int i=0; i<sz; i++ )
         {
-            if( gc_clipboard->gds[i]->pgn_handle == handle_replace )
-                gc_clipboard->gds[i]->pgn_handle = handle;
+            GameDocumentBase *ptr = gc_clipboard->gds[i]->GetGameDocumentBasePtr();
+            if( ptr && ptr->pgn_handle == handle_replace )
+                ptr->pgn_handle = handle;
         }
         std::pair<int,PgnFile> elem(handle,pf);
         files.insert(elem);

@@ -6,6 +6,7 @@
  ****************************************************************************/
 
 #include <algorithm>
+#include <vector>
 #include <stdlib.h>
 #include "CompressMoves.h"
 

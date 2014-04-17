@@ -1594,7 +1594,11 @@ void ChessFrame::RefreshLanguageFont( const char *from, bool before_large_font, 
                 case 2: gc = &objs.gl->gc_session;   break;
             }
             for( int i=0; gc && i<gc->gds.size(); i++ )
-                LangLine( gc->gds[i]->moves_txt, from, to );
+            {
+                GameDocumentBase *ptr = gc->gds[i]->GetGameDocumentBasePtr();
+                if( ptr )
+                    LangLine( ptr->moves_txt, from, to );
+            }
         }
     }
 

@@ -11,6 +11,7 @@
 #include <vector>
 #include <memory>
 #include "thc.h"
+#include "DebugPrintf.h"
 #include "MoveTree.h"
 #include "NavigationKey.h"
 #include "GameView.h"
@@ -19,6 +20,119 @@
 
 #define smart_ptr std::unique_ptr
 #define make_smart_ptr(T,to,from) smart_ptr<T> to; to.reset(new T(from))
+
+
+struct GameInFile
+{
+    // Data
+    unsigned long non_zero_start_pos;
+    bool        game_details_edited;
+    bool        game_prefix_edited;
+    bool        modified;
+    bool        in_memory;
+    uint32_t    game_being_edited;
+    int         pgn_handle;
+    bool        selected;
+    bool        focus;
+    int         sort_idx;
+    int         game_nbr;
+
+    std::string white;          // "White"
+    std::string black;          // "Black"
+    std::string event;          // "Event"
+    std::string site;           // "Site"
+    std::string date;           // "Date"
+    std::string round;          // "Round"
+    std::string result;         // "Result"
+    std::string eco;            // "ECO"
+    std::string white_elo;      // "WhiteElo"
+    std::string black_elo;      // "BlackElo"
+    thc::ChessPosition start_position;  // the start position
+    unsigned long fposn0;       // offset of prefix in .pgn file
+    unsigned long fposn1;       // offset of tags in .pgn file
+    unsigned long fposn2;       // offset where moves are in .pgn file
+    unsigned long fposn3;       // offset where moves end in .pgn file
+    std::string prefix_txt;     // text between games
+    std::string moves_txt;      // "1.e4 e5 2.Nf3.."
+};
+
+class GameSummary
+{
+public:
+    std::string white;
+    std::string black;
+    std::string event;
+    std::string site;
+    std::string result;
+    std::string date;
+    std::string white_elo;
+    std::string black_elo;
+    std::string move_txt;
+    std::string str_blob;
+    std::vector<thc::Move> moves;
+    std::string Description()
+    {
+        std::string white = this->white;
+        std::string black = this->black;
+        size_t comma = white.find(',');
+        if( comma != std::string::npos )
+            white = white.substr( 0, comma );
+        comma = black.find(',');
+        if( comma != std::string::npos )
+            black = black.substr( 0, comma );
+        int move_cnt = str_blob.length();
+        std::string label = white;
+        if( white_elo != "" )
+        {
+            label += " (";
+            label += white_elo;
+            label += ")";
+        }
+        label += " - ";
+        label += black;
+        if( black_elo != "" )
+        {
+            label += " (";
+            label += black_elo;
+            label += ")";
+        }
+        if( site != "" )
+        {
+            label += ", ";
+            label += site;
+        }
+        else if( event != "" )
+        {
+            label += ", ";
+            label += event;
+        }
+        if( date.length() >= 4 )
+        {
+            label += " ";
+            label += date.substr(0,4);
+        }
+        bool result_or_moves = false;
+        if( result != "*" )
+        {
+            result_or_moves = true;
+            label += ", ";
+            label += result;
+            if( move_cnt > 0 )
+                label += " in";
+        }
+        if( move_cnt > 0 )
+        {
+            if( !result_or_moves )
+                label += ", ";
+            char buf[100];
+            sprintf( buf, " %d moves", (move_cnt+1)/2 );
+            label += std::string(buf);
+        }
+        return label;
+    }
+
+};
+
 
                 
 class GameLogic;
@@ -44,7 +158,7 @@ public:
 
     void FleshOutDate();
     virtual void Init( const thc::ChessPosition &start_position );
-    virtual void GetGameDocument( GameDocument &gd );
+    void GetGameDocument( GameDocument &gd );
 
     // Data
     unsigned long non_zero_start_pos;
@@ -53,9 +167,9 @@ public:
     bool        modified;
     bool        in_memory;
     uint32_t    game_being_edited;
-    int         pgn_handle;
     bool        selected;
     bool        focus;
+    int         pgn_handle;
     int         sort_idx;
     int         game_nbr;
 
@@ -189,7 +303,6 @@ public:
     }
     
     virtual void Init( const thc::ChessPosition &start_position );
-    virtual void GetGameDocument( GameDocument &gd );
     std::string Description();
     
     void FleshOutMoves();

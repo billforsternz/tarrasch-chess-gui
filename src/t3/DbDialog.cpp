@@ -811,8 +811,12 @@ void DbDialog::OnCancel( wxCommandEvent& WXUNUSED(event) )
         int sz=gc->gds.size();
         for( int i=0; i<sz; i++ )
         {
-            gc->gds[i]->selected =  ( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED)) ? true : false;
-            gc->gds[i]->focus    =  ( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED)  ) ? true : false;
+            GameDocumentBase *ptr = gc->gds[i]->GetGameDocumentBasePtr();
+            if( ptr )
+            {
+                ptr->selected =  ( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED)) ? true : false;
+                ptr->focus    =  ( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED)  ) ? true : false;
+            }
         }
     }
     EndDialog( wxID_CANCEL );
