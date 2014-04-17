@@ -337,7 +337,7 @@ void db_primitive_create_extra_indexes()
     }
 }
 
-unsigned int levenshtein_distance(const std::string &s1, const std::string &s2)
+/* unsigned int levenshtein_distance(const std::string &s1, const std::string &s2)
 {
 	const size_t len1 = s1.size(), len2 = s2.size();
     std::vector<unsigned int> col(len2+1), prevCol(len2+1);
@@ -355,19 +355,19 @@ unsigned int levenshtein_distance(const std::string &s1, const std::string &s2)
 		col.swap(prevCol);
 	}
 	return prevCol[len2];
-}
+} 
 
 static void t( const char *left, const char *right )
 {
     unsigned int x = levenshtein_distance(left,right);
     printf( "[%s] [%s] %u\n", left, right, x );
-}
+} */
 
 
 
 void db_primitive_speed_tests()
 {
-    t( "Smith", "Smith" );
+ /*   t( "Smith", "Smith" );
     t( "Smith", "Simth" );
     t( "Smith", "Smithy" );
     t( "Smith", "Smiths" );
@@ -378,7 +378,7 @@ void db_primitive_speed_tests()
     t( "Smith", "Brith" );
     t( "Smith", "Roberts" );
     t( "Smith", "Jones" );
-    
+   */ 
     printf( "db_primitive_speed_tests()\n" );
     
     // Try to create the database. If it doesnt exist, it would be created
