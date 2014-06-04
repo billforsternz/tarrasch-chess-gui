@@ -6,7 +6,7 @@ static const char *board_setup_bitmap_xpm[] = {
 ", c #e1e1e1",
 "` c #d7d7d7",
 "~ c #cccccc",
-"x c #e0dfe3",
+"x c #c8c8c8",     // "x c #e0dfe3"
 "{ c #c0c0c0",
 "} c #b4b4b4",
 "= c #a7a7a7",
