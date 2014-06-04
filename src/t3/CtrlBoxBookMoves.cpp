@@ -41,7 +41,7 @@ void CtrlBoxBookMoves::OnMouseMove( wxMouseEvent &event )
     //todo only if book moves
     if( view_flags_book_moves )
     {
-        DebugPrintf(( "Book move point.x=%d, point.y=%d\n", point.x, point.y ));
+        dbg_printf( "Book move point.x=%d, point.y=%d\n", point.x, point.y );
         objs.gl->BookHover( point );
     }
 }

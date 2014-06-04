@@ -53,7 +53,7 @@ void ReportOnProgress
     int   //   depth
 )
 {
-    DebugPrintf(( "Unexpected call to ReportOnProgress() in GUI rather than engine" ));
+    dbg_printf( "Unexpected call to ReportOnProgress() in GUI rather than engine" );
 }
 
 
@@ -1183,7 +1183,7 @@ void GameLogic::FullUndo( GAME_STATE game_state )
                 if( legal )
                     pondering = StartPondering( ponder_move );
                 else
-                    DebugPrintfInner( "pondering failed\n" );
+                    release_printf( "pondering failed\n" );
             }
             chess_clock.GameStart( gd.master_position.WhiteToPlay() );
             NewState( pondering ? PONDERING : HUMAN );
@@ -1425,11 +1425,11 @@ void GameLogic::CmdClocks()
         objs.gl->chess_clock.Repository2Clocks();
         objs.gl->chess_clock.GameStart( gd.master_position.WhiteToPlay() );
         objs.canvas->RedrawClocks();
-        DebugPrintf(( "WHITE: time=%d, increment=%d, visible=%s, running=%s\n",
+        dbg_printf( "WHITE: time=%d, increment=%d, visible=%s, running=%s\n",
                 dialog.dat.m_white_time,
                 dialog.dat.m_white_increment,
                 dialog.dat.m_white_visible?"yes":"no",
-                dialog.dat.m_white_running?"yes":"no" ));
+                dialog.dat.m_white_running?"yes":"no" );
     }
     canvas->ClocksVisible();
 }
@@ -1442,11 +1442,11 @@ void GameLogic::CmdPlayers()
     if( wxID_OK == dialog.ShowModal() )
     {
         objs.repository->player = dialog.dat;
-        DebugPrintf(( "human=%s, computer=%s, white=%s, black=%s\n",
+        dbg_printf( "human=%s, computer=%s, white=%s, black=%s\n",
                      dialog.dat.m_human.c_str(),
                      dialog.dat.m_computer.c_str(),
                      dialog.dat.m_white.c_str(),
-                     dialog.dat.m_black.c_str() ));
+                     dialog.dat.m_black.c_str() );
         objs.gl->LabelPlayers(false,true);
     }
 }
@@ -1821,7 +1821,7 @@ void GameLogic::OnIdle()
                     KibitzClearDisplay(true);
                 if( !have_data )
                     break;
-                DebugPrintf(( "Rybka kibitz engine to move; txt=%s\n", buf ));
+                dbg_printf( "Rybka kibitz engine to move; txt=%s\n", buf );
                 KibitzUpdateEngineToMove( true, buf );
             }
         }
@@ -1841,7 +1841,7 @@ void GameLogic::OnIdle()
                     KibitzClearDisplay( true );
                 if( !have_data )
                     break;
-                DebugPrintf(( "Rybka kibitz engine to move; txt=%s\n", buf ));
+                dbg_printf( "Rybka kibitz engine to move; txt=%s\n", buf );
                 KibitzUpdateEngineToMove( false, buf );
             }
         }
@@ -1849,7 +1849,7 @@ void GameLogic::OnIdle()
         Move bestmove = objs.rybka->CheckBestMove( ponder );
         if( bestmove.Valid() )
         {
-            DebugPrintfInner( "Engine returns. bestmove is %s, ponder is %s\n",
+            release_printf( "Engine returns. bestmove is %s, ponder is %s\n",
                  bestmove.TerseOut().c_str(), ponder.TerseOut().c_str() );
             ChessRules cr = gd.master_position;
             cr.PlayMove( bestmove );
@@ -1921,7 +1921,7 @@ void GameLogic::OnIdle()
                         ponder_nmove_txt.sprintf( "%d%s%s", ponder_full_move_count, ponder_white_to_play?".":"...",nmove.c_str() );
                     }
                     else
-                        DebugPrintfInner( "pondering failed\n" );
+                        release_printf( "pondering failed\n" );
                 }
                 NewState( pondering ? PONDERING : HUMAN );
             }
@@ -1932,7 +1932,7 @@ void GameLogic::OnIdle()
     else if( kibitz && (state==MANUAL||state==RESET||state==HUMAN||state==GAMEOVER) )
 	{
         bool run=true;
-        //DebugPrintfInner( "Entering main kibitz display\n" );
+        //release_printf( "Entering main kibitz display\n" );
         //int cleared_events=0, have_data_events=0;
         for( int idx=0; idx<4; idx++ )
         {
@@ -1965,12 +1965,12 @@ void GameLogic::OnIdle()
                     break;
                 else
                 {
-                    DebugPrintf(( "Rybka kibitz; idx=%d, txt=%s\n", idx, buf ));
+                    dbg_printf( "Rybka kibitz; idx=%d, txt=%s\n", idx, buf );
                     KibitzUpdate( idx, buf );
                 }
             }
         }
-        //DebugPrintfInner( "Exiting main kibitz display %d cleared events, %d have_data events\n",
+        //release_printf( "Exiting main kibitz display %d cleared events, %d have_data events\n",
         //                    cleared_events, have_data_events );
     }
     else if( state == FAKE_BOOK_DELAY )
@@ -2770,7 +2770,7 @@ void GameLogic::DoPopup( wxPoint &point, vector<Move> &target_moves,
         gd.master_position.PlayMove(target_moves[0]);
     if( canvas->popup )
         delete canvas->popup;
-    //DebugPrintf(( "objs.frame is a %s window\n", objs.frame->IsTopLevel()?"top level":"child" ));
+    //dbg_printf( "objs.frame is a %s window\n", objs.frame->IsTopLevel()?"top level":"child" );
     canvas->popup = new PopupControl( objs.frame,strs,terses,book,popup_mode,hover,ID_POPUP,point );
 }
 

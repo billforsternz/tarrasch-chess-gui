@@ -56,9 +56,9 @@ void GameView::Debug()
         if( gve.type==MOVE && gve.offset1==3129 )
         {
             if( gve.node->move.src == a5 )
-                DebugPrintf(("no bug",gve.node));
+                dbg_printf("no bug",gve.node);
             else
-                DebugPrintf(("bug",gve.node));
+                dbg_printf("bug",gve.node);
         }
     } */
 }

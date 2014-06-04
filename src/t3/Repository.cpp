@@ -226,16 +226,16 @@ static void TestStandardPaths()
 // Resources dir:		c:\Documents and Settings\Bill\My Documents\Chess\wx
 
     wxStandardPathsBase& stdp = wxStandardPaths::Get();
-    DebugPrintf(( "Config dir (sys):\t%s\n", stdp.GetConfigDir().c_str()));
-    DebugPrintf(("Config dir (user):\t%s\n", stdp.GetUserConfigDir().c_str()));
-    DebugPrintf(("Data dir (sys):\t\t%s\n", stdp.GetDataDir().c_str()));
-    DebugPrintf(("Data dir (sys local):\t%s\n", stdp.GetLocalDataDir().c_str()));
-    DebugPrintf(("Data dir (user):\t%s\n", stdp.GetUserDataDir().c_str()));
-    DebugPrintf(("Data dir (user local):\t%s\n", stdp.GetUserLocalDataDir().c_str()));
-    DebugPrintf(("Documents dir:\t\t%s\n", stdp.GetDocumentsDir().c_str()));
-    DebugPrintf(("Executable path:\t%s\n", stdp.GetExecutablePath().c_str()));
-    DebugPrintf(("Plugins dir:\t\t%s\n", stdp.GetPluginsDir().c_str()));
-    DebugPrintf(("Resources dir:\t\t%s\n", stdp.GetResourcesDir().c_str()));
+    dbg_printf( "Config dir (sys):\t%s\n", stdp.GetConfigDir().c_str());
+    dbg_printf("Config dir (user):\t%s\n", stdp.GetUserConfigDir().c_str());
+    dbg_printf("Data dir (sys):\t\t%s\n", stdp.GetDataDir().c_str());
+    dbg_printf("Data dir (sys local):\t%s\n", stdp.GetLocalDataDir().c_str());
+    dbg_printf("Data dir (user):\t%s\n", stdp.GetUserDataDir().c_str());
+    dbg_printf("Data dir (user local):\t%s\n", stdp.GetUserLocalDataDir().c_str());
+    dbg_printf("Documents dir:\t\t%s\n", stdp.GetDocumentsDir().c_str());
+    dbg_printf("Executable path:\t%s\n", stdp.GetExecutablePath().c_str());
+    dbg_printf("Plugins dir:\t\t%s\n", stdp.GetPluginsDir().c_str());
+    dbg_printf("Resources dir:\t\t%s\n", stdp.GetResourcesDir().c_str());
 }
 */
 

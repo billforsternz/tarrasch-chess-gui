@@ -13,6 +13,8 @@
 #include <stdarg.h>
 #include "thc.h"
 #include "PgnRead.h"
+#include "DebugPrintf.h"
+
 
 using namespace std;
 using namespace thc;
@@ -158,7 +160,7 @@ bool PgnRead::Process( FILE *infile )
                 percent = (int)( file_offset / (file_len/100L) );
             if( percent != old_percent )
             {
-                printf( "%d %% complete\r", percent>100 ? 100 : percent );
+                cprintf( "%d %% complete\r", percent>100 ? 100 : percent );
             }
             old_percent = percent;
         }
@@ -489,7 +491,7 @@ bool PgnRead::Process( FILE *infile )
         // State changes
         if( state != old_state )
         {
-            //printf( "State change %s->%s\n", ShowState(old_state), ShowState(state) );
+            //cprintf( "State change %s->%s\n", ShowState(old_state), ShowState(state) );
             if( old_state == HEADER )
             {
                 buf[len++] = '\0';
@@ -651,7 +653,7 @@ void PgnRead::Header( char *buf )
 
 void PgnRead::GameBegin()
 {
-    //printf( "GameBegin() %d\n", nbr_games );
+    //cprintf( "GameBegin() %d\n", nbr_games );
     date      [0] = '\0';
     white     [0] = '\0';
     black     [0] = '\0';
@@ -677,7 +679,7 @@ void PgnRead::GameBegin()
                                   ((nbr_games%10) == 0 )
                                   ) */
        )
-        printf( "%d games\n", nbr_games );
+        cprintf( "%d games\n", nbr_games );
 }
 
 void PgnRead::GameOver()
@@ -686,7 +688,7 @@ void PgnRead::GameOver()
     s = &stack_array[0];
     if( !fen_flag )
         hook_gameover( callback_code, event, site, date, round, white, black, result, white_elo, black_elo, eco, s->nbr_moves, s->big_move_array, s->big_hash_array  );
-    //printf( "GameOver()\n" );
+    //cprintf( "GameOver()\n" );
     stack_idx = 0;
     ChessRules temp;
     chess_rules = temp;    // init
@@ -727,7 +729,7 @@ PgnRead::STATE PgnRead::Pop()
 
 void PgnRead::FileOver()
 {
-    printf( "Finished %d total games\n", nbr_games-1 );
+    cprintf( "Finished %d total games\n", nbr_games-1 );
 }
 
 
@@ -843,19 +845,19 @@ bool PgnRead::DoMove( bool white, int move_number, char *buf )
          /* uint32_t check = chess_rules.HashCalculate();
             if( hash != check )
             {
-                printf( "Incremental hash fail\n");
-                printf( "Move: %s\n", smove.c_str() );
-                printf( "Old position = %s\n", old_position.ToDebugStr().c_str() );
-                printf( "New position = %s\n", chess_rules.ToDebugStr().c_str() );
-                printf( "hash = 0x%08x\n", hash );
-                printf( "check = 0x%08x\n", check );
-                printf( "bugger\n" );
+                cprintf( "Incremental hash fail\n");
+                cprintf( "Move: %s\n", smove.c_str() );
+                cprintf( "Old position = %s\n", old_position.ToDebugStr().c_str() );
+                cprintf( "New position = %s\n", chess_rules.ToDebugStr().c_str() );
+                cprintf( "hash = 0x%08x\n", hash );
+                cprintf( "check = 0x%08x\n", check );
+                cprintf( "bugger\n" );
             }
             bool hit = ( hash == 0x990779e0 );
             mega_array[ hash&0xfffff ]++;
             if( hit )
             {
-                printf( "hit: hash=0x%08x, mega_array[hash]=%d\n", hash, mega_array[hash] );
+                cprintf( "hit: hash=0x%08x, mega_array[hash]=%d\n", hash, mega_array[hash] );
             } */
             n->big_move_array[n->nbr_moves] = move;
             n->big_hash_array[n->nbr_moves++] = hash;
@@ -866,7 +868,7 @@ bool PgnRead::DoMove( bool white, int move_number, char *buf )
             }
             //if( nbr_games == 1 )
             //{
-            //   printf( "%s\n", chess_rules.ToDebugStr().c_str() );
+            //   cprintf( "%s\n", chess_rules.ToDebugStr().c_str() );
             //}
         }
     }

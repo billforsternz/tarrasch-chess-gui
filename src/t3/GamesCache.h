@@ -14,9 +14,9 @@ class MagicBase
 {
 public:
     ~MagicBase() {}
-    virtual void GetGameDocument( GameDocument &gd )    { dprintf("FIXME DANGER WILL ROBINSON 1\n"); }
-    virtual GameDocument GetGameDocument()              { GameDocument doc;     dprintf("FIXME DANGER WILL ROBINSON 2\n"); return doc; }
-    virtual GameSummary  GetGameSummary()               { GameSummary  summary; dprintf("FIXME DANGER WILL ROBINSON 3\n"); return summary; }
+    virtual void GetGameDocument( GameDocument &gd )    { cprintf("FIXME DANGER WILL ROBINSON 1\n"); }
+    virtual GameDocument GetGameDocument()              { GameDocument doc;     cprintf("FIXME DANGER WILL ROBINSON 2\n"); return doc; }
+    virtual GameSummary  GetGameSummary()               { GameSummary  summary; cprintf("FIXME DANGER WILL ROBINSON 3\n"); return summary; }
     virtual GameDocumentBase *GetGameDocumentBasePtr()  { return NULL; }
     virtual GameDocument     *GetGameDocumentPtr()      { return NULL; }
     virtual std::string white()     { return ""; }

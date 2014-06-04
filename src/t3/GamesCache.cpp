@@ -686,25 +686,25 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
 
 void GamesCache::Debug( const char *intro_message )
 {
-/*  DebugPrintf(( "Cache dump>%s\n", intro_message ));
+/*  dbg_printf( "Cache dump>%s\n", intro_message );
     int gds_nbr = gds.size();
     for( int i=0; i<gds_nbr; i++ )    
     {   
         GameDocument doc = gds[i]->GetGameDocument();
-        dprintf( "game_nbr=%d, white=%s, moves_txt=%s, pgn_handle=%d\n",
+        cprintf( "game_nbr=%d, white=%s, moves_txt=%s, pgn_handle=%d\n",
                         doc.game_nbr,
                         doc.white.c_str(),
                         doc.moves_txt.c_str(),
                         doc.pgn_handle
                    );
 
-        dprintf( " modified=%s, in_memory=%s, game_details_edited=%s\n",
+        cprintf( " modified=%s, in_memory=%s, game_details_edited=%s\n",
                         doc.modified ? "true":"false",
                         doc.in_memory ? "true":"false",
                         doc.game_details_edited ? "true":"false"
                    );
 
-        dprintf( " game_being_edited=%d, selected=%s, focus=%s\n",
+        cprintf( " game_being_edited=%d, selected=%s, focus=%s\n",
                         (int)doc.game_being_edited,
                         doc.selected ? "true":"false",
                         doc.focus ? "true":"false"

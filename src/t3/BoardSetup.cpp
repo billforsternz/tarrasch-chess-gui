@@ -173,10 +173,10 @@ BoardSetup::BoardSetup( wxBitmap *bitmap, wxWindow *parent, int XBORDER, int YBO
    	assert( (info.bmWidthBytes%info.bmWidth) == 0 );
 	density      = info.bmWidthBytes/info.bmWidth;
 	height       = info.bmHeight;
-  	DebugPrintf(( "<4>ibWB=%lu, ibW=%lu, ibH=%lu\n",
+  	dbg_printf( "<4>ibWB=%lu, ibW=%lu, ibH=%lu\n",
 						(unsigned long)info.bmWidthBytes,
 						(unsigned long)info.bmWidth,
-						(unsigned long)info.bmHeight ));
+						(unsigned long)info.bmHeight );
 
 #endif
 
@@ -410,7 +410,7 @@ void BoardSetup::SetPosition( const char *position_ascii )
 
 
 	}
-    //DebugPrintf(( "BoardSetup::Debug() called\n"));
+    //dbg_printf( "BoardSetup::Debug() called\n");
     //Debug();
 
 	// Copy from the image buffer into the wxBitmap
@@ -485,7 +485,7 @@ void BoardSetup::SetPosition( const char *position_ascii )
 // Draw the graphic board
 void BoardSetup::Draw()
 {
-    //DebugPrintf(( "Square a8 at Draw()\n" ));
+    //dbg_printf( "Square a8 at Draw()\n" );
     //Debug();
     parent->Refresh(false);
     parent->Update();
@@ -521,7 +521,7 @@ void BoardSetup::Get( char src_file, char src_rank, char dst_file, char dst_rank
 // Put a piece from box onto board
 void BoardSetup::Put( char src_file, char src_rank, char dst_file, char dst_rank )
 {
-    //DebugPrintf(("%c%c\n", dst_file, dst_rank ));
+    //dbg_printf("%c%c\n", dst_file, dst_rank );
 	if( density != 4 )
 	{
 

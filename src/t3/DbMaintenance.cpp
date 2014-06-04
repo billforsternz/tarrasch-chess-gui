@@ -7,6 +7,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include "thc.h"
+#include "DebugPrintf.h"
 #include "PgnRead.h"
 #include "CompressMoves.h"
 #include "DbPrimitives.h"
@@ -40,14 +41,14 @@ void db_maintenance_decompress_pgn()
     bool ok = false;
     ifile = fopen( QGN_FILE, "rb" );
     if( !ifile )
-        printf( "Cannot open %s\n", QGN_FILE );
+        cprintf( "Cannot open %s\n", QGN_FILE );
     else
     {
         ofile = fopen( PGN_OUT_FILE, "wb" );
         if( ofile )
             ok = true;
         else
-            printf( "Cannot open %s\n", PGN_OUT_FILE );
+            cprintf( "Cannot open %s\n", PGN_OUT_FILE );
     }
     int nbr_games=0;
     while( ok )
@@ -71,9 +72,9 @@ void db_maintenance_decompress_pgn()
                                       ((nbr_games%10) == 0 )
                                       ) */
            )
-            printf( "%d games\n", nbr_games );
+            cprintf( "%d games\n", nbr_games );
     }
-    printf( "%d games\n", nbr_games );
+    cprintf( "%d games\n", nbr_games );
     if( ifile )
         fclose(ifile);
     if( ofile )
@@ -84,7 +85,7 @@ void db_maintenance_verify_compression()
 {
     ifile = fopen( PGN_FILE, "rt" );
     if( !ifile )
-        printf( "Cannot open %s\n", PGN_FILE );
+        cprintf( "Cannot open %s\n", PGN_FILE );
     else
     {
         PgnRead *pgn = new PgnRead('V');
@@ -100,12 +101,12 @@ void db_maintenance_compress_pgn()
 {
     ifile = fopen( PGN_FILE, "rt" );
     if( !ifile )
-        printf( "Cannot open %s\n", PGN_FILE );
+        cprintf( "Cannot open %s\n", PGN_FILE );
     else
     {
         ofile = fopen( QGN_FILE, "wb" );
         if( !ofile )
-            printf( "Cannot open %s\n", QGN_FILE );
+            cprintf( "Cannot open %s\n", QGN_FILE );
         else
         {
             PgnRead *pgn = new PgnRead('P');
@@ -123,7 +124,7 @@ void db_maintenance_create_or_append_to_database(  const char *pgn_filename )
 {
     ifile = fopen( pgn_filename , "rt" );
     if( !ifile )
-        printf( "Cannot open %s\n", pgn_filename );
+        cprintf( "Cannot open %s\n", pgn_filename );
     else
     {
         PgnRead *pgn = new PgnRead('A');
@@ -175,7 +176,7 @@ void hook_gameover( char callback_code, const char *event, const char *site, con
             evil_queen_count++;
         if( gbl_double_byte )
             double_byte_count++;
-        printf( "%d evil games, %d double byte games, %s-%s, %s\n",  evil_queen_count, double_byte_count, white, black, gbl_double_byte?"needs double bytes":"doesn't need double bytes");
+        cprintf( "%d evil games, %d double byte games, %s-%s, %s\n",  evil_queen_count, double_byte_count, white, black, gbl_double_byte?"needs double bytes":"doesn't need double bytes");
         gbl_evil_queen = false;
         gbl_double_byte = false;
         thc::ChessRules cr;
@@ -183,10 +184,10 @@ void hook_gameover( char callback_code, const char *event, const char *site, con
         {
             thc::Move mv = moves[i];
             std::string s = mv.NaturalOut( &cr );
-            printf( "%s ", s.c_str() );
+            cprintf( "%s ", s.c_str() );
             cr.PlayMove(mv);
         }
-        printf( "\n" );
+        cprintf( "\n" );
     }
 }
 
@@ -455,9 +456,9 @@ static void compress_moves_to_str( int nbr_moves, thc::Move *moves, char *dst, t
 //#define VERBOSE
 #ifdef VERBOSE
         if( nbr == 1 )
-            printf( "compress temp> %s -> %02x\n", s.c_str(), *dst&0xff );
+            cprintf( "compress temp> %s -> %02x\n", s.c_str(), *dst&0xff );
         else
-            printf( "compress temp> %s -> %02x,%02x\n", s.c_str(), *dst&0xff, *(dst+1)&0xff );
+            cprintf( "compress temp> %s -> %02x,%02x\n", s.c_str(), *dst&0xff, *(dst+1)&0xff );
 #endif
         dst += nbr;
         if( positions[i] != press.cr )
@@ -478,9 +479,9 @@ static void decompress_moves_from_str( int nbr_moves, char *src, thc::Move *move
         std::string s = mv.TerseOut();
 #ifdef VERBOSE
         if( nbr == 1 )
-            printf( "decompress temp> %02x -> %s\n", *src&0xff, s.c_str() );
+            cprintf( "decompress temp> %02x -> %s\n", *src&0xff, s.c_str() );
         else
-            printf( "decompress temp> %02x,%02x -> %s\n", *src&0xff, *(src+1)&0xff, s.c_str() );
+            cprintf( "decompress temp> %02x,%02x -> %s\n", *src&0xff, *(src+1)&0xff, s.c_str() );
 #endif
         src += nbr;
         *moves++ = mv;
@@ -500,7 +501,7 @@ static void verify_compression_algorithm( int nbr_moves, thc::Move *moves )
     thc::ChessRules cr;
     if( sizeof(buf) < 2*nbr_moves )
     {
-        printf( "Buffer too small" );
+        cprintf( "Buffer too small" );
         return;
     }
     for( int i=0; i<nbr_moves; i++ )
@@ -516,22 +517,22 @@ static void verify_compression_algorithm( int nbr_moves, thc::Move *moves )
         thc::Move mv = moves[i];
         std::string s = mv.TerseOut();
         if( i==0 )
-            printf( "Moves>" );
-        printf( " " );
-        printf( s.c_str() );
+            cprintf( "Moves>" );
+        cprintf( " " );
+        cprintf( s.c_str() );
     }
-    printf( "\n" );
+    cprintf( "\n" );
     for( int i=0; ; i++ )
     {
         char c = buf[i];
         if( c == '\0' )
             break;
         if( i==0 )
-            printf( "Compressed>" );
-        printf( " " );
-        printf( "%02x", c&0xff );
+            cprintf( "Compressed>" );
+        cprintf( " " );
+        cprintf( "%02x", c&0xff );
     }
-    printf( "\n" );
+    cprintf( "\n" );
 #endif
     decompress_moves_from_str( nbr_moves, buf, unpacked, positions_buffer );
 #ifdef VERBOSE
@@ -540,38 +541,38 @@ static void verify_compression_algorithm( int nbr_moves, thc::Move *moves )
         thc::Move mv = unpacked[i];
         std::string s = mv.TerseOut();
         if( i==0 )
-            printf( "Unpacked Moves>" );
-        printf( " " );
-        printf( s.c_str() );
+            cprintf( "Unpacked Moves>" );
+        cprintf( " " );
+        cprintf( s.c_str() );
     }
-    printf( "\n" );
+    cprintf( "\n" );
 #endif
     bool match = (0 == memcmp( moves, unpacked, nbr_moves*sizeof(thc::Move)));
     if( match )
     {
 #ifdef VERBOSE
-        printf( "Woo hoo, %d games match\n", ++nbr_games );
+        cprintf( "Woo hoo, %d games match\n", ++nbr_games );
 #endif
     }
     else
     {
-        printf( "Boo hoo, doesn't match\n" );
+        cprintf( "Boo hoo, doesn't match\n" );
         for( int i=0; i<nbr_moves; i++ )
         {
             bool match = (0 == memcmp( &moves[i], &unpacked[i], sizeof(thc::Move)));
             if( !match )
             {
-                printf( "Fail at idx %d, %s:%s", i, moves[i].TerseOut().c_str(), unpacked[i].TerseOut().c_str() );
+                cprintf( "Fail at idx %d, %s:%s", i, moves[i].TerseOut().c_str(), unpacked[i].TerseOut().c_str() );
                 for( int k=0; k<2; k++ )
                 {
                     unsigned char *s = (k==0?(unsigned char *)&moves[i]:(unsigned char *)&unpacked[i]);
-                    printf("\n");
+                    cprintf("\n");
                     for( int j=0; j<4; j++ )
                     {
-                        printf( " %02x", *s++ );
+                        cprintf( " %02x", *s++ );
                     }
                 }
-                printf("\n");
+                cprintf("\n");
                 break;
             }
         }

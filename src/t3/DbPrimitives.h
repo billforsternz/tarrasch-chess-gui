@@ -18,8 +18,8 @@
 #define DB_FILE             "/Users/billforster/Documents/ChessDatabases/next_generation_1.sqlite3"
 #define DB_MAINTENANCE_FILE "/Users/billforster/Documents/ChessDatabases/next_generation_1.sqlite3"
 #else
-#define DB_FILE             "/Users/Bill/Documents/T3Database/rebuild.sqlite3"
-#define DB_MAINTENANCE_FILE "/Users/Bill/Documents/T3Database/rebuild.sqlite3"
+#define DB_FILE             "/Users/Maria/Documents/Tarrasch/next_generation_1.sqlite3"
+#define DB_MAINTENANCE_FILE "/Users/Maria/Documents/Tarrasch/next_generation_1.sqlite3"
 #endif
 
 

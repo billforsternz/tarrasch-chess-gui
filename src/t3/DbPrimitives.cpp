@@ -13,6 +13,7 @@
 #include "sqlite3.h"
 #include "CompressMoves.h"
 #include "DbPrimitives.h"
+#include "DebugPrintf.h"
 static void purge_bucket(int bucket_idx);
 static void purge_buckets();
 #define NBR_BUCKETS 4096
@@ -30,7 +31,7 @@ static int report( const char * txt )
     char *p = strchr(buf,'\n');
     if( p )
         *p = '\0';
-    printf( "%s: %s\n", buf, txt );
+    cprintf( "%s: %s\n", buf, txt );
     int expired = (rawtime-before);
     before = rawtime;
     return expired;
@@ -56,10 +57,10 @@ int db_primitive_random_test_program()
     // If connection failed, handle returns NULL
     if(retval)
     {
-        printf("Database connection failed\n");
+        cprintf("Database connection failed\n");
         return -1;
     }
-    printf("Connection successful\n");
+    cprintf("Connection successful\n");
     
     // Create the SQL query for creating a table
     const char *create_table = "CREATE TABLE IF NOT EXISTS positions (game_id INTEGER, position_hash INTEGER)";
@@ -68,7 +69,7 @@ int db_primitive_random_test_program()
     retval = sqlite3_exec(handle,create_table,0,0,0);
     if( retval )
     {
-        printf("sqlite3_exec(CREATE) Failed\n");
+        cprintf("sqlite3_exec(CREATE) Failed\n");
         return -1;
     }
     
@@ -77,7 +78,7 @@ int db_primitive_random_test_program()
     retval = sqlite3_exec( handle, "DELETE FROM positions",0,0,0);
     if( retval )
     {
-        printf("sqlite3_exec(DELETE) Failed\n");
+        cprintf("sqlite3_exec(DELETE) Failed\n");
         return -1;
     }
     
@@ -86,14 +87,14 @@ int db_primitive_random_test_program()
     retval = sqlite3_exec( handle, "INSERT INTO positions VALUES(2,33334444)",0,0,&errmsg);
     if( retval )
     {
-        printf("sqlite3_exec(INSERT 1) Failed %s\n", errmsg );
+        cprintf("sqlite3_exec(INSERT 1) Failed %s\n", errmsg );
         return -1;
     }
     
     retval = sqlite3_exec( handle, "INSERT INTO positions VALUES(2,4444)",0,0,0);
     if( retval )
     {
-        printf("sqlite3_exec(INSERT 2) Failed\n");
+        cprintf("sqlite3_exec(INSERT 2) Failed\n");
         return -1;
     }
     
@@ -102,7 +103,7 @@ int db_primitive_random_test_program()
     retval = sqlite3_prepare_v2( handle, "SELECT * from positions", -1, &stmt, 0 );
     if( retval )
     {
-        printf("Selecting data from DB Failed\n");
+        cprintf("Selecting data from DB Failed\n");
         return -1;
     }
     
@@ -122,20 +123,20 @@ int db_primitive_random_test_program()
             for(int col=0 ; col<cols;col++)
             {
                 int val = sqlite3_column_int(stmt,col);
-                printf("%s = 0x%08x\t",sqlite3_column_name(stmt,col),val);
+                cprintf("%s = 0x%08x\t",sqlite3_column_name(stmt,col),val);
             }
-            printf("\n");
+            cprintf("\n");
         }
         else if(retval == SQLITE_DONE)
         {
             // All rows finished
-            printf("All rows fetched\n");
+            cprintf("All rows fetched\n");
             break;
         }
         else
         {
             // Some error encountered
-            printf("Some error encountered\n");
+            cprintf("Some error encountered\n");
             return -1;
         }
     }
@@ -151,7 +152,7 @@ static int game_id;
 
 void db_primitive_open_multi()
 {
-    printf( "db_primitive_open_multi()\n" );
+    cprintf( "db_primitive_open_multi()\n" );
     
     // Try to create the database. If it doesnt exist, it would be created
     //  pass a pointer to the pointer to sqlite3, in short sqlite3**
@@ -160,46 +161,48 @@ void db_primitive_open_multi()
     // If connection failed, handle returns NULL
     if(retval)
     {
-        printf("DATABASE CONNECTION FAILED\n");
+        cprintf("DATABASE CONNECTION FAILED\n");
         return;
     }
-    printf("Connection successful\n");
+    cprintf("Connection successful\n");
 
     // Create tables if not existing
     report( "Create games table");
     retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS description (description TEXT, version INTEGER)",0,0,0);
     if( retval )
     {
-        printf("sqlite3_exec(CREATE description) FAILED\n");
+        cprintf("sqlite3_exec(CREATE description) FAILED\n");
         return;
     }
     retval = sqlite3_exec(handle,"INSERT INTO description VALUES('Description of database goes here', 1 )",0,0,0);
     if( retval )
     {
-        printf("sqlite3_exec(INSERT description) FAILED\n");
+        cprintf("sqlite3_exec(INSERT description) FAILED\n");
         return;
     }
     retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS games (game_id INTEGER, game_hash INT8 UNIQUE, white TEXT, black TEXT, event TEXT, site TEXT, result TEXT, date TEXT, white_elo TEXT, black_elo TEXT, moves BLOB)",0,0,0);
     if( retval )
     {
-        printf("sqlite3_exec(CREATE games) FAILED\n");
+        cprintf("sqlite3_exec(CREATE games) FAILED\n");
         return;
     }
     retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS games_duplicates (game_id INTEGER, game_hash INT8, white TEXT, black TEXT, event TEXT, site TEXT, result TEXT, date TEXT, white_elo TEXT, black_elo TEXT, moves BLOB)",0,0,0);
     if( retval )
     {
-        printf("sqlite3_exec(CREATE games_duplicates) FAILED\n");
+        cprintf("sqlite3_exec(CREATE games_duplicates) FAILED\n");
         return;
     }
     report( "Create positions tables");
     for( int i=0; i<NBR_BUCKETS; i++ )
     {
+		if( i<20 || i%10 == 0)
+			cprintf( "Creating bucket %d\n", i);
         char buf[200];
         sprintf( buf, "CREATE TABLE IF NOT EXISTS positions_%d (game_id INTEGER, position_hash INTEGER)", i );
         retval = sqlite3_exec(handle,buf,0,0,0);
         if( retval )
         {
-            printf("sqlite3_exec(CREATE positions_%d) FAILED\n",i);
+            cprintf("sqlite3_exec(CREATE positions_%d) FAILED\n",i);
             return;
         }
     }
@@ -211,13 +214,13 @@ void db_primitive_delete_previous_data()
     int retval = sqlite3_exec( handle, "DELETE FROM games",0,0,0);
     if( retval )
     {
-        printf("sqlite3_exec(DELETE games) Failed\n");
+        cprintf("sqlite3_exec(DELETE games) Failed\n");
         return;
     }
     retval = sqlite3_exec( handle, "DELETE FROM positions",0,0,0);
     if( retval )
     {
-        printf("sqlite3_exec(DELETE positions) Failed\n");
+        cprintf("sqlite3_exec(DELETE positions) Failed\n");
         return;
     }
 }
@@ -225,12 +228,14 @@ void db_primitive_delete_previous_data()
 
 void db_primitive_transaction_begin()
 {
-    char *errmsg;
+    char *errmsg=NULL;
     char buf[80];
     sprintf( buf, "BEGIN TRANSACTION" );
     int retval = sqlite3_exec( handle, buf,0,0,&errmsg);
-    if( retval )
-        printf("sqlite3_exec(BEGIN TRANSACTION) FAILED %s\n", errmsg );
+    if( retval && errmsg )
+        cprintf("sqlite3_exec(BEGIN TRANSACTION) FAILED [%s]\n", errmsg );
+	else if (retval )
+		cprintf("sqlite3_exec(BEGIN TRANSACTION) FAILED\n" );
 }
 
 
@@ -242,7 +247,7 @@ void db_primitive_transaction_end()
     sprintf( buf, "COMMIT TRANSACTION" );
     int retval = sqlite3_exec( handle, buf,0,0,&errmsg);
     if( retval )
-        printf("sqlite3_exec(COMMIT TRANSACTION) FAILED %s\n", errmsg );
+        cprintf("sqlite3_exec(COMMIT TRANSACTION) FAILED %s\n", errmsg );
 }
 
 
@@ -256,7 +261,7 @@ void db_primitive_create_indexes()
     report( "Create positions index end" );
     if( retval )
     {
-        printf( "sqlite3_exec(%s) FAILED\n", buf );
+        cprintf( "sqlite3_exec(%s) FAILED\n", buf );
         return;
     }
     report( "Create games index");
@@ -264,7 +269,7 @@ void db_primitive_create_indexes()
     report( "Create games index end");
     if( retval )
     {
-        printf("sqlite3_exec(CREATE INDEX games) FAILED\n");
+        cprintf("sqlite3_exec(CREATE INDEX games) FAILED\n");
     }
 }
 
@@ -281,7 +286,7 @@ void db_primitive_create_indexes_multi()
         int retval = sqlite3_exec(handle,buf,0,0,0);
         if( retval )
         {
-            printf( "sqlite3_exec(%s) FAILED\n", buf );
+            cprintf( "sqlite3_exec(%s) FAILED\n", buf );
             return;
         }
     }
@@ -290,7 +295,7 @@ void db_primitive_create_indexes_multi()
     report( "Create games index end");
     if( retval )
     {
-        printf("sqlite3_exec(CREATE INDEX games) FAILED\n");
+        cprintf("sqlite3_exec(CREATE INDEX games) FAILED\n");
     }
 }
 
@@ -300,14 +305,14 @@ void db_primitive_create_extra_indexes()
     int retval = sqlite3_exec(handle,"CREATE INDEX IF NOT EXISTS idx_white ON games(white)",0,0,0);
     if( retval )
     {
-        printf( "sqlite3_exec() FAILED 1\n" );
+        cprintf( "sqlite3_exec() FAILED 1\n" );
         return;
     }
     report( "Create games(black) index");
     retval = sqlite3_exec(handle,"CREATE INDEX IF NOT EXISTS idx_black ON games(black)",0,0,0);
     if( retval )
     {
-        printf( "sqlite3_exec() FAILED 1\n" );
+        cprintf( "sqlite3_exec() FAILED 1\n" );
         return;
     }
     //int retval = sqlite3_exec(handle,"DROP INDEX idx_white",0,0,0);
@@ -320,7 +325,7 @@ void db_primitive_create_extra_indexes()
         retval = sqlite3_exec(handle,buf,0,0,0);
         if( retval )
         {
-            printf( "sqlite3_exec() FAILED 2\n" );
+            cprintf( "sqlite3_exec() FAILED 2\n" );
             return;
         }
         sprintf( buf, "Create idx%d begin", i );
@@ -331,7 +336,7 @@ void db_primitive_create_extra_indexes()
         report( buf );
         if( retval )
         {
-            printf( "sqlite3_exec FAILED 3\n" );
+            cprintf( "sqlite3_exec FAILED 3\n" );
             return;
         }
     }
@@ -361,7 +366,7 @@ unsigned int levenshtein_distance(const std::string &s1, const std::string &s2)
 static void t( const char *left, const char *right )
 {
     unsigned int x = levenshtein_distance(left,right);
-    printf( "[%s] [%s] %u\n", left, right, x );
+    cprintf( "[%s] [%s] %u\n", left, right, x );
 } */
 
 
@@ -380,7 +385,7 @@ void db_primitive_speed_tests()
     t( "Smith", "Roberts" );
     t( "Smith", "Jones" ); */
     
-    printf( "db_primitive_speed_tests()\n" );
+    cprintf( "db_primitive_speed_tests()\n" );
     
     // Try to create the database. If it doesnt exist, it would be created
     //  pass a pointer to the pointer to sqlite3, in short sqlite3**
@@ -389,10 +394,10 @@ void db_primitive_speed_tests()
     // If connection failed, handle returns NULL
     if(retval)
     {
-        printf("DATABASE CONNECTION FAILED\n");
+        cprintf("DATABASE CONNECTION FAILED\n");
         return;
     }
-    printf("Connection successful\n");
+    cprintf("Connection successful\n");
     
     const char *magnus = "SELECT COUNT(*) from games, positions_2569 WHERE games.white = 'Carlsen, Magnus' "
                          "AND positions_2569.position_hash=44349918 AND games.game_id = positions_2569.game_id";
@@ -403,7 +408,7 @@ void db_primitive_speed_tests()
 
     char buf[1000];
     sqlite3_stmt *stmt;    // A prepared statement for fetching tables
-    printf( "Database is %s\n", DB_MAINTENANCE_FILE );
+    cprintf( "Database is %s\n", DB_MAINTENANCE_FILE );
     int results[5][3];
     time_t start_time;
     time ( &start_time );
@@ -421,15 +426,15 @@ void db_primitive_speed_tests()
         retval = sqlite3_prepare_v2( handle, query, -1, &stmt, 0 );
         if( retval )
         {
-            printf("SELECTING DATA FROM DB FAILED 1\n");
+            cprintf("SELECTING DATA FROM DB FAILED 1\n");
         }
         retval = sqlite3_step(stmt);
         if( retval != SQLITE_ROW )
-            printf("SELECTING DATA FROM DB FAILED 2\n");
+            cprintf("SELECTING DATA FROM DB FAILED 2\n");
         else
         {
             const char *val = (const char*)sqlite3_column_text(stmt,0);
-            printf("Game count=%d\n", atoi(val) );
+            cprintf("Game count=%d\n", atoi(val) );
         }
         sprintf( buf, "Test %d, %s; end", i/3+1, txt );
         int expired = report( buf );
@@ -449,20 +454,20 @@ void db_primitive_speed_tests()
                 case 1: txt="Stamp:";    break;
                 case 2: txt="Sicilian:"; break;
             }
-            printf( "%-10s", txt );
+            cprintf( "%-10s", txt );
         }
         char buf[100];
         sprintf( buf, "%d:%02d", expired/60, expired%60 );
-        printf( "%8s", buf );
+        cprintf( "%8s", buf );
         if( (i+1)%5 == 0 )
-            printf( "\n" );
+            cprintf( "\n" );
         else
-            printf( "," );
+            cprintf( "," );
     }
     time_t end_time;
     time ( &end_time );
     int total_elapsed = (end_time-start_time);
-    printf( "Total elapsed: %d:%02d\n", total_elapsed/60, total_elapsed%60 );
+    cprintf( "Total elapsed: %d:%02d\n", total_elapsed/60, total_elapsed%60 );
     
     // Close the handle to free memory
     sqlite3_close(handle);
@@ -489,7 +494,7 @@ static void dump_game( FILE *f, int game_id )
     retval = sqlite3_prepare_v2( handle, buf, -1, &stmt, 0 );
     if( retval )
     {
-        printf("SELECTING DATA FROM DB FAILED\n");
+        cprintf("SELECTING DATA FROM DB FAILED\n");
     }
     retval = sqlite3_step(stmt);
     if(retval == SQLITE_ROW)
@@ -503,7 +508,7 @@ static void dump_game( FILE *f, int game_id )
     retval = sqlite3_prepare_v2( handle, buf, -1, &stmt, 0 );
     if( retval )
     {
-        printf("SELECTING DATA FROM DB FAILED\n");
+        cprintf("SELECTING DATA FROM DB FAILED\n");
     }
     retval = sqlite3_step(stmt);
     if(retval == SQLITE_ROW)
@@ -517,7 +522,7 @@ static void dump_game( FILE *f, int game_id )
     retval = sqlite3_prepare_v2( handle, buf, -1, &stmt, 0 );
     if( retval )
     {
-        printf("SELECTING DATA FROM DB FAILED\n");
+        cprintf("SELECTING DATA FROM DB FAILED\n");
     }
     retval = sqlite3_step(stmt);
     if(retval == SQLITE_ROW)
@@ -531,7 +536,7 @@ static void dump_game( FILE *f, int game_id )
     retval = sqlite3_prepare_v2( handle, buf, -1, &stmt, 0 );
     if( retval )
     {
-        printf("SELECTING DATA FROM DB FAILED\n");
+        cprintf("SELECTING DATA FROM DB FAILED\n");
     }
     retval = sqlite3_step(stmt);
     if(retval == SQLITE_ROW)
@@ -581,7 +586,7 @@ static void dump_game( FILE *f, int game_id )
 // A real database test
 void db_primitive_show_games( bool connect )
 {
-    printf( "db_primitive_show_games()\n" );
+    cprintf( "db_primitive_show_games()\n" );
     int retval;
     if( connect )
     {
@@ -592,10 +597,10 @@ void db_primitive_show_games( bool connect )
         // If connection failed, handle returns NULL
         if(retval)
         {
-            printf("DATABASE CONNECTION FAILED\n");
+            cprintf("DATABASE CONNECTION FAILED\n");
             return;
         }
-        printf("Connection successful\n");
+        cprintf("Connection successful\n");
         
         
     }
@@ -613,7 +618,7 @@ void db_primitive_show_games( bool connect )
     retval = sqlite3_prepare_v2( handle, buf, -1, &stmt, 0 );
     if( retval )
     {
-        printf("SELECTING DATA FROM DB FAILED\n");
+        cprintf("SELECTING DATA FROM DB FAILED\n");
     }
     
     // Read the number of rows fetched
@@ -634,14 +639,14 @@ void db_primitive_show_games( bool connect )
             for(int col=0 ; col<cols;col++)
             {
                 const char *val = (const char*)sqlite3_column_text(stmt,col);
-                //printf("%s:%s\t",sqlite3_column_name(stmt,col),val);
+                //cprintf("%s:%s\t",sqlite3_column_name(stmt,col),val);
                 if( col == 0 )
                 {
                     int game_id = atoi(val);
                     games.push_back(game_id);
                 }
             }
-            //printf("\n");
+            //cprintf("\n");
         }
         else if(retval == SQLITE_DONE)
         {
@@ -651,7 +656,7 @@ void db_primitive_show_games( bool connect )
         else
         {
             // Some error encountered
-            printf("SOME ERROR ENCOUNTERED\n");
+            cprintf("SOME ERROR ENCOUNTERED\n");
         }
     }
     report("Fetching games end");
@@ -692,14 +697,14 @@ int db_primitive_count_games()
     int retval = sqlite3_prepare_v2( handle, buf, -1, &stmt, 0 );
     if( retval )
     {
-        printf("SELECTING DATA FROM DB FAILED\n");
+        cprintf("SELECTING DATA FROM DB FAILED\n");
         return 0;
     }
 
     // Read the number of rows fetched
     int cols = sqlite3_column_count(stmt);
 
-    printf( "Get games count begin\n");
+    cprintf( "Get games count begin\n");
     while(1)
     {
         // fetch a row's status
@@ -713,13 +718,13 @@ int db_primitive_count_games()
             for( int col=0; col<cols; col++ )
             {
                 const char *val = (const char*)sqlite3_column_text(stmt,col);
-                //printf("%s:%s\t",sqlite3_column_name(gbl_stmt,col),val);
+                //cprintf("%s:%s\t",sqlite3_column_name(gbl_stmt,col),val);
                 if( col == 0 )
                 {
                     //int game_id = atoi(val);
                     //game_ids.push_back(game_id);
                     game_count = atoi(val);
-                    printf( "Game count = %d\n", game_count );
+                    cprintf( "Game count = %d\n", game_count );
                 }
             }
         }
@@ -732,10 +737,10 @@ int db_primitive_count_games()
         else
         {
             // Some error encountered
-            printf("SOME ERROR ENCOUNTERED\n");
+            cprintf("SOME ERROR ENCOUNTERED\n");
         }
     }
-    printf("Get games count end\n");
+    cprintf("Get games count end\n");
     game_id = game_count;
     return game_count;
 }
@@ -788,7 +793,7 @@ static void purge_bucket( int bucket_idx )
             int retval = sqlite3_exec( handle, insert_buf,0,0,&errmsg);
             if( retval )
             {
-                printf("sqlite3_exec(INSERT 3) FAILED %s\n", errmsg );
+                cprintf("sqlite3_exec(INSERT 3) FAILED %s\n", errmsg );
                 return;
             }
         }
@@ -810,7 +815,7 @@ bool db_primitive_check_for_duplicate( uint64_t game_hash, const char *white, co
         int retval = sqlite3_prepare_v2( handle, buf, -1, &stmt, &errmsg );
         if( retval )
         {
-            printf("DB FAIL db_primitive_check_for_duplicate() 1 %s (%s)\n", errmsg, buf );
+            cprintf("DB FAIL db_primitive_check_for_duplicate() 1 %s (%s)\n", errmsg, buf );
             return false;
         }
         
@@ -850,7 +855,7 @@ bool db_primitive_check_for_duplicate( uint64_t game_hash, const char *white, co
                         int len = sqlite3_column_bytes(stmt,col);
                         //fprintf(f,"Move len = %d\n",len);
                         if( len > 10 )
-                            printf( "A real game....\n" );
+                            cprintf( "A real game....\n" );
                         const char *blob = (const char*)sqlite3_column_blob(stmt,col);
                         if( blob )
                             moves_match = (0 == memcmp(blob_moves,blob,len));
@@ -864,7 +869,7 @@ bool db_primitive_check_for_duplicate( uint64_t game_hash, const char *white, co
                 stmt = NULL;
                 if( white_match && black_match && result_match && moves_match )
                 {
-                    printf( "Duplicate game %s-%s %s found\n", white,black,result);
+                    cprintf( "Duplicate game %s-%s %s found\n", white,black,result);
                     return true;    // duplicate found
                 }
                 break;
@@ -872,7 +877,7 @@ bool db_primitive_check_for_duplicate( uint64_t game_hash, const char *white, co
             else
             {
                 // Some error encountered
-                printf("DB FAIL db_primitive_check_for_duplicate() 2\n");
+                cprintf("DB FAIL db_primitive_check_for_duplicate() 2\n");
                 return false;
             }
         }
@@ -884,7 +889,7 @@ void db_primitive_insert_game_multi( const char *white, const char *black, const
                                     const char *date, const char *white_elo, const char *black_elo,
                                     int nbr_moves, thc::Move *moves, uint64_t *hashes  )
 {
-    //printf( "db_primitive_gameover(%s,%s)\n", white, black );
+    //cprintf( "db_primitive_gameover(%s,%s)\n", white, black );
     //uint32_t *move_ptr = (uint32_t *)moves;
     char *errmsg;
     char insert_buf[2000];
@@ -929,10 +934,10 @@ void db_primitive_insert_game_multi( const char *white, const char *black, const
     {
         if( !strstr(errmsg,"unique") )
         {
-            printf("DB_FAIL db_primitive_insert_game_multi() 1 %s (%s)\n", errmsg, insert_buf );
+            cprintf("DB_FAIL db_primitive_insert_game_multi() 1 %s (%s)\n", errmsg, insert_buf );
             return;
         }
-        printf("Non unique game hash %s (%s)\n", errmsg, insert_buf );
+        cprintf("Non unique game hash %s (%s)\n", errmsg, insert_buf );
 
         // Check whether a duplicate of existing game
         bool is_duplicate = db_primitive_check_for_duplicate( game_hash, white_buf, black_buf, result, blob_buf );
@@ -946,7 +951,7 @@ void db_primitive_insert_game_multi( const char *white, const char *black, const
             int retval = sqlite3_exec( handle, insert_buf,0,0,&errmsg);
             if( retval )
             {
-                printf("DB_FAIL db_primitive_insert_game_multi() 2 %s (%s)\n", errmsg, insert_buf );
+                cprintf("DB_FAIL db_primitive_insert_game_multi() 2 %s (%s)\n", errmsg, insert_buf );
                 return;
             }
             sprintf( insert_buf, "INSERT INTO games_duplicates VALUES(%d,%lld,'%s','%s','%s','%s','%s','%s','%s','%s',X'%s')",
@@ -955,7 +960,7 @@ void db_primitive_insert_game_multi( const char *white, const char *black, const
             retval = sqlite3_exec( handle, insert_buf,0,0,&errmsg);
             if( retval )
             {
-                printf("DB_FAIL db_primitive_insert_game_multi() 3 %s (%s)\n", errmsg, insert_buf );
+                cprintf("DB_FAIL db_primitive_insert_game_multi() 3 %s (%s)\n", errmsg, insert_buf );
                 return;
             }
         }

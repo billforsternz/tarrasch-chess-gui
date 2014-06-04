@@ -965,7 +965,7 @@ void PgnDialog::SetDialogHelp()
 
 void PgnDialog::OnListSelected( wxListEvent &event )
 {
-    DebugPrintf(( "idx=%d\n", event.m_itemIndex ));
+    dbg_printf( "idx=%d\n", event.m_itemIndex );
     if( list_ctrl )
         list_ctrl->SetItemState( event.m_itemIndex, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
     OnOk();
@@ -1357,7 +1357,7 @@ void PgnDialog::CopyOrAdd( bool clear_clipboard )
             nbr_copied++;
         }
     }
-    DebugPrintf(( "%d games copied\n", nbr_copied ));
+    dbg_printf( "%d games copied\n", nbr_copied );
 }
 
 void PgnDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
@@ -1414,7 +1414,7 @@ void PgnDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
             nbr_cut++;
         }
     }
-    DebugPrintf(( "%d games cut\n", nbr_cut ));
+    dbg_printf( "%d games cut\n", nbr_cut );
 }
 
 void PgnDialog::OnDelete( wxCommandEvent& WXUNUSED(event) )
@@ -1454,7 +1454,7 @@ void PgnDialog::OnDelete( wxCommandEvent& WXUNUSED(event) )
             nbr_deleted++;
         }
     }
-    DebugPrintf(( "%d games deleted\n", nbr_deleted ));
+    dbg_printf( "%d games deleted\n", nbr_deleted );
 }
 
 void PgnDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )

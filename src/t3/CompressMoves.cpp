@@ -4,11 +4,12 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-
+#define _CRT_SECURE_NO_DEPRECATE
 #include <algorithm>
 #include <vector>
 #include <stdlib.h>
 #include "CompressMoves.h"
+#include "DebugPrintf.h"
 
 // Compression method is basically hi nibble indicates one of 16 pieces, lo nibble indicates how piece moves
 #define CODE_SAME_FILE                          8          // Rank or file codes, this bit set indicates same file (so remaining 3 bits encode rank)
@@ -170,7 +171,7 @@ bool CompressMoves::Check( bool do_internal_check, const char *description, thc:
     std::string pos2;
     if( !do_internal_check )
     {
-        printf( "Check Fail: internal tracker position not checked\n");
+        cprintf( "Check Fail: internal tracker position not checked\n");
         ok = false;
     }
     else
@@ -185,7 +186,7 @@ bool CompressMoves::Check( bool do_internal_check, const char *description, thc:
             {
                 if( (int)pt->sq != i )
                 {
-                    printf( "Check Fail: square mismatch: %d %d\n", i, (int)pt->sq );
+                    cprintf( "Check Fail: square mismatch: %d %d\n", i, (int)pt->sq );
                     ok = false;
                 }
                 piece = pt->piece;
@@ -201,7 +202,7 @@ bool CompressMoves::Check( bool do_internal_check, const char *description, thc:
         pos2 = cp.ToDebugStr();
         if( 0 != pos1.compare(pos2) )
         {
-            printf( "Check Fail: internal tracker position mismatch\n");
+            cprintf( "Check Fail: internal tracker position mismatch\n");
             ok = false;
         }
     }
@@ -212,14 +213,14 @@ bool CompressMoves::Check( bool do_internal_check, const char *description, thc:
     }
     else
     {
-        printf( "Compression/Decompression problem: %s\n", description  );
-        printf( "last success position:%s", check_last_success.c_str() );
-        printf( "last success description:%s\n", check_last_description.c_str() );
+        cprintf( "Compression/Decompression problem: %s\n", description  );
+        cprintf( "last success position:%s", check_last_success.c_str() );
+        cprintf( "last success description:%s\n", check_last_description.c_str() );
         if( external )
-            printf( "external position:%s", external->ToDebugStr().c_str() );
-        printf( "ref position:%s", pos1.c_str() );
+            cprintf( "external position:%s", external->ToDebugStr().c_str() );
+        cprintf( "ref position:%s", pos1.c_str() );
         if( do_internal_check )
-            printf( "tracker position:%s", pos2.c_str() );
+            cprintf( "tracker position:%s", pos2.c_str() );
     }
     //if( !ok )
     //    exit(-1);
@@ -534,8 +535,8 @@ void CompressMoves::compress_move_slow_mode( thc::Move in, char &out )
     std::vector<thc::Move> moves2;
     cr2.GenLegalMoveList( moves2 );
     size_t len2 = moves2.size();
-    printf( "Should be 218 moves, actually it is %u\n", len2 );
-    printf( "By shear coincidence, MAXMOVES is also 218, I think, check: %d\n", MAXMOVES );
+    cprintf( "Should be 218 moves, actually it is %u\n", len2 );
+    cprintf( "By shear coincidence, MAXMOVES is also 218, I think, check: %d\n", MAXMOVES );
     
     // Generate a list of all legal moves, in string form, sorted
     std::vector<thc::Move> moves;

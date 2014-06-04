@@ -69,14 +69,14 @@ PopupControl::PopupControl
     // If there's not enough room - do it upside down
     if( popup_mode != BOOK_HOVER && (pos.y+size.y) >= (rect.height-4) )
         upside_down = true;
-    DebugPrintf(( "rect.x=%d rect.y=%d rect.width=%d rect.height=%d\n", rect.x, rect.y, rect.width, rect.height ));
-    DebugPrintf(( "pos.x=%d, pos.y=%d, size.y=%d\n", pos.x, pos.y, size.y ));
-    DebugPrintf(( "upside_down = %s\n", upside_down?"true":"false" ));
+    dbg_printf( "rect.x=%d rect.y=%d rect.width=%d rect.height=%d\n", rect.x, rect.y, rect.width, rect.height );
+    dbg_printf( "pos.x=%d, pos.y=%d, size.y=%d\n", pos.x, pos.y, size.y );
+    dbg_printf( "upside_down = %s\n", upside_down?"true":"false" );
     if( upside_down )
         pos.y -= (size.y-height);
     SetPosition( pos );
     SetSize    ( size );
-    DebugPrintf(( "*PopupControl::CaptureMouse*\n" ));
+    dbg_printf( "*PopupControl::CaptureMouse*\n" );
     CaptureMouse();
     done   = false;
     terse_move[0] = '\0';
@@ -95,16 +95,16 @@ void PopupControl::OnMouseMove( wxMouseEvent& event )
     wxSize size = GetClientSize();
     //int height = size.y / count;
     wxPoint point = event.GetPosition();
-    DebugPrintf(( "popup; point.x=%d, point.y=%d\n", point.x, point.y ));
+    dbg_printf( "popup; point.x=%d, point.y=%d\n", point.x, point.y );
     if( popup_mode==BOOK_HOVER && 0<=point.x && point.x<hover.width && (0-hover.height)<=point.y && point.y<0 )
     {
         in_region = true;
-        DebugPrintf(( "In region 1\n" ));
+        dbg_printf( "In region 1\n" );
     }
     if( 0<=point.x && point.x<size.x && 0<=point.y && point.y<size.y )
     {
         in_region = true;
-        DebugPrintf(( "In region 2\n" ));
+        dbg_printf( "In region 2\n" );
         int new_sel = point.y/height;
         if( upside_down )
             new_sel = count-1-new_sel;  // 0->count-1, count-1->0
@@ -122,7 +122,7 @@ void PopupControl::Shutdown( bool inject_move )
 {
     ReleaseMouse();
     //wxPoint point = event.GetPosition();
-    //DebugPrintf(( "*PopupControl::ReleaseMouse*: Up x=%d, y=%d\n", point.x, point.y ));
+    //dbg_printf( "*PopupControl::ReleaseMouse*: Up x=%d, y=%d\n", point.x, point.y );
     memset( terse_move, 0, sizeof(terse_move) );
     if( inject_move && 0<=sel && sel<count )
     {
@@ -156,7 +156,7 @@ void PopupControl::OnPaint( wxPaintEvent& WXUNUSED(event) )
     //s = strs[0];
     //dc.GetTextExtent(s, &w, &height);
     //height = this->height; //size.y / (count?count:1);
-    DebugPrintf(( "size.x=%d, size.y=%d\n", size.x, size.y  ));
+    dbg_printf( "size.x=%d, size.y=%d\n", size.x, size.y  );
  // dc.DrawRectangle( 0, 0, 68, 16 );      // need to get the rectangles overlapping, so 
  // dc.DrawRectangle( 0, 15, 68, 17 );     //  tweak 16 to 15 or 17, see tweaks below
  // dc.DrawRectangle( 0, 31, 68, 17 );
@@ -169,29 +169,29 @@ void PopupControl::OnPaint( wxPaintEvent& WXUNUSED(event) )
         if( idx == sel )
         {
             dc.SetBrush(*wxLIGHT_GREY_BRUSH);
-            DebugPrintf(( "LIGHT_GREY_BRUSH\n" ));
+            dbg_printf( "LIGHT_GREY_BRUSH\n" );
         }
         else if( book[idx]=="B" && popup_mode!=BOOK_HOVER )
         {
             dc.SetBrush(*wxGREEN_BRUSH);
-            DebugPrintf(( "GREEN_BRUSH\n" ));
+            dbg_printf( "GREEN_BRUSH\n" );
         }
         else
         {
             dc.SetBrush(*wxWHITE_BRUSH);
-            DebugPrintf(( "WHITE_BRUSH\n" ));
+            dbg_printf( "WHITE_BRUSH\n" );
         }
         int X = 0;
         int Y = (i==0?y:y-1);       // tweak 16 to 15 when i=0
         int W = size.x;
         int H = height + (i==0?0:1);  // tweak 16 to 17 when i!=0
         dc.DrawRectangle( X, Y, W, H );
-        DebugPrintf(( "height = %d\n", height ));
-        DebugPrintf(( "DrawRectangle %d, %d, %d, %d\n", X, Y, W, H ));
+        dbg_printf( "height = %d\n", height );
+        dbg_printf( "DrawRectangle %d, %d, %d, %d\n", X, Y, W, H );
         //dc.DrawLine(0, y+height -1, size.x -1, y+height  -1);
-        //DebugPrintf(( "DrawLine %d, %d, %d, %d\n", 0, y+height, size.x, y+height ));
+        //dbg_printf( "DrawLine %d, %d, %d, %d\n", 0, y+height, size.x, y+height );
         dc.DrawText( s, 0+4, y+2 );
-        DebugPrintf(( "DrawText %d, %d, %s\n", 0+4, y+2, s ));
+        dbg_printf( "DrawText %d, %d, %s\n", 0+4, y+2, s );
         y += height;
     }
  /*
