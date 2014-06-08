@@ -673,7 +673,7 @@ void PgnRead::GameBegin()
     hash = 0x0f6e2dc7837aa12f; //  0x837AA12F; //2205851951; //chess_rules.HashCalculate();
     nbr_games++;
     if(
-       ((nbr_games%1000) == 0 ) /* ||
+       ((nbr_games%10000) == 0 ) /* ||
                                   (
                                   (nbr_games < 100) &&
                                   ((nbr_games%10) == 0 )

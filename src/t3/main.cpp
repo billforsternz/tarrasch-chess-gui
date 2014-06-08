@@ -115,22 +115,51 @@ int DebugPrintfInner( const char *fmt, ... )
 }
 #endif
 
+// This formatter serves to better emulate printf() in a wxLogWindow - the problem solved here is that
+//  wxLogMessage() to a wxLogWindow always takes a whole line - in effect it appends a '\n' to every
+//  logged string. If there is already a '/n' at the end of the logged string, we remove it in
+//  anticipation.
+//  We also optionally prepend the time - to prepend the time instantiate a DebugPrintfTime object
+//  on the stack - no need to use it
+static int dbg_printf_prepend_time=0;
+DebugPrintfTime::DebugPrintfTime()  { dbg_printf_prepend_time++; }
+DebugPrintfTime::~DebugPrintfTime() { dbg_printf_prepend_time--; if(dbg_printf_prepend_time<0) dbg_printf_prepend_time=0; }
 class CustomLogFormatter : public wxLogFormatter
 {
 	virtual wxString Format(wxLogLevel level,
 	const wxString& msg,
 	const wxLogRecordInfo& info) const
 	{
-		size_t len = msg.Length();
-		if( len>0 && msg.Last()=='\n' )
-			return msg.Left(len-1);
-		else
-			return msg; // wxString::Format("[%d] %s(%d) : %s",
-						//info.threadId, info.filename, info.line, msg);
+        wxString temp=msg;
+        if( dbg_printf_prepend_time )
+        {
+            time_t now=time(NULL);
+		    temp = wxString::Format("%s%s", FormatTime(now), temp );
+        }
+        #define DEBUG_TO_LOG_FILE // temp temp
+        #ifdef  DEBUG_TO_LOG_FILE
+        {
+            static FILE *log_file;
+            if( log_file == NULL )
+                log_file = fopen("log.txt","wt");
+            if( log_file )
+            {
+                fwrite( temp.c_str(), 1, temp.length(), log_file );
+                fflush(log_file);
+            }
+        }
+        #endif
+		size_t len = temp.Length();
+		if( len>0 && temp.Last()=='\n' )
+        {
+			temp = temp.Left(len-1);
+        }
+        return temp;
 	}
 };
 
-
+// This is an example formatter for experimentation
+#if 0
 class LogFormatterWithThread : public wxLogFormatter
 {
     virtual wxString Format(wxLogLevel level,
@@ -145,11 +174,10 @@ class LogFormatterWithThread : public wxLogFormatter
         //    info.threadId, info.filename, info.line, msg);
     }
 };
+#endif
 
-//static CustomLogFormatter custom_log_formatter;
-//static LogFormatterWithThread custom_log_formatter;
+
 static bool is_windowing_printf_alive = false;
-
 class SimpleDebugPrintf : public wxLogWindow
 
 {
@@ -163,10 +191,10 @@ public:
         wxDisplaySize(&disp_width, &disp_height);
         wxSize sz;
         wxPoint pos;
-        sz.x = disp_width/2;
-        sz.y = disp_height/2;
-        pos.x = sz.x;
-        pos.y = sz.y;
+        sz.x = disp_width*48/100;
+        sz.y = disp_height*3/4;
+        pos.x = disp_width - sz.x;
+        pos.y = 0; //disp_height*9/10 - sz.y;
         wxFrame *window = GetFrame();
         window->SetSize( sz );
         window->SetPosition( pos );
@@ -204,6 +232,8 @@ int core_printf( const char *fmt, ... )
         OutputDebugString((LPCTSTR)buf);
         #endif
     }
+    int len = strlen(buf);
+    return len;
 }
 
 class ChessFrame: public wxFrame

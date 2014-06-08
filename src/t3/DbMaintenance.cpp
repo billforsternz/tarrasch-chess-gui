@@ -4,7 +4,7 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_DEPRECATE
 #include <stdio.h>
 #include "thc.h"
 #include "DebugPrintf.h"
@@ -14,9 +14,15 @@
 #include "DbMaintenance.h"
 
 //-- Temp - hardwire .pgn file and database name
+#ifdef THC_WINDOWS
+#define PGN_FILE        "/Users/Maria/Documents/Tarrasch/giant-base-part1-rebuilt.pgn"
+#define PGN_OUT_FILE    "/Users/Maria/Documents/BillsFiles/twic/twic_minimal_overlap_2.pgn"
+#define QGN_FILE        "/Users/Maria/Documents/BillsFiles/twic/twic_minimal_overlap.qgn"
+#else
 #define PGN_FILE        "/Users/billforster/Documents/ChessDatabases/twic-948-1010.pgn"
 #define PGN_OUT_FILE    "/Users/billforster/Documents/ChessDatabases/twic_minimal_overlap_2.pgn"
 #define QGN_FILE        "/Users/billforster/Documents/ChessDatabases/twic_minimal_overlap.qgn"
+#endif
 
 static FILE *ifile;
 static FILE *ofile;
@@ -127,12 +133,13 @@ void db_maintenance_create_or_append_to_database(  const char *pgn_filename )
         cprintf( "Cannot open %s\n", pgn_filename );
     else
     {
+        DebugPrintfTime turn_on_time_display;
         PgnRead *pgn = new PgnRead('A');
-        db_primitive_open_multi();
+        db_primitive_open();
         db_primitive_transaction_begin();
+        db_primitive_create_tables();
         db_primitive_count_games();
         pgn->Process(ifile);
-        db_primitive_create_indexes_multi();
         db_primitive_transaction_end();
         db_primitive_close();
     }
@@ -142,10 +149,11 @@ void db_maintenance_create_or_append_to_database(  const char *pgn_filename )
         fclose(ofile);
 }
 
-void db_maintenance_create_extra_indexes()
+void db_maintenance_create_indexes()
 {
-    db_primitive_open_multi();
+    db_primitive_open();
     db_primitive_transaction_begin();
+    db_primitive_create_indexes();
     db_primitive_create_extra_indexes();
     db_primitive_transaction_end();
     db_primitive_close();
@@ -163,7 +171,7 @@ void hook_gameover( char callback_code, const char *event, const char *site, con
         case 'P': game_to_qgn_file( event, site, date, round, white, black, result, white_elo, black_elo, eco, nbr_moves, moves, hashes );  break;
             
         // Append
-        case 'A': db_primitive_insert_game_multi( white, black, event, site, result, date, white_elo, black_elo, nbr_moves, moves, hashes ); break;
+        case 'A': db_primitive_insert_game( white, black, event, site, result, date, white_elo, black_elo, nbr_moves, moves, hashes ); break;
             
         // Verify
         case 'V': verify_compression_algorithm( nbr_moves, moves ); break;
@@ -180,14 +188,17 @@ void hook_gameover( char callback_code, const char *event, const char *site, con
         gbl_evil_queen = false;
         gbl_double_byte = false;
         thc::ChessRules cr;
+        std::string sgame;
         for( int i=0; i<nbr_moves; i++ )
         {
             thc::Move mv = moves[i];
             std::string s = mv.NaturalOut( &cr );
-            cprintf( "%s ", s.c_str() );
+            sgame += s;
+            if( i+1 < nbr_moves )
+                sgame += " ";
             cr.PlayMove(mv);
         }
-        cprintf( "\n" );
+        cprintf( "%s\n", sgame.c_str() );
     }
 }
 

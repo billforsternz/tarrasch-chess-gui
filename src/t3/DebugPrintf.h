@@ -38,4 +38,12 @@
     int core_printf( const char *fmt, ... );
 #endif
 
+// Enable time logging by instantiating instances of this
+class DebugPrintfTime
+{
+public:
+    DebugPrintfTime();
+    ~DebugPrintfTime();
+};
+
 #endif			// DEBUG_PRINTF_H

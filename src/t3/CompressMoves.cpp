@@ -530,13 +530,13 @@ int CompressMoves::compress_move( thc::Move mv, char *storage )
 //
 void CompressMoves::compress_move_slow_mode( thc::Move in, char &out )
 {
-    thc::ChessRules cr2;
+    /*thc::ChessRules cr2;
     cr2.Forsyth("R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1 w - - 0 1");
     std::vector<thc::Move> moves2;
     cr2.GenLegalMoveList( moves2 );
     size_t len2 = moves2.size();
     cprintf( "Should be 218 moves, actually it is %u\n", len2 );
-    cprintf( "By shear coincidence, MAXMOVES is also 218, I think, check: %d\n", MAXMOVES );
+    cprintf( "By shear coincidence, MAXMOVES is also 218, I think, check: %d\n", MAXMOVES ); */
     
     // Generate a list of all legal moves, in string form, sorted
     std::vector<thc::Move> moves;

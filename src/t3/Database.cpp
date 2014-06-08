@@ -187,7 +187,7 @@ int Database::SetPosition( thc::ChessRules &cr, std::string &player_name )
 static int virtual_dump_game( DB_GAME_INFO *info, int game_id )
 {
     // Get white player
-    char buf[100];
+    char buf[1000];
     sqlite3_stmt *stmt;    // A prepared statement for fetching from games table
     int retval;
     sprintf( buf, "SELECT white,black,event,site,result,date,white_elo,black_elo,moves from games WHERE game_id=%d", game_id );
@@ -426,7 +426,7 @@ int Database::GetRow( DB_GAME_INFO *info, int row )
             //        table_nbr, table_nbr, table_nbr, table_nbr, hash, row );
             if( is_start_pos )
             {
-                sprintf( buf,
+                sprintf( buf, 
                         "SELECT games.game_id from games%s ORDER BY games.white ASC LIMIT %d,100", where_white.c_str(), row );
             }
             else
