@@ -69,7 +69,7 @@ void CtrlBox::OnPaint( wxPaintEvent& WXUNUSED(event) )
     //if( w<r.width && h<r.height )
     {
         dc.DrawText( txt, (r.width-w)/2, (r.height-h)/2 );
-        DebugPrintf(( "CtrlBox::OnPaint(%s)", txt.c_str() ));
+        dbg_printf( "CtrlBox::OnPaint(%s)", txt.c_str() );
     }
 }
 

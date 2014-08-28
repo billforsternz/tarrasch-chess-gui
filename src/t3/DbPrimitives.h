@@ -15,27 +15,27 @@
 // recipe3.sqlite3 is a solid db
 
 #ifdef THC_MAC
-#define DB_FILE             "/Users/billforster/Documents/ChessDatabases/next_generation_1.sqlite3"
-#define DB_MAINTENANCE_FILE "/Users/billforster/Documents/ChessDatabases/next_generation_1.sqlite3"
+#define DB_FILE                         "/Users/billforster/Documents/ChessDatabases/next_generation_1.sqlite3"
+#define DB_MAINTENANCE_FILE             "/Users/billforster/Documents/ChessDatabases/next_generation_1.sqlite3"
+#define DB_MAINTENANCE_PGN_FILE         "/Users/billforster/Documents/ChessDatabases/giant-base-part1-rebuilt.pgn"
 #else
-#define DB_FILE             "/Users/Bill/Documents/T3Database/rebuild.sqlite3"
-#define DB_MAINTENANCE_FILE "/Users/Bill/Documents/T3Database/rebuild.sqlite3"
+#define DB_FILE                         "/Users/Maria/Documents/Tarrasch/next_generation_4.sqlite3"
+#define DB_MAINTENANCE_FILE             "/Users/Maria/Documents/Tarrasch/next_generation_4.sqlite3"
+#define DB_MAINTENANCE_PGN_FILE         "/Users/Maria/Documents/Tarrasch/giant-base-part1-rebuilt.pgn"
 #endif
 
 
 
-//void db_primitive_open();
-void db_primitive_open_multi();
+void db_primitive_open();
+void db_primitive_create_tables();
 void db_primitive_delete_previous_data();
 void db_primitive_transaction_begin();
 void db_primitive_transaction_end();
-//void db_primitive_create_indexes();
-void db_primitive_create_indexes_multi();
+void db_primitive_create_indexes();
 void db_primitive_create_extra_indexes();
 void db_primitive_close();
 int  db_primitive_count_games();
-//void db_primitive_insert_game( const char *white, const char *black, const char *event, const char *site, const char *result, int nbr_moves, thc::Move *moves, uint32_t *hashes  );
-void db_primitive_insert_game_multi( const char *white, const char *black, const char *event, const char *site, const char *result,
+void db_primitive_insert_game( const char *white, const char *black, const char *event, const char *site, const char *result,
                                     const char *date, const char *white_elo, const char *black_elo,
                                     int nbr_moves, thc::Move *moves, uint64_t *hashes  );
 

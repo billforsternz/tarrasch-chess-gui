@@ -393,8 +393,8 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
                 stk->pvar = &v2;
                 MoveTree  &m1 =  (*pvar)[imove];
                 MoveTree  &m2 = *(stk->m);
-                DebugPrintf(( "%s\n", stk->cr.squares ));
-                DebugPrintf(( "%d [%s%s]\n", stk_idx, stk->cr.white?"":"...", stk->m->game_move.move.NaturalOut( &stk->cr ).c_str() ));
+                dbg_printf( "%s\n", stk->cr.squares );
+                dbg_printf( "%d [%s%s]\n", stk_idx, stk->cr.white?"":"...", stk->m->game_move.move.NaturalOut( &stk->cr ).c_str() );
                 stk->cr.PushMove( stk->m->game_move.move );
                 if( &v1==&v2 && &m1==&m2 )
                 {

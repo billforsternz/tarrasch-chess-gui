@@ -114,14 +114,14 @@ extern void JobBegin()
     ghJob = CreateJobObject( NULL, NULL /*"The Tarrasch Chess GUI Job Object"*/ ); // GLOBAL
     if( ghJob == NULL)
     {
-        DebugPrintfInner( "Could not create job object" );
+        release_printf( "Could not create job object" );
     }
     else
     {
         // Configure all child processes associated with the job to terminate when the job closes
         jeli.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
         if( 0 == SetInformationJobObject( ghJob, JobObjectExtendedLimitInformation, &jeli, sizeof(jeli)))
-            DebugPrintfInner( "Could not SetInformationJobObject" );
+            release_printf( "Could not SetInformationJobObject" );
     }
 }
 
@@ -158,8 +158,8 @@ static void ErrorMessage( const char *filename_uci_exe, char *str )  //display d
     for( int count=0; count<sizeof(buf)-2 && *msg; count++ )
         *msg2++ = (char)*msg++;
     *msg2 = '\0';
-    DebugPrintf(("Error running %s %s: %s\n", filename_uci_exe,
-                                        str, buf ));
+    dbg_printf("Error running %s %s: %s\n", filename_uci_exe,
+                                        str, buf );
     wxString detail;
     detail.sprintf("File: %s\nError on %s: %s\n", filename_uci_exe,
                                         str, buf );
@@ -259,11 +259,11 @@ Rybka::Rybka( const char *filename_uci_exe )
     {
         okay = true;
         suspended = false;
-        DebugPrintf(( "Chess engine pid = %d\n", pi.dwProcessId ));
+        dbg_printf( "Chess engine pid = %d\n", pi.dwProcessId );
         if( ghJob )
         {
             if( 0 == AssignProcessToJobObject(ghJob,pi.hProcess) )
-                DebugPrintf(( "Could not AssignProcessToObject" ));
+                dbg_printf( "Could not AssignProcessToObject" );
         }
     }
 }
@@ -288,9 +288,9 @@ void Rybka::SuspendResume( bool resume )
             if( Thread32First(hThreadSnap, &te32) ) 
             { 
 		        if( resume )
-			        DebugPrintfInner( "Chess Engine resuming\n" );
+			        release_printf( "Chess Engine resuming\n" );
 		        else
-			        DebugPrintfInner( "Chess Engine suspending\n" );
+			        release_printf( "Chess Engine suspending\n" );
                 do 
                 { 
                     if( te32.th32OwnerProcessID == pi.dwProcessId )    //@@
@@ -388,7 +388,7 @@ void Rybka::StartThinking( bool ponder, ChessPosition &pos, const char *forsyth,
 bool Rybka::Ponderhit( ChessPosition &pos )
 {
     bool okay = false;
-    DebugPrintfInner( "Ponderhit\n" );
+    release_printf( "Ponderhit\n" );
     if( gbl_state==SEND_PLAY_ENGINE1 ||
         gbl_state==SEND_PLAY_ENGINE2 ||
         gbl_state==SEND_PLAY_ENGINE3 ||
@@ -402,7 +402,7 @@ bool Rybka::Ponderhit( ChessPosition &pos )
         pos_engine_to_move = pos;
         send_stop = false;
         send_ponderhit = true;
-        DebugPrintfInner( "Ponderhit inside\n" );
+        release_printf( "Ponderhit inside\n" );
         Run();
     }
     return okay;
@@ -410,7 +410,7 @@ bool Rybka::Ponderhit( ChessPosition &pos )
 
 void Rybka::MoveNow()
 {
-    DebugPrintfInner( "MoveNow\n" );
+    release_printf( "MoveNow\n" );
     if( gbl_state==SEND_PLAY_ENGINE1 ||
         gbl_state==SEND_PLAY_ENGINE2 ||
         gbl_state==SEND_PLAY_ENGINE3 ||
@@ -423,14 +423,14 @@ void Rybka::MoveNow()
         send_ponderhit = false;
         send_stop = true;
         last_command_was_go_infinite = true;
-        DebugPrintfInner( "MoveNow inside\n" );
+        release_printf( "MoveNow inside\n" );
         Run();
     }
 }
 
 void Rybka::ForceStop()
 {
-    DebugPrintfInner( "ForceStop\n" );
+    release_printf( "ForceStop\n" );
     if( gbl_state==SEND_PLAY_ENGINE1 ||
         gbl_state==SEND_PLAY_ENGINE2 ||
         gbl_state==SEND_PLAY_ENGINE3 ||
@@ -445,17 +445,17 @@ void Rybka::ForceStop()
         last_command_was_go_infinite = false;
         if( gbl_state==SEND_ISREADY_P || gbl_state==WAIT_READYOK_P )
         {
-            DebugPrintfInner( "ForceStop 1\n" );
+            release_printf( "ForceStop 1\n" );
             readyok_next_state = READY;
         }
         else if( gbl_state == WAIT_EVALUATION )
         {
-            DebugPrintfInner( "ForceStop 2\n" );
+            release_printf( "ForceStop 2\n" );
             gbl_state = SEND_FORCE_STOP;
         }
         else
         {
-            DebugPrintfInner( "ForceStop 3\n" );
+            release_printf( "ForceStop 3\n" );
             gbl_state = READY;
         }
         Run();
@@ -546,10 +546,10 @@ void Rybka::Stop()
 {
     debug_trigger = true;
     if( !okay )
-        DebugPrintf(( "Stop: not okay\n" ));
+        dbg_printf( "Stop: not okay\n" );
     else
     {
-        DebugPrintf(( "Stop: okay\n" ));
+        dbg_printf( "Stop: okay\n" );
         if( gbl_state == WAIT_EVALUATION )
             last_command_was_go_infinite = true;    // usually only send stop if go infinite, but here if waiting
                                                     //  for engine to move, also need to send stop
@@ -563,7 +563,7 @@ void Rybka::Stop()
             unsigned long now_time = GetTickCount();	
             unsigned long elapsed_time = now_time-base_time;
             if( first || elapsed_time!=elapsed_time_changed )
-                DebugPrintfInner( "Waiting for engine to die: running=%s, elapsed_time=%lu, loops=%lu\n", running?"true":"false", elapsed_time, i );
+                release_printf( "Waiting for engine to die: running=%s, elapsed_time=%lu, loops=%lu\n", running?"true":"false", elapsed_time, i );
             elapsed_time_changed = elapsed_time;
             first = false;
             if( !running )
@@ -592,7 +592,7 @@ bool Rybka::Run()
         PeekNamedPipe(read_stdout,buf,1023,&bread,&avail,NULL);
         if( avail || bread )
         {
-            DebugPrintfInner( "Peek: dbg_count=%lu, avail=%lu, bread=%lu\n", dbg_count, avail, bread );
+            release_printf( "Peek: dbg_count=%lu, avail=%lu, bread=%lu\n", dbg_count, avail, bread );
             dbg_count = 0;
         }
         else
@@ -601,14 +601,14 @@ bool Rybka::Run()
         if( bread != 0 )
         {
             //if( debug_trigger )
-            //    DebugPrintf(("avail: %lu\n", avail ));
+            //    dbg_printf("avail: %lu\n", avail );
             bzero(buf);
             if( avail > 1023 )
             {
                 while( bread >= 1023 )
                 {
                     ReadFile(read_stdout,buf,1023,&bread,NULL);  //read the stdout pipe
-                    DebugPrintfInner( "Read big: avail=%lu, bread=%lu\n", avail, bread );
+                    release_printf( "Read big: avail=%lu, bread=%lu\n", avail, bread );
                     dbg_count = 0;
                     user_hook_out(buf);
                     bzero(buf);
@@ -617,7 +617,7 @@ bool Rybka::Run()
             else
             {
                 ReadFile(read_stdout,buf,1023,&bread,NULL);
-                DebugPrintfInner( "Read small: avail=%lu, bread=%lu\n", avail, bread );
+                release_printf( "Read small: avail=%lu, bread=%lu\n", avail, bread );
                 dbg_count = 0;
                 user_hook_out(buf);
             }
@@ -631,7 +631,7 @@ bool Rybka::Run()
             WriteFile(write_stdin,read_ptr,strlen(read_ptr),&temp,NULL); //send it to stdin
             WriteFile(write_stdin,"\r\n",2,&temp,NULL); //send it to stdin
             if( debug_trigger )
-                DebugPrintf(("sending %s\n", read_ptr ));
+                dbg_printf("sending %s\n", read_ptr );
             read_ptr = NULL;
             #else
             bzero(buf);
@@ -641,14 +641,14 @@ bool Rybka::Run()
                 *buf = '\r';
                 read_ptr = NULL;
             }
-            //printf("%c",*buf);
+            //cprintf("%c",*buf);
             if( debug_trigger )
-                DebugPrintf(("sending %c\n", *buf ));
+                dbg_printf("sending %c\n", *buf );
             WriteFile(write_stdin,buf,1,&bread,NULL); //send it to stdin
             if (*buf == '\r')
             {
                 *buf = '\n';
-                //printf("%c",*buf);
+                //cprintf("%c",*buf);
                 WriteFile(write_stdin,buf,1,&bread,NULL); //send an extra newline char,
                                                     //if necessary
             }
@@ -667,15 +667,15 @@ Rybka::~Rybka()
         Stop();
         CloseHandle(pi.hThread);               //@@
         /*BOOL x =*/ CloseHandle(pi.hProcess);
-        //DebugPrintf(( "CloseHandle() returns %s\n", x?"true":"false" ));
+        //dbg_printf( "CloseHandle() returns %s\n", x?"true":"false" );
         CloseHandle(newstdin);            //clean stuff up
         CloseHandle(newstdout);
         CloseHandle(read_stdout);
         CloseHandle(write_stdin);
         //x = SafeTerminateProcess( pi.hProcess, -1 );
-        //DebugPrintfInner( "SafeTerminateProcess() returns %s\n", x?"true":"false" );
+        //release_printf( "SafeTerminateProcess() returns %s\n", x?"true":"false" );
         //x = TerminateProcess( pi.hProcess, -1 );
-        //DebugPrintfInner( "TerminateProcess() returns %s\n", x?"true":"false" );
+        //release_printf( "TerminateProcess() returns %s\n", x?"true":"false" );
     }
 }
 
@@ -1126,7 +1126,7 @@ const char *Rybka::user_hook_in()
     }
     if( s )
     {
-        DebugPrintfInner( "in: %s\n", s );
+        release_printf( "in: %s\n", s );
         last_command_was_go_infinite = (
                                             0 == memcmp(s,"go infinite",11) ||
                                             0 == memcmp(s,"go ponder",9)
@@ -1160,7 +1160,7 @@ void Rybka::user_hook_out( const char *s )
 void Rybka::line_out( const char *s )
 {
     const char *p, *temp;
-    DebugPrintfInner( "out: %s\n", s );
+    release_printf( "out: %s\n", s );
     switch( gbl_state )
     {
         case WAIT_READYOK_P:
@@ -1190,7 +1190,7 @@ void Rybka::line_out( const char *s )
             if( 0 == memcmp(s,"info ",5) && strstr(s," pv ") )
             {
                 kq_engine_to_move.Put(s+4);
-                DebugPrintf(( "Kibitz engine to move info:%s\n", s+4 ));
+                dbg_printf( "Kibitz engine to move info:%s\n", s+4 );
             }
             p = strstr(s,temp="bestmove ");
             if( p )
@@ -1200,7 +1200,7 @@ void Rybka::line_out( const char *s )
                 ChessRules cr=pos_engine_to_move;
                 bool legal = move.TerseIn(&cr,p);
                 if( !legal )
-                    DebugPrintfInner( "**!! False bestmove %s detected !!**\n", p );
+                    release_printf( "**!! False bestmove %s detected !!**\n", p );
                 else
                 {
                     gbl_bestmove = move;
@@ -1226,7 +1226,7 @@ void Rybka::line_out( const char *s )
         case KIBITZING:
         {
             if( strstr(s," multipv 3 ") )
-                DebugPrintf(( "Break here"));
+                dbg_printf( "Break here");
             if( 0==memcmp(s,"info ",5) && strstr(s," pv ") )
             {
                 int idx = 0; // first attempt at V2 used 0, changed to -1 for when
@@ -1244,7 +1244,7 @@ void Rybka::line_out( const char *s )
                 if( idx >= 0 )
                 {
                     kq[idx].Put(s+4);
-                    DebugPrintf(( "Kibitz info(%d):%s\n", idx, s+4 ));
+                    dbg_printf( "Kibitz info(%d):%s\n", idx, s+4 );
                 }
             }
             break;
@@ -1616,7 +1616,7 @@ void Rybka::NewState( const char *comment, RYBKA_STATE new_state )
         }
     }
     gbl_state = new_state;
-    DebugPrintfInner( "State change %s -> %s (%s)\n", s1, s2, comment );
+    release_printf( "State change %s -> %s (%s)\n", s1, s2, comment );
 }
 
 #endif // THC_WINDOWS

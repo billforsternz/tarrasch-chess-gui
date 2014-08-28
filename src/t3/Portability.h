@@ -46,6 +46,6 @@
    #error Unknown Platform!
 #endif
 
-//#define DebugPrintfInner printf //temp
+//#define release_printf cprintf //temp
 
 #endif // PORTABILITY_H

@@ -51,7 +51,7 @@ BoardSetupControl::BoardSetupControl
 //    wxPoint pos = point;
 //    SetPosition( pos );
 //    SetSize    ( size );
-    DebugPrintf(( "*BoardSetupControl::CaptureMouse*\n" ));
+    dbg_printf( "*BoardSetupControl::CaptureMouse*\n" );
     //CaptureMouse();
 
     // try to find the directory with our images
@@ -132,7 +132,7 @@ void BoardSetupControl::SetState( const char *action, State new_state )
             timer_running_after = timer_running;
         }
     }
-    DebugPrintf(( "Transition: %s: %s->%s\n", action, before, after ));
+    dbg_printf( "Transition: %s: %s->%s\n", action, before, after );
     state = new_state;
     if( timer_running_before && !timer_running_after )
         m_timer.Stop();
@@ -155,14 +155,14 @@ void BoardSetupControl::OnMouseMove( wxMouseEvent& event )
     char piece='\0', file='\0', rank='\0';
     bool hit = bs->HitTest( point, piece, file, rank );
 /*  if( !hit )
-        DebugPrintf(( "no hit; x=%d, y=%d\n", point.x, point.y ));
+        dbg_printf( "no hit; x=%d, y=%d\n", point.x, point.y );
     else
     {
-        DebugPrintf(( "hit; x=%d, y=%d -> piece=%c, file=%c, rank=%c\n",
+        dbg_printf( "hit; x=%d, y=%d -> piece=%c, file=%c, rank=%c\n",
                 point.x, point.y,
                 piece?piece:'?',
                 file?file:'?',
-                rank?rank:'?' ));
+                rank?rank:'?' );
     } */
     switch( state )
     {
@@ -228,7 +228,7 @@ c) square = curs on release (may be different square)
 
 void BoardSetupControl::OnTimeout( wxTimerEvent& WXUNUSED(event) )
 {
-    DebugPrintf(( "Timeout\n" ));
+    dbg_printf( "Timeout\n" );
     long_clearing_click = false;
     if( state == DOWN_CURSOR_WAIT )
     {
@@ -256,7 +256,7 @@ void BoardSetupControl::OnTimeout( wxTimerEvent& WXUNUSED(event) )
 
 void BoardSetupControl::OnMouseLeftUp( wxMouseEvent& event )
 {
-    DebugPrintf(( "Up\n" ));
+    dbg_printf( "Up\n" );
     wxPoint point = event.GetPosition();
     char piece='\0', file='\0', rank='\0';
     bool hit = bs->HitTest( point, piece, file, rank );
@@ -304,19 +304,19 @@ void BoardSetupControl::OnMouseLeftUp( wxMouseEvent& event )
                     if( cursor == squares[wait_offset] )
                     {
                         squares[wait_offset] = ' ';
-                        DebugPrintf(( "Quick click clear\n" ));
+                        dbg_printf( "Quick click clear\n" );
                     }
                     else
                     {
                         squares[wait_offset] = cursor;
-                        DebugPrintf(( "Quick click set\n" ));
+                        dbg_printf( "Quick click set\n" );
                     }
                 }
             }
             else
                 squares[wait_offset] = ' '; // clear waiting square
             UpdateBoard();
-            DebugPrintf(( "Quick click end\n" ));
+            dbg_printf( "Quick click end\n" );
             break;
         }
         case DOWN_CURSOR_DRAG:
@@ -344,20 +344,20 @@ void BoardSetupControl::OnMouseLeftUp( wxMouseEvent& event )
 
 void BoardSetupControl::OnMouseLeftDown( wxMouseEvent& event )
 {
-    DebugPrintf(( "Down\n" ));
+    dbg_printf( "Down\n" );
     long_clearing_click = false;
     wxPoint point = event.GetPosition();
     char piece='\0', file='\0', rank='\0';
     bool hit = bs->HitTest( point, piece, file, rank );
     if( !hit )
-        DebugPrintf(( "no hit; x=%d, y=%d\n", point.x, point.y ));
+        dbg_printf( "no hit; x=%d, y=%d\n", point.x, point.y );
     else
     {
-        DebugPrintf(( "hit; x=%d, y=%d -> piece=%c, file=%c, rank=%c\n",
+        dbg_printf( "hit; x=%d, y=%d -> piece=%c, file=%c, rank=%c\n",
                 point.x, point.y,
                 piece?piece:'?',
                 file?file:'?',
-                rank?rank:'?' ));
+                rank?rank:'?' );
     }
     switch( state )
     {
@@ -433,7 +433,7 @@ void BoardSetupControl::OnPaint( wxPaintEvent& WXUNUSED(event) )
     {
         //bool dont_redraw = (captured&&suppress_redraw);
         //if( dont_redraw )
-        //    DebugPrintf(( "OMG " ));
+        //    dbg_printf( "OMG " );
         dc.DrawBitmap( chess_bmp, 0, 0, true );
     }
 }

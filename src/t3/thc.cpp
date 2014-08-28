@@ -2133,21 +2133,21 @@ void ChessRules::TestInternals()
     const char *fen = "b3k2r/8/8/8/8/8/8/R3K2R w KQk - 0 1";
     Move move;
     Forsyth(fen);
-    printf( "Addresses etc.;\n" );
-    printf( " this = 0x%p\n",                         this );
-    printf( " (void *)this = 0x%p\n",                 (void *)this );
-    printf( " &white = 0x%p\n",                       &white );
-    printf( " &squares[0] = 0x%p\n",                  &squares[0] );
-    printf( " &half_move_clock = 0x%p\n",             &half_move_clock );
-    printf( " &full_move_count = 0x%p\n",             &full_move_count );
-    printf( " size to end of full_move_count = %lu", ((char *)&full_move_count - (char *)this) + sizeof(full_move_count) );
-    printf( " sizeof(ChessPosition) = %lu (should be 4 more than size to end of full_move_count)\n",
+    cprintf( "Addresses etc.;\n" );
+    cprintf( " this = 0x%p\n",                         this );
+    cprintf( " (void *)this = 0x%p\n",                 (void *)this );
+    cprintf( " &white = 0x%p\n",                       &white );
+    cprintf( " &squares[0] = 0x%p\n",                  &squares[0] );
+    cprintf( " &half_move_clock = 0x%p\n",             &half_move_clock );
+    cprintf( " &full_move_count = 0x%p\n",             &full_move_count );
+    cprintf( " size to end of full_move_count = %lu", ((char *)&full_move_count - (char *)this) + sizeof(full_move_count) );
+    cprintf( " sizeof(ChessPosition) = %lu (should be 4 more than size to end of full_move_count)\n",
            sizeof(ChessPosition) );
-    printf( " sizeof(Move) = %lu\n",                  sizeof(Move) );
+    cprintf( " sizeof(Move) = %lu\n",                  sizeof(Move) );
     
-    printf( " sizeof(ChessPositionRaw) = %lu\n", sizeof(ChessPositionRaw) );
-    printf( " (offsetof(ChessPositionRaw,full_move_count) + sizeof(full_move_count) + sizeof(DETAIL) =");
-    printf( " %lu + %lu + %lu = %lu\n",
+    cprintf( " sizeof(ChessPositionRaw) = %lu\n", sizeof(ChessPositionRaw) );
+    cprintf( " (offsetof(ChessPositionRaw,full_move_count) + sizeof(full_move_count) + sizeof(DETAIL) =");
+    cprintf( " %lu + %lu + %lu = %lu\n",
            offsetof(ChessPositionRaw,full_move_count), sizeof(full_move_count), sizeof(DETAIL),
            offsetof(ChessPositionRaw,full_move_count) + sizeof(full_move_count) + sizeof(DETAIL)
            );
@@ -2163,12 +2163,12 @@ void ChessRules::TestInternals()
             case 5: move.TerseIn(this,"e8g8");    break;
         }
         unsigned char *p = (unsigned char *)DETAIL_ADDR;
-        printf( " DETAIL_ADDR = 0x%p\n",  p );
-        printf( " DETAIL_ADDR[0] = %02x\n",  p[0] );
-        printf( " DETAIL_ADDR[1] = %02x\n",  p[1] );
-        printf( " DETAIL_ADDR[2] = %02x\n",  p[2] );
-        printf( " DETAIL_ADDR[3] = %02x\n",  p[3] );
-        printf( "Before %s: enpassant_target=0x%02x, wking_square=0x%02x, bking_square=0x%02x,"
+        cprintf( " DETAIL_ADDR = 0x%p\n",  p );
+        cprintf( " DETAIL_ADDR[0] = %02x\n",  p[0] );
+        cprintf( " DETAIL_ADDR[1] = %02x\n",  p[1] );
+        cprintf( " DETAIL_ADDR[2] = %02x\n",  p[2] );
+        cprintf( " DETAIL_ADDR[3] = %02x\n",  p[3] );
+        cprintf( "Before %s: enpassant_target=0x%02x, wking_square=0x%02x, bking_square=0x%02x,"
                " wking=%s, wqueen=%s, bking=%s, bqueen=%s\n",
                move.TerseOut().c_str(),
                enpassant_target,
@@ -2179,7 +2179,7 @@ void ChessRules::TestInternals()
                bking ?"true":"false",
                bqueen?"true":"false" );
         PushMove(move);
-        printf( "After PushMove(): enpassant_target=0x%02x, wking_square=0x%02x, bking_square=0x%02x,"
+        cprintf( "After PushMove(): enpassant_target=0x%02x, wking_square=0x%02x, bking_square=0x%02x,"
                " wking=%s, wqueen=%s, bking=%s, bqueen=%s\n",
                enpassant_target,
                wking_square,
@@ -2189,7 +2189,7 @@ void ChessRules::TestInternals()
                bking ?"true":"false",
                bqueen?"true":"false" );
         PopMove(move);
-        printf( "After PopMove(): enpassant_target=0x%02x, wking_square=0x%02x, bking_square=0x%02x,"
+        cprintf( "After PopMove(): enpassant_target=0x%02x, wking_square=0x%02x, bking_square=0x%02x,"
                " wking=%s, wqueen=%s, bking=%s, bqueen=%s\n",
                enpassant_target,
                wking_square,
@@ -2199,7 +2199,7 @@ void ChessRules::TestInternals()
                bking ?"true":"false",
                bqueen?"true":"false" );
         PushMove(move);
-        printf( "After PushMove(): enpassant_target=0x%02x, wking_square=0x%02x, bking_square=0x%02x,"
+        cprintf( "After PushMove(): enpassant_target=0x%02x, wking_square=0x%02x, bking_square=0x%02x,"
                " wking=%s, wqueen=%s, bking=%s, bqueen=%s\n",
                enpassant_target,
                wking_square,
@@ -2358,7 +2358,7 @@ bool ChessRules::IsDraw( bool white_asks, DRAWTYPE &result )
     //  detail, detail_idx)
     if( !draw )
     {
-//      DebugPrintf(( "Checking 3 times repitition\n" ));
+//      dbg_printf( "Checking 3 times repitition\n" );
         result = DRAWTYPE_REPITITION;
         /* static ;remove for thread safety */  char save_squares[sizeof(squares)];
         memcpy( save_squares, squares, sizeof(save_squares) );
@@ -5484,7 +5484,7 @@ const int MATERIAL_MIDDLE  = (500 + ((8*10+4*30+2*50+90)*1)/3);
 //	int score_test = material*4 /*balance=4*/ + positional;
 //  int score_test_cp = (score_test*10)/4;
 //	if( score_test_cp > 4000 )
-//      printf( "too much" );   // Problem fen "k7/8/PPK5/8/8/8/8/8 w - - 0 1"
+//      cprintf( "too much" );   // Problem fen "k7/8/PPK5/8/8/8/8/8 w - - 0 1"
 }
 
 
@@ -5695,13 +5695,13 @@ bool ChessEngine::CalculateNextMove( bool &only_move, int &score, Move &move, in
 	    {
 		    if( moves[i][0].src == moves[i][0].dst )
 			    break;
-		    DebugPrintf(( "%d: score %d, %c%c-%c%c\n", i, scores[i][0],
+		    dbg_printf( "%d: score %d, %c%c-%c%c\n", i, scores[i][0],
 					       FILE(moves[i][0].src),
 		                   RANK(moves[i][0].src),
 		                   FILE(moves[i][0].dst),
-		                   RANK(moves[i][0].dst) ));
+		                   RANK(moves[i][0].dst) );
 	    }
-	    DebugPrintf(( "DIAG_make_move_primary=%d\n"
+	    dbg_printf( "DIAG_make_move_primary=%d\n"
 				     "DIAG_evaluate_count=%d\n"
 				     "DIAG_evaluate_leaf_count=%d\n"
 				     "DIAG_cutoffs=%d\n"
@@ -5710,7 +5710,7 @@ bool ChessEngine::CalculateNextMove( bool &only_move, int &score, Move &move, in
 				     0,//DIAG_evaluate_count,
 				     0,//DIAG_evaluate_leaf_count,
 				     DIAG_cutoffs, 
-				     DIAG_deep_cutoffs	));
+				     DIAG_deep_cutoffs	);
 	    for( int i=0; i<MAX_DEPTH; i++ )
 	    {
 		    if( moves[i][0].src == moves[i][0].dst )
@@ -5772,13 +5772,13 @@ bool ChessEngine::CalculateNextMove( int &score, Move &move, int balance, int de
 	    {
 		    if( moves[i][0].src == moves[i][0].dst )
 			    break;
-		    DebugPrintf(( "%d: score %d, %c%c-%c%c\n", i, scores[i][0],
+		    dbg_printf( "%d: score %d, %c%c-%c%c\n", i, scores[i][0],
 					       FILE(moves[i][0].src),
 		                   RANK(moves[i][0].src),
 		                   FILE(moves[i][0].dst),
-		                   RANK(moves[i][0].dst) ));
+		                   RANK(moves[i][0].dst) );
 	    }
-	    DebugPrintf(( "DIAG_make_move_primary=%d\n"
+	    dbg_printf( "DIAG_make_move_primary=%d\n"
 				     "DIAG_evaluate_count=%d\n"
 				     "DIAG_evaluate_leaf_count=%d\n"
 				     "DIAG_cutoffs=%d\n"
@@ -5787,7 +5787,7 @@ bool ChessEngine::CalculateNextMove( int &score, Move &move, int balance, int de
 				     0,//DIAG_evaluate_count,
 				     0,//DIAG_evaluate_leaf_count,
 				     DIAG_cutoffs, 
-				     DIAG_deep_cutoffs	));
+				     DIAG_deep_cutoffs	);
 	    for( int i=0; i<MAX_DEPTH; i++ )
 	    {
 		    if( moves[i][0].src == moves[i][0].dst )
@@ -5847,13 +5847,13 @@ bool ChessEngine::CalculateNextMove( MOVELIST &ml, bool &only_move, int &score, 
 	    {
 		    if( moves[i][0].src == moves[i][0].dst )
 			    break;
-		    DebugPrintf(( "%d: score %d, %c%c-%c%c\n", i, scores[i][0],
+		    dbg_printf( "%d: score %d, %c%c-%c%c\n", i, scores[i][0],
 					       FILE(moves[i][0].src),
 		                   RANK(moves[i][0].src),
 		                   FILE(moves[i][0].dst),
-		                   RANK(moves[i][0].dst) ));
+		                   RANK(moves[i][0].dst) );
 	    }
-	    DebugPrintf(( "DIAG_make_move_primary=%d\n"
+	    dbg_printf( "DIAG_make_move_primary=%d\n"
 				     "DIAG_evaluate_count=%d\n"
 				     "DIAG_evaluate_leaf_count=%d\n"
 				     "DIAG_cutoffs=%d\n"
@@ -5862,7 +5862,7 @@ bool ChessEngine::CalculateNextMove( MOVELIST &ml, bool &only_move, int &score, 
 				     0,//DIAG_evaluate_count,
 				     0,//DIAG_evaluate_leaf_count,
 				     DIAG_cutoffs, 
-				     DIAG_deep_cutoffs	));
+				     DIAG_deep_cutoffs	);
 	    for( int i=0; i<MAX_DEPTH; i++ )
 	    {
 		    if( moves[i][0].src == moves[i][0].dst )
@@ -5914,7 +5914,7 @@ bool ChessEngine::CalculateNextMove( bool new_game, vector<Move> &pv, Move &best
     const int bump_kill_threshold = 10; // must show trend else stop chopping search
     static int multiplier[30];
 
-    DebugPrintfInner( "CNM: new_game = %s\n", new_game?"true":"false" );
+    release_printf( "CNM: new_game = %s\n", new_game?"true":"false" );
     if( new_game )
     {
         losing_ring[0]  = losing_ring[1]  =  false;
@@ -5944,20 +5944,20 @@ bool ChessEngine::CalculateNextMove( bool new_game, vector<Move> &pv, Move &best
 
         unsigned long now_time = GetTickCount();	
         elapsed_time = now_time-base_time;
-        DebugPrintfInner( "CNM: elapsed_time=%u, previous_elapsed=%u\n", elapsed_time, previous_elapsed );
+        release_printf( "CNM: elapsed_time=%u, previous_elapsed=%u\n", elapsed_time, previous_elapsed );
         if( depth && previous_elapsed )
             multiplier[depth-1] =  elapsed_time/previous_elapsed;
         if( !have_move )
-            DebugPrintfInner( "No move\n" );
+            release_printf( "No move\n" );
         else
         {
             std::string s = ml.moves[besti].NaturalOut(this);
-            DebugPrintfInner( "Depth:%d Move:%s Score:%d Elapsed time:%lu Budget time:%lu Maximum time:%lu\n",
+            release_printf( "Depth:%d Move:%s Score:%d Elapsed time:%lu Budget time:%lu Maximum time:%lu\n",
                 depth, s.c_str(), (score*10)/balance, elapsed_time, ms_budget, ms_time );
         }
         unsigned long budget_threshold    = ms_budget/2;        
         unsigned long inc_depth_threshold = ms_time/10;
-        DebugPrintfInner( "CNM: [%d] elapsed_time=%lu, budget_threshold=%lu, inc_depth_threshold=%lu\n",
+        release_printf( "CNM: [%d] elapsed_time=%lu, budget_threshold=%lu, inc_depth_threshold=%lu\n",
                                 depth, elapsed_time, budget_threshold, inc_depth_threshold );
         unsigned long predicted_time_1=0;
         if( elapsed_time && previous_elapsed )
@@ -5965,43 +5965,43 @@ bool ChessEngine::CalculateNextMove( bool new_game, vector<Move> &pv, Move &best
         unsigned long predicted_time_2=0;
         if( elapsed_time && multiplier[depth] )
             predicted_time_2 = elapsed_time * multiplier[depth];
-        DebugPrintfInner( "CNM: [%d] predicted_time (based on this position only)=%lu\n",
+        release_printf( "CNM: [%d] predicted_time (based on this position only)=%lu\n",
                             depth, predicted_time_1 );
-        DebugPrintfInner( "CNM: [%d] predicted_time (based on previous positions)=%lu\n",
+        release_printf( "CNM: [%d] predicted_time (based on previous positions)=%lu\n",
                             depth, predicted_time_2 );
         if( only_move || !have_move )
         {
-            DebugPrintfInner( "CNM: stop[%d] because only move or no move\n", depth );
+            release_printf( "CNM: stop[%d] because only move or no move\n", depth );
             break;      // stop thinking if zero or one moves
         }
         if( score_cp<-30000 || score_cp>30000 )
         {
-            DebugPrintfInner( "CNM: stop[%d] because mate detected\n", depth );
+            release_printf( "CNM: stop[%d] because mate detected\n", depth );
             break;      // stop thinking if mate anyway
         }
         if( depth>=5 && winning_ring[0] && winning_ring[1] && (score_cp>killing) )
         {
-            DebugPrintfInner( "CNM: stop[%d] because winning score_cp=%d\n", depth, score_cp );
+            release_printf( "CNM: stop[%d] because winning score_cp=%d\n", depth, score_cp );
             break;      // stop thinking if it's going very well/very_poorly
         }
         if( depth>=5 && losing_ring[0] && losing_ring[1] && (score_cp<killing) )
         {
-            DebugPrintfInner( "CNM: stop[%d] because losing score_cp=%d\n", depth, score_cp );
+            release_printf( "CNM: stop[%d] because losing score_cp=%d\n", depth, score_cp );
             break;      // stop thinking if it's going very well/very_poorly
         }
         if( elapsed_time > budget_threshold )
         {
-            DebugPrintfInner( "CNM: stop[%d] because budget exceeded\n", depth );
+            release_printf( "CNM: stop[%d] because budget exceeded\n", depth );
             break;
         }
         if( predicted_time_1 > inc_depth_threshold )
         {
-            DebugPrintfInner( "CNM: stop[%d] because predicted_time (based on this position only) > threshold\n", depth );
+            release_printf( "CNM: stop[%d] because predicted_time (based on this position only) > threshold\n", depth );
             break;  // stop thinking if we estimate we're going to use too much time
         }
         if( predicted_time_2 > inc_depth_threshold )
         {
-            DebugPrintfInner( "CNM: stop[%d] because predicted_time (based on previous positions) > threshold\n", depth );
+            release_printf( "CNM: stop[%d] because predicted_time (based on previous positions) > threshold\n", depth );
             break;  // stop thinking if we estimate we're going to use too much time
         }
         previous_elapsed = elapsed_time;
@@ -6067,7 +6067,7 @@ bool ChessEngine::CalculateNextMove( bool new_game, vector<Move> &pv, Move &best
                 break;
 
             // Remove best move from list
-            DebugPrintfInner( "Removing %s (score %d) because of repetition\n", move.TerseOut().c_str(), score_cp );
+            release_printf( "Removing %s (score %d) because of repetition\n", move.TerseOut().c_str(), score_cp );
             for( int i=besti+1; i<ml.count; i++ )
                 ml.moves[i-1] = ml.moves[i];
             ml.count--;
@@ -6088,7 +6088,7 @@ bool ChessEngine::CalculateNextMove( bool new_game, vector<Move> &pv, Move &best
             std::string nmove;
             move = ml.moves[besti];
             nmove = move.NaturalOut( this );
-            DebugPrintfInner( "Repetition attempt; Depth:%d Move:%s Score:%d\n",
+            release_printf( "Repetition attempt; Depth:%d Move:%s Score:%d\n",
                 depth, nmove.c_str(), (score*10)/balance );
             GetPV( pv );
             ReportOnProgress
@@ -6113,13 +6113,13 @@ bool ChessEngine::CalculateNextMove( bool new_game, vector<Move> &pv, Move &best
         killing += bump_kill_threshold;
     else
         killing = initial_kill_threshold;
-    DebugPrintfInner( "CNM: winning_ring[0]=%s\n", winning_ring[0]?"true":"false" );
-    DebugPrintfInner( "CNM: winning_ring[1]=%s\n", winning_ring[1]?"true":"false" );
-    DebugPrintfInner( "CNM: losing_ring[0]=%s\n",  losing_ring[0]?"true":"false" );
-    DebugPrintfInner( "CNM: losing_ring[1]=%s\n",  losing_ring[1]?"true":"false" );
-    DebugPrintfInner( "CNM: killing=%d\n",         killing );
+    release_printf( "CNM: winning_ring[0]=%s\n", winning_ring[0]?"true":"false" );
+    release_printf( "CNM: winning_ring[1]=%s\n", winning_ring[1]?"true":"false" );
+    release_printf( "CNM: losing_ring[0]=%s\n",  losing_ring[0]?"true":"false" );
+    release_printf( "CNM: losing_ring[1]=%s\n",  losing_ring[1]?"true":"false" );
+    release_printf( "CNM: killing=%d\n",         killing );
     if( have_move )
-        DebugPrintfInner( "CNM: bestmove=%s\n",    bestmove.TerseOut().c_str() );
+        release_printf( "CNM: bestmove=%s\n",    bestmove.TerseOut().c_str() );
     return have_move;
 }
 
@@ -6243,20 +6243,20 @@ int ChessEngine::ScoreWhiteToMove( MOVELIST &ml, int &besti, int black_mobility 
     unsigned long tag = tag_generator++;
     if( recurse_level < LEVEL_CAREFUL_SORTING )
     {
-        DebugPrintf(( "%sScoreWhiteToMove() [%lu], sorted [", indent(recurse_level), tag ));
+        dbg_printf( "%sScoreWhiteToMove() [%lu], sorted [", indent(recurse_level), tag );
         CarefulSort( ml );
     }
     else
-        DebugPrintf(( "%sScoreWhiteToMove() [%lu], not sorted [", indent(recurse_level), tag ));
+        dbg_printf( "%sScoreWhiteToMove() [%lu], not sorted [", indent(recurse_level), tag );
 	for( i=0; i<ml.count; i++  )
 	{
         Move move;
         move = ml.moves[i];
         std::string nmove;
         nmove = move.NaturalOut( this );
-        DebugPrintf(( " %s", nmove.c_str() ));
+        dbg_printf( " %s", nmove.c_str() );
     }
-    DebugPrintf(( "]\n" ));
+    dbg_printf( "]\n" );
     #else
     if( recurse_level < LEVEL_CAREFUL_SORTING )
         CarefulSort( ml );
@@ -6268,7 +6268,7 @@ int ChessEngine::ScoreWhiteToMove( MOVELIST &ml, int &besti, int black_mobility 
         move = ml.moves[i];
         std::string nmove;
         nmove = move.NaturalOut( this );
-        DebugPrintf(( "%sScoreWhiteToMove() [%lu], playing .%s\n", indent(recurse_level), tag, nmove.c_str() ));
+        dbg_printf( "%sScoreWhiteToMove() [%lu], playing .%s\n", indent(recurse_level), tag, nmove.c_str() );
         #endif
 		PushMove( ml.moves[i] );
 		DIAG_make_move_primary++;	
@@ -6278,14 +6278,14 @@ int ChessEngine::ScoreWhiteToMove( MOVELIST &ml, int &besti, int black_mobility 
 		{
             #ifdef VARIABLE_PLY
             if( gbl_stop )
-                DebugPrintf(("Stop command received\n" ));
+                dbg_printf("Stop command received\n" );
             #endif
 			int material, positional;
 			EvaluateLeaf(material,positional);
 			score = material*static_balance + positional + (white_mobility-black_mobility)/4;
             #ifdef EXTRA_DEBUG_CODE1
-            DebugPrintf(( "%s [%lu] Leaf score: score=%d: (material=%d, positional=%d, white_mobility=%d, black_mobility=%d)\n",
-                            indent(recurse_level), tag, score, material, positional, white_mobility, black_mobility ));
+            dbg_printf( "%s [%lu] Leaf score: score=%d: (material=%d, positional=%d, white_mobility=%d, black_mobility=%d)\n",
+                            indent(recurse_level), tag, score, material, positional, white_mobility, black_mobility );
             #endif
         }
 		else
@@ -6307,15 +6307,15 @@ int ChessEngine::ScoreWhiteToMove( MOVELIST &ml, int &besti, int black_mobility 
 				}
 			}
             #ifdef EXTRA_DEBUG_CODE1
-            DebugPrintf(( "%s [%lu] Recursion score: score=%d\n",
-                            indent(recurse_level), tag, score ));
+            dbg_printf( "%s [%lu] Recursion score: score=%d\n",
+                            indent(recurse_level), tag, score );
             #endif
 		}
         if( score > max )
         {
             #ifdef EXTRA_DEBUG_CODE1
-            DebugPrintf(( "%s [%lu] New max: score=%d, previous max=%d\n",
-                            indent(recurse_level), tag, score, max ));
+            dbg_printf( "%s [%lu] New max: score=%d, previous max=%d\n",
+                            indent(recurse_level), tag, score, max );
             #endif
 			#ifdef ALPHA_BETA
             for( int j=recurse_level-1; j>=0 ; j-=2 )
@@ -6325,9 +6325,9 @@ int ChessEngine::ScoreWhiteToMove( MOVELIST &ml, int &besti, int black_mobility 
                     prune = true;
 					DIAG_cutoffs++;
                     #ifdef EXTRA_DEBUG_CODE1
-                    DebugPrintf(( "%s [%lu] Beta %s: score=%d, beta[%d] = %d\n",
+                    dbg_printf( "%s [%lu] Beta %s: score=%d, beta[%d] = %d\n",
                                     indent(recurse_level), tag, j!=recurse_level-1?"deep prune":"prune",
-                                    score, j, beta[j] ));
+                                    score, j, beta[j] );
                     #endif
 					if( j != recurse_level-1 )
 						DIAG_deep_cutoffs++;
@@ -6337,9 +6337,9 @@ int ChessEngine::ScoreWhiteToMove( MOVELIST &ml, int &besti, int black_mobility 
             if( score > alpha[recurse_level] )
             {
                 #ifdef EXTRA_DEBUG_CODE1
-                DebugPrintf(( "%s [%lu] Alpha update: score=%d > old alpha[%d] = %d\n",
+                dbg_printf( "%s [%lu] Alpha update: score=%d > old alpha[%d] = %d\n",
                                 indent(recurse_level), tag,
-                                score, recurse_level, alpha[recurse_level] ));
+                                score, recurse_level, alpha[recurse_level] );
                 #endif
                 alpha[recurse_level] = score;
             }
@@ -6414,14 +6414,14 @@ void ChessEngine::CarefulSort( MOVELIST &ml )
     for( i=0; i<ml.count; i++ )
         ml.moves[i] = out.moves[i];
     #ifdef EXTRA_DEBUG_CODE3
-    DebugPrintf(( "Sorting position with %s to move;\n%s\n", white?"white":"black", squares ));
+    dbg_printf( "Sorting position with %s to move;\n%s\n", white?"white":"black", squares );
     for( i=0; i<ml.count; i++ )
     {
         Move move;
         move = ml.moves[i];
         std::string nmove;
         nmove = move.NaturalOut( this );
-        DebugPrintf(( " %s", nmove.c_str() ));
+        dbg_printf( " %s", nmove.c_str() );
     }
     #endif
 }
@@ -6444,20 +6444,20 @@ int ChessEngine::ScoreBlackToMove( MOVELIST &ml, int &besti, int white_mobility 
     unsigned long tag = tag_generator++;
     if( recurse_level < LEVEL_CAREFUL_SORTING )
     {
-        DebugPrintf(( "%sScoreBlackToMove() [%lu], sorted [", indent(recurse_level), tag ));
+        dbg_printf( "%sScoreBlackToMove() [%lu], sorted [", indent(recurse_level), tag );
         CarefulSort( ml );
     }
     else
-        DebugPrintf(( "%sScoreBlackToMove() [%lu], not sorted [", indent(recurse_level), tag ));
+        dbg_printf( "%sScoreBlackToMove() [%lu], not sorted [", indent(recurse_level), tag );
 	for( i=0; i<ml.count; i++  )
 	{
         Move move;
         move = ml.moves[i];
         std::string nmove;
         nmove = move.NaturalOut( this );
-        DebugPrintf(( " %s", nmove.c_str() ));
+        dbg_printf( " %s", nmove.c_str() );
     }
-    DebugPrintf(( "]\n" ));
+    dbg_printf( "]\n" );
     #else
     if( recurse_level < LEVEL_CAREFUL_SORTING )
         CarefulSort( ml );
@@ -6469,7 +6469,7 @@ int ChessEngine::ScoreBlackToMove( MOVELIST &ml, int &besti, int white_mobility 
         move = ml.moves[i];
         std::string nmove;
         nmove = move.NaturalOut( this );
-        DebugPrintf(( "%sScoreBlackToMove() [%lu], playing %s\n", indent(recurse_level), tag, nmove.c_str() ));
+        dbg_printf( "%sScoreBlackToMove() [%lu], playing %s\n", indent(recurse_level), tag, nmove.c_str() );
         #endif
 		PushMove( ml.moves[i] );
 		DIAG_make_move_primary++;	
@@ -6479,14 +6479,14 @@ int ChessEngine::ScoreBlackToMove( MOVELIST &ml, int &besti, int white_mobility 
 		{
             #ifdef VARIABLE_PLY
             if( gbl_stop )
-                DebugPrintf(("Stop command received\n" ));
+                dbg_printf("Stop command received\n" );
             #endif
 			int material, positional;
 			EvaluateLeaf(material,positional);
 			score = material*static_balance + positional + (white_mobility-black_mobility)/4;
             #ifdef EXTRA_DEBUG_CODE1
-            DebugPrintf(( "%s [%lu] Leaf score: score=%d: (material=%d, positional=%d, white_mobility=%d, black_mobility=%d)\n",
-                            indent(recurse_level), tag, score, material, positional, white_mobility, black_mobility ));
+            dbg_printf( "%s [%lu] Leaf score: score=%d: (material=%d, positional=%d, white_mobility=%d, black_mobility=%d)\n",
+                            indent(recurse_level), tag, score, material, positional, white_mobility, black_mobility );
             #endif
         }
 		else
@@ -6508,15 +6508,15 @@ int ChessEngine::ScoreBlackToMove( MOVELIST &ml, int &besti, int white_mobility 
 				}
 			}
             #ifdef EXTRA_DEBUG_CODE1
-            DebugPrintf(( "%s [%lu] Recursion score: score=%d\n",
-                            indent(recurse_level), tag, score ));
+            dbg_printf( "%s [%lu] Recursion score: score=%d\n",
+                            indent(recurse_level), tag, score );
             #endif
 		}
         if( score < min )
         {
             #ifdef EXTRA_DEBUG_CODE1
-            DebugPrintf(( "%s [%lu] New min: score=%d, previous min=%d\n",
-                            indent(recurse_level), tag, score, min ));
+            dbg_printf( "%s [%lu] New min: score=%d, previous min=%d\n",
+                            indent(recurse_level), tag, score, min );
             #endif
 			#ifdef ALPHA_BETA
             for( int j=recurse_level-1; j>=0 ; j-=2 )
@@ -6526,9 +6526,9 @@ int ChessEngine::ScoreBlackToMove( MOVELIST &ml, int &besti, int white_mobility 
                     prune = true;
 					DIAG_cutoffs++;
                     #ifdef EXTRA_DEBUG_CODE1
-                    DebugPrintf(( "%s [%lu] Alpha %s: score=%d, alpha[%d] = %d\n",
+                    dbg_printf( "%s [%lu] Alpha %s: score=%d, alpha[%d] = %d\n",
                                     indent(recurse_level), tag, j!=recurse_level-1?"deep prune":"prune",
-                                    score, j, alpha[j] ));
+                                    score, j, alpha[j] );
                     #endif
 					if( j != recurse_level-1 )
 						DIAG_deep_cutoffs++;
@@ -6538,9 +6538,9 @@ int ChessEngine::ScoreBlackToMove( MOVELIST &ml, int &besti, int white_mobility 
             if( score < beta[recurse_level] )
             {
                 #ifdef EXTRA_DEBUG_CODE1
-                DebugPrintf(( "%s [%lu] Beta update: score=%d < old beta[%d] = %d\n",
+                dbg_printf( "%s [%lu] Beta update: score=%d < old beta[%d] = %d\n",
                                 indent(recurse_level), tag,
-                                score, recurse_level, beta[recurse_level] ));
+                                score, recurse_level, beta[recurse_level] );
                 #endif
                 beta[recurse_level] = score;
             }
@@ -6627,10 +6627,10 @@ void ChessEngine::TestGame()
             bool okay = move.NaturalIn( this, txt );
             if( !okay )
             {
-                printf( "Couldn't convert nmove=%s\n", txt );
+                cprintf( "Couldn't convert nmove=%s\n", txt );
                 break;
             }
-            printf( "Input: %s\n", txt );
+            cprintf( "Input: %s\n", txt );
             PlayMove( move );
         }
         else if( typ == 'E' ) // engine move
@@ -6640,7 +6640,7 @@ void ChessEngine::TestGame()
             bool only_move;
             CalculateNextMove( only_move, score, move, BALANCE, DEFAULT_DEPTH );
             nmove = move.NaturalOut( this );
-            printf( "Output: %s\n", nmove.c_str() );
+            cprintf( "Output: %s\n", nmove.c_str() );
             s = strstr(txt,nmove.c_str());
             okay  = false;
             if( s != NULL )
@@ -6654,7 +6654,7 @@ void ChessEngine::TestGame()
             }
             if( !okay )
             {
-                printf( "Convert bestmove=%s->nmove=%s, doesn't match %s\n", move.TerseOut().c_str(), nmove.c_str(), txt );
+                cprintf( "Convert bestmove=%s->nmove=%s, doesn't match %s\n", move.TerseOut().c_str(), nmove.c_str(), txt );
                 break;
             }
             PlayMove( move );
@@ -6662,9 +6662,9 @@ void ChessEngine::TestGame()
     }
     unsigned long after = GetTickCount();
     if( complete )
-        printf( "Success, elapsed time = %lu\n", after-before );
+        cprintf( "Success, elapsed time = %lu\n", after-before );
     else
-        printf( "Didn't complete\n" );
+        cprintf( "Didn't complete\n" );
 }
 
 void ChessEngine::TestInternals()
@@ -6672,16 +6672,16 @@ void ChessEngine::TestInternals()
     const char *fen = "b3k2r/8/8/8/8/8/8/R3K2R w KQk - 0 1";
     Move move;
     Forsyth(fen);
-    printf( "Addresses etc.;\n" );
-    printf( " this = 0x%p\n",                         this );
-    printf( " &white = 0x%p\n",                       &white );
-    printf( " &squares[0] = 0x%p\n",                  &squares[0] );
-    printf( " &half_move_clock = 0x%p\n",             &half_move_clock );
-    printf( " &full_move_count = 0x%p\n",             &full_move_count );
-    printf( " size to end of full_move_count = 0x%x\n", (unsigned int)( ((char *)&full_move_count - (char *)this) + sizeof(full_move_count) )  );
-    printf( " sizeof(ChessPosition) = 0x%x (should be 4 more than size to end of full_move_count)\n",
+    cprintf( "Addresses etc.;\n" );
+    cprintf( " this = 0x%p\n",                         this );
+    cprintf( " &white = 0x%p\n",                       &white );
+    cprintf( " &squares[0] = 0x%p\n",                  &squares[0] );
+    cprintf( " &half_move_clock = 0x%p\n",             &half_move_clock );
+    cprintf( " &full_move_count = 0x%p\n",             &full_move_count );
+    cprintf( " size to end of full_move_count = 0x%x\n", (unsigned int)( ((char *)&full_move_count - (char *)this) + sizeof(full_move_count) )  );
+    cprintf( " sizeof(ChessPosition) = 0x%x (should be 4 more than size to end of full_move_count)\n",
                                                         (unsigned int)sizeof(ChessPosition) );
-    printf( " sizeof(Move) = 0x%x\n",                  (unsigned int)sizeof(Move) );
+    cprintf( " sizeof(Move) = 0x%x\n",                  (unsigned int)sizeof(Move) );
     for( int i=0; i<6; i++ )
     {
         switch(i)
@@ -6694,12 +6694,12 @@ void ChessEngine::TestInternals()
             case 5: move.TerseIn(this,"e8g8");    break;
         }
         unsigned char *p = (unsigned char *)DETAIL_ADDR;
-        printf( " DETAIL_ADDR = 0x%p\n",  p );
-        printf( " DETAIL_ADDR[0] = %02x\n",  p[0] );
-        printf( " DETAIL_ADDR[1] = %02x\n",  p[1] );
-        printf( " DETAIL_ADDR[2] = %02x\n",  p[2] );
-        printf( " DETAIL_ADDR[3] = %02x\n",  p[3] );
-        printf( "Before %s: enpassant_target=0x%02x, wking_square=0x%02x, bking_square=0x%02x,"
+        cprintf( " DETAIL_ADDR = 0x%p\n",  p );
+        cprintf( " DETAIL_ADDR[0] = %02x\n",  p[0] );
+        cprintf( " DETAIL_ADDR[1] = %02x\n",  p[1] );
+        cprintf( " DETAIL_ADDR[2] = %02x\n",  p[2] );
+        cprintf( " DETAIL_ADDR[3] = %02x\n",  p[3] );
+        cprintf( "Before %s: enpassant_target=0x%02x, wking_square=0x%02x, bking_square=0x%02x,"
                 " wking=%s, wqueen=%s, bking=%s, bqueen=%s\n",
             move.TerseOut().c_str(),
             enpassant_target,
@@ -6710,7 +6710,7 @@ void ChessEngine::TestInternals()
             bking ?"true":"false",
             bqueen?"true":"false" );
         PushMove(move);        
-        printf( "After PushMove(): enpassant_target=0x%02x, wking_square=0x%02x, bking_square=0x%02x,"
+        cprintf( "After PushMove(): enpassant_target=0x%02x, wking_square=0x%02x, bking_square=0x%02x,"
                 " wking=%s, wqueen=%s, bking=%s, bqueen=%s\n",
             enpassant_target,
             wking_square,
@@ -6720,7 +6720,7 @@ void ChessEngine::TestInternals()
             bking ?"true":"false",
             bqueen?"true":"false" );
         PopMove(move);        
-        printf( "After PopMove(): enpassant_target=0x%02x, wking_square=0x%02x, bking_square=0x%02x,"
+        cprintf( "After PopMove(): enpassant_target=0x%02x, wking_square=0x%02x, bking_square=0x%02x,"
                 " wking=%s, wqueen=%s, bking=%s, bqueen=%s\n",
             enpassant_target,
             wking_square,
@@ -6730,7 +6730,7 @@ void ChessEngine::TestInternals()
             bking ?"true":"false",
             bqueen?"true":"false" );
         PushMove(move);        
-        printf( "After PushMove(): enpassant_target=0x%02x, wking_square=0x%02x, bking_square=0x%02x,"
+        cprintf( "After PushMove(): enpassant_target=0x%02x, wking_square=0x%02x, bking_square=0x%02x,"
                 " wking=%s, wqueen=%s, bking=%s, bqueen=%s\n",
             enpassant_target,
             wking_square,
@@ -6781,17 +6781,17 @@ void ChessEngine::TestPosition()
     CalculateNextMove( ml, only_move, score, besti, BALANCE, 7 );
     move = ml.moves[besti];
     std::string nmove = move.NaturalOut( this );
-    printf( "%s", ToDebugStr().c_str() );
-    printf( "score=%d, material=%d, positional=%d, move=%s\n", score, material, positional, nmove.c_str() );
+    cprintf( "%s", ToDebugStr().c_str() );
+    cprintf( "score=%d, material=%d, positional=%d, move=%s\n", score, material, positional, nmove.c_str() );
     #if 0   // enable this to test transformed position
     Transform();
     EvaluateLeaf(material,positional);
     CalculateNextMove( only_move, score, move, BALANCE, DEFAULT_DEPTH );
     std::string nmove = move.NaturalOut(this);
-    DebugPrintf(( "AFTER Transform(), %s", ToDebugStr().c_str() ));
-    DebugPrintf(( "score=%d, material=%d, positional=%d, move=%s\n", score, material, positional, nmove.c_str() ));
-    printf( "AFTER Transform(), %s", ToDebugStr().c_str() );
-    printf( "score=%d, material=%d, positional=%d, move=%s\n", score, material, positional, nmove.c_str() );
+    dbg_printf( "AFTER Transform(), %s", ToDebugStr().c_str() );
+    dbg_printf( "score=%d, material=%d, positional=%d, move=%s\n", score, material, positional, nmove.c_str() );
+    cprintf( "AFTER Transform(), %s", ToDebugStr().c_str() );
+    cprintf( "score=%d, material=%d, positional=%d, move=%s\n", score, material, positional, nmove.c_str() );
     #endif
 }
 
@@ -6810,8 +6810,8 @@ void ChessEngine::TestEnprise()
     if( okay )
     {
         int m = (WhiteToPlay() ? EnpriseWhite() : EnpriseBlack());
-        printf( "ChessPosition: %s\n", pos );
-        printf( "Side to move can win %d centipawns of material in this position\n", m*10 );
+        cprintf( "ChessPosition: %s\n", pos );
+        cprintf( "Side to move can win %d centipawns of material in this position\n", m*10 );
     }
 }
 
@@ -6821,7 +6821,7 @@ void ChessEngine::Test()
     TestGame();
     //TestPosition();
     //TestEnprise();
-    //printf( "Press Enter\n" );
+    //cprintf( "Press Enter\n" );
     //getchar();
 }
 

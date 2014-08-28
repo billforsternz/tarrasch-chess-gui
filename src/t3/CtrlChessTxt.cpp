@@ -151,8 +151,8 @@ void CtrlChessTxt::OnMouseWheel( wxMouseEvent &ev )
     wxPoint pt( ev.GetPosition() );
     int rotation = ev.GetWheelRotation();
     //CalcUnscrolledPosition( pt.x, pt.y, &x, &y );
-    DebugPrintf(( "Mouse wheel event; Rotation: %d, delta = %d\n",
-                  rotation, ev.GetWheelDelta() ));
+    dbg_printf( "Mouse wheel event; Rotation: %d, delta = %d\n",
+                  rotation, ev.GetWheelDelta() );
     bool up = rotation>0;
     NAVIGATION_KEY nk  = (up ? NK_UP : NK_DOWN);
     NavigationKey( nk );
@@ -220,18 +220,18 @@ void CtrlChessTxt::OnTextCut(wxClipboardTextEvent& WXUNUSED(event))
 
 void CtrlChessTxt::OnTextCopy(wxClipboardTextEvent& WXUNUSED(event))
 {
-    DebugPrintf(( "Copy\n" ));
+    dbg_printf( "Copy\n" );
 }
 
 void CtrlChessTxt::OnTextPaste(wxClipboardTextEvent& WXUNUSED(event))
 {
-    DebugPrintf(( "Paste 2\n" ));
+    dbg_printf( "Paste 2\n" );
 }
 
 void CtrlChessTxt::Paste()
 {
     Atomic begin;
-    DebugPrintf(( "Paste 1\n" ));
+    dbg_printf( "Paste 1\n" );
     if( wxTheClipboard->Open() )
     {
         if( wxTheClipboard->IsSupported( wxDF_TEXT ) )

@@ -723,7 +723,7 @@ void Book::GameBegin()
     chess_rules = temp;    // init
     nbr_games++;
     if( (nbr_games%10) == 0 )
-        DebugPrintf(( "%d games\n", nbr_games ));
+        dbg_printf( "%d games\n", nbr_games );
 }
 
 Book::STATE Book::Push( Book::STATE in )
@@ -899,7 +899,7 @@ bool Book::DoMove( bool white, int move_number, char *buf )
                     bool match;
                     match = (chess_rules == pos);
                     if( !match )
-                        DebugPrintf(( "**** No match %s-%s\n", chess_rules.squares, pos.squares ));
+                        dbg_printf( "**** No match %s-%s\n", chess_rules.squares, pos.squares );
                 }
                 #endif
                 hash &= BOOK_HASH_MSK;
@@ -956,7 +956,7 @@ bool Book::Compile( wxString &error_msg, wxString &compile_msg, wxString &pgn_fi
     #ifdef REGENERATE
     file_regen = fopen( "file_regen.pgn", "wt" );
     #endif
-    DebugPrintf(( compile_msg ));
+    dbg_printf( compile_msg );
     if( infile == NULL )
     {
         error_msg.Printf( "Cannot open %s for reading", pgn_in );
@@ -1029,7 +1029,7 @@ bool Book::Compile( wxString &error_msg, wxString &compile_msg, wxString &pgn_fi
                     ui = bucket[i].size();
                     fwrite( &ui, sizeof(ui), 1, outfile );
                     //bool multi = (bucket[i].size()>1);
-                    //DebugPrintf(( "bucket[%04x] has %d position%s", i, bucket[i].size(), multi?"s":"" ));
+                    //dbg_printf( "bucket[%04x] has %d position%s", i, bucket[i].size(), multi?"s":"" );
                     vector<BookPosition>::iterator it;
                     for( it = bucket[i].begin(); it != bucket[i].end(); it++ )
                     {

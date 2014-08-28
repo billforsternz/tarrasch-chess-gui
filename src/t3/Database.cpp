@@ -51,13 +51,13 @@ Database::Database()
     int retval = sqlite3_open(DB_FILE,&gbl_handle);
     
     // If connection failed, handle returns NULL
-    tprintf( "DATABASE CONSTRUCTOR %s\n", retval ? "FAILED" : "SUCCESSFUL" );
+    dbg_printf( "DATABASE CONSTRUCTOR %s\n", retval ? "FAILED" : "SUCCESSFUL" );
 }
 
 Database::~Database()
 {
     cprintf( "DATABASE DESTRUCTOR\n" );
-#if 0
+#if 1
     if( gbl_stmt )
     {
         sqlite3_finalize(gbl_stmt);
@@ -155,13 +155,13 @@ int Database::SetPosition( thc::ChessRules &cr, std::string &player_name )
             for( int col=0; col<cols; col++ )
             {
                 const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
-                //printf("%s:%s\t",sqlite3_column_name(gbl_stmt,col),val);
+                //cprintf("%s:%s\t",sqlite3_column_name(gbl_stmt,col),val);
                 if( col == 0 )
                 {
                     //int game_id = atoi(val);
                     //game_ids.push_back(game_id);
                     game_count = atoi(val);
-                    tprintf( "Game count = %d\n", game_count );
+                    dbg_printf( "Game count = %d\n", game_count );
                 }
             }
         }
@@ -178,7 +178,7 @@ int Database::SetPosition( thc::ChessRules &cr, std::string &player_name )
             cprintf("SOME ERROR ENCOUNTERED\n");
         }
     }
-    tprintf("Get games count end\n");
+    dbg_printf("Get games count end\n");
     gbl_count = game_count;
     return game_count;
 }
@@ -187,7 +187,7 @@ int Database::SetPosition( thc::ChessRules &cr, std::string &player_name )
 static int virtual_dump_game( DB_GAME_INFO *info, int game_id )
 {
     // Get white player
-    char buf[100];
+    char buf[1000];
     sqlite3_stmt *stmt;    // A prepared statement for fetching from games table
     int retval;
     sprintf( buf, "SELECT white,black,event,site,result,date,white_elo,black_elo,moves from games WHERE game_id=%d", game_id );
@@ -383,7 +383,7 @@ int Database::GetRow( DB_GAME_INFO *info, int row )
                     for( int col=0; col<cols; col++ )
                     {
                         const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
-                        //printf("%s:%s\t",sqlite3_column_name(gbl_stmt,col),val);
+                        //cprintf("%s:%s\t",sqlite3_column_name(gbl_stmt,col),val);
                         if( col == 0 )
                         {
                             int game_id = atoi(val);
@@ -426,7 +426,7 @@ int Database::GetRow( DB_GAME_INFO *info, int row )
             //        table_nbr, table_nbr, table_nbr, table_nbr, hash, row );
             if( is_start_pos )
             {
-                sprintf( buf,
+                sprintf( buf, 
                         "SELECT games.game_id from games%s ORDER BY games.white ASC LIMIT %d,100", where_white.c_str(), row );
             }
             else
