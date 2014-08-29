@@ -15,8 +15,8 @@
 // recipe3.sqlite3 is a solid db
 
 #ifdef THC_MAC
-#define DB_FILE                         "/Users/billforster/Documents/ChessDatabases/next_generation_1.sqlite3"
-#define DB_MAINTENANCE_FILE             "/Users/billforster/Documents/ChessDatabases/next_generation_1.sqlite3"
+#define DB_FILE                         "/Users/billforster/Documents/ChessDatabases/next_generation_2.sqlite3"
+#define DB_MAINTENANCE_FILE             "/Users/billforster/Documents/ChessDatabases/next_generation_2.sqlite3"
 #define DB_MAINTENANCE_PGN_FILE         "/Users/billforster/Documents/ChessDatabases/giant-base-part1-rebuilt.pgn"
 #else
 #define DB_FILE                         "/Users/Maria/Documents/Tarrasch/next_generation_4.sqlite3"

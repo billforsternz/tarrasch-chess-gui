@@ -219,14 +219,14 @@ int core_printf( const char *fmt, ... )
 	va_start( stk, fmt );
 	vsnprintf( buf /*strchr(buf,'\0')*/, sizeof(buf)-2, fmt, stk );
     buf[ sizeof(buf)-1 ] = '\0';
-    if( is_windowing_printf_alive )
+ /* if( is_windowing_printf_alive )
     {
         wxLogMessage(buf);
     }
-    else
+    else */
     {
         #ifdef THC_MAC
-        cprintf(buf);
+        printf("%s",buf);
         #endif
         #ifdef THC_WINDOWS
         OutputDebugString((LPCTSTR)buf);
