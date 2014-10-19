@@ -63,6 +63,7 @@ struct PATH_TO_POSITION
     bool operator == (const PATH_TO_POSITION& ptp) const { return frequency == ptp.frequency; }
 };
 
+
 // DbDialog class declaration
 class DbDialog: public wxDialog
 {    
@@ -74,14 +75,19 @@ private:
     GamesCache *gc_clipboard;
     thc::ChessRules cr;
     wxStaticText *title_ctrl;
-
-    // We calculate a vector of all blobs in the games that leading to the search position
-    std::vector< PATH_TO_POSITION > transpositions;
     
     // Map each move in the position to move stats
     std::map< uint32_t, MOVE_STATS > stats;
     
 public:
+    // We calculate a vector of all blobs in the games that leading to the search position
+    std::vector< PATH_TO_POSITION > transpositions;
+    int compare_col;
+
+    // Track the chess position on the mini board
+    thc::ChessPosition track_updated_position;
+    DB_GAME_INFO track_info;
+    std::vector< thc::Move > track_focus_moves;
 
     // Constructors
     DbDialog
@@ -157,6 +163,8 @@ public:
     void OnCheckBox( wxCommandEvent& event );
     
     bool ReadItemFromMemory( int item ); //const
+    bool ReadItemFromMemory( int item, DB_GAME_INFO &info );
+
     void StatsCalculate();
     
 //  void OnClose( wxCloseEvent& event );
@@ -195,7 +203,9 @@ private:
     wxButton *utility;
     MiniBoard *mini_board;
     bool activated_at_least_once;
+public:
     bool transpo_activated;
+private:
     
     wxWindowID  id;
     int file_game_idx;

@@ -71,30 +71,20 @@ BEGIN_EVENT_TABLE( DbDialog, wxDialog )
     EVT_NOTEBOOK_PAGE_CHANGED( wxID_ANY, DbDialog::OnTabSelected)
 END_EVENT_TABLE()
 
-// It's a pity we have these static vars, but unfortunately OnGetItemText() must be const for some reason
-static thc::ChessPosition gbl_updated_position;
-static int gbl_last_item;
-static DB_GAME_INFO gbl_info;
-static std::vector< thc::Move > gbl_focus_moves;
 
-int focus_idx;
-int focus_offset;
-MiniBoard *mini_board;
-
-// Read game information from memory if available
-bool DbDialog::ReadItemFromMemory( int item )
+bool DbDialog::ReadItemFromMemory( int item, DB_GAME_INFO &info )
 {
     bool in_memory = false;
-    gbl_info.transpo_nbr = 0;
+    info.transpo_nbr = 0;
     if( games.size() > item )
     {
         in_memory = true;
-        gbl_info = games[item];
-        gbl_info.transpo_nbr = 0;
-        cprintf( "ReadItemFromMemory(%d), white=%s\n", item, gbl_info.white.c_str() );
-        if( gbl_info.move_txt.length() == 0 )
+        info = games[item];
+        info.transpo_nbr = 0;
+        //cprintf( "ReadItemFromMemory(%d), white=%s\n", item, info.white.c_str() );
+        //if( info.move_txt.length() == 0 )
         {
-            db_calculate_move_txt(&gbl_info);
+            //info.db_calculate_move_txt( objs.db->gbl_hash );
             if( transpo_activated && transpositions.size() > 1 )
             {
                 for( unsigned int j=0; j<transpositions.size(); j++ )
@@ -102,9 +92,9 @@ bool DbDialog::ReadItemFromMemory( int item )
                     std::string &this_one = transpositions[j].blob;
                     const char *p = this_one.c_str();
                     size_t len = this_one.length();
-                    if( gbl_info.str_blob.length()>=len && 0 == memcmp(p,gbl_info.str_blob.c_str(),len) )
+                    if( info.str_blob.length()>=len && 0 == memcmp(p,info.str_blob.c_str(),len) )
                     {
-                        gbl_info.transpo_nbr = j+1;
+                        info.transpo_nbr = j+1;
                         break;
                     }
                 }
@@ -124,7 +114,6 @@ public:
     {
         focus_idx = 0;
         focus_offset = 0;
-        gbl_last_item = -1;
         mini_board = 0;
     }
     //~wxVirtualListCtrl();
@@ -138,34 +127,30 @@ public:
     MiniBoard *mini_board;
 
     // Read game information from games or database
-    void ReadItem( int item ) const
+    void ReadItem( int item, DB_GAME_INFO &info ) const
     {
-        bool in_memory = data_src->ReadItemFromMemory( item );
+        bool in_memory = data_src->ReadItemFromMemory( item, info );
         if( !in_memory )
         {
-            if( item != gbl_last_item )
-            {
-                //cprintf( "ListCtrl::ReadItem(%d) READ FROM DATABASE REQUIRED\n", item );
-                objs.db->GetRow( &gbl_info, item );
-                gbl_info.transpo_nbr = 0;
-                gbl_last_item = item;
-            }
+            objs.db->GetRow( &info, item );
+            //cprintf( "ListCtrl::ReadItem(%d) READ %s FROM DATABASE\n", item, info.Description().c_str() );
+            info.transpo_nbr = 0;
         }
     }
     
     // Focus changes to new item;
     void ReceiveFocus( int focus_idx )
     {
-        cprintf( "ListCtrl::ReceiveFocus(%d)\n", focus_idx );
+        //cprintf( "ListCtrl::ReceiveFocus(%d)\n", focus_idx );
         this->focus_idx = focus_idx;
-        ReadItem(focus_idx);
-        initial_focus_offset = focus_offset = db_calculate_move_vector( &gbl_info, gbl_focus_moves );
+        ReadItem( focus_idx, data_src->track_info );
+        initial_focus_offset = focus_offset = data_src->track_info.db_calculate_move_vector( data_src->track_focus_moves, objs.db->gbl_hash );
         if( mini_board )
         {
             CalculateMoveTxt();
-            //cprintf( "ReceiveFocus(): SetPosition() %s\n", gbl_updated_position.ToDebugStr().c_str()  );
-            mini_board->SetPosition( gbl_updated_position.squares );
-            std::string desc = gbl_info.Description();
+            mini_board->SetPosition( data_src->track_updated_position.squares );
+            std::string desc = data_src->track_info.Description();
+            //cprintf( "ListCtrl::ReceiveFocus(%d), game=%s\n", focus_idx, desc.c_str() );
             data_src->player_names->SetLabel(wxString(desc.c_str()));
         }
     }
@@ -175,16 +160,16 @@ public:
         std::string move_txt;
         thc::ChessRules cr;
         bool first=true;
-        for( size_t i=0; i<gbl_focus_moves.size(); i++ )
+        for( size_t i=0; i<data_src->track_focus_moves.size(); i++ )
         {
-            thc::Move mv = gbl_focus_moves[i];
+            thc::Move mv = data_src->track_focus_moves[i];
             if( i >= focus_offset )
             {
                 std::string s = mv.NaturalOut(&cr);
                 if( i%2 == 0 || first )
                 {
                     if( first )
-                        gbl_updated_position = cr;
+                        data_src->track_updated_position = cr;
                     first = false;
                     char buf[100];
                     sprintf( buf, "%lu%s", i/2+1, i%2==0?".":"..." );
@@ -192,9 +177,9 @@ public:
                 }
                 move_txt += s;
                 move_txt += " ";
-                if( i+1 == gbl_focus_moves.size() )
-                    move_txt += gbl_info.result;
-                else if( i < gbl_focus_moves.size()-5 && move_txt.length()>100 )
+                if( i+1 == data_src->track_focus_moves.size() )
+                    move_txt += data_src->track_info.result;
+                else if( i < data_src->track_focus_moves.size()-5 && move_txt.length()>100 )
                 {
                     move_txt += "...";  // very long lines get over truncated by the list control (sad but true)
                     break;
@@ -204,10 +189,10 @@ public:
         }
         if( first )
         {
-            gbl_updated_position = cr;
-            move_txt = gbl_info.result;
+            data_src->track_updated_position = cr;
+            move_txt = data_src->track_info.result;
         }
-        //cprintf( "CalculateMoveTxt(): [%s]%s\n", move_txt.c_str(), gbl_updated_position.ToDebugStr().c_str() );
+        //cprintf( "CalculateMoveTxt(): [%s]%s\n", move_txt.c_str(), data_src->track_updated_position.ToDebugStr().c_str() );
         return move_txt;
     }
     
@@ -215,27 +200,28 @@ protected:
     virtual wxString OnGetItemText( long item, long column) const
     {
         //cprintf( "ListCtrl::OnGetItemText(%ld,%ld)\n", item, column );
+        DB_GAME_INFO info;
         std::string move_txt;
         const char *txt;
-        ReadItem(item);
+        ReadItem( item, info );
         switch( column )
         {
-            default: txt =  "";                           break;
-            case 1: txt =   gbl_info.white.c_str();       break;
-            case 2: txt =   gbl_info.white_elo.c_str();      break;
-            case 3: txt =   gbl_info.black.c_str();       break;
-            case 4: txt =   gbl_info.black_elo.c_str();      break;
-            case 5: txt =   gbl_info.date.c_str();      break;
-            case 6: txt =   gbl_info.site.c_str();      break;
-            //case 7: txt =   gbl_info.round.c_str();      break;
-            case 8: txt =   gbl_info.result.c_str();      break;
-            //case 9: txt =   gbl_info.eco.c_str();      break;
+            default: txt =  "";                         break;
+            case 1: txt =   info.white.c_str();         break;
+            case 2: txt =   info.white_elo.c_str();     break;
+            case 3: txt =   info.black.c_str();         break;
+            case 4: txt =   info.black_elo.c_str();     break;
+            case 5: txt =   info.date.c_str();          break;
+            case 6: txt =   info.site.c_str();          break;
+            //case 7: txt = info.round.c_str();         break;
+            case 8: txt =   info.result.c_str();        break;
+            //case 9: txt = info.eco.c_str();           break;
             case 10:
             {
                 char buf[1000];
                 buf[0] = '\0';
-                if( gbl_info.transpo_nbr > 0 )
-                    sprintf(buf,"(T%d) ", gbl_info.transpo_nbr );
+                if( info.transpo_nbr > 0 )
+                    sprintf(buf,"(T%d) ", info.transpo_nbr );
                 if( item == focus_idx )
                 {
                     move_txt = CalculateMoveTxt();
@@ -244,7 +230,7 @@ protected:
                 }
                 else
                 {
-                    move_txt = gbl_info.move_txt.c_str();
+                    move_txt = info.db_calculate_move_txt(objs.db->gbl_hash);
                     move_txt = buf + move_txt;
                 }
                 txt = move_txt.c_str();
@@ -275,20 +261,20 @@ void wxVirtualListCtrl::OnChar( wxKeyEvent &event )
             if( mini_board )
             {
                 CalculateMoveTxt();
-                //cprintf( "WXK_LEFT: SetPosition() %s\n", gbl_updated_position.ToDebugStr().c_str()  );
-                mini_board->SetPosition( gbl_updated_position.squares );
+                //cprintf( "WXK_LEFT: SetPosition() %s\n", data_src->track_updated_position.ToDebugStr().c_str()  );
+                mini_board->SetPosition( data_src->track_updated_position.squares );
             }
             break;
         case WXK_RIGHT:
             //cprintf( "WXK_RIGHT\n" );
-            if( focus_offset < gbl_focus_moves.size() )
+            if( focus_offset < data_src->track_focus_moves.size() )
                 focus_offset++;
             RefreshItem(focus_idx);
             if( mini_board )
             {
                 CalculateMoveTxt();
-                //cprintf( "WXK_RIGHT: SetPosition() %s\n", gbl_updated_position.ToDebugStr().c_str()  );
-                mini_board->SetPosition( gbl_updated_position.squares );
+                //cprintf( "WXK_RIGHT: SetPosition() %s\n", data_src->track_updated_position.ToDebugStr().c_str()  );
+                mini_board->SetPosition( data_src->track_updated_position.squares );
             }
             break;
         default:
@@ -508,7 +494,7 @@ void DbDialog::CreateControls()
 
     mini_board = new MiniBoard(this);
     list_ctrl->mini_board = mini_board;
-    gbl_updated_position = cr;
+    list_ctrl->data_src->track_updated_position = cr;
     mini_board->SetPosition( cr.squares );
 
     hsiz_panel->Add( mini_board, 1, wxALIGN_LEFT|wxTOP|wxRIGHT|wxBOTTOM|wxFIXED_MINSIZE, 5 );
@@ -668,9 +654,148 @@ void DbDialog::SetDialogHelp()
 */
 }
 
+static DbDialog *backdoor;
+static bool compare( const DB_GAME_INFO &g1, const DB_GAME_INFO &g2 )
+{
+    bool lt=false;
+    switch( backdoor->compare_col )
+    {
+        case 0: lt = g1.white < g2.white;           break;
+        case 1: lt = g1.black < g2.black;           break;
+        default:
+        {
+            unsigned int sz = backdoor->transpositions.size();
+            for( unsigned int i=0; i<sz; i++ )
+            {
+                PATH_TO_POSITION *ptp1 = &backdoor->transpositions[i];
+                unsigned int offset1 = ptp1->blob.length();
+                if( 0 == memcmp( ptp1->blob.c_str(), g1.str_blob.c_str(), offset1 ) )
+                {
+                    for( unsigned int j=0; j<sz; j++ )
+                    {
+                        PATH_TO_POSITION *ptp2 = &backdoor->transpositions[j];
+                        unsigned int offset2 = ptp2->blob.length();
+                        if( 0 == memcmp( ptp2->blob.c_str(), g2.str_blob.c_str(), offset2 ) )
+                        {
+                            if( backdoor->transpo_activated )
+                            {
+                                if( i != j )
+                                    lt = i<j;
+                            }
+                            else
+                            {
+                                // lt = g1.str_blob.substr(offset1) < g2.str_blob.substr(offset2);
+                                unsigned int len1 = g1.str_blob.length();
+                                unsigned int len2 = g2.str_blob.length();
+                                const char *p = g1.str_blob.c_str() + offset1;
+                                const char *q = g2.str_blob.c_str() + offset2;
+                                int idx = 0;
+                                while( *p == *q )
+                                {
+                                    idx++;
+                                    if( offset1+idx >= len1 || offset2+idx >= len2 )
+                                        break;
+                                    p++;
+                                    q++;
+                                }
+                                if( offset1+idx>=len1 && offset2+idx<len2 )
+                                    lt = true;
+                                else if( offset1+idx<len1 && offset2+idx<len2 )
+                                {
+                                    unsigned int c = *p;
+                                    unsigned int d = *q;
+                                    unsigned int hi = c&0xf0;
+                                    unsigned int lo = c&0x0f;
+                                    if( hi == 0x00 )
+                                    {
+                                        if( 1<=lo && lo<=4 )
+                                            hi = 0x30; // O-O or O-O-O
+                                        else
+                                            hi = 0x10; // K
+                                    }
+                                    else if( hi==0x10 || hi==0x20 )
+                                    {
+                                        if( lo < 8 )
+                                            hi = 0x20; // N
+                                        else
+                                            hi = 0x40; // Q (shadow)
+                                    }
+                                    else if( hi==0x30 || hi==0x40 )
+                                    {
+                                        hi = 0x60;     // R
+                                    }
+                                    else if( hi==0x50 || hi==0x60 )
+                                    {
+                                        hi = 0x00;     // B
+                                    }
+                                    else if( hi == 0x70 )
+                                    {
+                                        hi = 0x50; // Q
+                                    }
+                                    c = hi|lo;
+                                    hi = d&0xf0;
+                                    lo = d&0x0f;
+                                    if( hi == 0x00 )
+                                    {
+                                        if( 1<=lo && lo<=4 )
+                                            hi = 0x30; // O-O or O-O-O
+                                        else
+                                            hi = 0x10; // K
+                                    }
+                                    else if( hi==0x10 || hi==0x20 )
+                                    {
+                                        if( lo < 8 )
+                                            hi = 0x20; // N
+                                        else
+                                            hi = 0x40; // Q (shadow)
+                                    }
+                                    else if( hi==0x30 || hi==0x40 )
+                                    {
+                                        hi = 0x60;     // R
+                                    }
+                                    else if( hi==0x50 || hi==0x60 )
+                                    {
+                                        hi = 0x00;     // B
+                                    }
+                                    else if( hi == 0x70 )
+                                    {
+                                        hi = 0x50; // Q
+                                    }
+                                    d = hi|lo;
+                                    lt = c<d;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            break;
+        }
+    }
+    return lt;
+}
+
 void DbDialog::OnListColClick( wxListEvent &event )
 {
-    int col = event.GetColumn();
+    if( games.size() > 0 )
+    {
+        compare_col = event.GetColumn();
+        backdoor = this;
+        std::sort( games.begin(), games.end(), compare );
+        gbl_nbr = games.size();
+        list_ctrl->SetItemCount(gbl_nbr);
+        list_ctrl->RefreshItems( 0, gbl_nbr-1 );
+        list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
+        list_ctrl->ReceiveFocus(0);
+        int top = list_ctrl->GetTopItem();
+        int count = 1 + list_ctrl->GetCountPerPage();
+        if( count > gbl_nbr )
+            count = gbl_nbr;
+        for( int i=0; i<count; i++ )
+            list_ctrl->RefreshItem(top++);
+        list_ctrl->SetFocus();
+    }
 }
 
 
@@ -685,7 +810,7 @@ void DbDialog::OnActivate(wxActivateEvent& event)
     if( !activated_at_least_once )
     {
         activated_at_least_once = true;
-        cprintf( "DbDialog::OnActivate\n");
+        //cprintf( "DbDialog::OnActivate\n");
         wxPoint pos = notebook->GetPosition();
         //list_ctrl_stats->Hide();
         //list_ctrl_transpo->Hide();
@@ -700,7 +825,7 @@ void DbDialog::OnActivate(wxActivateEvent& event)
         utility->SetPosition( pos_button );
         
         //vsiz_panel_buttons->Add(utility, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-        list_ctrl->ReadItem(0);
+        list_ctrl->ReadItem(0,list_ctrl->data_src->track_info);
     }
 }
 
@@ -1007,8 +1132,6 @@ void DbDialog::StatsCalculate()
         }
         cr_to_match.PlayMove(mv);
     }
-    extern void db_set_gbl_position( thc::ChessPosition &pos );   // FIXME this is an abomination
-    db_set_gbl_position( cr_to_match );   // FIXME this is an abomination
 
     // hash to match
     uint64_t gbl_hash = cr_to_match.Hash64Calculate();

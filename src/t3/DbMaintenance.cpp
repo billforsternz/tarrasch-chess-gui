@@ -149,8 +149,10 @@ void db_maintenance_create_or_append_to_database(  const char *pgn_filename )
         fclose(ofile);
 }
 
+void db_utility_test();
 void db_maintenance_create_indexes()
 {
+    //db_utility_test();
     db_primitive_open();
     db_primitive_transaction_begin();
     db_primitive_create_indexes();
@@ -158,6 +160,8 @@ void db_maintenance_create_indexes()
     db_primitive_transaction_end();
     db_primitive_close();
 }
+
+
 
 bool gbl_evil_queen;
 bool gbl_double_byte;

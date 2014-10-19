@@ -219,11 +219,11 @@ int core_printf( const char *fmt, ... )
 	va_start( stk, fmt );
 	vsnprintf( buf /*strchr(buf,'\0')*/, sizeof(buf)-2, fmt, stk );
     buf[ sizeof(buf)-1 ] = '\0';
- /* if( is_windowing_printf_alive )
+    if( is_windowing_printf_alive )
     {
         wxLogMessage(buf);
     }
-    else */
+    else
     {
         #ifdef THC_MAC
         printf("%s",buf);
@@ -604,7 +604,9 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
                                                             //        wxNO_FULL_REPAINT_ON_RESIZE )
 {
     #ifndef KILL_DEBUG_COMPLETELY
+    #ifdef THC_WINDOWS
     SimpleDebugPrintf *sdf = new SimpleDebugPrintf(this);   // all child windows are automatically deleted
+    #endif
     #endif
 
     // Timer

@@ -20,6 +20,9 @@ static void purge_buckets();
 #define NBR_BUCKETS 4096
 #define PURGE_QUOTA 10000
 
+static void dump_game( FILE *f, int game_id );
+void db_giri_game_hashes();
+
 
 // A test program
 int db_primitive_random_test_program()
@@ -243,6 +246,7 @@ void db_primitive_create_indexes()
 {
     DebugPrintfTime turn_on_time_reporting;
     purge_buckets();
+ /* moved to db_primitive_create_extra_indexes()
     for( int i=0; i<NBR_BUCKETS; i++ )
     {
         char buf[200];
@@ -254,10 +258,10 @@ void db_primitive_create_indexes()
             cprintf( "sqlite3_exec(%s) FAILED\n", buf );
             return;
         }
-    }
-    cprintf( "Create games index");
+    } */
+    cprintf( "Create games index\n");
     int retval = sqlite3_exec(handle,"CREATE INDEX IF NOT EXISTS idx_games ON games(game_id)",0,0,0);
-    cprintf( "Create games index end");
+    cprintf( "Create games index end\n");
     if( retval )
     {
         cprintf("sqlite3_exec(CREATE INDEX games) FAILED\n");
@@ -267,14 +271,14 @@ void db_primitive_create_indexes()
 void db_primitive_create_extra_indexes()
 {
     DebugPrintfTime turn_on_time_reporting;
-    cprintf( "Create games(white) index");
+    cprintf( "Create games(white) index\n");
     int retval = sqlite3_exec(handle,"CREATE INDEX IF NOT EXISTS idx_white ON games(white)",0,0,0);
     if( retval )
     {
         cprintf( "sqlite3_exec() FAILED 1\n" );
         return;
     }
-    cprintf( "Create games(black) index");
+    cprintf( "Create games(black) index\n");
     retval = sqlite3_exec(handle,"CREATE INDEX IF NOT EXISTS idx_black ON games(black)",0,0,0);
     if( retval )
     {
@@ -282,10 +286,11 @@ void db_primitive_create_extra_indexes()
         return;
     }
     //int retval = sqlite3_exec(handle,"DROP INDEX idx_white",0,0,0);
-    cprintf( "Create games(white) index end");
+    cprintf( "Create games(white) index end\n");
     for( int i=0; i<NBR_BUCKETS; i++ )
     {
         char buf[200];
+     /* no longer create idx%d in db_primitive_create_indexes();
         sprintf( buf, "DROP INDEX idx%d", i );
         cprintf( buf );
         retval = sqlite3_exec(handle,buf,0,0,0);
@@ -293,11 +298,11 @@ void db_primitive_create_extra_indexes()
         {
             cprintf( "sqlite3_exec() FAILED 2\n" );
             return;
-        }
-        cprintf( "Create idx%d begin", i );
+        } */
+        cprintf( "Create idx%d begin\n", i );
         sprintf( buf, "CREATE INDEX IF NOT EXISTS idx%d ON positions_%d(position_hash,game_id)",i,i);
         retval = sqlite3_exec(handle,buf,0,0,0);
-        cprintf( "Create idx%d end", i );
+        cprintf( "Create idx%d end\n", i );
         if( retval )
         {
             cprintf( "sqlite3_exec FAILED 3\n" );
@@ -386,7 +391,7 @@ void db_primitive_speed_tests()
             case 1: query = stamp;      txt="Stamp"; break;
             case 2: query = sicilian;   txt="Sicilian"; break;
         }
-        cprintf( "Test %d, %s; begin", i/3+1, txt );
+        cprintf( "Test %d, %s; begin\n", i/3+1, txt );
         time_t begin = time(NULL);
         retval = sqlite3_prepare_v2( handle, query, -1, &stmt, 0 );
         if( retval )
@@ -403,7 +408,7 @@ void db_primitive_speed_tests()
         }
         time_t end = time(NULL);
         int expired = (int)end-begin;
-        cprintf( "Test %d, %s; end", i/3+1, txt );
+        cprintf( "Test %d, %s; end\n", i/3+1, txt );
         results[i/3][i%3] = expired;
         sqlite3_finalize(stmt);
     }
@@ -438,6 +443,197 @@ void db_primitive_speed_tests()
     // Close the handle to free memory
     sqlite3_close(handle);
 }
+
+
+void db_giri_game_hashes()
+{
+    const char *a4[] =
+    {
+        "a4"
+    };
+    const char *giri_wangyue[] =
+    {
+        "c4", "Nf6", "Nf3", "c6", "g3", "g6", "Bg2", "Bg7", "O-O", "O-O", "d4", "d5", "Qb3", "Qb6", "Nc3", "Rd8",
+        "Qa3", "dxc4", "Qxe7", "Re8", "Qa3", "Na6", "Qa4", "Qb4", "Qd1", "Bf5", "Nd2", "Be6", "e3", "Nd5", "Qc2",
+        "Rad8", "a3", "Qe7", "Nxc4", "Nxc3", "Qxc3", "c5", "Ne5", "Bd5", "b4", "cxd4", "exd4", "Bxg2", "Kxg2", "Rxd4",
+        "f4", "Rdd8", "Bb2", "Nb8", "Rae1", "Nd7", "Qc2", "Nxe5", "Bxe5", "Bxe5", "Rxe5", "Qf6", "Rfe1", "Rxe5", "Rxe5",
+        "Qa6", "Qc3", "Qd6", "Qe3", "Qc6+", "Qe4", "Rd2+", "Kh3", "Qxe4", "Rxe4", "Kf8", "b5", "b6", "Ra4"
+    };
+    
+    const char *giri_wangyue2[] =
+    {
+        "c4", "Nf6", "Nf3", "c6", "g3", "g6", "Bg2", "Bg7", "O-O", "O-O", "d4", "d5", "Qb3", "Qb6",
+        "Nc3", "Rd8", "Qa3", "dxc4", "Qxe7", "Re8", "Qa3", "Na6", "Qa4", "Qb4", "Qd1", "Bf5",
+        "Nd2", "Be6", "e3", "Nd5", "Qc2", "Rad8", "a3", "Qe7", "Nxc4", "Nxc3", "Qxc3", "c5",
+        "Ne5", "Bd5", "b4", "cxd4", "exd4", "Bxg2", "Kxg2", "Rxd4", "f4", "Rdd8", "Bb2", "Nb8",
+        "Rae1", "Nd7", "Qc2", "Nxe5", "Bxe5", "Bxe5", "Rxe5", "Qf6", "Rfe1", "Rxe5", "Rxe5", "Qa6",
+        "Qc3", "Qd6", "Qe3", "Qc6+", "Qe4", "Rd2+", "Kh3", "Qxe4", "Rxe4", "Kf8", "b5", "b6",
+        "Ra4"
+    };
+    
+    /*
+     [Event "World Cities Team GpF"]
+     [Site "Al-Ain UAE"]
+     [Date "2012.12.24"]
+     [Round "3.1"]
+     [White "Giri,A"]
+     [Black "Wang Yue"]
+     [Result "1/2-1/2"]
+     [WhiteElo "2720"]
+     [BlackElo "2696"]
+     [ECO "D78"]
+     
+     1. c4 Nf6 2. Nf3 c6 3. g3 g6 4. Bg2 Bg7 5. O-O O-O 6. d4 d5 7. Qb3 Qb6 8.
+     Nc3 Rd8 9. Qa3 dxc4 10. Qxe7 Re8 11. Qa3 Na6 12. Qa4 Qb4 13. Qd1 Bf5 14.
+     Nd2 Be6 15. e3 Nd5 16. Qc2 Rad8 17. a3 Qe7 18. Nxc4 Nxc3 19. Qxc3 c5 20.
+     Ne5 Bd5 21. b4 cxd4 22. exd4 Bxg2 23. Kxg2 Rxd4 24. f4 Rdd8 25. Bb2 Nb8 26.
+     Rae1 Nd7 27. Qc2 Nxe5 28. Bxe5 Bxe5 29. Rxe5 Qf6 30. Rfe1 Rxe5 31. Rxe5 Qa6
+     32. Qc3 Qd6 33. Qe3 Qc6+ 34. Qe4 Rd2+ 35. Kh3 Qxe4 36. Rxe4 Kf8 37. b5 b6
+     38. Ra4 1/2-1/2
+     
+     
+     
+     
+     */
+    // 1.c4 Nf6 2.Nf3 c6 3.g3 g6 4.Bg2 Bg7 5.O-O O-O 6.d4 d5 7.Qb3 Qb6 8.Nc3 Rd8
+    // 9.Qa3 dxc4 10.Qxe7 Re8 11.Qa3 Na6 12.Qa4 Qb4 13.Qd1 Bf5 14.Nd2 Be6 15.e3 Nd5 16.Qc2
+    // Rad8 17.a3 Qe7 18.Nxc4 Nxc3
+    // 19.Qxc3 c5 20.Ne5 Bd5 21.b4 cxd4 22.exd4 Bxg2 23.Kxg2 Rxd4
+    // 24.f4 Rdd8 25.Bb2 Nb8 26.Rae1 Nd7 27.Qc2 Nxe5 28.Bxe5 Bxe5 29.Rxe5 Qf6 30.Rfe1 Rxe5 31.Rxe5
+    // Qa6 32.Qc3 Qd6 33.Qe3 Qc6+ 34.Qe4 Rd2+ 35.Kh3 Qxe4 36.Rxe4 Kf8 37.b5 b6 38.Ra4 1/2-1/2
+    
+    
+    for( int i=0; i<2; i++ )
+    {
+        const char **p;
+        int nbr;
+        thc::ChessRules cr;
+        switch( i )
+        {
+            case 0: p = a4; nbr = 1; break;
+            case 1: p = giri_wangyue2; nbr = sizeof(giri_wangyue2)/sizeof(giri_wangyue2[0]); break;
+        }
+        for( int j=0; j<nbr; j++ )
+        {
+            uint64_t hash64=cr.Hash64Calculate();
+            thc::Move mv;
+            const char *natural = p[j];
+            bool ok = mv.NaturalIn( &cr, natural );
+            if( !ok )
+            {
+                cprintf( "Whoops!\n" );
+                break;
+            }
+            hash64 = cr.Hash64Update( hash64, mv );
+            cr.PlayMove(mv);
+            uint64_t bucket32 = (hash64>>32) & 0xfff;
+            int bucket = (int)bucket32;
+            uint64_t hash32 = hash64 & 0xffffffff;
+            int hash = (int)hash32;
+            //cprintf( "Move=%4s, bucket=%03x, hash=%08x, hash64=%lx\n", natural, bucket, hash, hash64 );
+            cprintf( "Move=%4s, bucket=%d, hash=%d, hash64=%0lx\n", natural, bucket, hash, hash64 );
+            //cprintf( "Move=%s, hash64=%lx\n", natural, hash64 );
+        }
+    }
+}
+
+
+void db_test_after_1a4()
+{
+    cprintf( "db_test_after_1a4()\n" );
+    
+    // Try to create the database. If it doesnt exist, it would be created
+    //  pass a pointer to the pointer to sqlite3, in short sqlite3**
+    int retval = sqlite3_open(DB_MAINTENANCE_FILE,&handle);
+    
+    // If connection failed, handle returns NULL
+    if(retval)
+    {
+        cprintf("DATABASE CONNECTION FAILED\n");
+        return;
+    }
+    cprintf("Connection successful\n");
+    
+    char buf[1000];
+    sqlite3_stmt *stmt;    // A prepared statement for fetching tables
+    cprintf( "Database is %s\n", DB_MAINTENANCE_FILE );
+    //const char *query = "SELECT games.game_id from games JOIN positions_969 ON games.game_id = positions_969.game_id WHERE positions_969.position_hash=-1850675132 ORDER BY games.rowid DESC LIMIT 0,100";
+    const char *query = "SELECT games.game_id from games JOIN positions_969 ON games.game_id = positions_969.game_id WHERE positions_969.position_hash=-1850675132 ORDER BY games.rowid";
+    //const char *query = "SELECT game_id FROM positions_969 WHERE position_hash=-1850675132";
+
+    retval = sqlite3_prepare_v2( handle, query, -1, &stmt, 0 );
+    if( retval )
+    {
+        cprintf("SELECTING DATA FROM DB FAILED 1\n");
+    }
+    for(;;)
+    {
+        retval = sqlite3_step(stmt);
+        if( retval != SQLITE_ROW )
+            break;
+        else
+        {
+            const char *val = (const char*)sqlite3_column_text(stmt,0);
+            cprintf("game_id=%d\n", atoi(val) );
+            //dump_game( stdout, atoi(val) );
+            //cprintf("\n");
+        }
+    }
+    sqlite3_finalize(stmt);
+    
+    // Close the handle to free memory
+    sqlite3_close(handle);
+}
+
+void db_test_dump_selected_games()
+{
+    cprintf( "db_test_dump_selected_games()\n" );
+    
+    // Try to create the database. If it doesnt exist, it would be created
+    //  pass a pointer to the pointer to sqlite3, in short sqlite3**
+    int retval = sqlite3_open(DB_MAINTENANCE_FILE,&handle);
+    
+    // If connection failed, handle returns NULL
+    if(retval)
+    {
+        cprintf("DATABASE CONNECTION FAILED\n");
+        return;
+    }
+    cprintf("Connection successful\n");
+
+#define PROBE 2516563
+    struct { int n; const char *desc; } game_list[] =
+    {
+        {0,          "start"    },
+        {1,          "start+1"  },
+        {2,          "start+2"  },
+        {3,          "start+3"  },
+        {PROBE,      "probe"    },
+        {PROBE+1,    "probe+1"  },
+        {PROBE+2,    "probe+2"  },
+        {PROBE+3,    "probe+3"  }
+     /* {0,       "first game, start of giant part 1" },
+        {2516563, "start of giant part 2" },
+        {3495200, "start of twic no overlap" },
+        {4201480, "start of twic extras" },
+        {4227389, "before mystery game" },
+        {4227390, "mystery game" },
+        {4227391, "after mystery game" },
+        {4358865, "last game"  } */
+    };
+    for( int i=0; i<sizeof(game_list)/sizeof(game_list[0]); i++ )
+    {
+        int n = game_list[i].n;
+        const char *desc = game_list[i].desc;
+        cprintf( "Showing %s game %d\n", desc, n );
+        dump_game(stdout,n);
+    }
+    
+    // Close the handle to free memory
+    sqlite3_close(handle);
+}
+
+
 
 
 void db_primitive_close()
@@ -755,6 +951,10 @@ static void purge_bucket( int bucket_idx )
         {
             std::pair<int,int> duo = (*bucket)[j];
             sprintf( insert_buf, "INSERT INTO positions_%d VALUES(%d,%d)", bucket_idx, duo.second, duo.first );
+            if( duo.second==4227390 && bucket_idx==0x3c9 && duo.second==-1850675132 /*0x91b0f044*/ )
+            {
+                cprintf( "*** TRIGGER b) *** Giri game wrongly linked to position after 1.a4\n" );
+            }
             int retval = sqlite3_exec( handle, insert_buf,0,0,&errmsg);
             if( retval )
             {
@@ -906,9 +1106,12 @@ void db_primitive_insert_game( const char *white, const char *black, const char 
 
         // Check whether a duplicate of existing game
         bool is_duplicate = db_primitive_check_for_duplicate( game_hash, white_buf, black_buf, result, blob_buf );
-        
+        if( is_duplicate )
+        {
+            return;  // ZOMBIE bug fix - return here, don't add bogus moves and increment game count
+        }
         // If not, put it into the database
-        if( !is_duplicate )
+        else
         {
             sprintf( insert_buf, "INSERT INTO games VALUES(%d,NULL,'%s','%s','%s','%s','%s','%s','%s','%s',X'%s')",
                     game_id, white_buf, black_buf, event_buf, site_buf, result,
@@ -938,13 +1141,16 @@ void db_primitive_insert_game( const char *white, const char *black, const char 
         std::vector<std::pair<int,int>> *bucket = &buckets[table_nbr];
         std::pair<int,int> duo(hash32,game_id);
         bucket->push_back(duo);
+        if( game_id==4227390 && table_nbr==0x3c9 && hash32==-1850675132 /*0x91b0f044*/ )
+        {
+            cprintf( "*** TRIGGER a) *** Giri game wrongly linked to position after 1.a4\n");
+        }
         int count = bucket->size();
         if( count >= PURGE_QUOTA )
             purge_bucket(table_nbr);
     }
     game_id++;
 }
-
 
 
 

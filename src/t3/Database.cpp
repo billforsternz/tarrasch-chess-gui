@@ -10,7 +10,6 @@
 #include "thc.h"
 #include "Portability.h"
 #include "DebugPrintf.h"
-#include "sqlite3.h"
 #include "CompressMoves.h"
 #include "DbPrimitives.h"
 #include "Database.h"
@@ -18,35 +17,16 @@
 #include "wx/progdlg.h"
 
 
-// Create a handle for database connection, create a pointer to sqlite3
-static sqlite3 *gbl_handle;
-
-// A prepared statement for fetching from positions table
-static sqlite3_stmt *gbl_stmt;
-
-// Whereabouts we are in the virtual list control
-static int gbl_expected;
-
-// Whereabouts we are in the virtual list control
-static int gbl_current;
-
-// Number of elements in the virtual list control
-static int gbl_count;
-
-// The position we are looking for
-thc::ChessPosition gbl_position;
-uint64_t gbl_hash;
-void db_set_gbl_position( thc::ChessPosition &pos )   // FIXME this is an abomination
-{
-    uint64_t hash = pos.Hash64Calculate();
-    gbl_hash = hash;
-    gbl_position = pos;
-}
-
 #define NBR_BUCKETS 4096
 
 Database::Database()
 {
+    gbl_handle = 0;
+    gbl_stmt = 0;
+    gbl_expected = 0;
+    gbl_current = 0;
+    gbl_count = 0;
+    
     // Access the database.
     int retval = sqlite3_open(DB_FILE,&gbl_handle);
     
@@ -57,7 +37,6 @@ Database::Database()
 Database::~Database()
 {
     cprintf( "DATABASE DESTRUCTOR\n" );
-#if 1
     if( gbl_stmt )
     {
         sqlite3_finalize(gbl_stmt);
@@ -68,7 +47,6 @@ Database::~Database()
         sqlite3_close(gbl_handle);
         gbl_handle = NULL;
     }
-#endif
 }
 
 int Database::SetPosition( thc::ChessRules &cr )
@@ -89,6 +67,8 @@ int Database::SetPosition( thc::ChessRules &cr, std::string &player_name )
     //cr.Forsyth("r1bqk2r/ppp1bppp/2n1pn2/3p4/Q1PP4/P3PN2/1P1N1PPP/R1B1KB1R b KQkq - 0 7");
     gbl_hash = cr.Hash64Calculate();
     gbl_position = cr;
+    cache.clear();
+    stack.clear();
     
     // select matching rows from the table
     char buf[1000];
@@ -184,8 +164,10 @@ int Database::SetPosition( thc::ChessRules &cr, std::string &player_name )
 }
 
 
-static int virtual_dump_game( DB_GAME_INFO *info, int game_id )
+int Database::virtual_dump_game( DB_GAME_INFO *info, int game_id )
 {
+    info->game_id = game_id;
+    
     // Get white player
     char buf[1000];
     sqlite3_stmt *stmt;    // A prepared statement for fetching from games table
@@ -272,14 +254,75 @@ static int virtual_dump_game( DB_GAME_INFO *info, int game_id )
     return 0;
 }
 
-void db_calculate_move_txt( DB_GAME_INFO *info )
+std::string DB_GAME_INFO::Description()
+{
+    std::string white = this->white;
+    std::string black = this->black;
+    size_t comma = white.find(',');
+    if( comma != std::string::npos )
+        white = white.substr( 0, comma );
+    comma = black.find(',');
+    if( comma != std::string::npos )
+        black = black.substr( 0, comma );
+    int move_cnt = str_blob.length();
+    std::string label = white;
+    if( white_elo != "" )
+    {
+        label += " (";
+        label += white_elo;
+        label += ")";
+    }
+    label += " - ";
+    label += black;
+    if( black_elo != "" )
+    {
+        label += " (";
+        label += black_elo;
+        label += ")";
+    }
+    if( site != "" )
+    {
+        label += ", ";
+        label += site;
+    }
+    else if( event != "" )
+    {
+        label += ", ";
+        label += event;
+    }
+    if( date.length() >= 4 )
+    {
+        label += " ";
+        label += date.substr(0,4);
+    }
+    bool result_or_moves = false;
+    if( result != "*" )
+    {
+        result_or_moves = true;
+        label += ", ";
+        label += result;
+        if( move_cnt > 0 )
+            label += " in";
+    }
+    if( move_cnt > 0 )
+    {
+        if( !result_or_moves )
+            label += ", ";
+        char buf[100];
+        sprintf( buf, " %d moves", (move_cnt+1)/2 );
+        label += std::string(buf);
+    }
+    return label;
+}
+
+std::string DB_GAME_INFO::db_calculate_move_txt( uint64_t hash_to_match )
 {
     CompressMoves press;
     std::string move_txt;
-    size_t len = info->str_blob.length();
-    const char *blob = (const char*)info->str_blob.c_str();
+    size_t len = str_blob.length();
+    const char *blob = (const char*)str_blob.c_str();
     uint64_t hash = press.cr.Hash64Calculate();
-    bool triggered=(hash==gbl_hash), first=true;
+    bool triggered=(hash==hash_to_match), first=true;
     for( int count=0, nbr=0; nbr<len; count++ )
     {
         
@@ -303,31 +346,33 @@ void db_calculate_move_txt( DB_GAME_INFO *info )
             move_txt += s;
             move_txt += " ";
             if( nbr >= len )
-                move_txt += info->result;
-                else if( nbr<len-5 && move_txt.length()>100 )
-                {
-                    move_txt += "...";  // very long lines get over truncated by the list control (sad but true), see example below
-                    break;
-                }
+            {
+                move_txt += result;
+            }
+            else if( nbr<len-5 && move_txt.length()>100 )
+            {
+                move_txt += "...";  // very long lines get over truncated by the list control (sad but true), see example below
+                break;
+            }
         }
         hash = cr.Hash64Update( hash, mv );
-        if( hash == gbl_hash )
+        if( hash == hash_to_match )
             triggered = true;
     }
-    info->move_txt = move_txt;
+    return move_txt;
     //fprintf(f,"\n");
     
     // very long line example;
-    //info->move_txt = "3...a6 4.Bxc6 bxc6 5.d3 e6 6.O-O Nf6 7.e5 Nd5 8.c4 Ne7 9.Nc3 Ng6 10.Ne4 Qc7 11.Be3"; //Nxe5 12.Nxc5 Nxf3+ 13.Qxf3 Bd6 14.Ne4 O-O 15.Nxd6 Qxd6 16.d4 f5 17.c5 Qb8 18.Bf4 Qxb2 19.Be5 Qd2 20.Qg3 Qh6 21.f4 Kf7 22.Rf3 Rg8 23.Qf2 a5 24.a4 Ba6 25.Rb1 Qh5 26.Rh3 Qe2 27.Qxe2 Bxe2 28.Rb7 Bg4 29.Rhb3 Rgd8 30.Rc7 Ke8 31.Rbb7 Bd1 32.Bxg7 Rac8 33.Rxc8 Rxc8 34.Ra7 Bxa4 35.Rxa5 Bd1 36.Be5 Bh5 37.Ra7 Rd8 38.Bc7 Rc8 39.Bd6 Rd8 40.Kf2 Kf7 41.Ke3 h6 42.Kd2 Kf6 43.Be5+ Ke7 44.Kc3 Be2 45.g3 Bf3 46.Kb4 Kf7 47.Ka5 Kg6 48.Kb6 Kh5 49.Kc7 Rf8 50.Bd6 Rf7 51.Kd8 Bd5 52.Rb7 Kg4 53.Be7 h5 54.Rb2 Rh7 55.Rf2 Rh8+ 56.Kxd7 Ra8 57.Re2 Ra4 58.Bf6 Kh3 59.Rxe6 Kxh2 60.Bh4 Bxe6+ 61.Kxe6 Rxd4 62.Kxf5 Rd5+ 63.Ke6 Rxc5 64.f5 Rc2 65.f6 Rf2 66.f7 Re2+ 67.Kf6 Rf2+ 68.Ke7 Re2+ 69.Kf6 Ra2 70.Kg6 Ra8 71.Kxh5 Rf8 72.Kg6 Kh3 73.Kg7 Rxf7+ 74.Kxf7 c5 1/2-1/2";
+    // move_txt = "3...a6 4.Bxc6 bxc6 5.d3 e6 6.O-O Nf6 7.e5 Nd5 8.c4 Ne7 9.Nc3 Ng6 10.Ne4 Qc7 11.Be3"; //Nxe5 12.Nxc5 Nxf3+ 13.Qxf3 Bd6 14.Ne4 O-O 15.Nxd6 Qxd6 16.d4 f5 17.c5 Qb8 18.Bf4 Qxb2 19.Be5 Qd2 20.Qg3 Qh6 21.f4 Kf7 22.Rf3 Rg8 23.Qf2 a5 24.a4 Ba6 25.Rb1 Qh5 26.Rh3 Qe2 27.Qxe2 Bxe2 28.Rb7 Bg4 29.Rhb3 Rgd8 30.Rc7 Ke8 31.Rbb7 Bd1 32.Bxg7 Rac8 33.Rxc8 Rxc8 34.Ra7 Bxa4 35.Rxa5 Bd1 36.Be5 Bh5 37.Ra7 Rd8 38.Bc7 Rc8 39.Bd6 Rd8 40.Kf2 Kf7 41.Ke3 h6 42.Kd2 Kf6 43.Be5+ Ke7 44.Kc3 Be2 45.g3 Bf3 46.Kb4 Kf7 47.Ka5 Kg6 48.Kb6 Kh5 49.Kc7 Rf8 50.Bd6 Rf7 51.Kd8 Bd5 52.Rb7 Kg4 53.Be7 h5 54.Rb2 Rh7 55.Rf2 Rh8+ 56.Kxd7 Ra8 57.Re2 Ra4 58.Bf6 Kh3 59.Rxe6 Kxh2 60.Bh4 Bxe6+ 61.Kxe6 Rxd4 62.Kxf5 Rd5+ 63.Ke6 Rxc5 64.f5 Rc2 65.f6 Rf2 66.f7 Re2+ 67.Kf6 Rf2+ 68.Ke7 Re2+ 69.Kf6 Ra2 70.Kg6 Ra8 71.Kxh5 Rf8 72.Kg6 Kh3 73.Kg7 Rxf7+ 74.Kxf7 c5 1/2-1/2";
 
 }
 
 // Return index into vector where start position found
-int db_calculate_move_vector( DB_GAME_INFO *info, std::vector<thc::Move> &moves )
+int DB_GAME_INFO::db_calculate_move_vector( std::vector<thc::Move> &moves, uint64_t hash_to_match )
 {
     CompressMoves press;
-    size_t len = info->str_blob.length();
-    const char *blob = (const char*)info->str_blob.c_str();
+    size_t len = str_blob.length();
+    const char *blob = (const char*)str_blob.c_str();
     uint64_t hash = press.cr.Hash64Calculate();
     moves.clear();
     int ret=0;
@@ -342,7 +387,7 @@ int db_calculate_move_vector( DB_GAME_INFO *info, std::vector<thc::Move> &moves 
         blob += nbr_used;
         nbr += nbr_used;
         hash = cr.Hash64Update( hash, mv );
-        if( hash == gbl_hash )
+        if( hash == hash_to_match )
             ret = moves.size();
     }
     return ret;
@@ -350,8 +395,57 @@ int db_calculate_move_vector( DB_GAME_INFO *info, std::vector<thc::Move> &moves 
 
 static bool gbl_protect_recursion;   // FIXME
 
-
 int Database::GetRow( DB_GAME_INFO *info, int row )
+{
+    static DB_GAME_INFO single_line_cache;
+    static int single_line_cache_row;
+    int ret=0;
+    if( stack.size()!=0 && single_line_cache_row==row )
+    {
+        *info = single_line_cache;
+        cprintf( "Single line cache hit, row %d\n", row );
+    }
+    else
+    {
+        if( 0 != cache.count(row) )
+        {
+            *info = cache.at(row);
+            single_line_cache     = *info;
+            single_line_cache_row = row;
+            cprintf( "Cache hit, row %d\n", row );
+        }
+        else
+        {
+            ret = GetRowRaw( info, row );
+            if( ret == 0 )
+            {
+                cache[row]            = *info;
+                single_line_cache     = *info;
+                single_line_cache_row = row;
+                stack.push_back(row);
+                if( stack.size() < 100 )
+                {
+                    cprintf( "Add row %d to cache, no removal\n", row );
+                }
+                else
+                {
+                    int front = *stack.begin();
+                    cprintf( "Add row %d and remove row %d from cache\n", row, front );
+                    stack.pop_front();
+                    cache.erase(front);
+                }
+            }
+        }
+    }
+/*    if( ret == 0 )
+    {
+        info->db_calculate_move_txt( gbl_hash );
+        cprintf( "Recalculate move_txt %s, row=%d\n", info->move_txt.c_str(), row );
+    } */
+    return ret;
+}
+
+int Database::GetRowRaw( DB_GAME_INFO *info, int row )
 {
     if( gbl_protect_recursion )
     {
@@ -359,7 +453,7 @@ int Database::GetRow( DB_GAME_INFO *info, int row )
         return 0;
     }
     gbl_current = row;
-    cprintf( "db_virtual_row() IN row=%d, expected=%d,%smatch\n", row, gbl_expected, row==gbl_expected?" ":" no " );
+    cprintf( "Database::GetRow() IN row=%d, expected=%d,%smatch\n", row, gbl_expected, row==gbl_expected?" ":" no " );
     int retval = -1;
     if( !gbl_handle || row>=gbl_count )
     {
@@ -388,8 +482,8 @@ int Database::GetRow( DB_GAME_INFO *info, int row )
                         {
                             int game_id = atoi(val);
                             retval = virtual_dump_game( info, game_id );
-                            db_calculate_move_txt(info);
-                            cprintf( "db_virtual_row() SUCCESS game_id = %d\n", game_id );
+                            // info->db_calculate_move_txt( gbl_hash );
+                            cprintf( "Database::GetRow() SUCCESS game_id = %d\n", game_id );
                             return retval;
                         }
                     }
@@ -432,7 +526,7 @@ int Database::GetRow( DB_GAME_INFO *info, int row )
             else
             {
                 sprintf( buf,
-//#define NO_REVERSE
+// #define NO_REVERSE
 #ifdef NO_REVERSE
                         "SELECT games.game_id from games JOIN positions_%d ON games.game_id = positions_%d.game_id WHERE %spositions_%d.position_hash=%d LIMIT %d,100",
 #else
@@ -441,7 +535,7 @@ int Database::GetRow( DB_GAME_INFO *info, int row )
                         table_nbr, table_nbr, white_and.c_str(), table_nbr, hash, row );
             }
             retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &gbl_stmt, 0 );
-            cprintf( "db_virtual_row() START query: %s\n",buf);
+            cprintf( "Database::GetRow() START query: %s\n",buf);
             if( retval )
             {
                 cprintf("SELECTING DATA FROM DB FAILED 2\n");
