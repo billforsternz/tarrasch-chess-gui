@@ -1135,6 +1135,8 @@ void DbDialog::StatsCalculate()
 
     // hash to match
     uint64_t gbl_hash = cr_to_match.Hash64Calculate();
+    objs.db->gbl_hash = gbl_hash;
+    objs.db->gbl_position = cr_to_match;
     
     int maxlen = 1000000;   // absurdly large until a match found
 
@@ -1365,7 +1367,7 @@ void DbDialog::OnNextMove( wxCommandEvent &event )
     cprintf( "DbDialog::OnNextMove(%d)\n", idx );
     if( idx==0 && moves_from_base_position.size()>0 )
     {
-        moves_from_base_position.pop_back();
+        moves_from_base_position.pop_back();  // Undo last move
     }
     else
     {
