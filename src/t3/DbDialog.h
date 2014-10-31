@@ -6,6 +6,7 @@
  ****************************************************************************/
 #ifndef DB_DIALOG_H
 #define DB_DIALOG_H
+#include <unordered_set>
 #include "wx/spinctrl.h"
 #include "wx/statline.h"
 #include "wx/accel.h"
@@ -180,7 +181,7 @@ public:
     GameDocument *GetFocusGame( int &idx );
     void DeselectOthers();
     void OnOk();
-
+    
     // DbDialog member variables
 public:
     wxStaticText *player_names;
@@ -203,6 +204,8 @@ private:
     wxButton *utility;
     MiniBoard *mini_board;
     bool activated_at_least_once;
+    int nbr_games_in_list_ctrl;
+
 public:
     bool transpo_activated;
 private:
@@ -211,6 +214,8 @@ private:
     int file_game_idx;
     bool db_game_set;
     std::vector<DB_GAME_INFO> cache;    // games from database
+    std::unordered_set<int>   games_set;    // game_ids for all games in memory
+    std::unordered_set<uint64_t> drill_down_set;  // positions already encountered drilling down
     std::vector<thc::Move> moves_in_this_position;
     std::vector<thc::Move> moves_from_base_position;
     GameDocument db_game;

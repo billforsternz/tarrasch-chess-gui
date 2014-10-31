@@ -104,6 +104,30 @@ bool DbDialog::ReadItemFromMemory( int item, DB_GAME_INFO &info )
     return in_memory;
 }
 
+static bool DebugIsTarget( const DB_GAME_INFO &info )
+{
+    bool match = (info.str_blob == "\xc3\xa3\x93\xa0\xb3\xc1\x10\xb3\xc1\x54\x81\xd1\x80\x51\xa1\x54\x5b\xd0\x10\x15\x66\x26\xd3\x02\x01\x24\x6d\x25\x6c\x7c\x1d\x6b\x23\x81\x2c\x3a\x34\x45\xe1\x73\x23\xf1\x20\x64\x31\x7a\x3e\x61\xf3\x0f\x35\x91\x06\x81\xf1\xe3\xf2\x08\x47\x47\xe1\x2c\x06\x64\xd1\x73\x0e\x81\x4a\xc2\x48\x6e\x77");
+    return match;
+}
+
+static void DebugDumpBlob( const char *msg, const DB_GAME_INFO &info )
+{
+    char buf[2000];
+    char *p = buf;
+    for( int i=0; i<info.str_blob.length(); i++ )
+    {
+        char c = info.str_blob[i];
+        unsigned u = (unsigned)c;
+        u &= 0xff;
+        if( i == 0 )
+            sprintf( p, "%02x", u );
+        else
+            sprintf( p, " %02x", u );
+        p = strchr(p,'\0');
+    }
+    cprintf( "%s [%s]\n", msg, buf );
+}
+
 class wxVirtualListCtrl: public wxListCtrl
 {
     //DECLARE_CLASS( wxVirtualListCtrl )
@@ -142,16 +166,24 @@ public:
     void ReceiveFocus( int focus_idx )
     {
         //cprintf( "ListCtrl::ReceiveFocus(%d)\n", focus_idx );
-        this->focus_idx = focus_idx;
-        ReadItem( focus_idx, data_src->track_info );
-        initial_focus_offset = focus_offset = data_src->track_info.db_calculate_move_vector( data_src->track_focus_moves, objs.db->gbl_hash );
-        if( mini_board )
+        if( focus_idx >= 0 )
         {
-            CalculateMoveTxt();
-            mini_board->SetPosition( data_src->track_updated_position.squares );
-            std::string desc = data_src->track_info.Description();
-            //cprintf( "ListCtrl::ReceiveFocus(%d), game=%s\n", focus_idx, desc.c_str() );
-            data_src->player_names->SetLabel(wxString(desc.c_str()));
+            this->focus_idx = focus_idx;
+            ReadItem( focus_idx, data_src->track_info );
+            //DebugDumpBlob("Focus", data_src->track_info );
+            //bool match = DebugIsTarget(data_src->track_info);
+            //if( match )
+            //    cprintf( "Found Pennekamp-Imbierowicz\n" );
+
+            initial_focus_offset = focus_offset = data_src->track_info.db_calculate_move_vector( data_src->track_focus_moves, objs.db->gbl_hash );
+            if( mini_board )
+            {
+                CalculateMoveTxt();
+                mini_board->SetPosition( data_src->track_updated_position.squares );
+                std::string desc = data_src->track_info.Description();
+                //cprintf( "ListCtrl::ReceiveFocus(%d), game=%s\n", focus_idx, desc.c_str() );
+                data_src->player_names->SetLabel(wxString(desc.c_str()));
+            }
         }
     }
 
@@ -298,6 +330,7 @@ DbDialog::DbDialog
     this->gc_clipboard = gc_clipboard;
     this->id = id;
     file_game_idx = -1;
+    nbr_games_in_list_ctrl = 0;
     Init();
     Create( parent, id, "Title FIXME", pos, size, style );
 }
@@ -351,7 +384,6 @@ bool DbDialog::Create( wxWindow* parent,
     return okay;
 }
 
-static int gbl_nbr; //FIXME
 
 // Control creation for DbDialog
 void DbDialog::CreateControls()
@@ -366,9 +398,9 @@ void DbDialog::CreateControls()
     top_sizer->Add(box_sizer, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
 
     // A friendly message
-    gbl_nbr = objs.db->SetPosition( cr ); //gc->gds.size();
+    nbr_games_in_list_ctrl = objs.db->SetPosition( cr ); //gc->gds.size();
     char buf[200];
-    sprintf(buf,"List of %d matching games from the database",gbl_nbr);
+    sprintf(buf,"List of %d matching games from the database",nbr_games_in_list_ctrl);
     title_ctrl = new wxStaticText( this, wxID_STATIC,
         buf, wxDefaultPosition, wxDefaultSize, 0 );
     box_sizer->Add(title_ctrl, 0, wxALIGN_LEFT|wxALL, 5);
@@ -384,7 +416,7 @@ void DbDialog::CreateControls()
     sz.y = (disp_height*2)/5;
     list_ctrl  = new wxVirtualListCtrl( this, ID_PGN_LISTBOX, wxDefaultPosition, sz/*wxDefaultSize*/,wxLC_REPORT|wxLC_VIRTUAL );
     list_ctrl->data_src = this;
-    list_ctrl->SetItemCount(gbl_nbr);
+    list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
     list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
 
     list_ctrl->InsertColumn( 0, id==ID_PGN_DIALOG_FILE?"#":" "  );
@@ -658,12 +690,22 @@ static DbDialog *backdoor;
 static bool compare( const DB_GAME_INFO &g1, const DB_GAME_INFO &g2 )
 {
     bool lt=false;
+    bool is_target1 = DebugIsTarget( g1 );
+    bool is_target2 = DebugIsTarget( g2 );
     switch( backdoor->compare_col )
     {
-        case 0: lt = g1.white < g2.white;           break;
-        case 1: lt = g1.black < g2.black;           break;
+        case 1: lt = g1.white < g2.white;           break;
+        case 3: lt = g1.black < g2.black;           break;
         default:
         {
+            /* if( is_target1 )
+            {
+                DebugDumpBlob("compare(g1,g2) g1 is match, g2 is", g2 );
+            }
+            if( is_target2 )
+            {
+                DebugDumpBlob("compare(g1,g2) g2 is match, g1 is", g1 );
+            } */
             unsigned int sz = backdoor->transpositions.size();
             for( unsigned int i=0; i<sz; i++ )
             {
@@ -677,10 +719,9 @@ static bool compare( const DB_GAME_INFO &g1, const DB_GAME_INFO &g2 )
                         unsigned int offset2 = ptp2->blob.length();
                         if( 0 == memcmp( ptp2->blob.c_str(), g2.str_blob.c_str(), offset2 ) )
                         {
-                            if( backdoor->transpo_activated )
+                            if( backdoor->transpo_activated && i!=j )
                             {
-                                if( i != j )
-                                    lt = i<j;
+                                lt = i<j;
                             }
                             else
                             {
@@ -773,6 +814,10 @@ static bool compare( const DB_GAME_INFO &g1, const DB_GAME_INFO &g2 )
             break;
         }
     }
+    if( is_target1 || is_target2 )
+    {
+        cprintf( "compare() returns lt is %s\n", lt?"true":"false" );
+    }
     return lt;
 }
 
@@ -783,15 +828,15 @@ void DbDialog::OnListColClick( wxListEvent &event )
         compare_col = event.GetColumn();
         backdoor = this;
         std::sort( games.begin(), games.end(), compare );
-        gbl_nbr = games.size();
-        list_ctrl->SetItemCount(gbl_nbr);
-        list_ctrl->RefreshItems( 0, gbl_nbr-1 );
+        nbr_games_in_list_ctrl = games.size();
+        list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
+        list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
         list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
         list_ctrl->ReceiveFocus(0);
         int top = list_ctrl->GetTopItem();
         int count = 1 + list_ctrl->GetCountPerPage();
-        if( count > gbl_nbr )
-            count = gbl_nbr;
+        if( count > nbr_games_in_list_ctrl )
+            count = nbr_games_in_list_ctrl;
         for( int i=0; i<count; i++ )
             list_ctrl->RefreshItem(top++);
         list_ctrl->SetFocus();
@@ -836,6 +881,7 @@ void DbDialog::LoadGame( int idx )
     {
         static DB_GAME_INFO info;
         objs.db->GetRow( &info, idx );
+        list_ctrl->ReadItem( idx, info );
         GameDocument gd;
         std::vector<thc::Move> moves;
         gd.white = info.white;
@@ -846,7 +892,6 @@ void DbDialog::LoadGame( int idx )
         CompressMoves press;
         for( int nbr=0; nbr<len;  )
         {
-            thc::ChessRules cr = press.cr;
             thc::Move mv;
             int nbr_used = press.decompress_move( blob, mv );
             if( nbr_used == 0 )
@@ -978,7 +1023,7 @@ void DbDialog::OnComboBox( wxCommandEvent& event )
 void DbDialog::OnCheckBox( wxCommandEvent& event )
 {
     cprintf( "OnCheckBox()\n");
-    list_ctrl->SetItemCount(20);//gbl_nbr);
+    list_ctrl->SetItemCount(20);//nbr_games_in_list_ctrl);
     list_ctrl->RefreshItems(0,19);
 }
 
@@ -999,13 +1044,13 @@ void DbDialog::OnReload( wxCommandEvent& WXUNUSED(event) )
     }
     else
     {
-        gbl_nbr = objs.db->SetPosition( cr, sname );
+        nbr_games_in_list_ctrl = objs.db->SetPosition( cr, sname );
         char buf[200];
-        sprintf(buf,"List of %d matching games from the database",gbl_nbr);
+        sprintf(buf,"List of %d matching games from the database",nbr_games_in_list_ctrl);
         title_ctrl->SetLabel( buf );
-        cprintf( "Reloading, %d games\n", gbl_nbr);
-        list_ctrl->SetItemCount(gbl_nbr);
-        list_ctrl->RefreshItems(0,gbl_nbr-1);
+        cprintf( "Reloading, %d games\n", nbr_games_in_list_ctrl);
+        list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
+        list_ctrl->RefreshItems(0,nbr_games_in_list_ctrl-1);
     }
 }
 
@@ -1096,26 +1141,40 @@ void DbDialog::OnUtility( wxCommandEvent& WXUNUSED(event) )
         AutoTimer at("1) Load games into memory");
         
         // Load all the matching games from the database
-        objs.db->LoadAllGames( cache, gbl_nbr );
+        objs.db->LoadAllGames( cache, nbr_games_in_list_ctrl );
     }
     {
         AutoTimer at("2) Calculate stats");
         moves_from_base_position.clear();
         moves_in_this_position.clear();
+        
+        // No need to look for more games in database in base position
+        drill_down_set.clear();
+        uint64_t base_hash = this->cr.Hash64Calculate();
+        drill_down_set.insert(base_hash);
+        games_set.clear();
+        for( unsigned int i=0; i<cache.size(); i++ )
+        {
+            DB_GAME_INFO info = cache[i];
+            games_set.insert( info.game_id );
+        }
+
+        // Do all the hard work
         StatsCalculate();
     }
 }
 
 void DbDialog::StatsCalculate()
 {
+    int total_white_wins = 0;
+    int total_black_wins = 0;
+    int total_draws = 0;
     transpositions.clear();
     stats.clear();
     games.clear();
     cprintf( "Remove focus %d\n", list_ctrl->focus_idx );
     list_ctrl->SetItemState( list_ctrl->focus_idx, 0, wxLIST_STATE_FOCUSED );
     list_ctrl->SetItemState( list_ctrl->focus_idx, 0, wxLIST_STATE_SELECTED );
-
-    
     thc::ChessRules cr_to_match = this->cr;
     bool add_go_back = false;
     std::string go_back_string;
@@ -1137,9 +1196,19 @@ void DbDialog::StatsCalculate()
     uint64_t gbl_hash = cr_to_match.Hash64Calculate();
     objs.db->gbl_hash = gbl_hash;
     objs.db->gbl_position = cr_to_match;
-    
     int maxlen = 1000000;   // absurdly large until a match found
 
+    // Only if we haven't seen this position, look for and load extra games (due to transposition) from database
+    if( drill_down_set.count(gbl_hash) > 0 )
+    {
+        cprintf( "Already seen this position\n" );
+    }
+    else
+    {
+        drill_down_set.insert(gbl_hash);
+        objs.db->LoadGamesWithQuery( gbl_hash, cache, games_set );
+    }
+    
     // For each cached game
     for( unsigned int i=0; i<cache.size(); i++ )
     {
@@ -1195,6 +1264,16 @@ void DbDialog::StatsCalculate()
 
         if( found )
         {
+            bool white_wins = (info.result=="1-0");
+            if( white_wins )
+                total_white_wins++;
+            bool black_wins = (info.result=="0-1");
+            if( black_wins )
+                total_black_wins++;
+            bool draw       = (info.result=="1/2-1/2");
+            if( draw )
+                total_draws++;
+
             games.push_back(info);
             PATH_TO_POSITION *p = &transpositions[found_idx];
             p->frequency++;
@@ -1220,11 +1299,11 @@ void DbDialog::StatsCalculate()
                     it = stats.find(imv);
                 }
                 it->second.nbr_games++;
-                if( info.result == "1-0" )
+                if( white_wins )
                     it->second.nbr_white_wins++;
-                else if( info.result== "0-1" )
+                else if( black_wins )
                     it->second.nbr_black_wins++;
-                else if( info.result== "1/2-1/2" )
+                else if( draw )
                     it->second.nbr_draws++;
             }
         }
@@ -1234,7 +1313,7 @@ void DbDialog::StatsCalculate()
             std::sort( transpositions.rbegin(), transpositions.rend() );
         }
     }
-
+    
     wxArrayString strings;
     if( !list_ctrl_stats )
     {
@@ -1257,13 +1336,14 @@ void DbDialog::StatsCalculate()
     std::multimap< MOVE_STATS,  uint32_t >::reverse_iterator it;
     for( it=dst.rbegin(); it!=dst.rend(); it++ )
     {
-        double percentage_score;
+        double percentage_score = 0.0;
         int nbr_games      = it->first.nbr_games;
         int nbr_white_wins = it->first.nbr_white_wins;
         int nbr_black_wins = it->first.nbr_black_wins;
         int nbr_draws      = it->first.nbr_draws;
         int draws_plus_no_result = nbr_games - nbr_white_wins - nbr_black_wins;
-        percentage_score = ((1.0*nbr_white_wins + 0.5*draws_plus_no_result) * 100.0) / nbr_games;
+        if( nbr_games )
+            percentage_score = ((1.0*nbr_white_wins + 0.5*draws_plus_no_result) * 100.0) / nbr_games;
         uint32_t imv=it->second;
         thc::Move mv;
         memcpy( &mv, &imv, sizeof(mv) ); // FIXME
@@ -1329,19 +1409,26 @@ void DbDialog::StatsCalculate()
     }
     list_ctrl_transpo->InsertItems( strings, 0 );
 
-    gbl_nbr = games.size();
-    list_ctrl->SetItemCount(gbl_nbr);
-    list_ctrl->RefreshItems( 0, gbl_nbr-1 );
+    nbr_games_in_list_ctrl = games.size();
+    list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
+    list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
     list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
     list_ctrl->ReceiveFocus(0);
-    char buf[200];
-    sprintf(buf,"List of %d matching games from the database",gbl_nbr);
+    char buf[1000];
+    int total_games  = games.size();
+    int total_draws_plus_no_result = total_games - total_white_wins - total_black_wins;
+    double percent_score=0.0;
+    if( total_games )
+        percent_score= ((1.0*total_white_wins + 0.5*total_draws_plus_no_result) * 100.0) / total_games;
+    sprintf( buf, "%d games, white scores %.1f%% +%d -%d =%d",
+            total_games, percent_score,
+            total_white_wins, total_black_wins, total_draws );
     title_ctrl->SetLabel( buf );
 
     int top = list_ctrl->GetTopItem();
     int count = 1 + list_ctrl->GetCountPerPage();
-    if( count > gbl_nbr )
-        count = gbl_nbr;
+    if( count > nbr_games_in_list_ctrl )
+        count = nbr_games_in_list_ctrl;
     for( int i=0; i<count; i++ )
         list_ctrl->RefreshItem(top++);
     list_ctrl->SetFocus();
@@ -1353,8 +1440,8 @@ void DbDialog::OnTabSelected( wxBookCtrlEvent& event )
     transpo_activated = (1==event.GetSelection());
     int top = list_ctrl->GetTopItem();
     int count = 1 + list_ctrl->GetCountPerPage();
-    if( count > gbl_nbr )
-        count = gbl_nbr;
+    if( count > nbr_games_in_list_ctrl )
+        count = nbr_games_in_list_ctrl;
     for( int i=0; i<count; i++ )
         list_ctrl->RefreshItem(top++);
 }
@@ -1364,7 +1451,6 @@ void DbDialog::OnTabSelected( wxBookCtrlEvent& event )
 void DbDialog::OnNextMove( wxCommandEvent &event )
 {
     int idx = event.GetSelection();
-    cprintf( "DbDialog::OnNextMove(%d)\n", idx );
     if( idx==0 && moves_from_base_position.size()>0 )
     {
         moves_from_base_position.pop_back();  // Undo last move
@@ -1374,7 +1460,28 @@ void DbDialog::OnNextMove( wxCommandEvent &event )
         thc::Move this_one = moves_in_this_position[idx];
         moves_from_base_position.push_back(this_one);
     }
-    StatsCalculate();
+    
+    thc::ChessRules cr_to_match = this->cr;
+    for( int i=0; i<moves_from_base_position.size(); i++ )
+    {
+        thc::Move mv = moves_from_base_position[i];
+        cr_to_match.PlayMove(mv);
+    }
+    uint64_t hash = cr_to_match.Hash64Calculate();
+    if( drill_down_set.count(hash) > 0 )
+    {
+        cprintf( "Already seen this position\n" );
+    }
+    else
+    {
+        title_ctrl->SetLabel( "Searching for extra games through transposition...." );
+        title_ctrl->Refresh();
+        title_ctrl->Update();
+        //title_ctrl->MacDoRedraw(0);
+    }
+    cprintf( "DbDialog::OnNextMove(%d)\n", idx );
+    wxSafeYield();
+    CallAfter( &DbDialog::StatsCalculate );
 }
 
 

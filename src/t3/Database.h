@@ -11,6 +11,7 @@
 #include <vector>
 #include <map>
 #include <list>
+#include <unordered_set>
 #include "sqlite3.h"
 #include "thc.h"
 #include "GameDocument.h"
@@ -42,6 +43,7 @@ public:
 
     int SetPosition( thc::ChessRules &cr );
     int SetPosition( thc::ChessRules &cr, std::string &player_name );
+    int GetNbrGames( thc::ChessRules &cr );
     int GetRow( DB_GAME_INFO *info, int row );
     int GetRowRaw( DB_GAME_INFO *info, int row );
     int LoadAllGames( std::vector<DB_GAME_INFO> &cache, int nbr_games );
@@ -49,7 +51,9 @@ public:
     bool TestPrevRow();
     int GetCurrent();
     int FindRow( std::string &name );
-    int virtual_dump_game( DB_GAME_INFO *info, int game_id );
+    int LoadGameWithQuery( DB_GAME_INFO *info, int game_id );
+    int LoadGamesWithQuery( uint64_t hash, std::vector<DB_GAME_INFO> &games, std::unordered_set<int> &games_set );
+
 
   
 private:
