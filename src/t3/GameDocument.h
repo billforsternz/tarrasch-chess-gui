@@ -311,7 +311,7 @@ public:
     void ToPublishTxtGameBody( std::string &str, int &diagram_idx, int &mv_idx, int &neg_base, int publish_options  );
     bool IsDiff( GameDocument &other );
     bool PgnParse( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language=false, int imove=-1 );
-    void LoadFromMoveList( std::vector<thc::Move> &moves );
+    void LoadFromMoveList( std::vector<thc::Move> &moves, int move_idx=0 );
     
     MoveTree *MakeMove( GAME_MOVE game_move, bool allow_overwrite );
     MoveTree *KibitzCaptureStart( const char *engine_name, const char *txt, std::vector<thc::Move> &var,
@@ -401,24 +401,6 @@ public:
     MoveTree *Locate( unsigned long pos, thc::ChessRules &cr )
     {   cr = start_position;
         std::string title; bool at_move0; return gv.Locate( pos, cr, title, at_move0 ); }
-    void SetNonZeroStartPosition( thc::ChessPosition cp )
-    {
-        unsigned long pos=0;
-        bool found=false;
-        for(;;)
-        {
-            thc::ChessRules step;
-            if( !Locate( pos, step ) )
-                break;
-            if( step == cp )
-                found = true;
-            else if( found )
-                break;  // found earlier, so set non_zero_start_pos to the last match
-            pos++;
-        }
-        if( found )
-            non_zero_start_pos = pos-1;
-    }
 
     //Data
     thc::ChessRules master_position;    // the current position

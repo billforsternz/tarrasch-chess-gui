@@ -965,7 +965,6 @@ void GameLogic::CmdFileDatabase()
             PutBackDocument();
             if( dialog.LoadGame(this,new_gd,this->file_game_idx) )
             {
-                new_gd.SetNonZeroStartPosition(cr);
                 tabs->TabNew(new_gd);
                 tabs->SetInfile(false);
                 ShowNewDocument();

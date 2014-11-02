@@ -26,7 +26,7 @@ void Tabs::TabNew( GameDocument &new_gd )
         wxPanel *notebook_page1 = new wxPanel(objs.canvas->notebook, wxID_ANY );
         objs.canvas->notebook->AddPage(notebook_page1,"New Game",true);
     }
-    cprintf( "Set: tab idx=%d, pos=%ld\n", current_idx, pos );
+    cprintf( "New tab idx=%d, pos=%ld\n", current_idx, pos );
 }
 
 
@@ -36,18 +36,23 @@ bool Tabs::TabSelected( int idx )
     if( idx < nbr_tabs )
     {
         okay = true;
-        unsigned long pos = gl->gd.GetInsertionPoint();
-        v[current_idx].gd  = gl->gd;
-        v[current_idx].pos = pos;
-        v[current_idx].undo = gl->undo;
-        cprintf( "Set: tab idx=%d, pos=%ld\n", current_idx, pos );
-        gl->gd = v[idx].gd;
-        gl->undo = v[idx].undo;
-        pos = v[idx].pos;
-        gl->gd.SetInsertionPoint(pos);
-        gl->gd.non_zero_start_pos = pos;
-        current_idx = idx;
-        cprintf( "Get: tab idx=%d, pos=%ld\n", idx, pos );
+
+        // If reverting to an old tab (as opposed to switching to a new one) save
+        //  the current insertion point, doc and undo and restore the saved
+        //  insertion point doc and undo
+        if( idx != current_idx )
+        {
+            unsigned long pos = gl->gd.GetInsertionPoint();
+            v[current_idx].gd  = gl->gd;
+            v[current_idx].pos = pos;
+            v[current_idx].undo = gl->undo;
+            gl->gd = v[idx].gd;
+            gl->undo = v[idx].undo;
+            pos = v[idx].pos;
+            gl->gd.non_zero_start_pos = pos;
+            current_idx = idx;
+            cprintf( "Set tab idx=%d, pos=%ld\n", idx, pos );
+        }
     }
     return okay;
 }

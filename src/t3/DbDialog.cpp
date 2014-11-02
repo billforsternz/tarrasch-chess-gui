@@ -875,12 +875,11 @@ void DbDialog::OnActivate(wxActivateEvent& event)
 }
 
 
-void DbDialog::LoadGame( int idx )
+void DbDialog::LoadGame( int idx, int focus_offset )
 {
     if( list_ctrl )
     {
         static DB_GAME_INFO info;
-        objs.db->GetRow( &info, idx );
         list_ctrl->ReadItem( idx, info );
         GameDocument gd;
         std::vector<thc::Move> moves;
@@ -900,7 +899,7 @@ void DbDialog::LoadGame( int idx )
             blob += nbr_used;
             nbr += nbr_used;
         }
-        gd.LoadFromMoveList(moves);
+        gd.LoadFromMoveList( moves, focus_offset );
         db_game = gd;
         db_game_set = true;
     }
@@ -914,7 +913,7 @@ void DbDialog::OnListSelected( wxListEvent &event )
         int idx = event.m_itemIndex;
         cprintf( "DbDialog::OnListSelected(%d)\n", idx );
         list_ctrl->SetItemState( idx, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
-        LoadGame( idx );
+        LoadGame( idx, list_ctrl->focus_offset );
         TransferDataToWindow();
         AcceptAndClose();
     }
@@ -939,7 +938,7 @@ void DbDialog::OnOk()
 {
     if( list_ctrl )
     {
-        LoadGame( list_ctrl->focus_idx );
+        LoadGame( list_ctrl->focus_idx, list_ctrl->focus_offset );
         TransferDataToWindow();
         AcceptAndClose();
     }

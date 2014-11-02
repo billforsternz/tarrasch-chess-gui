@@ -1418,23 +1418,7 @@ unsigned long GameView::NavigationKey( unsigned long pos, NAVIGATION_KEY nk )
     }
     return pos;
 }
-/*
-void GameView::SetNonZeroStartPosition( thc::ChessPosition cp )
-{
-    int ret=0;
-    int nbr = expansion.size();
-    for( int i=0; i<nbr; i++ )
-    {
-        GameViewElement gve = expansion[i];
-        if( gve.type==MOVE && gve )
-        {
-            ret = i;
-            break;
-        }
-    }
-    return ret;
-}
- */
+
 int GameView::GetInternalOffset( MoveTree *move )
 {
     int ret=0;

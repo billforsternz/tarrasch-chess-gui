@@ -172,7 +172,7 @@ public:
 //  void SaveColumns();
     bool ShowModalOk();
 
-    void LoadGame( int idx );
+    void LoadGame( int idx, int focus_offset=0 );
     
     // Return true if a game has been selected
     bool LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx );

@@ -926,7 +926,7 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
 }
 
 // Load a GameDocumentBase from a list of moves
-void GameDocument::LoadFromMoveList( std::vector<thc::Move> &moves )
+void GameDocument::LoadFromMoveList( std::vector<thc::Move> &moves, int move_idx )
 {
     thc::ChessRules cr;
     thc::ChessPosition start_position;
@@ -945,7 +945,14 @@ void GameDocument::LoadFromMoveList( std::vector<thc::Move> &moves )
     in_memory = true;
     gbl_plast_move = NULL;
     if( (*pvar).size() > 0 )
+    {
         gbl_plast_move = &(*pvar)[(*pvar).size()-1];
+        if(  0<move_idx &&  move_idx <= (*pvar).size() )
+        {
+            unsigned long pos = gv.GetMoveOffset( &(*pvar)[move_idx-1] );
+            non_zero_start_pos = pos;
+        }
+    }
 }
 
 // Return ptr to move played if any
@@ -1143,6 +1150,7 @@ unsigned long GameDocument::GetInsertionPoint()
 // Where are we in the document
 void GameDocument::SetInsertionPoint(unsigned long pos)
 {
+    // FIXME - this sets the physical insertion point in a control - is that really what we want ?
     gl->atom.SetInsertionPoint(pos);
 }
 
