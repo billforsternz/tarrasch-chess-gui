@@ -20,6 +20,9 @@ void Tabs::TabNew( GameDocument &new_gd )
         v[current_idx].gd  = gl->gd;
         v[current_idx].pos = pos;
         v[current_idx].undo = gl->undo;
+        cprintf( "Creating new tab, current_idx=%d, [0]undo=%s [0]redo=%s, old undo=%s old redo=%s\n", current_idx,
+                v[0].undo.IsModified()?"yes":"no", v[0].undo.CanRedo()?"yes":"no",
+                gl->undo.IsModified()?"yes":"no", gl->undo.CanRedo()?"yes":"no" );
         gl->gd = new_gd;
         gl->undo = e.undo; // blank
         current_idx = nbr_tabs-1;
@@ -51,7 +54,9 @@ bool Tabs::TabSelected( int idx )
             pos = v[idx].pos;
             gl->gd.non_zero_start_pos = pos;
             current_idx = idx;
-            cprintf( "Set tab idx=%d, pos=%ld\n", idx, pos );
+            cprintf( "Set difference tab idx=%d, [0]undo=%s [0]redo=%s, new undo=%s new redo=%s\n", idx,
+                        v[0].undo.IsModified()?"yes":"no", v[0].undo.CanRedo()?"yes":"no",
+                        gl->undo.IsModified()?"yes":"no", gl->undo.CanRedo()?"yes":"no" );
         }
     }
     return okay;

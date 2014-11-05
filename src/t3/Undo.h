@@ -52,6 +52,7 @@ public:
 private:
     enum { NORMAL, UNDOING } state;
     bool no_front_pops_yet;
+public:
     std::deque<RestorePoint> stack;
     std::deque<RestorePoint>::iterator it_saved;
     GameLogic *gl;
