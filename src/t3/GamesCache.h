@@ -117,7 +117,7 @@ public:
     {
         resume_previous_window=false;
     }
-    void PrepareResumePreviousWindow( int top_item ) 
+    void PrepareForResumePreviousWindow( int top_item )
     {
         resume_previous_window=true; this->top_item = top_item;
     }

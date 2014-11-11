@@ -976,7 +976,7 @@ void DbDialog::OnCancel( wxCommandEvent& WXUNUSED(event) )
 {
     if( list_ctrl )
     {
-        gc->PrepareResumePreviousWindow( list_ctrl->GetTopItem() );
+        gc->PrepareForResumePreviousWindow( list_ctrl->GetTopItem() );
         int sz=gc->gds.size();
         for( int i=0; i<sz; i++ )
         {

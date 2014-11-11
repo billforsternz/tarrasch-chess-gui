@@ -55,8 +55,6 @@ BEGIN_EVENT_TABLE( PgnDialog, wxDialog )
     EVT_LIST_COL_CLICK(ID_PGN_LISTBOX, PgnDialog::OnListColClick)
 END_EVENT_TABLE()
 
-
-
 // It's a pity we have these static vars, but unfortunately OnGetItemText() must be const for some reason
 static std::string gbl_game_description;
 static std::vector< thc::Move > gbl_focus_moves;
@@ -121,69 +119,6 @@ public:
         //  This could be refactored as std::string GameDocument.Description()
         GameDocument gd;
         data_src->gc->gds[focus_idx]->GetGameDocument(gd);
-      /*  std::string white = gd.white;
-        std::string black = gd.black;
-        size_t comma = white.find(',');
-        if( comma != std::string::npos )
-            white = white.substr( 0, comma );
-        comma = black.find(',');
-        if( comma != std::string::npos )
-            black = black.substr( 0, comma );
-        std::string event = gd.event;
-        std::string site = gd.site;
-        std::string white_elo = gd.white_elo;
-        std::string black_elo = gd.black_elo;
-        std::string result = gd.result;
-        std::string date = gd.date;
-        int move_cnt = gd.tree.variations[0].size();
-        gbl_result = gd.result;
-        std::string label = white;
-        if( white_elo != "" )
-        {
-            label += " (";
-            label += white_elo;
-            label += ")";
-        }
-        label += " - ";
-        label += black;
-        if( black_elo != "" )
-        {
-            label += " (";
-            label += white_elo;
-            label += ")";
-        }
-        if( site != "" )
-        {
-            label += ", ";
-            label += site;
-        }
-        else if( event != "" )
-        {
-            label += ", ";
-            label += event;
-        }
-        if( date.length() >= 4 )
-        {
-            label += " ";
-            label += date.substr(0,4);
-        }
-        bool result_or_moves = false;
-        if( result != "*" )
-        {
-            result_or_moves = true;
-            label += ", ";
-            label += result;
-            if( move_cnt > 0 )
-                label += " in";
-        }
-        if( move_cnt > 0 )
-        {
-            if( !result_or_moves )
-                label += ", ";
-            char buf[100];
-            sprintf( buf, " %d moves", (move_cnt+1)/2 );
-            label += std::string(buf);
-        } */
         gbl_result = gd.result;
         std::string label = gd.Description();
         gbl_game_description = label;
@@ -1141,7 +1076,7 @@ void PgnDialog::OnOk()
     selected_game = -1;
     if( list_ctrl )
     {
-        gc->PrepareResumePreviousWindow( list_ctrl->GetTopItem() );
+        gc->PrepareForResumePreviousWindow( list_ctrl->GetTopItem() );
         int sz=gc->gds.size();
         for( int i=0; i<sz; i++ )
         {
@@ -1172,9 +1107,11 @@ bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx )
     if( selected_game != -1 )
     {
         gl->IndicateNoCurrentDocument();
-        GameDocumentBase *ptr = gc->gds[selected_game]->GetGameDocumentBasePtr();
+        //GameDocumentBase *ptr = gc->gds[selected_game]->GetGameDocumentBasePtr();
+        GameDocument *ptr = gc->gds[selected_game]->GetGameDocumentPtr();
         ptr->game_being_edited = ++objs.gl->game_being_edited_tag;
-        ptr->GetGameDocument(gd);
+        //ptr->GetGameDocument(gd);
+        gd = *ptr;
         gd.selected = false;
         ptr->selected = true;
         if( &gl->gc == gc )
@@ -1522,7 +1459,7 @@ void PgnDialog::OnCancel( wxCommandEvent& WXUNUSED(event) )
 {
     if( list_ctrl )
     {
-        gc->PrepareResumePreviousWindow( list_ctrl->GetTopItem() );
+        gc->PrepareForResumePreviousWindow( list_ctrl->GetTopItem() );
         int sz=gc->gds.size();
         for( int i=0; i<sz; i++ )
         {
