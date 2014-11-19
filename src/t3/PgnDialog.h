@@ -6,6 +6,8 @@
  ****************************************************************************/
 #ifndef PGN_DIALOG_H
 #define PGN_DIALOG_H
+#include <map>
+#include <list>
 #include "wx/spinctrl.h"
 #include "wx/statline.h"
 #include "wx/accel.h"
@@ -44,6 +46,12 @@ class PgnDialog: public wxDialog
 public:
     GamesCache *gc;
     GamesCache *gc_clipboard;
+    GameDocument *GetCachedDocument( int idx );
+    void GetCachedDocumentRaw( int idx, GameDocument &gd );
+    GameDocument                single_line_cache;
+    int                         single_line_cache_idx;
+    std::map<int,GameDocument>  local_cache;
+    std::list<int>              stack;
 
     // Constructors
     PgnDialog
@@ -125,6 +133,7 @@ public:
     // PgnDialog member variables
 public:
     wxStaticText *game_description;
+
 private:
     wxVirtualPgnListCtrl  *list_ctrl;
     int          selected_game;

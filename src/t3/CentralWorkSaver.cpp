@@ -57,10 +57,8 @@ bool CentralWorkSaver::TestFileModified()
         modified = gc->file_irrevocably_modified;
         for( unsigned int i=0; !modified && i<gc->gds.size(); i++ )
         {
-            GameDocumentBase *ptr = gc->gds[i]->GetGameDocumentBasePtr();
-            if( ptr && ptr->in_memory &&
-                    (ptr->game_prefix_edited || ptr->game_details_edited || ptr->modified)
-              )
+            MagicBase *ptr = gc->gds[i].get();
+            if( ptr && ptr->IsModified() )
             {
                 modified = true;
                 break;
@@ -80,8 +78,8 @@ bool CentralWorkSaver::TestGameInFile()
     bool in_file=false;
     for( unsigned int i=0; i<gc->gds.size(); i++ )
     {
-        GameDocumentBase *ptr = gc->gds[i]->GetGameDocumentBasePtr();
-        if( ptr && ptr->game_being_edited  )
+        MagicBase *ptr = gc->gds[i].get();
+        if( ptr && ptr->GetGameBeingEdited()!=0 )
         {
             in_file = true;
             break;
@@ -99,16 +97,11 @@ void CentralWorkSaver::AddGameToFile()
     objs.log->SaveGame(gd,editing_log);         // ...and this now because we need to set...
     objs.gl->IndicateNoCurrentDocument();
     gd->in_memory = true;
-    gd->game_being_edited = true;
+    gd->game_being_edited = ++objs.gl->game_being_edited_tag;
     gd->modified = false;           // ...modified=false, which could mean the game
                                     // not getting to log or session later (not satisfactory I know - too many flags)
     int nbr = gc->gds.size();
-    if( nbr > 0  )
-    {
-        GameDocumentBase *ptr = gc->gds[nbr-1]->GetGameDocumentBasePtr();
-        if( ptr )
-            gd->game_nbr = ptr->game_nbr + 1;
-    }
+    gd->game_nbr = nbr + 1;
     make_smart_ptr( HoldDocument, new_smart_ptr, *gd );  // smart_ptr event: document->cache
     gc->gds.push_back( std::move(new_smart_ptr) );
     objs.gl->file_game_idx = gc->gds.size()-1;

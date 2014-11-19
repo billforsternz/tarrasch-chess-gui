@@ -2591,20 +2591,19 @@ void GameLogic::StatusUpdate( int idx )
         {
             for( int i=0; i<gc.gds.size(); i++ )
             {
-                GameDocumentBase *ptr = gc.gds[i]->GetGameDocumentBasePtr();
-                if( ptr &&
-                     (ptr->modified || ptr->game_prefix_edited  || ptr->game_details_edited)
-                  )
+                MagicBase *ptr = gc.gds[i].get();
+                uint32_t game_being_edited = ptr->GetGameBeingEdited();
+                if( ptr && ptr->IsModified() )
                 {
                     nbr_modified++;
                 }
-                else if( ptr && ptr->game_being_edited )
+                else if( ptr && game_being_edited )
                 {
                     GameDocument *pd = tabs->Begin();
                     Undo *pu = tabs->BeginUndo();
                     while( pd && pu )
                     {
-                        if( ptr->game_being_edited == pd->game_being_edited )
+                        if( game_being_edited == pd->game_being_edited )
                         {
                             bool doc_modified = (pd->game_details_edited || pd->game_prefix_edited || pd->modified || pu->IsModified());
                             if( doc_modified )

@@ -156,6 +156,10 @@ public:
         *this = src;    // use the assignment operator
     }
 
+    // Overrides
+    bool IsModified() { return (game_prefix_edited || game_details_edited || modified); }
+    uint32_t GetGameBeingEdited() { return game_being_edited; }
+    
     void FleshOutDate();
     virtual void Init( const thc::ChessPosition &start_position );
     void GetGameDocument( GameDocument &gd );

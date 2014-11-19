@@ -60,6 +60,70 @@ static std::string gbl_game_description;
 static std::vector< thc::Move > gbl_focus_moves;
 static std::string gbl_result;
 
+void PgnDialog::GetCachedDocumentRaw( int idx, GameDocument &gd )
+{
+    std::unique_ptr<MagicBase> &mb = gc->gds[idx];
+    mb->GetGameDocument(gd);
+}
+
+GameDocument * PgnDialog::GetCachedDocument( int idx )
+{
+    GameDocument *ptr = &single_line_cache;
+    if( stack.size()!=0 && single_line_cache_idx==idx )
+    {
+        cprintf( "PgnDialog single line cache hit, idx %d\n", idx );
+    }
+    else
+    {
+        if( 0 != local_cache.count(idx) )
+        {
+            ptr = &local_cache.at(idx);
+            single_line_cache     = *ptr;
+            single_line_cache_idx = idx;
+            cprintf( "PgnDialog cache hit, idx %d\n", idx );
+        }
+        else
+        {
+            GameDocument gd;
+            GetCachedDocumentRaw( idx, gd );
+            local_cache[idx]      = gd;
+            single_line_cache     = gd;
+            single_line_cache_idx = idx;
+            stack.push_back(idx);
+            if( stack.size() < 100 )
+            {
+                cprintf( "PgnDialog add idx %d to cache, no removal\n", idx );
+            }
+            else
+            {
+                int front = *stack.begin();
+                cprintf( "PgnDialog add idx %d and remove idx %d from cache\n", idx, front );
+                stack.pop_front();
+                local_cache.erase(front);
+            }
+            
+            // Take the opportunity to put games that are likely to be needed soon in the local_cache
+            for( int i=1; i<10 && idx+i<gc->gds.size(); i++ )
+            {
+                if( 0 == local_cache.count(idx+i) )
+                {
+                    GetCachedDocumentRaw( idx+i, gd );
+                    local_cache[idx+i] = gd;
+                    stack.push_back(idx+i);
+                    if( stack.size() >= 100 )
+                    {
+                        int front = *stack.begin();
+                        stack.pop_front();
+                        local_cache.erase(front);
+                    }
+                }
+            }
+        }
+    }
+    return ptr;
+}
+
+
 class wxVirtualPgnListCtrl: public wxListCtrl
 {
     //DECLARE_CLASS( wxVirtualPgnListCtrl )
@@ -95,18 +159,17 @@ public:
         }
         else
         {
-            GameDocumentBase *ptr = data_src->gc->gds[item]->GetGameDocumentBasePtr();
-            if( ptr )
-                move_txt = ptr->moves_txt;
-            else
-            {
-                GameDocument gd = data_src->gc->gds[item]->GetGameDocument();
-                move_txt = gd.moves_txt;
-            }
+            GameDocument *ptr = data_src->GetCachedDocument(item);
+            std::vector<thc::Move> moves;
+            VARIATION &v = ptr->tree.variations[0];
+            for( size_t i=0; i<v.size(); i++ )
+                moves.push_back( v[i].game_move.move );
+            std::string     previous_move;
+            thc::ChessRules current_position;
+            RecalculateMoveTxt( 0, moves, ptr->result, previous_move, current_position, move_txt );
         }
         return move_txt;
     }
-    
     
     // Focus changes to new item;
     void ReceiveFocus( int focus_idx )
@@ -117,15 +180,14 @@ public:
         
         // Calculate game description, eg "Carlen(2870) - Kramnik(2800), Paris 2000 1-0 in 43 moves"
         //  This could be refactored as std::string GameDocument.Description()
-        GameDocument gd;
-        data_src->gc->gds[focus_idx]->GetGameDocument(gd);
-        gbl_result = gd.result;
-        std::string label = gd.Description();
+        GameDocument *ptr = data_src->GetCachedDocument(focus_idx);
+        gbl_result = ptr->result;
+        std::string label = ptr->Description();
         gbl_game_description = label;
         
         // Calculate main line move vector
         gbl_focus_moves.clear();
-        VARIATION &v = gd.tree.variations[0];
+        VARIATION &v = ptr->tree.variations[0];
         for( size_t i=0; i<v.size(); i++ )
             gbl_focus_moves.push_back( v[i].game_move.move );
 
@@ -145,18 +207,25 @@ public:
     
     void RecalculateMoveTxt( std::string &previous_move, thc::ChessRules &current_position, std::string &remaining_moves ) const
     {
+        RecalculateMoveTxt( focus_offset, gbl_focus_moves, gbl_result,
+                           previous_move, current_position, remaining_moves );
+    }
+    
+    void RecalculateMoveTxt( int offset, std::vector<thc::Move> &moves, std::string &result,
+                             std::string &previous_move, thc::ChessRules &current_position, std::string &remaining_moves ) const
+    {
         std::string move_txt;
         thc::ChessRules cr;
         bool position_updated = false;
         bool truncated = false;
         previous_move = "";
-        for( size_t i=0; i<gbl_focus_moves.size(); i++ )
+        for( size_t i=0; i<moves.size(); i++ )
         {
-            thc::Move mv = gbl_focus_moves[i];
-            if( i>=focus_offset || i+1==focus_offset )
+            thc::Move mv = moves[i];
+            if( i>=offset || i+1==offset )
             {
-                bool prev_move = (i+1 == focus_offset);
-                bool first_move = (i == focus_offset);
+                bool prev_move = (i+1 == offset);
+                bool first_move = (i == offset);
                 std::string s = mv.NaturalOut(&cr);
                 if( i%2 == 0 || prev_move || first_move )
                 {
@@ -175,7 +244,7 @@ public:
                 {
                     move_txt += s;
                     move_txt += " ";
-                    if( i < gbl_focus_moves.size()-5 && move_txt.length()>100 )
+                    if( i < moves.size()-5 && move_txt.length()>100 )
                     {
                         truncated = true;
                         move_txt += "...";  // very long lines get over truncated by the list control (sad but true)
@@ -186,7 +255,7 @@ public:
             cr.PlayMove(mv);
         }
         if( !truncated )
-            move_txt += gbl_result;
+            move_txt += result;
         if( !position_updated )
             current_position = cr;
         remaining_moves = move_txt;
@@ -198,7 +267,7 @@ protected:
         char buf[20];
         buf[0] = '\0';
         std::string txt;
-        std::unique_ptr<MagicBase> &mb = data_src->gc->gds[item];
+        GameDocument *ptr = data_src->GetCachedDocument(item);
         switch( column )
         {
             case 0:
@@ -206,7 +275,6 @@ protected:
                 sprintf( buf, "%ld", item+1 );
                 GameDocument *pd = objs.tabs->Begin();
                 Undo *pu = objs.tabs->BeginUndo();
-                GameDocumentBase *ptr = mb->GetGameDocumentBasePtr();
                 while( ptr && pd && pu )
                 {
                     bool modified = ptr->modified;
@@ -225,47 +293,47 @@ protected:
             }
             case 1:
             {
-                txt = mb->white();
+                txt = ptr->white;
                 break;
             }
             case 2:
             {
-                txt = mb->white_elo();
+                txt = ptr->white_elo;
                 break;
             }
             case 3:
             {
-                txt = mb->black();
+                txt = ptr->black;
                 break;
             }
             case 4:
             {
-                txt = mb->black_elo();
+                txt = ptr->black_elo;
                 break;
             }
             case 5:
             {
-                txt = mb->date();
+                txt = ptr->date;
                 break;
             }
             case 6:
             {
-                txt = mb->site();
+                txt = ptr->site;
                 break;
             }
             case 7:
             {
-                txt = mb->round();
+                txt = ptr->round;
                 break;
             }
             case 8:
             {
-                txt = mb->result()=="*" ? "" : mb->result();
+                txt = ptr->result=="*" ? "" : ptr->result;
                 break;
             }
             case 9:
             {
-                txt = mb->eco();
+                txt = ptr->eco;
                 break;
             }
             case 10:
@@ -572,7 +640,7 @@ void PgnDialog::CreateControls()
     gc->col_flags.push_back(col_flag);
     list_ctrl->SetColumnWidth(10, cols[10] );   // "Moves"
     gc->col_flags.push_back(col_flag);
-    int top_item;
+/*    int top_item;
     bool resuming = gc->IsResumingPreviousWindow(top_item);
     bool selections_made = false;
     if( resuming )
@@ -662,7 +730,7 @@ void PgnDialog::CreateControls()
                 }
             }
         }
-    }
+    }  */
     box_sizer->Add(list_ctrl, 0, wxGROW|wxALL, 5);
 
     // A dividing line before the buttons
@@ -1077,7 +1145,7 @@ void PgnDialog::OnOk()
     if( list_ctrl )
     {
         gc->PrepareForResumePreviousWindow( list_ctrl->GetTopItem() );
-        int sz=gc->gds.size();
+     /* int sz=gc->gds.size();
         for( int i=0; i<sz; i++ )
         {
             GameDocumentBase *ptr = gc->gds[i]->GetGameDocumentBasePtr();
@@ -1087,13 +1155,14 @@ void PgnDialog::OnOk()
                 ptr->focus = true;
             else
                 ptr->focus = false;
-        }
+        } */
         selected_game = GetFocusGame(file_game_idx);
         if( selected_game != -1  )
         {
-            DeselectOthers(selected_game);
-            GameDocument doc = gc->gds[selected_game]->GetGameDocument();
+            // DeselectOthers(selected_game);
+            GameDocument doc = *GetCachedDocument(selected_game);
             doc.in_memory = true;
+            doc.selected = true;
             make_smart_ptr( HoldDocument,sptr,doc );
             gc->gds[selected_game] = std::move(sptr);
         }
@@ -1106,12 +1175,12 @@ bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx )
 {
     if( selected_game != -1 )
     {
-        gl->IndicateNoCurrentDocument();
-        //GameDocumentBase *ptr = gc->gds[selected_game]->GetGameDocumentBasePtr();
-        GameDocument *ptr = gc->gds[selected_game]->GetGameDocumentPtr();
-        ptr->game_being_edited = ++objs.gl->game_being_edited_tag;
-        //ptr->GetGameDocument(gd);
+        // gl->IndicateNoCurrentDocument();
+        uint32_t temp = ++objs.gl->game_being_edited_tag;
+        gc->gds[selected_game]->GetGameDocumentBasePtr()->game_being_edited = temp;
+        GameDocument *ptr = GetCachedDocument(selected_game);
         gd = *ptr;
+        gd.game_being_edited = temp;
         gd.selected = false;
         ptr->selected = true;
         if( &gl->gc == gc )
@@ -1169,7 +1238,7 @@ void PgnDialog::OnRenumber( wxCommandEvent& WXUNUSED(event) )
         int game_nbr = i+1;
         if( !gc->renumber )
         {
-            GameDocumentBase *ptr = gc->gds[i]->GetGameDocumentBasePtr();
+            GameDocumentBase *ptr = GetCachedDocument(i);
             if( ptr )
                 game_nbr = ptr->game_nbr;
         }
@@ -1197,10 +1266,10 @@ void PgnDialog::OnEditGameDetails( wxCommandEvent& WXUNUSED(event) )
     if( focus_idx != -1  )
     {
         GameDetailsDialog dialog( this );
-        GameDocument temp = gc->gds[focus_idx]->GetGameDocument();
+        GameDocument temp = *GetCachedDocument(focus_idx);
         if( dialog.Run( temp ) )
         {
-            GameDocument temp = gc->gds[focus_idx]->GetGameDocument();
+            GameDocument temp = *GetCachedDocument(focus_idx);
             objs.gl->GameRedisplayPlayersResult();
             list_ctrl->SetItem( idx, 1, temp.white );
             list_ctrl->SetItem( idx, 2, temp.white_elo );
