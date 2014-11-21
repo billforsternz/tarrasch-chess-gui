@@ -1756,7 +1756,7 @@ void ChessFrame::RefreshLanguageFont( const char *from, bool before_large_font, 
             }
             for( int i=0; gc && i<gc->gds.size(); i++ )
             {
-                GameDocumentBase *ptr = gc->gds[i]->GetGameDocumentBasePtr();
+                GameDocument *ptr = gc->gds[i]->GetGameDocumentPtr();
                 if( ptr )
                     LangLine( ptr->moves_txt, from, to );
             }

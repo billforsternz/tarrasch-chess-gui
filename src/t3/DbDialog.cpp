@@ -980,7 +980,7 @@ void DbDialog::OnCancel( wxCommandEvent& WXUNUSED(event) )
         int sz=gc->gds.size();
         for( int i=0; i<sz; i++ )
         {
-            GameDocumentBase *ptr = gc->gds[i]->GetGameDocumentBasePtr();
+            GameDocument *ptr = gc->gds[i]->GetGameDocumentPtr();
             if( ptr )
             {
                 ptr->selected =  ( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED)) ? true : false;

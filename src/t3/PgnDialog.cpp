@@ -471,8 +471,8 @@ int wxCALLBACK sort_callback( long item1, long item2, long col )
     int f2=0;
     bool iflag=false;
     bool fflag=false;
-    GameDocumentBase *summary1 = ptr_gds[item1]->GetGameDocumentBasePtr();
-    GameDocumentBase *summary2 = ptr_gds[item2]->GetGameDocumentBasePtr();
+    GameDocument *summary1 = ptr_gds[item1]->GetGameDocumentPtr();
+    GameDocument *summary2 = ptr_gds[item2]->GetGameDocumentPtr();
     if( summary1==NULL || summary2==NULL )
         return 0;
     switch( col )
@@ -653,7 +653,7 @@ void PgnDialog::CreateControls()
         int focus_idx;
         for( int i=0; !focus_found && i<sz; i++ )
         {
-            GameDocumentBase *ptr = gc->gds[i]->GetGameDocumentBasePtr();
+            GameDocument *ptr = gc->gds[i]->GetGameDocumentPtr();
             if( ptr->focus )
             {
                 list_ctrl->SetItemState( i, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
@@ -663,7 +663,7 @@ void PgnDialog::CreateControls()
         }
         for( int i=0; i<sz; i++ )
         {
-            GameDocumentBase *ptr = gc->gds[i]->GetGameDocumentBasePtr();
+            GameDocument *ptr = gc->gds[i]->GetGameDocumentPtr();
             if( ptr->selected )
             {
                 selections_made = true;
@@ -710,7 +710,7 @@ void PgnDialog::CreateControls()
             bool current_found = false;
             for( int i=0; i<gds_nbr; i++ )
             {
-                GameDocumentBase *ptr = gc->gds[i]->GetGameDocumentBasePtr();
+                GameDocument *ptr = gc->gds[i]->GetGameDocumentPtr();
                 if( ptr && ptr->game_being_edited == objs.gl->gd.game_being_edited )
                 {
                     idx = i;
@@ -889,7 +889,7 @@ void PgnDialog::CreateControls()
 }
 
 
-std::string PgnDialog::CalculateMovesColumn( GameDocumentBase &gd )
+std::string PgnDialog::CalculateMovesColumn( GameDocument &gd )
 {
     std::string sp = gd.prefix_txt;
     std::string sm = gd.moves_txt;
@@ -1000,7 +1000,7 @@ void PgnDialog::OnListColClick( wxListEvent &event )
     }
     for( int i=0; i<gc->gds.size(); i++ )
     {
-        GameDocumentBase *ptr = gc->gds[i]->GetGameDocumentBasePtr();
+        GameDocument *ptr = gc->gds[i]->GetGameDocumentPtr();
         if( ptr && ptr->game_being_edited==objs.gl->gd.game_being_edited && gc==&objs.gl->gc )
             objs.gl->file_game_idx = i;
     }
@@ -1025,7 +1025,7 @@ void PgnDialog::SyncCacheOrderAfter()
     for( int i=0; i<gds_nbr; i++ )    
     {
         int idx = list_ctrl->GetItemData(i);
-        GameDocumentBase *ptr = gc->gds[idx]->GetGameDocumentBasePtr();
+        GameDocument *ptr = gc->gds[idx]->GetGameDocumentPtr();
         ptr->sort_idx = i;
     }
     sort( gc->gds.begin(), gc->gds.end() );
@@ -1068,7 +1068,7 @@ void PgnDialog::DeselectOthers( int selected_game )
         int sz=gc->gds.size();
         for( int i=0; i<sz; i++ )
         {
-            GameDocumentBase *ptr = gc->gds[i]->GetGameDocumentBasePtr();
+            GameDocument *ptr = gc->gds[i]->GetGameDocumentPtr();
             if( i != selected_game )
             {
                 if( ptr->selected || (wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED)) )
@@ -1148,7 +1148,7 @@ void PgnDialog::OnOk()
      /* int sz=gc->gds.size();
         for( int i=0; i<sz; i++ )
         {
-            GameDocumentBase *ptr = gc->gds[i]->GetGameDocumentBasePtr();
+            GameDocument *ptr = gc->gds[i]->GetGameDocumentPtr();
             if( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED) )
                 ptr->selected = true;
             if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
@@ -1177,7 +1177,7 @@ bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx )
     {
         // gl->IndicateNoCurrentDocument();
         uint32_t temp = ++objs.gl->game_being_edited_tag;
-        gc->gds[selected_game]->GetGameDocumentBasePtr()->game_being_edited = temp;
+        gc->gds[selected_game]->GetGameDocumentPtr()->game_being_edited = temp;
         GameDocument *ptr = GetCachedDocument(selected_game);
         gd = *ptr;
         gd.game_being_edited = temp;
@@ -1238,7 +1238,7 @@ void PgnDialog::OnRenumber( wxCommandEvent& WXUNUSED(event) )
         int game_nbr = i+1;
         if( !gc->renumber )
         {
-            GameDocumentBase *ptr = GetCachedDocument(i);
+            GameDocument *ptr = GetCachedDocument(i);
             if( ptr )
                 game_nbr = ptr->game_nbr;
         }
@@ -1488,7 +1488,7 @@ void PgnDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
             wxListItem item;              
             list_ctrl->InsertItem( idx_focus, item );
             list_ctrl->SetItem( idx_focus, 0, "" );                     // game_nbr
-            GameDocumentBase *ptr = gc_clipboard->gds[i]->GetGameDocumentBasePtr();
+            GameDocument *ptr = gc_clipboard->gds[i]->GetGameDocumentPtr();
             if( ptr )
             {
                 list_ctrl->SetItem( idx_focus, 1, ptr->white );
@@ -1538,7 +1538,7 @@ void PgnDialog::OnCancel( wxCommandEvent& WXUNUSED(event) )
             if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
                 gc->gds[i]->focus = true;
             #else
-            GameDocumentBase *ptr = gc->gds[i]->GetGameDocumentBasePtr(); 
+            GameDocument *ptr = gc->gds[i]->GetGameDocumentPtr(); 
             if( ptr )
             {
                 ptr->selected =  ( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED)) ? true : false;

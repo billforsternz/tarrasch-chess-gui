@@ -16,61 +16,11 @@ public:
     ~MagicBase() {}
     virtual void GetGameDocument( GameDocument &gd )    { cprintf("FIXME DANGER WILL ROBINSON 1\n"); }
     virtual GameDocument GetGameDocument()              { GameDocument doc;     cprintf("FIXME DANGER WILL ROBINSON 2\n"); return doc; }
-    virtual GameSummary  GetGameSummary()               { GameSummary  summary; cprintf("FIXME DANGER WILL ROBINSON 3\n"); return summary; }
-    virtual GameDocumentBase *GetGameDocumentBasePtr()  { return NULL; }
-    virtual GameDocument     *GetGameDocumentPtr()      { return NULL; }
-    virtual std::string white()     { return ""; }
-    virtual std::string white_elo() { return ""; }
-    virtual std::string black()     { return ""; }
-    virtual std::string black_elo() { return ""; }
-    virtual std::string date()      { return ""; }
-    virtual std::string site()      { return ""; }
-    virtual std::string round()     { return ""; }
-    virtual std::string result()    { return ""; }
-    virtual std::string eco()       { return ""; }
+    virtual GameDocument *GetGameDocumentPtr()  { return NULL; }
     virtual bool IsInMemory()        { return false; }
     virtual bool IsModified()        { return false; }
     virtual uint32_t GetGameBeingEdited() { return 0; }
     virtual long GetFposn() { return 0; }
-};
-
-class HoldGameSummary : public MagicBase
-{
-public:
-    GameSummary         the_game;
-	virtual GameSummary         GetGameSummary()                { return the_game; }
-	virtual std::string white()     { return the_game.white; }
-	virtual std::string white_elo() { return the_game.white_elo; }
-	virtual std::string black()     { return the_game.black; }
-	virtual std::string black_elo() { return the_game.black_elo; }
-	virtual std::string date()      { return the_game.date; }
-	virtual std::string site()      { return the_game.site; }
-	//virtual std::string round()     { return the_game.round; }
-    virtual std::string result()    { return the_game.result; }
-    //virtual std::string eco()       { return the_game.eco; }
-};
-
-class HoldDocumentBase : public MagicBase
-{
-public:
-    HoldDocumentBase( GameDocumentBase &doc ) { the_game = doc; }
-    GameDocumentBase    the_game;
-	virtual void GetGameDocument(GameDocument &gd)				{ the_game.GetGameDocument(gd); }
-	virtual GameDocument        GetGameDocument()               { GameDocument gd; the_game.GetGameDocument(gd); return gd; }
-	virtual GameDocumentBase    *GetGameDocumentBasePtr()       { return &the_game; }
-	virtual std::string white()     { return the_game.white; }
-	virtual std::string white_elo() { return the_game.white_elo; }
-	virtual std::string black()     { return the_game.black; }
-	virtual std::string black_elo() { return the_game.black_elo; }
-	virtual std::string date()      { return the_game.date; }
-	virtual std::string site()      { return the_game.site; }
-	virtual std::string round()     { return the_game.round; }
-	virtual std::string result()    { return the_game.result; }
-    virtual std::string eco()       { return the_game.eco; }
-    virtual bool IsInMemory()        { return true; }
-    virtual bool IsModified()        { return the_game.IsModified(); }
-    virtual uint32_t GetGameBeingEdited() { return the_game.game_being_edited; }
-    virtual long GetFposn() { return the_game.fposn0; }
 };
 
 class HoldDocument : public MagicBase
@@ -81,16 +31,6 @@ public:
 	virtual void GetGameDocument(GameDocument &gd)				{ the_game.GetGameDocument(gd); }
 	virtual GameDocument        GetGameDocument()               { return the_game; }
 	virtual GameDocument        *GetGameDocumentPtr()           { return &the_game; }
-	virtual GameDocumentBase    *GetGameDocumentBasePtr()       { return static_cast<GameDocumentBase *>(&the_game); }
-	virtual std::string white()     { return the_game.white; }
-	virtual std::string white_elo() { return the_game.white_elo; }
-	virtual std::string black()     { return the_game.black; }
-	virtual std::string black_elo() { return the_game.black_elo; }
-	virtual std::string date()      { return the_game.date; }
-	virtual std::string site()      { return the_game.site; }
-	virtual std::string round()     { return the_game.round; }
-	virtual std::string result()    { return the_game.result; }
-	virtual std::string eco()       { return the_game.eco; }
     virtual bool IsInMemory()        { return true; }
     virtual bool IsModified()        { return the_game.IsModified(); }
     virtual uint32_t GetGameBeingEdited() { return the_game.game_being_edited; }
@@ -122,13 +62,6 @@ public:
         cprintf("FIXME DANGER WILL ROBINSON (ptr to static 1)\n");
         ReadGameFromPgn( pgn_handle, fposn, the_game );
         return &the_game;
-    }
-	virtual GameDocumentBase    *GetGameDocumentBasePtr()
-    {
-        static GameDocument  the_game;
-        cprintf("FIXME DANGER WILL ROBINSON (ptr to static 2)\n");
-        ReadGameFromPgn( pgn_handle, fposn, the_game );
-        return static_cast<GameDocumentBase *>(&the_game);
     }
     virtual long GetFposn() { return fposn; }
 };
@@ -181,9 +114,9 @@ private:
     bool loaded;
 
     // Check whether text s is a valid header, return true if it is,
-    //  add info to a GameDocumentBase, optionally clearing it first
+    //  add info to a GameDocument, optionally clearing it first
 public:
-    bool Tagline( GameDocumentBase &gd,  const char *s );
+    bool Tagline( GameDocument &gd,  const char *s );
 };
 
 #endif    // GAMES_CACHE_H

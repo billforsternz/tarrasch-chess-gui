@@ -17,22 +17,23 @@
 using namespace std;
 using namespace thc;
 
-GameDocumentBase::GameDocumentBase( GameLogic *gl )
+GameDocument::GameDocument( GameLogic *gl )
+    : gv(gl)
 {
     this->gl = gl;
     ChessPosition initial_position;
     Init(initial_position);
 }
 
-GameDocumentBase::GameDocumentBase()
+GameDocument::GameDocument()
+    : gv(objs.gl)
 {
     this->gl = objs.gl;
     ChessPosition initial_position;
     Init(initial_position);
 }
 
-// Virtual
-void GameDocumentBase::Init( const ChessPosition &start_position )
+void GameDocument::Init( const ChessPosition &start_position )
 {
     non_zero_start_pos = 0;
     game_details_edited = false;
@@ -61,9 +62,12 @@ void GameDocumentBase::Init( const ChessPosition &start_position )
     fposn3 = 0;
     moves_txt = "";
     prefix_txt = "";
+    this->master_position = start_position;
+    tree.Init( this->start_position );
+    Rebuild();
 }
 
-void GameDocumentBase::FleshOutDate()
+void GameDocument::FleshOutDate()
 {
     if( date=="" )
     {
@@ -191,32 +195,7 @@ std::string RemoveLineEnds( std::string &s )
     return t;
 }
 
-GameDocument::GameDocument( GameLogic *gl )
-    : GameDocumentBase(gl), gv(gl)
-{
-    ChessPosition initial_position;
-    Init(initial_position);
-}
-
-GameDocument::GameDocument()
-    : gv(objs.gl)
-{
-    this->gl = objs.gl;
-    ChessPosition initial_position;
-    Init(initial_position);
-}
-
-
-// Virtual
-void GameDocument::Init( const ChessPosition &start_position )
-{
-    this->master_position = start_position;
-    GameDocumentBase::Init(start_position);
-    tree.Init( this->start_position );
-    Rebuild();
-}
-
-void GameDocumentBase::GetGameDocument( GameDocument &read_from_file )
+void GameDocument::GetGameDocument( GameDocument &read_from_file )
 {
     /* GameDocument doc = * std::dynamic_pointer_cast<GameDocument> (gds[i]); */
     GameDocument temp = *this;
@@ -925,7 +904,7 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
     return okay;
 }
 
-// Load a GameDocumentBase from a list of moves
+// Load a GameDocument from a list of moves
 void GameDocument::LoadFromMoveList( std::vector<thc::Move> &moves, int move_idx )
 {
     thc::ChessRules cr;

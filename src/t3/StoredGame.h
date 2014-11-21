@@ -30,10 +30,10 @@ public:
 class StoredGameFile : public StoredGame
 {
 private:
-    GameDocumentBase base;
+    GameDocument base;
 
 public:
-    StoredGameFile( GameDocumentBase &base ) { this->base = base; }
+    StoredGameFile( GameDocument &base ) { this->base = base; }
     
     void FromStorage( GameDocument &read_from_file )
     {

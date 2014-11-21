@@ -576,7 +576,7 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
         bool have_game = false;
         if( gc.gds.size()==1 && objs.repository->general.m_straight_to_game )
         {
-            GameDocumentBase *gd_file = gc.gds[0]->GetGameDocumentBasePtr();
+            GameDocument *gd_file = gc.gds[0]->GetGameDocumentPtr();
             bool have_game = gd_file && gd_file->in_memory;
             if( !have_game && gd_file )
             {
@@ -709,7 +709,7 @@ void GameLogic::NextGamePreviousGame( int idx )
         IndicateNoCurrentDocument();
         gd_file.game_being_edited = ++game_being_edited_tag;
         gd = gd_file;
-        GameDocumentBase *ptr = gc.gds[idx]->GetGameDocumentBasePtr();
+        GameDocument *ptr = gc.gds[idx]->GetGameDocumentPtr();
         if( ptr )
             ptr->selected = true;
         this->file_game_idx = idx;
@@ -851,7 +851,7 @@ void GameLogic::PutBackDocument()
 {
     for( int i=0; i<gc.gds.size(); i++ )
     {
-        GameDocumentBase *ptr = gc.gds[i]->GetGameDocumentBasePtr();
+        GameDocument *ptr = gc.gds[i]->GetGameDocumentPtr();
         if( ptr && ptr->game_being_edited == gd.game_being_edited )
         {
             gd.FleshOutDate();
@@ -865,7 +865,7 @@ void GameLogic::PutBackDocument()
     }
     for( int i=0; i<gc_clipboard.gds.size(); i++ )
     {
-        GameDocumentBase *ptr = gc_clipboard.gds[i]->GetGameDocumentBasePtr();
+        GameDocument *ptr = gc_clipboard.gds[i]->GetGameDocumentPtr();
         if( ptr && ptr->game_being_edited == gd.game_being_edited  )
         {
             gd.FleshOutDate();
@@ -883,14 +883,14 @@ void GameLogic::IndicateNoCurrentDocument()
 {
     for( int i=0; i<gc.gds.size(); i++ )
     {
-        GameDocumentBase *ptr = gc.gds[i]->GetGameDocumentBasePtr();
+        GameDocument *ptr = gc.gds[i]->GetGameDocumentPtr();
         if( ptr && ptr->game_being_edited == gd.game_being_edited )
              ptr->game_being_edited = 0;
         ptr->selected = false;
     }
     for( int i=0; i<gc_clipboard.gds.size(); i++ )
     {
-        GameDocumentBase *ptr = gc_clipboard.gds[i]->GetGameDocumentBasePtr();
+        GameDocument *ptr = gc_clipboard.gds[i]->GetGameDocumentPtr();
         if( ptr && ptr->game_being_edited == gd.game_being_edited )
              ptr->game_being_edited = 0;
         ptr->selected = false;

@@ -26,8 +26,8 @@ using namespace std;
 bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen );
 
 
-static bool operator < (const smart_ptr<GameDocumentBase>& left,
-                        const smart_ptr<GameDocumentBase>& right)
+static bool operator < (const smart_ptr<GameDocument>& left,
+                        const smart_ptr<GameDocument>& right)
 {
     bool result = ( *left < *right );
     cprintf( "operator <; left->white=%s, right->white=%s, result=%s\n", left->white.c_str(),  right->white.c_str(), result?"true":"false" );
@@ -258,7 +258,7 @@ void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &new_doc )
             case 'T':
             case 't':
             {
-                gc_fixme->Tagline( static_cast<GameDocumentBase &>(gd), buf );
+                gc_fixme->Tagline( static_cast<GameDocument &>(gd), buf );
                 break;
             }
             case 'P':
@@ -292,7 +292,7 @@ void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &new_doc )
 
 // Check whether text s is a valid header, return true if it is,
 //  add info to a GameDocument, optionally clearing it first
-bool GamesCache::Tagline( GameDocumentBase &gd,  const char *s )
+bool GamesCache::Tagline( GameDocument &gd,  const char *s )
 {
     const char *tag_begin, *tag_end, *val_begin, *val_end;
     bool is_header = false;
@@ -410,7 +410,7 @@ void GamesCache::FileSave( GamesCache *gc_clipboard )
         int gds_nbr = gds.size();
         for( int i=0; i<gds_nbr; i++ )    
         {   
-            GameDocumentBase *ptr = gds[i]->GetGameDocumentBasePtr();
+            GameDocument *ptr = gds[i]->GetGameDocumentPtr();
             if( ptr )
             {
                 int handle      = ptr->pgn_handle;
@@ -661,7 +661,7 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
     {
         for( int i=0; i<gds_nbr; i++ )
         {
-            GameDocumentBase *ptr = gds[i]->GetGameDocumentBasePtr();
+            GameDocument *ptr = gds[i]->GetGameDocumentPtr();
             if( ptr )
             {
                 int temp = ptr->sort_idx;
@@ -691,7 +691,7 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
         fprintf( debug, "Before: pgn_handle=%d\n", pgn_handle );
         for( int i=0; i<gds_nbr; i++ )    
         {   
-            GameDocumentBase *ptr = gds[i]->GetGameDocumentBasePtr();
+            GameDocument *ptr = gds[i]->GetGameDocumentPtr();
             if( ptr )
             {
                 int handle      = ptr->pgn_handle;
@@ -717,7 +717,7 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
     {
         for( int i=0; i<gds_nbr; i++ )    
         {   
-            GameDocumentBase *ptr = gds[i]->GetGameDocumentBasePtr();
+            GameDocument *ptr = gds[i]->GetGameDocumentPtr();
             if( ptr )
             {
                 ptr->sort_idx = ptr->game_nbr;
@@ -729,7 +729,7 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
     long posn=0;
     for( int i=0; i<gds_nbr; i++ )    
     {   
-        GameDocumentBase *ptr = gds[i]->GetGameDocumentBasePtr();
+        GameDocument *ptr = gds[i]->GetGameDocumentPtr();
         if( ptr )
         {
             bool replace_game_prefix = true;
@@ -875,7 +875,7 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
     {
         for( int i=0; i<gds_nbr; i++ )    
         {   
-            GameDocumentBase *ptr = gds[i]->GetGameDocumentBasePtr();
+            GameDocument *ptr = gds[i]->GetGameDocumentPtr();
             if( ptr )
             {
                 int temp = ptr->sort_idx;
@@ -892,7 +892,7 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
         fprintf( debug, "After: pgn_handle=%d\n", pgn_handle );
         for( int i=0; i<gds_nbr; i++ )    
         {   
-            GameDocumentBase *ptr = gds[i]->GetGameDocumentBasePtr();
+            GameDocument *ptr = gds[i]->GetGameDocumentPtr();
             if( ptr )
             {
                 int handle      = ptr->pgn_handle;
@@ -1011,7 +1011,7 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
             {
                 for( int i=0; i<gds_nbr; i++ )    
                 {
-                    GameDocumentBase *ptr = gds[i]->GetGameDocumentBasePtr();
+                    GameDocument *ptr = gds[i]->GetGameDocumentPtr();
                     if( ptr )
                     {
                         ptr->sort_idx = ptr->game_nbr;
@@ -1222,7 +1222,7 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
             {
                 for( int i=0; i<gds_nbr; i++ )    
                 {   
-                    GameDocumentBase *ptr = gds[i]->GetGameDocumentBasePtr();
+                    GameDocument *ptr = gds[i]->GetGameDocumentPtr();
                     if( ptr )
                     {
                         int temp = ptr->sort_idx;

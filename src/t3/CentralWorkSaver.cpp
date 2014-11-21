@@ -225,7 +225,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                             else if( fm == FILE_EXISTS_GAME_MODIFIED )
                                 PutBackDocument();
                             gc->Debug( "Games that are about to be added to an existing file" );
-                            std::vector< smart_ptr<GameDocumentBase> > gds_temp; // FIXME! = gc->gds;   // copy existing file of games to temp
+                            std::vector< smart_ptr<GameDocument> > gds_temp; // FIXME! = gc->gds;   // copy existing file of games to temp
                             if( !gc->Load(filename) )
                             {
                                 wxString msg="Cannot append to existing file ";

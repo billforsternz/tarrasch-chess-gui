@@ -140,7 +140,7 @@ private:
     void         SyncCacheOrderBefore();
     void         SyncCacheOrderAfter();
     void         CopyOrAdd( bool clear_clipboard );
-    std::string  CalculateMovesColumn( GameDocumentBase &gd );
+    std::string  CalculateMovesColumn( GameDocument &gd );
 
     // Data members
     wxWindowID  id;
