@@ -438,25 +438,6 @@ void DbDialog::LoadGamesIntoMemory()
 
 void DbDialog::StatsCalculate()
 {
-    if( !list_ctrl_stats )
-    {
-        utility->Hide();
-        wxSize sz4 = mini_board->GetSize();
-        sz4.x = (sz4.x*13)/10;
-        sz4.y = (sz4.y*10)/10;
-        
-        list_ctrl_stats   = new wxListBox( notebook, ID_DB_LISTBOX_STATS, wxDefaultPosition, sz4, 0, NULL, wxLB_HSCROLL );
-        list_ctrl_transpo = new wxListBox( notebook, ID_DB_LISTBOX_TRANSPO, wxDefaultPosition, sz4, 0, NULL, wxLB_HSCROLL );
-        notebook->AddPage(list_ctrl_stats,"Next Move",true);
-        notebook->AddPage(list_ctrl_transpo,"Transpositions",false);
-    }
-    
-    list_ctrl_stats->Clear();
-    list_ctrl_transpo->Clear();
-
-    
-    wxArrayString strings_stats;
-    wxArrayString strings_transpos;
     int total_white_wins = 0;
     int total_black_wins = 0;
     int total_draws = 0;
@@ -610,6 +591,7 @@ void DbDialog::StatsCalculate()
     std::multimap< MOVE_STATS,  uint32_t > dst = flip_and_sort_map(stats);
     std::multimap< MOVE_STATS,  uint32_t >::reverse_iterator it;
     moves_in_this_position.clear();
+    wxArrayString strings_stats;
     for( it=dst.rbegin(); it!=dst.rend(); it++ )
     {
         double percentage_score = 0.0;
@@ -646,6 +628,7 @@ void DbDialog::StatsCalculate()
 
     // Print the transpositions in order
     cprintf( "%d transpositions\n", transpositions.size() );
+    wxArrayString strings_transpos;
     for( unsigned int j=0; j<transpositions.size(); j++ )
     {
         PATH_TO_POSITION *p = &transpositions[j];
@@ -682,15 +665,11 @@ void DbDialog::StatsCalculate()
     }
 
     nbr_games_in_list_ctrl = games.size();
-    cprintf( "Got here #1\n" );
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
-    cprintf( "Got here #2\n" );
     list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
-    cprintf( "Got here #3\n" );
     list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED+wxLIST_STATE_FOCUSED, wxLIST_STATE_SELECTED+wxLIST_STATE_FOCUSED);
-    cprintf( "Got here #4\n" );
     char buf[1000];
-    int total_games  = games.size();
+    int total_games  = nbr_games_in_list_ctrl;
     int total_draws_plus_no_result = total_games - total_white_wins - total_black_wins;
     double percent_score=0.0;
     if( total_games )
@@ -705,18 +684,27 @@ void DbDialog::StatsCalculate()
     int count = 1 + list_ctrl->GetCountPerPage();
     if( count > nbr_games_in_list_ctrl )
         count = nbr_games_in_list_ctrl;
-    cprintf( "Got here #6\n" );
     for( int i=0; i<count; i++ )
         list_ctrl->RefreshItem(top++);
-    cprintf( "Got here #7\n" );
     list_ctrl->SetFocus();
+
+    if( !list_ctrl_stats )
+    {
+        utility->Hide();
+        wxSize sz4 = mini_board->GetSize();
+        sz4.x = (sz4.x*13)/10;
+        sz4.y = (sz4.y*10)/10;
+        
+        list_ctrl_stats   = new wxListBox( notebook, ID_DB_LISTBOX_STATS, wxDefaultPosition, sz4, 0, NULL, wxLB_HSCROLL );
+        list_ctrl_transpo = new wxListBox( notebook, ID_DB_LISTBOX_TRANSPO, wxDefaultPosition, sz4, 0, NULL, wxLB_HSCROLL );
+        notebook->AddPage(list_ctrl_stats,"Next Move",true);
+        notebook->AddPage(list_ctrl_transpo,"Transpositions",false);
+    }
     
-    cprintf( "Number string_stats = %d\n", strings_stats.size() );
-    if( strings_stats.size() )
-        list_ctrl_stats->InsertItems( strings_stats, 0 );
-    cprintf( "Number strings_transpos = %d\n", strings_transpos.size() );
-    if( strings_transpos.size() )
-        list_ctrl_transpo->InsertItems( strings_transpos, 0 );
+    list_ctrl_stats->Clear();
+    list_ctrl_transpo->Clear();
+    list_ctrl_stats->InsertItems( strings_stats, 0 );
+    list_ctrl_transpo->InsertItems( strings_transpos, 0 );
 }
 
 // One of the moves in move stats is clicked
@@ -752,8 +740,7 @@ void DbDialog::OnNextMove( int idx )
     }
 
     wxSafeYield();
-    StatsCalculate();
-    //CallAfter( &DbDialog::StatsCalculate );
+    CallAfter( &DbDialog::StatsCalculate );
 }
 
 
