@@ -624,11 +624,6 @@ int Database::GetRow( DB_GAME_INFO *info, int row )
             }
         }
     }
-/*    if( ret == 0 )
-    {
-        info->db_calculate_move_txt( gbl_hash );
-        cprintf( "Recalculate move_txt %s, row=%d\n", info->move_txt.c_str(), row );
-    } */
     return ret;
 }
 

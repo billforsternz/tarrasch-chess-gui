@@ -155,7 +155,7 @@ public:
         {
             std::string     previous_move;
             thc::ChessRules current_position;
-            RecalculateMoveTxt( previous_move, current_position, move_txt );
+            CalculateMoveTxt( previous_move, current_position, move_txt );
         }
         else
         {
@@ -166,7 +166,7 @@ public:
                 moves.push_back( v[i].game_move.move );
             std::string     previous_move;
             thc::ChessRules current_position;
-            RecalculateMoveTxt( 0, moves, ptr->result, previous_move, current_position, move_txt );
+            CalculateMoveTxt( 0, moves, ptr->result, previous_move, current_position, move_txt );
         }
         return move_txt;
     }
@@ -197,7 +197,7 @@ public:
             std::string     previous_move;
             thc::ChessRules current_position;
             std::string     remaining_moves;
-            RecalculateMoveTxt( previous_move, current_position, remaining_moves );
+            CalculateMoveTxt( previous_move, current_position, remaining_moves );
             if( previous_move.length() > 0 )
                 label = label + ", after " + previous_move;
             mini_board->SetPosition( current_position.squares );
@@ -205,13 +205,14 @@ public:
         }
     }
     
-    void RecalculateMoveTxt( std::string &previous_move, thc::ChessRules &current_position, std::string &remaining_moves ) const
+    
+    void CalculateMoveTxt( std::string &previous_move, thc::ChessRules &current_position, std::string &remaining_moves ) const
     {
-        RecalculateMoveTxt( focus_offset, gbl_focus_moves, gbl_result,
+        CalculateMoveTxt( focus_offset, gbl_focus_moves, gbl_result,
                            previous_move, current_position, remaining_moves );
     }
     
-    void RecalculateMoveTxt( int offset, std::vector<thc::Move> &moves, std::string &result,
+    void CalculateMoveTxt( int offset, std::vector<thc::Move> &moves, std::string &result,
                              std::string &previous_move, thc::ChessRules &current_position, std::string &remaining_moves ) const
     {
         std::string move_txt;
@@ -384,7 +385,7 @@ void wxVirtualPgnListCtrl::OnChar( wxKeyEvent &event )
         std::string     previous_move;
         thc::ChessRules current_position;
         std::string     remaining_moves;
-        RecalculateMoveTxt( previous_move, current_position, remaining_moves );
+        CalculateMoveTxt( previous_move, current_position, remaining_moves );
         std::string label = gbl_game_description;
         if( previous_move.length() > 0 )
             label = label + ", after " + previous_move;

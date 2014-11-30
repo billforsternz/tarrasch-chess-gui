@@ -1,5 +1,5 @@
 /****************************************************************************
- * Custom dialog - Database browser
+ * Database data source for games dialog
  *  Author:  Bill Forster
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
@@ -34,42 +34,17 @@
 #include <algorithm>
 using namespace std;
 
-// DbDialog type definition
-IMPLEMENT_CLASS( DbDialog, wxDialog )
-
-// DbDialog event table definition
-BEGIN_EVENT_TABLE( DbDialog, wxDialog )
-//  EVT_CLOSE( DbDialog::OnClose )
-    EVT_ACTIVATE(DbDialog::OnActivate)
-    EVT_BUTTON( wxID_OK,                DbDialog::OnOkClick )
-    EVT_BUTTON( ID_DB_UTILITY,          DbDialog::OnUtility )
-    EVT_BUTTON( ID_DB_RELOAD,           DbDialog::OnReload )
-    EVT_BUTTON( wxID_CANCEL,            DbDialog::OnCancel )
-    EVT_BUTTON( ID_SAVE_ALL_TO_A_FILE,  DbDialog::OnSaveAllToAFile )
-/*  EVT_BUTTON( ID_BOARD2GAME,          DbDialog::OnBoard2Game )
-    EVT_CHECKBOX( ID_REORDER,           DbDialog::OnRenumber )
-    EVT_BUTTON( ID_ADD_TO_CLIPBOARD,    DbDialog::OnAddToClipboard )
-    EVT_BUTTON( ID_PGN_DIALOG_GAME_DETAILS,   DbDialog::OnEditGameDetails )
-    EVT_BUTTON( ID_PGN_DIALOG_GAME_PREFIX,    DbDialog::OnEditGamePrefix )
-    EVT_BUTTON( ID_PGN_DIALOG_PUBLISH,  DbDialog::OnPublish )
-    EVT_BUTTON( wxID_COPY,              DbDialog::OnCopy )
-    EVT_BUTTON( wxID_CUT,               DbDialog::OnCut )
-    EVT_BUTTON( wxID_DELETE,            DbDialog::OnDelete )
-    EVT_BUTTON( wxID_PASTE,             DbDialog::OnPaste )
-    EVT_BUTTON( wxID_SAVE,              DbDialog::OnSave ) */
-    EVT_BUTTON( wxID_HELP,              DbDialog::OnHelpClick )
-
-    EVT_RADIOBUTTON( ID_DB_RADIO,       DbDialog::OnRadio )
-    EVT_CHECKBOX   ( ID_DB_CHECKBOX,    DbDialog::OnCheckBox )
-    EVT_COMBOBOX   ( ID_DB_COMBO,       DbDialog::OnComboBox )
-    EVT_LISTBOX(ID_DB_LISTBOX_STATS, DbDialog::OnNextMove)
-
-    //EVT_MENU( wxID_SELECTALL, DbDialog::OnSelectAll )
-    EVT_LIST_ITEM_FOCUSED(ID_PGN_LISTBOX, DbDialog::OnListFocused)
-    EVT_LIST_ITEM_ACTIVATED(ID_PGN_LISTBOX, DbDialog::OnListSelected)
-    EVT_LIST_COL_CLICK(ID_PGN_LISTBOX, DbDialog::OnListColClick)
-    EVT_NOTEBOOK_PAGE_CHANGED( wxID_ANY, DbDialog::OnTabSelected)
-END_EVENT_TABLE()
+// Read game information from games or database
+void DbDialog::ReadItem( int item, DB_GAME_INFO &info )
+{
+    bool in_memory = ReadItemFromMemory( item, info );
+    if( !in_memory )
+    {
+        objs.db->GetRow( &info, item );
+        //cprintf( "ListCtrl::ReadItem(%d) READ %s FROM DATABASE\n", item, info.Description().c_str() );
+        info.transpo_nbr = 0;
+    }
+}
 
 
 bool DbDialog::ReadItemFromMemory( int item, DB_GAME_INFO &info )
@@ -128,563 +103,24 @@ static void DebugDumpBlob( const char *msg, const DB_GAME_INFO &info )
     cprintf( "%s [%s]\n", msg, buf );
 }
 
-class wxVirtualListCtrl: public wxListCtrl
-{
-    //DECLARE_CLASS( wxVirtualListCtrl )
-    DECLARE_EVENT_TABLE()
-public:
-    wxVirtualListCtrl( wxWindow *parent, wxWindowID id, const wxPoint &pos, const wxSize &size, long style )
-    : wxListCtrl( parent, id, pos, size, wxLC_REPORT|wxLC_VIRTUAL )
-    {
-        focus_idx = 0;
-        focus_offset = 0;
-        mini_board = 0;
-    }
-    //~wxVirtualListCtrl();
-    void OnChar( wxKeyEvent &event );
-
-public:
-    DbDialog *data_src;
-    int focus_idx;
-    int focus_offset;
-    int initial_focus_offset;
-    MiniBoard *mini_board;
-
-    // Read game information from games or database
-    void ReadItem( int item, DB_GAME_INFO &info ) const
-    {
-        bool in_memory = data_src->ReadItemFromMemory( item, info );
-        if( !in_memory )
-        {
-            objs.db->GetRow( &info, item );
-            //cprintf( "ListCtrl::ReadItem(%d) READ %s FROM DATABASE\n", item, info.Description().c_str() );
-            info.transpo_nbr = 0;
-        }
-    }
-    
-    // Focus changes to new item;
-    void ReceiveFocus( int focus_idx )
-    {
-        //cprintf( "ListCtrl::ReceiveFocus(%d)\n", focus_idx );
-        if( focus_idx >= 0 )
-        {
-            this->focus_idx = focus_idx;
-            ReadItem( focus_idx, data_src->track_info );
-            //DebugDumpBlob("Focus", data_src->track_info );
-            //bool match = DebugIsTarget(data_src->track_info);
-            //if( match )
-            //    cprintf( "Found Pennekamp-Imbierowicz\n" );
-
-            initial_focus_offset = focus_offset = data_src->track_info.db_calculate_move_vector( data_src->track_focus_moves, objs.db->gbl_hash );
-            if( mini_board )
-            {
-                CalculateMoveTxt();
-                mini_board->SetPosition( data_src->track_updated_position.squares );
-                std::string desc = data_src->track_info.Description();
-                //cprintf( "ListCtrl::ReceiveFocus(%d), game=%s\n", focus_idx, desc.c_str() );
-                data_src->player_names->SetLabel(wxString(desc.c_str()));
-            }
-        }
-    }
-
-    std::string CalculateMoveTxt() const
-    {
-        std::string move_txt;
-        thc::ChessRules cr;
-        bool first=true;
-        for( size_t i=0; i<data_src->track_focus_moves.size(); i++ )
-        {
-            thc::Move mv = data_src->track_focus_moves[i];
-            if( i >= focus_offset )
-            {
-                std::string s = mv.NaturalOut(&cr);
-                if( i%2 == 0 || first )
-                {
-                    if( first )
-                        data_src->track_updated_position = cr;
-                    first = false;
-                    char buf[100];
-                    sprintf( buf, "%lu%s", i/2+1, i%2==0?".":"..." );
-                    move_txt += buf;
-                }
-                move_txt += s;
-                move_txt += " ";
-                if( i+1 == data_src->track_focus_moves.size() )
-                    move_txt += data_src->track_info.result;
-                else if( i < data_src->track_focus_moves.size()-5 && move_txt.length()>100 )
-                {
-                    move_txt += "...";  // very long lines get over truncated by the list control (sad but true)
-                    break;
-                }
-            }
-            cr.PlayMove(mv);
-        }
-        if( first )
-        {
-            data_src->track_updated_position = cr;
-            move_txt = data_src->track_info.result;
-        }
-        //cprintf( "CalculateMoveTxt(): [%s]%s\n", move_txt.c_str(), data_src->track_updated_position.ToDebugStr().c_str() );
-        return move_txt;
-    }
-    
-protected:
-    virtual wxString OnGetItemText( long item, long column) const
-    {
-        //cprintf( "ListCtrl::OnGetItemText(%ld,%ld)\n", item, column );
-        DB_GAME_INFO info;
-        std::string move_txt;
-        const char *txt;
-        ReadItem( item, info );
-        switch( column )
-        {
-            default: txt =  "";                         break;
-            case 1: txt =   info.white.c_str();         break;
-            case 2: txt =   info.white_elo.c_str();     break;
-            case 3: txt =   info.black.c_str();         break;
-            case 4: txt =   info.black_elo.c_str();     break;
-            case 5: txt =   info.date.c_str();          break;
-            case 6: txt =   info.site.c_str();          break;
-            //case 7: txt = info.round.c_str();         break;
-            case 8: txt =   info.result.c_str();        break;
-            //case 9: txt = info.eco.c_str();           break;
-            case 10:
-            {
-                char buf[1000];
-                buf[0] = '\0';
-                if( info.transpo_nbr > 0 )
-                    sprintf(buf,"(T%d) ", info.transpo_nbr );
-                if( item == focus_idx )
-                {
-                    move_txt = CalculateMoveTxt();
-                    if( focus_offset == initial_focus_offset )
-                        move_txt = buf + move_txt;
-                }
-                else
-                {
-                    move_txt = info.db_calculate_move_txt(objs.db->gbl_hash);
-                    move_txt = buf + move_txt;
-                }
-                txt = move_txt.c_str();
-                break;
-            }
-        }
-        wxString ws(txt);
-        return ws;
-    }
-};
-
-
-// DbDialog event table definition
-BEGIN_EVENT_TABLE( wxVirtualListCtrl, wxListCtrl )
-    EVT_CHAR(wxVirtualListCtrl::OnChar)
-END_EVENT_TABLE()
-
-void wxVirtualListCtrl::OnChar( wxKeyEvent &event )
-{
-    //cprintf( "OnChar" );
-    switch ( event.GetKeyCode() )
-    {
-        case WXK_LEFT:
-            //cprintf( "WXK_LEFT\n" );
-            if( focus_offset > 0 )
-                focus_offset--;
-            RefreshItem(focus_idx);
-            if( mini_board )
-            {
-                CalculateMoveTxt();
-                //cprintf( "WXK_LEFT: SetPosition() %s\n", data_src->track_updated_position.ToDebugStr().c_str()  );
-                mini_board->SetPosition( data_src->track_updated_position.squares );
-            }
-            break;
-        case WXK_RIGHT:
-            //cprintf( "WXK_RIGHT\n" );
-            if( focus_offset < data_src->track_focus_moves.size() )
-                focus_offset++;
-            RefreshItem(focus_idx);
-            if( mini_board )
-            {
-                CalculateMoveTxt();
-                //cprintf( "WXK_RIGHT: SetPosition() %s\n", data_src->track_updated_position.ToDebugStr().c_str()  );
-                mini_board->SetPosition( data_src->track_updated_position.squares );
-            }
-            break;
-        default:
-            event.Skip();
-    }
-}
 
 // DbDialog constructors
 DbDialog::DbDialog
 (
-    wxWindow* parent,
+    wxWindow    *parent,
     thc::ChessRules *cr,
     GamesCache  *gc,
     GamesCache  *gc_clipboard,
-    wxWindowID id,
-    const wxPoint& pos, const wxSize& size, long style
-)
+    wxWindowID  id,
+    const wxPoint& pos,
+    const wxSize& size,
+    long style
+ ) : GamesDialog( parent, cr, gc, gc_clipboard, id, pos, size )
 {
-    this->cr = *cr;
-    this->gc = gc;
-    this->gc_clipboard = gc_clipboard;
-    this->id = id;
-    file_game_idx = -1;
-    nbr_games_in_list_ctrl = 0;
-    Init();
-    Create( parent, id, "Title FIXME", pos, size, style );
-}
-
-// Pre window creation initialisation
-void DbDialog::Init()
-{
-    list_ctrl_stats = NULL;
-    list_ctrl = NULL;
-    selected_game = -1;
-    db_game_set = false;
     activated_at_least_once = false;
     transpo_activated = false;
-    wxAcceleratorEntry entries[5];
-    entries[0].Set(wxACCEL_CTRL,  (int) 'X',     wxID_CUT);
-    entries[1].Set(wxACCEL_CTRL,  (int) 'C',     wxID_COPY);
-    entries[2].Set(wxACCEL_CTRL,  (int) 'V',     wxID_PASTE);
-    entries[3].Set(wxACCEL_CTRL,  (int) 'A',     wxID_SELECTALL);
-    entries[4].Set(wxACCEL_NORMAL,  WXK_DELETE,  wxID_DELETE);
-    wxAcceleratorTable accel(5, entries);
-    SetAcceleratorTable(accel);
 }
 
-// Window creation
-bool DbDialog::Create( wxWindow* parent,
-  wxWindowID id, const wxString& caption,
-  const wxPoint& pos, const wxSize& size, long style )
-{
-    bool okay=true;
-
-    // We have to set extra styles before creating the dialog
-    SetExtraStyle( wxWS_EX_BLOCK_EVENTS|wxDIALOG_EX_CONTEXTHELP );
-    if( !wxDialog::Create( parent, id, caption, pos, size, style ) )
-        okay = false;
-    else
-    {
-
-        CreateControls();
-        SetDialogHelp();
-        SetDialogValidators();
-
-        // This fits the dialog to the minimum size dictated by the sizers
-        GetSizer()->Fit(this);
-        
-        // This ensures that the dialog cannot be sized smaller than the minimum size
-        GetSizer()->SetSizeHints(this);
-
-        // Centre the dialog on the parent or (if none) screen
-        Centre();
-    }
-    return okay;
-}
-
-
-// Control creation for DbDialog
-void DbDialog::CreateControls()
-{    
-
-    // A top-level sizer
-    wxBoxSizer* top_sizer = new wxBoxSizer(wxVERTICAL);
-    this->SetSizer(top_sizer);
-    
-    // A second box sizer to give more space around the controls
-    wxBoxSizer* box_sizer = new wxBoxSizer(wxVERTICAL);
-    top_sizer->Add(box_sizer, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
-
-    // A friendly message
-    nbr_games_in_list_ctrl = objs.db->SetPosition( cr ); //gc->gds.size();
-    char buf[200];
-    sprintf(buf,"List of %d matching games from the database",nbr_games_in_list_ctrl);
-    title_ctrl = new wxStaticText( this, wxID_STATIC,
-        buf, wxDefaultPosition, wxDefaultSize, 0 );
-    box_sizer->Add(title_ctrl, 0, wxALIGN_LEFT|wxALL, 5);
-
-    // Spacer
-    box_sizer->Add(5, 5, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
-    int disp_width, disp_height;
-    wxDisplaySize(&disp_width, &disp_height);
-    wxSize sz;
-    if( disp_width > 1366 )
-        disp_width = 1366;
-    sz.x = (disp_width*4)/5;
-    sz.y = (disp_height*2)/5;
-    list_ctrl  = new wxVirtualListCtrl( this, ID_PGN_LISTBOX, wxDefaultPosition, sz/*wxDefaultSize*/,wxLC_REPORT|wxLC_VIRTUAL );
-    list_ctrl->data_src = this;
-    list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
-    list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
-
-    list_ctrl->InsertColumn( 0, id==ID_PGN_DIALOG_FILE?"#":" "  );
-    list_ctrl->InsertColumn( 1, "White"    );
-    list_ctrl->InsertColumn( 2, "Elo W"    );
-    list_ctrl->InsertColumn( 3, "Black"    );
-    list_ctrl->InsertColumn( 4, "Elo B"    );
-    list_ctrl->InsertColumn( 5, "Date"     );
-    list_ctrl->InsertColumn( 6, "Site"     );
-    list_ctrl->InsertColumn( 7, "Round"    );
-    list_ctrl->InsertColumn( 8, "Result"   );
-    list_ctrl->InsertColumn( 9, "ECO"      );
-    list_ctrl->InsertColumn(10, "Moves"    );
-    int col_flag=0;
-    int cols[11];
-
-    // Only use the non volatile column widths if they validate okay
-    if( objs.repository->nv.m_col0 > 0 &&
-        objs.repository->nv.m_col1 > 0 &&
-        objs.repository->nv.m_col2 > 0 &&
-        objs.repository->nv.m_col3 > 0 &&
-        objs.repository->nv.m_col4 > 0 &&
-        objs.repository->nv.m_col5 > 0 &&
-        objs.repository->nv.m_col6 > 0 &&
-        objs.repository->nv.m_col7 > 0 &&
-        objs.repository->nv.m_col8 > 0 &&
-        objs.repository->nv.m_col9 > 0 &&
-        objs.repository->nv.m_col10 > 0
-      )
-    {
-        cols[0] = objs.repository->nv.m_col0;
-        cols[1] = objs.repository->nv.m_col1;
-        cols[2] = objs.repository->nv.m_col2;
-        cols[3] = objs.repository->nv.m_col3;
-        cols[4] = objs.repository->nv.m_col4;
-        cols[5] = objs.repository->nv.m_col5;
-        cols[6] = objs.repository->nv.m_col6;
-        cols[7] = objs.repository->nv.m_col7;
-        cols[8] = objs.repository->nv.m_col8;
-        cols[9] = objs.repository->nv.m_col9;
-        cols[10]= objs.repository->nv.m_col10;
-    }
-    else // else set some sensible defaults
-    {
-        int x   = (sz.x*98)/100;
-        objs.repository->nv.m_col0 = cols[0] =   4*x/97;    // "Game #"
-        objs.repository->nv.m_col1 = cols[1] =  14*x/97;    // "White" 
-        objs.repository->nv.m_col2 = cols[2] =   6*x/97;    // "Elo W"
-        objs.repository->nv.m_col3 = cols[3] =  14*x/97;    // "Black" 
-        objs.repository->nv.m_col4 = cols[4] =   6*x/97;    // "Elo B" 
-        objs.repository->nv.m_col5 = cols[5] =  10*x/97;    // "Date"  
-        objs.repository->nv.m_col6 = cols[6] =   9*x/97;    // "Site"  
-        objs.repository->nv.m_col7 = cols[7] =   7*x/97;    // "Round" 
-        objs.repository->nv.m_col8 = cols[8] =   8*x/97;    // "Result"
-        objs.repository->nv.m_col9 = cols[9] =   5*x/97;    // "ECO"   
-        objs.repository->nv.m_col10= cols[10]=  14*x/97;    // "Moves"
-    }
- /*   if(true) //temp temp temp white, black, result, moves only
-    {
-        int x   = (sz.x*98)/100;
-        objs.repository->nv.m_col0 = cols[0] =   2*x/97;    // "Game #"
-        objs.repository->nv.m_col1 = cols[1] =  14*x/97;    // "White"
-        objs.repository->nv.m_col2 = cols[2] =   2*x/97;    // "Elo W"
-        objs.repository->nv.m_col3 = cols[3] =  14*x/97;    // "Black"
-        objs.repository->nv.m_col4 = cols[4] =   2*x/97;    // "Elo B"
-        objs.repository->nv.m_col5 = cols[5] =   2*x/97;    // "Date"
-        objs.repository->nv.m_col6 = cols[6] =   2*x/97;    // "Site"
-        objs.repository->nv.m_col7 = cols[7] =   2*x/97;    // "Round"
-        objs.repository->nv.m_col8 = cols[8] =   8*x/97;    // "Result"
-        objs.repository->nv.m_col9 = cols[9] =   2*x/97;    // "ECO"
-        objs.repository->nv.m_col10= cols[10]=  45*x/97;    // "Moves"
-    }  */
-    list_ctrl->SetColumnWidth( 0, cols[0] );    // "Game #"
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth( 1, cols[1] );    // "White" 
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth( 2, cols[2] );    // "Elo W" 
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth( 3, cols[3] );    // "Black" 
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth( 4, cols[4] );    // "Elo B" 
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth( 5, cols[5] );    // "Date"  
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth( 6, cols[6] );    // "Site"  
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth( 7, cols[7] );    // "Round"
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth( 8, cols[8] );    // "Result"
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth( 9, cols[9] );    // "ECO"   
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth(10, cols[10] );   // "Moves"
-    gc->col_flags.push_back(col_flag);
-    //int top_item;
-    //bool resuming = gc->IsResumingPreviousWindow(top_item);
-    box_sizer->Add(list_ctrl, 0, wxGROW|wxALL, 5);
-
-    // A dividing line before the details
-    wxStaticLine* line = new wxStaticLine ( this, wxID_STATIC,
-        wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
-    box_sizer->Add(line, 0, wxGROW|wxALL, 5);
-
-    // Create a panel beneath the list control, containing everything else
-    wxBoxSizer* hsiz_panel = new wxBoxSizer(wxHORIZONTAL);
-    box_sizer->Add(hsiz_panel, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxTOP, 10);
-
-    mini_board = new MiniBoard(this);
-    list_ctrl->mini_board = mini_board;
-    list_ctrl->data_src->track_updated_position = cr;
-    mini_board->SetPosition( cr.squares );
-
-    hsiz_panel->Add( mini_board, 1, wxALIGN_LEFT|wxTOP|wxRIGHT|wxBOTTOM|wxFIXED_MINSIZE, 5 );
-    wxGridSizer* vsiz_panel_buttons = new wxGridSizer(6,2,0,0);
-    hsiz_panel->Add(vsiz_panel_buttons, 0, wxALIGN_TOP|wxALL, 10);
-
-    // Load / Ok / Game->Board
-    wxButton* ok = new wxButton ( this, wxID_OK, wxT("Load Game"),
-        wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_buttons->Add(ok, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    
-    // Save all games to a file
-    wxButton* save_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save all to a file"),
-        wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_buttons->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-
-    // The Cancel button
-    wxButton* cancel = new wxButton ( this, wxID_CANCEL,
-        wxT("Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_buttons->Add(cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-
-    // The Help button
-    wxButton* help = new wxButton( this, wxID_HELP, wxT("Help"),
-        wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_buttons->Add(help, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-
-    wxButton* reload = new wxButton ( this, ID_DB_RELOAD, wxT("Search again"),
-                                     wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_buttons->Add(reload, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    
-
-    // Text control for white entry
-    text_ctrl = new wxTextCtrl ( this, ID_DB_TEXT, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_buttons->Add(text_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    wxSize sz2=text_ctrl->GetSize();
-    text_ctrl->SetSize((sz2.x*118)/32,sz2.y);      // temp temp
-    //text_ctrl->SetSize((sz.x*7)/2,sz2.y);      // temp temp
-    text_ctrl->SetValue("Name");
-    
-    filter_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX,
-                                 wxT("&Filter"), wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_buttons->Add(filter_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    filter_ctrl->SetValue( false );
-    
-    /*radio_ctrl = new wxRadioButton( this,  ID_DB_RADIO,
-     wxT("&Radio"), wxDefaultPosition, wxDefaultSize,  wxRB_GROUP );
-     vsiz_panel_buttons->Add(radio_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-     radio_ctrl->SetValue( false ); */
-    
-    wxString combo_array[9];
-    combo_array[0] = "Equals";
-    combo_array[1] = "Starts with";
-    combo_array[2] = "Ends with";
-    combo_ctrl = new wxComboBox ( this, ID_DB_COMBO,
-                                 "None", wxDefaultPosition,
-                                 wxSize(50, wxDefaultCoord), 3, combo_array, wxCB_READONLY );
-    vsiz_panel_buttons->Add(combo_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    wxString combo;
-    combo = "None";
-    combo_ctrl->SetValue(combo);
-    wxSize sz3=combo_ctrl->GetSize();
-    combo_ctrl->SetSize((sz3.x*118)/32,sz3.y);      // temp temp
-    
-    // Stats list box
-//    wxSize sz4 = sz;
-//    sz.x /= 4;
-//    sz.y /= 3;
-    wxSize sz4 = mini_board->GetSize();
-    wxSize sz5 = sz4;
-    sz5.x = (sz4.x*18)/10;
-    sz5.y = (sz4.y*10)/10;
-    notebook = new wxNotebook(this, wxID_ANY, wxDefaultPosition, /*wxDefaultSize*/ sz5 );
-    //wxPanel *notebook_page1 = new wxPanel(notebook, wxID_ANY );
-    hsiz_panel /*vsiz_panel_stats*/->Add( notebook, 0, wxALIGN_TOP|wxGROW|wxALL, 0 );
-    
-    player_names = new wxStaticText( this, wxID_ANY, "White - Black",
-                                    wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL );
-    box_sizer->Add(player_names, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxBOTTOM, 10);
-
-}
-
-
-std::string DbDialog::CalculateMovesColumn( GameDocument &gd )
-{
-    std::string sp = gd.prefix_txt;
-    std::string sm = gd.moves_txt;
-    std::string s  = sm;
-    int len = sm.length();
-    if( len>=1 && sm[len-1] == '*' )
-    {
-        sm = sm.substr(0,len-1);
-        s = sm;
-    }
-    len = sp.length();
-    int start_idx = 0;
-    int end_idx = 0;
-    for( ; start_idx<len; start_idx++ )
-    {
-        if( sp[start_idx]!='\n' && sp[start_idx]!='\r' )
-            break;
-    }
-    len -= start_idx;
-    end_idx = start_idx;
-    for( ; end_idx<len; end_idx++ )
-    {
-        if( sp[end_idx]=='\n' || sp[end_idx]=='\r' )
-            break;
-    }
-    len = end_idx-start_idx;
-    if( len > 0 )
-    {
-        bool truncate=false;
-        if( len > 12 )
-        {
-            truncate=true;
-            len = 12;
-        }
-        s = "(" + sp.substr(start_idx,start_idx+len-1) + (truncate?"...)":")") + sm;
-    }
-    return s;
-}
-
-// Set the validators for the dialog controls
-void DbDialog::SetDialogValidators()
-{
-/*    FindWindow(ID_HUMAN)->SetValidator(
-        wxTextValidator(wxFILTER_ASCII, &dat.m_human));
-//    FindWindow(ID_COMPUTER)->SetValidator(
-//        wxTextValidator(wxFILTER_ASCII, &dat.m_computer));
-    FindWindow(ID_WHITE)->SetValidator(
-        wxTextValidator(wxFILTER_ASCII, &dat.m_white));
-    FindWindow(ID_BLACK)->SetValidator(
-        wxTextValidator(wxFILTER_ASCII, &dat.m_black));
-*/
-}
-
-// Sets the help text for the dialog controls
-void DbDialog::SetDialogHelp()
-{
-/*
-    wxString human_help    = wxT("The person who usually uses this program to play against a chess engine.");
-//    wxString computer_help = wxT("An optional friendly name for the chess engine.");
-    wxString white_help    = wxT("White's name.");
-    wxString black_help    = wxT("Black's name.");
-
-    FindWindow(ID_HUMAN)->SetHelpText(human_help);
-    FindWindow(ID_HUMAN)->SetToolTip(human_help);
-
-//    FindWindow(ID_COMPUTER)->SetHelpText(computer_help);
-//    FindWindow(ID_COMPUTER)->SetToolTip(computer_help);
-
-    FindWindow(ID_WHITE)->SetHelpText(white_help);
-    FindWindow(ID_WHITE)->SetToolTip(white_help);
-
-    FindWindow(ID_BLACK)->SetHelpText(black_help);
-    FindWindow(ID_BLACK)->SetToolTip(black_help);
-*/
-}
 
 static DbDialog *backdoor;
 static bool compare( const DB_GAME_INFO &g1, const DB_GAME_INFO &g2 )
@@ -821,18 +257,17 @@ static bool compare( const DB_GAME_INFO &g1, const DB_GAME_INFO &g2 )
     return lt;
 }
 
-void DbDialog::OnListColClick( wxListEvent &event )
+void DbDialog::OnListColClick( int compare_col )
 {
     if( games.size() > 0 )
     {
-        compare_col = event.GetColumn();
+        this->compare_col = compare_col;
         backdoor = this;
         std::sort( games.begin(), games.end(), compare );
         nbr_games_in_list_ctrl = games.size();
         list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
         list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
-        list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
-        list_ctrl->ReceiveFocus(0);
+        list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED+wxLIST_STATE_FOCUSED, wxLIST_STATE_SELECTED+wxLIST_STATE_FOCUSED);
         int top = list_ctrl->GetTopItem();
         int count = 1 + list_ctrl->GetCountPerPage();
         if( count > nbr_games_in_list_ctrl )
@@ -844,117 +279,8 @@ void DbDialog::OnListColClick( wxListEvent &event )
 }
 
 
-// wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_OK
-void DbDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
-{
-    OnOk();
-}
 
-void DbDialog::OnActivate(wxActivateEvent& event)
-{
-    if( !activated_at_least_once )
-    {
-        activated_at_least_once = true;
-        //cprintf( "DbDialog::OnActivate\n");
-        wxPoint pos = notebook->GetPosition();
-        //list_ctrl_stats->Hide();
-        //list_ctrl_transpo->Hide();
-        
-        utility = new wxButton ( this, ID_DB_UTILITY, wxT("Calculate Stats"),
-                                pos, wxDefaultSize, 0 );
-        wxSize sz_panel  = notebook->GetSize();
-        wxSize sz_button = utility->GetSize();
-        wxPoint pos_button = utility->GetPosition();
-        pos_button.x += (sz_panel.x/2 - sz_button.x/2);
-        pos_button.y += (sz_panel.y/2 - sz_button.y/2);
-        utility->SetPosition( pos_button );
-        
-        //vsiz_panel_buttons->Add(utility, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-        list_ctrl->ReadItem(0,list_ctrl->data_src->track_info);
-    }
-}
-
-
-void DbDialog::LoadGame( int idx, int focus_offset )
-{
-    if( list_ctrl )
-    {
-        static DB_GAME_INFO info;
-        list_ctrl->ReadItem( idx, info );
-        GameDocument gd;
-        std::vector<thc::Move> moves;
-        gd.white = info.white;
-        gd.black = info.black;
-        gd.result = info.result;
-        int len = info.str_blob.length();
-        const char *blob = info.str_blob.c_str();
-        CompressMoves press;
-        for( int nbr=0; nbr<len;  )
-        {
-            thc::Move mv;
-            int nbr_used = press.decompress_move( blob, mv );
-            if( nbr_used == 0 )
-                break;
-            moves.push_back(mv);
-            blob += nbr_used;
-            nbr += nbr_used;
-        }
-        gd.LoadFromMoveList( moves, focus_offset );
-        db_game = gd;
-        db_game_set = true;
-    }
-}
-
-
-void DbDialog::OnListSelected( wxListEvent &event )
-{
-    if( list_ctrl )
-    {
-        int idx = event.m_itemIndex;
-        cprintf( "DbDialog::OnListSelected(%d)\n", idx );
-        list_ctrl->SetItemState( idx, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
-        LoadGame( idx, list_ctrl->focus_offset );
-        TransferDataToWindow();
-        AcceptAndClose();
-    }
-}
-
-void DbDialog::OnListFocused( wxListEvent &event )
-{
-    if( list_ctrl )
-    {
-        int prev = list_ctrl->focus_idx;
-        int idx = event.m_itemIndex;
-        cprintf( "DbDialog::OnListFocused() Prev idx=%d, New idx=%d\n", prev, idx );
-        list_ctrl->ReceiveFocus( idx );
-        list_ctrl->RefreshItem(prev);
-    }
-}
-
-
-
-// wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_OK
-void DbDialog::OnOk()
-{
-    if( list_ctrl )
-    {
-        LoadGame( list_ctrl->focus_idx, list_ctrl->focus_offset );
-        TransferDataToWindow();
-        AcceptAndClose();
-    }
-}
-
-bool DbDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx )
-{
-    if( db_game_set )
-    {
-        gd = db_game;
-    }
-    return db_game_set;
-}
-
-
-void DbDialog::OnSaveAllToAFile( wxCommandEvent& WXUNUSED(event) )
+void DbDialog::OnSaveAllToAFile()
 {
     wxFileDialog fd( objs.frame, "Save all listed games to a new .pgn file", "", "", "*.pgn", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
     wxString dir = objs.repository->nv.m_doc_dir;
@@ -972,27 +298,22 @@ void DbDialog::OnSaveAllToAFile( wxCommandEvent& WXUNUSED(event) )
 }
 
 
-void DbDialog::OnCancel( wxCommandEvent& WXUNUSED(event) )
+void DbDialog::OnCancel()
 {
-    if( list_ctrl )
+    gc->PrepareForResumePreviousWindow( list_ctrl->GetTopItem() );
+    int sz=gc->gds.size();
+    for( int i=0; i<sz; i++ )
     {
-        gc->PrepareForResumePreviousWindow( list_ctrl->GetTopItem() );
-        int sz=gc->gds.size();
-        for( int i=0; i<sz; i++ )
+        GameDocument *ptr = gc->gds[i]->GetGameDocumentPtr();
+        if( ptr )
         {
-            GameDocument *ptr = gc->gds[i]->GetGameDocumentPtr();
-            if( ptr )
-            {
-                ptr->selected =  ( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED)) ? true : false;
-                ptr->focus    =  ( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED)  ) ? true : false;
-            }
+            ptr->selected =  ( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED)) ? true : false;
+            ptr->focus    =  ( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED)  ) ? true : false;
         }
     }
-    EndDialog( wxID_CANCEL );
 }
 
-// wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_HELP
-void DbDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
+void DbDialog::OnHelpClick()
 {
     // Normally we would wish to display proper online help.
     // For this example, we're just using a message box.
@@ -1004,54 +325,9 @@ void DbDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
     wxT("Use this panel to load games from the database\n\n");
     wxMessageBox(helpText,
     wxT("Database Dialog Help"),
-    wxOK|wxICON_INFORMATION, this);
+    wxOK|wxICON_INFORMATION, NULL );
 }
 
-void DbDialog::OnRadio( wxCommandEvent& event )
-{
-}
-
-void DbDialog::OnSpin( wxCommandEvent& event )
-{
-}
-
-void DbDialog::OnComboBox( wxCommandEvent& event )
-{
-}
-
-void DbDialog::OnCheckBox( wxCommandEvent& event )
-{
-    cprintf( "OnCheckBox()\n");
-    list_ctrl->SetItemCount(20);//nbr_games_in_list_ctrl);
-    list_ctrl->RefreshItems(0,19);
-}
-
-
-void DbDialog::OnReload( wxCommandEvent& WXUNUSED(event) )
-{
-    wxString name = text_ctrl->GetValue();
-    std::string sname(name.c_str());
-    thc::ChessPosition start_cp;
-    
-    // Temp - do a "find on page type feature"
-    if( sname.length()>0 && cr==start_cp )
-    {
-        int row = objs.db->FindRow( sname );
-        list_ctrl->EnsureVisible( row );   // get vaguely close
-        list_ctrl->SetItemState( row, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
-        list_ctrl->SetItemState( row, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
-    }
-    else
-    {
-        nbr_games_in_list_ctrl = objs.db->SetPosition( cr, sname );
-        char buf[200];
-        sprintf(buf,"List of %d matching games from the database",nbr_games_in_list_ctrl);
-        title_ctrl->SetLabel( buf );
-        cprintf( "Reloading, %d games\n", nbr_games_in_list_ctrl);
-        list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
-        list_ctrl->RefreshItems(0,nbr_games_in_list_ctrl-1);
-    }
-}
 
 // Sorting map<std::string,MOV_STATS> by MOVE_STATS instead of std::string requires this flipping procedure
 template<typename A, typename B>
@@ -1134,46 +410,62 @@ double AutoTimer::End()
     return elapsed_time;
 }
 
-void DbDialog::OnUtility( wxCommandEvent& WXUNUSED(event) )
+void DbDialog::OnUtility()
 {
-    {
-        AutoTimer at("1) Load games into memory");
-        
-        // Load all the matching games from the database
-        objs.db->LoadAllGames( cache, nbr_games_in_list_ctrl );
-    }
-    {
-        AutoTimer at("2) Calculate stats");
-        moves_from_base_position.clear();
-        moves_in_this_position.clear();
-        
-        // No need to look for more games in database in base position
-        drill_down_set.clear();
-        uint64_t base_hash = this->cr.Hash64Calculate();
-        drill_down_set.insert(base_hash);
-        games_set.clear();
-        for( unsigned int i=0; i<cache.size(); i++ )
-        {
-            DB_GAME_INFO info = cache[i];
-            games_set.insert( info.game_id );
-        }
+    LoadGamesIntoMemory();
+    StatsCalculate();
+}
 
-        // Do all the hard work
-        StatsCalculate();
+void DbDialog::LoadGamesIntoMemory()
+{
+    AutoTimer at("Load games into memory");
+    
+    // Load all the matching games from the database
+    objs.db->LoadAllGames( cache, nbr_games_in_list_ctrl );
+    moves_from_base_position.clear();
+    
+    // No need to look for more games in database in base position
+    drill_down_set.clear();
+    uint64_t base_hash = this->cr.Hash64Calculate();
+    drill_down_set.insert(base_hash);
+    games_set.clear();
+    for( unsigned int i=0; i<cache.size(); i++ )
+    {
+        DB_GAME_INFO info = cache[i];
+        games_set.insert( info.game_id );
     }
 }
 
 void DbDialog::StatsCalculate()
 {
+    if( !list_ctrl_stats )
+    {
+        utility->Hide();
+        wxSize sz4 = mini_board->GetSize();
+        sz4.x = (sz4.x*13)/10;
+        sz4.y = (sz4.y*10)/10;
+        
+        list_ctrl_stats   = new wxListBox( notebook, ID_DB_LISTBOX_STATS, wxDefaultPosition, sz4, 0, NULL, wxLB_HSCROLL );
+        list_ctrl_transpo = new wxListBox( notebook, ID_DB_LISTBOX_TRANSPO, wxDefaultPosition, sz4, 0, NULL, wxLB_HSCROLL );
+        notebook->AddPage(list_ctrl_stats,"Next Move",true);
+        notebook->AddPage(list_ctrl_transpo,"Transpositions",false);
+    }
+    
+    list_ctrl_stats->Clear();
+    list_ctrl_transpo->Clear();
+
+    
+    wxArrayString strings_stats;
+    wxArrayString strings_transpos;
     int total_white_wins = 0;
     int total_black_wins = 0;
     int total_draws = 0;
     transpositions.clear();
     stats.clear();
     games.clear();
-    cprintf( "Remove focus %d\n", list_ctrl->focus_idx );
-    list_ctrl->SetItemState( list_ctrl->focus_idx, 0, wxLIST_STATE_FOCUSED );
-    list_ctrl->SetItemState( list_ctrl->focus_idx, 0, wxLIST_STATE_SELECTED );
+    cprintf( "Remove focus %d\n", track->focus_idx );
+    list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_FOCUSED );
+    list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_SELECTED );
     thc::ChessRules cr_to_match = this->cr;
     bool add_go_back = false;
     std::string go_back_string;
@@ -1313,26 +605,11 @@ void DbDialog::StatsCalculate()
         }
     }
     
-    wxArrayString strings;
-    if( !list_ctrl_stats )
-    {
-        utility->Hide();
-        wxSize sz4 = mini_board->GetSize();
-        sz4.x = (sz4.x*13)/10;
-        sz4.y = (sz4.y*10)/10;
-
-        list_ctrl_stats   = new wxListBox( notebook, ID_DB_LISTBOX_STATS, wxDefaultPosition, sz4, 0, NULL, wxLB_HSCROLL );
-        list_ctrl_transpo = new wxListBox( notebook, ID_DB_LISTBOX_TRANSPO, wxDefaultPosition, sz4, 0, NULL, wxLB_HSCROLL );
-        notebook->AddPage(list_ctrl_stats,"Next Move",true);
-        notebook->AddPage(list_ctrl_transpo,"Transpositions",false);
-    }
-
-    list_ctrl_stats->Clear();
-    moves_in_this_position.clear();
 
     // Sort the stats according to number of games
     std::multimap< MOVE_STATS,  uint32_t > dst = flip_and_sort_map(stats);
     std::multimap< MOVE_STATS,  uint32_t >::reverse_iterator it;
+    moves_in_this_position.clear();
     for( it=dst.rbegin(); it!=dst.rend(); it++ )
     {
         double percentage_score = 0.0;
@@ -1350,7 +627,7 @@ void DbDialog::StatsCalculate()
         {
             add_go_back = false;
             wxString wstr( go_back_string.c_str() );
-            strings.Add(wstr);
+            strings_stats.Add(wstr);
             moves_in_this_position.push_back(mv);
         }
         moves_in_this_position.push_back(mv);
@@ -1364,13 +641,10 @@ void DbDialog::StatsCalculate()
                 nbr_white_wins, nbr_black_wins, nbr_draws );
         cprintf( "%s\n", buf );
         wxString wstr(buf);
-        strings.Add(wstr);
+        strings_stats.Add(wstr);
     }
-    list_ctrl_stats->InsertItems( strings, 0 );
 
     // Print the transpositions in order
-    list_ctrl_transpo->Clear();
-    strings.Clear();
     cprintf( "%d transpositions\n", transpositions.size() );
     for( unsigned int j=0; j<transpositions.size(); j++ )
     {
@@ -1404,15 +678,17 @@ void DbDialog::StatsCalculate()
         sprintf( buf, "T%d: %s: %d occurences", j+1, txt.c_str(), p->frequency );
         cprintf( "%s\n", buf );
         wxString wstr(buf);
-        strings.Add(wstr);
+        strings_transpos.Add(wstr);
     }
-    list_ctrl_transpo->InsertItems( strings, 0 );
 
     nbr_games_in_list_ctrl = games.size();
+    cprintf( "Got here #1\n" );
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
+    cprintf( "Got here #2\n" );
     list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
-    list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
-    list_ctrl->ReceiveFocus(0);
+    cprintf( "Got here #3\n" );
+    list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED+wxLIST_STATE_FOCUSED, wxLIST_STATE_SELECTED+wxLIST_STATE_FOCUSED);
+    cprintf( "Got here #4\n" );
     char buf[1000];
     int total_games  = games.size();
     int total_draws_plus_no_result = total_games - total_white_wins - total_black_wins;
@@ -1422,34 +698,30 @@ void DbDialog::StatsCalculate()
     sprintf( buf, "%d games, white scores %.1f%% +%d -%d =%d",
             total_games, percent_score,
             total_white_wins, total_black_wins, total_draws );
+    cprintf( "Got here #5\n" );
     title_ctrl->SetLabel( buf );
 
     int top = list_ctrl->GetTopItem();
     int count = 1 + list_ctrl->GetCountPerPage();
     if( count > nbr_games_in_list_ctrl )
         count = nbr_games_in_list_ctrl;
+    cprintf( "Got here #6\n" );
     for( int i=0; i<count; i++ )
         list_ctrl->RefreshItem(top++);
+    cprintf( "Got here #7\n" );
     list_ctrl->SetFocus();
+    
+    cprintf( "Number string_stats = %d\n", strings_stats.size() );
+    if( strings_stats.size() )
+        list_ctrl_stats->InsertItems( strings_stats, 0 );
+    cprintf( "Number strings_transpos = %d\n", strings_transpos.size() );
+    if( strings_transpos.size() )
+        list_ctrl_transpo->InsertItems( strings_transpos, 0 );
 }
-
-// Move Stats or Transpostitions selected
-void DbDialog::OnTabSelected( wxBookCtrlEvent& event )
-{
-    transpo_activated = (1==event.GetSelection());
-    int top = list_ctrl->GetTopItem();
-    int count = 1 + list_ctrl->GetCountPerPage();
-    if( count > nbr_games_in_list_ctrl )
-        count = nbr_games_in_list_ctrl;
-    for( int i=0; i<count; i++ )
-        list_ctrl->RefreshItem(top++);
-}
-
 
 // One of the moves in move stats is clicked
-void DbDialog::OnNextMove( wxCommandEvent &event )
+void DbDialog::OnNextMove( int idx )
 {
-    int idx = event.GetSelection();
     if( idx==0 && moves_from_base_position.size()>0 )
     {
         moves_from_base_position.pop_back();  // Undo last move
@@ -1478,118 +750,12 @@ void DbDialog::OnNextMove( wxCommandEvent &event )
         title_ctrl->Update();
         //title_ctrl->MacDoRedraw(0);
     }
-    cprintf( "DbDialog::OnNextMove(%d)\n", idx );
+
     wxSafeYield();
-    CallAfter( &DbDialog::StatsCalculate );
+    StatsCalculate();
+    //CallAfter( &DbDialog::StatsCalculate );
 }
 
 
-/*
-    games.clear();
-    
-    
-    // We calculate a vector of all blobs in the games that leading to the search position
-    std::vector< PATH_TO_POSITION > transpositions;
-    
-    // Map each move in the position to move stats
-    std::map< uint32_t, MOVE_STATS > stats;
-    
-    // hash to match
-    uint64_t gbl_hash = cr.Hash64Calculate();
-    
-    // For each game
-    for( unsigned int game_idx=0; game_idx<games.size(); game_idx++ )
-    {
-        DB_GAME_INFO info = games[game_idx];
-        
-        // Search for a match to this game
-        bool new_transposition_found=false;
-        bool found=false;
-        int found_idx=0;
-        for( unsigned int j=0; !found && j<transpositions.size(); j++ )
-        {
-            std::string &this_one = transpositions[j].blob;
-            const char *p = this_one.c_str();
-            size_t len = this_one.length();
-            if( info.str_blob.length()>=len && 0 == memcmp(p,info.str_blob.c_str(),len) )
-            {
-                found = true;
-                found_idx = j;
-            }
-        }
-        
-        // If none so far add the one from this game
-        if( !found )
-        {
-            PATH_TO_POSITION ptp;
-            size_t len = info.str_blob.length();
-            const char *blob = (const char*)info.str_blob.c_str();
-            uint64_t hash = ptp.press.cr.Hash64Calculate();
-            int nbr=0;
-            found = (hash==gbl_hash && ptp.press.cr==this->cr );
-            while( !found && nbr<len )
-            {
-                thc::ChessRules cr = ptp.press.cr;
-                thc::Move mv;
-                int nbr_used = ptp.press.decompress_move( blob, mv );
-                if( nbr_used == 0 )
-                    break;
-                blob += nbr_used;
-                nbr += nbr_used;
-                hash = cr.Hash64Update( hash, mv );
-                if( hash == gbl_hash && ptp.press.cr==this->cr )
-                    found = true;
-            }
-            if( found )
-            {
-                new_transposition_found = true;
-                ptp.blob =info.str_blob.substr(0,nbr);
-                transpositions.push_back(ptp);
-                found_idx = transpositions.size()-1;
-            }
-        }
-        
-        if( found )
-        {
-            PATH_TO_POSITION *p = &transpositions[found_idx];
-            p->frequency++;
-            size_t len = p->blob.length();
-            if( len < info.str_blob.length() ) // must be more moves
-            {
-                const char *compress_move_ptr = info.str_blob.c_str()+len;
-                thc::Move mv;
-                p->press.decompress_move_stay( compress_move_ptr, mv );
-                if( mv == this_one )
-                {
-                    //cache_subset.push_back( game_idx );
-                }
-            }
-        }
-        if( new_transposition_found )
-        {
-            std::sort( transpositions.rbegin(), transpositions.rend() );
-        }
-    }
-    list_ctrl->SetItemCount( games.size() );
-    list_ctrl->ReceiveFocus(0);
-    list_ctrl->RefreshItems( 0, games.size()-1 );
-    list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
-} */
 
 
-bool DbDialog::ShowModalOk()
-{
-    bool ok = (wxID_OK == ShowModal());
-    objs.repository->nv.m_col0  = list_ctrl->GetColumnWidth( 0 );    // "Game #"
-    objs.repository->nv.m_col1  = list_ctrl->GetColumnWidth( 1 );    // "White"
-    objs.repository->nv.m_col2  = list_ctrl->GetColumnWidth( 2 );    // "Elo W"
-    objs.repository->nv.m_col3  = list_ctrl->GetColumnWidth( 3 );    // "Black"
-    objs.repository->nv.m_col4  = list_ctrl->GetColumnWidth( 4 );    // "Elo B" 
-    objs.repository->nv.m_col5  = list_ctrl->GetColumnWidth( 5 );    // "Date"  
-    objs.repository->nv.m_col6  = list_ctrl->GetColumnWidth( 6 );    // "Site"  
-    objs.repository->nv.m_col7  = list_ctrl->GetColumnWidth( 7 );    // "Round" 
-    objs.repository->nv.m_col8  = list_ctrl->GetColumnWidth( 8 );    // "Result"
-    objs.repository->nv.m_col9  = list_ctrl->GetColumnWidth( 9 );    // "ECO"   
-    objs.repository->nv.m_col10 = list_ctrl->GetColumnWidth(10 );    // "Moves"
-    return ok;
-}

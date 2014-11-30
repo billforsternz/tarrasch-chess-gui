@@ -955,15 +955,19 @@ void GameLogic::CmdFileDatabase()
         wxSize sz = objs.frame->GetSize();
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
-        DbDialog dialog( objs.frame, &cr, &gc_database/*gc_session*/, &gc_clipboard, ID_PGN_DIALOG_DATABASE, pt, sz );
-        if( dialog.ShowModalOk() )
+        DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard , ID_PGN_DIALOG_DATABASE, pt, sz );
+        if( dialog.nbr_games_in_list_ctrl == 0 )
+        {
+            wxMessageBox( "No games found" );
+        }
+        else if( dialog.ShowModalOk() )
         {
             objs.log->SaveGame(&gd,editing_log);
           //objs.session->SaveGame(&gd);        //careful...
             GameDocument temp = gd;
             GameDocument new_gd;
             PutBackDocument();
-            if( dialog.LoadGame(this,new_gd,this->file_game_idx) )
+            if( dialog.LoadGame(new_gd) )
             {
                 tabs->TabNew(new_gd);
                 tabs->SetInfile(false);
