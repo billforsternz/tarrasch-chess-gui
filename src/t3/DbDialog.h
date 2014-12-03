@@ -72,6 +72,8 @@ public:
     bool ReadItemFromMemory( int item, DB_GAME_INFO &info );
 
     // Overrides
+    bool dirty;
+    virtual bool TestAndClearIsCacheDirty() { bool was=dirty; dirty=false; return was; }
     virtual void ReadItem( int item, DB_GAME_INFO &info );
     virtual void OnListColClick( int compare_col );
     virtual void OnSaveAllToAFile();

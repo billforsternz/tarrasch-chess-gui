@@ -136,8 +136,11 @@ public:
     void OnComboBox( wxCommandEvent& event );
     void OnCheckBox( wxCommandEvent& event );
     void OnListSelected( int idx );
-    
+
+    void ReadItemWithSingleLineCache( int item, DB_GAME_INFO &info );
+
     // Overrides
+    virtual bool TestAndClearIsCacheDirty() = 0;
     virtual void ReadItem( int item, DB_GAME_INFO &info ) = 0;
     virtual void OnCancel();
     virtual void OnListColClick( int compare_col );
@@ -163,6 +166,9 @@ public:
     // GamesDialog member variables
 public:
     wxStaticText *player_names;
+    DB_GAME_INFO   single_line_cache;
+    int            single_line_cache_idx;
+    
 protected:
     wxVirtualListCtrl  *list_ctrl;
     wxNotebook  *notebook;
@@ -183,6 +189,8 @@ protected:
     DbDialog    *data_src;
     bool activated_at_least_once;
 
+private:    //TODO - move more vars to private
+    bool init_position_specified;
 public:
     bool transpo_activated;
     int nbr_games_in_list_ctrl;

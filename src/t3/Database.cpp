@@ -326,10 +326,17 @@ int Database::LoadGamesWithQuery( uint64_t hash, std::vector<DB_GAME_INFO> &game
 {
     int retval=-1;
     int nbr_before = games.size();
+    wxProgressDialog progress( "Searching for extra games", "Searching for extra games", 100, NULL,
+                              wxPD_APP_MODAL+
+                              wxPD_AUTO_HIDE+
+                              wxPD_ELAPSED_TIME+
+                              wxPD_ESTIMATED_TIME );
+    
     
     // select matching rows from the table
     char buf[1000];
     gbl_expected = -1;
+    int old_percent=0, nbr_new=0, nbr_already=0;
     int hash32 = (int)(hash);
     int table_nbr = (int)((hash>>32)&(NBR_BUCKETS-1));
     sprintf( buf,
@@ -362,7 +369,12 @@ int Database::LoadGamesWithQuery( uint64_t hash, std::vector<DB_GAME_INFO> &game
                     const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
                     info.game_id = atoi(val);
                     int count = games_set.count(info.game_id);
-                    if( count > 0 )
+                    bool already = (count > 0);
+                    if( already )
+                        nbr_already++;
+                    else
+                        nbr_new++;
+                    if( already )
                         break;
                 }
                 else if( col == 1 )
@@ -419,6 +431,20 @@ int Database::LoadGamesWithQuery( uint64_t hash, std::vector<DB_GAME_INFO> &game
                         info.str_blob = "";
                     games.push_back( info );
                     games_set.insert(info.game_id);
+                    if( nbr_new > 5 )
+                    {
+                        int estimated_total = (nbr_before * (nbr_new+nbr_already) ) / (nbr_already?nbr_already:1);
+                        int percent = (nbr_new + nbr_before * 100) / (estimated_total?estimated_total:1);
+                        if( percent < 1 )
+                            percent = 1;
+                        if( percent > 90 )
+                            percent = 90;
+                        if( percent > old_percent )
+                        {
+                            progress.Update( percent>100 ? 100 : percent );
+                            old_percent = percent;
+                        }
+                    }
                 }
             }
         }
@@ -584,43 +610,29 @@ int DB_GAME_INFO::db_calculate_move_vector( std::vector<thc::Move> &moves, uint6
 
 int Database::GetRow( DB_GAME_INFO *info, int row )
 {
-    static DB_GAME_INFO single_line_cache;
-    static int single_line_cache_row;
     int ret=0;
-    if( stack.size()!=0 && single_line_cache_row==row )
+    if( 0 != cache.count(row) )
     {
-        *info = single_line_cache;
-        cprintf( "Single line cache hit, row %d\n", row );
+        *info = cache.at(row);
+        cprintf( "Cache hit, row %d\n", row );
     }
     else
     {
-        if( 0 != cache.count(row) )
+        ret = GetRowRaw( info, row );
+        if( ret == 0 )
         {
-            *info = cache.at(row);
-            single_line_cache     = *info;
-            single_line_cache_row = row;
-            cprintf( "Cache hit, row %d\n", row );
-        }
-        else
-        {
-            ret = GetRowRaw( info, row );
-            if( ret == 0 )
+            cache[row] = *info;
+            stack.push_back(row);
+            if( stack.size() < 100 )
             {
-                cache[row]            = *info;
-                single_line_cache     = *info;
-                single_line_cache_row = row;
-                stack.push_back(row);
-                if( stack.size() < 100 )
-                {
-                    cprintf( "Add row %d to cache, no removal\n", row );
-                }
-                else
-                {
-                    int front = *stack.begin();
-                    cprintf( "Add row %d and remove row %d from cache\n", row, front );
-                    stack.pop_front();
-                    cache.erase(front);
-                }
+                cprintf( "Add row %d to cache, no removal\n", row );
+            }
+            else
+            {
+                int front = *stack.begin();
+                cprintf( "Add row %d and remove row %d from cache\n", row, front );
+                stack.pop_front();
+                cache.erase(front);
             }
         }
     }
@@ -703,11 +715,12 @@ int Database::GetRowRaw( DB_GAME_INFO *info, int row )
             {
                 sprintf( buf, 
                         "SELECT games.game_id from games%s ORDER BY games.white ASC LIMIT %d,100", where_white.c_str(), row );
+                  //      "SELECT games.game_id from games%s ORDER BY games.rowid LIMIT %d,100", where_white.c_str(), row );
             }
             else
             {
                 sprintf( buf,
-// #define NO_REVERSE
+//#define NO_REVERSE
 #ifdef NO_REVERSE
                         "SELECT games.game_id from games JOIN positions_%d ON games.game_id = positions_%d.game_id WHERE %spositions_%d.position_hash=%d LIMIT %d,100",
 #else
@@ -758,10 +771,8 @@ int Database::LoadAllGames( std::vector<DB_GAME_INFO> &cache, int nbr_games )
     else
     {
         sprintf( buf,
-#ifdef NO_REVERSE
-//                sprintf( buf, "SELECT white,black,event,site,result,date,white_elo,black_elo,moves from games WHERE game_id=%d", game_id );
-                "SELECT games.game_id, games.white, games.black, games.event, games.site, games.result, games.date, games.white_elo, games.black_elo, games.moves from games, positions_%d WHERE games.game_id = positions_%d.game_id AND %spositions_%d.position_hash=%d",
-                //"SELECT games.game_id, games.white, games.black, games.result, games.moves from games JOIN positions_%d ON games.game_id = positions_%d.game_id WHERE %spositions_%d.position_hash=%d",
+#if 1 //def NO_REVERSE
+                "SELECT games.game_id, games.white, games.black, games.event, games.site, games.result, games.date, games.white_elo, games.black_elo, games.moves from games JOIN positions_%d ON games.game_id = positions_%d.game_id WHERE %spositions_%d.position_hash=%d",
 #else
                 "SELECT games.game_id, games.white, games.black, games.event, games.site, games.result, games.date, games.white_elo, games.black_elo, games.moves from games JOIN positions_%d ON games.game_id = positions_%d.game_id WHERE %spositions_%d.position_hash=%d ORDER BY games.rowid DESC",
 #endif

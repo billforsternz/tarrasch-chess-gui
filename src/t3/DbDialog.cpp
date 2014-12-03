@@ -46,15 +46,15 @@ void DbDialog::ReadItem( int item, DB_GAME_INFO &info )
     }
 }
 
-
 bool DbDialog::ReadItemFromMemory( int item, DB_GAME_INFO &info )
 {
     bool in_memory = false;
     info.transpo_nbr = 0;
-    if( games.size() > item )
+    int nbr_games = games.size();
+    if( 0<=item && item<nbr_games )
     {
         in_memory = true;
-        info = games[item];
+        info = games[nbr_games-1-item];
         info.transpo_nbr = 0;
         //cprintf( "ReadItemFromMemory(%d), white=%s\n", item, info.white.c_str() );
         //if( info.move_txt.length() == 0 )
@@ -119,6 +119,7 @@ DbDialog::DbDialog
 {
     activated_at_least_once = false;
     transpo_activated = false;
+    dirty = false;
 }
 
 
@@ -263,6 +264,7 @@ void DbDialog::OnListColClick( int compare_col )
     {
         this->compare_col = compare_col;
         backdoor = this;
+        dirty = true;
         std::sort( games.begin(), games.end(), compare );
         nbr_games_in_list_ctrl = games.size();
         list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
@@ -443,6 +445,7 @@ void DbDialog::StatsCalculate()
     int total_draws = 0;
     transpositions.clear();
     stats.clear();
+    dirty = true;
     games.clear();
     cprintf( "Remove focus %d\n", track->focus_idx );
     list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_FOCUSED );
@@ -667,7 +670,11 @@ void DbDialog::StatsCalculate()
     nbr_games_in_list_ctrl = games.size();
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
     list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
-    list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED+wxLIST_STATE_FOCUSED, wxLIST_STATE_SELECTED+wxLIST_STATE_FOCUSED);
+#if 1
+    list_ctrl->SetItemState( 0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
+    list_ctrl->SetItemState( 0, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
+    list_ctrl->ReceiveFocus(0);
+#endif
     char buf[1000];
     int total_games  = nbr_games_in_list_ctrl;
     int total_draws_plus_no_result = total_games - total_white_wins - total_black_wins;

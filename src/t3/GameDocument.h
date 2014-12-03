@@ -135,6 +135,8 @@ public:
     bool IsDiff( GameDocument &other );
     bool PgnParse( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language=false, int imove=-1 );
     void LoadFromMoveList( std::vector<thc::Move> &moves, int move_idx=0 );
+    void SetNonZeroStartPosition( int main_line_idx );
+
     
     MoveTree *MakeMove( GAME_MOVE game_move, bool allow_overwrite );
     MoveTree *KibitzCaptureStart( const char *engine_name, const char *txt, std::vector<thc::Move> &var,

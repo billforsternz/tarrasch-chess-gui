@@ -87,7 +87,7 @@ void wxVirtualListCtrl::ReceiveFocus( int focus_idx )
     if( focus_idx >= 0 )
     {
         track->focus_idx = focus_idx;
-        parent->ReadItem( focus_idx, track->info );
+        parent->ReadItemWithSingleLineCache( focus_idx, track->info );
 
         initial_focus_offset = track->focus_offset = track->info.db_calculate_move_vector( track->focus_moves, objs.db->gbl_hash );
         if( mini_board )
@@ -167,11 +167,10 @@ std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move ) co
     
 wxString wxVirtualListCtrl::OnGetItemText( long item, long column) const
 {
-    //cprintf( "ListCtrl::OnGetItemText(%ld,%ld)\n", item, column );
     DB_GAME_INFO info;
     std::string move_txt;
     const char *txt;
-    parent->ReadItem( item, info );
+    parent->ReadItemWithSingleLineCache( item, info );
     switch( column )
     {
         default: txt =  "";                         break;
@@ -202,6 +201,8 @@ wxString wxVirtualListCtrl::OnGetItemText( long item, long column) const
                 move_txt = buf + move_txt;
             }
             txt = move_txt.c_str();
+            //if( item == 0 )
+            //    cprintf( "item 0, column 10: %s\n", txt );
             break;
         }
     }
@@ -268,10 +269,13 @@ GamesDialog::GamesDialog
     const wxPoint& pos, const wxSize& size, long style
 )
 {
-    this->cr = *cr;
+    init_position_specified = (cr!=NULL);
+    if( init_position_specified )
+        this->cr = *cr;
     this->id = id;
     this->gc = gc;
     this->gc_clipboard = gc_clipboard;
+    single_line_cache_idx = -1;
     file_game_idx = -1;
     nbr_games_in_list_ctrl = 0;
     Init();
@@ -342,9 +346,22 @@ void GamesDialog::CreateControls()
     top_sizer->Add(box_sizer, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
 
     // A friendly message
-    nbr_games_in_list_ctrl = objs.db->SetPosition( cr ); //gc->gds.size();
     char buf[200];
-    sprintf(buf,"List of %d matching games from the database",nbr_games_in_list_ctrl);
+    if( !init_position_specified )
+    {
+        // FIXME FIXME FIXME
+        CompressMoves press;
+        uint64_t hash = press.cr.Hash64Calculate();
+        objs.db->gbl_hash = hash;
+        
+        nbr_games_in_list_ctrl = gc->gds.size();
+        sprintf(buf,"%d games in file",nbr_games_in_list_ctrl);
+    }
+    else
+    {
+        nbr_games_in_list_ctrl = objs.db->SetPosition( cr ); //gc->gds.size();
+        sprintf(buf,"List of %d matching games from the database",nbr_games_in_list_ctrl);
+    }
     title_ctrl = new wxStaticText( this, wxID_STATIC,
         buf, wxDefaultPosition, wxDefaultSize, 0 );
     box_sizer->Add(title_ctrl, 0, wxALIGN_LEFT|wxALL, 5);
@@ -632,15 +649,28 @@ void GamesDialog::OnActivate(wxActivateEvent& event)
         utility->SetPosition( pos_button );
         
         //vsiz_panel_buttons->Add(utility, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-        ReadItem(0,track->info);
+        ReadItemWithSingleLineCache(0,track->info);
     }
 }
 
+void GamesDialog::ReadItemWithSingleLineCache( int item, DB_GAME_INFO &info )
+{
+    if( !TestAndClearIsCacheDirty() && (item==single_line_cache_idx) )
+    {
+        info = single_line_cache;
+    }
+    else
+    {
+        ReadItem( item, info );
+        single_line_cache_idx = item;
+        single_line_cache = info;
+    }
+}
 
 void GamesDialog::LoadGame( int idx, int focus_offset )
 {
     static DB_GAME_INFO info;
-    ReadItem( idx, info );
+    ReadItemWithSingleLineCache( idx, info );
     GameDocument gd;
     std::vector<thc::Move> moves;
     gd.white = info.white;

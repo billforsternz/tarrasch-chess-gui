@@ -921,14 +921,20 @@ void GameDocument::LoadFromMoveList( std::vector<thc::Move> &moves, int move_idx
         (*pvar).push_back( node );
     }
     Rebuild();
-    in_memory = true;
+    SetNonZeroStartPosition( move_idx );
+}
+
+// Set a non zero start position
+void GameDocument::SetNonZeroStartPosition( int main_line_idx )
+{
+    VARIATION &variation = tree.variations[0];
     gbl_plast_move = NULL;
-    if( (*pvar).size() > 0 )
+    if( variation.size() > 0 )
     {
-        gbl_plast_move = &(*pvar)[(*pvar).size()-1];
-        if(  0<move_idx &&  move_idx <= (*pvar).size() )
+        gbl_plast_move = &(variation)[variation.size()-1];
+        if(  0<main_line_idx &&  main_line_idx <= variation.size() )
         {
-            unsigned long pos = gv.GetMoveOffset( &(*pvar)[move_idx-1] );
+            unsigned long pos = gv.GetMoveOffset( &variation[main_line_idx-1] );
             non_zero_start_pos = pos;
         }
     }
