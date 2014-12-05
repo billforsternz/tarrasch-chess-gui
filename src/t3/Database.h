@@ -53,8 +53,7 @@ public:
     int FindRow( std::string &name );
     int LoadGameWithQuery( DB_GAME_INFO *info, int game_id );
     int LoadGamesWithQuery( uint64_t hash, std::vector<DB_GAME_INFO> &games, std::unordered_set<int> &games_set );
-
-
+    int LoadGamesWithQuery( std::string &player_name, bool white, std::vector<DB_GAME_INFO> &games );
   
 private:
     // Create a handle for database connection, create a pointer to sqlite3

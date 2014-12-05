@@ -47,6 +47,11 @@ BEGIN_EVENT_TABLE( GamesDialog, wxDialog )
     EVT_BUTTON( ID_DB_RELOAD,           GamesDialog::OnReload )
     EVT_BUTTON( wxID_CANCEL,            GamesDialog::OnCancel )
     EVT_BUTTON( ID_SAVE_ALL_TO_A_FILE,  GamesDialog::OnSaveAllToAFile )
+    EVT_BUTTON( ID_BUTTON_1,            GamesDialog::OnButton1 )
+    EVT_BUTTON( ID_BUTTON_2,            GamesDialog::OnButton2 )
+    EVT_BUTTON( ID_BUTTON_3,            GamesDialog::OnButton3 )
+    EVT_BUTTON( ID_BUTTON_4,            GamesDialog::OnButton4 )
+
 /*  EVT_BUTTON( ID_BOARD2GAME,          GamesDialog::OnBoard2Game )
     EVT_CHECKBOX( ID_REORDER,           GamesDialog::OnRenumber )
     EVT_BUTTON( ID_ADD_TO_CLIPBOARD,    GamesDialog::OnAddToClipboard )
@@ -482,7 +487,7 @@ void GamesDialog::CreateControls()
     box_sizer->Add(line, 0, wxGROW|wxALL, 5);
 
     // Create a panel beneath the list control, containing everything else
-    wxBoxSizer* hsiz_panel = new wxBoxSizer(wxHORIZONTAL);
+    hsiz_panel = new wxBoxSizer(wxHORIZONTAL);
     box_sizer->Add(hsiz_panel, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxTOP, 10);
 
     mini_board = new MiniBoard(this);
@@ -495,70 +500,43 @@ void GamesDialog::CreateControls()
     mini_board->SetPosition( cr.squares );
 
     hsiz_panel->Add( mini_board, 1, wxALIGN_LEFT|wxTOP|wxRIGHT|wxBOTTOM|wxFIXED_MINSIZE, 5 );
-    wxGridSizer* vsiz_panel_buttons = new wxGridSizer(6,2,0,0);
-    hsiz_panel->Add(vsiz_panel_buttons, 0, wxALIGN_TOP|wxALL, 10);
+
+    wxBoxSizer *button_panel = new wxBoxSizer(wxVERTICAL);
+    hsiz_panel->Add(button_panel, 0, wxALIGN_TOP|wxALL, 10);
+
+    vsiz_panel_button1 = new wxFlexGridSizer(3,2,0,0);
+    button_panel->Add(vsiz_panel_button1, 0, wxALIGN_TOP|wxALL, 0);
+    vsiz_panel_buttons = new wxFlexGridSizer(5,1,0,0);
+    button_panel->Add(vsiz_panel_buttons, 0, wxALIGN_TOP|wxALL, 0);
 
     // Load / Ok / Game->Board
     wxButton* ok = new wxButton ( this, wxID_OK, wxT("Load Game"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_buttons->Add(ok, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_button1->Add(ok, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     
     // Save all games to a file
-    wxButton* save_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save all to a file"),
+    wxButton* save_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save all"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_buttons->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_button1->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     // The Cancel button
     wxButton* cancel = new wxButton ( this, wxID_CANCEL,
         wxT("Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_buttons->Add(cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_button1->Add(cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     // The Help button
     wxButton* help = new wxButton( this, wxID_HELP, wxT("Help"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_buttons->Add(help, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_button1->Add(help, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-    wxButton* reload = new wxButton ( this, ID_DB_RELOAD, wxT("Search again"),
-                                     wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_buttons->Add(reload, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    
-
-    // Text control for white entry
-    text_ctrl = new wxTextCtrl ( this, ID_DB_TEXT, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_buttons->Add(text_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    wxSize sz2=text_ctrl->GetSize();
-    text_ctrl->SetSize((sz2.x*118)/32,sz2.y);      // temp temp
-    //text_ctrl->SetSize((sz.x*7)/2,sz2.y);      // temp temp
-    text_ctrl->SetValue("Name");
-    
-    filter_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX,
-                                 wxT("&Filter"), wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_buttons->Add(filter_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    filter_ctrl->SetValue( false );
-    
-    /*radio_ctrl = new wxRadioButton( this,  ID_DB_RADIO,
-     wxT("&Radio"), wxDefaultPosition, wxDefaultSize,  wxRB_GROUP );
-     vsiz_panel_buttons->Add(radio_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-     radio_ctrl->SetValue( false ); */
-    
-    wxString combo_array[9];
-    combo_array[0] = "Equals";
-    combo_array[1] = "Starts with";
-    combo_array[2] = "Ends with";
-    combo_ctrl = new wxComboBox ( this, ID_DB_COMBO,
-                                 "None", wxDefaultPosition,
-                                 wxSize(50, wxDefaultCoord), 3, combo_array, wxCB_READONLY );
-    vsiz_panel_buttons->Add(combo_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    wxString combo;
-    combo = "None";
-    combo_ctrl->SetValue(combo);
-    wxSize sz3=combo_ctrl->GetSize();
-    combo_ctrl->SetSize((sz3.x*118)/32,sz3.y);      // temp temp
+    player_names = new wxStaticText( this, wxID_ANY, "White - Black",
+                                    wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL );
+    box_sizer->Add(player_names, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxBOTTOM, 10);
     
     // Stats list box
-//    wxSize sz4 = sz;
-//    sz.x /= 4;
-//    sz.y /= 3;
+    //    wxSize sz4 = sz;
+    //    sz.x /= 4;
+    //    sz.y /= 3;
     wxSize sz4 = mini_board->GetSize();
     wxSize sz5 = sz4;
     sz5.x = (sz4.x*18)/10;
@@ -566,10 +544,7 @@ void GamesDialog::CreateControls()
     notebook = new wxNotebook(this, wxID_ANY, wxDefaultPosition, /*wxDefaultSize*/ sz5 );
     //wxPanel *notebook_page1 = new wxPanel(notebook, wxID_ANY );
     hsiz_panel /*vsiz_panel_stats*/->Add( notebook, 0, wxALIGN_TOP|wxGROW|wxALL, 0 );
-    
-    player_names = new wxStaticText( this, wxID_ANY, "White - Black",
-                                    wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL );
-    box_sizer->Add(player_names, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxBOTTOM, 10);
+
 }
 
 
@@ -631,26 +606,12 @@ void GamesDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
 
 void GamesDialog::OnActivate(wxActivateEvent& event)
 {
-    if( !activated_at_least_once )
-    {
-        activated_at_least_once = true;
-        //cprintf( "GamesDialog::OnActivate\n");
-        wxPoint pos = notebook->GetPosition();
-        //list_ctrl_stats->Hide();
-        //list_ctrl_transpo->Hide();
-        
-        utility = new wxButton ( this, ID_DB_UTILITY, wxT("Calculate Stats"),
-                                pos, wxDefaultSize, 0 );
-        wxSize sz_panel  = notebook->GetSize();
-        wxSize sz_button = utility->GetSize();
-        wxPoint pos_button = utility->GetPosition();
-        pos_button.x += (sz_panel.x/2 - sz_button.x/2);
-        pos_button.y += (sz_panel.y/2 - sz_button.y/2);
-        utility->SetPosition( pos_button );
-        
-        //vsiz_panel_buttons->Add(utility, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-        ReadItemWithSingleLineCache(0,track->info);
-    }
+    OnActivate();
+}
+
+// override
+void GamesDialog::OnActivate()
+{
 }
 
 void GamesDialog::ReadItemWithSingleLineCache( int item, DB_GAME_INFO &info )
@@ -795,6 +756,7 @@ void GamesDialog::OnReload( wxCommandEvent& WXUNUSED(event) )
         list_ctrl->EnsureVisible( row );   // get vaguely close
         list_ctrl->SetItemState( row, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
         list_ctrl->SetItemState( row, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
+        list_ctrl->SetFocus();
     }
     else
     {
@@ -815,6 +777,46 @@ void GamesDialog::OnUtility( wxCommandEvent& WXUNUSED(event) )
 
 // overide
 void GamesDialog::OnUtility()
+{
+}
+
+void GamesDialog::OnButton1( wxCommandEvent& WXUNUSED(event) )
+{
+    OnButton1();
+}
+
+// overide
+void GamesDialog::OnButton1()
+{
+}
+
+void GamesDialog::OnButton2( wxCommandEvent& WXUNUSED(event) )
+{
+    OnButton2();
+}
+
+// overide
+void GamesDialog::OnButton2()
+{
+}
+
+void GamesDialog::OnButton3( wxCommandEvent& WXUNUSED(event) )
+{
+    OnButton3();
+}
+
+// overide
+void GamesDialog::OnButton3()
+{
+}
+
+void GamesDialog::OnButton4( wxCommandEvent& WXUNUSED(event) )
+{
+    OnButton4();
+}
+
+// overide
+void GamesDialog::OnButton4()
 {
 }
 

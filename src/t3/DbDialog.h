@@ -72,6 +72,8 @@ public:
     bool ReadItemFromMemory( int item, DB_GAME_INFO &info );
 
     // Overrides
+    virtual void OnActivate();
+    void AddExtraControls();
     bool dirty;
     virtual bool TestAndClearIsCacheDirty() { bool was=dirty; dirty=false; return was; }
     virtual void ReadItem( int item, DB_GAME_INFO &info );
@@ -79,6 +81,10 @@ public:
     virtual void OnSaveAllToAFile();
     virtual void OnHelpClick();
     virtual void OnUtility();
+    virtual void OnButton1();
+    virtual void OnButton2();
+    virtual void OnButton3();
+    virtual void OnButton4();
     virtual void OnCancel();
     virtual void OnNextMove( int idx );
 
@@ -97,7 +103,8 @@ private:
     
     // Map each move in the position to move stats
     std::map< uint32_t, MOVE_STATS > stats;
-    
+    bool clipboard_db;          // fixme temp
+    bool reload_next_time;      // fixme temp
 
 private:
    

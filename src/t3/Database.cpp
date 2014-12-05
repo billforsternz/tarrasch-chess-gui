@@ -322,6 +322,121 @@ int Database::LoadGameWithQuery( DB_GAME_INFO *info, int game_id )
 static bool gbl_protect_recursion;   // FIXME
 
 
+int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::vector<DB_GAME_INFO> &games )
+{
+    int retval=-1;
+    if( !gbl_handle )
+        return 0;
+    gbl_expected = -1;
+    
+    // select matching rows from the table
+    char buf[1000];
+    sprintf( buf,
+            "SELECT games.game_id, games.white, games.black, games.event, games.site, games.result, games.date, games.white_elo, games.black_elo, games.moves from games "
+            "WHERE games.%s='%s'",  white?"white":"black",  player_name.c_str() );
+    cprintf( "LoadGamesWithQuery() START query: %s\n",buf);
+    retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &gbl_stmt, 0 );
+    if( retval )
+    {
+        cprintf("SELECTING DATA FROM DB FAILED 2\n");
+        return retval;
+    }
+    
+    // Read the game info
+    int cols = sqlite3_column_count(gbl_stmt);
+    for(;;)
+    {
+        retval = sqlite3_step(gbl_stmt);
+        if( retval == SQLITE_ROW )
+        {
+            DB_GAME_INFO info;
+            
+            // SQLITE_ROW means fetched a row
+            
+            // sqlite3_column_text returns a const void* , typecast it to const char*
+            for( int col=0; col<cols; col++ )
+            {
+                if( col == 0 )
+                {
+                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    info.game_id = atoi(val);
+                }
+                else if( col == 1 )
+                {
+                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    info.white = val ? std::string(val) : "Whoops";
+                }
+                else if( col == 2 )
+                {
+                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    info.black = val ? std::string(val) : "Whoops";
+                }
+                else if( col == 3 )
+                {
+                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    info.event = val ? std::string(val) : "Whoops";
+                }
+                else if( col == 4 )
+                {
+                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    info.site = val ? std::string(val) : "Whoops";
+                }
+                else if( col == 5 )
+                {
+                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    info.result = val ? std::string(val) : "*";
+                }
+                else if( col == 6 )
+                {
+                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    info.date = val ? std::string(val) : "Whoops";
+                }
+                else if( col == 7 )
+                {
+                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    info.white_elo = val ? std::string(val) : "Whoops";
+                }
+                else if( col == 8 )
+                {
+                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    info.black_elo = val ? std::string(val) : "Whoops";
+                }
+                else if( col == 9 )
+                {
+                    int len = sqlite3_column_bytes(gbl_stmt,col);
+                    //fprintf(f,"Move len = %d\n",len);
+                    const char *blob = (const char*)sqlite3_column_blob(gbl_stmt,col);
+                    if( len && blob )
+                    {
+                        std::string str_blob(blob,len);
+                        info.str_blob = str_blob;
+                    }
+                    else
+                        info.str_blob = "";
+                    games.push_back( info );
+                }
+            }
+        }
+        else if( retval == SQLITE_DONE )
+        {
+            // All rows finished
+            sqlite3_finalize(gbl_stmt);
+            gbl_stmt = NULL;
+            int nbr_after = games.size();
+            cprintf("LoadGamesWithQuery(): %d games loaded\n", games.size() );
+            break;
+        }
+        else
+        {
+            // Some error encountered
+            cprintf("SOME ERROR ENCOUNTERED\n");
+            return retval;
+        }
+    }
+    return retval;
+}
+
+
 int Database::LoadGamesWithQuery( uint64_t hash, std::vector<DB_GAME_INFO> &games, std::unordered_set<int> &games_set )
 {
     int retval=-1;
@@ -341,7 +456,7 @@ int Database::LoadGamesWithQuery( uint64_t hash, std::vector<DB_GAME_INFO> &game
     int table_nbr = (int)((hash>>32)&(NBR_BUCKETS-1));
     sprintf( buf,
             "SELECT games.game_id, games.white, games.black, games.event, games.site, games.result, games.date, games.white_elo, games.black_elo, games.moves from games JOIN positions_%d ON games.game_id = positions_%d.game_id WHERE %spositions_%d.position_hash=%d",
-                table_nbr, table_nbr, white_and.c_str(), table_nbr, hash32);
+            table_nbr, table_nbr, white_and.c_str(), table_nbr, hash32);
     cprintf( "LoadGamesWithQuery() START query: %s\n",buf);
     retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &gbl_stmt, 0 );
     if( retval )

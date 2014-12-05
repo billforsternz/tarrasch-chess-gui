@@ -34,6 +34,90 @@
 #include <algorithm>
 using namespace std;
 
+
+void DbDialog::AddExtraControls()
+{
+    wxButton* reload = new wxButton ( this, ID_DB_RELOAD, wxT("Search"),
+                                     wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(reload, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    
+    // Text control for white entry
+    text_ctrl = new wxTextCtrl ( this, ID_DB_TEXT, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(text_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    wxSize sz2=text_ctrl->GetSize();
+    text_ctrl->SetSize((sz2.x*118)/32,sz2.y);      // temp temp
+    //text_ctrl->SetSize((sz.x*7)/2,sz2.y);      // temp temp
+    text_ctrl->SetValue("White Player");
+    
+    wxButton* btn1 = new wxButton ( this, ID_BUTTON_1, wxT("Clear Clipboard"),
+                                     wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_buttons->Add(btn1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+    wxButton* btn2 = new wxButton ( this, ID_BUTTON_2, wxT("Add to Clipboard"),
+                                   wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_buttons->Add(btn2, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    
+    wxButton* btn3 = new wxButton ( this, ID_BUTTON_3, wxT("Add All Player's White Games"),
+                                     wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_buttons->Add(btn3, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    
+    wxButton* btn4 = new wxButton ( this, ID_BUTTON_4, wxT("Add All Player's Black Games"),
+                                   wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_buttons->Add(btn4, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    
+    filter_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX,
+                                 wxT("&Clipboard as temp database"), wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_buttons->Add(filter_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    filter_ctrl->SetValue( false );
+    
+    /*radio_ctrl = new wxRadioButton( this,  ID_DB_RADIO,
+     wxT("&Radio"), wxDefaultPosition, wxDefaultSize,  wxRB_GROUP );
+     vsiz_panel_buttons->Add(radio_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+     radio_ctrl->SetValue( false ); */
+ 
+#if 0
+    wxString combo_array[9];
+    combo_array[0] = "Equals";
+    combo_array[1] = "Starts with";
+    combo_array[2] = "Ends with";
+    combo_ctrl = new wxComboBox ( this, ID_DB_COMBO,
+                                 "None", wxDefaultPosition,
+                                 wxSize(50, wxDefaultCoord), 3, combo_array, wxCB_READONLY );
+    vsiz_panel_buttons->Add(combo_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    wxString combo;
+    combo = "None";
+    combo_ctrl->SetValue(combo);
+    wxSize sz3=combo_ctrl->GetSize();
+    combo_ctrl->SetSize((sz3.x*118)/32,sz3.y);      // temp temp
+#endif
+   
+}
+
+void DbDialog::OnActivate()
+{
+    if( !activated_at_least_once )
+    {
+        activated_at_least_once = true;
+        //cprintf( "GamesDialog::OnActivate\n");
+        wxPoint pos = notebook->GetPosition();
+        //list_ctrl_stats->Hide();
+        //list_ctrl_transpo->Hide();
+        
+        utility = new wxButton ( this, ID_DB_UTILITY, wxT("Calculate Stats"),
+                                pos, wxDefaultSize, 0 );
+        wxSize sz_panel  = notebook->GetSize();
+        wxSize sz_button = utility->GetSize();
+        wxPoint pos_button = utility->GetPosition();
+        pos_button.x += (sz_panel.x/2 - sz_button.x/2);
+        pos_button.y += (sz_panel.y/2 - sz_button.y/2);
+        utility->SetPosition( pos_button );
+        
+        list_ctrl->SetFocus();
+    }
+}
+
+
+
 // Read game information from games or database
 void DbDialog::ReadItem( int item, DB_GAME_INFO &info )
 {
@@ -117,9 +201,12 @@ DbDialog::DbDialog
     long style
  ) : GamesDialog( parent, cr, gc, gc_clipboard, id, pos, size )
 {
+    AddExtraControls();
     activated_at_least_once = false;
     transpo_activated = false;
     dirty = false;
+    clipboard_db = false;
+    reload_next_time = false;
 }
 
 
@@ -264,7 +351,6 @@ void DbDialog::OnListColClick( int compare_col )
     {
         this->compare_col = compare_col;
         backdoor = this;
-        dirty = true;
         std::sort( games.begin(), games.end(), compare );
         nbr_games_in_list_ctrl = games.size();
         list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
@@ -276,6 +362,11 @@ void DbDialog::OnListColClick( int compare_col )
             count = nbr_games_in_list_ctrl;
         for( int i=0; i<count; i++ )
             list_ctrl->RefreshItem(top++);
+        dirty = true;
+        list_ctrl->RefreshItem(0);
+        list_ctrl->ReceiveFocus(0);
+        list_ctrl->SetItemState( 0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
+        list_ctrl->SetItemState( 0, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
         list_ctrl->SetFocus();
     }
 }
@@ -418,6 +509,69 @@ void DbDialog::OnUtility()
     StatsCalculate();
 }
 
+void DbDialog::OnButton1()
+{
+    reload_next_time = true;
+}
+
+void DbDialog::OnButton2()
+{
+}
+
+void DbDialog::OnButton3()
+{
+    if( reload_next_time )
+    {
+        reload_next_time = false;
+        cache.clear();
+        games.clear();
+    }
+    std::string player_name = track->info.white;
+    objs.db->LoadGamesWithQuery( player_name, true, cache );
+
+    // Clear the base position
+    thc::ChessRules cr;
+    this->cr = cr;
+    moves_from_base_position.clear();
+    
+    // No need to look for more games in database in base position
+    clipboard_db = true;
+    
+    StatsCalculate();
+
+    list_ctrl->SetItemState( 0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
+    list_ctrl->SetItemState( 0, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
+    list_ctrl->EnsureVisible(0);
+    list_ctrl->SetFocus();
+}
+
+void DbDialog::OnButton4()
+{
+    if( reload_next_time )
+    {
+        reload_next_time = false;
+        cache.clear();
+        games.clear();
+    }
+    std::string player_name = track->info.white;
+    objs.db->LoadGamesWithQuery( player_name, false, cache );
+    
+    // Clear the base position
+    thc::ChessRules cr;
+    this->cr = cr;
+    moves_from_base_position.clear();
+    
+    // No need to look for more games in database in base position
+    clipboard_db = true;
+    
+    StatsCalculate();
+    
+    list_ctrl->SetItemState( 0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
+    list_ctrl->SetItemState( 0, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
+    list_ctrl->EnsureVisible(0);
+    list_ctrl->SetFocus();
+}
+
 void DbDialog::LoadGamesIntoMemory()
 {
     AutoTimer at("Load games into memory");
@@ -474,7 +628,7 @@ void DbDialog::StatsCalculate()
     int maxlen = 1000000;   // absurdly large until a match found
 
     // Only if we haven't seen this position, look for and load extra games (due to transposition) from database
-    if( drill_down_set.count(gbl_hash) > 0 )
+    if( clipboard_db || drill_down_set.count(gbl_hash) > 0 )
     {
         cprintf( "Already seen this position\n" );
     }
@@ -668,13 +822,11 @@ void DbDialog::StatsCalculate()
     }
 
     nbr_games_in_list_ctrl = games.size();
+    dirty = true;
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
     list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
-#if 1
     list_ctrl->SetItemState( 0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
     list_ctrl->SetItemState( 0, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
-    list_ctrl->ReceiveFocus(0);
-#endif
     char buf[1000];
     int total_games  = nbr_games_in_list_ctrl;
     int total_draws_plus_no_result = total_games - total_white_wins - total_black_wins;
@@ -717,6 +869,7 @@ void DbDialog::StatsCalculate()
 // One of the moves in move stats is clicked
 void DbDialog::OnNextMove( int idx )
 {
+    dirty = true;
     if( idx==0 && moves_from_base_position.size()>0 )
     {
         moves_from_base_position.pop_back();  // Undo last move

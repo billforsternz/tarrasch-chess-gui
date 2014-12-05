@@ -30,7 +30,11 @@ enum
     ID_DB_TEXT          = 10005,
     ID_DB_LISTBOX_GAMES = 10006,
     ID_DB_LISTBOX_STATS = 10007,
-    ID_DB_LISTBOX_TRANSPO = 10008
+    ID_DB_LISTBOX_TRANSPO = 10008,
+    ID_BUTTON_1 = 10009,
+    ID_BUTTON_2 = 10010,
+    ID_BUTTON_3 = 10011,
+    ID_BUTTON_4 = 10012
 };
 
 
@@ -131,6 +135,10 @@ public:
     
     void OnReload( wxCommandEvent& event );
     void OnUtility( wxCommandEvent& event );
+    void OnButton1( wxCommandEvent& event );
+    void OnButton2( wxCommandEvent& event );
+    void OnButton3( wxCommandEvent& event );
+    void OnButton4( wxCommandEvent& event );
     void OnRadio( wxCommandEvent& event );
     void OnSpin( wxCommandEvent& event );
     void OnComboBox( wxCommandEvent& event );
@@ -140,6 +148,7 @@ public:
     void ReadItemWithSingleLineCache( int item, DB_GAME_INFO &info );
 
     // Overrides
+    virtual void OnActivate();
     virtual bool TestAndClearIsCacheDirty() = 0;
     virtual void ReadItem( int item, DB_GAME_INFO &info ) = 0;
     virtual void OnCancel();
@@ -147,6 +156,10 @@ public:
     virtual void OnSaveAllToAFile();
     virtual void OnHelpClick();
     virtual void OnUtility();
+    virtual void OnButton1();
+    virtual void OnButton2();
+    virtual void OnButton3();
+    virtual void OnButton4();
     virtual void OnNextMove( int idx );
     
 //  void OnClose( wxCloseEvent& event );
@@ -171,6 +184,11 @@ public:
     
 protected:
     wxVirtualListCtrl  *list_ctrl;
+    wxBoxSizer*  hsiz_panel;
+    wxBoxSizer *button_panel;
+    wxGridSizer* vsiz_panel_button1;
+    wxGridSizer* vsiz_panel_buttons;
+    
     wxNotebook  *notebook;
     int          selected_game;
     void         SyncCacheOrderBefore();
