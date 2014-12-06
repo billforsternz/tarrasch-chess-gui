@@ -723,6 +723,57 @@ int DB_GAME_INFO::db_calculate_move_vector( std::vector<thc::Move> &moves, uint6
 }
 
 
+void DB_GAME_INFO::Upscale( GameDocument &gd )
+{
+    gd.white     = white;
+    gd.black     = black;
+    gd.event     = event;
+    gd.site      = site;
+    gd.result    = result;
+    gd.date      = date;
+    gd.white_elo = white_elo;
+    gd.black_elo = black_elo;
+    std::vector<thc::Move> moves;
+    db_calculate_move_vector(moves,0);
+    std::vector<MoveTree> &variation = gd.tree.variations[0];
+    variation.clear();
+    MoveTree m;
+    for( int i=0; i<moves.size(); i++ )
+    {
+        m.game_move.move = moves[i];
+        variation.push_back(m);
+    }
+    gd.Rebuild();
+}
+
+
+void DB_GAME_INFO::Downscale( GameDocument &gd )
+{
+    white       = gd.white;
+    black       = gd.black;
+    white_elo   = gd.white_elo;
+    black_elo   = gd.black_elo;
+    event       = gd.event;
+    site        = gd.site;
+    date        = gd.date;
+    // eco      = gd.eco;
+    date        = gd.date;
+    result      = gd.result;
+    transpo_nbr = 0;
+    CompressMoves press;
+    std::vector<MoveTree> &variation = gd.tree.variations[0];
+    std::string str;
+    for( int i=0; i<variation.size(); i++ )
+    {
+        thc::Move mv = variation[i].game_move.move;
+        char ch;
+        press.compress_move( mv, &ch );
+        str.push_back(ch);
+    }
+    str_blob = str;
+}
+
+
 int Database::GetRow( DB_GAME_INFO *info, int row )
 {
     int ret=0;

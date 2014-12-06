@@ -37,17 +37,27 @@ using namespace std;
 
 void DbDialog::AddExtraControls()
 {
+    // Text control for white entry
+    wxSize sz4 = mini_board->GetSize();
+    wxSize sz5 = wxDefaultSize;
+    sz5.x = (sz4.x*55)/100;
+    //sz5.y = (sz4.y*2)/10;
+
+    //text_ctrl->SetSize( sz3.x*2, sz3.y );      // temp temp
+    text_ctrl = new wxTextCtrl ( this, ID_DB_TEXT, wxT(""), wxDefaultPosition, sz5, 0 );
+    vsiz_panel_button1->Add(text_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    wxSize sz2=text_ctrl->GetSize();
+    //text_ctrl->SetSize((sz2.x*10)/32,sz2.y);      // temp temp
+    //text_ctrl->SetSize((sz.x*7)/2,sz2.y);      // temp temp
+    text_ctrl->SetValue("White Player");
+
     wxButton* reload = new wxButton ( this, ID_DB_RELOAD, wxT("Search"),
                                      wxDefaultPosition, wxDefaultSize, 0 );
     vsiz_panel_button1->Add(reload, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    
-    // Text control for white entry
-    text_ctrl = new wxTextCtrl ( this, ID_DB_TEXT, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_button1->Add(text_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    wxSize sz2=text_ctrl->GetSize();
-    text_ctrl->SetSize((sz2.x*118)/32,sz2.y);      // temp temp
-    //text_ctrl->SetSize((sz.x*7)/2,sz2.y);      // temp temp
-    text_ctrl->SetValue("White Player");
+
+    //wxSize sz3=reload->GetSize();
+    //text_ctrl->SetSize( sz3.x*2, sz3.y );      // temp temp
+ 
     
     wxButton* btn1 = new wxButton ( this, ID_BUTTON_1, wxT("Clear Clipboard"),
                                      wxDefaultPosition, wxDefaultSize, 0 );
@@ -345,13 +355,158 @@ static bool compare( const DB_GAME_INFO &g1, const DB_GAME_INFO &g2 )
     return lt;
 }
 
+struct TempElement
+{
+    int idx;
+    std::string blob;
+    std::vector<int> counts;
+};
+
+static bool compare_blob( const TempElement &e1, const TempElement &e2 )
+{
+    bool lt = e1.blob < e2.blob;
+    return lt;
+}
+
+static bool compare_counts( const TempElement &e1, const TempElement &e2 )
+{
+    bool lt = false;
+    unsigned int len = e1.blob.length();
+    if( e2.blob.length() < len )
+        len = e2.blob.length();
+    for( unsigned int i=0; i<len; i++ )
+    {
+        if( e1.counts[i] != e2.counts[i] )
+        {
+            lt = (e1.counts[i] < e2.counts[i]);
+            return lt;;
+        }
+    }
+    lt = (e1.blob.length() < e2.blob.length());
+    return lt;
+}
+
+void DbDialog::SmartCompare()
+{
+    std::vector<TempElement> inter;     // intermediate representation
+    
+    // Step 1, do a conventional string sort, beginning at our offset into the blob
+    unsigned int sz = games.size();
+    for( unsigned int i=0; i<sz; i++ )
+    {
+        DB_GAME_INFO &g = games[i];
+        TempElement e;
+        unsigned int sz2 = transpositions.size();
+        for( unsigned int j=0; j<sz2; j++ )
+        {
+            PATH_TO_POSITION *ptp = &transpositions[j];
+            unsigned int offset = ptp->blob.length();
+            if( 0 == memcmp( ptp->blob.c_str(), g.str_blob.c_str(), offset ) )
+            {
+                e.idx = i;
+                e.blob = g.str_blob.substr(offset);
+                e.counts.resize( e.blob.length() );
+                inter.push_back(e);
+                break;
+            }
+        }
+    }
+    std::sort( inter.begin(), inter.end(), compare_blob );
+    
+    // Step 2, work out the nbr of moves in clumps of moves
+    sz = inter.size();
+    bool at_least_one = true;
+    for( unsigned int j=0; at_least_one; j++ )
+    {
+        at_least_one = false;  // stop when we've passed end of all strings
+        char current='\0';
+        unsigned int start=0;
+        bool run_in_progress=false;
+        for( unsigned int i=0; i<sz; i++ )
+        {
+            TempElement &e = inter[i];
+            
+            // A short game stops runs
+            if( j >= e.blob.length() )
+            {
+                if( run_in_progress )
+                {
+                    run_in_progress = false;
+                    int count = i-start;
+                    for( int k=start; k<i; k++ )
+                    {
+                        TempElement &f = inter[k];
+                        f.counts[j] = count;
+                    }
+                }
+                continue;
+            }
+            at_least_one = true;
+            char c = e.blob[j];
+            
+            // First time, get something to start a run
+            if( !run_in_progress )
+            {
+                run_in_progress = true;
+                current = c;
+                start = i;
+            }
+            else
+            {
+                
+                // Run can be over because of character change
+                if( c != current )
+                {
+                    int count = i-start;
+                    for( int k=start; k<i; k++ )
+                    {
+                        TempElement &f = inter[k];
+                        f.counts[j] = count;
+                    }
+                    current = c;
+                    start = i;
+                }
+                
+                // And/Or because we reach bottom
+                if( i+1 == sz )
+                {
+                    int count = sz - start;
+                    for( int k=start; k<sz; k++ )
+                    {
+                        TempElement &f = inter[k];
+                        f.counts[j] = count;
+                    }
+                }
+            }
+        }
+    }
+
+    // Step 3 sort again using the counts
+    std::sort( inter.begin(), inter.end(), compare_counts );
+    
+    // Step 4 build sorted version of games list
+    std::vector<DB_GAME_INFO> temp;
+    sz = inter.size();
+    for( unsigned int i=0; i<sz; i++ )
+    {
+        TempElement &e = inter[i];
+        temp.push_back( games[e.idx] );
+    }
+
+    // Step 5 replace original games list
+    games = temp;
+}
+
 void DbDialog::OnListColClick( int compare_col )
 {
     if( games.size() > 0 )
     {
         this->compare_col = compare_col;
         backdoor = this;
-        std::sort( games.begin(), games.end(), compare );
+        if( compare_col==1 || compare_col==3 )
+            std::sort( games.begin(), games.end(), compare );
+        else
+            SmartCompare();
         nbr_games_in_list_ctrl = games.size();
         list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
         list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
@@ -528,21 +683,6 @@ void DbDialog::OnButton3()
     }
     std::string player_name = track->info.white;
     objs.db->LoadGamesWithQuery( player_name, true, cache );
-
-    // Clear the base position
-    thc::ChessRules cr;
-    this->cr = cr;
-    moves_from_base_position.clear();
-    
-    // No need to look for more games in database in base position
-    clipboard_db = true;
-    
-    StatsCalculate();
-
-    list_ctrl->SetItemState( 0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
-    list_ctrl->SetItemState( 0, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
-    list_ctrl->EnsureVisible(0);
-    list_ctrl->SetFocus();
 }
 
 void DbDialog::OnButton4()
@@ -556,21 +696,30 @@ void DbDialog::OnButton4()
     std::string player_name = track->info.white;
     objs.db->LoadGamesWithQuery( player_name, false, cache );
     
-    // Clear the base position
-    thc::ChessRules cr;
-    this->cr = cr;
-    moves_from_base_position.clear();
-    
-    // No need to look for more games in database in base position
-    clipboard_db = true;
-    
-    StatsCalculate();
-    
-    list_ctrl->SetItemState( 0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
-    list_ctrl->SetItemState( 0, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
-    list_ctrl->EnsureVisible(0);
-    list_ctrl->SetFocus();
 }
+
+void DbDialog::OnCheckBox( bool checked )
+{
+    if( checked )
+    {
+       
+        // Clear the base position
+        thc::ChessRules cr;
+        this->cr = cr;
+        moves_from_base_position.clear();
+        
+        // No need to look for more games in database in base position
+        clipboard_db = true;
+        
+        StatsCalculate();
+        
+        list_ctrl->SetItemState( 0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
+        list_ctrl->SetItemState( 0, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
+        list_ctrl->EnsureVisible(0);
+        list_ctrl->SetFocus();
+    }
+}
+
 
 void DbDialog::LoadGamesIntoMemory()
 {

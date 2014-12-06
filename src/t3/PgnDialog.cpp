@@ -107,29 +107,7 @@ GameDocument * PgnDialog::GetCachedDocument( int idx )
 void PgnDialog::ReadItem( int item, DB_GAME_INFO &info )
 {
     GameDocument *ptr = GetCachedDocument(item);
-    GameDocument gd = *ptr;
-    info.white = gd.white;
-    info.black = gd.black;
-    info.white_elo = gd.white_elo;
-    info.black_elo = gd.black_elo;
-    info.event = gd.event;
-    info.site  = gd.site;
-    info.date  = gd.date;
-//    info.eco   = gd.eco;
-    info.date  = gd.date;
-    info.result = gd.result;
-    info.transpo_nbr = 0;
-    CompressMoves press;
-    std::vector<MoveTree> &variation = gd.tree.variations[0];
-    std::string str;
-    for( int i=0; i<variation.size(); i++ )
-    {
-        thc::Move mv = variation[i].game_move.move;
-        char ch;
-        press.compress_move( mv, &ch );
-        str.push_back(ch);
-    }
-    info.str_blob = str;
+    info.Downscale( *ptr );
 }
 
 void PgnDialog::OnSaveAllToAFile() {}

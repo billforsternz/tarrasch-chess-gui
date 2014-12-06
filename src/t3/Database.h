@@ -15,25 +15,7 @@
 #include "sqlite3.h"
 #include "thc.h"
 #include "GameDocument.h"
-
-struct DB_GAME_INFO
-{
-    int game_id;
-    std::string white;
-    std::string black;
-    std::string event;
-    std::string site;
-    std::string result;
-    std::string date;
-    std::string white_elo;
-    std::string black_elo;
-    std::string str_blob;
-    int transpo_nbr;
-    
-    std::string db_calculate_move_txt( uint64_t hash_to_match );
-    int  db_calculate_move_vector( std::vector<thc::Move> &moves, uint64_t hash_to_match  );
-    std::string Description();
-};
+#include "GamesCache.h"
 
 class Database
 {

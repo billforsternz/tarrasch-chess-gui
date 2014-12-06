@@ -70,6 +70,7 @@ public:
     std::vector< PATH_TO_POSITION > transpositions;
     int compare_col;
     bool ReadItemFromMemory( int item, DB_GAME_INFO &info );
+    void SmartCompare();
 
     // Overrides
     virtual void OnActivate();
@@ -80,6 +81,7 @@ public:
     virtual void OnListColClick( int compare_col );
     virtual void OnSaveAllToAFile();
     virtual void OnHelpClick();
+    virtual void OnCheckBox( bool checked );
     virtual void OnUtility();
     virtual void OnButton1();
     virtual void OnButton2();

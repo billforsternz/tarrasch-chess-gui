@@ -510,9 +510,9 @@ void GamesDialog::CreateControls()
     button_panel->Add(vsiz_panel_buttons, 0, wxALIGN_TOP|wxALL, 0);
 
     // Load / Ok / Game->Board
-    wxButton* ok = new wxButton ( this, wxID_OK, wxT("Load Game"),
+    ok_button = new wxButton ( this, wxID_OK, wxT("Load Game"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_button1->Add(ok, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_button1->Add(ok_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     
     // Save all games to a file
     wxButton* save_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save all"),
@@ -726,6 +726,17 @@ void GamesDialog::OnHelpClick()
 {
 }
 
+void GamesDialog::OnCheckBox( wxCommandEvent& event )
+{
+    bool checked = event.IsChecked();
+    OnCheckBox( checked );
+}
+
+// overide
+void GamesDialog::OnCheckBox( bool checked )
+{
+}
+
 void GamesDialog::OnRadio( wxCommandEvent& event )
 {
 }
@@ -735,10 +746,6 @@ void GamesDialog::OnSpin( wxCommandEvent& event )
 }
 
 void GamesDialog::OnComboBox( wxCommandEvent& event )
-{
-}
-
-void GamesDialog::OnCheckBox( wxCommandEvent& event )
 {
 }
 

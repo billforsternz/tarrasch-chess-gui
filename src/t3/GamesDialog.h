@@ -155,6 +155,7 @@ public:
     virtual void OnListColClick( int compare_col );
     virtual void OnSaveAllToAFile();
     virtual void OnHelpClick();
+    virtual void OnCheckBox( bool checked );
     virtual void OnUtility();
     virtual void OnButton1();
     virtual void OnButton2();
@@ -196,6 +197,7 @@ protected:
     void         CopyOrAdd( bool clear_clipboard );
 
     // Data members
+    wxButton* ok_button;
     wxCheckBox *filter_ctrl;
     wxRadioButton *radio_ctrl;
     wxComboBox *combo_ctrl;

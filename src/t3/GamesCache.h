@@ -9,14 +9,16 @@
 #include "GameDocument.h"
 #include <time.h> // time_t
 
+class DB_GAME_INFO;
 
 class MagicBase
 {
 public:
-    ~MagicBase() {}
+    virtual ~MagicBase() {}
     virtual void GetGameDocument( GameDocument &gd )    { cprintf("FIXME DANGER WILL ROBINSON 1\n"); }
     virtual GameDocument GetGameDocument()              { GameDocument doc;     cprintf("FIXME DANGER WILL ROBINSON 2\n"); return doc; }
     virtual GameDocument *GetGameDocumentPtr()  { return NULL; }
+    virtual DB_GAME_INFO *GetCompactGamePtr() { return NULL; }      // FIXME USE THIS AS MUCH AS POSSIBLE FOR GOOD PERFORMANCE
     virtual bool IsInMemory()        { return false; }
     virtual bool IsModified()        { return false; }
     virtual uint32_t GetGameBeingEdited() { return 0; }
@@ -35,6 +37,31 @@ public:
     virtual bool IsModified()        { return the_game.IsModified(); }
     virtual uint32_t GetGameBeingEdited() { return the_game.game_being_edited; }
     virtual long GetFposn() { return the_game.fposn0; }
+};
+
+class DB_GAME_INFO : public MagicBase
+{
+public:
+    virtual void GetGameDocument( GameDocument &gd )    { Upscale(gd); }
+    virtual GameDocument GetGameDocument()              { GameDocument doc;  Upscale(doc);   cprintf("FIXME DANGER WILL ROBINSON 4\n"); return doc; }
+    virtual DB_GAME_INFO *GetCompactGamePtr() { return this; }
+    int game_id;
+    std::string white;
+    std::string black;
+    std::string event;
+    std::string site;
+    std::string result;
+    std::string date;
+    std::string white_elo;
+    std::string black_elo;
+    std::string str_blob;
+    int transpo_nbr;
+    
+    std::string db_calculate_move_txt( uint64_t hash_to_match );
+    int  db_calculate_move_vector( std::vector<thc::Move> &moves, uint64_t hash_to_match  );
+    std::string Description();
+    void Upscale( GameDocument &gd );       // to GameDocument
+    void Downscale( GameDocument &gd );     // from GameDocument
 };
 
 void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &gd );
