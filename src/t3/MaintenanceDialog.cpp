@@ -413,7 +413,7 @@ void MaintenanceDialog::OnMaintenanceVerify( wxCommandEvent& WXUNUSED(event) )
 void MaintenanceDialog::OnMaintenanceCreate( wxCommandEvent& WXUNUSED(event) )
 {
     db_maintenance_create_or_append_to_database( pgn_filename.c_str() );
-    cprintf(                     "Appending file: %s\n", pgn_filename.c_str().AsChar() );
+    cprintf(                     "Appending file: %s\n", pgn_filename.c_str() );
     #if 0
     cprintf(                     "Appending file: /Users/Maria/Documents/Tarrasch/giant-base-part1-rebuilt.pgn\n" );
     db_maintenance_create_or_append_to_database( "/Users/Maria/Documents/Tarrasch/giant-base-part1-rebuilt.pgn" );

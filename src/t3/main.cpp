@@ -12,6 +12,7 @@
 #include "wx/listctrl.h"
 #include "wx/clipbrd.h"
 #include "wx/sysopt.h"
+#include "wx/log.h"
 #include "Portability.h"
 #include "Appdefs.h"
 #include "Canvas.h"
@@ -124,6 +125,7 @@ int DebugPrintfInner( const char *fmt, ... )
 static int dbg_printf_prepend_time=0;
 DebugPrintfTime::DebugPrintfTime()  { dbg_printf_prepend_time++; }
 DebugPrintfTime::~DebugPrintfTime() { dbg_printf_prepend_time--; if(dbg_printf_prepend_time<0) dbg_printf_prepend_time=0; }
+#ifdef WX_3
 class CustomLogFormatter : public wxLogFormatter
 {
 	virtual wxString Format(wxLogLevel level,
@@ -157,6 +159,7 @@ class CustomLogFormatter : public wxLogFormatter
         return temp;
 	}
 };
+#endif
 
 // This is an example formatter for experimentation
 #if 0
@@ -182,8 +185,10 @@ class SimpleDebugPrintf : public wxLogWindow
 
 {
     wxLog *old_target;
+#ifdef WX_3
     wxLogFormatter *old_formatter;
     CustomLogFormatter custom_log_formatter;
+#endif
 public:
     SimpleDebugPrintf( wxWindow* parent ) : wxLogWindow( parent, "Log Window", true, false )
     {
@@ -200,14 +205,18 @@ public:
         window->SetPosition( pos );
 
 	    old_target = wxLog::SetActiveTarget(this);
+#ifdef WX_3
 	    old_formatter = SetFormatter(&custom_log_formatter);
+#endif
         is_windowing_printf_alive = true;
     }
 
     ~SimpleDebugPrintf()
     {
         is_windowing_printf_alive = false;
+#ifdef WX_3
 	    SetFormatter(old_formatter);
+#endif
 	    wxLog::SetActiveTarget(old_target);
     }
 };
@@ -219,11 +228,12 @@ int core_printf( const char *fmt, ... )
 	va_start( stk, fmt );
 	vsnprintf( buf /*strchr(buf,'\0')*/, sizeof(buf)-2, fmt, stk );
     buf[ sizeof(buf)-1 ] = '\0';
- /* if( is_windowing_printf_alive )
+    #ifdef THC_WINDOWS
+    if( is_windowing_printf_alive )
     {
         wxLogMessage(buf);
     }
-    else */
+    #endif
     {
         #ifdef THC_MAC
         printf("%s",buf);

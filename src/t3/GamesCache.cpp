@@ -859,7 +859,7 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
                         s = "<h2>" + white + "</h2>";
                     s += "\n";
                     publish_options |= GameView::SUPPRESS_NULL_MOVE;
-                    //publish_options |= GameView::SUPPRESS_VARIATION_PARENS;
+                    publish_options |= GameView::SUPPRESS_VARIATION_PARENS;
                 }
 #else
                 // Write prefix
@@ -873,7 +873,7 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
                         s = "##" + white;
                     s += "\r\n";
                     publish_options |= GameView::SUPPRESS_NULL_MOVE;
-                    //publish_options |= GameView::SUPPRESS_VARIATION_PARENS;
+                    publish_options |= GameView::SUPPRESS_VARIATION_PARENS;
                 }
 #endif
                 if( suppress_move )

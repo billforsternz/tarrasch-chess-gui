@@ -1223,14 +1223,14 @@ void GameView::ToPublishString( std::string &str, int &diagram_base, int &mv_bas
             case START_OF_VARIATION:
             {
                 indent++;
-                if( !(publish_options & SUPPRESS_VARIATION_PARENS) )
+                if( 0 ) //!(publish_options & SUPPRESS_VARIATION_PARENS) )
                     frag = "("; //"<b>(</b>";
                 break;
             }
             case END_OF_VARIATION:
             {
                 indent--;
-                if( !(publish_options & SUPPRESS_VARIATION_PARENS) )
+                if( 0 ) //!(publish_options & SUPPRESS_VARIATION_PARENS) )
                     frag = ")\n"; //"<b>)</b>\n";
                 break;
             }

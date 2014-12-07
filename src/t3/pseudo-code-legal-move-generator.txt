@@ -1,0 +1,45 @@
+efficiently calculate list of all legal moves
+ king moves
+  for each knight ray
+   if its an enemy knight increment check count
+  for each king ray
+   clear possible pin flag
+   for each square
+    if enemy
+     it may be giving check, or it may be pinning, or neither, then we are done
+      checker or pinner based on whether friend previously set possible pin flag
+      horizontal and vertical rays - checkers and pinners are from rooks and queens
+      diagonal rays - checkers and pinners are from bishops and queens, sometimes pawns check
+      if checker increment check count
+      if pinner save pinned piece and two pin rays
+       a pinned piece can move along the two pin rays (one towards king the other towards pinner) only
+       note that because there is only one king per side, a piece cannot be pinned in two or more directions at once
+       (Euclid says only one line intersects two points - comprising pinned piece and king).
+       diagonnally pinned bishops, queens, and pawns can move on the two diagonal pinning rays
+       orthogonally pinned rooks, queens and pawns can move on the two orthogonal pinning rays
+    if friend
+     if possible pin flag already set we are done, else set possible pinned flag
+    if empty and first square
+     if the square is not attacked save this as a valid move
+  
+ if check > 1
+  we are done because if double check only king moves are possible
+  
+ if check == 0
+  add castling moves if possible
+
+ normal moves
+  if enpassant target, generate up to two enpassant moves
+   ignore normal pinning logic, apply simple legality check - is king attacked after move?
+  for each square on board
+   if friend and not king
+    for each ray or if pinned for each pin ray
+     for each square
+      if friend we are done
+      if empty or enemy conditionally save move, then if enemy we are done
+       conditionally save move
+        if check save move only if destination is on ray from king to checker
+        otherwise just save move
+        
+        
+   
