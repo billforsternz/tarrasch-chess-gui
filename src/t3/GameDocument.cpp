@@ -17,22 +17,23 @@
 using namespace std;
 using namespace thc;
 
-GameDocumentBase::GameDocumentBase( GameLogic *gl )
+GameDocument::GameDocument( GameLogic *gl )
+    : gv(gl)
 {
     this->gl = gl;
     ChessPosition initial_position;
     Init(initial_position);
 }
 
-GameDocumentBase::GameDocumentBase()
+GameDocument::GameDocument()
+    : gv(objs.gl)
 {
     this->gl = objs.gl;
     ChessPosition initial_position;
     Init(initial_position);
 }
 
-// Virtual
-void GameDocumentBase::Init( const ChessPosition &start_position )
+void GameDocument::Init( const ChessPosition &start_position )
 {
     non_zero_start_pos = 0;
     game_details_edited = false;
@@ -61,9 +62,12 @@ void GameDocumentBase::Init( const ChessPosition &start_position )
     fposn3 = 0;
     moves_txt = "";
     prefix_txt = "";
+    this->master_position = start_position;
+    tree.Init( this->start_position );
+    Rebuild();
 }
 
-void GameDocumentBase::FleshOutDate()
+void GameDocument::FleshOutDate()
 {
     if( date=="" )
     {
@@ -191,32 +195,7 @@ std::string RemoveLineEnds( std::string &s )
     return t;
 }
 
-GameDocument::GameDocument( GameLogic *gl )
-    : GameDocumentBase(gl), gv(gl)
-{
-    ChessPosition initial_position;
-    Init(initial_position);
-}
-
-GameDocument::GameDocument()
-    : gv(objs.gl)
-{
-    this->gl = objs.gl;
-    ChessPosition initial_position;
-    Init(initial_position);
-}
-
-
-// Virtual
-void GameDocument::Init( const ChessPosition &start_position )
-{
-    this->master_position = start_position;
-    GameDocumentBase::Init(start_position);
-    tree.Init( this->start_position );
-    Rebuild();
-}
-
-void GameDocumentBase::GetGameDocument( GameDocument &read_from_file )
+void GameDocument::GetGameDocument( GameDocument &read_from_file )
 {
     /* GameDocument doc = * std::dynamic_pointer_cast<GameDocument> (gds[i]); */
     GameDocument temp = *this;
@@ -241,7 +220,7 @@ void GameDocumentBase::GetGameDocument( GameDocument &read_from_file )
         }
     }
     read_from_file = temp;
-    //cprintf( "white = %s, moves = %d\n", read_from_file.white.c_str(), read_from_file.tree.variations[0].size() );
+    cprintf( "white = %s, moves = %d\n", read_from_file.white.c_str(), read_from_file.tree.variations[0].size() );
 }
 
 std::string GameDocument::Description()
@@ -925,8 +904,8 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
     return okay;
 }
 
-// Load a GameDocumentBase from a list of moves
-void GameDocument::LoadFromMoveList( std::vector<thc::Move> &moves )
+// Load a GameDocument from a list of moves
+void GameDocument::LoadFromMoveList( std::vector<thc::Move> &moves, int move_idx )
 {
     thc::ChessRules cr;
     thc::ChessPosition start_position;
@@ -942,10 +921,23 @@ void GameDocument::LoadFromMoveList( std::vector<thc::Move> &moves )
         (*pvar).push_back( node );
     }
     Rebuild();
-    in_memory = true;
+    SetNonZeroStartPosition( move_idx );
+}
+
+// Set a non zero start position
+void GameDocument::SetNonZeroStartPosition( int main_line_idx )
+{
+    VARIATION &variation = tree.variations[0];
     gbl_plast_move = NULL;
-    if( (*pvar).size() > 0 )
-        gbl_plast_move = &(*pvar)[(*pvar).size()-1];
+    if( variation.size() > 0 )
+    {
+        gbl_plast_move = &(variation)[variation.size()-1];
+        if(  0<main_line_idx &&  main_line_idx <= variation.size() )
+        {
+            unsigned long pos = gv.GetMoveOffset( &variation[main_line_idx-1] );
+            non_zero_start_pos = pos;
+        }
+    }
 }
 
 // Return ptr to move played if any
@@ -1143,6 +1135,7 @@ unsigned long GameDocument::GetInsertionPoint()
 // Where are we in the document
 void GameDocument::SetInsertionPoint(unsigned long pos)
 {
+    // FIXME - this sets the physical insertion point in a control - is that really what we want ?
     gl->atom.SetInsertionPoint(pos);
 }
 

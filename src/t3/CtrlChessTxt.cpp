@@ -58,6 +58,7 @@ void CtrlChessTxt::SetGameDocument( GameDocument *gd )
     unsigned long pos = gd->non_zero_start_pos ? gd->non_zero_start_pos : gd->gv.FindMove0();
     if( gl )
         gl->atom.Redisplay(pos);
+    cprintf( "SetGameDocument() pos = %lu\n", pos );
 }
 
 void CtrlChessTxt::OnProcessCustom(wxCommandEvent& event)

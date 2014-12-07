@@ -264,7 +264,7 @@ void PgnFiles::Close( GamesCache *gc_clipboard )
             int sz=gc_clipboard->gds.size();
             for( int i=0; !still_needed && i<sz; i++ )
             {
-                GameDocumentBase *ptr = gc_clipboard->gds[i]->GetGameDocumentBasePtr();
+                GameDocument *ptr = gc_clipboard->gds[i]->GetGameDocumentPtr();
                 if( ptr && ptr->pgn_handle == it->first )
                 {
                     still_needed   = true;
@@ -322,7 +322,7 @@ void PgnFiles::Close( GamesCache *gc_clipboard )
         int sz=gc_clipboard->gds.size();
         for( int i=0; i<sz; i++ )
         {
-            GameDocumentBase *ptr = gc_clipboard->gds[i]->GetGameDocumentBasePtr();
+            GameDocument *ptr = gc_clipboard->gds[i]->GetGameDocumentPtr();
             if( ptr && ptr->pgn_handle == handle_replace )
                 ptr->pgn_handle = handle;
         }

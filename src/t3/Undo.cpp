@@ -35,9 +35,8 @@ Undo::Undo( const Undo& copy_from_me )
     no_front_pops_yet = copy_from_me.no_front_pops_yet;
     gl                = copy_from_me.gl;
     stack             = copy_from_me.stack;
-#if 1 //FIXME later
-    it_saved = stack.begin();
-#else
+    it_saved          = stack.begin();
+#if 0 // FIXME - should work but crashes
     if( copy_from_me.it_saved < copy_from_me.stack.begin() )
         cprintf( "Gotcha 1\n");
     if( copy_from_me.it_saved > copy_from_me.stack.end() )
@@ -45,6 +44,17 @@ Undo::Undo( const Undo& copy_from_me )
     it_saved = stack.begin() + (copy_from_me.it_saved - copy_from_me.stack.begin());
     cprintf( "it_saved offset=%d, stack.end() offset=%d\n", it_saved-stack.begin(), stack.end()-stack.begin() );
     assert_todo_fix( it_saved >= stack.begin() );
+#else // work in progress, but seems okay
+    std::deque<RestorePoint>::iterator it;
+    std::deque<RestorePoint>::const_iterator it2;
+    for( it=stack.begin(), it2=copy_from_me.stack.begin(); it!=stack.end() && it2!=copy_from_me.stack.end(); it++, it2++ )
+    {
+        if( it2 == copy_from_me.it_saved )
+        {
+            it_saved = it;
+            break;
+        }
+    }
 #endif
 }
 
@@ -54,16 +64,26 @@ Undo & Undo::operator= (const Undo & copy_from_me )
     no_front_pops_yet = copy_from_me.no_front_pops_yet;
     gl                = copy_from_me.gl;
     stack             = copy_from_me.stack;
-#if 1 //FIXME later
-    it_saved = stack.begin();
-#else
+    it_saved          = stack.begin();
+#if 0 // FIXME - should work but crashes
     if( copy_from_me.it_saved < copy_from_me.stack.begin() )
-        cprintf( "* Gotcha 1\n");
+        cprintf( "Gotcha 1\n");
     if( copy_from_me.it_saved > copy_from_me.stack.end() )
-        cprintf( "* Gotcha 2\n");
+        cprintf( "Gotcha 2\n");
     it_saved = stack.begin() + (copy_from_me.it_saved - copy_from_me.stack.begin());
-    cprintf( "* it_saved offset=%d, stack.end() offset=%d\n", it_saved-stack.begin(), stack.end()-stack.begin() );
+    cprintf( "it_saved offset=%d, stack.end() offset=%d\n", it_saved-stack.begin(), stack.end()-stack.begin() );
     assert_todo_fix( it_saved >= stack.begin() );
+#else // work in progress, but seems okay
+    std::deque<RestorePoint>::iterator it;
+    std::deque<RestorePoint>::const_iterator it2;
+    for( it=stack.begin(), it2=copy_from_me.stack.begin(); it!=stack.end() && it2!=copy_from_me.stack.end(); it++, it2++ )
+    {
+        if( it2 == copy_from_me.it_saved )
+        {
+            it_saved = it;
+            break;
+        }
+    }
 #endif
     return *this;
 }

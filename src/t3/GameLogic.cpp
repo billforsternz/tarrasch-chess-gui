@@ -576,7 +576,7 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
         bool have_game = false;
         if( gc.gds.size()==1 && objs.repository->general.m_straight_to_game )
         {
-            GameDocumentBase *gd_file = gc.gds[0]->GetGameDocumentBasePtr();
+            GameDocument *gd_file = gc.gds[0]->GetGameDocumentPtr();
             bool have_game = gd_file && gd_file->in_memory;
             if( !have_game && gd_file )
             {
@@ -709,7 +709,7 @@ void GameLogic::NextGamePreviousGame( int idx )
         IndicateNoCurrentDocument();
         gd_file.game_being_edited = ++game_being_edited_tag;
         gd = gd_file;
-        GameDocumentBase *ptr = gc.gds[idx]->GetGameDocumentBasePtr();
+        GameDocument *ptr = gc.gds[idx]->GetGameDocumentPtr();
         if( ptr )
             ptr->selected = true;
         this->file_game_idx = idx;
@@ -851,7 +851,7 @@ void GameLogic::PutBackDocument()
 {
     for( int i=0; i<gc.gds.size(); i++ )
     {
-        GameDocumentBase *ptr = gc.gds[i]->GetGameDocumentBasePtr();
+        GameDocument *ptr = gc.gds[i]->GetGameDocumentPtr();
         if( ptr && ptr->game_being_edited == gd.game_being_edited )
         {
             gd.FleshOutDate();
@@ -865,7 +865,7 @@ void GameLogic::PutBackDocument()
     }
     for( int i=0; i<gc_clipboard.gds.size(); i++ )
     {
-        GameDocumentBase *ptr = gc_clipboard.gds[i]->GetGameDocumentBasePtr();
+        GameDocument *ptr = gc_clipboard.gds[i]->GetGameDocumentPtr();
         if( ptr && ptr->game_being_edited == gd.game_being_edited  )
         {
             gd.FleshOutDate();
@@ -883,14 +883,14 @@ void GameLogic::IndicateNoCurrentDocument()
 {
     for( int i=0; i<gc.gds.size(); i++ )
     {
-        GameDocumentBase *ptr = gc.gds[i]->GetGameDocumentBasePtr();
+        GameDocument *ptr = gc.gds[i]->GetGameDocumentPtr();
         if( ptr && ptr->game_being_edited == gd.game_being_edited )
              ptr->game_being_edited = 0;
         ptr->selected = false;
     }
     for( int i=0; i<gc_clipboard.gds.size(); i++ )
     {
-        GameDocumentBase *ptr = gc_clipboard.gds[i]->GetGameDocumentBasePtr();
+        GameDocument *ptr = gc_clipboard.gds[i]->GetGameDocumentPtr();
         if( ptr && ptr->game_being_edited == gd.game_being_edited )
              ptr->game_being_edited = 0;
         ptr->selected = false;
@@ -955,17 +955,20 @@ void GameLogic::CmdFileDatabase()
         wxSize sz = objs.frame->GetSize();
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
-        DbDialog dialog( objs.frame, &cr, &gc_database/*gc_session*/, &gc_clipboard, ID_PGN_DIALOG_DATABASE, pt, sz );
-        if( dialog.ShowModalOk() )
+        DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard , ID_PGN_DIALOG_DATABASE, pt, sz );
+        if( dialog.nbr_games_in_list_ctrl == 0 )
+        {
+            wxMessageBox( "No games found" );
+        }
+        else if( dialog.ShowModalOk() )
         {
             objs.log->SaveGame(&gd,editing_log);
           //objs.session->SaveGame(&gd);        //careful...
             GameDocument temp = gd;
             GameDocument new_gd;
             PutBackDocument();
-            if( dialog.LoadGame(this,new_gd,this->file_game_idx) )
+            if( dialog.LoadGame(new_gd) )
             {
-                new_gd.SetNonZeroStartPosition(cr);
                 tabs->TabNew(new_gd);
                 tabs->SetInfile(false);
                 ShowNewDocument();
@@ -2592,20 +2595,19 @@ void GameLogic::StatusUpdate( int idx )
         {
             for( int i=0; i<gc.gds.size(); i++ )
             {
-                GameDocumentBase *ptr = gc.gds[i]->GetGameDocumentBasePtr();
-                if( ptr &&
-                     (ptr->modified || ptr->game_prefix_edited  || ptr->game_details_edited)
-                  )
+                MagicBase *ptr = gc.gds[i].get();
+                uint32_t game_being_edited = ptr->GetGameBeingEdited();
+                if( ptr && ptr->IsModified() )
                 {
                     nbr_modified++;
                 }
-                else if( ptr && ptr->game_being_edited )
+                else if( ptr && game_being_edited )
                 {
                     GameDocument *pd = tabs->Begin();
                     Undo *pu = tabs->BeginUndo();
                     while( pd && pu )
                     {
-                        if( ptr->game_being_edited == pd->game_being_edited )
+                        if( game_being_edited == pd->game_being_edited )
                         {
                             bool doc_modified = (pd->game_details_edited || pd->game_prefix_edited || pd->modified || pu->IsModified());
                             if( doc_modified )

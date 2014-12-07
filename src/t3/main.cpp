@@ -233,6 +233,7 @@ int core_printf( const char *fmt, ... )
     {
         wxLogMessage(buf);
     }
+    else
     #endif
     {
         #ifdef THC_MAC
@@ -614,7 +615,9 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
                                                             //        wxNO_FULL_REPAINT_ON_RESIZE )
 {
     #ifndef KILL_DEBUG_COMPLETELY
+    #ifdef THC_WINDOWS
     SimpleDebugPrintf *sdf = new SimpleDebugPrintf(this);   // all child windows are automatically deleted
+    #endif
     #endif
 
     // Timer
@@ -1764,7 +1767,7 @@ void ChessFrame::RefreshLanguageFont( const char *from, bool before_large_font, 
             }
             for( int i=0; gc && i<gc->gds.size(); i++ )
             {
-                GameDocumentBase *ptr = gc->gds[i]->GetGameDocumentBasePtr();
+                GameDocument *ptr = gc->gds[i]->GetGameDocumentPtr();
                 if( ptr )
                     LangLine( ptr->moves_txt, from, to );
             }

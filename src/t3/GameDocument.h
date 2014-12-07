@@ -21,184 +21,14 @@
 #define smart_ptr std::unique_ptr
 #define make_smart_ptr(T,to,from) smart_ptr<T> to; to.reset(new T(from))
 
-
-struct GameInFile
-{
-    // Data
-    unsigned long non_zero_start_pos;
-    bool        game_details_edited;
-    bool        game_prefix_edited;
-    bool        modified;
-    bool        in_memory;
-    uint32_t    game_being_edited;
-    int         pgn_handle;
-    bool        selected;
-    bool        focus;
-    int         sort_idx;
-    int         game_nbr;
-
-    std::string white;          // "White"
-    std::string black;          // "Black"
-    std::string event;          // "Event"
-    std::string site;           // "Site"
-    std::string date;           // "Date"
-    std::string round;          // "Round"
-    std::string result;         // "Result"
-    std::string eco;            // "ECO"
-    std::string white_elo;      // "WhiteElo"
-    std::string black_elo;      // "BlackElo"
-    thc::ChessPosition start_position;  // the start position
-    unsigned long fposn0;       // offset of prefix in .pgn file
-    unsigned long fposn1;       // offset of tags in .pgn file
-    unsigned long fposn2;       // offset where moves are in .pgn file
-    unsigned long fposn3;       // offset where moves end in .pgn file
-    std::string prefix_txt;     // text between games
-    std::string moves_txt;      // "1.e4 e5 2.Nf3.."
-};
-
-class GameSummary
-{
-public:
-    std::string white;
-    std::string black;
-    std::string event;
-    std::string site;
-    std::string result;
-    std::string date;
-    std::string white_elo;
-    std::string black_elo;
-    std::string move_txt;
-    std::string str_blob;
-    std::vector<thc::Move> moves;
-    std::string Description()
-    {
-        std::string white = this->white;
-        std::string black = this->black;
-        size_t comma = white.find(',');
-        if( comma != std::string::npos )
-            white = white.substr( 0, comma );
-        comma = black.find(',');
-        if( comma != std::string::npos )
-            black = black.substr( 0, comma );
-        int move_cnt = str_blob.length();
-        std::string label = white;
-        if( white_elo != "" )
-        {
-            label += " (";
-            label += white_elo;
-            label += ")";
-        }
-        label += " - ";
-        label += black;
-        if( black_elo != "" )
-        {
-            label += " (";
-            label += black_elo;
-            label += ")";
-        }
-        if( site != "" )
-        {
-            label += ", ";
-            label += site;
-        }
-        else if( event != "" )
-        {
-            label += ", ";
-            label += event;
-        }
-        if( date.length() >= 4 )
-        {
-            label += " ";
-            label += date.substr(0,4);
-        }
-        bool result_or_moves = false;
-        if( result != "*" )
-        {
-            result_or_moves = true;
-            label += ", ";
-            label += result;
-            if( move_cnt > 0 )
-                label += " in";
-        }
-        if( move_cnt > 0 )
-        {
-            if( !result_or_moves )
-                label += ", ";
-            char buf[100];
-            sprintf( buf, " %d moves", (move_cnt+1)/2 );
-            label += std::string(buf);
-        }
-        return label;
-    }
-
-};
-
-
-                
 class GameLogic;
-class GameDocument;
-class GameDocumentBase
+class GameDocument
 {
-public:
-    GameDocumentBase( GameLogic *gl );
-    GameDocumentBase();
-    GameLogic *gl;
-
-    // Allow sorts
-    bool operator< (const GameDocumentBase &rhs) const
-    {
-        return sort_idx < rhs.sort_idx;
-    }
-
-    // Copy constructor
-    GameDocumentBase( const GameDocumentBase& src )
-    {
-        *this = src;    // use the assignment operator
-    }
-
-    void FleshOutDate();
-    virtual void Init( const thc::ChessPosition &start_position );
-    void GetGameDocument( GameDocument &gd );
-
-    // Data
-    unsigned long non_zero_start_pos;
-    bool        game_details_edited;
-    bool        game_prefix_edited;
-    bool        modified;
-    bool        in_memory;
-    uint32_t    game_being_edited;
-    bool        selected;
-    bool        focus;
-    int         pgn_handle;
-    int         sort_idx;
-    int         game_nbr;
-
-    std::string white;          // "White"
-    std::string black;          // "Black"
-    std::string event;          // "Event"
-    std::string site;           // "Site"
-    std::string date;           // "Date"
-    std::string round;          // "Round"
-    std::string result;         // "Result"
-    std::string eco;            // "ECO"
-    std::string white_elo;      // "WhiteElo"
-    std::string black_elo;      // "BlackElo"
-    thc::ChessPosition start_position;  // the start position
-    unsigned long fposn0;       // offset of prefix in .pgn file
-    unsigned long fposn1;       // offset of tags in .pgn file
-    unsigned long fposn2;       // offset where moves are in .pgn file
-    unsigned long fposn3;       // offset where moves end in .pgn file
-    std::string prefix_txt;     // text between games
-    std::string moves_txt;      // "1.e4 e5 2.Nf3.."
-};
-
-class GameDocument : public GameDocumentBase
-{
-
+    
 public:
     GameDocument( GameLogic *gl );
     GameDocument();
-
+    
     // Copy constructor
     GameDocument( const GameDocument& src )
     {
@@ -208,7 +38,7 @@ public:
     // Assignment operator
     GameDocument& operator=( const GameDocument& src )
     {
-
+        
         // Copy all data fields
         gl = src.gl;
         game_details_edited = src.game_details_edited;
@@ -250,59 +80,52 @@ public:
         Rebuild();
         return( *this );
     }
-    
-    // Copy constructor
-    GameDocument( const GameDocumentBase& src )
+
+    // Allow sorts
+    bool operator< (const GameDocument &rhs) const
     {
-        *this = src;    // use the assignment operator
+        return sort_idx < rhs.sort_idx;
     }
+
+    // Overrides
+    bool IsModified() { return (game_prefix_edited || game_details_edited || modified); }
+    uint32_t GetGameBeingEdited() { return game_being_edited; }
     
-    // Assignment operator
-    GameDocument& operator=( const GameDocumentBase& src )
-    {
-        
-         // Copy all data fields
-         gl = src.gl;
-         game_details_edited = src.game_details_edited;
-         game_prefix_edited  = src.game_prefix_edited;
-         modified        = src.modified;
-         in_memory       = src.in_memory;
-         game_being_edited    = src.game_being_edited;
-         pgn_handle      = src.pgn_handle;
-         sort_idx        = src.sort_idx;
-         focus           = false; //src.focus;
-         selected        = src.selected;
-         game_nbr        = src.game_nbr;
-         white           = src.white;
-         black           = src.black;
-         event           = src.event;
-         site            = src.site;
-         date            = src.date;
-         round           = src.round;
-         result          = src.result;
-         eco             = src.eco;
-         white_elo       = src.white_elo;
-         black_elo       = src.black_elo;
-         start_position  = src.start_position;
-         fposn0          = src.fposn0;
-         fposn1          = src.fposn1;
-         fposn2          = src.fposn2;
-         fposn3          = src.fposn3;
-         prefix_txt      = src.prefix_txt;
-         moves_txt       = src.moves_txt;
-         non_zero_start_pos = src.non_zero_start_pos;
-        
-        master_position = src.start_position;
-        gv.gl = src.gl;
-        
-        // Need to rebuild using our copy of the tree to avoid
-        //  raw ptrs to the old tree
-        tree.root = &start_position;
-        Rebuild();
-        return( *this );
-    }
-    
+    void FleshOutDate();
     virtual void Init( const thc::ChessPosition &start_position );
+    void GetGameDocument( GameDocument &gd );
+
+    // Data
+    unsigned long non_zero_start_pos;
+    bool        game_details_edited;
+    bool        game_prefix_edited;
+    bool        modified;
+    bool        in_memory;
+    uint32_t    game_being_edited;
+    bool        selected;
+    bool        focus;
+    int         pgn_handle;
+    int         sort_idx;
+    int         game_nbr;
+
+    std::string white;          // "White"
+    std::string black;          // "Black"
+    std::string event;          // "Event"
+    std::string site;           // "Site"
+    std::string date;           // "Date"
+    std::string round;          // "Round"
+    std::string result;         // "Result"
+    std::string eco;            // "ECO"
+    std::string white_elo;      // "WhiteElo"
+    std::string black_elo;      // "BlackElo"
+    thc::ChessPosition start_position;  // the start position
+    unsigned long fposn0;       // offset of prefix in .pgn file
+    unsigned long fposn1;       // offset of tags in .pgn file
+    unsigned long fposn2;       // offset where moves are in .pgn file
+    unsigned long fposn3;       // offset where moves end in .pgn file
+    std::string prefix_txt;     // text between games
+    std::string moves_txt;      // "1.e4 e5 2.Nf3.."
+    
     std::string Description();
     
     void FleshOutMoves();
@@ -311,7 +134,9 @@ public:
     void ToPublishTxtGameBody( std::string &str, int &diagram_idx, int &mv_idx, int &neg_base, int publish_options  );
     bool IsDiff( GameDocument &other );
     bool PgnParse( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language=false, int imove=-1 );
-    void LoadFromMoveList( std::vector<thc::Move> &moves );
+    void LoadFromMoveList( std::vector<thc::Move> &moves, int move_idx=0 );
+    void SetNonZeroStartPosition( int main_line_idx );
+
     
     MoveTree *MakeMove( GAME_MOVE game_move, bool allow_overwrite );
     MoveTree *KibitzCaptureStart( const char *engine_name, const char *txt, std::vector<thc::Move> &var,
@@ -401,26 +226,9 @@ public:
     MoveTree *Locate( unsigned long pos, thc::ChessRules &cr )
     {   cr = start_position;
         std::string title; bool at_move0; return gv.Locate( pos, cr, title, at_move0 ); }
-    void SetNonZeroStartPosition( thc::ChessPosition cp )
-    {
-        unsigned long pos=0;
-        bool found=false;
-        for(;;)
-        {
-            thc::ChessRules step;
-            if( !Locate( pos, step ) )
-                break;
-            if( step == cp )
-                found = true;
-            else if( found )
-                break;  // found earlier, so set non_zero_start_pos to the last match
-            pos++;
-        }
-        if( found )
-            non_zero_start_pos = pos-1;
-    }
 
     //Data
+    GameLogic *gl;
     thc::ChessRules master_position;    // the current position
     MoveTree  tree;                     // the moves
     GameView gv;
