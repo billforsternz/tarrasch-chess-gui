@@ -922,7 +922,7 @@ void Canvas::BookUpdate( bool suppress )
             txt = "1 book move";
         else
             txt.Printf( "%d book moves", n );
-        dbg_printf( "Book moves updated: %s\n", txt.c_str().AsChar() );
+        dbg_printf( "Book moves updated: %s\n", txt.c_str() );
         book_moves->Show(true);
         book_moves->SetTxt(txt);
     }

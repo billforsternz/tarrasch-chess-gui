@@ -31,7 +31,10 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <iterator>
+#include <list>    
 #include <algorithm>
+
 using namespace std;
 
 
@@ -109,18 +112,33 @@ void DbDialog::OnActivate()
     {
         activated_at_least_once = true;
         //cprintf( "GamesDialog::OnActivate\n");
-        wxPoint pos = notebook->GetPosition();
+        //wxPoint pos = notebook->GetPosition();
         //list_ctrl_stats->Hide();
         //list_ctrl_transpo->Hide();
         
+        wxPoint pos = ok_button->GetPosition();
+        wxSize  sz  = ok_button->GetSize();
+        pos.x += 3*(sz.x);
+        ok_button->SetPosition( pos );
+        ok_button->Update();
+        ok_button->Refresh();
+
+        wxPoint pos2 = notebook->GetPosition();
+        wxSize  sz2  = notebook->GetSize();
+        wxSize  sz3  = ok_button->GetSize();
+        pos2.x += (sz2.x/2);        
+        pos2.y += (sz2.y/2);        
+        pos2.x -= (sz3.x/2);        
+        pos2.y -= (sz3.y/2);        
+        //pos_button.x += (sz_panel.x/2 - sz_button.x/2);
+        //pos_button.y += (sz_panel.y/2 - sz_button.y/2);
         utility = new wxButton ( this, ID_DB_UTILITY, wxT("Calculate Stats"),
-                                pos, wxDefaultSize, 0 );
+                                pos2, wxDefaultSize, 0 );
+        utility->Raise();
         wxSize sz_panel  = notebook->GetSize();
         wxSize sz_button = utility->GetSize();
         wxPoint pos_button = utility->GetPosition();
-        pos_button.x += (sz_panel.x/2 - sz_button.x/2);
-        pos_button.y += (sz_panel.y/2 - sz_button.y/2);
-        utility->SetPosition( pos_button );
+        //utility->SetPosition( pos_button );
         
         list_ctrl->SetFocus();
     }
@@ -211,7 +229,6 @@ DbDialog::DbDialog
     long style
  ) : GamesDialog( parent, cr, gc, gc_clipboard, id, pos, size )
 {
-    AddExtraControls();
     activated_at_least_once = false;
     transpo_activated = false;
     dirty = false;
@@ -588,10 +605,8 @@ template<typename A, typename B>
 std::multimap<B,A> flip_and_sort_map(const std::map<A,B> &src)
 {
     std::multimap<B,A> dst;
-#ifdef MAC_FIX_LATER    // doesn't compile in Visual C++
     std::transform(src.begin(), src.end(), std::inserter(dst, dst.begin()),
                    flip_pair<A,B>);
-#endif
     return dst;
 }
 
@@ -894,6 +909,7 @@ void DbDialog::StatsCalculate()
     
 
     // Sort the stats according to number of games
+
     std::multimap< MOVE_STATS,  uint32_t > dst = flip_and_sort_map(stats);
     std::multimap< MOVE_STATS,  uint32_t >::reverse_iterator it;
     moves_in_this_position.clear();
@@ -1049,7 +1065,11 @@ void DbDialog::OnNextMove( int idx )
     }
 
     wxSafeYield();
+#ifdef THC_MAC
     CallAfter( &DbDialog::StatsCalculate );
+#else
+    StatsCalculate();
+#endif
 }
 
 

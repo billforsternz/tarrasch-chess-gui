@@ -204,7 +204,7 @@ public:
         window->SetSize( sz );
         window->SetPosition( pos );
 
-	    old_target = wxLog::SetActiveTarget(this);
+	    /*delete old_target =*/ wxLog::SetActiveTarget(this);
 #ifdef WX_3
 	    old_formatter = SetFormatter(&custom_log_formatter);
 #endif
@@ -217,34 +217,36 @@ public:
 #ifdef WX_3
 	    SetFormatter(old_formatter);
 #endif
-	    wxLog::SetActiveTarget(old_target);
+	    wxLog::SetActiveTarget(NULL /*old_target*/);
     }
 };
 
 int core_printf( const char *fmt, ... )
 {
-	static char buf[1024];
-	va_list stk;
-	va_start( stk, fmt );
-	vsnprintf( buf /*strchr(buf,'\0')*/, sizeof(buf)-2, fmt, stk );
-    buf[ sizeof(buf)-1 ] = '\0';
+	va_list args;
+	va_start( args, fmt );
     #ifdef THC_WINDOWS
     if( is_windowing_printf_alive )
     {
-        wxLogMessage(buf);
+        wxVLogMessage(fmt,args);
     }
     else
     #endif
     {
         #ifdef THC_MAC
-        printf("%s",buf);
+        vprintf(fmt,args);
         #endif
         #ifdef THC_WINDOWS
-        OutputDebugString((LPCTSTR)buf);
+        {
+        	static char buf[1024];
+	        vsnprintf( buf /*strchr(buf,'\0')*/, sizeof(buf)-2, fmt, args );
+            buf[ sizeof(buf)-1 ] = '\0';
+            OutputDebugString((LPCTSTR)buf);
+        }
         #endif
     }
-    int len = strlen(buf);
-    return len;
+    va_end(args);
+    return 0;
 }
 
 class ChessFrame: public wxFrame

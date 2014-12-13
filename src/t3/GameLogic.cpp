@@ -956,11 +956,7 @@ void GameLogic::CmdFileDatabase()
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
         DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard , ID_PGN_DIALOG_DATABASE, pt, sz );
-        if( dialog.nbr_games_in_list_ctrl == 0 )
-        {
-            wxMessageBox( "No games found" );
-        }
-        else if( dialog.ShowModalOk() )
+        if( dialog.ShowModalOk() )
         {
             objs.log->SaveGame(&gd,editing_log);
           //objs.session->SaveGame(&gd);        //careful...

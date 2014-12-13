@@ -149,6 +149,7 @@ public:
 
     // Overrides
     virtual void OnActivate();
+    virtual void AddExtraControls() {}
     virtual bool TestAndClearIsCacheDirty() = 0;
     virtual void ReadItem( int item, DB_GAME_INFO &info ) = 0;
     virtual void OnCancel();
@@ -184,6 +185,12 @@ public:
     int            single_line_cache_idx;
     
 protected:
+    wxWindow* parent2;
+    wxWindowID id;
+    wxPoint pos;
+    wxSize size;
+    long style;
+
     wxVirtualListCtrl  *list_ctrl;
     wxBoxSizer*  hsiz_panel;
     wxBoxSizer *button_panel;
@@ -215,7 +222,6 @@ public:
     bool transpo_activated;
     int nbr_games_in_list_ctrl;
 protected:
-    wxWindowID  id;
     int file_game_idx;
     bool db_game_set;
     GamesCache  *gc;

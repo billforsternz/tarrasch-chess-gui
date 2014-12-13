@@ -1042,6 +1042,7 @@
     <ClInclude Include="src\t3\GameLogic.h" />
     <ClInclude Include="src\t3\GamePrefixDialog.h" />
     <ClInclude Include="src\t3\GamesCache.h" />
+    <ClInclude Include="src\t3\GamesDialog.h" />
     <ClInclude Include="src\t3\GameSkeleton.h" />
     <ClInclude Include="src\t3\GameState.h" />
     <ClInclude Include="src\t3\GameView.h" />
@@ -1102,6 +1103,7 @@
     <ClCompile Include="src\t3\GameLogic.cpp" />
     <ClCompile Include="src\t3\GamePrefixDialog.cpp" />
     <ClCompile Include="src\t3\GamesCache.cpp" />
+    <ClCompile Include="src\t3\GamesDialog.cpp" />
     <ClCompile Include="src\t3\GameSkeleton.cpp" />
     <ClCompile Include="src\t3\GameView.cpp" />
     <ClCompile Include="src\t3\GeneralDialog.cpp" />

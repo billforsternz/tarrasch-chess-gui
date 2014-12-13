@@ -74,7 +74,7 @@ public:
 
     // Overrides
     virtual void OnActivate();
-    void AddExtraControls();
+    virtual void AddExtraControls();
     bool dirty;
     virtual bool TestAndClearIsCacheDirty() { bool was=dirty; dirty=false; return was; }
     virtual void ReadItem( int item, DB_GAME_INFO &info );

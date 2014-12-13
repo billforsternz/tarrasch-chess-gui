@@ -274,17 +274,19 @@ GamesDialog::GamesDialog
     const wxPoint& pos, const wxSize& size, long style
 )
 {
+    this->parent2 = parent;
+    this->id = id;
+    this->pos = pos;
+    this->size = size;
+    this->style = style;
+    this->gc = gc;
+    this->gc_clipboard = gc_clipboard;
     init_position_specified = (cr!=NULL);
     if( init_position_specified )
         this->cr = *cr;
-    this->id = id;
-    this->gc = gc;
-    this->gc_clipboard = gc_clipboard;
     single_line_cache_idx = -1;
     file_game_idx = -1;
     nbr_games_in_list_ctrl = 0;
-    Init();
-    Create( parent, id, "Title FIXME", pos, size, style );
 }
 
 
@@ -545,6 +547,8 @@ void GamesDialog::CreateControls()
     //wxPanel *notebook_page1 = new wxPanel(notebook, wxID_ANY );
     hsiz_panel /*vsiz_panel_stats*/->Add( notebook, 0, wxALIGN_TOP|wxGROW|wxALL, 0 );
 
+    // Overridden by specialised classes
+    AddExtraControls();
 }
 
 
@@ -856,6 +860,8 @@ void GamesDialog::OnNextMove( int idx )
     
 bool GamesDialog::ShowModalOk()
 {
+    Init();
+    Create( parent2, id, "Title FIXME", pos, size, style );
     bool ok = (wxID_OK == ShowModal());
     objs.repository->nv.m_col0  = list_ctrl->GetColumnWidth( 0 );    // "Game #"
     objs.repository->nv.m_col1  = list_ctrl->GetColumnWidth( 1 );    // "White"

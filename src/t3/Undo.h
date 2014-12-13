@@ -54,7 +54,7 @@ private:
     bool no_front_pops_yet;
 public:
     std::deque<RestorePoint> stack;
-    std::deque<RestorePoint>::iterator it_saved;
+    int /* std::deque<RestorePoint>::iterator */ it_saved;
     GameLogic *gl;
 };
 
