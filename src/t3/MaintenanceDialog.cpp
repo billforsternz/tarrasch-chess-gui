@@ -412,8 +412,8 @@ void MaintenanceDialog::OnMaintenanceVerify( wxCommandEvent& WXUNUSED(event) )
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_5
 void MaintenanceDialog::OnMaintenanceCreate( wxCommandEvent& WXUNUSED(event) )
 {
-    db_maintenance_create_or_append_to_database( pgn_filename.c_str() );
     cprintf(                     "Appending file: %s\n", pgn_filename.c_str() );
+    db_maintenance_create_or_append_to_database( pgn_filename.c_str() );
     #if 0
     cprintf(                     "Appending file: /Users/Maria/Documents/Tarrasch/giant-base-part1-rebuilt.pgn\n" );
     db_maintenance_create_or_append_to_database( "/Users/Maria/Documents/Tarrasch/giant-base-part1-rebuilt.pgn" );
@@ -424,6 +424,7 @@ void MaintenanceDialog::OnMaintenanceCreate( wxCommandEvent& WXUNUSED(event) )
     cprintf(                     "Appending file: /Users/Maria/Documents/Tarrasch/twic-948-1010.pgn\n" );
     db_maintenance_create_or_append_to_database( "/Users/Maria/Documents/Tarrasch/twic-948-1010.pgn" );
     #endif
+    cprintf( "Appending file complete\n" );
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_6

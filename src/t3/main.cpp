@@ -6,14 +6,22 @@
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
 #define _CRT_SECURE_NO_DEPRECATE
+#include "Portability.h"
+#ifdef THC_WINDOWS
+#include <windows.h>    // Windows headers for RedirectIoToConsole()
+#include <stdio.h>
+#include <fcntl.h>
+#include <io.h>
+#include <iostream>
+#include <fstream>
 #include <time.h>
+#endif
 #include "wx/wx.h"
 #include "wx/file.h"
 #include "wx/listctrl.h"
 #include "wx/clipbrd.h"
 #include "wx/sysopt.h"
 #include "wx/log.h"
-#include "Portability.h"
 #include "Appdefs.h"
 #include "Canvas.h"
 #include "GraphicBoard.h"
@@ -69,8 +77,6 @@ Objects objs;
 // Should really be a little more sophisticated about this
 #define TIMER_ID 2001
 
-
-
 // ----------------------------------------------------------------------------
 // application class
 // ----------------------------------------------------------------------------
@@ -89,13 +95,6 @@ public:
 //some old debug code
 #if 0
 static wxMessageOutputDebug msg;
-int DebugPrintfInner( const char *fmt, ... )
-{
-	static char buf[1024];
-	va_list stk;
-	va_start( stk, fmt );
-	vsnprintf( buf /*strchr(buf,'\0')*/, sizeof(buf)-2, fmt, stk );
-//  #define DEBUG_TO_LOG_FILE
     #ifdef  DEBUG_TO_LOG_FILE
     {
         static FILE *log_file;
@@ -104,150 +103,80 @@ int DebugPrintfInner( const char *fmt, ... )
         if( log_file )
             fwrite( buf, 1, strlen(buf), log_file );
     }
-    #else
-#if 0 //def THC_WINDOWS
-	OutputDebugString((LPCTSTR)buf);
-#else
-	msg.Printf("%s",buf);   // FIXME Doesn't seem to work in Windows Release ??
-#endif
     #endif
-	va_end(stk);
-    return 0;
-}
 #endif
 
-// This formatter serves to better emulate printf() in a wxLogWindow - the problem solved here is that
-//  wxLogMessage() to a wxLogWindow always takes a whole line - in effect it appends a '\n' to every
-//  logged string. If there is already a '/n' at the end of the logged string, we remove it in
-//  anticipation.
 //  We also optionally prepend the time - to prepend the time instantiate a DebugPrintfTime object
 //  on the stack - no need to use it
 static int dbg_printf_prepend_time=0;
 DebugPrintfTime::DebugPrintfTime()  { dbg_printf_prepend_time++; }
 DebugPrintfTime::~DebugPrintfTime() { dbg_printf_prepend_time--; if(dbg_printf_prepend_time<0) dbg_printf_prepend_time=0; }
-#ifdef WX_3
-class CustomLogFormatter : public wxLogFormatter
-{
-	virtual wxString Format(wxLogLevel level,
-	const wxString& msg,
-	const wxLogRecordInfo& info) const
-	{
-        wxString temp=msg;
-        if( dbg_printf_prepend_time )
-        {
-            time_t now=time(NULL);
-		    temp = wxString::Format("%s%s", FormatTime(now), temp );
-        }
-        #define DEBUG_TO_LOG_FILE // temp temp
-        #ifdef  DEBUG_TO_LOG_FILE
-        {
-            static FILE *log_file;
-            if( log_file == NULL )
-                log_file = fopen("log.txt","wt");
-            if( log_file )
-            {
-                fwrite( temp.c_str(), 1, temp.length(), log_file );
-                fflush(log_file);
-            }
-        }
-        #endif
-		size_t len = temp.Length();
-		if( len>0 && temp.Last()=='\n' )
-        {
-			temp = temp.Left(len-1);
-        }
-        return temp;
-	}
-};
-#endif
-
-// This is an example formatter for experimentation
-#if 0
-class LogFormatterWithThread : public wxLogFormatter
-{
-    virtual wxString Format(wxLogLevel level,
-                            const wxString& msg,
-                            const wxLogRecordInfo& info) const
-    {
-        return wxLogFormatter::Format( level, msg, info );
-        //static wxString msg2;
-        //msg2 = msg;
-        //return msg2;
-        //return wxString::Format("[%d] %s(%d) : %s",
-        //    info.threadId, info.filename, info.line, msg);
-    }
-};
-#endif
-
-
-static bool is_windowing_printf_alive = false;
-class SimpleDebugPrintf : public wxLogWindow
-
-{
-    wxLog *old_target;
-#ifdef WX_3
-    wxLogFormatter *old_formatter;
-    CustomLogFormatter custom_log_formatter;
-#endif
-public:
-    SimpleDebugPrintf( wxWindow* parent ) : wxLogWindow( parent, "Log Window", true, false )
-    {
-        int disp_width, disp_height;
-        wxDisplaySize(&disp_width, &disp_height);
-        wxSize sz;
-        wxPoint pos;
-        sz.x = disp_width*48/100;
-        sz.y = disp_height*3/4;
-        pos.x = disp_width - sz.x;
-        pos.y = 0; //disp_height*9/10 - sz.y;
-        wxFrame *window = GetFrame();
-        window->SetSize( sz );
-        window->SetPosition( pos );
-
-	    /*delete old_target =*/ wxLog::SetActiveTarget(this);
-#ifdef WX_3
-	    old_formatter = SetFormatter(&custom_log_formatter);
-#endif
-        is_windowing_printf_alive = true;
-    }
-
-    ~SimpleDebugPrintf()
-    {
-        is_windowing_printf_alive = false;
-#ifdef WX_3
-	    SetFormatter(old_formatter);
-#endif
-	    wxLog::SetActiveTarget(NULL /*old_target*/);
-    }
-};
-
 int core_printf( const char *fmt, ... )
 {
+    int ret=0;
+    #ifndef KILL_DEBUG_COMPLETELY
+    if( dbg_printf_prepend_time )
+    {
+        time_t rawtime;
+        struct tm * timeinfo;
+        time ( &rawtime );
+        timeinfo = localtime ( &rawtime );
+		printf( "%s", asctime(timeinfo) );
+    }
 	va_list args;
 	va_start( args, fmt );
-    #ifdef THC_WINDOWS
-    if( is_windowing_printf_alive )
-    {
-        wxVLogMessage(fmt,args);
-    }
-    else
-    #endif
-    {
-        #ifdef THC_MAC
-        vprintf(fmt,args);
-        #endif
-        #ifdef THC_WINDOWS
-        {
-        	static char buf[1024];
-	        vsnprintf( buf /*strchr(buf,'\0')*/, sizeof(buf)-2, fmt, args );
-            buf[ sizeof(buf)-1 ] = '\0';
-            OutputDebugString((LPCTSTR)buf);
-        }
-        #endif
-    }
+    ret = vprintf(fmt,args);
     va_end(args);
-    return 0;
+    #endif
+    return ret;
 }
+
+// New approach to logging - use a console window to simulate Mac behaviour on Windows
+#ifdef THC_WINDOWS
+static const WORD MAX_CONSOLE_LINES = 500;      // maximum mumber of lines the output console should have
+void RedirectIOToConsole()
+{
+    int hConHandle;
+    long lStdHandle;
+    CONSOLE_SCREEN_BUFFER_INFO coninfo;
+    FILE *fp;
+
+    // allocate a console for this app
+    AllocConsole();
+
+    // set the screen buffer to be big enough to let us scroll text
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &coninfo);
+
+    coninfo.dwSize.Y = MAX_CONSOLE_LINES;
+    SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
+
+    // redirect unbuffered STDOUT to the console
+    lStdHandle = (long)GetStdHandle(STD_OUTPUT_HANDLE);
+    hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
+    fp = _fdopen( hConHandle, "w" );
+    *stdout = *fp;
+    setvbuf( stdout, NULL, _IONBF, 0 );
+
+    // redirect unbuffered STDIN to the console
+    lStdHandle = (long)GetStdHandle(STD_INPUT_HANDLE);
+    hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
+    fp = _fdopen( hConHandle, "r" );
+    *stdin = *fp;
+    setvbuf( stdin, NULL, _IONBF, 0 );
+
+    // redirect unbuffered STDERR to the console
+    lStdHandle = (long)GetStdHandle(STD_ERROR_HANDLE);
+    hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
+    fp = _fdopen( hConHandle, "w" );
+    *stderr = *fp;
+    setvbuf( stderr, NULL, _IONBF, 0 );
+
+    // make cout, wcout, cin, wcin, wcerr, cerr, wclog and clog
+    // point to console as well
+    ios::sync_with_stdio();
+}
+#endif
+
 
 class ChessFrame: public wxFrame
 {
@@ -618,7 +547,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 {
     #ifndef KILL_DEBUG_COMPLETELY
     #ifdef THC_WINDOWS
-    SimpleDebugPrintf *sdf = new SimpleDebugPrintf(this);   // all child windows are automatically deleted
+    RedirectIOToConsole(); // SimpleDebugPrintf *sdf = new SimpleDebugPrintf(this);   // all child windows are automatically deleted
     #endif
     #endif
 

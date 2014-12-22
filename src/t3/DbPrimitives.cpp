@@ -902,7 +902,7 @@ int db_primitive_count_games()
             cprintf("SOME ERROR ENCOUNTERED\n");
         }
     }
-    cprintf("Get games count end\n");
+    cprintf("Get games count end - %d games\n", game_count );
     game_id = game_count;
     return game_count;
 }
