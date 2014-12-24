@@ -121,7 +121,12 @@ int core_printf( const char *fmt, ... )
         struct tm * timeinfo;
         time ( &rawtime );
         timeinfo = localtime ( &rawtime );
-		printf( "%s", asctime(timeinfo) );
+        char buf[200];
+        strcpy( buf, asctime(timeinfo) );
+        char *p = strchr(buf,'\n');
+        if( p )
+            *p = '\0';
+		printf( "%s ", buf );
     }
 	va_list args;
 	va_start( args, fmt );
@@ -145,10 +150,22 @@ void RedirectIOToConsole()
     AllocConsole();
 
     // set the screen buffer to be big enough to let us scroll text
-    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &coninfo);
+    HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    GetConsoleScreenBufferInfo( handle , &coninfo);
 
     coninfo.dwSize.Y = MAX_CONSOLE_LINES;
-    SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
+    SetConsoleScreenBufferSize( handle, coninfo.dwSize);
+
+    int height = 60; 
+    int width = 80; 
+
+    _SMALL_RECT rect; 
+    rect.Top = 0; 
+    rect.Left = 0; 
+    rect.Bottom = height - 1; 
+    rect.Right = width - 1; 
+
+    SetConsoleWindowInfo( handle, TRUE, &rect);            // Set Window Size 
 
     // redirect unbuffered STDOUT to the console
     lStdHandle = (long)GetStdHandle(STD_OUTPUT_HANDLE);

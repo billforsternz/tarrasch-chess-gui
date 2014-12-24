@@ -145,12 +145,14 @@ public:
     void OnCheckBox( wxCommandEvent& event );
     void OnListSelected( int idx );
 
+    void Goto( int idx );
     void ReadItemWithSingleLineCache( int item, DB_GAME_INFO &info );
 
     // Overrides
     virtual void OnActivate();
     virtual void AddExtraControls() {}
-    virtual bool TestAndClearIsCacheDirty() = 0;
+    bool dirty;
+    virtual bool TestAndClearIsCacheDirty() { bool was=dirty; dirty=false; return was; }
     virtual void ReadItem( int item, DB_GAME_INFO &info ) = 0;
     virtual void OnCancel();
     virtual void OnListColClick( int compare_col );

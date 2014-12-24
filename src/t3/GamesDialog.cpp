@@ -92,6 +92,8 @@ void wxVirtualListCtrl::ReceiveFocus( int focus_idx )
     if( focus_idx >= 0 )
     {
         track->focus_idx = focus_idx;
+        //if( focus_idx==0 ) 
+        //    cprintf( "** ReceiveFocus(0) calling ReadItemWithSingleLineCache\n" );
         parent->ReadItemWithSingleLineCache( focus_idx, track->info );
 
         initial_focus_offset = track->focus_offset = track->info.db_calculate_move_vector( track->focus_moves, objs.db->gbl_hash );
@@ -175,6 +177,8 @@ wxString wxVirtualListCtrl::OnGetItemText( long item, long column) const
     DB_GAME_INFO info;
     std::string move_txt;
     const char *txt;
+    //if( item==0 && column==10 ) 
+    //    cprintf( "** OnGetItemText(0) calling ReadItemWithSingleLineCache\n" );
     parent->ReadItemWithSingleLineCache( item, info );
     switch( column )
     {
@@ -196,12 +200,16 @@ wxString wxVirtualListCtrl::OnGetItemText( long item, long column) const
                 sprintf(buf,"(T%d) ", info.transpo_nbr );
             if( item == track->focus_idx )
             {
+                //if( item == 0 ) 
+                //    cprintf( " ** OnGetItemText(0) focus hit, nbr moves=%d\n", track->focus_moves.size() );
                 move_txt = CalculateMoveTxt();
                 if( track->focus_offset == initial_focus_offset )
                     move_txt = buf + move_txt;
             }
             else
             {
+                //if( item == 0 ) 
+                //    cprintf( " ** OnGetItemText(0) no focus hit\n" );
                 move_txt = info.db_calculate_move_txt(objs.db->gbl_hash);
                 move_txt = buf + move_txt;
             }
@@ -287,6 +295,7 @@ GamesDialog::GamesDialog
     single_line_cache_idx = -1;
     file_game_idx = -1;
     nbr_games_in_list_ctrl = 0;
+    dirty = true;
 }
 
 
@@ -378,14 +387,19 @@ void GamesDialog::CreateControls()
     int disp_width, disp_height;
     wxDisplaySize(&disp_width, &disp_height);
     wxSize sz;
+    cprintf( "disp_width=%d, disp_height=%d\n", disp_width, disp_height );
     if( disp_width > 1366 )
         disp_width = 1366;
-    sz.x = (disp_width*4)/5;
-    sz.y = (disp_height*2)/5;
+    if( disp_height > 768 )
+        disp_height = 768;
+    sz.x = (disp_width*90)/100;
+    sz.y = (disp_height*32)/100;
     list_ctrl  = new wxVirtualListCtrl( this, ID_PGN_LISTBOX, wxDefaultPosition, sz/*wxDefaultSize*/,wxLC_REPORT|wxLC_VIRTUAL );
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
     if( nbr_games_in_list_ctrl > 0 )
+    {
         list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
+    }
 
     list_ctrl->InsertColumn( 0, id==ID_PGN_DIALOG_FILE?"#":" "  );
     list_ctrl->InsertColumn( 1, "White"    );
@@ -402,6 +416,7 @@ void GamesDialog::CreateControls()
     int cols[11];
 
     // Only use the non volatile column widths if they validate okay
+    #if 0 //temp todo
     if( objs.repository->nv.m_col0 > 0 &&
         objs.repository->nv.m_col1 > 0 &&
         objs.repository->nv.m_col2 > 0 &&
@@ -428,19 +443,20 @@ void GamesDialog::CreateControls()
         cols[10]= objs.repository->nv.m_col10;
     }
     else // else set some sensible defaults
+    #endif
     {
         int x   = (sz.x*98)/100;
-        objs.repository->nv.m_col0 = cols[0] =   4*x/97;    // "Game #"
-        objs.repository->nv.m_col1 = cols[1] =  14*x/97;    // "White" 
-        objs.repository->nv.m_col2 = cols[2] =   6*x/97;    // "Elo W"
-        objs.repository->nv.m_col3 = cols[3] =  14*x/97;    // "Black" 
-        objs.repository->nv.m_col4 = cols[4] =   6*x/97;    // "Elo B" 
-        objs.repository->nv.m_col5 = cols[5] =  10*x/97;    // "Date"  
-        objs.repository->nv.m_col6 = cols[6] =   9*x/97;    // "Site"  
-        objs.repository->nv.m_col7 = cols[7] =   7*x/97;    // "Round" 
-        objs.repository->nv.m_col8 = cols[8] =   8*x/97;    // "Result"
-        objs.repository->nv.m_col9 = cols[9] =   5*x/97;    // "ECO"   
-        objs.repository->nv.m_col10= cols[10]=  14*x/97;    // "Moves"
+        objs.repository->nv.m_col0 = cols[0] =   4*x/142;    // "Game #"
+        objs.repository->nv.m_col1 = cols[1] =  16*x/142;    // "White" 
+        objs.repository->nv.m_col2 = cols[2] =   6*x/142;    // "Elo W"
+        objs.repository->nv.m_col3 = cols[3] =  16*x/142;    // "Black" 
+        objs.repository->nv.m_col4 = cols[4] =   6*x/142;    // "Elo B" 
+        objs.repository->nv.m_col5 = cols[5] =  10*x/142;    // "Date"  
+        objs.repository->nv.m_col6 = cols[6] =  14*x/142;    // "Site"  
+        objs.repository->nv.m_col7 = cols[7] =   3*x/142;    // "Round" 
+        objs.repository->nv.m_col8 = cols[8] =   8*x/142;    // "Result"
+        objs.repository->nv.m_col9 = cols[9] =   3*x/142;    // "ECO"   
+        objs.repository->nv.m_col10= cols[10]=  56*x/142;    // "Moves"
     }
  /*   if(true) //temp temp temp white, black, result, moves only
     {
@@ -496,7 +512,7 @@ void GamesDialog::CreateControls()
     list_ctrl->mini_board = mini_board;
     track = &mini_board_game;
     track->updated_position = cr;
-    track->focus_idx = 0;
+    track->focus_idx = -1;
     track->focus_offset = 0;
     list_ctrl->track = track;
     mini_board->SetPosition( cr.squares );
@@ -549,6 +565,8 @@ void GamesDialog::CreateControls()
 
     // Overridden by specialised classes
     AddExtraControls();
+
+//  Goto(0);
 }
 
 
@@ -616,20 +634,40 @@ void GamesDialog::OnActivate(wxActivateEvent& event)
 // override
 void GamesDialog::OnActivate()
 {
+    Goto(0); // list_ctrl->SetFocus();
+}
+
+void GamesDialog::Goto( int idx )
+{
+    dirty = true;
+    list_ctrl->RefreshItem( idx );
+    list_ctrl->ReceiveFocus( idx );
+    list_ctrl->SetItemState( idx, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
+    list_ctrl->SetItemState( idx, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
+    list_ctrl->SetFocus();
+    list_ctrl->EnsureVisible(idx);
 }
 
 void GamesDialog::ReadItemWithSingleLineCache( int item, DB_GAME_INFO &info )
 {
+    //if( item==0 )
+    //    cprintf( "** In ReadItemWithSingleLineCache(0)\n" );        
     if( !TestAndClearIsCacheDirty() && (item==single_line_cache_idx) )
     {
+        //if( item==0 )
+        //    cprintf( " single line cache\n" );        
         info = single_line_cache;
     }
     else
     {
+        //if( item==0 )
+        //    cprintf( " not single line cache\n" );        
         ReadItem( item, info );
         single_line_cache_idx = item;
         single_line_cache = info;
     }
+    //if( item==0 )
+    //    cprintf( " nbr moves=%d\n", info.str_blob.size() );        
 }
 
 void GamesDialog::LoadGame( int idx, int focus_offset )
@@ -764,10 +802,11 @@ void GamesDialog::OnReload( wxCommandEvent& WXUNUSED(event) )
     if( sname.length()>0 && cr==start_cp )
     {
         int row = objs.db->FindRow( sname );
+        Goto(row); /*
         list_ctrl->EnsureVisible( row );   // get vaguely close
         list_ctrl->SetItemState( row, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
         list_ctrl->SetItemState( row, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
-        list_ctrl->SetFocus();
+        list_ctrl->SetFocus( ); */
     }
     else
     {
@@ -778,6 +817,8 @@ void GamesDialog::OnReload( wxCommandEvent& WXUNUSED(event) )
         cprintf( "Reloading, %d games\n", nbr_games_in_list_ctrl);
         list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
         list_ctrl->RefreshItems(0,nbr_games_in_list_ctrl-1);
+        if( nbr_games_in_list_ctrl > 0 )
+            Goto(0);
     }
 }
 

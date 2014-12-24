@@ -11,6 +11,8 @@
 #include "thc.h"
 #include "Portability.h"
 #include "DebugPrintf.h"
+#include "GameLogic.h"
+#include "Objects.h"
 #include "CompressMoves.h"
 #include "DbPrimitives.h"
 #include "Database.h"
@@ -414,6 +416,10 @@ int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::ve
                     else
                         info.str_blob = "";
                     games.push_back( info );
+                    GameDocument gd;
+                    info.Upscale( gd );
+                    make_smart_ptr( HoldDocument, new_doc, gd );
+                    objs.gl->gc_clipboard.gds.push_back( std::move(new_doc) );
                 }
             }
         }

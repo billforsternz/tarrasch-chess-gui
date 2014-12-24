@@ -61,7 +61,6 @@ public:
     );
     
     // Overrides
-    virtual bool TestAndClearIsCacheDirty() { return false; }
     virtual void ReadItem( int item, DB_GAME_INFO &info );
     virtual void OnListColClick( int compare_col );
     virtual void OnSaveAllToAFile();

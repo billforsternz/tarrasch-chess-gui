@@ -140,7 +140,7 @@ void DbDialog::OnActivate()
         wxPoint pos_button = utility->GetPosition();
         //utility->SetPosition( pos_button );
         
-        list_ctrl->SetFocus();
+        Goto(0); // list_ctrl->SetFocus();
     }
 }
 
@@ -231,7 +231,6 @@ DbDialog::DbDialog
 {
     activated_at_least_once = false;
     transpo_activated = false;
-    dirty = false;
     clipboard_db = false;
     reload_next_time = false;
 }
@@ -534,16 +533,9 @@ void DbDialog::OnListColClick( int compare_col )
             count = nbr_games_in_list_ctrl;
         for( int i=0; i<count; i++ )
             list_ctrl->RefreshItem(top++);
-        dirty = true;
-        list_ctrl->RefreshItem(0);
-        list_ctrl->ReceiveFocus(0);
-        list_ctrl->SetItemState( 0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
-        list_ctrl->SetItemState( 0, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
-        list_ctrl->SetFocus();
+        Goto(0);
     }
 }
-
-
 
 void DbDialog::OnSaveAllToAFile()
 {
@@ -727,11 +719,7 @@ void DbDialog::OnCheckBox( bool checked )
         clipboard_db = true;
         
         StatsCalculate();
-        
-        list_ctrl->SetItemState( 0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
-        list_ctrl->SetItemState( 0, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
-        list_ctrl->EnsureVisible(0);
-        list_ctrl->SetFocus();
+        Goto(0);
     }
 }
 
@@ -990,8 +978,6 @@ void DbDialog::StatsCalculate()
     dirty = true;
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
     list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
-    list_ctrl->SetItemState( 0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
-    list_ctrl->SetItemState( 0, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
     char buf[1000];
     int total_games  = nbr_games_in_list_ctrl;
     int total_draws_plus_no_result = total_games - total_white_wins - total_black_wins;
@@ -1029,6 +1015,7 @@ void DbDialog::StatsCalculate()
     list_ctrl_transpo->Clear();
     list_ctrl_stats->InsertItems( strings_stats, 0 );
     list_ctrl_transpo->InsertItems( strings_transpos, 0 );
+    Goto(0);
 }
 
 // One of the moves in move stats is clicked
