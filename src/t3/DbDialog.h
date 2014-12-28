@@ -104,11 +104,11 @@ private:
     // Map each move in the position to move stats
     std::map< uint32_t, MOVE_STATS > stats;
     bool clipboard_db;          // fixme temp
-    bool reload_next_time;      // fixme temp
 
 private:
    
-    std::vector<DB_GAME_INFO> cache;    // games from database
+    //std::vector<DB_GAME_INFO> cache;    // games from database
+    std::vector< smart_ptr<MagicBase> >  cache;
     std::unordered_set<int>   games_set;    // game_ids for all games in memory
     std::unordered_set<uint64_t> drill_down_set;  // positions already encountered drilling down
     std::vector<thc::Move> moves_in_this_position;

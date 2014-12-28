@@ -1072,6 +1072,30 @@ void db_primitive_insert_game( const char *white, const char *black, const char 
     char site_buf[200];
     if( nbr_moves < 3 )    // skip 'games' with zero, one or two moves
         return;
+    if( white_elo && black_elo )
+    {
+        int elo_w = atoi(white_elo);
+        int elo_b = atoi(black_elo);
+        if( 0<elo_w && elo_w<2000 && 0<elo_b && elo_b<2000 )
+            return;   // if any elo information, need at least one good player
+    }
+    /* if( date && strlen(date)>=4 )
+    {
+        char buf[5];
+        memcpy(buf,date,4);
+        buf[4] = '\0';
+        int year = atoi(buf);
+        if( year >= 1980 )
+        {
+            if( white_elo && strlen(white_elo)>=4  && black_elo && strlen(black_elo)>=4 )
+            {
+                int elo_w = atoi(white_elo);
+                int elo_b = atoi(black_elo);
+                if( elo_w<2000 && elo_b<2000 )
+                    return;
+            }
+        }                                    
+    }  */
     bool alphaWhite = sanitise( white,  white_buf, sizeof(white_buf) );
     bool alphaBlack = sanitise( black,  black_buf, sizeof(black_buf) );
     if( !alphaWhite || !alphaBlack )    // skip games with no names

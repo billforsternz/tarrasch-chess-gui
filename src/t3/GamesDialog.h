@@ -223,6 +223,8 @@ private:    //TODO - move more vars to private
 public:
     bool transpo_activated;
     int nbr_games_in_list_ctrl;
+    int orig_nbr_games_in_list_ctrl;
+    
 protected:
     int file_game_idx;
     bool db_game_set;

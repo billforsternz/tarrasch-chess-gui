@@ -232,7 +232,6 @@ DbDialog::DbDialog
     activated_at_least_once = false;
     transpo_activated = false;
     clipboard_db = false;
-    reload_next_time = false;
 }
 
 
@@ -673,7 +672,8 @@ void DbDialog::OnUtility()
 
 void DbDialog::OnButton1()
 {
-    reload_next_time = true;
+    objs.gl->gc_clipboard.gds.clear();
+    Goto( track->focus_idx );
 }
 
 void DbDialog::OnButton2()
@@ -682,45 +682,38 @@ void DbDialog::OnButton2()
 
 void DbDialog::OnButton3()
 {
-    if( reload_next_time )
-    {
-        reload_next_time = false;
-        cache.clear();
-        games.clear();
-    }
     std::string player_name = track->info.white;
-    objs.db->LoadGamesWithQuery( player_name, true, cache );
+    objs.db->LoadGamesWithQuery( player_name, true, objs.gl->gc_clipboard.gds );
+    Goto( track->focus_idx );
 }
 
 void DbDialog::OnButton4()
 {
-    if( reload_next_time )
-    {
-        reload_next_time = false;
-        cache.clear();
-        games.clear();
-    }
     std::string player_name = track->info.white;
-    objs.db->LoadGamesWithQuery( player_name, false, cache );
-    
+    objs.db->LoadGamesWithQuery( player_name, false, objs.gl->gc_clipboard.gds );
+    Goto( track->focus_idx );
 }
 
 void DbDialog::OnCheckBox( bool checked )
 {
-    if( checked )
-    {
-       
-        // Clear the base position
-        thc::ChessRules cr;
-        this->cr = cr;
-        moves_from_base_position.clear();
+    // Clear the base position
+    thc::ChessRules cr;
+    this->cr = cr;
+    moves_from_base_position.clear();
         
-        // No need to look for more games in database in base position
-        clipboard_db = true;
+    // No need to look for more games in database in base position
+    clipboard_db = checked;
         
+    if( clipboard_db || games.size()>0 )
         StatsCalculate();
-        Goto(0);
+    else
+    {
+        nbr_games_in_list_ctrl = orig_nbr_games_in_list_ctrl;
+        dirty = true;
+        list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
+        list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
     }
+    Goto(0);
 }
 
 
@@ -739,8 +732,9 @@ void DbDialog::LoadGamesIntoMemory()
     games_set.clear();
     for( unsigned int i=0; i<cache.size(); i++ )
     {
-        DB_GAME_INFO info = cache[i];
-        games_set.insert( info.game_id );
+        DB_GAME_INFO *info = cache[i]->GetCompactGamePtr();
+        if( info )
+            games_set.insert( info->game_id );
     }
 }
 
@@ -791,107 +785,111 @@ void DbDialog::StatsCalculate()
     }
     
     // For each cached game
-    for( unsigned int i=0; i<cache.size(); i++ )
+    std::vector< smart_ptr<MagicBase> > &source = (clipboard_db ? objs.gl->gc_clipboard.gds : cache );
+    for( unsigned int i=0; i<source.size(); i++ )
     {
-        DB_GAME_INFO info = cache[i];
+        DB_GAME_INFO *info = source[i]->GetCompactGamePtr();
+        if( info )
+        {
     
-        // Search for a match to this game
-        bool new_transposition_found=false;
-        bool found=false;
-        int found_idx=0;
-        for( unsigned int j=0; !found && j<transpositions.size(); j++ )
-        {
-            std::string &this_one = transpositions[j].blob;
-            const char *p = this_one.c_str();
-            size_t len = this_one.length();
-            if( info.str_blob.length()>=len && 0 == memcmp(p,info.str_blob.c_str(),len) )
+            // Search for a match to this game
+            bool new_transposition_found=false;
+            bool found=false;
+            int found_idx=0;
+            for( unsigned int j=0; !found && j<transpositions.size(); j++ )
             {
-                found = true;
-                found_idx = j;
-            }
-        }
-        
-        // If none so far add the one from this game
-        if( !found )
-        {
-            PATH_TO_POSITION ptp;
-            size_t len = info.str_blob.length();
-            const char *blob = (const char*)info.str_blob.c_str();
-            uint64_t hash = ptp.press.cr.Hash64Calculate();
-            int nbr=0;
-            found = (hash==gbl_hash && ptp.press.cr==cr_to_match );
-            while( !found && nbr<len && nbr<maxlen )
-            {
-                thc::ChessRules cr_hash = ptp.press.cr;
-                thc::Move mv;
-                int nbr_used = ptp.press.decompress_move( blob, mv );
-                if( nbr_used == 0 )
-                    break;
-                blob += nbr_used;
-                nbr += nbr_used;
-                hash = cr_hash.Hash64Update( hash, mv );
-                if( hash == gbl_hash && ptp.press.cr==cr_to_match )
+                std::string &this_one = transpositions[j].blob;
+                const char *p = this_one.c_str();
+                size_t len = this_one.length();
+                if( info->str_blob.length()>=len && 0 == memcmp(p,info->str_blob.c_str(),len) )
+                {
                     found = true;
+                    found_idx = j;
+                }
             }
+        
+            // If none so far add the one from this game
+            if( !found )
+            {
+                PATH_TO_POSITION ptp;
+                size_t len = info->str_blob.length();
+                const char *blob = (const char*)info->str_blob.c_str();
+                uint64_t hash = ptp.press.cr.Hash64Calculate();
+                int nbr=0;
+                found = (hash==gbl_hash && ptp.press.cr==cr_to_match );
+                while( !found && nbr<len && nbr<maxlen )
+                {
+                    thc::ChessRules cr_hash = ptp.press.cr;
+                    thc::Move mv;
+                    int nbr_used = ptp.press.decompress_move( blob, mv );
+                    if( nbr_used == 0 )
+                        break;
+                    blob += nbr_used;
+                    nbr += nbr_used;
+                    hash = cr_hash.Hash64Update( hash, mv );
+                    if( hash == gbl_hash && ptp.press.cr==cr_to_match )
+                        found = true;
+                }
+                if( found )
+                {
+                    maxlen = nbr+8;
+                    new_transposition_found = true;
+                    ptp.blob =info->str_blob.substr(0,nbr);
+                    transpositions.push_back(ptp);
+                    found_idx = transpositions.size()-1;
+                }
+            }
+
             if( found )
             {
-                maxlen = nbr+8;
-                new_transposition_found = true;
-                ptp.blob =info.str_blob.substr(0,nbr);
-                transpositions.push_back(ptp);
-                found_idx = transpositions.size()-1;
-            }
-        }
-
-        if( found )
-        {
-            bool white_wins = (info.result=="1-0");
-            if( white_wins )
-                total_white_wins++;
-            bool black_wins = (info.result=="0-1");
-            if( black_wins )
-                total_black_wins++;
-            bool draw       = (info.result=="1/2-1/2");
-            if( draw )
-                total_draws++;
-
-            games.push_back(info);
-            PATH_TO_POSITION *p = &transpositions[found_idx];
-            p->frequency++;
-            size_t len = p->blob.length();
-            if( len < info.str_blob.length() ) // must be more moves
-            {
-                const char *compress_move_ptr = info.str_blob.c_str()+len;
-                thc::Move mv;
-                p->press.decompress_move_stay( compress_move_ptr, mv );
-                uint32_t imv = 0;
-                assert( sizeof(imv) == sizeof(mv) );
-                memcpy( &imv, &mv, sizeof(mv) ); // FIXME
-                std::map< uint32_t, MOVE_STATS >::iterator it;
-                it = stats.find(imv);
-                if( it == stats.end() )
-                {
-                    MOVE_STATS empty;
-                    empty.nbr_games = 0;
-                    empty.nbr_white_wins = 0;
-                    empty.nbr_black_wins = 0;
-                    empty.nbr_draws = 0;
-                    stats[imv] = empty;
-                    it = stats.find(imv);
-                }
-                it->second.nbr_games++;
+                bool white_wins = (info->result=="1-0");
                 if( white_wins )
-                    it->second.nbr_white_wins++;
-                else if( black_wins )
-                    it->second.nbr_black_wins++;
-                else if( draw )
-                    it->second.nbr_draws++;
+                    total_white_wins++;
+                bool black_wins = (info->result=="0-1");
+                if( black_wins )
+                    total_black_wins++;
+                bool draw       = (info->result=="1/2-1/2");
+                if( draw )
+                    total_draws++;
+
+                games.push_back(*info);
+                PATH_TO_POSITION *p = &transpositions[found_idx];
+                p->frequency++;
+                size_t len = p->blob.length();
+                if( len < info->str_blob.length() ) // must be more moves
+                {
+                    const char *compress_move_ptr = info->str_blob.c_str()+len;
+                    thc::Move mv;
+                    p->press.decompress_move_stay( compress_move_ptr, mv );
+                    uint32_t imv = 0;
+                    assert( sizeof(imv) == sizeof(mv) );
+                    memcpy( &imv, &mv, sizeof(mv) ); // FIXME
+                    std::map< uint32_t, MOVE_STATS >::iterator it;
+                    it = stats.find(imv);
+                    if( it == stats.end() )
+                    {
+                        MOVE_STATS empty;
+                        empty.nbr_games = 0;
+                        empty.nbr_white_wins = 0;
+                        empty.nbr_black_wins = 0;
+                        empty.nbr_draws = 0;
+                        stats[imv] = empty;
+                        it = stats.find(imv);
+                    }
+                    it->second.nbr_games++;
+                    if( white_wins )
+                        it->second.nbr_white_wins++;
+                    else if( black_wins )
+                        it->second.nbr_black_wins++;
+                    else if( draw )
+                        it->second.nbr_draws++;
+                }
             }
-        }
         
-        if( new_transposition_found )
-        {
-            std::sort( transpositions.rbegin(), transpositions.rend() );
+            if( new_transposition_found )
+            {
+                std::sort( transpositions.rbegin(), transpositions.rend() );
+            }
         }
     }
     

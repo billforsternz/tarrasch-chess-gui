@@ -11,8 +11,6 @@
 #include "thc.h"
 #include "Portability.h"
 #include "DebugPrintf.h"
-#include "GameLogic.h"
-#include "Objects.h"
 #include "CompressMoves.h"
 #include "DbPrimitives.h"
 #include "Database.h"
@@ -324,7 +322,7 @@ int Database::LoadGameWithQuery( DB_GAME_INFO *info, int game_id )
 static bool gbl_protect_recursion;   // FIXME
 
 
-int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::vector<DB_GAME_INFO> &games )
+int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::vector< smart_ptr<MagicBase> > &games )
 {
     int retval=-1;
     if( !gbl_handle )
@@ -415,11 +413,8 @@ int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::ve
                     }
                     else
                         info.str_blob = "";
-                    games.push_back( info );
-                    GameDocument gd;
-                    info.Upscale( gd );
-                    make_smart_ptr( HoldDocument, new_doc, gd );
-                    objs.gl->gc_clipboard.gds.push_back( std::move(new_doc) );
+                    make_smart_ptr( DB_GAME_INFO, new_info, info );
+                    games.push_back( std::move(new_info) );
                 }
             }
         }
@@ -443,7 +438,7 @@ int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::ve
 }
 
 
-int Database::LoadGamesWithQuery( uint64_t hash, std::vector<DB_GAME_INFO> &games, std::unordered_set<int> &games_set )
+int Database::LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<MagicBase> > &games, std::unordered_set<int> &games_set )
 {
     int retval=-1;
     int nbr_before = games.size();
@@ -550,7 +545,8 @@ int Database::LoadGamesWithQuery( uint64_t hash, std::vector<DB_GAME_INFO> &game
                     }
                     else
                         info.str_blob = "";
-                    games.push_back( info );
+                    make_smart_ptr( DB_GAME_INFO, new_info, info );
+                    games.push_back( std::move(new_info) );
                     games_set.insert(info.game_id);
                     if( nbr_new > 5 )
                     {
@@ -915,7 +911,7 @@ int Database::GetRowRaw( DB_GAME_INFO *info, int row )
 }
 
 
-int Database::LoadAllGames( std::vector<DB_GAME_INFO> &cache, int nbr_games )
+int Database::LoadAllGames( std::vector< smart_ptr<MagicBase> > &cache, int nbr_games )
 {
     gbl_protect_recursion = true;
 
@@ -1032,7 +1028,8 @@ int Database::LoadAllGames( std::vector<DB_GAME_INFO> &cache, int nbr_games )
                         info.str_blob = "";
                 }
             }
-            cache.push_back( info );
+            make_smart_ptr( DB_GAME_INFO, new_info, info );
+            cache.push_back( std::move(new_info) );
 
             int percent = (cache.size()*100) / (nbr_games?nbr_games:1);
             if( percent < 1 )

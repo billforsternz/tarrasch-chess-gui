@@ -436,11 +436,13 @@ void MaintenanceDialog::OnMaintenanceCreate( wxCommandEvent& WXUNUSED(event) )
     db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/twic_minimal_overlap.pgn" );
     cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/twic-948-1010.pgn\n" );
     db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/twic-948-1010.pgn" );
-    cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/twic-1011-1048.pgn\n" );
-    db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/twic-1011-1048.pgn" );
+    cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/twic-1011-1050.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/twic-1011-1050.pgn" );
     #endif
     #endif
     cprintf( "Appending files complete\n" );
+    db_maintenance_create_indexes();    // temp
+    cprintf( "TEMP - created indexes automatically\n" );
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_6

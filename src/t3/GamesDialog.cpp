@@ -378,6 +378,8 @@ void GamesDialog::CreateControls()
         nbr_games_in_list_ctrl = objs.db->SetPosition( cr ); //gc->gds.size();
         sprintf(buf,"List of %d matching games from the database",nbr_games_in_list_ctrl);
     }
+    orig_nbr_games_in_list_ctrl = nbr_games_in_list_ctrl;
+
     title_ctrl = new wxStaticText( this, wxID_STATIC,
         buf, wxDefaultPosition, wxDefaultSize, 0 );
     box_sizer->Add(title_ctrl, 0, wxALIGN_LEFT|wxALL, 5);
