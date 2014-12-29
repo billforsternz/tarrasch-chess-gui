@@ -40,9 +40,20 @@ using namespace std;
 
 void DbDialog::AddExtraControls()
 {
-    // Text control for white entry
+    // Stats list box
+    //    wxSize sz4 = sz;
+    //    sz.x /= 4;
+    //    sz.y /= 3;
     wxSize sz4 = mini_board->GetSize();
-    wxSize sz5 = wxDefaultSize;
+    wxSize sz5 = sz4;
+    sz5.x = (sz4.x*18)/10;
+    sz5.y = (sz4.y*10)/10;
+    notebook = new wxNotebook(this, wxID_ANY, wxDefaultPosition, /*wxDefaultSize*/ sz5 );
+    //wxPanel *notebook_page1 = new wxPanel(notebook, wxID_ANY );
+    hsiz_panel /*vsiz_panel_stats*/->Add( notebook, 0, wxALIGN_TOP|wxGROW|wxALL, 0 );
+
+    // Text control for white entry
+    sz5 = wxDefaultSize;
     sz5.x = (sz4.x*55)/100;
     //sz5.y = (sz4.y*2)/10;
 
@@ -62,25 +73,39 @@ void DbDialog::AddExtraControls()
     //text_ctrl->SetSize( sz3.x*2, sz3.y );      // temp temp
  
     
+    wxStaticText* spacer1 = new wxStaticText( this, wxID_ANY, wxT(""),
+                                     wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(spacer1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+    white_player_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX2,
+                                 wxT("&White player"), wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(white_player_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    white_player_ctrl->SetValue( true );
+
     wxButton* btn1 = new wxButton ( this, ID_BUTTON_1, wxT("Clear Clipboard"),
                                      wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_buttons->Add(btn1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-
+    vsiz_panel_button1->Add(btn1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     wxButton* btn2 = new wxButton ( this, ID_BUTTON_2, wxT("Add to Clipboard"),
                                    wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_buttons->Add(btn2, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_button1->Add(btn2, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     
     wxButton* btn3 = new wxButton ( this, ID_BUTTON_3, wxT("Add All Player's White Games"),
                                      wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_buttons->Add(btn3, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_button1->Add(btn3, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    wxStaticText* spacer2 = new wxStaticText( this, wxID_ANY, wxT(""),
+                                     wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(spacer2, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     
     wxButton* btn4 = new wxButton ( this, ID_BUTTON_4, wxT("Add All Player's Black Games"),
                                    wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_buttons->Add(btn4, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_button1->Add(btn4, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    wxStaticText* spacer3 = new wxStaticText( this, wxID_ANY, wxT(""),
+                                     wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(spacer3, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     
     filter_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX,
                                  wxT("&Clipboard as temp database"), wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_buttons->Add(filter_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_button1->Add(filter_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     filter_ctrl->SetValue( false );
     
     /*radio_ctrl = new wxRadioButton( this,  ID_DB_RADIO,
@@ -232,6 +257,7 @@ DbDialog::DbDialog
     activated_at_least_once = false;
     transpo_activated = false;
     clipboard_db = false;
+    white_player_search = true;
 }
 
 
@@ -239,13 +265,37 @@ static DbDialog *backdoor;
 static bool compare( const DB_GAME_INFO &g1, const DB_GAME_INFO &g2 )
 {
     bool lt=false;
-    bool is_target1 = DebugIsTarget( g1 );
-    bool is_target2 = DebugIsTarget( g2 );
     switch( backdoor->compare_col )
     {
-        case 1: lt = g1.white < g2.white;           break;
-        case 3: lt = g1.black < g2.black;           break;
-        default:
+        case 1: lt = g1.white < g2.white;
+                break;
+        case 2:
+        {       
+                int elo_1 = atoi( g1.white_elo.c_str() );
+                int elo_2 = atoi( g2.white_elo.c_str() );
+                lt = elo_1 < elo_2;
+                break;
+        }
+        case 3: lt = g1.black < g2.black;
+                break;
+        case 4:
+        {
+                int elo_1 = atoi( g1.black_elo.c_str() );
+                int elo_2 = atoi( g2.black_elo.c_str() );
+                lt = elo_1 < elo_2;
+                break;
+        }
+        case 5: lt = g1.date < g2.date;
+                break;
+        case 6: lt = g1.site < g2.site;
+                break;
+        case 8: lt = g1.result < g2.result;
+                break;
+    }
+    return lt;
+}
+        
+/*        default:
         {
             /* if( is_target1 )
             {
@@ -255,7 +305,7 @@ static bool compare( const DB_GAME_INFO &g1, const DB_GAME_INFO &g2 )
             {
                 DebugDumpBlob("compare(g1,g2) g2 is match, g1 is", g1 );
             } */
-            unsigned int sz = backdoor->transpositions.size();
+     /*       unsigned int sz = backdoor->transpositions.size();
             for( unsigned int i=0; i<sz; i++ )
             {
                 PATH_TO_POSITION *ptp1 = &backdoor->transpositions[i];
@@ -360,12 +410,35 @@ static bool compare( const DB_GAME_INFO &g1, const DB_GAME_INFO &g2 )
                     }
                 }
             }
-            break;
-        }
-    }
-    if( is_target1 || is_target2 )
+            break; 
+        }  */
+    /* if( is_target1 || is_target2 )
     {
         cprintf( "compare() returns lt is %s\n", lt?"true":"false" );
+    }  */
+
+static bool rev_compare( const DB_GAME_INFO &g1, const DB_GAME_INFO &g2 )
+{
+    bool lt=true;
+    switch( backdoor->compare_col )
+    {
+        case 1: lt = g1.white > g2.white;           break;
+        case 2:
+        {       int elo_1 = atoi( g1.white_elo.c_str() );
+                int elo_2 = atoi( g2.white_elo.c_str() );
+                lt = elo_1 > elo_2;
+                break;
+        }
+        case 3: lt = g1.black > g2.black;           break;
+        case 4:
+        {       int elo_1 = atoi( g1.black_elo.c_str() );
+                int elo_2 = atoi( g2.black_elo.c_str() );
+                lt = elo_1 > elo_2;
+                break;
+        }
+        case 5: lt = g1.date > g2.date;             break;
+        case 6: lt = g1.site > g2.site;             break;
+        case 8: lt = g1.result > g2.result;         break;
     }
     return lt;
 }
@@ -373,31 +446,41 @@ static bool compare( const DB_GAME_INFO &g1, const DB_GAME_INFO &g2 )
 struct TempElement
 {
     int idx;
+    int transpo;
     std::string blob;
     std::vector<int> counts;
 };
 
 static bool compare_blob( const TempElement &e1, const TempElement &e2 )
 {
-    bool lt = e1.blob < e2.blob;
+    bool lt = false;
+    if( e1.transpo == e2.transpo )
+        lt = (e1.blob < e2.blob);
+    else
+        lt = (e1.transpo > e2.transpo);     // smaller transpo nbr should come first
     return lt;
 }
 
 static bool compare_counts( const TempElement &e1, const TempElement &e2 )
 {
     bool lt = false;
-    unsigned int len = e1.blob.length();
-    if( e2.blob.length() < len )
-        len = e2.blob.length();
-    for( unsigned int i=0; i<len; i++ )
+    if( e1.transpo != e2.transpo )
+        lt = (e1.transpo > e2.transpo);     // smaller transpo nbr should come first
+    else
     {
-        if( e1.counts[i] != e2.counts[i] )
+        unsigned int len = e1.blob.length();
+        if( e2.blob.length() < len )
+            len = e2.blob.length();
+        for( unsigned int i=0; i<len; i++ )
         {
-            lt = (e1.counts[i] < e2.counts[i]);
-            return lt;;
+            if( e1.counts[i] != e2.counts[i] )
+            {
+                lt = (e1.counts[i] < e2.counts[i]);
+                return lt;
+            }
         }
+        lt = (e1.blob.length() < e2.blob.length());
     }
-    lt = (e1.blob.length() < e2.blob.length());
     return lt;
 }
 
@@ -421,6 +504,7 @@ void DbDialog::SmartCompare()
                 e.idx = i;
                 e.blob = g.str_blob.substr(offset);
                 e.counts.resize( e.blob.length() );
+                e.transpo = transpo_activated ? j+1 : 0;
                 inter.push_back(e);
                 break;
             }
@@ -516,16 +600,21 @@ void DbDialog::OnListColClick( int compare_col )
 {
     if( games.size() > 0 )
     {
+        static int last_time;
+        static int consecutive;
+        if( compare_col == last_time )
+            consecutive++;
+        else
+            consecutive=0;
         this->compare_col = compare_col;
         backdoor = this;
-        if( compare_col==1 || compare_col==3 )
-            std::sort( games.begin(), games.end(), compare );
-        else
+        if( compare_col == 10 )
             SmartCompare();
+        else
+            std::sort( games.begin(), games.end(), (consecutive%2==0)?rev_compare:compare );
         nbr_games_in_list_ctrl = games.size();
         list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
         list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
-        list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED+wxLIST_STATE_FOCUSED, wxLIST_STATE_SELECTED+wxLIST_STATE_FOCUSED);
         int top = list_ctrl->GetTopItem();
         int count = 1 + list_ctrl->GetCountPerPage();
         if( count > nbr_games_in_list_ctrl )
@@ -533,8 +622,41 @@ void DbDialog::OnListColClick( int compare_col )
         for( int i=0; i<count; i++ )
             list_ctrl->RefreshItem(top++);
         Goto(0);
+        last_time = compare_col;
     }
 }
+
+void DbDialog::OnSearch()
+{
+    wxString name = text_ctrl->GetValue();
+    std::string sname(name.c_str());
+    thc::ChessPosition start_cp;
+    
+    // Temp - do a "find on page type feature"
+    if( sname.length()>0 && cr==start_cp )
+    {
+        std::string current = white_player_search ? track->info.white : track->info.black;
+        int row = objs.db->FindPlayer( sname, current, track->focus_idx, white_player_search );
+        Goto(row); /*
+        list_ctrl->EnsureVisible( row );   // get vaguely close
+        list_ctrl->SetItemState( row, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
+        list_ctrl->SetItemState( row, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
+        list_ctrl->SetFocus( ); */
+    }
+    else
+    {
+        nbr_games_in_list_ctrl = objs.db->SetPosition( cr, sname );
+        char buf[200];
+        sprintf(buf,"List of %d matching games from the database",nbr_games_in_list_ctrl);
+        title_ctrl->SetLabel( buf );
+        cprintf( "Reloading, %d games\n", nbr_games_in_list_ctrl);
+        list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
+        list_ctrl->RefreshItems(0,nbr_games_in_list_ctrl-1);
+        if( nbr_games_in_list_ctrl > 0 )
+            Goto(0);
+    }
+}
+
 
 void DbDialog::OnSaveAllToAFile()
 {
@@ -682,15 +804,42 @@ void DbDialog::OnButton2()
 
 void DbDialog::OnButton3()
 {
-    std::string player_name = track->info.white;
-    objs.db->LoadGamesWithQuery( player_name, true, objs.gl->gc_clipboard.gds );
+    std::string player_name = white_player_search ? track->info.white : track->info.black;
+    int nbr_loaded = objs.db->LoadGamesWithQuery( player_name, true, objs.gl->gc_clipboard.gds );
+    if( nbr_loaded > 0 )
+    {
+        char buf[2000];
+        sprintf( buf, "Added %d white games played by \"%s\" to clipboard", nbr_loaded, player_name.c_str() );
+        wxMessageBox( buf, "Added player's white games to clipboard", wxOK, this );
+    }
     Goto( track->focus_idx );
 }
 
 void DbDialog::OnButton4()
 {
-    std::string player_name = track->info.white;
-    objs.db->LoadGamesWithQuery( player_name, false, objs.gl->gc_clipboard.gds );
+    std::string player_name = white_player_search ? track->info.white : track->info.black;
+    int nbr_loaded = objs.db->LoadGamesWithQuery( player_name, false, objs.gl->gc_clipboard.gds );
+    if( nbr_loaded > 0 )
+    {
+        char buf[2000];
+        sprintf( buf, "Added %d black games played by \"%s\" to clipboard", nbr_loaded, player_name.c_str() );
+        wxMessageBox( buf, "Added player's black games to clipboard", wxOK, this );
+    }
+    Goto( track->focus_idx );
+}
+
+void DbDialog::OnCheckBox2( bool checked )
+{
+    white_player_search = checked;
+    std::string s(text_ctrl->GetValue());
+    if( !white_player_search && s=="White Player" )
+    {
+        text_ctrl->SetValue("Black Player");
+    }
+    else if( white_player_search && s=="Black Player" )
+    {
+        text_ctrl->SetValue("White Player");
+    }
     Goto( track->focus_idx );
 }
 

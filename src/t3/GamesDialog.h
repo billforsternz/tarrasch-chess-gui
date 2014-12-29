@@ -7,6 +7,7 @@
 #ifndef GAMES_DIALOG_H
 #define GAMES_DIALOG_H
 #include <unordered_set>
+
 #include "wx/spinctrl.h"
 #include "wx/statline.h"
 #include "wx/accel.h"
@@ -23,14 +24,15 @@
 enum
 {
     ID_DB_CHECKBOX      = 10000,
-    ID_DB_RADIO         = 10001,
-    ID_DB_COMBO         = 10002,
-    ID_DB_RELOAD        = 10003,
-    ID_DB_UTILITY       = 10004,
-    ID_DB_TEXT          = 10005,
-    ID_DB_LISTBOX_GAMES = 10006,
-    ID_DB_LISTBOX_STATS = 10007,
-    ID_DB_LISTBOX_TRANSPO = 10008,
+    ID_DB_CHECKBOX2     = 10001,
+    ID_DB_RADIO         = 10002,
+    ID_DB_COMBO         = 10003,
+    ID_DB_RELOAD        = 10004,
+    ID_DB_UTILITY       = 10005,
+    ID_DB_TEXT          = 10006,
+    ID_DB_LISTBOX_GAMES = 10007,
+    ID_DB_LISTBOX_STATS = 10008,
+    ID_DB_LISTBOX_TRANSPO = 10009,
     ID_BUTTON_1 = 10009,
     ID_BUTTON_2 = 10010,
     ID_BUTTON_3 = 10011,
@@ -133,7 +135,7 @@ public:
     void OnPublish( wxCommandEvent& event );
     void OnHelpClick( wxCommandEvent& event );
     
-    void OnReload( wxCommandEvent& event );
+    void OnSearch( wxCommandEvent& event );
     void OnUtility( wxCommandEvent& event );
     void OnButton1( wxCommandEvent& event );
     void OnButton2( wxCommandEvent& event );
@@ -143,6 +145,7 @@ public:
     void OnSpin( wxCommandEvent& event );
     void OnComboBox( wxCommandEvent& event );
     void OnCheckBox( wxCommandEvent& event );
+    void OnCheckBox2( wxCommandEvent& event );
     void OnListSelected( int idx );
 
     void Goto( int idx );
@@ -151,6 +154,7 @@ public:
     // Overrides
     virtual void OnActivate();
     virtual void AddExtraControls() {}
+    virtual void GetButtonGridDimensions( int &row1, int &col1, int &row2, int &col2 ) { row1=8; col1=2; row2=0; col2=0; }
     bool dirty;
     virtual bool TestAndClearIsCacheDirty() { bool was=dirty; dirty=false; return was; }
     virtual void ReadItem( int item, DB_GAME_INFO &info ) = 0;
@@ -159,12 +163,28 @@ public:
     virtual void OnSaveAllToAFile();
     virtual void OnHelpClick();
     virtual void OnCheckBox( bool checked );
+    virtual void OnCheckBox2( bool checked );
+    virtual void OnSearch();
     virtual void OnUtility();
     virtual void OnButton1();
     virtual void OnButton2();
     virtual void OnButton3();
     virtual void OnButton4();
     virtual void OnNextMove( int idx );
+
+    // Todo later
+    void OnEditGameDetails( wxCommandEvent );
+    void OnEditGamePrefix( wxCommandEvent );
+    //void OnSaveAllToAFile();
+    void OnAddToClipboard( wxCommandEvent );
+    void OnCopy( wxCommandEvent );
+    //void CopyOrAdd( bool clear_clipboard );
+    void OnCut( wxCommandEvent );
+    void OnDelete( wxCommandEvent );
+    void OnPaste( wxCommandEvent );
+    void OnSave( wxCommandEvent );
+    void OnPublish( wxCommandEvent );
+
     
 //  void OnClose( wxCloseEvent& event );
 //  void SaveColumns();
@@ -196,8 +216,8 @@ protected:
     wxVirtualListCtrl  *list_ctrl;
     wxBoxSizer*  hsiz_panel;
     wxBoxSizer *button_panel;
-    wxGridSizer* vsiz_panel_button1;
-    wxGridSizer* vsiz_panel_buttons;
+    wxFlexGridSizer* vsiz_panel_button1;
+    wxFlexGridSizer* vsiz_panel_buttons;
     
     wxNotebook  *notebook;
     int          selected_game;
@@ -208,6 +228,7 @@ protected:
     // Data members
     wxButton* ok_button;
     wxCheckBox *filter_ctrl;
+    wxCheckBox *white_player_ctrl;
     wxRadioButton *radio_ctrl;
     wxComboBox *combo_ctrl;
     wxTextCtrl *text_ctrl;

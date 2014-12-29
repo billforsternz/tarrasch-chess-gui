@@ -61,10 +61,13 @@ public:
     );
     
     // Overrides
+    virtual void AddExtraControls();
+    virtual void GetButtonGridDimensions( int &row1, int &col1, int &row2, int &col2 ) { row1=8; col1=2; row2=0; col2=0; }
     virtual void ReadItem( int item, DB_GAME_INFO &info );
     virtual void OnListColClick( int compare_col );
     virtual void OnSaveAllToAFile();
     virtual void OnHelpClick();
+    virtual void OnSearch();
     virtual void OnUtility();
     virtual void OnCancel();
     virtual void OnNextMove( int idx );

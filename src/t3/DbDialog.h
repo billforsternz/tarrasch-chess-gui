@@ -66,6 +66,8 @@ public:
         long style = wxCAPTION|wxRESIZE_BORDER|wxSYSTEM_MENU|wxCLOSE_BOX
     );
 
+    virtual ~DbDialog() { objs.db->FindPlayerEnd(); }
+
     // We calculate a vector of all blobs in the games that leading to the search position
     std::vector< PATH_TO_POSITION > transpositions;
     int compare_col;
@@ -80,7 +82,9 @@ public:
     virtual void OnSaveAllToAFile();
     virtual void OnHelpClick();
     virtual void OnCheckBox( bool checked );
+    virtual void OnCheckBox2( bool checked );
     virtual void OnUtility();
+    virtual void OnSearch();
     virtual void OnButton1();
     virtual void OnButton2();
     virtual void OnButton3();
@@ -104,6 +108,7 @@ private:
     // Map each move in the position to move stats
     std::map< uint32_t, MOVE_STATS > stats;
     bool clipboard_db;          // fixme temp
+    bool white_player_search;
 
 private:
    
