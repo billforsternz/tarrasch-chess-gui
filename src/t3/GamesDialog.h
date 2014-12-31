@@ -205,6 +205,7 @@ public:
     wxStaticText *player_names;
     DB_GAME_INFO   single_line_cache;
     int            single_line_cache_idx;
+    int          compare_col;
     
 protected:
     wxWindow* parent2;

@@ -70,7 +70,6 @@ public:
 
     // We calculate a vector of all blobs in the games that leading to the search position
     std::vector< PATH_TO_POSITION > transpositions;
-    int compare_col;
     bool ReadItemFromMemory( int item, DB_GAME_INFO &info );
     void SmartCompare();
 
