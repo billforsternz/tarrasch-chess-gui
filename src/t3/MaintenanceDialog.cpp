@@ -428,10 +428,10 @@ void MaintenanceDialog::OnMaintenanceCreate( wxCommandEvent& WXUNUSED(event) )
     cprintf(                     "Appending file: /Users/billforster/Documents/Tarrasch/twic-1011-1048.pgn\n" );
     db_maintenance_create_or_append_to_database( "/Users/billforster/Documents/Tarrasch/twic-1011-1048.pgn" );
     #else
-    cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/giant-base-part1-rebuilt.pgn\n" );
-    db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/giant-base-part1-rebuilt.pgn" );
-    cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/giant-base-part2-rebuilt.pgn\n" );
-    db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/giant-base-part2-rebuilt.pgn" );
+    cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/giant1.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/giant1.pgn" );
+    cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/giant2.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/giant2.pgn" );
     cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/twic_minimal_overlap.pgn\n" );
     db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/twic_minimal_overlap.pgn" );
     cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/twic-948-1010.pgn\n" );

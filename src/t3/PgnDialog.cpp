@@ -485,6 +485,12 @@ int wxCALLBACK sort_callback( long item1, long item2, long col )
 
 void PgnDialog::OnListColClick( int compare_col )
 {
+    local_cache.clear();
+    stack.clear();
+    GamesDialog::OnListColClick( compare_col );
+}
+
+/*
     ptr_gds = &gc->gds[0];
     ptr_col_flags = &gc->col_flags[compare_col];
     gc->Debug( "Before sort" );
@@ -514,7 +520,7 @@ void PgnDialog::OnListColClick( int compare_col )
     }
     list_ctrl->EnsureVisible( idx );
     *ptr_col_flags = !*ptr_col_flags;
-}
+} */
 
 
 bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx )
@@ -545,15 +551,15 @@ bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx )
 //  order of the list box items call this ...
 void PgnDialog::SyncCacheOrderBefore()
 {
-    int gds_nbr = gc->gds.size();
+/*    int gds_nbr = gc->gds.size();
     for( int i=0; i<gds_nbr; i++ )    
-        list_ctrl->SetItemData( i, i );
+        list_ctrl->SetItemData( i, i );  */
 }
 
 // ... Afterward call this to reestablish sync
 void PgnDialog::SyncCacheOrderAfter()
 {
-    int gds_nbr = gc->gds.size();
+/*    int gds_nbr = gc->gds.size();
     for( int i=0; i<gds_nbr; i++ )    
     {
         int idx = list_ctrl->GetItemData(i);
@@ -562,7 +568,7 @@ void PgnDialog::SyncCacheOrderAfter()
     }
     sort( gc->gds.begin(), gc->gds.end() );
     for( int i=0; i<gds_nbr; i++ )    
-        list_ctrl->SetItemData( i, i );
+        list_ctrl->SetItemData( i, i ); */
 }
 
 

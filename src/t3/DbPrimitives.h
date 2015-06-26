@@ -20,7 +20,7 @@
 #define DB_MAINTENANCE_PGN_FILE         "/Users/billforster/Documents/ChessDatabases/giant-base-part1-rebuilt.pgn"
 #else
 #define DB_FILE                         "/Users/Bill/Documents/T3Database/next_generation_7.sqlite3"
-#define DB_MAINTENANCE_FILE             "/Users/Bill/Documents/T3Database/next_generation_7.sqlite3"
+#define DB_MAINTENANCE_FILE             "/Users/Bill/Documents/T3Database/next_generation_8.sqlite3"
 #define DB_MAINTENANCE_PGN_FILE         "/Users/Bill/Documents/T3Database/twic1011-1050.pgn"
 #endif
 

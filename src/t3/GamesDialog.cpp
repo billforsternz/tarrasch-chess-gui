@@ -296,6 +296,7 @@ GamesDialog::GamesDialog
     single_line_cache_idx = -1;
     file_game_idx = -1;
     nbr_games_in_list_ctrl = 0;
+    compare_col = 0;
     dirty = true;
 }
 
@@ -613,9 +614,289 @@ void GamesDialog::OnListColClick( wxListEvent &event )
     OnListColClick( compare_col );
 }
 
+
+// TODO - Fix the mass copy paste from DbDialog.cpp !
+
+static GamesDialog *backdoor;
+static bool compare( const smart_ptr<MagicBase> &g1, const smart_ptr<MagicBase> &g2 )
+{
+    bool lt=false;
+    DB_GAME_INFO *p1 = g1->GetCompactGamePtr();
+    if( !p1 )
+    {
+        static GameDocument gd1;
+        g1->GetGameDocument(gd1);
+        static DB_GAME_INFO db1;
+        db1.Downscale(gd1);
+        p1 = &db1;
+    }
+    DB_GAME_INFO *p2 = g2->GetCompactGamePtr();
+    if( !p2 )
+    {
+        static GameDocument gd2;
+        g2->GetGameDocument(gd2);
+        static DB_GAME_INFO db2;
+        db2.Downscale(gd2);
+        p2 = &db2;
+    }
+    switch( backdoor->compare_col )
+    {
+        case 1: lt = p1->white < p2->white;
+                break;
+        case 2:
+        {       
+                int elo_1 = atoi( p1->white_elo.c_str() );
+                int elo_2 = atoi( p2->white_elo.c_str() );
+                lt = elo_1 < elo_2;
+                break;
+        }
+        case 3: lt = p1->black < p2->black;
+                break;
+        case 4:
+        {
+                int elo_1 = atoi( p1->black_elo.c_str() );
+                int elo_2 = atoi( p2->black_elo.c_str() );
+                lt = elo_1 < elo_2;
+                break;
+        }
+        case 5: lt = p1->date < p2->date;
+                break;
+        case 6: lt = p1->site < p2->site;
+                break;
+        case 8: lt = p1->result < p2->result;
+                break;
+    }
+    return lt;
+}
+        
+static bool rev_compare( const smart_ptr<MagicBase> &g1, const smart_ptr<MagicBase> &g2 )
+{
+    bool lt=true;
+    DB_GAME_INFO *p1 = g1->GetCompactGamePtr();
+    if( !p1 )
+    {
+        static GameDocument gd1;
+        g1->GetGameDocument(gd1);
+        static DB_GAME_INFO db1;
+        db1.Downscale(gd1);
+        p1 = &db1;
+    }
+    DB_GAME_INFO *p2 = g2->GetCompactGamePtr();
+    if( !p2 )
+    {
+        static GameDocument gd2;
+        g2->GetGameDocument(gd2);
+        static DB_GAME_INFO db2;
+        db2.Downscale(gd2);
+        p2 = &db2;
+    }
+    switch( backdoor->compare_col )
+    {
+        case 1: lt = p1->white > p2->white;           break;
+        case 2:
+        {       int elo_1 = atoi( p1->white_elo.c_str() );
+                int elo_2 = atoi( p2->white_elo.c_str() );
+                lt = elo_1 > elo_2;
+                break;
+        }
+        case 3: lt = p1->black > p2->black;           break;
+        case 4:
+        {       int elo_1 = atoi( p1->black_elo.c_str() );
+                int elo_2 = atoi( p2->black_elo.c_str() );
+                lt = elo_1 > elo_2;
+                break;
+        }
+        case 5: lt = p1->date > p2->date;             break;
+        case 6: lt = p1->site > p2->site;             break;
+        case 8: lt = p1->result > p2->result;         break;
+    }
+    return lt;
+}
+
+struct TempElement
+{
+    int idx;
+    int transpo;
+    std::string blob;
+    std::vector<int> counts;
+};
+
+static bool compare_blob( const TempElement &e1, const TempElement &e2 )
+{
+    bool lt = false;
+    if( e1.transpo == e2.transpo )
+        lt = (e1.blob < e2.blob);
+    else
+        lt = (e1.transpo > e2.transpo);     // smaller transpo nbr should come first
+    return lt;
+}
+
+static bool compare_counts( const TempElement &e1, const TempElement &e2 )
+{
+    bool lt = false;
+    if( e1.transpo != e2.transpo )
+        lt = (e1.transpo > e2.transpo);     // smaller transpo nbr should come first
+    else
+    {
+        unsigned int len = e1.blob.length();
+        if( e2.blob.length() < len )
+            len = e2.blob.length();
+        for( unsigned int i=0; i<len; i++ )
+        {
+            if( e1.counts[i] != e2.counts[i] )
+            {
+                lt = (e1.counts[i] < e2.counts[i]);
+                return lt;
+            }
+        }
+        lt = (e1.blob.length() < e2.blob.length());
+    }
+    return lt;
+}
+
+#if 0
+void GamesDialog::SmartCompare()
+{
+    std::vector<TempElement> inter;     // intermediate representation
+    
+    // Step 1, do a conventional string sort, beginning at our offset into the blob
+    unsigned int sz = gc->gds.size();
+    for( unsigned int i=0; i<sz; i++ )
+    {
+        DB_GAME_INFO &g = gc->gds[i];
+        TempElement e;
+        unsigned int sz2 = transpositions.size();
+        for( unsigned int j=0; j<sz2; j++ )
+        {
+            PATH_TO_POSITION *ptp = &transpositions[j];
+            unsigned int offset = ptp->blob.length();
+            if( 0 == memcmp( ptp->blob.c_str(), g.str_blob.c_str(), offset ) )
+            {
+                e.idx = i;
+                e.blob = g.str_blob.substr(offset);
+                e.counts.resize( e.blob.length() );
+                e.transpo = transpo_activated ? j+1 : 0;
+                inter.push_back(e);
+                break;
+            }
+        }
+    }
+    std::sort( inter.begin(), inter.end(), compare_blob );
+    
+    // Step 2, work out the nbr of moves in clumps of moves
+    sz = inter.size();
+    bool at_least_one = true;
+    for( unsigned int j=0; at_least_one; j++ )
+    {
+        at_least_one = false;  // stop when we've passed end of all strings
+        char current='\0';
+        unsigned int start=0;
+        bool run_in_progress=false;
+        for( unsigned int i=0; i<sz; i++ )
+        {
+            TempElement &e = inter[i];
+            
+            // A short game stops runs
+            if( j >= e.blob.length() )
+            {
+                if( run_in_progress )
+                {
+                    run_in_progress = false;
+                    int count = i-start;
+                    for( int k=start; k<i; k++ )
+                    {
+                        TempElement &f = inter[k];
+                        f.counts[j] = count;
+                    }
+                }
+                continue;
+            }
+            at_least_one = true;
+            char c = e.blob[j];
+            
+            // First time, get something to start a run
+            if( !run_in_progress )
+            {
+                run_in_progress = true;
+                current = c;
+                start = i;
+            }
+            else
+            {
+                
+                // Run can be over because of character change
+                if( c != current )
+                {
+                    int count = i-start;
+                    for( int k=start; k<i; k++ )
+                    {
+                        TempElement &f = inter[k];
+                        f.counts[j] = count;
+                    }
+                    current = c;
+                    start = i;
+                }
+                
+                // And/Or because we reach bottom
+                if( i+1 == sz )
+                {
+                    int count = sz - start;
+                    for( int k=start; k<sz; k++ )
+                    {
+                        TempElement &f = inter[k];
+                        f.counts[j] = count;
+                    }
+                }
+            }
+        }
+    }
+
+    // Step 3 sort again using the counts
+    std::sort( inter.begin(), inter.end(), compare_counts );
+    
+    // Step 4 build sorted version of games list
+    std::vector<DB_GAME_INFO> temp;
+    sz = inter.size();
+    for( unsigned int i=0; i<sz; i++ )
+    {
+        TempElement &e = inter[i];
+        temp.push_back( gc->gds[e.idx] );
+    }
+
+    // Step 5 replace original games list
+    gc->gds = temp;
+}
+#endif
+
 // override
 void GamesDialog::OnListColClick( int compare_col )
 {
+    if( gc->gds.size() > 0 )
+    {
+        static int last_time;
+        static int consecutive;
+        if( compare_col == last_time )
+            consecutive++;
+        else
+            consecutive=0;
+        this->compare_col = compare_col;
+        backdoor = this;
+        if( compare_col == 10 )
+            ;//SmartCompare();
+        else
+            std::sort( gc->gds.begin(), gc->gds.end(), (consecutive%2==0)?rev_compare:compare );
+        nbr_games_in_list_ctrl = gc->gds.size();
+        list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
+        list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
+        int top = list_ctrl->GetTopItem();
+        int count = 1 + list_ctrl->GetCountPerPage();
+        if( count > nbr_games_in_list_ctrl )
+            count = nbr_games_in_list_ctrl;
+        for( int i=0; i<count; i++ )
+            list_ctrl->RefreshItem(top++);
+        Goto(0);
+        last_time = compare_col;
+    }
 }
 
 
