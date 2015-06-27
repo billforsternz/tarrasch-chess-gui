@@ -1519,5 +1519,5 @@ void GamesDialog::OnSave( wxCommandEvent& WXUNUSED(event) )
 
 void GamesDialog::OnPublish( wxCommandEvent& WXUNUSED(event) )
 {
- //   gc->Publish( gc_clipboard );
+    gc->Publish( gc_clipboard );
 }

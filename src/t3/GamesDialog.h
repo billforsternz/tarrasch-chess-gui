@@ -23,22 +23,34 @@
 // Control identifiers
 enum
 {
-    ID_DB_CHECKBOX      = 10000,
-    ID_DB_CHECKBOX2     = 10001,
-    ID_DB_RADIO         = 10002,
-    ID_DB_COMBO         = 10003,
-    ID_DB_RELOAD        = 10004,
-    ID_DB_UTILITY       = 10005,
-    ID_DB_TEXT          = 10006,
-    ID_DB_LISTBOX_GAMES = 10007,
-    ID_DB_LISTBOX_STATS = 10008,
-    ID_DB_LISTBOX_TRANSPO = 10009,
-    ID_BUTTON_1 = 10009,
-    ID_BUTTON_2 = 10010,
-    ID_BUTTON_3 = 10011,
-    ID_BUTTON_4 = 10012
+    ID_DB_CHECKBOX  = 10000,
+    ID_DB_CHECKBOX2,
+    ID_DB_RADIO ,
+    ID_DB_COMBO ,
+    ID_DB_RELOAD,
+    ID_DB_UTILITY,
+    ID_DB_TEXT   ,
+    ID_DB_LISTBOX_GAMES,
+    ID_DB_LISTBOX_STATS,
+    ID_DB_LISTBOX_TRANSPO,
+    ID_BUTTON_1,
+    ID_BUTTON_2,
+    ID_BUTTON_3,
+    ID_BUTTON_4,
+    ID_PGN_DIALOG_FILE     ,
+    ID_PGN_DIALOG_CLIPBOARD,
+    ID_PGN_DIALOG_SESSION  ,
+    ID_BOARD2GAME          ,
+    ID_PGN_DIALOG_GAME_DETAILS,
+    ID_REORDER           ,
+    ID_ADD_TO_CLIPBOARD  ,
+    ID_SAVE_ALL_TO_A_FILE,
+    ID_PGN_DIALOG_GAME_PREFIX,
+    ID_PGN_DIALOG_PUBLISH    ,
+    ID_PGN_DIALOG_DATABASE   ,
+    ID_PGN_DIALOG_UTILITY1   ,
+    ID_PGN_DIALOG_UTILITY2   
 };
-
 
 // Track the game presented on the mini board
 struct MiniBoardGame

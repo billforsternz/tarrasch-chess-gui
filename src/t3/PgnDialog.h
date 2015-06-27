@@ -17,24 +17,6 @@
 #include "GameDocument.h"
 #include "Repository.h"
 
-// Control identifiers
-enum
-{
-    ID_PGN_DIALOG_FILE      = 10000,
-    ID_PGN_DIALOG_CLIPBOARD = 10001,
-    ID_PGN_DIALOG_SESSION   = 10002,
-    ID_BOARD2GAME           = 10003,
-    ID_PGN_DIALOG_GAME_DETAILS  = 10004,
-    ID_REORDER              = 10005,
-    ID_ADD_TO_CLIPBOARD     = 10006,
-    ID_SAVE_ALL_TO_A_FILE   = 10007,
-    ID_PGN_DIALOG_GAME_PREFIX    = 10008,
-    ID_PGN_DIALOG_PUBLISH    = 10009,
-    ID_PGN_DIALOG_DATABASE   = 10010,
-    ID_PGN_DIALOG_UTILITY1   = 10011,
-    ID_PGN_DIALOG_UTILITY2   = 10012
-};
-
 class wxVirtualPgnListCtrl;
 
 
