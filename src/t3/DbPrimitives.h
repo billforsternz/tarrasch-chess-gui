@@ -12,19 +12,15 @@
 //#define DB_FILE  "/Users/billforster/Documents/chessdb_small_blob.sqlite3"
 //#define DB_FILE  "/Users/billforster/Documents/ChessDatabases/chessdb_giant_part1_multi_4096.sqlite3"
 
-// recipe3.sqlite3 is a solid db
-
 #ifdef THC_MAC
 #define DB_FILE                         "/Users/billforster/Documents/ChessDatabases/next_generation_6.sqlite3"   // 5 has zombie issues
 #define DB_MAINTENANCE_FILE             "/Users/billforster/Documents/ChessDatabases/next_generation_6.sqlite3"
 #define DB_MAINTENANCE_PGN_FILE         "/Users/billforster/Documents/ChessDatabases/giant-base-part1-rebuilt.pgn"
 #else
 #define DB_FILE                         "/Users/Bill/Documents/T3Database/next_generation_7.sqlite3"
-#define DB_MAINTENANCE_FILE             "/Users/Bill/Documents/T3Database/next_generation_7.sqlite3"
+#define DB_MAINTENANCE_FILE             "/Users/Bill/Documents/T3Database/next_generation_8.sqlite3"
 #define DB_MAINTENANCE_PGN_FILE         "/Users/Bill/Documents/T3Database/twic1011-1050.pgn"
 #endif
-
-
 
 void db_primitive_open();
 void db_primitive_create_tables();
