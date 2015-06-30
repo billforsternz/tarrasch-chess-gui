@@ -9,7 +9,7 @@ it to analyse positions and games.
 Tarrasch has been around for a few years. Tarrasch V1 was primitive but useful in some
 contexts. Tarrasch V2 was much more complete and useful. You can find out more about Tarrasch
 and download Tarrasch V2 for Windows at this [website](http://triplehappy.com). Tarrasch
-V2 is also an open-source project, although the code is not currently on github.
+V2 is also an open-source project, using the peer old-tarrasch-chess-gui repository on github.
 
 At the time of writing Tarrasch V3 is under development. I have been working on it
 privately for some time, but now I am putting the working repository on Github and the
