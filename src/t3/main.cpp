@@ -111,10 +111,10 @@ static wxMessageOutputDebug msg;
 static int dbg_printf_prepend_time=0;
 DebugPrintfTime::DebugPrintfTime()  { dbg_printf_prepend_time++; }
 DebugPrintfTime::~DebugPrintfTime() { dbg_printf_prepend_time--; if(dbg_printf_prepend_time<0) dbg_printf_prepend_time=0; }
+#ifndef KILL_DEBUG_COMPLETELY
 int core_printf( const char *fmt, ... )
 {
     int ret=0;
-    #ifndef KILL_DEBUG_COMPLETELY
     if( dbg_printf_prepend_time )
     {
         time_t rawtime;
@@ -132,9 +132,9 @@ int core_printf( const char *fmt, ... )
 	va_start( args, fmt );
     ret = vprintf(fmt,args);
     va_end(args);
-    #endif
     return ret;
 }
+#endif
 
 // New approach to logging - use a console window to simulate Mac behaviour on Windows
 #ifdef THC_WINDOWS

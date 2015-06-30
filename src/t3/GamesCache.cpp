@@ -264,7 +264,8 @@ void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &new_doc )
             case 'P':
             case 'p':
             {
-                //prefix += std::string(buf);
+				gd.prefix_txt += std::string(buf);
+				//gd.prefix_txt += '\n';
                 break;
             }
             case 'M':
@@ -1007,7 +1008,7 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
             int gds_nbr = gds.size();
 
             // Sort by game_nbr, save current order in .game_nbr for restore later
-            if( !renumber )
+        /*  if( !renumber )
             {
                 for( int i=0; i<gds_nbr; i++ )    
                 {
@@ -1019,7 +1020,7 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
                     }
                 }
                 sort( gds.begin(), gds.end() );
-            }
+            }  */
 
             // For each game
             int diagram_base = 0;
@@ -1104,7 +1105,7 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
                         s = "#" + white;
                     else
                         s = "##" + white;
-                    s += "\r\n";
+                    s += "\r";
                     publish_options |= GameView::SUPPRESS_NULL_MOVE;
                     publish_options |= GameView::SUPPRESS_VARIATION_PARENS;
                 }
@@ -1152,9 +1153,9 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
                 if( len > 0 )
                 {
                     if( i != 0 )    // blank line needed before all but first prefix
-                        fwrite( "\r\n", 1, 2, md_out);
+                        fwrite( "\n", 1, 1, md_out);
                     fwrite( s.c_str(), 1, len, md_out);
-                    fwrite( "\r\n", 1, 2, md_out);
+                    fwrite( "\n", 1, 1, md_out);
                 }
                 if( !skip_game )
                 {
@@ -1220,7 +1221,7 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
             // Restore sort order .game_nbr field is restored to its original value
             if( !renumber )
             {
-                for( int i=0; i<gds_nbr; i++ )    
+            /*  for( int i=0; i<gds_nbr; i++ )    
                 {   
                     GameDocument *ptr = gds[i]->GetGameDocumentPtr();
                     if( ptr )
@@ -1230,8 +1231,8 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
                         ptr->game_nbr = temp;
                     }
                 }
-                sort( gds.begin(), gds.end() );
-            }
+                sort( gds.begin(), gds.end() ); */
+            } 
             objs.gl->pf.Close( gc_clipboard );    // close all handles
             fwrite("<br/>\n",1,6,md_out);
             if( !markdown )

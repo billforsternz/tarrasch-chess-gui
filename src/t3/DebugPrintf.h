@@ -20,7 +20,7 @@
 // dbg_printf()      -  outputs in debug, [potentially] archived
 // cprintf()         -  outputs in debug or release, things we are working on Currently
 // core_printf()     -  don't use this directly
-//#define KILL_DEBUG_COMPLETELY
+#define KILL_DEBUG_COMPLETELY
 #ifdef KILL_DEBUG_COMPLETELY
     #define release_printf(...)
     #define dbg_printf(...)
