@@ -56,6 +56,7 @@ public:
     std::string black_elo;
     std::string str_blob;
     int transpo_nbr;
+	thc::ChessPosition start_position;
     
     std::string db_calculate_move_txt( uint64_t hash_to_match );
     int  db_calculate_move_vector( std::vector<thc::Move> &moves, uint64_t hash_to_match  );
