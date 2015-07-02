@@ -82,6 +82,7 @@ public:
 
     bool Check( bool do_internal_check, const char *description, thc::ChessPosition *external );
     void Init();
+	void Init( thc::ChessPosition &cp );
     int  compress_move( thc::Move mv, char *storage );
     int  decompress_move( const char *storage, thc::Move &mv );
     void decompress_move_stay( const char *storage, thc::Move &mv ) const;  // decompress but don't advance

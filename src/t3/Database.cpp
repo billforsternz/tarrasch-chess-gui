@@ -652,11 +652,16 @@ std::string DB_GAME_INFO::Description()
 std::string DB_GAME_INFO::db_calculate_move_txt( uint64_t hash_to_match )
 {
     CompressMoves press;
+	press.Init(start_position);
     std::string move_txt;
     size_t len = str_blob.length();
     const char *blob = (const char*)str_blob.c_str();
     uint64_t hash = press.cr.Hash64Calculate();
     bool triggered=(hash==hash_to_match), first=true;
+	bool from_initial_position = ( 0 == strcmp(start_position.squares,"rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR")
+								 ) && start_position.white;
+	if( !from_initial_position )
+		triggered = true;
     for( int count=0, nbr=0; nbr<len; count++ )
     {
         
@@ -705,6 +710,7 @@ std::string DB_GAME_INFO::db_calculate_move_txt( uint64_t hash_to_match )
 int DB_GAME_INFO::db_calculate_move_vector( std::vector<thc::Move> &moves, uint64_t hash_to_match )
 {
     CompressMoves press;
+	press.Init(start_position);
     size_t len = str_blob.length();
     const char *blob = (const char*)str_blob.c_str();
     uint64_t hash = press.cr.Hash64Calculate();
@@ -738,6 +744,7 @@ void DB_GAME_INFO::Upscale( GameDocument &gd )
     gd.date      = date;
     gd.white_elo = white_elo;
     gd.black_elo = black_elo;
+	gd.start_position = start_position;
     std::vector<thc::Move> moves;
     db_calculate_move_vector(moves,0);
     std::vector<MoveTree> &variation = gd.tree.variations[0];
@@ -765,7 +772,9 @@ void DB_GAME_INFO::Downscale( GameDocument &gd )
     date        = gd.date;
     result      = gd.result;
     transpo_nbr = 0;
+	start_position = gd.start_position;
     CompressMoves press;
+	press.Init( start_position );  // temp temp slow
     std::vector<MoveTree> &variation = gd.tree.variations[0];
     std::string str;
     for( int i=0; i<variation.size(); i++ )
