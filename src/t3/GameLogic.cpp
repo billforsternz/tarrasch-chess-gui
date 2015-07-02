@@ -886,14 +886,16 @@ void GameLogic::IndicateNoCurrentDocument()
         GameDocument *ptr = gc.gds[i]->GetGameDocumentPtr();
         if( ptr && ptr->game_being_edited == gd.game_being_edited )
              ptr->game_being_edited = 0;
-        ptr->selected = false;
+        if( ptr )
+            ptr->selected = false;
     }
     for( int i=0; i<gc_clipboard.gds.size(); i++ )
     {
         GameDocument *ptr = gc_clipboard.gds[i]->GetGameDocumentPtr();
         if( ptr && ptr->game_being_edited == gd.game_being_edited )
              ptr->game_being_edited = 0;
-        ptr->selected = false;
+        if( ptr )
+            ptr->selected = false;
     }
 }
 

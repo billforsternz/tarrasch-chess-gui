@@ -412,19 +412,38 @@ void MaintenanceDialog::OnMaintenanceVerify( wxCommandEvent& WXUNUSED(event) )
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_5
 void MaintenanceDialog::OnMaintenanceCreate( wxCommandEvent& WXUNUSED(event) )
 {
+    #if 0
     db_maintenance_create_or_append_to_database( pgn_filename.c_str() );
     const char *str_filename = pgn_filename.c_str();
     cprintf(                     "Appending file: %s\n", str_filename );
-    #if 0
-    cprintf(                     "Appending file: /Users/Maria/Documents/Tarrasch/giant-base-part1-rebuilt.pgn\n" );
-    db_maintenance_create_or_append_to_database( "/Users/Maria/Documents/Tarrasch/giant-base-part1-rebuilt.pgn" );
-    cprintf(                     "Appending file: /Users/Maria/Documents/Tarrasch/giant-base-part2-rebuilt.pgn\n" );
-    db_maintenance_create_or_append_to_database( "/Users/Maria/Documents/Tarrasch/giant-base-part2-rebuilt.pgn" );
-    cprintf(                     "Appending file: /Users/Maria/Documents/Tarrasch/twic_minimal_overlap.pgn\n" );
-    db_maintenance_create_or_append_to_database( "/Users/Maria/Documents/Tarrasch/twic_minimal_overlap.pgn" );
-    cprintf(                     "Appending file: /Users/Maria/Documents/Tarrasch/twic-948-1010.pgn\n" );
-    db_maintenance_create_or_append_to_database( "/Users/Maria/Documents/Tarrasch/twic-948-1010.pgn" );
+    #else
+    #ifdef THC_MAC
+    cprintf(                     "Appending file: /Users/billforster/Documents/Tarrasch/giant-base-part1-rebuilt.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/billforster/Documents/Tarrasch/giant-base-part1-rebuilt.pgn" );
+    cprintf(                     "Appending file: /Users/billforster/Documents/Tarrasch/giant-base-part2-rebuilt.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/billforster/Documents/Tarrasch/giant-base-part2-rebuilt.pgn" );
+    cprintf(                     "Appending file: /Users/billforster/Documents/Tarrasch/twic_minimal_overlap.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/billforster/Documents/Tarrasch/twic_minimal_overlap.pgn" );
+    cprintf(                     "Appending file: /Users/billforster/Documents/Tarrasch/twic-948-1010.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/billforster/Documents/Tarrasch/twic-948-1010.pgn" );
+    cprintf(                     "Appending file: /Users/billforster/Documents/Tarrasch/twic-1011-1048.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/billforster/Documents/Tarrasch/twic-1011-1048.pgn" );
+    #else
+    cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/giant1.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/giant1.pgn" );
+    cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/giant2.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/giant2.pgn" );
+    cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/twic_minimal_overlap.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/twic_minimal_overlap.pgn" );
+    cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/twic-948-1010.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/twic-948-1010.pgn" );
+    cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/twic-1011-1050.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/twic-1011-1050.pgn" );
     #endif
+    #endif
+    cprintf( "Appending files complete\n" );
+    db_maintenance_create_indexes();    // temp
+    cprintf( "TEMP - created indexes automatically\n" );
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_6

@@ -54,6 +54,66 @@ BEGIN_EVENT_TABLE( PgnDialog, wxDialog )
 END_EVENT_TABLE()
 #endif
 
+void PgnDialog::AddExtraControls()
+{
+    // Edit game details
+    wxButton* edit_game_details = new wxButton ( this, ID_PGN_DIALOG_GAME_DETAILS, wxT("Edit Game Details"),
+        wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(edit_game_details, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+    // Edit game prefix
+    wxButton* edit_game_prefix = new wxButton ( this, ID_PGN_DIALOG_GAME_PREFIX, wxT("Edit Game Prefix"),
+        wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(edit_game_prefix, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+    // Paste game / Board->Game
+    wxButton* board2game = new wxButton ( this, ID_BOARD2GAME, wxT("Paste current game"),
+        wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(board2game, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+    // Delete
+    wxButton* delete_ = new wxButton ( this, wxID_DELETE, wxT("Delete"),
+        wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(delete_, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+    // Cut
+    wxButton* cut = new wxButton ( this, wxID_CUT, wxT("Cut"),
+        wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(cut, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+    // Add to clipboard
+    wxButton* add = new wxButton ( this, ID_ADD_TO_CLIPBOARD, wxT("Add to clipboard"),
+        wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(add, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+    // Copy
+    wxButton* copy = new wxButton ( this, wxID_COPY, wxT("Copy"),
+        wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(copy, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+    // Paste
+    wxButton* paste = new wxButton ( this, wxID_PASTE, wxT("Paste"),
+        wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(paste, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+    // Save all games to a file
+    wxButton* save_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save all to a file"),
+        wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+    // Write to file
+    wxButton* write_to_file = new wxButton ( this, wxID_SAVE, wxT("Save file"),
+        wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(write_to_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+    // Publish
+    wxButton* publish = new wxButton ( this, ID_PGN_DIALOG_PUBLISH, wxT("Publish"),
+        wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(publish, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+}
+
+
+
 void PgnDialog::GetCachedDocumentRaw( int idx, GameDocument &gd )
 {
     std::unique_ptr<MagicBase> &mb = gc->gds[idx];
@@ -112,6 +172,7 @@ void PgnDialog::ReadItem( int item, DB_GAME_INFO &info )
 
 void PgnDialog::OnSaveAllToAFile() {}
 void PgnDialog::OnHelpClick() {}
+void PgnDialog::OnSearch() {}
 void PgnDialog::OnUtility() {}
 void PgnDialog::OnCancel() {}
 void PgnDialog::OnNextMove( int idx ) {}
@@ -424,6 +485,12 @@ int wxCALLBACK sort_callback( long item1, long item2, long col )
 
 void PgnDialog::OnListColClick( int compare_col )
 {
+    local_cache.clear();
+    stack.clear();
+    GamesDialog::OnListColClick( compare_col );
+}
+
+/*
     ptr_gds = &gc->gds[0];
     ptr_col_flags = &gc->col_flags[compare_col];
     gc->Debug( "Before sort" );
@@ -453,7 +520,7 @@ void PgnDialog::OnListColClick( int compare_col )
     }
     list_ctrl->EnsureVisible( idx );
     *ptr_col_flags = !*ptr_col_flags;
-}
+} */
 
 
 bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx )
@@ -463,7 +530,9 @@ bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx )
     {
         // gl->IndicateNoCurrentDocument();
         uint32_t temp = ++gl->game_being_edited_tag;
-        gc->gds[selected_game]->GetGameDocumentPtr()->game_being_edited = temp;
+        GameDocument *ptr2 = gc->gds[selected_game]->GetGameDocumentPtr();
+        if( ptr2 )
+            ptr2->game_being_edited = temp;
         GameDocument *ptr = GetCachedDocument(selected_game);
         gd = *ptr;
         gd.SetNonZeroStartPosition(track->focus_offset);
@@ -482,15 +551,15 @@ bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx )
 //  order of the list box items call this ...
 void PgnDialog::SyncCacheOrderBefore()
 {
-    int gds_nbr = gc->gds.size();
+/*    int gds_nbr = gc->gds.size();
     for( int i=0; i<gds_nbr; i++ )    
-        list_ctrl->SetItemData( i, i );
+        list_ctrl->SetItemData( i, i );  */
 }
 
 // ... Afterward call this to reestablish sync
 void PgnDialog::SyncCacheOrderAfter()
 {
-    int gds_nbr = gc->gds.size();
+/*    int gds_nbr = gc->gds.size();
     for( int i=0; i<gds_nbr; i++ )    
     {
         int idx = list_ctrl->GetItemData(i);
@@ -499,7 +568,7 @@ void PgnDialog::SyncCacheOrderAfter()
     }
     sort( gc->gds.begin(), gc->gds.end() );
     for( int i=0; i<gds_nbr; i++ )    
-        list_ctrl->SetItemData( i, i );
+        list_ctrl->SetItemData( i, i ); */
 }
 
 

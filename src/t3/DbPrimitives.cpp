@@ -902,14 +902,15 @@ int db_primitive_count_games()
             cprintf("SOME ERROR ENCOUNTERED\n");
         }
     }
-    cprintf("Get games count end\n");
+    cprintf("Get games count end - %d games\n", game_count );
     game_id = game_count;
     return game_count;
 }
 
 
-static void sanitise( const char *in, char *out, int out_siz )
+static bool sanitise( const char *in, char *out, int out_siz )
 {
+    bool hasAlpha=false;
     int len=0;
     while( *in && len<out_siz-3 )
     {
@@ -919,11 +920,16 @@ static void sanitise( const char *in, char *out, int out_siz )
         else if( c!=' ' && c!='.' && c!=',' && !isalnum(c) )
             *out = '_';
         else
+        {
             *out = c;
+            if( !hasAlpha && isalpha(c) )
+                hasAlpha = true;
+        }
         out++;
         len++;
     }
     *out = '\0';
+    return hasAlpha;
 }
 
 
@@ -1064,8 +1070,36 @@ void db_primitive_insert_game( const char *white, const char *black, const char 
     char black_buf[200];
     char event_buf[200];
     char site_buf[200];
-    sanitise( white,  white_buf, sizeof(white_buf) );
-    sanitise( black,  black_buf, sizeof(black_buf) );
+    if( nbr_moves < 3 )    // skip 'games' with zero, one or two moves
+        return;
+    if( white_elo && black_elo )
+    {
+        int elo_w = atoi(white_elo);
+        int elo_b = atoi(black_elo);
+        if( 0<elo_w && elo_w<2000 && 0<elo_b && elo_b<2000 )
+            return;   // if any elo information, need at least one good player
+    }
+    /* if( date && strlen(date)>=4 )
+    {
+        char buf[5];
+        memcpy(buf,date,4);
+        buf[4] = '\0';
+        int year = atoi(buf);
+        if( year >= 1980 )
+        {
+            if( white_elo && strlen(white_elo)>=4  && black_elo && strlen(black_elo)>=4 )
+            {
+                int elo_w = atoi(white_elo);
+                int elo_b = atoi(black_elo);
+                if( elo_w<2000 && elo_b<2000 )
+                    return;
+            }
+        }                                    
+    }  */
+    bool alphaWhite = sanitise( white,  white_buf, sizeof(white_buf) );
+    bool alphaBlack = sanitise( black,  black_buf, sizeof(black_buf) );
+    if( !alphaWhite || !alphaBlack )    // skip games with no names
+        return;
     sanitise( event,  event_buf, sizeof(event_buf) );
     sanitise( site, site_buf,  sizeof(site_buf) );
     CompressMoves press;
@@ -1097,7 +1131,17 @@ void db_primitive_insert_game( const char *white, const char *black, const char 
     int retval = sqlite3_exec( handle, insert_buf,0,0,&errmsg);
     if( retval )
     {
-        if( !strstr(errmsg,"unique") )
+        char buf[200];
+        strncpy( buf, errmsg, sizeof(buf)-1 );
+        buf[ sizeof(buf)-1 ] = '\0';
+        char *p = buf;
+        while( *p )
+        {
+            if( isalpha(*p) && isupper(*p) )
+                *p = tolower(*p);
+            p++;
+        }
+        if( !strstr(buf,"unique") )
         {
             cprintf("DB_FAIL db_primitive_insert_game() 1 %s (%s)\n", errmsg, insert_buf );
             return;

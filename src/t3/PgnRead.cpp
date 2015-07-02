@@ -653,6 +653,7 @@ void PgnRead::Header( char *buf )
 
 void PgnRead::GameBegin()
 {
+
     //cprintf( "GameBegin() %d\n", nbr_games );
     date      [0] = '\0';
     white     [0] = '\0';
@@ -667,6 +668,9 @@ void PgnRead::GameBegin()
     variation [0] = '\0';
     move_order_type    [0] = '\0';
     fen                [0] = '\0';
+    round[0]     = '\0';
+    white_elo[0] = '\0';
+    black_elo[0] = '\0';
     fen_flag = false;
     ChessRules temp;
     chess_rules = temp;    // init

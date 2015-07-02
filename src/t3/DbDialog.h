@@ -66,23 +66,24 @@ public:
         long style = wxCAPTION|wxRESIZE_BORDER|wxSYSTEM_MENU|wxCLOSE_BOX
     );
 
+    virtual ~DbDialog() { objs.db->FindPlayerEnd(); }
+
     // We calculate a vector of all blobs in the games that leading to the search position
     std::vector< PATH_TO_POSITION > transpositions;
-    int compare_col;
     bool ReadItemFromMemory( int item, DB_GAME_INFO &info );
     void SmartCompare();
 
     // Overrides
     virtual void OnActivate();
     virtual void AddExtraControls();
-    bool dirty;
-    virtual bool TestAndClearIsCacheDirty() { bool was=dirty; dirty=false; return was; }
     virtual void ReadItem( int item, DB_GAME_INFO &info );
     virtual void OnListColClick( int compare_col );
     virtual void OnSaveAllToAFile();
     virtual void OnHelpClick();
     virtual void OnCheckBox( bool checked );
+    virtual void OnCheckBox2( bool checked );
     virtual void OnUtility();
+    virtual void OnSearch();
     virtual void OnButton1();
     virtual void OnButton2();
     virtual void OnButton3();
@@ -106,11 +107,12 @@ private:
     // Map each move in the position to move stats
     std::map< uint32_t, MOVE_STATS > stats;
     bool clipboard_db;          // fixme temp
-    bool reload_next_time;      // fixme temp
+    bool white_player_search;
 
 private:
    
-    std::vector<DB_GAME_INFO> cache;    // games from database
+    //std::vector<DB_GAME_INFO> cache;    // games from database
+    std::vector< smart_ptr<MagicBase> >  cache;
     std::unordered_set<int>   games_set;    // game_ids for all games in memory
     std::unordered_set<uint64_t> drill_down_set;  // positions already encountered drilling down
     std::vector<thc::Move> moves_in_this_position;

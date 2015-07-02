@@ -28,14 +28,16 @@ public:
     int GetNbrGames( thc::ChessRules &cr );
     int GetRow( DB_GAME_INFO *info, int row );
     int GetRowRaw( DB_GAME_INFO *info, int row );
-    int LoadAllGames( std::vector<DB_GAME_INFO> &cache, int nbr_games );
+    int LoadAllGames( std::vector< smart_ptr<MagicBase> > &cache, int nbr_games );
     bool TestNextRow();
     bool TestPrevRow();
     int GetCurrent();
-    int FindRow( std::string &name );
+    int  FindPlayer( std::string &name, std::string &current, int start_row, bool white );
+    void FindPlayerEnd();
+
     int LoadGameWithQuery( DB_GAME_INFO *info, int game_id );
-    int LoadGamesWithQuery( uint64_t hash, std::vector<DB_GAME_INFO> &games, std::unordered_set<int> &games_set );
-    int LoadGamesWithQuery( std::string &player_name, bool white, std::vector<DB_GAME_INFO> &games );
+    int LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<MagicBase> > &games, std::unordered_set<int> &games_set );
+    int LoadGamesWithQuery( std::string &player_name, bool white, std::vector< smart_ptr<MagicBase> > &games );
   
 private:
     // Create a handle for database connection, create a pointer to sqlite3
@@ -44,6 +46,9 @@ private:
     // A prepared statement for fetching from positions table
     sqlite3_stmt *gbl_stmt;
     
+    // A prepared statement for player search
+    sqlite3_stmt *player_search_stmt;
+
     // Whereabouts we are in the virtual list control
     int gbl_expected;
     
@@ -57,6 +62,10 @@ private:
     bool is_start_pos;
     std::string where_white;
     std::string white_and;
+    std::string prev_name;
+    std::string prev_current;
+    bool        prev_white;
+    int         prev_row;
     
     // Number of elements in the virtual list control
     int gbl_count;

@@ -7,6 +7,7 @@
 #define _CRT_SECURE_NO_DEPRECATE
 #include <stdio.h>
 #include <stdlib.h>
+#include <algorithm>
 #include <unordered_set>
 #include "thc.h"
 #include "Portability.h"
@@ -24,6 +25,7 @@ Database::Database()
 {
     gbl_handle = 0;
     gbl_stmt = 0;
+    player_search_stmt = 0;
     gbl_expected = 0;
     gbl_current = 0;
     gbl_count = 0;
@@ -322,11 +324,12 @@ int Database::LoadGameWithQuery( DB_GAME_INFO *info, int game_id )
 static bool gbl_protect_recursion;   // FIXME
 
 
-int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::vector<DB_GAME_INFO> &games )
+int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::vector< smart_ptr<MagicBase> > &games )
 {
+    int nbr_before = games.size();
     int retval=-1;
     if( !gbl_handle )
-        return 0;
+        return -1;
     gbl_expected = -1;
     
     // select matching rows from the table
@@ -339,7 +342,7 @@ int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::ve
     if( retval )
     {
         cprintf("SELECTING DATA FROM DB FAILED 2\n");
-        return retval;
+        return -1;
     }
     
     // Read the game info
@@ -413,7 +416,8 @@ int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::ve
                     }
                     else
                         info.str_blob = "";
-                    games.push_back( info );
+                    make_smart_ptr( DB_GAME_INFO, new_info, info );
+                    games.push_back( std::move(new_info) );
                 }
             }
         }
@@ -423,21 +427,21 @@ int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::ve
             sqlite3_finalize(gbl_stmt);
             gbl_stmt = NULL;
             int nbr_after = games.size();
-            cprintf("LoadGamesWithQuery(): %d games loaded\n", games.size() );
-            break;
+            cprintf("LoadGamesWithQuery(): %d games loaded\n", nbr_after-nbr_before );
+            return nbr_after-nbr_before;
         }
         else
         {
             // Some error encountered
             cprintf("SOME ERROR ENCOUNTERED\n");
-            return retval;
+            return -1;
         }
     }
-    return retval;
+    return -1;
 }
 
 
-int Database::LoadGamesWithQuery( uint64_t hash, std::vector<DB_GAME_INFO> &games, std::unordered_set<int> &games_set )
+int Database::LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<MagicBase> > &games, std::unordered_set<int> &games_set )
 {
     int retval=-1;
     int nbr_before = games.size();
@@ -544,7 +548,8 @@ int Database::LoadGamesWithQuery( uint64_t hash, std::vector<DB_GAME_INFO> &game
                     }
                     else
                         info.str_blob = "";
-                    games.push_back( info );
+                    make_smart_ptr( DB_GAME_INFO, new_info, info );
+                    games.push_back( std::move(new_info) );
                     games_set.insert(info.game_id);
                     if( nbr_new > 5 )
                     {
@@ -909,7 +914,7 @@ int Database::GetRowRaw( DB_GAME_INFO *info, int row )
 }
 
 
-int Database::LoadAllGames( std::vector<DB_GAME_INFO> &cache, int nbr_games )
+int Database::LoadAllGames( std::vector< smart_ptr<MagicBase> > &cache, int nbr_games )
 {
     gbl_protect_recursion = true;
 
@@ -1026,7 +1031,8 @@ int Database::LoadAllGames( std::vector<DB_GAME_INFO> &cache, int nbr_games )
                         info.str_blob = "";
                 }
             }
-            cache.push_back( info );
+            make_smart_ptr( DB_GAME_INFO, new_info, info );
+            cache.push_back( std::move(new_info) );
 
             int percent = (cache.size()*100) / (nbr_games?nbr_games:1);
             if( percent < 1 )
@@ -1057,38 +1063,75 @@ int Database::LoadAllGames( std::vector<DB_GAME_INFO> &cache, int nbr_games )
     return retval;
 }
 
-// Returns row
-int Database::FindRow( std::string &name )
+void Database::FindPlayerEnd()
 {
-    int row=0;
-    char upper='A', lower='a';
-    if( isalpha(name[0]) )
+    if( player_search_stmt )
     {
-        upper = name[0];
-        lower = tolower(upper);
-        upper = toupper(lower);
+        sqlite3_finalize(player_search_stmt);
+        player_search_stmt = NULL;
     }
-    int retval = sqlite3_prepare_v2( gbl_handle, "SELECT games.white from games ORDER BY games.white ASC", -1, &gbl_stmt, 0 );
-    bool okay = !retval;
+}
+
+// Returns row
+int Database::FindPlayer( std::string &name, std::string &current, int start_row, bool white )
+{
+    bool okay = true;
+    int retval = -1;                               
+    int row = 0;
+    gbl_expected = -1;
+    std::string input(name);
+    std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+    std::transform(current.begin(), current.end(), current.begin(), ::tolower);
+    int input_len = input.length();
+    if( player_search_stmt &&
+        prev_name == name &&
+        prev_current == current &&
+        prev_white == white &&
+        prev_row == start_row
+      )
+    {
+        row = start_row+1;
+    }
+    else
+    {
+        if( player_search_stmt )
+        {
+            sqlite3_finalize(player_search_stmt);
+            player_search_stmt = NULL;
+        }
+        retval = sqlite3_prepare_v2( gbl_handle, white ? "SELECT games.white from games ORDER BY games.white ASC" : "SELECT games.black from games ORDER BY games.white ASC", -1, &player_search_stmt, 0 );
+        okay = !retval;
+    }
     while( okay )
     {
-        retval = sqlite3_step(gbl_stmt);
-        okay = ( retval == SQLITE_ROW );
+        retval = sqlite3_step(player_search_stmt);
+        okay = (retval == SQLITE_ROW);
         if( okay )
         {
-            const char *val = (const char*)sqlite3_column_text(gbl_stmt,0);
-            std::string srow(val);
-            if( srow >= name ) //&& (*val==lower || *val==upper) )
-                break;
+            const char *val = (const char*)sqlite3_column_text(player_search_stmt,0);
+            std::string player(val);
+            std::transform(player.begin(), player.end(), player.begin(), ::tolower);
+            int player_len = player.length();
+            if( player!=current && input_len<=player_len && player.substr(0,input_len)==input )
+            {
+                prev_name = name;
+                prev_current = player;
+                prev_white = white;
+                prev_row = row;
+                return row;
+            }
             row++;
         }
     }
-    sqlite3_finalize(gbl_stmt);
-    gbl_stmt = NULL;
-    gbl_expected = -1;
-    return row;
+    sqlite3_finalize(player_search_stmt);
+    player_search_stmt = NULL;
+    return start_row;
 }
 
+
+
+
+// Returns row
 bool Database::TestNextRow()
 {
     int next = gbl_current+1;

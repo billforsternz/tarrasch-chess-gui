@@ -44,7 +44,7 @@ BEGIN_EVENT_TABLE( GamesDialog, wxDialog )
     EVT_ACTIVATE(GamesDialog::OnActivate)
     EVT_BUTTON( wxID_OK,                GamesDialog::OnOkClick )
     EVT_BUTTON( ID_DB_UTILITY,          GamesDialog::OnUtility )
-    EVT_BUTTON( ID_DB_RELOAD,           GamesDialog::OnReload )
+    EVT_BUTTON( ID_DB_RELOAD,           GamesDialog::OnSearch )
     EVT_BUTTON( wxID_CANCEL,            GamesDialog::OnCancel )
     EVT_BUTTON( ID_SAVE_ALL_TO_A_FILE,  GamesDialog::OnSaveAllToAFile )
     EVT_BUTTON( ID_BUTTON_1,            GamesDialog::OnButton1 )
@@ -52,8 +52,8 @@ BEGIN_EVENT_TABLE( GamesDialog, wxDialog )
     EVT_BUTTON( ID_BUTTON_3,            GamesDialog::OnButton3 )
     EVT_BUTTON( ID_BUTTON_4,            GamesDialog::OnButton4 )
 
-/*  EVT_BUTTON( ID_BOARD2GAME,          GamesDialog::OnBoard2Game )
-    EVT_CHECKBOX( ID_REORDER,           GamesDialog::OnRenumber )
+    EVT_BUTTON( ID_BOARD2GAME,          GamesDialog::OnBoard2Game )
+//    EVT_CHECKBOX( ID_REORDER,           GamesDialog::OnRenumber )
     EVT_BUTTON( ID_ADD_TO_CLIPBOARD,    GamesDialog::OnAddToClipboard )
     EVT_BUTTON( ID_PGN_DIALOG_GAME_DETAILS,   GamesDialog::OnEditGameDetails )
     EVT_BUTTON( ID_PGN_DIALOG_GAME_PREFIX,    GamesDialog::OnEditGamePrefix )
@@ -62,11 +62,12 @@ BEGIN_EVENT_TABLE( GamesDialog, wxDialog )
     EVT_BUTTON( wxID_CUT,               GamesDialog::OnCut )
     EVT_BUTTON( wxID_DELETE,            GamesDialog::OnDelete )
     EVT_BUTTON( wxID_PASTE,             GamesDialog::OnPaste )
-    EVT_BUTTON( wxID_SAVE,              GamesDialog::OnSave ) */
+    EVT_BUTTON( wxID_SAVE,              GamesDialog::OnSave )
     EVT_BUTTON( wxID_HELP,              GamesDialog::OnHelpClick )
 
     EVT_RADIOBUTTON( ID_DB_RADIO,       GamesDialog::OnRadio )
     EVT_CHECKBOX   ( ID_DB_CHECKBOX,    GamesDialog::OnCheckBox )
+    EVT_CHECKBOX   ( ID_DB_CHECKBOX2,   GamesDialog::OnCheckBox2 )
     EVT_COMBOBOX   ( ID_DB_COMBO,       GamesDialog::OnComboBox )
     EVT_LISTBOX(ID_DB_LISTBOX_STATS, GamesDialog::OnNextMove)
 
@@ -92,6 +93,8 @@ void wxVirtualListCtrl::ReceiveFocus( int focus_idx )
     if( focus_idx >= 0 )
     {
         track->focus_idx = focus_idx;
+        //if( focus_idx==0 ) 
+        //    cprintf( "** ReceiveFocus(0) calling ReadItemWithSingleLineCache\n" );
         parent->ReadItemWithSingleLineCache( focus_idx, track->info );
 
         initial_focus_offset = track->focus_offset = track->info.db_calculate_move_vector( track->focus_moves, objs.db->gbl_hash );
@@ -175,6 +178,8 @@ wxString wxVirtualListCtrl::OnGetItemText( long item, long column) const
     DB_GAME_INFO info;
     std::string move_txt;
     const char *txt;
+    //if( item==0 && column==10 ) 
+    //    cprintf( "** OnGetItemText(0) calling ReadItemWithSingleLineCache\n" );
     parent->ReadItemWithSingleLineCache( item, info );
     switch( column )
     {
@@ -196,12 +201,16 @@ wxString wxVirtualListCtrl::OnGetItemText( long item, long column) const
                 sprintf(buf,"(T%d) ", info.transpo_nbr );
             if( item == track->focus_idx )
             {
+                //if( item == 0 ) 
+                //    cprintf( " ** OnGetItemText(0) focus hit, nbr moves=%d\n", track->focus_moves.size() );
                 move_txt = CalculateMoveTxt();
                 if( track->focus_offset == initial_focus_offset )
                     move_txt = buf + move_txt;
             }
             else
             {
+                //if( item == 0 ) 
+                //    cprintf( " ** OnGetItemText(0) no focus hit\n" );
                 move_txt = info.db_calculate_move_txt(objs.db->gbl_hash);
                 move_txt = buf + move_txt;
             }
@@ -287,6 +296,8 @@ GamesDialog::GamesDialog
     single_line_cache_idx = -1;
     file_game_idx = -1;
     nbr_games_in_list_ctrl = 0;
+    compare_col = 0;
+    dirty = true;
 }
 
 
@@ -369,6 +380,8 @@ void GamesDialog::CreateControls()
         nbr_games_in_list_ctrl = objs.db->SetPosition( cr ); //gc->gds.size();
         sprintf(buf,"List of %d matching games from the database",nbr_games_in_list_ctrl);
     }
+    orig_nbr_games_in_list_ctrl = nbr_games_in_list_ctrl;
+
     title_ctrl = new wxStaticText( this, wxID_STATIC,
         buf, wxDefaultPosition, wxDefaultSize, 0 );
     box_sizer->Add(title_ctrl, 0, wxALIGN_LEFT|wxALL, 5);
@@ -378,14 +391,19 @@ void GamesDialog::CreateControls()
     int disp_width, disp_height;
     wxDisplaySize(&disp_width, &disp_height);
     wxSize sz;
+    cprintf( "disp_width=%d, disp_height=%d\n", disp_width, disp_height );
     if( disp_width > 1366 )
         disp_width = 1366;
-    sz.x = (disp_width*4)/5;
-    sz.y = (disp_height*2)/5;
+    if( disp_height > 768 )
+        disp_height = 768;
+    sz.x = (disp_width*90)/100;
+    sz.y = (disp_height*36)/100;
     list_ctrl  = new wxVirtualListCtrl( this, ID_PGN_LISTBOX, wxDefaultPosition, sz/*wxDefaultSize*/,wxLC_REPORT|wxLC_VIRTUAL );
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
     if( nbr_games_in_list_ctrl > 0 )
+    {
         list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
+    }
 
     list_ctrl->InsertColumn( 0, id==ID_PGN_DIALOG_FILE?"#":" "  );
     list_ctrl->InsertColumn( 1, "White"    );
@@ -402,6 +420,7 @@ void GamesDialog::CreateControls()
     int cols[11];
 
     // Only use the non volatile column widths if they validate okay
+    #if 0 //temp todo
     if( objs.repository->nv.m_col0 > 0 &&
         objs.repository->nv.m_col1 > 0 &&
         objs.repository->nv.m_col2 > 0 &&
@@ -428,19 +447,20 @@ void GamesDialog::CreateControls()
         cols[10]= objs.repository->nv.m_col10;
     }
     else // else set some sensible defaults
+    #endif
     {
         int x   = (sz.x*98)/100;
-        objs.repository->nv.m_col0 = cols[0] =   4*x/97;    // "Game #"
-        objs.repository->nv.m_col1 = cols[1] =  14*x/97;    // "White" 
-        objs.repository->nv.m_col2 = cols[2] =   6*x/97;    // "Elo W"
-        objs.repository->nv.m_col3 = cols[3] =  14*x/97;    // "Black" 
-        objs.repository->nv.m_col4 = cols[4] =   6*x/97;    // "Elo B" 
-        objs.repository->nv.m_col5 = cols[5] =  10*x/97;    // "Date"  
-        objs.repository->nv.m_col6 = cols[6] =   9*x/97;    // "Site"  
-        objs.repository->nv.m_col7 = cols[7] =   7*x/97;    // "Round" 
-        objs.repository->nv.m_col8 = cols[8] =   8*x/97;    // "Result"
-        objs.repository->nv.m_col9 = cols[9] =   5*x/97;    // "ECO"   
-        objs.repository->nv.m_col10= cols[10]=  14*x/97;    // "Moves"
+        objs.repository->nv.m_col0 = cols[0] =   4*x/142;    // "Game #"
+        objs.repository->nv.m_col1 = cols[1] =  16*x/142;    // "White" 
+        objs.repository->nv.m_col2 = cols[2] =   6*x/142;    // "Elo W"
+        objs.repository->nv.m_col3 = cols[3] =  16*x/142;    // "Black" 
+        objs.repository->nv.m_col4 = cols[4] =   6*x/142;    // "Elo B" 
+        objs.repository->nv.m_col5 = cols[5] =  10*x/142;    // "Date"  
+        objs.repository->nv.m_col6 = cols[6] =  14*x/142;    // "Site"  
+        objs.repository->nv.m_col7 = cols[7] =   3*x/142;    // "Round" 
+        objs.repository->nv.m_col8 = cols[8] =   8*x/142;    // "Result"
+        objs.repository->nv.m_col9 = cols[9] =   3*x/142;    // "ECO"   
+        objs.repository->nv.m_col10= cols[10]=  56*x/142;    // "Moves"
     }
  /*   if(true) //temp temp temp white, black, result, moves only
     {
@@ -496,7 +516,7 @@ void GamesDialog::CreateControls()
     list_ctrl->mini_board = mini_board;
     track = &mini_board_game;
     track->updated_position = cr;
-    track->focus_idx = 0;
+    track->focus_idx = -1;
     track->focus_offset = 0;
     list_ctrl->track = track;
     mini_board->SetPosition( cr.squares );
@@ -506,10 +526,20 @@ void GamesDialog::CreateControls()
     wxBoxSizer *button_panel = new wxBoxSizer(wxVERTICAL);
     hsiz_panel->Add(button_panel, 0, wxALIGN_TOP|wxALL, 10);
 
-    vsiz_panel_button1 = new wxFlexGridSizer(3,2,0,0);
-    button_panel->Add(vsiz_panel_button1, 0, wxALIGN_TOP|wxALL, 0);
-    vsiz_panel_buttons = new wxFlexGridSizer(5,1,0,0);
-    button_panel->Add(vsiz_panel_buttons, 0, wxALIGN_TOP|wxALL, 0);
+    int row1, col1, row2, col2;
+    GetButtonGridDimensions( row1, col1, row2, col2 );
+    if( row1>0 && col1>0 )
+        vsiz_panel_button1 = new wxFlexGridSizer(row1,col1,0,0);
+    else
+        vsiz_panel_button1 = NULL;
+    if( vsiz_panel_button1 )
+        button_panel->Add(vsiz_panel_button1, 0, wxALIGN_TOP|wxALL, 0);
+    if( row2>0 && col2>0 )
+        vsiz_panel_buttons = new wxFlexGridSizer(row2,col2,0,0);
+    else
+        vsiz_panel_buttons = NULL;
+    if( vsiz_panel_buttons )
+        button_panel->Add(vsiz_panel_buttons, 0, wxALIGN_TOP|wxALL, 0);
 
     // Load / Ok / Game->Board
     ok_button = new wxButton ( this, wxID_OK, wxT("Load Game"),
@@ -535,18 +565,6 @@ void GamesDialog::CreateControls()
                                     wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL );
     box_sizer->Add(player_names, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxBOTTOM, 10);
     
-    // Stats list box
-    //    wxSize sz4 = sz;
-    //    sz.x /= 4;
-    //    sz.y /= 3;
-    wxSize sz4 = mini_board->GetSize();
-    wxSize sz5 = sz4;
-    sz5.x = (sz4.x*18)/10;
-    sz5.y = (sz4.y*10)/10;
-    notebook = new wxNotebook(this, wxID_ANY, wxDefaultPosition, /*wxDefaultSize*/ sz5 );
-    //wxPanel *notebook_page1 = new wxPanel(notebook, wxID_ANY );
-    hsiz_panel /*vsiz_panel_stats*/->Add( notebook, 0, wxALIGN_TOP|wxGROW|wxALL, 0 );
-
     // Overridden by specialised classes
     AddExtraControls();
 }
@@ -596,9 +614,289 @@ void GamesDialog::OnListColClick( wxListEvent &event )
     OnListColClick( compare_col );
 }
 
+
+// TODO - Fix the mass copy paste from DbDialog.cpp !
+
+static GamesDialog *backdoor;
+static bool compare( const smart_ptr<MagicBase> &g1, const smart_ptr<MagicBase> &g2 )
+{
+    bool lt=false;
+    DB_GAME_INFO *p1 = g1->GetCompactGamePtr();
+    if( !p1 )
+    {
+        static GameDocument gd1;
+        g1->GetGameDocument(gd1);
+        static DB_GAME_INFO db1;
+        db1.Downscale(gd1);
+        p1 = &db1;
+    }
+    DB_GAME_INFO *p2 = g2->GetCompactGamePtr();
+    if( !p2 )
+    {
+        static GameDocument gd2;
+        g2->GetGameDocument(gd2);
+        static DB_GAME_INFO db2;
+        db2.Downscale(gd2);
+        p2 = &db2;
+    }
+    switch( backdoor->compare_col )
+    {
+        case 1: lt = p1->white < p2->white;
+                break;
+        case 2:
+        {       
+                int elo_1 = atoi( p1->white_elo.c_str() );
+                int elo_2 = atoi( p2->white_elo.c_str() );
+                lt = elo_1 < elo_2;
+                break;
+        }
+        case 3: lt = p1->black < p2->black;
+                break;
+        case 4:
+        {
+                int elo_1 = atoi( p1->black_elo.c_str() );
+                int elo_2 = atoi( p2->black_elo.c_str() );
+                lt = elo_1 < elo_2;
+                break;
+        }
+        case 5: lt = p1->date < p2->date;
+                break;
+        case 6: lt = p1->site < p2->site;
+                break;
+        case 8: lt = p1->result < p2->result;
+                break;
+    }
+    return lt;
+}
+        
+static bool rev_compare( const smart_ptr<MagicBase> &g1, const smart_ptr<MagicBase> &g2 )
+{
+    bool lt=true;
+    DB_GAME_INFO *p1 = g1->GetCompactGamePtr();
+    if( !p1 )
+    {
+        static GameDocument gd1;
+        g1->GetGameDocument(gd1);
+        static DB_GAME_INFO db1;
+        db1.Downscale(gd1);
+        p1 = &db1;
+    }
+    DB_GAME_INFO *p2 = g2->GetCompactGamePtr();
+    if( !p2 )
+    {
+        static GameDocument gd2;
+        g2->GetGameDocument(gd2);
+        static DB_GAME_INFO db2;
+        db2.Downscale(gd2);
+        p2 = &db2;
+    }
+    switch( backdoor->compare_col )
+    {
+        case 1: lt = p1->white > p2->white;           break;
+        case 2:
+        {       int elo_1 = atoi( p1->white_elo.c_str() );
+                int elo_2 = atoi( p2->white_elo.c_str() );
+                lt = elo_1 > elo_2;
+                break;
+        }
+        case 3: lt = p1->black > p2->black;           break;
+        case 4:
+        {       int elo_1 = atoi( p1->black_elo.c_str() );
+                int elo_2 = atoi( p2->black_elo.c_str() );
+                lt = elo_1 > elo_2;
+                break;
+        }
+        case 5: lt = p1->date > p2->date;             break;
+        case 6: lt = p1->site > p2->site;             break;
+        case 8: lt = p1->result > p2->result;         break;
+    }
+    return lt;
+}
+
+struct TempElement
+{
+    int idx;
+    int transpo;
+    std::string blob;
+    std::vector<int> counts;
+};
+
+static bool compare_blob( const TempElement &e1, const TempElement &e2 )
+{
+    bool lt = false;
+    if( e1.transpo == e2.transpo )
+        lt = (e1.blob < e2.blob);
+    else
+        lt = (e1.transpo > e2.transpo);     // smaller transpo nbr should come first
+    return lt;
+}
+
+static bool compare_counts( const TempElement &e1, const TempElement &e2 )
+{
+    bool lt = false;
+    if( e1.transpo != e2.transpo )
+        lt = (e1.transpo > e2.transpo);     // smaller transpo nbr should come first
+    else
+    {
+        unsigned int len = e1.blob.length();
+        if( e2.blob.length() < len )
+            len = e2.blob.length();
+        for( unsigned int i=0; i<len; i++ )
+        {
+            if( e1.counts[i] != e2.counts[i] )
+            {
+                lt = (e1.counts[i] < e2.counts[i]);
+                return lt;
+            }
+        }
+        lt = (e1.blob.length() < e2.blob.length());
+    }
+    return lt;
+}
+
+#if 0
+void GamesDialog::SmartCompare()
+{
+    std::vector<TempElement> inter;     // intermediate representation
+    
+    // Step 1, do a conventional string sort, beginning at our offset into the blob
+    unsigned int sz = gc->gds.size();
+    for( unsigned int i=0; i<sz; i++ )
+    {
+        DB_GAME_INFO &g = gc->gds[i];
+        TempElement e;
+        unsigned int sz2 = transpositions.size();
+        for( unsigned int j=0; j<sz2; j++ )
+        {
+            PATH_TO_POSITION *ptp = &transpositions[j];
+            unsigned int offset = ptp->blob.length();
+            if( 0 == memcmp( ptp->blob.c_str(), g.str_blob.c_str(), offset ) )
+            {
+                e.idx = i;
+                e.blob = g.str_blob.substr(offset);
+                e.counts.resize( e.blob.length() );
+                e.transpo = transpo_activated ? j+1 : 0;
+                inter.push_back(e);
+                break;
+            }
+        }
+    }
+    std::sort( inter.begin(), inter.end(), compare_blob );
+    
+    // Step 2, work out the nbr of moves in clumps of moves
+    sz = inter.size();
+    bool at_least_one = true;
+    for( unsigned int j=0; at_least_one; j++ )
+    {
+        at_least_one = false;  // stop when we've passed end of all strings
+        char current='\0';
+        unsigned int start=0;
+        bool run_in_progress=false;
+        for( unsigned int i=0; i<sz; i++ )
+        {
+            TempElement &e = inter[i];
+            
+            // A short game stops runs
+            if( j >= e.blob.length() )
+            {
+                if( run_in_progress )
+                {
+                    run_in_progress = false;
+                    int count = i-start;
+                    for( int k=start; k<i; k++ )
+                    {
+                        TempElement &f = inter[k];
+                        f.counts[j] = count;
+                    }
+                }
+                continue;
+            }
+            at_least_one = true;
+            char c = e.blob[j];
+            
+            // First time, get something to start a run
+            if( !run_in_progress )
+            {
+                run_in_progress = true;
+                current = c;
+                start = i;
+            }
+            else
+            {
+                
+                // Run can be over because of character change
+                if( c != current )
+                {
+                    int count = i-start;
+                    for( int k=start; k<i; k++ )
+                    {
+                        TempElement &f = inter[k];
+                        f.counts[j] = count;
+                    }
+                    current = c;
+                    start = i;
+                }
+                
+                // And/Or because we reach bottom
+                if( i+1 == sz )
+                {
+                    int count = sz - start;
+                    for( int k=start; k<sz; k++ )
+                    {
+                        TempElement &f = inter[k];
+                        f.counts[j] = count;
+                    }
+                }
+            }
+        }
+    }
+
+    // Step 3 sort again using the counts
+    std::sort( inter.begin(), inter.end(), compare_counts );
+    
+    // Step 4 build sorted version of games list
+    std::vector<DB_GAME_INFO> temp;
+    sz = inter.size();
+    for( unsigned int i=0; i<sz; i++ )
+    {
+        TempElement &e = inter[i];
+        temp.push_back( gc->gds[e.idx] );
+    }
+
+    // Step 5 replace original games list
+    gc->gds = temp;
+}
+#endif
+
 // override
 void GamesDialog::OnListColClick( int compare_col )
 {
+    if( gc->gds.size() > 0 )
+    {
+        static int last_time;
+        static int consecutive;
+        if( compare_col == last_time )
+            consecutive++;
+        else
+            consecutive=0;
+        this->compare_col = compare_col;
+        backdoor = this;
+        if( compare_col == 10 )
+            ;//SmartCompare();
+        else
+            std::sort( gc->gds.begin(), gc->gds.end(), (consecutive%2==0)?rev_compare:compare );
+        nbr_games_in_list_ctrl = gc->gds.size();
+        list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
+        list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
+        int top = list_ctrl->GetTopItem();
+        int count = 1 + list_ctrl->GetCountPerPage();
+        if( count > nbr_games_in_list_ctrl )
+            count = nbr_games_in_list_ctrl;
+        for( int i=0; i<count; i++ )
+            list_ctrl->RefreshItem(top++);
+        Goto(0);
+        last_time = compare_col;
+    }
 }
 
 
@@ -616,20 +914,53 @@ void GamesDialog::OnActivate(wxActivateEvent& event)
 // override
 void GamesDialog::OnActivate()
 {
+    if( !activated_at_least_once )
+    {
+        activated_at_least_once = true;
+        Goto(0); // list_ctrl->SetFocus();
+    }
+}
+
+void GamesDialog::Goto( int idx )
+{
+    int old = track->focus_idx;
+    if( old != idx && old>=0 )
+    {
+        list_ctrl->SetItemState( old, 0, wxLIST_STATE_SELECTED );
+        list_ctrl->SetItemState( old, 0, wxLIST_STATE_FOCUSED );
+    }
+    list_ctrl->SetItemState( idx, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
+    list_ctrl->SetItemState( idx, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
+    
+    dirty = true;
+    list_ctrl->RefreshItem( idx );
+    list_ctrl->ReceiveFocus( idx );
+    list_ctrl->SetItemState( idx, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
+    list_ctrl->SetItemState( idx, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
+    list_ctrl->SetFocus();
+    list_ctrl->EnsureVisible(idx);
 }
 
 void GamesDialog::ReadItemWithSingleLineCache( int item, DB_GAME_INFO &info )
 {
+    //if( item==0 )
+    //    cprintf( "** In ReadItemWithSingleLineCache(0)\n" );        
     if( !TestAndClearIsCacheDirty() && (item==single_line_cache_idx) )
     {
+        //if( item==0 )
+        //    cprintf( " single line cache\n" );        
         info = single_line_cache;
     }
     else
     {
+        //if( item==0 )
+        //    cprintf( " not single line cache\n" );        
         ReadItem( item, info );
         single_line_cache_idx = item;
         single_line_cache = info;
     }
+    //if( item==0 )
+    //    cprintf( " nbr moves=%d\n", info.str_blob.size() );        
 }
 
 void GamesDialog::LoadGame( int idx, int focus_offset )
@@ -741,6 +1072,17 @@ void GamesDialog::OnCheckBox( bool checked )
 {
 }
 
+void GamesDialog::OnCheckBox2( wxCommandEvent& event )
+{
+    bool checked = event.IsChecked();
+    OnCheckBox2( checked );
+}
+
+// overide
+void GamesDialog::OnCheckBox2( bool checked )
+{
+}
+
 void GamesDialog::OnRadio( wxCommandEvent& event )
 {
 }
@@ -754,33 +1096,6 @@ void GamesDialog::OnComboBox( wxCommandEvent& event )
 }
 
 
-void GamesDialog::OnReload( wxCommandEvent& WXUNUSED(event) )
-{
-    wxString name = text_ctrl->GetValue();
-    std::string sname(name.c_str());
-    thc::ChessPosition start_cp;
-    
-    // Temp - do a "find on page type feature"
-    if( sname.length()>0 && cr==start_cp )
-    {
-        int row = objs.db->FindRow( sname );
-        list_ctrl->EnsureVisible( row );   // get vaguely close
-        list_ctrl->SetItemState( row, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
-        list_ctrl->SetItemState( row, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
-        list_ctrl->SetFocus();
-    }
-    else
-    {
-        nbr_games_in_list_ctrl = objs.db->SetPosition( cr, sname );
-        char buf[200];
-        sprintf(buf,"List of %d matching games from the database",nbr_games_in_list_ctrl);
-        title_ctrl->SetLabel( buf );
-        cprintf( "Reloading, %d games\n", nbr_games_in_list_ctrl);
-        list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
-        list_ctrl->RefreshItems(0,nbr_games_in_list_ctrl-1);
-    }
-}
-
 void GamesDialog::OnUtility( wxCommandEvent& WXUNUSED(event) )
 {
     OnUtility();
@@ -788,6 +1103,16 @@ void GamesDialog::OnUtility( wxCommandEvent& WXUNUSED(event) )
 
 // overide
 void GamesDialog::OnUtility()
+{
+}
+
+void GamesDialog::OnSearch( wxCommandEvent& WXUNUSED(event) )
+{
+    OnSearch();
+}
+
+// overide
+void GamesDialog::OnSearch()
 {
 }
 
@@ -894,3 +1219,305 @@ void GamesDialog::OnListSelected( int idx )
     LoadGame( idx, track->focus_offset );
 }
 
+
+
+void GamesDialog::OnEditGameDetails( wxCommandEvent& WXUNUSED(event) )
+{
+ /*   int idx;
+    int focus_idx = GetFocusGame(idx);
+    if( focus_idx != -1  )
+    {
+        GameDetailsDialog dialog( this );
+        GameDocument temp = *GetCachedDocument(focus_idx);
+        if( dialog.Run( temp ) )
+        {
+            GameDocument temp = *GetCachedDocument(focus_idx);
+            objs.gl->GameRedisplayPlayersResult();
+            list_ctrl->SetItem( idx, 1, temp.white );
+            list_ctrl->SetItem( idx, 2, temp.white_elo );
+            list_ctrl->SetItem( idx, 3, temp.black );
+            list_ctrl->SetItem( idx, 4, temp.black_elo );
+            list_ctrl->SetItem( idx, 5, temp.date );
+            list_ctrl->SetItem( idx, 6, temp.site );
+            list_ctrl->SetItem( idx, 7, temp.round );
+            list_ctrl->SetItem( idx, 8, temp.result );
+            list_ctrl->SetItem( idx, 9, temp.eco );
+        }
+    }  */
+}
+
+void GamesDialog::OnEditGamePrefix( wxCommandEvent& WXUNUSED(event) )
+{
+/*    int idx;
+    int focus_idx = GetFocusGame(idx);
+    if( focus_idx != -1  )
+    {
+        GamePrefixDialog dialog( this );
+        GameDocument temp = gc->gds[focus_idx]->GetGameDocument();
+        if( dialog.Run( temp ) )
+        {
+            std::string s = CalculateMovesColumn(temp);
+            list_ctrl->SetItem( idx,10,s);
+        }
+    } */
+}
+
+void GamesDialog::OnAddToClipboard( wxCommandEvent& WXUNUSED(event) )
+{
+    CopyOrAdd( false );
+}
+
+void GamesDialog::OnCopy( wxCommandEvent& WXUNUSED(event) )
+{
+    CopyOrAdd( true );
+}
+
+void GamesDialog::CopyOrAdd( bool clear_clipboard )
+{
+/*    int nbr_copied=0, idx_focus=-1;
+    if( list_ctrl )
+    {
+        int sz=gc->gds.size();
+        for( int i=0; i<sz; i++ )
+        {
+            if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
+                idx_focus = i;
+            if( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED) )
+            {
+                if( clear_clipboard )
+                {
+                    clear_clipboard = false;
+                    gc_clipboard->gds.clear();
+                }
+                GameDocument gd = gc->gds[i]->GetGameDocument();
+                make_smart_ptr( HoldDocument, new_doc, gd );
+                gc_clipboard->gds.push_back(std::move(new_doc));
+                nbr_copied++;
+            }
+        }
+        if( nbr_copied==0 && idx_focus>=0 )
+        {
+            if( clear_clipboard )
+            {
+                clear_clipboard = false;
+                gc_clipboard->gds.clear();
+            }
+            GameDocument gd = gc->gds[idx_focus]->GetGameDocument();
+            make_smart_ptr( HoldDocument, new_doc, gd );
+            gc_clipboard->gds.push_back(std::move(new_doc));
+            nbr_copied++;
+        }
+    }
+    dbg_printf( "%d games copied\n", nbr_copied ); */
+}
+
+void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
+{
+    /*int idx_focus=0;
+    int sz=gc->gds.size();
+    if( list_ctrl && list_ctrl->GetItemCount()==sz )
+    {
+        for( int i=0; i<sz; i++ )
+        {
+            if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
+                idx_focus = i;
+        }
+        std::vector< smart_ptr<MagicBase> >::iterator iter = gc->gds.begin() + idx_focus;
+        GameDocument gd = objs.gl->gd;
+        gd.modified = true;
+        GameDetailsDialog dialog( this );
+        if( dialog.Run(gd) )
+        {
+            objs.gl->GameRedisplayPlayersResult();
+            gd.game_nbr = 0;
+            gd.modified = true;
+            gc->file_irrevocably_modified = true;
+            make_smart_ptr( HoldDocument, new_doc, gd );
+            gc->gds.insert( iter, std::move(new_doc) );
+            wxListItem item;              
+            list_ctrl->InsertItem( idx_focus, item );
+            list_ctrl->SetItem( idx_focus, 0, "" );                     // game_nbr
+            list_ctrl->SetItem( idx_focus, 1, gd.white );
+            list_ctrl->SetItem( idx_focus, 2, gd.white_elo );
+            list_ctrl->SetItem( idx_focus, 3, gd.black );
+            list_ctrl->SetItem( idx_focus, 4, gd.black_elo );
+            list_ctrl->SetItem( idx_focus, 5, gd.date );
+            list_ctrl->SetItem( idx_focus, 6, gd.site );
+            list_ctrl->SetItem( idx_focus, 7, gd.round );
+            list_ctrl->SetItem( idx_focus, 8, gd.result );
+            list_ctrl->SetItem( idx_focus, 9, gd.eco );
+            list_ctrl->SetItem( idx_focus, 10, gd.moves_txt );
+        }
+    } */
+}
+
+
+#if 0
+void GamesDialog::OnSaveAllToAFile()
+{
+/*    wxFileDialog fd( objs.frame, "Save all listed games to a new .pgn file", "", "", "*.pgn", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
+    wxString dir = objs.repository->nv.m_doc_dir;
+    fd.SetDirectory(dir);
+    int answer = fd.ShowModal();
+    if( answer == wxID_OK )
+    {
+        wxString dir;
+        wxFileName::SplitPath( fd.GetPath(), &dir, NULL, NULL );
+        objs.repository->nv.m_doc_dir = dir;
+        wxString wx_filename = fd.GetPath();
+        std::string filename( wx_filename.c_str() );
+        gc->FileSaveAllAsAFile( filename );
+    } */
+}
+
+#endif
+
+void GamesDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
+{
+/*    bool clear_clipboard = true;
+    int nbr_cut=0, idx_focus=-1;
+    int sz=gc->gds.size();
+    if( list_ctrl && list_ctrl->GetItemCount()==sz )
+    {
+        std::vector< smart_ptr<MagicBase> >::iterator iter = gc->gds.begin();
+        std::vector< smart_ptr<MagicBase> >::iterator iter_focus;
+        for( int i=0; iter!=gc->gds.end(); )
+        {
+            if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
+            {
+                idx_focus = i;
+                iter_focus = iter;
+            }
+            if( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED) )
+            {
+                if( clear_clipboard )
+                {
+                    clear_clipboard = false;
+                    gc_clipboard->gds.clear();
+                }
+                MagicBase &mb = **iter;
+                GameDocument gd = mb.GetGameDocument();
+                make_smart_ptr( HoldDocument, new_doc, gd );
+                gc_clipboard->gds.push_back(std::move(new_doc));
+                list_ctrl->DeleteItem(i);
+                iter = gc->gds.erase(iter);
+                gc->file_irrevocably_modified = true;
+                nbr_cut++;
+            }
+            else
+            {
+                ++iter;
+                ++i;
+            }
+        }
+
+        if( nbr_cut==0 && idx_focus>=0 )
+        {
+            gc_clipboard->gds.clear();
+            MagicBase &mb = **iter_focus;
+            GameDocument gd = mb.GetGameDocument();
+            // This is required because for some reason it doesn't work if you don't use the intermediate reference, i.e.:
+            //   GameDocument gd = **iter_focus.GetGameDocument();   // doesn't work
+            make_smart_ptr( HoldDocument,new_doc,gd);
+            gc_clipboard->gds.push_back(std::move(new_doc));
+            list_ctrl->DeleteItem(idx_focus);
+            iter = gc->gds.erase(iter_focus);
+            gc->file_irrevocably_modified = true;
+            nbr_cut++;
+        }
+    }
+    dbg_printf( "%d games cut\n", nbr_cut ); */
+}
+
+void GamesDialog::OnDelete( wxCommandEvent& WXUNUSED(event) )
+{
+/*    int nbr_deleted=0, idx_focus=-1;
+    int sz=gc->gds.size();
+    if( list_ctrl && list_ctrl->GetItemCount()==sz )
+    {
+        std::vector< smart_ptr<MagicBase> >::iterator iter = gc->gds.begin();
+        std::vector< smart_ptr<MagicBase> >::iterator iter_focus;
+        for( int i=0; iter!=gc->gds.end(); )
+        {
+            if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
+            {
+                idx_focus = i;
+                iter_focus = iter;
+            }
+            if( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED) )
+            {
+                list_ctrl->DeleteItem(i);
+                iter = gc->gds.erase(iter);
+                gc->file_irrevocably_modified = true;
+                nbr_deleted++;
+            }
+            else
+            {
+                ++iter;
+                ++i;
+            }
+        }
+
+        if( nbr_deleted==0 && idx_focus>=0 )
+        {
+            list_ctrl->DeleteItem(idx_focus);
+            iter = gc->gds.erase(iter_focus);
+            gc->file_irrevocably_modified = true;
+            nbr_deleted++;
+        }
+    }
+    dbg_printf( "%d games deleted\n", nbr_deleted ); */
+}
+
+void GamesDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
+{
+    /*int idx_focus=0;
+    int sz=gc->gds.size();
+    if( list_ctrl && list_ctrl->GetItemCount()==sz )
+    {
+        for( int i=0; i<sz; i++ )
+        {
+            if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
+                idx_focus = i;
+        }
+        sz = gc_clipboard->gds.size();
+        for( int i=sz-1; i>=0; i-- )    
+        {                                 
+            std::vector< smart_ptr<MagicBase> >::iterator iter = gc->gds.begin() + idx_focus;
+            GameDocument gd;
+            gc_clipboard->gds[i]->GetGameDocument(gd);
+            gd.game_nbr = 0;
+            gd.modified = true;
+            make_smart_ptr( HoldDocument,new_doc,gd);
+            gc->gds.insert( iter, std::move(new_doc) );
+            gc->file_irrevocably_modified = true;
+            wxListItem item;              
+            list_ctrl->InsertItem( idx_focus, item );
+            list_ctrl->SetItem( idx_focus, 0, "" );                     // game_nbr
+            GameDocument *ptr = gc_clipboard->gds[i]->GetGameDocumentPtr();
+            if( ptr )
+            {
+                list_ctrl->SetItem( idx_focus, 1, ptr->white );
+                list_ctrl->SetItem( idx_focus, 2, ptr->white_elo );
+                list_ctrl->SetItem( idx_focus, 3, ptr->black );
+                list_ctrl->SetItem( idx_focus, 4, ptr->black_elo );
+                list_ctrl->SetItem( idx_focus, 5, ptr->date );
+                list_ctrl->SetItem( idx_focus, 6, ptr->site );
+                list_ctrl->SetItem( idx_focus, 7, ptr->round );
+                list_ctrl->SetItem( idx_focus, 8, ptr->result );
+                list_ctrl->SetItem( idx_focus, 9, ptr->eco );
+                list_ctrl->SetItem( idx_focus,10, ptr->moves_txt );
+            }
+        }
+    } */
+}
+
+void GamesDialog::OnSave( wxCommandEvent& WXUNUSED(event) )
+{
+   // gc->FileSave( gc_clipboard );
+}
+
+void GamesDialog::OnPublish( wxCommandEvent& WXUNUSED(event) )
+{
+    gc->Publish( gc_clipboard );
+}

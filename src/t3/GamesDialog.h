@@ -7,6 +7,7 @@
 #ifndef GAMES_DIALOG_H
 #define GAMES_DIALOG_H
 #include <unordered_set>
+
 #include "wx/spinctrl.h"
 #include "wx/statline.h"
 #include "wx/accel.h"
@@ -22,21 +23,34 @@
 // Control identifiers
 enum
 {
-    ID_DB_CHECKBOX      = 10000,
-    ID_DB_RADIO         = 10001,
-    ID_DB_COMBO         = 10002,
-    ID_DB_RELOAD        = 10003,
-    ID_DB_UTILITY       = 10004,
-    ID_DB_TEXT          = 10005,
-    ID_DB_LISTBOX_GAMES = 10006,
-    ID_DB_LISTBOX_STATS = 10007,
-    ID_DB_LISTBOX_TRANSPO = 10008,
-    ID_BUTTON_1 = 10009,
-    ID_BUTTON_2 = 10010,
-    ID_BUTTON_3 = 10011,
-    ID_BUTTON_4 = 10012
+    ID_DB_CHECKBOX  = 10000,
+    ID_DB_CHECKBOX2,
+    ID_DB_RADIO ,
+    ID_DB_COMBO ,
+    ID_DB_RELOAD,
+    ID_DB_UTILITY,
+    ID_DB_TEXT   ,
+    ID_DB_LISTBOX_GAMES,
+    ID_DB_LISTBOX_STATS,
+    ID_DB_LISTBOX_TRANSPO,
+    ID_BUTTON_1,
+    ID_BUTTON_2,
+    ID_BUTTON_3,
+    ID_BUTTON_4,
+    ID_PGN_DIALOG_FILE     ,
+    ID_PGN_DIALOG_CLIPBOARD,
+    ID_PGN_DIALOG_SESSION  ,
+    ID_BOARD2GAME          ,
+    ID_PGN_DIALOG_GAME_DETAILS,
+    ID_REORDER           ,
+    ID_ADD_TO_CLIPBOARD  ,
+    ID_SAVE_ALL_TO_A_FILE,
+    ID_PGN_DIALOG_GAME_PREFIX,
+    ID_PGN_DIALOG_PUBLISH    ,
+    ID_PGN_DIALOG_DATABASE   ,
+    ID_PGN_DIALOG_UTILITY1   ,
+    ID_PGN_DIALOG_UTILITY2   
 };
-
 
 // Track the game presented on the mini board
 struct MiniBoardGame
@@ -133,7 +147,7 @@ public:
     void OnPublish( wxCommandEvent& event );
     void OnHelpClick( wxCommandEvent& event );
     
-    void OnReload( wxCommandEvent& event );
+    void OnSearch( wxCommandEvent& event );
     void OnUtility( wxCommandEvent& event );
     void OnButton1( wxCommandEvent& event );
     void OnButton2( wxCommandEvent& event );
@@ -143,26 +157,46 @@ public:
     void OnSpin( wxCommandEvent& event );
     void OnComboBox( wxCommandEvent& event );
     void OnCheckBox( wxCommandEvent& event );
+    void OnCheckBox2( wxCommandEvent& event );
     void OnListSelected( int idx );
 
+    void Goto( int idx );
     void ReadItemWithSingleLineCache( int item, DB_GAME_INFO &info );
 
     // Overrides
     virtual void OnActivate();
     virtual void AddExtraControls() {}
-    virtual bool TestAndClearIsCacheDirty() = 0;
+    virtual void GetButtonGridDimensions( int &row1, int &col1, int &row2, int &col2 ) { row1=8; col1=2; row2=0; col2=0; }
+    bool dirty;
+    virtual bool TestAndClearIsCacheDirty() { bool was=dirty; dirty=false; return was; }
     virtual void ReadItem( int item, DB_GAME_INFO &info ) = 0;
     virtual void OnCancel();
     virtual void OnListColClick( int compare_col );
     virtual void OnSaveAllToAFile();
     virtual void OnHelpClick();
     virtual void OnCheckBox( bool checked );
+    virtual void OnCheckBox2( bool checked );
+    virtual void OnSearch();
     virtual void OnUtility();
     virtual void OnButton1();
     virtual void OnButton2();
     virtual void OnButton3();
     virtual void OnButton4();
     virtual void OnNextMove( int idx );
+
+    // Todo later
+    void OnEditGameDetails( wxCommandEvent );
+    void OnEditGamePrefix( wxCommandEvent );
+    //void OnSaveAllToAFile();
+    void OnAddToClipboard( wxCommandEvent );
+    void OnCopy( wxCommandEvent );
+    //void CopyOrAdd( bool clear_clipboard );
+    void OnCut( wxCommandEvent );
+    void OnDelete( wxCommandEvent );
+    void OnPaste( wxCommandEvent );
+    void OnSave( wxCommandEvent );
+    void OnPublish( wxCommandEvent );
+
     
 //  void OnClose( wxCloseEvent& event );
 //  void SaveColumns();
@@ -183,6 +217,7 @@ public:
     wxStaticText *player_names;
     DB_GAME_INFO   single_line_cache;
     int            single_line_cache_idx;
+    int          compare_col;
     
 protected:
     wxWindow* parent2;
@@ -194,8 +229,8 @@ protected:
     wxVirtualListCtrl  *list_ctrl;
     wxBoxSizer*  hsiz_panel;
     wxBoxSizer *button_panel;
-    wxGridSizer* vsiz_panel_button1;
-    wxGridSizer* vsiz_panel_buttons;
+    wxFlexGridSizer* vsiz_panel_button1;
+    wxFlexGridSizer* vsiz_panel_buttons;
     
     wxNotebook  *notebook;
     int          selected_game;
@@ -206,6 +241,7 @@ protected:
     // Data members
     wxButton* ok_button;
     wxCheckBox *filter_ctrl;
+    wxCheckBox *white_player_ctrl;
     wxRadioButton *radio_ctrl;
     wxComboBox *combo_ctrl;
     wxTextCtrl *text_ctrl;
@@ -221,6 +257,8 @@ private:    //TODO - move more vars to private
 public:
     bool transpo_activated;
     int nbr_games_in_list_ctrl;
+    int orig_nbr_games_in_list_ctrl;
+    
 protected:
     int file_game_idx;
     bool db_game_set;
