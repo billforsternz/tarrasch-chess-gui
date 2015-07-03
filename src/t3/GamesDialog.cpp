@@ -124,7 +124,6 @@ std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move ) co
 {
     bool position_updated = false;
     std::string move_txt;
-    bool truncated = false;
 	thc::ChessRules cr=track->info.start_position;
     for( size_t i=0; i<track->focus_moves.size(); i++ )
     {
@@ -134,7 +133,7 @@ std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move ) co
             bool prev_move = (i+1 == track->focus_offset);
             bool first_move = (i == track->focus_offset);
             std::string s = mv.NaturalOut(&cr);
-            if( i%2 == 0 || prev_move || first_move )
+            if( cr.white || prev_move || first_move )
             {
                 if( first_move )
                 {
@@ -142,7 +141,7 @@ std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move ) co
                     track->updated_position = cr;
                 }
                 char buf[100];
-                sprintf( buf, "%lu%s", i/2+1, i%2==0?".":"..." );
+                sprintf( buf, "%lu%s", cr.full_move_count, cr.white?".":"..." );
                 s = std::string(buf) + s;
             }
             if( prev_move )
@@ -150,21 +149,24 @@ std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move ) co
             else
             {
                 move_txt += s;
-                move_txt += " ";
                 if( i+1 == track->focus_moves.size() )
+                {
+                    move_txt += " ";
                     move_txt += track->info.result;
+                }
                 else if( i < track->focus_moves.size()-5 && move_txt.length()>100 )
                 {
-                    truncated = true;
                     move_txt += "...";  // very long lines get over truncated by the list control (sad but true)
                     break;
+                }
+                else
+                {
+                    move_txt += " ";
                 }
             }
         }
         cr.PlayMove(mv);
     }
-    if( !truncated )
-        move_txt += track->info.result;
     if( !position_updated )
     {
         track->updated_position = cr;

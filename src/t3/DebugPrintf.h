@@ -1,5 +1,5 @@
 /****************************************************************************
- * A debug only (needs double parenthesis) cprintf() like debug facility
+ * A debug build only printf() like debug facility
  *  Author:  Bill Forster
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
@@ -20,7 +20,7 @@
 // dbg_printf()      -  outputs in debug, [potentially] archived
 // cprintf()         -  outputs in debug or release, things we are working on Currently
 // core_printf()     -  don't use this directly
-#define KILL_DEBUG_COMPLETELY
+//#define KILL_DEBUG_COMPLETELY
 #ifdef KILL_DEBUG_COMPLETELY
     #define release_printf(...)
     #define dbg_printf(...)

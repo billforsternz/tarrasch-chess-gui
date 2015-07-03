@@ -675,11 +675,11 @@ std::string DB_GAME_INFO::db_calculate_move_txt( uint64_t hash_to_match )
         if( triggered )
         {
             std::string s = mv.NaturalOut(&cr);
-            if( count%2 == 0 || first )
+            if( cr.white || first )
             {
                 first = false;
                 char buf[20];
-                sprintf( buf, "%d%s", count/2+1, count%2==0?".":"..." );
+                sprintf( buf, "%d%s", cr.full_move_count, cr.white?".":"..." );
                 move_txt += buf;
             }
             move_txt += s;

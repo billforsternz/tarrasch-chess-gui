@@ -15,10 +15,14 @@ class MagicBase
 {
 public:
     virtual ~MagicBase() {}
-    virtual void GetGameDocument( GameDocument &gd )    { cprintf("FIXME DANGER WILL ROBINSON 1\n"); }
-    virtual GameDocument GetGameDocument()              { GameDocument doc;     cprintf("FIXME DANGER WILL ROBINSON 2\n"); return doc; }
-    virtual GameDocument *GetGameDocumentPtr()  { cprintf("FIXME DANGER WILL ROBINSON 3\n");  return NULL; }
-    virtual DB_GAME_INFO *GetCompactGamePtr() { cprintf("FIXME DANGER WILL ROBINSON 4\n");  return NULL; }      // FIXME USE THIS AS MUCH AS POSSIBLE FOR GOOD PERFORMANCE
+    virtual void GetGameDocument( GameDocument &gd )    {
+        cprintf("FIXME DANGER WILL ROBINSON 1\n"); }
+    virtual GameDocument GetGameDocument()              { GameDocument doc;
+        cprintf("FIXME DANGER WILL ROBINSON 2\n"); return doc; }
+    virtual GameDocument *GetGameDocumentPtr()  {
+        cprintf("FIXME DANGER WILL ROBINSON 3\n");  return NULL; }
+    virtual DB_GAME_INFO *GetCompactGamePtr() {
+        cprintf("FIXME DANGER WILL ROBINSON 4\n");  return NULL; }      // FIXME USE THIS AS MUCH AS POSSIBLE FOR GOOD PERFORMANCE
     virtual bool IsInMemory()        { return false; }
     virtual bool IsModified()        { return false; }
     virtual uint32_t GetGameBeingEdited() { return 0; }
@@ -43,7 +47,8 @@ class DB_GAME_INFO : public MagicBase
 {
 public:
     virtual void GetGameDocument( GameDocument &gd )    { Upscale(gd); }
-    virtual GameDocument GetGameDocument()              { GameDocument doc;  Upscale(doc);   cprintf("FIXME DANGER WILL ROBINSON 5\n"); return doc; }
+    virtual GameDocument GetGameDocument()              { GameDocument doc;  Upscale(doc);
+        cprintf("FIXME DANGER WILL ROBINSON 5\n"); return doc; }
     virtual DB_GAME_INFO *GetCompactGamePtr() { return this; }
     int game_id;
     std::string white;
