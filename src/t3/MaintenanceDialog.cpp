@@ -118,14 +118,19 @@ void MaintenanceDialog::CreateControls()
            "For now the files involved are mainly hardwired at compile time - to\n"
            "change them, change the source code and recompile! See files\n"
            "DbPrimitives.h and DbMaintenance.cpp.\n\n"
-           "Before rebuilding the database, manually delete the maintenance database;\n"
+            #define DB_APPEND_ONLY
+            #ifdef DB_APPEND_ONLY
+           "Before appending to the database, make a copy of the production database;\n"
+            DB_FILE "\n"
+           "to a maintenance database;\n"
             DB_MAINTENANCE_FILE "\n"
            "Then use the append from .pgn button, for each .pgn you wish to add\n"
            "(a file picker GUI control does let you select that .pgn, at the\n"
-           "moment avoid .pgn files with overlapping games). Then add indexes\n"
+           "moment avoid .pgn files with overlapping games).\n"
            "Finally manually replace the production database;\n"
             DB_FILE "\n"
            "With the newly created maintenance database and restart Tarrasch.\n"
+            #endif
            , wxDefaultPosition, wxDefaultSize, 0 );
     box_sizer->Add(descr, 0, wxALIGN_LEFT|wxALL, 5);
     
@@ -412,7 +417,7 @@ void MaintenanceDialog::OnMaintenanceVerify( wxCommandEvent& WXUNUSED(event) )
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_5
 void MaintenanceDialog::OnMaintenanceCreate( wxCommandEvent& WXUNUSED(event) )
 {
-    #if 0
+    #ifdef DB_APPEND_ONLY
     db_maintenance_create_or_append_to_database( pgn_filename.c_str() );
     const char *str_filename = pgn_filename.c_str();
     cprintf(                     "Appending file: %s\n", str_filename );
@@ -439,11 +444,13 @@ void MaintenanceDialog::OnMaintenanceCreate( wxCommandEvent& WXUNUSED(event) )
     db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/twic-948-1010.pgn" );
     cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/twic-1011-1050.pgn\n" );
     db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/twic-1011-1050.pgn" );
-    #endif
+    cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/twic-1051-1077.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/twic-1051-1077.pgn" );
     #endif
     cprintf( "Appending files complete\n" );
     db_maintenance_create_indexes();    // temp
     cprintf( "TEMP - created indexes automatically\n" );
+    #endif
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_6
