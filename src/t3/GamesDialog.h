@@ -56,7 +56,7 @@ enum
 struct MiniBoardGame
 {
     thc::ChessPosition  updated_position;
-    DB_GAME_INFO        info;
+    DB_GAME_INFO_FEN    info;
     std::vector< thc::Move > focus_moves;
     int                 focus_idx;
     int                 focus_offset;
@@ -161,7 +161,7 @@ public:
     void OnListSelected( int idx );
 
     void Goto( int idx );
-    void ReadItemWithSingleLineCache( int item, DB_GAME_INFO &info );
+    void ReadItemWithSingleLineCache( int item, DB_GAME_INFO_FEN &info );
 
     // Overrides
     virtual void OnActivate();
@@ -215,7 +215,7 @@ public:
     // GamesDialog member variables
 public:
     wxStaticText *player_names;
-    DB_GAME_INFO   single_line_cache;
+    DB_GAME_INFO_FEN   single_line_cache;
     int            single_line_cache_idx;
     int          compare_col;
     

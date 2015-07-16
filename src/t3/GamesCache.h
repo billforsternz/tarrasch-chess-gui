@@ -61,13 +61,23 @@ public:
     std::string black_elo;
     std::string str_blob;
     int transpo_nbr;
-	thc::ChessPosition start_position;
     
     std::string db_calculate_move_txt( uint64_t hash_to_match );
     int  db_calculate_move_vector( std::vector<thc::Move> &moves, uint64_t hash_to_match  );
     std::string Description();
     void Upscale( GameDocument &gd );       // to GameDocument
-    void Downscale( GameDocument &gd );     // from GameDocument
+    virtual void Downscale( GameDocument &gd );     // from GameDocument
+    virtual bool HaveStartPosition() { return false; }
+    virtual thc::ChessPosition &GetStartPosition() { cprintf("FIXME (MAYBE) DANGER WILL ROBINSON 6\n"); static thc::ChessPosition start; return start; }
+};
+
+class DB_GAME_INFO_FEN : public DB_GAME_INFO
+{
+public:
+	thc::ChessPosition start_position;
+    virtual bool HaveStartPosition() { return true; }
+    virtual thc::ChessPosition &GetStartPosition() { return start_position; }
+    virtual void Downscale( GameDocument &gd );     // from GameDocument
 };
 
 void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &gd );

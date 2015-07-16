@@ -124,7 +124,7 @@ std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move ) co
 {
     bool position_updated = false;
     std::string move_txt;
-	thc::ChessRules cr=track->info.start_position;
+	thc::ChessRules cr=track->info.GetStartPosition();
     for( size_t i=0; i<track->focus_moves.size(); i++ )
     {
         thc::Move mv = track->focus_moves[i];
@@ -177,7 +177,7 @@ std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move ) co
     
 wxString wxVirtualListCtrl::OnGetItemText( long item, long column) const
 {
-    DB_GAME_INFO info;
+    DB_GAME_INFO_FEN info;
     std::string move_txt;
     const char *txt;
     //if( item==0 && column==10 ) 
@@ -943,7 +943,7 @@ void GamesDialog::Goto( int idx )
     list_ctrl->EnsureVisible(idx);
 }
 
-void GamesDialog::ReadItemWithSingleLineCache( int item, DB_GAME_INFO &info )
+void GamesDialog::ReadItemWithSingleLineCache( int item, DB_GAME_INFO_FEN &info )
 {
     //if( item==0 )
     //    cprintf( "** In ReadItemWithSingleLineCache(0)\n" );        
@@ -967,7 +967,7 @@ void GamesDialog::ReadItemWithSingleLineCache( int item, DB_GAME_INFO &info )
 
 void GamesDialog::LoadGame( int idx, int focus_offset )
 {
-    static DB_GAME_INFO info;
+    static DB_GAME_INFO_FEN info;
     ReadItemWithSingleLineCache( idx, info );
     GameDocument gd;
     std::vector<thc::Move> moves;
@@ -977,7 +977,9 @@ void GamesDialog::LoadGame( int idx, int focus_offset )
     int len = info.str_blob.length();
     const char *blob = info.str_blob.c_str();
     CompressMoves press;
-	press.Init(info.start_position);
+    bool have_start_position = info.HaveStartPosition();
+    if( have_start_position )
+        press.Init( info.GetStartPosition() );
     for( int nbr=0; nbr<len;  )
     {
         thc::Move mv;

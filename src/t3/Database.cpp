@@ -652,15 +652,15 @@ std::string DB_GAME_INFO::Description()
 std::string DB_GAME_INFO::db_calculate_move_txt( uint64_t hash_to_match )
 {
     CompressMoves press;
-	press.Init(start_position);
+    bool have_start_position = HaveStartPosition();
+    if( have_start_position )
+        press.Init( GetStartPosition() );
     std::string move_txt;
     size_t len = str_blob.length();
     const char *blob = (const char*)str_blob.c_str();
     uint64_t hash = press.cr.Hash64Calculate();
     bool triggered=(hash==hash_to_match), first=true;
-	bool from_initial_position = ( 0 == strcmp(start_position.squares,"rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR")
-								 ) && start_position.white;
-	if( !from_initial_position )
+	if( have_start_position )
 		triggered = true;
     for( int count=0, nbr=0; nbr<len; count++ )
     {
@@ -710,7 +710,9 @@ std::string DB_GAME_INFO::db_calculate_move_txt( uint64_t hash_to_match )
 int DB_GAME_INFO::db_calculate_move_vector( std::vector<thc::Move> &moves, uint64_t hash_to_match )
 {
     CompressMoves press;
-	press.Init(start_position);
+    bool have_start_position = HaveStartPosition();
+    if( have_start_position )
+        press.Init( GetStartPosition() );
     size_t len = str_blob.length();
     const char *blob = (const char*)str_blob.c_str();
     uint64_t hash = press.cr.Hash64Calculate();
@@ -744,7 +746,11 @@ void DB_GAME_INFO::Upscale( GameDocument &gd )
     gd.date      = date;
     gd.white_elo = white_elo;
     gd.black_elo = black_elo;
-	gd.start_position = start_position;
+    bool have_start_position = HaveStartPosition();
+    if( have_start_position )
+        gd.start_position =  GetStartPosition();
+    else
+        gd.start_position.Init();
     std::vector<thc::Move> moves;
     db_calculate_move_vector(moves,0);
     std::vector<MoveTree> &variation = gd.tree.variations[0];
@@ -760,6 +766,33 @@ void DB_GAME_INFO::Upscale( GameDocument &gd )
 
 
 void DB_GAME_INFO::Downscale( GameDocument &gd )
+{
+    white       = gd.white;
+    black       = gd.black;
+    white_elo   = gd.white_elo;
+    black_elo   = gd.black_elo;
+    event       = gd.event;
+    site        = gd.site;
+    date        = gd.date;
+    // eco      = gd.eco;
+    date        = gd.date;
+    result      = gd.result;
+    transpo_nbr = 0;
+    CompressMoves press;
+    std::vector<MoveTree> &variation = gd.tree.variations[0];
+    std::string str;
+    for( int i=0; i<variation.size(); i++ )
+    {
+        thc::Move mv = variation[i].game_move.move;
+        char ch;
+        press.compress_move( mv, &ch );
+        str.push_back(ch);
+    }
+    str_blob = str;
+}
+
+
+void DB_GAME_INFO_FEN::Downscale( GameDocument &gd )
 {
     white       = gd.white;
     black       = gd.black;
