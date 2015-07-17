@@ -75,7 +75,10 @@ class DB_GAME_INFO_FEN : public DB_GAME_INFO
 {
 public:
 	thc::ChessPosition start_position;
-    virtual bool HaveStartPosition() { return true; }
+    virtual bool HaveStartPosition() {
+        bool is_initial_position = ( 0 == strcmp(start_position.squares,"rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR")
+                                    ) && start_position.white;
+        return !is_initial_position; }
     virtual thc::ChessPosition &GetStartPosition() { return start_position; }
     virtual void Downscale( GameDocument &gd );     // from GameDocument
 };

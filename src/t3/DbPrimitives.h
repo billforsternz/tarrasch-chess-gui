@@ -10,8 +10,8 @@
 #include <stdint.h>
 
 #ifdef THC_MAC
-#define DB_FILE                         "/Users/billforster/Documents/ChessDatabases/next_generation_6.sqlite3"   // 5 has zombie issues
-#define DB_MAINTENANCE_FILE             "/Users/billforster/Documents/ChessDatabases/next_generation_6.sqlite3"
+#define DB_FILE                         "/Users/billforster/Documents/ChessDatabases/next_generation_8.sqlite3"   // 5 has zombie issues
+#define DB_MAINTENANCE_FILE             "/Users/billforster/Documents/ChessDatabases/next_generation_9.sqlite3"
 #define DB_MAINTENANCE_PGN_FILE         "/Users/billforster/Documents/ChessDatabases/giant-base-part1-rebuilt.pgn"
 #else
 #define DB_FILE                         "/Users/Bill/Documents/T3Database/next_generation_8.sqlite3"
