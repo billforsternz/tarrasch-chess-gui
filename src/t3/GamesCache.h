@@ -11,6 +11,20 @@
 
 class DB_GAME_INFO;
 
+class Roster
+{
+public:
+    std::string white;
+    std::string black;
+    std::string event;
+    std::string site;
+    std::string result;
+    std::string date;
+    std::string eco;
+    std::string white_elo;
+    std::string black_elo;
+};
+
 class MagicBase
 {
 public:
@@ -51,14 +65,7 @@ public:
         cprintf("FIXME DANGER WILL ROBINSON 5\n"); return doc; }
     virtual DB_GAME_INFO *GetCompactGamePtr() { return this; }
     int game_id;
-    std::string white;
-    std::string black;
-    std::string event;
-    std::string site;
-    std::string result;
-    std::string date;
-    std::string white_elo;
-    std::string black_elo;
+    Roster r;
     std::string str_blob;
     int transpo_nbr;
     

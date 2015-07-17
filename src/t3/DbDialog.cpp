@@ -267,29 +267,29 @@ static bool compare( const DB_GAME_INFO &g1, const DB_GAME_INFO &g2 )
     bool lt=false;
     switch( backdoor->compare_col )
     {
-        case 1: lt = g1.white < g2.white;
+        case 1: lt = g1.r.white < g2.r.white;
                 break;
         case 2:
         {       
-                int elo_1 = atoi( g1.white_elo.c_str() );
-                int elo_2 = atoi( g2.white_elo.c_str() );
+                int elo_1 = atoi( g1.r.white_elo.c_str() );
+                int elo_2 = atoi( g2.r.white_elo.c_str() );
                 lt = elo_1 < elo_2;
                 break;
         }
-        case 3: lt = g1.black < g2.black;
+        case 3: lt = g1.r.black < g2.r.black;
                 break;
         case 4:
         {
-                int elo_1 = atoi( g1.black_elo.c_str() );
-                int elo_2 = atoi( g2.black_elo.c_str() );
+                int elo_1 = atoi( g1.r.black_elo.c_str() );
+                int elo_2 = atoi( g2.r.black_elo.c_str() );
                 lt = elo_1 < elo_2;
                 break;
         }
-        case 5: lt = g1.date < g2.date;
+        case 5: lt = g1.r.date < g2.r.date;
                 break;
-        case 6: lt = g1.site < g2.site;
+        case 6: lt = g1.r.site < g2.r.site;
                 break;
-        case 8: lt = g1.result < g2.result;
+        case 8: lt = g1.r.result < g2.r.result;
                 break;
     }
     return lt;
@@ -422,23 +422,23 @@ static bool rev_compare( const DB_GAME_INFO &g1, const DB_GAME_INFO &g2 )
     bool lt=true;
     switch( backdoor->compare_col )
     {
-        case 1: lt = g1.white > g2.white;           break;
+        case 1: lt = g1.r.white > g2.r.white;           break;
         case 2:
-        {       int elo_1 = atoi( g1.white_elo.c_str() );
-                int elo_2 = atoi( g2.white_elo.c_str() );
+        {       int elo_1 = atoi( g1.r.white_elo.c_str() );
+                int elo_2 = atoi( g2.r.white_elo.c_str() );
                 lt = elo_1 > elo_2;
                 break;
         }
-        case 3: lt = g1.black > g2.black;           break;
+        case 3: lt = g1.r.black > g2.r.black;           break;
         case 4:
-        {       int elo_1 = atoi( g1.black_elo.c_str() );
-                int elo_2 = atoi( g2.black_elo.c_str() );
+        {       int elo_1 = atoi( g1.r.black_elo.c_str() );
+                int elo_2 = atoi( g2.r.black_elo.c_str() );
                 lt = elo_1 > elo_2;
                 break;
         }
-        case 5: lt = g1.date > g2.date;             break;
-        case 6: lt = g1.site > g2.site;             break;
-        case 8: lt = g1.result > g2.result;         break;
+        case 5: lt = g1.r.date > g2.r.date;             break;
+        case 6: lt = g1.r.site > g2.r.site;             break;
+        case 8: lt = g1.r.result > g2.r.result;         break;
     }
     return lt;
 }
@@ -635,7 +635,7 @@ void DbDialog::OnSearch()
     // Temp - do a "find on page type feature"
     if( sname.length()>0 && cr==start_cp )
     {
-        std::string current = white_player_search ? track->info.white : track->info.black;
+        std::string current = white_player_search ? track->info.r.white : track->info.r.black;
         int row = objs.db->FindPlayer( sname, current, track->focus_idx, white_player_search );
         Goto(row); /*
         list_ctrl->EnsureVisible( row );   // get vaguely close
@@ -804,7 +804,7 @@ void DbDialog::OnButton2()
 
 void DbDialog::OnButton3()
 {
-    std::string player_name = white_player_search ? track->info.white : track->info.black;
+    std::string player_name = white_player_search ? track->info.r.white : track->info.r.black;
     int nbr_loaded = objs.db->LoadGamesWithQuery( player_name, true, objs.gl->gc_clipboard.gds );
     if( nbr_loaded > 0 )
     {
@@ -817,7 +817,7 @@ void DbDialog::OnButton3()
 
 void DbDialog::OnButton4()
 {
-    std::string player_name = white_player_search ? track->info.white : track->info.black;
+    std::string player_name = white_player_search ? track->info.r.white : track->info.r.black;
     int nbr_loaded = objs.db->LoadGamesWithQuery( player_name, false, objs.gl->gc_clipboard.gds );
     if( nbr_loaded > 0 )
     {
@@ -991,13 +991,13 @@ void DbDialog::StatsCalculate()
 
             if( found )
             {
-                bool white_wins = (info->result=="1-0");
+                bool white_wins = (info->r.result=="1-0");
                 if( white_wins )
                     total_white_wins++;
-                bool black_wins = (info->result=="0-1");
+                bool black_wins = (info->r.result=="0-1");
                 if( black_wins )
                     total_black_wins++;
-                bool draw       = (info->result=="1/2-1/2");
+                bool draw       = (info->r.result=="1/2-1/2");
                 if( draw )
                     total_draws++;
 

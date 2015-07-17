@@ -152,7 +152,7 @@ std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move ) co
                 if( i+1 == track->focus_moves.size() )
                 {
                     move_txt += " ";
-                    move_txt += track->info.result;
+                    move_txt += track->info.r.result;
                 }
                 else if( i < track->focus_moves.size()-5 && move_txt.length()>100 )
                 {
@@ -170,7 +170,7 @@ std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move ) co
     if( !position_updated )
     {
         track->updated_position = cr;
-        move_txt = track->info.result;
+        move_txt = track->info.r.result;
     }
     return move_txt;
 }
@@ -186,15 +186,15 @@ wxString wxVirtualListCtrl::OnGetItemText( long item, long column) const
     switch( column )
     {
         default: txt =  "";                         break;
-        case 1: txt =   info.white.c_str();         break;
-        case 2: txt =   info.white_elo.c_str();     break;
-        case 3: txt =   info.black.c_str();         break;
-        case 4: txt =   info.black_elo.c_str();     break;
-        case 5: txt =   info.date.c_str();          break;
-        case 6: txt =   info.site.c_str();          break;
-        //case 7: txt = info.round.c_str();         break;
-        case 8: txt =   info.result.c_str();        break;
-        //case 9: txt = info.eco.c_str();           break;
+        case 1: txt =   info.r.white.c_str();         break;
+        case 2: txt =   info.r.white_elo.c_str();     break;
+        case 3: txt =   info.r.black.c_str();         break;
+        case 4: txt =   info.r.black_elo.c_str();     break;
+        case 5: txt =   info.r.date.c_str();          break;
+        case 6: txt =   info.r.site.c_str();          break;
+        //case 7: txt = info.r.round.c_str();         break;
+        case 8: txt =   info.r.result.c_str();        break;
+        //case 9: txt = info.r.eco.c_str();           break;
         case 10:
         {
             char buf[1000];
@@ -643,29 +643,29 @@ static bool compare( const smart_ptr<MagicBase> &g1, const smart_ptr<MagicBase> 
     }
     switch( backdoor->compare_col )
     {
-        case 1: lt = p1->white < p2->white;
+        case 1: lt = p1->r.white < p2->r.white;
                 break;
         case 2:
         {       
-                int elo_1 = atoi( p1->white_elo.c_str() );
-                int elo_2 = atoi( p2->white_elo.c_str() );
+                int elo_1 = atoi( p1->r.white_elo.c_str() );
+                int elo_2 = atoi( p2->r.white_elo.c_str() );
                 lt = elo_1 < elo_2;
                 break;
         }
-        case 3: lt = p1->black < p2->black;
+        case 3: lt = p1->r.black < p2->r.black;
                 break;
         case 4:
         {
-                int elo_1 = atoi( p1->black_elo.c_str() );
-                int elo_2 = atoi( p2->black_elo.c_str() );
+                int elo_1 = atoi( p1->r.black_elo.c_str() );
+                int elo_2 = atoi( p2->r.black_elo.c_str() );
                 lt = elo_1 < elo_2;
                 break;
         }
-        case 5: lt = p1->date < p2->date;
+        case 5: lt = p1->r.date < p2->r.date;
                 break;
-        case 6: lt = p1->site < p2->site;
+        case 6: lt = p1->r.site < p2->r.site;
                 break;
-        case 8: lt = p1->result < p2->result;
+        case 8: lt = p1->r.result < p2->r.result;
                 break;
     }
     return lt;
@@ -694,23 +694,23 @@ static bool rev_compare( const smart_ptr<MagicBase> &g1, const smart_ptr<MagicBa
     }
     switch( backdoor->compare_col )
     {
-        case 1: lt = p1->white > p2->white;           break;
+        case 1: lt = p1->r.white > p2->r.white;           break;
         case 2:
-        {       int elo_1 = atoi( p1->white_elo.c_str() );
-                int elo_2 = atoi( p2->white_elo.c_str() );
+        {       int elo_1 = atoi( p1->r.white_elo.c_str() );
+                int elo_2 = atoi( p2->r.white_elo.c_str() );
                 lt = elo_1 > elo_2;
                 break;
         }
-        case 3: lt = p1->black > p2->black;           break;
+        case 3: lt = p1->r.black > p2->r.black;           break;
         case 4:
-        {       int elo_1 = atoi( p1->black_elo.c_str() );
-                int elo_2 = atoi( p2->black_elo.c_str() );
+        {       int elo_1 = atoi( p1->r.black_elo.c_str() );
+                int elo_2 = atoi( p2->r.black_elo.c_str() );
                 lt = elo_1 > elo_2;
                 break;
         }
-        case 5: lt = p1->date > p2->date;             break;
-        case 6: lt = p1->site > p2->site;             break;
-        case 8: lt = p1->result > p2->result;         break;
+        case 5: lt = p1->r.date > p2->r.date;             break;
+        case 6: lt = p1->r.site > p2->r.site;             break;
+        case 8: lt = p1->r.result > p2->r.result;         break;
     }
     return lt;
 }
@@ -971,9 +971,9 @@ void GamesDialog::LoadGame( int idx, int focus_offset )
     ReadItemWithSingleLineCache( idx, info );
     GameDocument gd;
     std::vector<thc::Move> moves;
-    gd.white = info.white;
-    gd.black = info.black;
-    gd.result = info.result;
+    gd.white = info.r.white;
+    gd.black = info.r.black;
+    gd.result = info.r.result;
     int len = info.str_blob.length();
     const char *blob = info.str_blob.c_str();
     CompressMoves press;

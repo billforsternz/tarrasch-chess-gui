@@ -732,9 +732,9 @@ void GameLogic::CmdNextGame()
             objs.db->GetRow(&info, idx+1 );
             GameDocument gd_temp;
             std::vector<thc::Move> moves;
-            gd_temp.white = info.white;
-            gd_temp.black = info.black;
-            gd_temp.result = info.result;
+            gd_temp.white = info.r.white;
+            gd_temp.black = info.r.black;
+            gd_temp.result = info.r.result;
             int len = info.str_blob.length();
             const char *blob = info.str_blob.c_str();
             CompressMoves press;
@@ -781,9 +781,9 @@ void GameLogic::CmdPreviousGame()
             objs.db->GetRow( &info, idx-1 );
             GameDocument gd_temp;
             std::vector<thc::Move> moves;
-            gd_temp.white = info.white;
-            gd_temp.black = info.black;
-            gd_temp.result = info.result;
+            gd_temp.white = info.r.white;
+            gd_temp.black = info.r.black;
+            gd_temp.result = info.r.result;
             size_t len = info.str_blob.length();
             const char *blob = info.str_blob.c_str();
             CompressMoves press;
