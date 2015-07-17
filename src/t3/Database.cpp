@@ -791,7 +791,6 @@ void DB_GAME_INFO::Downscale( GameDocument &gd )
     str_blob = str;
 }
 
-
 void DB_GAME_INFO_FEN::Downscale( GameDocument &gd )
 {
     white       = gd.white;
