@@ -46,16 +46,16 @@ void GameDocument::Init( const ChessPosition &start_position )
     pgn_handle = 0;
     game_nbr   = 0;
     sort_idx   = 0;
-    white     = "";
-    black     = "";
-    event     = "";
-    site      = "";
-    date      = "";
-    round     = "";
-    result    = "";
-    eco       = "";
-    white_elo = "";
-    black_elo = "";
+    r.white     = "";
+    r.black     = "";
+    r.event     = "";
+    r.site      = "";
+    r.date      = "";
+    r.round     = "";
+    r.result    = "";
+    r.eco       = "";
+    r.white_elo = "";
+    r.black_elo = "";
     this->start_position = start_position;
     fposn1 = 0;
     fposn2 = 0;
@@ -69,7 +69,7 @@ void GameDocument::Init( const ChessPosition &start_position )
 
 void GameDocument::FleshOutDate()
 {
-    if( date=="" )
+    if( r.date=="" )
     {
         time_t timer = time(NULL);
         struct tm *ptime = localtime( &timer );
@@ -78,7 +78,7 @@ void GameDocument::FleshOutDate()
         int dd   = ptime->tm_mday;
         char buf[20];
         sprintf( buf, "%04d.%02d.%02d", yyyy, mm, dd );
-        date = buf;
+        r.date = buf;
     }
 }
 
@@ -220,13 +220,13 @@ void GameDocument::GetGameDocument( GameDocument &read_from_file )
         }
     }
     read_from_file = temp;
-    cprintf( "white = %s, moves = %d\n", read_from_file.white.c_str(), read_from_file.tree.variations[0].size() );
+    cprintf( "white = %s, moves = %d\n", read_from_file.r.white.c_str(), read_from_file.tree.variations[0].size() );
 }
 
 std::string GameDocument::Description()
 {
-    std::string white = this->white;
-    std::string black = this->black;
+    std::string white = this->r.white;
+    std::string black = this->r.black;
     size_t comma = white.find(',');
     if( comma != std::string::npos )
         white = white.substr( 0, comma );
@@ -235,41 +235,41 @@ std::string GameDocument::Description()
         black = black.substr( 0, comma );
     int move_cnt = tree.variations[0].size();
     std::string label = white;
-    if( white_elo != "" )
+    if( r.white_elo != "" )
     {
         label += " (";
-        label += white_elo;
+        label += r.white_elo;
         label += ")";
     }
     label += " - ";
     label += black;
-    if( black_elo != "" )
+    if( r.black_elo != "" )
     {
         label += " (";
-        label += black_elo;
+        label += r.black_elo;
         label += ")";
     }
-    if( site != "" )
+    if( r.site != "" )
     {
         label += ", ";
-        label += site;
+        label += r.site;
     }
-    else if( event != "" )
+    else if( r.event != "" )
     {
         label += ", ";
-        label += event;
+        label += r.event;
     }
-    if( date.length() >= 4 )
+    if( r.date.length() >= 4 )
     {
         label += " ";
-        label += date.substr(0,4);
+        label += r.date.substr(0,4);
     }
     bool result_or_moves = false;
-    if( result != "*" )
+    if( r.result != "*" )
     {
         result_or_moves = true;
         label += ", ";
-        label += result;
+        label += r.result;
         if( move_cnt > 0 )
             label += " in";
     }
@@ -1955,42 +1955,42 @@ void GameDocument::ToFileTxtGameDetails( std::string &str )
     #endif
     string str1;
     str1 += "[Event \"";
-    str1 += (event=="" ? "?" : event);
+    str1 += (r.event=="" ? "?" : r.event);
     str1 += "\"]" EOL;
     str1 += "[Site \"";
-    str1 += (site=="" ? "?" : site);
+    str1 += (r.site=="" ? "?" : r.site);
     str1 += "\"]" EOL;
     str1 += "[Date \"";
-    str1 += (date=="" ? "????.??.??" : date);
+    str1 += (r.date=="" ? "????.??.??" : r.date);
     str1 += "\"]" EOL;
     str1 += "[Round \"";
-    str1 += (round=="" ? "?": round);
+    str1 += (r.round=="" ? "?": r.round);
     str1 += "\"]" EOL;
     str1 += "[White \"";
-    str1 += (white=="" ? "?": white);
+    str1 += (r.white=="" ? "?": r.white);
     str1 += "\"]" EOL;
     str1 += "[Black \"";
-    str1 += (black=="" ? "?": black);
+    str1 += (r.black=="" ? "?": r.black);
     str1 += "\"]" EOL;
     str1 += "[Result \"";
-    str1 += (result=="" ? "*" : result);
+    str1 += (r.result=="" ? "*" : r.result);
     str1 += "\"]" EOL;
-    if( eco != "" )
+    if( r.eco != "" )
     {
         str1 += "[ECO \"";
-        str1 += eco;
+        str1 += r.eco;
         str1 += "\"]" EOL;
     }
-    if( white_elo != "" )
+    if( r.white_elo != "" )
     {
         str1 += "[WhiteElo \"";
-        str1 += white_elo;
+        str1 += r.white_elo;
         str1 += "\"]" EOL;
     }
-    if( black_elo != "" )
+    if( r.black_elo != "" )
     {
         str1 += "[BlackElo \"";
-        str1 += black_elo;
+        str1 += r.black_elo;
         str1 += "\"]" EOL;
     }
     ChessPosition tmp;

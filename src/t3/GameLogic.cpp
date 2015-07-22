@@ -213,8 +213,8 @@ void GameLogic::ShowNewDocument()
         else if( draw_type1==DRAWTYPE_REPITITION || draw_type2==DRAWTYPE_REPITITION )
             result = RESULT_DRAW_REPITITION;
     }
-    objs.repository->player.m_white = gd.white;
-    objs.repository->player.m_black = gd.black;
+    objs.repository->player.m_white = gd.r.white;
+    objs.repository->player.m_black = gd.r.black;
     LabelPlayers(false,true);
     if( objs.rybka )
     {
@@ -732,9 +732,9 @@ void GameLogic::CmdNextGame()
             objs.db->GetRow(&info, idx+1 );
             GameDocument gd_temp;
             std::vector<thc::Move> moves;
-            gd_temp.white = info.r.white;
-            gd_temp.black = info.r.black;
-            gd_temp.result = info.r.result;
+            gd_temp.r.white = info.r.white;
+            gd_temp.r.black = info.r.black;
+            gd_temp.r.result = info.r.result;
             int len = info.str_blob.length();
             const char *blob = info.str_blob.c_str();
             CompressMoves press;
@@ -781,9 +781,9 @@ void GameLogic::CmdPreviousGame()
             objs.db->GetRow( &info, idx-1 );
             GameDocument gd_temp;
             std::vector<thc::Move> moves;
-            gd_temp.white = info.r.white;
-            gd_temp.black = info.r.black;
-            gd_temp.result = info.r.result;
+            gd_temp.r.white = info.r.white;
+            gd_temp.r.black = info.r.black;
+            gd_temp.r.result = info.r.result;
             size_t len = info.str_blob.length();
             const char *blob = info.str_blob.c_str();
             CompressMoves press;
@@ -1356,7 +1356,7 @@ void GameLogic::CmdDraw()
         }
         glc.Set( result );
         NewState( GAMEOVER );
-        gd.result = "1/2-1/2";
+        gd.r.result = "1/2-1/2";
         gd.Rebuild();
         unsigned long pos = gd.gv.FindEnd();
         atom.Redisplay( pos );
@@ -1376,7 +1376,7 @@ void GameLogic::CmdWhiteResigns()
         NewState( GAMEOVER );
         if( gd.AreWeInMain() )
         {
-            gd.result = "0-1";
+            gd.r.result = "0-1";
             gd.Rebuild();
             unsigned long pos = gd.gv.FindEnd();
             atom.Redisplay( pos );
@@ -1397,7 +1397,7 @@ void GameLogic::CmdBlackResigns()
         NewState( GAMEOVER );
         if( gd.AreWeInMain() )
         {
-            gd.result = "1-0";
+            gd.r.result = "1-0";
             gd.Rebuild();
             unsigned long pos = gd.gv.FindEnd();
             atom.Redisplay( pos );
@@ -1471,8 +1471,8 @@ void GameLogic::CmdEditGamePrefix()
 // If players or result (possibly) changed, redisplay it
 void GameLogic::GameRedisplayPlayersResult()
 {
-    objs.repository->player.m_white = gd.white;
-    objs.repository->player.m_black = gd.black;
+    objs.repository->player.m_white = gd.r.white;
+    objs.repository->player.m_black = gd.r.black;
     LabelPlayers(false,true);
     long pos = lb->GetInsertionPoint();
     gd.Rebuild();
@@ -1675,8 +1675,8 @@ void GameLogic::LabelPlayers( bool start_game, bool set_document_player_names )
     objs.repository->player.m_black = black;
     if( set_document_player_names )
     {
-        gd.white = objs.repository->player.m_white;
-        gd.black = objs.repository->player.m_black;
+        gd.r.white = objs.repository->player.m_white;
+        gd.r.black = objs.repository->player.m_black;
         canvas->SetPlayers( white.c_str(), black.c_str()  );
     }
 }
@@ -1735,7 +1735,7 @@ void GameLogic::OnIdle()
                 NewState( GAMEOVER );
                 if( gd.AreWeInMain() )
                 {
-                    gd.result = (white ? "0-1" : "1-0");
+                    gd.r.result = (white ? "0-1" : "1-0");
                     gd.Rebuild();
                     unsigned long pos = gd.gv.FindEnd();
                     atom.Redisplay( pos );
@@ -1775,12 +1775,12 @@ void GameLogic::OnIdle()
                             case RESULT_BLACK_CHECKMATED:
                             case RESULT_BLACK_RESIGNS:
                             case RESULT_BLACK_LOSE_TIME:
-                                gd.result = "1-0";
+                                gd.r.result = "1-0";
                                 break;
                             case RESULT_WHITE_CHECKMATED:
                             case RESULT_WHITE_RESIGNS:
                             case RESULT_WHITE_LOSE_TIME:
-                                gd.result = "0-1";
+                                gd.r.result = "0-1";
                                 break;
                             case RESULT_DRAW_WHITE_STALEMATED:
                             case RESULT_DRAW_BLACK_STALEMATED:
@@ -1788,7 +1788,7 @@ void GameLogic::OnIdle()
                             case RESULT_DRAW_50MOVE:
                             case RESULT_DRAW_INSUFFICIENT:
                             case RESULT_DRAW_REPITITION:
-                                gd.result = "1/2-1/2";
+                                gd.r.result = "1/2-1/2";
                                 break;
                         }
                         gd.Rebuild();
@@ -1871,12 +1871,12 @@ void GameLogic::OnIdle()
                         case RESULT_BLACK_CHECKMATED:
                         case RESULT_BLACK_RESIGNS:
                         case RESULT_BLACK_LOSE_TIME:
-                            gd.result = "1-0";
+                            gd.r.result = "1-0";
                             break;
                         case RESULT_WHITE_CHECKMATED:
                         case RESULT_WHITE_RESIGNS:
                         case RESULT_WHITE_LOSE_TIME:
-                            gd.result = "0-1";
+                            gd.r.result = "0-1";
                             break;
                         case RESULT_DRAW_WHITE_STALEMATED:
                         case RESULT_DRAW_BLACK_STALEMATED:
@@ -1884,7 +1884,7 @@ void GameLogic::OnIdle()
                         case RESULT_DRAW_50MOVE:
                         case RESULT_DRAW_INSUFFICIENT:
                         case RESULT_DRAW_REPITITION:
-                            gd.result = "1/2-1/2";
+                            gd.r.result = "1/2-1/2";
                             break;
                     }
                     gd.Rebuild();
@@ -1997,12 +1997,12 @@ void GameLogic::OnIdle()
                         case RESULT_BLACK_CHECKMATED:
                         case RESULT_BLACK_RESIGNS:
                         case RESULT_BLACK_LOSE_TIME:
-                            gd.result = "1-0";
+                            gd.r.result = "1-0";
                             break;
                         case RESULT_WHITE_CHECKMATED:
                         case RESULT_WHITE_RESIGNS:
                         case RESULT_WHITE_LOSE_TIME:
-                            gd.result = "0-1";
+                            gd.r.result = "0-1";
                             break;
                         case RESULT_DRAW_WHITE_STALEMATED:
                         case RESULT_DRAW_BLACK_STALEMATED:
@@ -2010,7 +2010,7 @@ void GameLogic::OnIdle()
                         case RESULT_DRAW_50MOVE:
                         case RESULT_DRAW_INSUFFICIENT:
                         case RESULT_DRAW_REPITITION:
-                            gd.result = "1/2-1/2";
+                            gd.r.result = "1/2-1/2";
                             break;
                     }
                     gd.Rebuild();
@@ -2140,12 +2140,12 @@ void GameLogic::MouseUp( char file, char rank, wxPoint &point )
                             case RESULT_BLACK_CHECKMATED:
                             case RESULT_BLACK_RESIGNS:
                             case RESULT_BLACK_LOSE_TIME:
-                                gd.result = "1-0";
+                                gd.r.result = "1-0";
                                 break;
                             case RESULT_WHITE_CHECKMATED:
                             case RESULT_WHITE_RESIGNS:
                             case RESULT_WHITE_LOSE_TIME:
-                                gd.result = "0-1";
+                                gd.r.result = "0-1";
                                 break;
                             case RESULT_DRAW_WHITE_STALEMATED:
                             case RESULT_DRAW_BLACK_STALEMATED:
@@ -2153,7 +2153,7 @@ void GameLogic::MouseUp( char file, char rank, wxPoint &point )
                             case RESULT_DRAW_50MOVE:
                             case RESULT_DRAW_INSUFFICIENT:
                             case RESULT_DRAW_REPITITION:
-                                gd.result = "1/2-1/2";
+                                gd.r.result = "1/2-1/2";
                                 break;
                         }
                         gd.Rebuild();
@@ -2303,12 +2303,12 @@ bool GameLogic::MouseDown( char file, char rank, wxPoint &point )     // return 
                                 case RESULT_BLACK_CHECKMATED:
                                 case RESULT_BLACK_RESIGNS:
                                 case RESULT_BLACK_LOSE_TIME:
-                                    gd.result = "1-0";
+                                    gd.r.result = "1-0";
                                     break;
                                 case RESULT_WHITE_CHECKMATED:
                                 case RESULT_WHITE_RESIGNS:
                                 case RESULT_WHITE_LOSE_TIME:
-                                    gd.result = "0-1";
+                                    gd.r.result = "0-1";
                                     break;
                                 case RESULT_DRAW_WHITE_STALEMATED:
                                 case RESULT_DRAW_BLACK_STALEMATED:
@@ -2316,7 +2316,7 @@ bool GameLogic::MouseDown( char file, char rank, wxPoint &point )     // return 
                                 case RESULT_DRAW_50MOVE:
                                 case RESULT_DRAW_INSUFFICIENT:
                                 case RESULT_DRAW_REPITITION:
-                                    gd.result = "1/2-1/2";
+                                    gd.r.result = "1/2-1/2";
                                     break;
                             }
                             gd.Rebuild();

@@ -971,9 +971,9 @@ void GamesDialog::LoadGame( int idx, int focus_offset )
     ReadItemWithSingleLineCache( idx, info );
     GameDocument gd;
     std::vector<thc::Move> moves;
-    gd.white = info.r.white;
-    gd.black = info.r.black;
-    gd.result = info.r.result;
+    gd.r.white = info.r.white;
+    gd.r.black = info.r.black;
+    gd.r.result = info.r.result;
     int len = info.str_blob.length();
     const char *blob = info.str_blob.c_str();
     CompressMoves press;

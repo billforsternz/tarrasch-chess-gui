@@ -137,7 +137,7 @@ int CentralWorkSaver::SaveGamePrompt( bool prompt, FILE_MODE fm, bool save_as )
     }
     if( answer == wxYES )
     {
-        if( gd->white == "" ) // if( !game_details_edited )
+        if( gd->r.white == "" ) // if( !game_details_edited )
         {
             GameDetailsDialog dialog(objs.frame);
             if( dialog.Run(*gd) )

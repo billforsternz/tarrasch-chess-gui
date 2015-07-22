@@ -21,6 +21,22 @@
 #define smart_ptr std::unique_ptr
 #define make_smart_ptr(T,to,from) smart_ptr<T> to; to.reset(new T(from))
 
+class Roster
+{
+public:
+    std::string white;
+    std::string black;
+    std::string event;
+    std::string site;
+    std::string result;
+    std::string round;
+    std::string date;
+    std::string eco;
+    std::string white_elo;
+    std::string black_elo;
+};
+
+
 class GameLogic;
 class GameDocument
 {
@@ -51,16 +67,7 @@ public:
         focus           = false; //src.focus;
         selected        = src.selected;
         game_nbr        = src.game_nbr;
-        white           = src.white;
-        black           = src.black;
-        event           = src.event;
-        site            = src.site;
-        date            = src.date;
-        round           = src.round;
-        result          = src.result;
-        eco             = src.eco;
-        white_elo       = src.white_elo;
-        black_elo       = src.black_elo;
+        r               = src.r;
         start_position  = src.start_position;
         master_position = src.master_position;
         fposn0          = src.fposn0;
@@ -96,6 +103,7 @@ public:
     void GetGameDocument( GameDocument &gd );
 
     // Data
+    Roster      r;  // white, black, event, site, date etc.
     unsigned long non_zero_start_pos;
     bool        game_details_edited;
     bool        game_prefix_edited;
@@ -107,17 +115,7 @@ public:
     int         pgn_handle;
     int         sort_idx;
     int         game_nbr;
-
-    std::string white;          // "White"
-    std::string black;          // "Black"
-    std::string event;          // "Event"
-    std::string site;           // "Site"
-    std::string date;           // "Date"
-    std::string round;          // "Round"
-    std::string result;         // "Result"
-    std::string eco;            // "ECO"
-    std::string white_elo;      // "WhiteElo"
-    std::string black_elo;      // "BlackElo"
+   
     thc::ChessPosition start_position;  // the start position
     unsigned long fposn0;       // offset of prefix in .pgn file
     unsigned long fposn1;       // offset of tags in .pgn file
@@ -155,7 +153,7 @@ public:
     void PromoteToVariation( unsigned long offset_within_comment=0 );
     void PromoteRestToVariation();
     void DemoteToComment();
-    void Rebuild() { gv.Build( result, &tree, this->start_position ); }
+    void Rebuild() { gv.Build( r.result, &tree, this->start_position ); }
     void DeleteRestOfVariation();
     void RedisplayRequest( MoveTree *found );
     void Redisplay( unsigned long pos );

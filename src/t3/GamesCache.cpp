@@ -30,7 +30,7 @@ static bool operator < (const smart_ptr<GameDocument>& left,
                         const smart_ptr<GameDocument>& right)
 {
     bool result = ( *left < *right );
-    cprintf( "operator <; left->white=%s, right->white=%s, result=%s\n", left->white.c_str(),  right->white.c_str(), result?"true":"false" );
+    cprintf( "operator <; left->r.white=%s, right->r.white=%s, result=%s\n", left->r.white.c_str(),  right->r.white.c_str(), result?"true":"false" );
     return result;
 }
 
@@ -344,25 +344,25 @@ bool GamesCache::Tagline( GameDocument &gd,  const char *s )
             string tag(tag_begin,tag_end-tag_begin);
             string val(val_begin,val_end-val_begin);
             if( tag == "White" )
-                gd.white = val;
+                gd.r.white = val;
             if( tag == "Black" )
-                gd.black = val;
+                gd.r.black = val;
             if( tag == "Event" )
-                gd.event = val;
+                gd.r.event = val;
             if( tag == "Site" )
-                gd.site = val;
+                gd.r.site = val;
             if( tag == "Date" )
-                gd.date = val;
+                gd.r.date = val;
             if( tag == "Round" )
-                gd.round = val;
+                gd.r.round = val;
             if( tag == "Result" )
-                gd.result = val;
+                gd.r.result = val;
             if( tag == "ECO" )
-                gd.eco = val;
+                gd.r.eco = val;
             if( tag == "WhiteElo" )
-                gd.white_elo = val;
+                gd.r.white_elo = val;
             if( tag == "BlackElo" )
-                gd.black_elo = val;
+                gd.r.black_elo = val;
             if( tag == "FEN" )
                 gd.start_position.Forsyth(val.c_str());
         }
@@ -1035,8 +1035,8 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
                 int publish_options = 0;
                 bool skip_intro = false;
                 bool skip_game = false;
-                std::string white = gd.white;
-                std::string black = gd.black;
+                std::string white = gd.r.white;
+                std::string black = gd.r.black;
                 std::string t = black;
                 std::string options = "";
                 bool white_only = (white!="" && white!="?") && (black=="" || black=="?");
@@ -1169,12 +1169,12 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
                         s += white;
                         s += " - ";
                         s += black;
-                        if( gd.event.find('?') == std::string::npos )
+                        if( gd.r.event.find('?') == std::string::npos )
                         {
                             s += " ";
-                            s += gd.event;
+                            s += gd.r.event;
                         }
-                        std::string year = gd.date.substr(0,4);
+                        std::string year = gd.r.date.substr(0,4);
                         if( year.find('?') == std::string::npos )
                         {
                             s += " ";

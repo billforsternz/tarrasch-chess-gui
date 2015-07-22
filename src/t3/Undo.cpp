@@ -169,7 +169,7 @@ void Undo::Save( long undo_previous_posn, GameDocument &gd, GAME_STATE game_stat
     rp.tree = gd.tree;
     rp.previous_posn = undo_previous_posn;
     rp.posn = gd.GetInsertionPoint();
-    rp.result = gd.result;
+    rp.result = gd.r.result;
     rp.state = game_state;
     rp.ponder_move = gl->ponder_move;
     rp.human_is_white = gl->glc.human_is_white;
@@ -215,7 +215,7 @@ GAME_STATE Undo::DoUndo( GameDocument &gd, bool takeback )
             RestorePoint rp;
             rp = *it;
             ret = rp.state;
-            gd.result = rp.result;
+            gd.r.result = rp.result;
             gd.tree = rp.tree;
             gl->ponder_move = rp.ponder_move;
             gl->glc.human_is_white = rp.human_is_white;
@@ -265,7 +265,7 @@ GAME_STATE Undo::DoRedo( GameDocument &gd )
             ret = rp.takeback ? rp.state : MANUAL;
             #endif
             gd.tree = rp.tree;
-            gd.result = rp.result;
+            gd.r.result = rp.result;
             gl->ponder_move = rp.ponder_move;
             gl->glc.human_is_white = rp.human_is_white;
             gl->glc.result = rp.game_result;

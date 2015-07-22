@@ -102,9 +102,9 @@ void Tabs::SetTitle( GameDocument &gd )
 {
     const int TAB_TITLE_LENGTH=20;
     std::string s("New Game");
-    if( gd.white.length() > 0 )
+    if( gd.r.white.length() > 0 )
     {
-        s = gd.white + "-" + gd.black;
+        s = gd.r.white + "-" + gd.r.black;
     }
     else
     {

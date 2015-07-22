@@ -738,14 +738,7 @@ int DB_GAME_INFO::db_calculate_move_vector( std::vector<thc::Move> &moves, uint6
 
 void DB_GAME_INFO::Upscale( GameDocument &gd )
 {
-    gd.white     = r.white;
-    gd.black     = r.black;
-    gd.event     = r.event;
-    gd.site      = r.site;
-    gd.result    = r.result;
-    gd.date      = r.date;
-    gd.white_elo = r.white_elo;
-    gd.black_elo = r.black_elo;
+    gd.r = r;
     bool have_start_position = HaveStartPosition();
     if( have_start_position )
         gd.start_position =  GetStartPosition();
@@ -767,16 +760,7 @@ void DB_GAME_INFO::Upscale( GameDocument &gd )
 
 void DB_GAME_INFO::Downscale( GameDocument &gd )
 {
-    r.white       = gd.white;
-    r.black       = gd.black;
-    r.white_elo   = gd.white_elo;
-    r.black_elo   = gd.black_elo;
-    r.event       = gd.event;
-    r.site        = gd.site;
-    r.date        = gd.date;
-    // r.eco      = gd.eco;
-    r.date        = gd.date;
-    r.result      = gd.result;
+    r = gd.r;
     transpo_nbr = 0;
     CompressMoves press;
     std::vector<MoveTree> &variation = gd.tree.variations[0];
@@ -793,16 +777,7 @@ void DB_GAME_INFO::Downscale( GameDocument &gd )
 
 void DB_GAME_INFO_FEN::Downscale( GameDocument &gd )
 {
-    r.white       = gd.white;
-    r.black       = gd.black;
-    r.white_elo   = gd.white_elo;
-    r.black_elo   = gd.black_elo;
-    r.event       = gd.event;
-    r.site        = gd.site;
-    r.date        = gd.date;
-    // r.eco      = gd.eco;
-    r.date        = gd.date;
-    r.result      = gd.result;
+    r = gd.r;
     transpo_nbr = 0;
 	start_position = gd.start_position;
     CompressMoves press;

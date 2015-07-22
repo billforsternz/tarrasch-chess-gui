@@ -11,20 +11,6 @@
 
 class DB_GAME_INFO;
 
-class Roster
-{
-public:
-    std::string white;
-    std::string black;
-    std::string event;
-    std::string site;
-    std::string result;
-    std::string date;
-    std::string eco;
-    std::string white_elo;
-    std::string black_elo;
-};
-
 class MagicBase
 {
 public:
