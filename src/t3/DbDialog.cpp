@@ -172,34 +172,16 @@ void DbDialog::OnActivate()
 
 
 // Read game information from games or database
-void DbDialog::ReadItem( int item, CompactGame &compact )
+void DbDialog::ReadItem( int item, CompactGame &pact )
 {
     DB_GAME_INFO info;
     bool in_memory = ReadItemFromMemory( item, info );
     if( !in_memory )
     {
         objs.db->GetRow( &info, item );
-        //cprintf( "ListCtrl::ReadItem(%d) READ %s FROM DATABASE\n", item, info.Description().c_str() );
         info.transpo_nbr = 0;
     }
-    compact.r = info.r;
-    compact.transpo_nbr = info.transpo_nbr;
-    compact.game_id = info.game_id;
-    cprintf( "decompressing in\n");
-    CompressMoves press;
-    thc::Move mv;
-    int len = info.str_blob.size();
-    const char *blob = info.str_blob.c_str();
-    compact.moves.clear();
-    for( int i=0; i<len; i++ )
-    {
-        int nbr_used = press.decompress_move( blob++, mv );
-        if( nbr_used == 0 )
-            break;
-        compact.moves.push_back(mv);
-    }
-    //compact.db_calculate_move_vector(info.str_blob.c_str(), 0 );
-    cprintf( "decompressing out\n");
+    info.GetCompactGame( pact );
 }
 
 bool DbDialog::ReadItemFromMemory( int item, DB_GAME_INFO &info )

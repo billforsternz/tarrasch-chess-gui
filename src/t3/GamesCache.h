@@ -7,9 +7,55 @@
 #ifndef GAMES_CACHE_H
 #define GAMES_CACHE_H
 #include "GameDocument.h"
+#include "CompressMoves.h"
 #include <time.h> // time_t
 
 class DB_GAME_INFO;
+
+class CompactGame
+{
+public:
+    Roster r;
+    thc::ChessPosition start_position;
+    std::vector< thc::Move > moves;
+    
+    // temp stuff hopefully
+    int game_id;
+    int transpo_nbr;
+    
+    //std::string db_calculate_move_txt( uint64_t hash_to_match );
+    std::string Description();
+    void Upscale( GameDocument &gd );       // to GameDocument
+    void Downscale( GameDocument &gd );     // from GameDocument
+    bool HaveStartPosition() {
+        bool is_initial_position = ( 0 == strcmp(start_position.squares,"rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR")
+                                    ) && start_position.white;
+        return !is_initial_position; }
+    thc::ChessPosition &GetStartPosition() { return start_position; }
+    
+    // Return index into vector where start position found
+    bool FindPositionInGame( uint64_t hash_to_match, int &idx )
+    {
+        thc::ChessRules cr = start_position;
+        size_t len = moves.size();
+        uint64_t hash = cr.Hash64Calculate();
+        bool found = (hash==hash_to_match);
+        for( size_t i=0; !found && i<len; i++  )
+        {
+            thc::Move mv = moves[i];
+            hash = cr.Hash64Update( hash, mv );
+            if( hash == hash_to_match )
+            {
+                found = true;
+                idx = static_cast<int>(i+1);
+                break;
+            }
+            cr.PlayMove(mv);
+        }
+        return found;
+    }
+    
+};
 
 class MagicBase
 {
@@ -27,6 +73,20 @@ public:
     virtual bool IsModified()        { return false; }
     virtual uint32_t GetGameBeingEdited() { return 0; }
     virtual long GetFposn() { return 0; }
+
+    // High performance
+    virtual Roster &RefRoster() { static Roster r; return r; }
+    virtual std::vector<thc::Move> &RefMoves() { static std::vector<thc::Move> moves; return moves; }
+    virtual thc::ChessPosition &RefStartPosition() { static thc::ChessPosition cp; return cp; }
+    
+    // Easy to use
+    virtual void GetCompactGame( CompactGame &pact )
+    {
+        pact.r     = RefRoster();
+        pact.moves = RefMoves();
+        pact.start_position = RefStartPosition();
+        pact.transpo_nbr = 0;
+    }
 };
 
 class HoldDocument : public MagicBase
@@ -41,31 +101,21 @@ public:
     virtual bool IsModified()        { return the_game.IsModified(); }
     virtual uint32_t GetGameBeingEdited() { return the_game.game_being_edited; }
     virtual long GetFposn() { return the_game.fposn0; }
+    virtual Roster &RefRoster() { return the_game.r; }
+    virtual std::vector<thc::Move> &RefMoves()
+    {
+        static std::vector<thc::Move> moves;
+        moves.clear();
+        std::vector<MoveTree> &variation = the_game.tree.variations[0];
+        for( int i=0; i<variation.size(); i++ )
+        {
+            thc::Move mv = variation[i].game_move.move;
+            moves.push_back(mv);
+        }
+        return moves;
+    }
+    virtual thc::ChessPosition &RefStartPosition() { return the_game.start_position; }
 };
-
-class CompactGame
-{
-public:
-    Roster r;
-    thc::ChessPosition start_position;
-    std::vector< thc::Move > moves;
-    
-    // temp stuff hopefully
-    int game_id;
-    int transpo_nbr;
-    
-    std::string db_calculate_move_txt( uint64_t hash_to_match );
-    int  db_calculate_move_vector( const char *str_blob, uint64_t hash_to_match  );
-    std::string Description();
-    void Upscale( GameDocument &gd );       // to GameDocument
-    void Downscale( GameDocument &gd );     // from GameDocument
-    bool HaveStartPosition() {
-        bool is_initial_position = ( 0 == strcmp(start_position.squares,"rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR")
-                                    ) && start_position.white;
-        return !is_initial_position; }
-    thc::ChessPosition &GetStartPosition() { return start_position; }
-};
-
 
 class DB_GAME_INFO : public MagicBase
 {
@@ -79,13 +129,32 @@ public:
     std::string str_blob;
     int transpo_nbr;
     
-    std::string db_calculate_move_txt( uint64_t hash_to_match );
-    int  db_calculate_move_vector( std::vector<thc::Move> &moves, uint64_t hash_to_match  );
+    //std::string db_calculate_move_txt( uint64_t hash_to_match );
     std::string Description();
     void Upscale( GameDocument &gd );       // to GameDocument
     virtual void Downscale( GameDocument &gd );     // from GameDocument
     virtual bool HaveStartPosition() { return false; }
     virtual thc::ChessPosition &GetStartPosition() { cprintf("FIXME (MAYBE) DANGER WILL ROBINSON 6\n"); static thc::ChessPosition start; return start; }
+    virtual Roster &RefRoster() { return r; }
+    virtual std::vector<thc::Move> &RefMoves()
+    {
+        static std::vector<thc::Move> moves;
+        moves.clear();
+        CompressMoves press;
+        int len = str_blob.size();
+        const char *blob = str_blob.c_str();
+        for( int i=0; i<len; i++ )
+        {
+            thc::Move mv;
+            int nbr = press.decompress_move( blob, mv );
+            blob++;
+            if( nbr == 0 )
+                break;
+            moves.push_back(mv);
+        }
+        return moves;
+    }
+    virtual thc::ChessPosition &RefStartPosition() { static thc::ChessPosition start; return start;  }
 };
 
 class DB_GAME_INFO_FEN : public DB_GAME_INFO
@@ -98,6 +167,26 @@ public:
         return !is_initial_position; }
     virtual thc::ChessPosition &GetStartPosition() { return start_position; }
     virtual void Downscale( GameDocument &gd );     // from GameDocument
+    virtual std::vector<thc::Move> &RefMoves()
+    {
+        static std::vector<thc::Move> moves;
+        moves.clear();
+        CompressMoves press;
+        press.Init( start_position );
+        int len = str_blob.size();
+        const char *blob = str_blob.c_str();
+        for( int i=0; i<len; i++ )
+        {
+            thc::Move mv;
+            int nbr = press.decompress_move( blob, mv );
+            blob++;
+            if( nbr == 0 )
+                break;
+            moves.push_back(mv);
+        }
+        return moves;
+    }
+    virtual thc::ChessPosition &RefStartPosition() { return start_position;  }
 };
 
 void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &gd );
@@ -127,6 +216,33 @@ public:
         return &the_game;
     }
     virtual long GetFposn() { return fposn; }
+    virtual Roster &RefRoster()
+    {
+        static GameDocument  the_game;
+        ReadGameFromPgn( pgn_handle, fposn, the_game );
+        return the_game.r;
+    }
+    virtual std::vector<thc::Move> &RefMoves()
+    {
+        static GameDocument  the_game;
+        ReadGameFromPgn( pgn_handle, fposn, the_game );
+        static std::vector<thc::Move> moves;
+        moves.clear();
+        std::vector<MoveTree> &variation = the_game.tree.variations[0];
+        for( int i=0; i<variation.size(); i++ )
+        {
+            thc::Move mv = variation[i].game_move.move;
+            moves.push_back(mv);
+        }
+        return moves;
+    }
+    virtual thc::ChessPosition &RefStartPosition()
+    {
+        static GameDocument  the_game;
+        ReadGameFromPgn( pgn_handle, fposn, the_game );
+        return the_game.start_position;
+    }
+    
 };
 
 

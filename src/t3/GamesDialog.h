@@ -283,8 +283,12 @@ public:
     
     // Focus changes to new item;
     void ReceiveFocus( int focus_idx );
+    
+    // Recipes to calculate move text
     std::string CalculateMoveTxt() const;
     std::string CalculateMoveTxt( std::string &previous_move ) const;
+    std::string CalculateMoveTxt( CompactGame &info, int offset ) const;
+    std::string CalculateMoveTxt( std::string &previous_move, CompactGame &info, int focus_offset, thc::ChessPosition &updated_position ) const;
     
 protected:
     virtual wxString OnGetItemText( long item, long column) const;

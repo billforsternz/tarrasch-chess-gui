@@ -97,7 +97,9 @@ void wxVirtualListCtrl::ReceiveFocus( int focus_idx )
         //    cprintf( "** ReceiveFocus(0) calling ReadItemWithSingleLineCache\n" );
         parent->ReadItemWithSingleLineCache( focus_idx, track->info );
 
-        initial_focus_offset = track->focus_offset = 0; // todo todo calculate offset track->info.db_calculate_move_vector( track->focus_moves, objs.db->gbl_hash );
+        int offset=0;
+        track->info.FindPositionInGame( objs.db->gbl_hash, offset );
+        initial_focus_offset = track->focus_offset = offset;
         if( mini_board )
         {
             std::string previous_move;
@@ -117,28 +119,40 @@ void wxVirtualListCtrl::ReceiveFocus( int focus_idx )
 std::string wxVirtualListCtrl::CalculateMoveTxt() const
 {
     std::string previous_move_not_needed;
-    return CalculateMoveTxt(previous_move_not_needed);
+    return CalculateMoveTxt(previous_move_not_needed,track->info,track->focus_offset,track->updated_position);
 }
 
 std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move ) const
 {
+    return CalculateMoveTxt(previous_move,track->info,track->focus_offset,track->updated_position);
+}
+
+std::string wxVirtualListCtrl::CalculateMoveTxt( CompactGame &info, int offset ) const
+{
+    std::string previous_move_not_needed;
+    thc::ChessPosition updated_position_not_needed;
+    return CalculateMoveTxt(previous_move_not_needed,info,offset,updated_position_not_needed);
+}
+
+std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move, CompactGame &info, int focus_offset, thc::ChessPosition &updated_position ) const
+{
     bool position_updated = false;
     std::string move_txt;
-	thc::ChessRules cr=track->info.GetStartPosition();
-    for( size_t i=0; i<track->info.moves.size(); i++ )
+	thc::ChessRules cr=info.GetStartPosition();
+    for( size_t i=0; i<info.moves.size(); i++ )
     {
-        thc::Move mv = track->info.moves[i];
-        if( i>=track->focus_offset || i+1==track->focus_offset )
+        thc::Move mv = info.moves[i];
+        if( i>=focus_offset || i+1==focus_offset )
         {
-            bool prev_move = (i+1 == track->focus_offset);
-            bool first_move = (i == track->focus_offset);
+            bool prev_move = (i+1 == focus_offset);
+            bool first_move = (i == focus_offset);
             std::string s = mv.NaturalOut(&cr);
             if( cr.white || prev_move || first_move )
             {
                 if( first_move )
                 {
                     position_updated = true;
-                    track->updated_position = cr;
+                    updated_position = cr;
                 }
                 char buf[100];
                 sprintf( buf, "%lu%s", cr.full_move_count, cr.white?".":"..." );
@@ -149,12 +163,12 @@ std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move ) co
             else
             {
                 move_txt += s;
-                if( i+1 == track->info.moves.size() )
+                if( i+1 == info.moves.size() )
                 {
                     move_txt += " ";
-                    move_txt += track->info.r.result;
+                    move_txt += info.r.result;
                 }
-                else if( i < track->info.moves.size()-5 && move_txt.length()>100 )
+                else if( i < info.moves.size()-5 && move_txt.length()>100 )
                 {
                     move_txt += "...";  // very long lines get over truncated by the list control (sad but true)
                     break;
@@ -169,8 +183,8 @@ std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move ) co
     }
     if( !position_updated )
     {
-        track->updated_position = cr;
-        move_txt = track->info.r.result;
+        updated_position = cr;
+        move_txt = info.r.result;
     }
     return move_txt;
 }
@@ -203,17 +217,15 @@ wxString wxVirtualListCtrl::OnGetItemText( long item, long column) const
                 sprintf(buf,"(T%d) ", info.transpo_nbr );
             if( item == track->focus_idx )
             {
-                //if( item == 0 ) 
-                //    cprintf( " ** OnGetItemText(0) focus hit, nbr moves=%d\n", track->focus_moves.size() );
                 move_txt = CalculateMoveTxt();
                 if( track->focus_offset == initial_focus_offset )
                     move_txt = buf + move_txt;
             }
             else
             {
-                //if( item == 0 ) 
-                //    cprintf( " ** OnGetItemText(0) no focus hit\n" );
-                move_txt = info.db_calculate_move_txt(objs.db->gbl_hash);
+                int idx;
+                info.FindPositionInGame(objs.db->gbl_hash, idx );
+                move_txt = CalculateMoveTxt( info, idx ); //info.db_calculate_move_txt(objs.db->gbl_hash);  // CalculateMoveTxt( info, idx );
                 move_txt = buf + move_txt;
             }
             txt = move_txt.c_str();
