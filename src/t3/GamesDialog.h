@@ -56,8 +56,8 @@ enum
 struct MiniBoardGame
 {
     thc::ChessPosition  updated_position;
-    DB_GAME_INFO_FEN    info;
-    std::vector< thc::Move > focus_moves;
+    CompactGame         info;
+    //std::vector< thc::Move > focus_moves;  //temp temp
     int                 focus_idx;
     int                 focus_offset;
 };
@@ -161,7 +161,7 @@ public:
     void OnListSelected( int idx );
 
     void Goto( int idx );
-    void ReadItemWithSingleLineCache( int item, DB_GAME_INFO_FEN &info );
+    void ReadItemWithSingleLineCache( int item, CompactGame &info );
 
     // Overrides
     virtual void OnActivate();
@@ -169,7 +169,7 @@ public:
     virtual void GetButtonGridDimensions( int &row1, int &col1, int &row2, int &col2 ) { row1=8; col1=2; row2=0; col2=0; }
     bool dirty;
     virtual bool TestAndClearIsCacheDirty() { bool was=dirty; dirty=false; return was; }
-    virtual void ReadItem( int item, DB_GAME_INFO &info ) = 0;
+    virtual void ReadItem( int item, CompactGame &info ) = 0;
     virtual void OnCancel();
     virtual void OnListColClick( int compare_col );
     virtual void OnSaveAllToAFile();
@@ -215,9 +215,9 @@ public:
     // GamesDialog member variables
 public:
     wxStaticText *player_names;
-    DB_GAME_INFO_FEN   single_line_cache;
-    int            single_line_cache_idx;
-    int          compare_col;
+    CompactGame   single_line_cache;
+    int           single_line_cache_idx;
+    int           compare_col;
     
 protected:
     wxWindow* parent2;

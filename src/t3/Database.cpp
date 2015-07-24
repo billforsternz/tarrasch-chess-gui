@@ -794,6 +794,176 @@ void DB_GAME_INFO_FEN::Downscale( GameDocument &gd )
     str_blob = str;
 }
 
+std::string CompactGame::Description()
+{
+    std::string white = this->r.white;
+    std::string black = this->r.black;
+    size_t comma = white.find(',');
+    if( comma != std::string::npos )
+        white = white.substr( 0, comma );
+    comma = black.find(',');
+    if( comma != std::string::npos )
+        black = black.substr( 0, comma );
+    int move_cnt = moves.size();
+    std::string label = white;
+    if( r.white_elo != "" )
+    {
+        label += " (";
+        label += r.white_elo;
+        label += ")";
+    }
+    label += " - ";
+    label += black;
+    if( r.black_elo != "" )
+    {
+        label += " (";
+        label += r.black_elo;
+        label += ")";
+    }
+    if( r.site != ""  && r.site != "?" )
+    {
+        label += ", ";
+        label += r.site;
+    }
+    else if( r.event != "" && r.event != "?"  )
+    {
+        label += ", ";
+        label += r.event;
+    }
+    if( r.date.length() >= 4 )
+    {
+        label += " ";
+        label += r.date.substr(0,4);
+    }
+    bool result_or_moves = false;
+    if( r.result != "*" )
+    {
+        result_or_moves = true;
+        label += ", ";
+        label += r.result;
+        if( move_cnt > 0 )
+            label += " in";
+    }
+    if( move_cnt > 0 )
+    {
+        if( !result_or_moves )
+            label += ", ";
+        char buf[100];
+        sprintf( buf, " %d moves", (move_cnt+1)/2 );
+        label += std::string(buf);
+    }
+    return label;
+}
+
+std::string CompactGame::db_calculate_move_txt( uint64_t hash_to_match )
+{
+    thc::ChessRules cr = start_position;
+    std::string move_txt;
+    size_t len = moves.size();
+    uint64_t hash = cr.Hash64Calculate();
+    bool triggered=(hash==hash_to_match), first=true;
+    bool is_initial_position = ( 0 == strcmp(start_position.squares,"rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR")
+                                ) && start_position.white;
+
+	if( !is_initial_position )
+		triggered = true;
+    for( int i=0; i<len; i++ )
+    {
+        thc::Move mv = moves[i];
+        if( triggered )
+        {
+            std::string s = mv.NaturalOut(&cr);
+            if( cr.white || first )
+            {
+                first = false;
+                char buf[20];
+                sprintf( buf, "%d%s", cr.full_move_count, cr.white?".":"..." );
+                move_txt += buf;
+            }
+            move_txt += s;
+            move_txt += " ";
+            if( i+1 >= len )
+            {
+                move_txt += r.result;
+            }
+            else if( i+1<len-5 && move_txt.length()>100 )
+            {
+                move_txt += "...";  // very long lines get over truncated by the list control (sad but true), see example below
+                break;
+            }
+        }
+        hash = cr.Hash64Update( hash, mv );
+        cr.PlayMove(mv);
+        if( hash == hash_to_match )
+            triggered = true;
+    }
+    return move_txt;
+    //fprintf(f,"\n");
+    
+    // very long line example;
+    // move_txt = "3...a6 4.Bxc6 bxc6 5.d3 e6 6.O-O Nf6 7.e5 Nd5 8.c4 Ne7 9.Nc3 Ng6 10.Ne4 Qc7 11.Be3"; //Nxe5 12.Nxc5 Nxf3+ 13.Qxf3 Bd6 14.Ne4 O-O 15.Nxd6 Qxd6 16.d4 f5 17.c5 Qb8 18.Bf4 Qxb2 19.Be5 Qd2 20.Qg3 Qh6 21.f4 Kf7 22.Rf3 Rg8 23.Qf2 a5 24.a4 Ba6 25.Rb1 Qh5 26.Rh3 Qe2 27.Qxe2 Bxe2 28.Rb7 Bg4 29.Rhb3 Rgd8 30.Rc7 Ke8 31.Rbb7 Bd1 32.Bxg7 Rac8 33.Rxc8 Rxc8 34.Ra7 Bxa4 35.Rxa5 Bd1 36.Be5 Bh5 37.Ra7 Rd8 38.Bc7 Rc8 39.Bd6 Rd8 40.Kf2 Kf7 41.Ke3 h6 42.Kd2 Kf6 43.Be5+ Ke7 44.Kc3 Be2 45.g3 Bf3 46.Kb4 Kf7 47.Ka5 Kg6 48.Kb6 Kh5 49.Kc7 Rf8 50.Bd6 Rf7 51.Kd8 Bd5 52.Rb7 Kg4 53.Be7 h5 54.Rb2 Rh7 55.Rf2 Rh8+ 56.Kxd7 Ra8 57.Re2 Ra4 58.Bf6 Kh3 59.Rxe6 Kxh2 60.Bh4 Bxe6+ 61.Kxe6 Rxd4 62.Kxf5 Rd5+ 63.Ke6 Rxc5 64.f5 Rc2 65.f6 Rf2 66.f7 Re2+ 67.Kf6 Rf2+ 68.Ke7 Re2+ 69.Kf6 Ra2 70.Kg6 Ra8 71.Kxh5 Rf8 72.Kg6 Kh3 73.Kg7 Rxf7+ 74.Kxf7 c5 1/2-1/2";
+    
+}
+
+// Return index into vector where start position found
+int CompactGame::db_calculate_move_vector( const char *str_blob, uint64_t hash_to_match )
+{
+    CompressMoves press;
+    bool have_start_position = HaveStartPosition();
+    if( have_start_position )
+        press.Init( GetStartPosition() );
+    uint64_t hash = press.cr.Hash64Calculate();
+    moves.clear();
+    int ret=0, nbr=0;
+    for(;;)
+    {
+        thc::Move mv;
+        thc::ChessRules cr = press.cr;
+        int nbr_used = press.decompress_move( str_blob, mv );
+        if( nbr_used == 0 )
+            break;
+        moves.push_back(mv);
+        str_blob += nbr_used;
+        nbr += nbr_used;
+        hash = cr.Hash64Update( hash, mv );
+        if( hash == hash_to_match )
+            ret = moves.size();
+    }
+    return ret;
+}
+
+void CompactGame::Upscale( GameDocument &gd )
+{
+    gd.r = r;
+    bool have_start_position = HaveStartPosition();
+    if( have_start_position )
+        gd.start_position =  GetStartPosition();
+    else
+        gd.start_position.Init();
+    std::vector<MoveTree> &variation = gd.tree.variations[0];
+    variation.clear();
+    MoveTree m;
+    for( int i=0; i<moves.size(); i++ )
+    {
+        m.game_move.move = moves[i];
+        variation.push_back(m);
+    }
+    gd.Rebuild();
+}
+
+void CompactGame::Downscale( GameDocument &gd )
+{
+    r = gd.r;
+    transpo_nbr = 0;
+	start_position = gd.start_position;
+    std::vector<MoveTree> &variation = gd.tree.variations[0];
+    std::string str;
+    for( int i=0; i<variation.size(); i++ )
+    {
+        thc::Move mv = variation[i].game_move.move;
+        moves.push_back(mv);
+    }
+}
 
 int Database::GetRow( DB_GAME_INFO *info, int row )
 {

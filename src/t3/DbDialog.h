@@ -76,7 +76,7 @@ public:
     // Overrides
     virtual void OnActivate();
     virtual void AddExtraControls();
-    virtual void ReadItem( int item, DB_GAME_INFO &info );
+    virtual void ReadItem( int item, CompactGame &info );
     virtual void OnListColClick( int compare_col );
     virtual void OnSaveAllToAFile();
     virtual void OnHelpClick();

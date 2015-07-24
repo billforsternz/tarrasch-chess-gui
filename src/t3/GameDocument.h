@@ -36,7 +36,6 @@ public:
     std::string black_elo;
 };
 
-
 class GameLogic;
 class GameDocument
 {

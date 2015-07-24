@@ -164,7 +164,7 @@ GameDocument * PgnDialog::GetCachedDocument( int idx )
     return &local_cache.at(idx);
 }
 
-void PgnDialog::ReadItem( int item, DB_GAME_INFO &info )
+void PgnDialog::ReadItem( int item, CompactGame &info )
 {
     GameDocument *ptr = GetCachedDocument(item);
     info.Downscale( *ptr );

@@ -97,7 +97,7 @@ void wxVirtualListCtrl::ReceiveFocus( int focus_idx )
         //    cprintf( "** ReceiveFocus(0) calling ReadItemWithSingleLineCache\n" );
         parent->ReadItemWithSingleLineCache( focus_idx, track->info );
 
-        initial_focus_offset = track->focus_offset = track->info.db_calculate_move_vector( track->focus_moves, objs.db->gbl_hash );
+        initial_focus_offset = track->focus_offset = 0; // todo todo calculate offset track->info.db_calculate_move_vector( track->focus_moves, objs.db->gbl_hash );
         if( mini_board )
         {
             std::string previous_move;
@@ -125,9 +125,9 @@ std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move ) co
     bool position_updated = false;
     std::string move_txt;
 	thc::ChessRules cr=track->info.GetStartPosition();
-    for( size_t i=0; i<track->focus_moves.size(); i++ )
+    for( size_t i=0; i<track->info.moves.size(); i++ )
     {
-        thc::Move mv = track->focus_moves[i];
+        thc::Move mv = track->info.moves[i];
         if( i>=track->focus_offset || i+1==track->focus_offset )
         {
             bool prev_move = (i+1 == track->focus_offset);
@@ -149,12 +149,12 @@ std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move ) co
             else
             {
                 move_txt += s;
-                if( i+1 == track->focus_moves.size() )
+                if( i+1 == track->info.moves.size() )
                 {
                     move_txt += " ";
                     move_txt += track->info.r.result;
                 }
-                else if( i < track->focus_moves.size()-5 && move_txt.length()>100 )
+                else if( i < track->info.moves.size()-5 && move_txt.length()>100 )
                 {
                     move_txt += "...";  // very long lines get over truncated by the list control (sad but true)
                     break;
@@ -177,7 +177,7 @@ std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move ) co
     
 wxString wxVirtualListCtrl::OnGetItemText( long item, long column) const
 {
-    DB_GAME_INFO_FEN info;
+    CompactGame info;
     std::string move_txt;
     const char *txt;
     //if( item==0 && column==10 ) 
@@ -245,7 +245,7 @@ void wxVirtualListCtrl::OnChar( wxKeyEvent &event )
             }
             break;
         case WXK_RIGHT:
-            if( track->focus_offset < track->focus_moves.size() )
+            if( track->focus_offset < track->info.moves.size() )
             {
                 track->focus_offset++;
                 update = true;
@@ -943,7 +943,7 @@ void GamesDialog::Goto( int idx )
     list_ctrl->EnsureVisible(idx);
 }
 
-void GamesDialog::ReadItemWithSingleLineCache( int item, DB_GAME_INFO_FEN &info )
+void GamesDialog::ReadItemWithSingleLineCache( int item, CompactGame &info )
 {
     //if( item==0 )
     //    cprintf( "** In ReadItemWithSingleLineCache(0)\n" );        
@@ -967,30 +967,11 @@ void GamesDialog::ReadItemWithSingleLineCache( int item, DB_GAME_INFO_FEN &info 
 
 void GamesDialog::LoadGame( int idx, int focus_offset )
 {
-    static DB_GAME_INFO_FEN info;
+    static CompactGame info;
     ReadItemWithSingleLineCache( idx, info );
     GameDocument gd;
-    std::vector<thc::Move> moves;
-    gd.r.white = info.r.white;
-    gd.r.black = info.r.black;
-    gd.r.result = info.r.result;
-    int len = info.str_blob.length();
-    const char *blob = info.str_blob.c_str();
-    CompressMoves press;
-    bool have_start_position = info.HaveStartPosition();
-    if( have_start_position )
-        press.Init( info.GetStartPosition() );
-    for( int nbr=0; nbr<len;  )
-    {
-        thc::Move mv;
-        int nbr_used = press.decompress_move( blob, mv );
-        if( nbr_used == 0 )
-            break;
-        moves.push_back(mv);
-        blob += nbr_used;
-        nbr += nbr_used;
-    }
-    gd.LoadFromMoveList( moves, focus_offset );
+    gd.r = info.r;
+    gd.LoadFromMoveList( info.moves, focus_offset );
     db_game = gd;
     db_game_set = true;
 }

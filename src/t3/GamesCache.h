@@ -43,6 +43,30 @@ public:
     virtual long GetFposn() { return the_game.fposn0; }
 };
 
+class CompactGame
+{
+public:
+    Roster r;
+    thc::ChessPosition start_position;
+    std::vector< thc::Move > moves;
+    
+    // temp stuff hopefully
+    int game_id;
+    int transpo_nbr;
+    
+    std::string db_calculate_move_txt( uint64_t hash_to_match );
+    int  db_calculate_move_vector( const char *str_blob, uint64_t hash_to_match  );
+    std::string Description();
+    void Upscale( GameDocument &gd );       // to GameDocument
+    void Downscale( GameDocument &gd );     // from GameDocument
+    bool HaveStartPosition() {
+        bool is_initial_position = ( 0 == strcmp(start_position.squares,"rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR")
+                                    ) && start_position.white;
+        return !is_initial_position; }
+    thc::ChessPosition &GetStartPosition() { return start_position; }
+};
+
+
 class DB_GAME_INFO : public MagicBase
 {
 public:
