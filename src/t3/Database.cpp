@@ -649,65 +649,6 @@ std::string DB_GAME_INFO::Description()
     return label;
 }
 
-#if 0
-std::string DB_GAME_INFO::db_calculate_move_txt( uint64_t hash_to_match )
-{
-    CompressMoves press;
-    bool have_start_position = HaveStartPosition();
-    if( have_start_position )
-        press.Init( GetStartPosition() );
-    std::string move_txt;
-    size_t len = str_blob.length();
-    const char *blob = (const char*)str_blob.c_str();
-    uint64_t hash = press.cr.Hash64Calculate();
-    bool triggered=(hash==hash_to_match), first=true;
-	if( have_start_position )
-		triggered = true;
-    for( int count=0, nbr=0; nbr<len; count++ )
-    {
-        
-        thc::ChessRules cr = press.cr;
-        thc::Move mv;
-        int nbr_used = press.decompress_move( blob, mv );
-        if( nbr_used == 0 )
-            break;
-        blob += nbr_used;
-        nbr += nbr_used;
-        if( triggered )
-        {
-            std::string s = mv.NaturalOut(&cr);
-            if( cr.white || first )
-            {
-                first = false;
-                char buf[20];
-                sprintf( buf, "%d%s", cr.full_move_count, cr.white?".":"..." );
-                move_txt += buf;
-            }
-            move_txt += s;
-            move_txt += " ";
-            if( nbr >= len )
-            {
-                move_txt += r.result;
-            }
-            else if( nbr<len-5 && move_txt.length()>100 )
-            {
-                move_txt += "...";  // very long lines get over truncated by the list control (sad but true), see example below
-                break;
-            }
-        }
-        hash = cr.Hash64Update( hash, mv );
-        if( hash == hash_to_match )
-            triggered = true;
-    }
-    return move_txt;
-    //fprintf(f,"\n");
-    
-    // very long line example;
-    // move_txt = "3...a6 4.Bxc6 bxc6 5.d3 e6 6.O-O Nf6 7.e5 Nd5 8.c4 Ne7 9.Nc3 Ng6 10.Ne4 Qc7 11.Be3"; //Nxe5 12.Nxc5 Nxf3+ 13.Qxf3 Bd6 14.Ne4 O-O 15.Nxd6 Qxd6 16.d4 f5 17.c5 Qb8 18.Bf4 Qxb2 19.Be5 Qd2 20.Qg3 Qh6 21.f4 Kf7 22.Rf3 Rg8 23.Qf2 a5 24.a4 Ba6 25.Rb1 Qh5 26.Rh3 Qe2 27.Qxe2 Bxe2 28.Rb7 Bg4 29.Rhb3 Rgd8 30.Rc7 Ke8 31.Rbb7 Bd1 32.Bxg7 Rac8 33.Rxc8 Rxc8 34.Ra7 Bxa4 35.Rxa5 Bd1 36.Be5 Bh5 37.Ra7 Rd8 38.Bc7 Rc8 39.Bd6 Rd8 40.Kf2 Kf7 41.Ke3 h6 42.Kd2 Kf6 43.Be5+ Ke7 44.Kc3 Be2 45.g3 Bf3 46.Kb4 Kf7 47.Ka5 Kg6 48.Kb6 Kh5 49.Kc7 Rf8 50.Bd6 Rf7 51.Kd8 Bd5 52.Rb7 Kg4 53.Be7 h5 54.Rb2 Rh7 55.Rf2 Rh8+ 56.Kxd7 Ra8 57.Re2 Ra4 58.Bf6 Kh3 59.Rxe6 Kxh2 60.Bh4 Bxe6+ 61.Kxe6 Rxd4 62.Kxf5 Rd5+ 63.Ke6 Rxc5 64.f5 Rc2 65.f6 Rf2 66.f7 Re2+ 67.Kf6 Rf2+ 68.Ke7 Re2+ 69.Kf6 Ra2 70.Kg6 Ra8 71.Kxh5 Rf8 72.Kg6 Kh3 73.Kg7 Rxf7+ 74.Kxf7 c5 1/2-1/2";
-
-}
-#endif
-
 void DB_GAME_INFO::Upscale( GameDocument &gd )
 {
     CompactGame pact;

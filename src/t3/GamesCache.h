@@ -23,7 +23,6 @@ public:
     int game_id;
     int transpo_nbr;
     
-    //std::string db_calculate_move_txt( uint64_t hash_to_match );
     std::string Description();
     void Upscale( GameDocument &gd );       // to GameDocument
     void Downscale( GameDocument &gd );     // from GameDocument
@@ -129,7 +128,6 @@ public:
     std::string str_blob;
     int transpo_nbr;
     
-    //std::string db_calculate_move_txt( uint64_t hash_to_match );
     std::string Description();
     void Upscale( GameDocument &gd );       // to GameDocument
     virtual void Downscale( GameDocument &gd );     // from GameDocument

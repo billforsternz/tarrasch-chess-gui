@@ -225,7 +225,7 @@ wxString wxVirtualListCtrl::OnGetItemText( long item, long column) const
             {
                 int idx;
                 info.FindPositionInGame(objs.db->gbl_hash, idx );
-                move_txt = CalculateMoveTxt( info, idx ); //info.db_calculate_move_txt(objs.db->gbl_hash);  // CalculateMoveTxt( info, idx );
+                move_txt = CalculateMoveTxt( info, idx );
                 move_txt = buf + move_txt;
             }
             txt = move_txt.c_str();
