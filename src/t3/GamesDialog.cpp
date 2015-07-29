@@ -938,11 +938,11 @@ void GamesDialog::OnActivate()
 void GamesDialog::Goto( int idx )
 {
     int old = track->focus_idx;
-    if( old != idx && old>=0 )
+  /*  if( old != idx && old>=0 )
     {
         list_ctrl->SetItemState( old, 0, wxLIST_STATE_SELECTED );
         list_ctrl->SetItemState( old, 0, wxLIST_STATE_FOCUSED );
-    }
+    } */
     list_ctrl->SetItemState( idx, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
     list_ctrl->SetItemState( idx, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
     
