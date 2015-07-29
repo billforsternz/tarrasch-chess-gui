@@ -39,6 +39,7 @@ public:
         size_t len = moves.size();
         uint64_t hash = cr.Hash64Calculate();
         bool found = (hash==hash_to_match);
+        idx = 0;
         for( size_t i=0; !found && i<len; i++  )
         {
             thc::Move mv = moves[i];

@@ -841,7 +841,7 @@ void CompactGame::Downscale( GameDocument &gd )
     transpo_nbr = 0;
 	start_position = gd.start_position;
     std::vector<MoveTree> &variation = gd.tree.variations[0];
-    std::string str;
+    moves.clear();
     for( int i=0; i<variation.size(); i++ )
     {
         thc::Move mv = variation[i].game_move.move;
