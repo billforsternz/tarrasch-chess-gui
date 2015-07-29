@@ -882,9 +882,9 @@ void DbDialog::LoadGamesIntoMemory()
     games_set.clear();
     for( unsigned int i=0; i<cache.size(); i++ )
     {
-        DB_GAME_INFO *info = cache[i]->GetCompactGamePtr();
-        if( info )
-            games_set.insert( info->game_id );
+        DB_GAME_INFO *p = cache[i]->GetDbGameInfoPtr();
+        if( p )
+            games_set.insert( p->game_id );
     }
 }
 
@@ -938,7 +938,7 @@ void DbDialog::StatsCalculate()
     std::vector< smart_ptr<MagicBase> > &source = (clipboard_db ? objs.gl->gc_clipboard.gds : cache );
     for( unsigned int i=0; i<source.size(); i++ )
     {
-        DB_GAME_INFO *info = source[i]->GetCompactGamePtr();
+        DB_GAME_INFO *info = source[i]->GetDbGameInfoPtr();
         if( info )
         {
     

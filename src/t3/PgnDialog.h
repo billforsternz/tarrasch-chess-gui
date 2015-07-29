@@ -25,7 +25,6 @@ class PgnDialog: public GamesDialog
 {    
 public:
     GameDocument *GetCachedDocument( int idx );
-    DB_GAME_INFO *GetCachedDbGameInfo( int idx );
     void GetCachedDocumentRaw( int idx, GameDocument &gd );
     std::map<int,GameDocument>     local_cache;
     std::list<int>                 stack;

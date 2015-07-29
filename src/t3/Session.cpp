@@ -31,8 +31,9 @@ void Session::SaveGame( GameDocument *gd )
         int sz = objs.gl->gc_session.gds.size();
         if( sz )
         {
-            GameDocument temp = objs.gl->gc_session.gds[sz-1]->GetGameDocument();
-            diff = gd->IsDiff( temp );
+            GameDocument *p = objs.gl->gc_session.gds[sz-1]->GetGameDocumentPtr();
+            if(p)
+                diff = gd->IsDiff( *p );
         }
         if( diff )
         {

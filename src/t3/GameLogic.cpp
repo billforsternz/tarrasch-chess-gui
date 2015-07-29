@@ -609,7 +609,7 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
                 objs.session->SaveGame(&gd);
                 IndicateNoCurrentDocument();
                 gd_file->game_being_edited = ++game_being_edited_tag;
-                gd_file->GetGameDocument(gd);
+                gd_file->GetGameDocumentFromFile(gd);
                 gd_file->selected = true;
                 this->file_game_idx = 0;    // game 0
                 tabs->SetInfile(true);
@@ -674,47 +674,50 @@ void GameLogic::NextGamePreviousGame( int idx )
     Atomic begin;
     bool editing_log = objs.gl->EditingLog();
     bool have_game = false;
-    GameDocument gd_file;
-    gc.gds[idx]->GetGameDocument(gd_file);
-    have_game = gd_file.in_memory;
-    if( !have_game )
+    GameDocument *ptr = gc.gds[idx]->GetGameDocumentPtr();
+    if( ptr )
     {
-        FILE *pgn_in = pf.ReopenRead( gd_file.pgn_handle );
-        if( pgn_in )
+        GameDocument gd_file = *ptr;
+        have_game = gd_file.in_memory;
+        if( !have_game )
         {
-            long fposn2 = gd_file.fposn2;
-            long end    = gd_file.fposn3;
-            fseek(pgn_in,fposn2,SEEK_SET);
-            long len = end-fposn2;
-            char *buf = new char [len];
-            if( len == (long)fread(buf,1,len,pgn_in) )
+            FILE *pgn_in = pf.ReopenRead( gd_file.pgn_handle );
+            if( pgn_in )
             {
-                std::string s(buf,len);
-                thc::ChessRules cr;
-                int nbr_converted;
-                gd_file.PgnParse(true,nbr_converted,s,cr,NULL);
-                make_smart_ptr( HoldDocument,new_smart_ptr,gd_file);
-                gc.gds[idx] = std::move(new_smart_ptr);
-                have_game = true;
+                long fposn2 = gd_file.fposn2;
+                long end    = gd_file.fposn3;
+                fseek(pgn_in,fposn2,SEEK_SET);
+                long len = end-fposn2;
+                char *buf = new char [len];
+                if( len == (long)fread(buf,1,len,pgn_in) )
+                {
+                    std::string s(buf,len);
+                    thc::ChessRules cr;
+                    int nbr_converted;
+                    gd_file.PgnParse(true,nbr_converted,s,cr,NULL);
+                    make_smart_ptr( HoldDocument,new_smart_ptr,gd_file);
+                    gc.gds[idx] = std::move(new_smart_ptr);
+                    have_game = true;
+                }
+                pf.Close( &gc_clipboard );
+                delete[] buf;
             }
-            pf.Close( &gc_clipboard );
-            delete[] buf;
         }
-    }
-    if( have_game )
-    {
-        PutBackDocument();
-        objs.log->SaveGame(&gd,editing_log);
-        objs.session->SaveGame(&gd);
-        IndicateNoCurrentDocument();
-        gd_file.game_being_edited = ++game_being_edited_tag;
-        gd = gd_file;
-        GameDocument *ptr = gc.gds[idx]->GetGameDocumentPtr();
-        if( ptr )
-            ptr->selected = true;
-        this->file_game_idx = idx;
-        tabs->SetInfile(true);
-        ShowNewDocument();
+        if( have_game )
+        {
+            PutBackDocument();
+            objs.log->SaveGame(&gd,editing_log);
+            objs.session->SaveGame(&gd);
+            IndicateNoCurrentDocument();
+            gd_file.game_being_edited = ++game_being_edited_tag;
+            gd = gd_file;
+            GameDocument *ptr = gc.gds[idx]->GetGameDocumentPtr();
+            if( ptr )
+                ptr->selected = true;
+            this->file_game_idx = idx;
+            tabs->SetInfile(true);
+            ShowNewDocument();
+        }
     }
     atom.StatusUpdate();
 }

@@ -635,49 +635,33 @@ static GamesDialog *backdoor;
 static bool compare( const smart_ptr<MagicBase> &g1, const smart_ptr<MagicBase> &g2 )
 {
     bool lt=false;
-    DB_GAME_INFO *p1 = g1->GetCompactGamePtr();
-    if( !p1 )
-    {
-        static GameDocument gd1;
-        g1->GetGameDocument(gd1);
-        static DB_GAME_INFO db1;
-        db1.Downscale(gd1);
-        p1 = &db1;
-    }
-    DB_GAME_INFO *p2 = g2->GetCompactGamePtr();
-    if( !p2 )
-    {
-        static GameDocument gd2;
-        g2->GetGameDocument(gd2);
-        static DB_GAME_INFO db2;
-        db2.Downscale(gd2);
-        p2 = &db2;
-    }
+    Roster r1 = g1->RefRoster();
+    Roster r2 = g2->RefRoster();
     switch( backdoor->compare_col )
     {
-        case 1: lt = p1->r.white < p2->r.white;
+        case 1: lt = r1.white < r2.white;
                 break;
         case 2:
         {       
-                int elo_1 = atoi( p1->r.white_elo.c_str() );
-                int elo_2 = atoi( p2->r.white_elo.c_str() );
+                int elo_1 = atoi( r1.white_elo.c_str() );
+                int elo_2 = atoi( r2.white_elo.c_str() );
                 lt = elo_1 < elo_2;
                 break;
         }
-        case 3: lt = p1->r.black < p2->r.black;
+        case 3: lt = r1.black < r2.black;
                 break;
         case 4:
         {
-                int elo_1 = atoi( p1->r.black_elo.c_str() );
-                int elo_2 = atoi( p2->r.black_elo.c_str() );
+                int elo_1 = atoi( r1.black_elo.c_str() );
+                int elo_2 = atoi( r2.black_elo.c_str() );
                 lt = elo_1 < elo_2;
                 break;
         }
-        case 5: lt = p1->r.date < p2->r.date;
+        case 5: lt = r1.date < r2.date;
                 break;
-        case 6: lt = p1->r.site < p2->r.site;
+        case 6: lt = r1.site < r2.site;
                 break;
-        case 8: lt = p1->r.result < p2->r.result;
+        case 8: lt = r1.result < r2.result;
                 break;
     }
     return lt;
@@ -686,43 +670,27 @@ static bool compare( const smart_ptr<MagicBase> &g1, const smart_ptr<MagicBase> 
 static bool rev_compare( const smart_ptr<MagicBase> &g1, const smart_ptr<MagicBase> &g2 )
 {
     bool lt=true;
-    DB_GAME_INFO *p1 = g1->GetCompactGamePtr();
-    if( !p1 )
-    {
-        static GameDocument gd1;
-        g1->GetGameDocument(gd1);
-        static DB_GAME_INFO db1;
-        db1.Downscale(gd1);
-        p1 = &db1;
-    }
-    DB_GAME_INFO *p2 = g2->GetCompactGamePtr();
-    if( !p2 )
-    {
-        static GameDocument gd2;
-        g2->GetGameDocument(gd2);
-        static DB_GAME_INFO db2;
-        db2.Downscale(gd2);
-        p2 = &db2;
-    }
+    Roster r1 = g1->RefRoster();
+    Roster r2 = g2->RefRoster();
     switch( backdoor->compare_col )
     {
-        case 1: lt = p1->r.white > p2->r.white;           break;
+        case 1: lt = r1.white > r2.white;           break;
         case 2:
-        {       int elo_1 = atoi( p1->r.white_elo.c_str() );
-                int elo_2 = atoi( p2->r.white_elo.c_str() );
+        {       int elo_1 = atoi( r1.white_elo.c_str() );
+                int elo_2 = atoi( r2.white_elo.c_str() );
                 lt = elo_1 > elo_2;
                 break;
         }
-        case 3: lt = p1->r.black > p2->r.black;           break;
+        case 3: lt = r1.black > r2.black;           break;
         case 4:
-        {       int elo_1 = atoi( p1->r.black_elo.c_str() );
-                int elo_2 = atoi( p2->r.black_elo.c_str() );
+        {       int elo_1 = atoi( r1.black_elo.c_str() );
+                int elo_2 = atoi( r2.black_elo.c_str() );
                 lt = elo_1 > elo_2;
                 break;
         }
-        case 5: lt = p1->r.date > p2->r.date;             break;
-        case 6: lt = p1->r.site > p2->r.site;             break;
-        case 8: lt = p1->r.result > p2->r.result;         break;
+        case 5: lt = r1.date > r2.date;             break;
+        case 6: lt = r1.site > r2.site;             break;
+        case 8: lt = r1.result > r2.result;         break;
     }
     return lt;
 }

@@ -195,9 +195,8 @@ std::string RemoveLineEnds( std::string &s )
     return t;
 }
 
-void GameDocument::GetGameDocument( GameDocument &read_from_file )
+void GameDocument::GetGameDocumentFromFile( GameDocument &read_from_file )
 {
-    /* GameDocument doc = * std::dynamic_pointer_cast<GameDocument> (gds[i]); */
     GameDocument temp = *this;
     if( !temp.in_memory )
     {

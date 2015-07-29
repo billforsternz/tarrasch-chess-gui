@@ -61,14 +61,11 @@ class MagicBase
 {
 public:
     virtual ~MagicBase() {}
-    virtual void GetGameDocument( GameDocument &gd )    {
-        cprintf("FIXME DANGER WILL ROBINSON 1\n"); }
-    virtual GameDocument GetGameDocument()              { GameDocument doc;
-        cprintf("FIXME DANGER WILL ROBINSON 2\n"); return doc; }
+    virtual DB_GAME_INFO *GetDbGameInfoPtr() { return NULL; }
     virtual GameDocument *GetGameDocumentPtr()  {
         cprintf("FIXME DANGER WILL ROBINSON 3\n");  return NULL; }
-    virtual DB_GAME_INFO *GetCompactGamePtr() {
-        cprintf("FIXME DANGER WILL ROBINSON 4\n");  return NULL; }      // FIXME USE THIS AS MUCH AS POSSIBLE FOR GOOD PERFORMANCE
+    virtual bool GetPgnHandle( int &png_handle ) { return false; }
+    virtual void SetPgnHandle( int png_handle )  {}
     virtual bool IsInMemory()        { return false; }
     virtual bool IsModified()        { return false; }
     virtual uint32_t GetGameBeingEdited() { return 0; }
@@ -77,7 +74,7 @@ public:
     // High performance
     virtual Roster &RefRoster() { static Roster r; return r; }
     virtual std::vector<thc::Move> &RefMoves() { static std::vector<thc::Move> moves; return moves; }
-    virtual thc::ChessPosition &RefStartPosition() { static thc::ChessPosition cp; return cp; }
+    virtual thc::ChessPosition     &RefStartPosition() { static thc::ChessPosition cp; return cp; }
     
     // Easy to use
     virtual void GetCompactGame( CompactGame &pact )
@@ -94,8 +91,6 @@ class HoldDocument : public MagicBase
 public:
     HoldDocument( GameDocument &doc ) { the_game = doc; }
     GameDocument        the_game;
-	virtual void GetGameDocument(GameDocument &gd)				{ the_game.GetGameDocument(gd); }
-	virtual GameDocument        GetGameDocument()               { return the_game; }
 	virtual GameDocument        *GetGameDocumentPtr()           { return &the_game; }
     virtual bool IsInMemory()        { return true; }
     virtual bool IsModified()        { return the_game.IsModified(); }
@@ -120,18 +115,13 @@ public:
 class DB_GAME_INFO : public MagicBase
 {
 public:
-    virtual void GetGameDocument( GameDocument &gd )    { Upscale(gd); }
-    virtual GameDocument GetGameDocument()              { GameDocument doc;  Upscale(doc);
-        cprintf("FIXME DANGER WILL ROBINSON 5\n"); return doc; }
-    virtual DB_GAME_INFO *GetCompactGamePtr() { return this; }
+    virtual DB_GAME_INFO  *GetDbGameInfoPtr()  { return this; }
     int game_id;
     Roster r;
     std::string str_blob;
     int transpo_nbr;
     
     std::string Description();
-    void Upscale( GameDocument &gd );       // to GameDocument
-    virtual void Downscale( GameDocument &gd );     // from GameDocument
     virtual bool HaveStartPosition() { return false; }
     virtual thc::ChessPosition &GetStartPosition() { cprintf("FIXME (MAYBE) DANGER WILL ROBINSON 6\n"); static thc::ChessPosition start; return start; }
     virtual Roster &RefRoster() { return r; }
@@ -156,38 +146,6 @@ public:
     virtual thc::ChessPosition &RefStartPosition() { static thc::ChessPosition start; return start;  }
 };
 
-class DB_GAME_INFO_FEN : public DB_GAME_INFO
-{
-public:
-	thc::ChessPosition start_position;
-    virtual bool HaveStartPosition() {
-        bool is_initial_position = ( 0 == strcmp(start_position.squares,"rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR")
-                                    ) && start_position.white;
-        return !is_initial_position; }
-    virtual thc::ChessPosition &GetStartPosition() { return start_position; }
-    virtual void Downscale( GameDocument &gd );     // from GameDocument
-    virtual std::vector<thc::Move> &RefMoves()
-    {
-        static std::vector<thc::Move> moves;
-        moves.clear();
-        CompressMoves press;
-        press.Init( start_position );
-        int len = str_blob.size();
-        const char *blob = str_blob.c_str();
-        for( int i=0; i<len; i++ )
-        {
-            thc::Move mv;
-            int nbr = press.decompress_move( blob, mv );
-            blob++;
-            if( nbr == 0 )
-                break;
-            moves.push_back(mv);
-        }
-        return moves;
-    }
-    virtual thc::ChessPosition &RefStartPosition() { return start_position;  }
-};
-
 void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &gd );
 
 class PgnDocument : public MagicBase
@@ -197,16 +155,6 @@ private:
     long fposn;
 public:
     PgnDocument( int pgn_handle, long fposn ) { this->pgn_handle=pgn_handle, this->fposn = fposn; }
-	virtual void GetGameDocument(GameDocument &gd)
-    {
-        ReadGameFromPgn( pgn_handle, fposn, gd );
-    }
-	virtual GameDocument        GetGameDocument()
-    {
-        GameDocument  the_game;
-        ReadGameFromPgn( pgn_handle, fposn, the_game );
-        return the_game;
-    }
 	virtual GameDocument        *GetGameDocumentPtr()
     {
         static GameDocument  the_game;

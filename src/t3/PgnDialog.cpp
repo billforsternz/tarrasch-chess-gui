@@ -113,11 +113,10 @@ void PgnDialog::AddExtraControls()
 }
 
 
-
 void PgnDialog::GetCachedDocumentRaw( int idx, GameDocument &gd )
 {
     std::unique_ptr<MagicBase> &mb = gc->gds[idx];
-    mb->GetGameDocument(gd);
+    gd = *mb->GetGameDocumentPtr();
 }
 
 GameDocument * PgnDialog::GetCachedDocument( int idx )
@@ -169,6 +168,7 @@ void PgnDialog::ReadItem( int item, CompactGame &info )
     GameDocument *ptr = GetCachedDocument(item);
     info.Downscale( *ptr );
 }
+
 
 void PgnDialog::OnSaveAllToAFile() {}
 void PgnDialog::OnHelpClick() {}

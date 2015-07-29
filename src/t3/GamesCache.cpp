@@ -1028,218 +1028,221 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
             int neg_base = -2;
             for( int i=0; i<gds_nbr; i++ )    
             {   
-                GameDocument gd;
-                gds[i]->GetGameDocument(gd);
-                thc::ChessPosition tmp;
+                GameDocument *ptr = gds[i]->GetGameDocumentPtr();
+                if( ptr )
+                {
+                    GameDocument gd = *ptr;
+                    thc::ChessPosition tmp;
 
-                int publish_options = 0;
-                bool skip_intro = false;
-                bool skip_game = false;
-                std::string white = gd.r.white;
-                std::string black = gd.r.black;
-                std::string t = black;
-                std::string options = "";
-                bool white_only = (white!="" && white!="?") && (black=="" || black=="?");
-                if( !white_only && t[0]=='@' )
-                {
-                    size_t at2;
-                    at2 = t.substr(1).find('@');
-                    if( at2 != std::string::npos )
+                    int publish_options = 0;
+                    bool skip_intro = false;
+                    bool skip_game = false;
+                    std::string white = gd.r.white;
+                    std::string black = gd.r.black;
+                    std::string t = black;
+                    std::string options = "";
+                    bool white_only = (white!="" && white!="?") && (black=="" || black=="?");
+                    if( !white_only && t[0]=='@' )
                     {
-                        options = t.substr(0,at2+1);
-                        black = t.substr(at2+2);
-                    }
-                }
-
-                bool heading_1 = (std::string::npos != options.find('1'));
-                bool heading_2 = (std::string::npos != options.find('2'));
-                bool suppress_move = (std::string::npos != options.find('N'));
-                bool heading = (heading_1 || heading_2 || white_only);
-                bool join = (std::string::npos != options.find('J'));
-                if( join )
-                {
-                    white = white + " " + black;
-                    black = "";
-                }
-
-#ifdef NOMARKDOWN
-                //<h1>Introduction</h1>
-                //<p>Sorry, this was rushed out, I may have time to embellish these brief highlights later. </p>
-                //<h3>Russell Dive - Scott Wastney, Julian Mazur Memorial 2012</h3>
-                std::string s = "";
-                std::string pre = gd.prefix_txt;
-                if( pre.size()>0 && pre[0] == '#' )
-                {
-                    size_t off1 = pre.find_first_not_of("#");
-                    size_t off2 = pre.find('\n');
-                    if( off1!=std::string::npos && off2!=std::string::npos
-                        && off2>off1 )
-                    {
-                        s += "<h1>";
-                        s += pre.substr(off1,off2-off1);
-                        s += "</h1>\n";
-                        pre = pre.substr(off2);
-                    }
-                }
-                s += "<p>";
-                s += pre;
-                s += "</p>\n";
-                if( heading )
-                {
-                    skip_intro = true;
-                    if( heading_1 )
-                        s = "<h1>" + white + "</h1>";
-                    else
-                        s = "<h2>" + white + "</h2>";
-                    s += "\n";
-                    publish_options |= GameView::SUPPRESS_NULL_MOVE;
-                    publish_options |= GameView::SUPPRESS_VARIATION_PARENS;
-                }
-#else
-                // Write prefix
-                std::string s = gd.prefix_txt;
-                if( heading )
-                {
-                    skip_intro = true;
-                    if( heading_1 )
-                        s = "#" + white;
-                    else
-                        s = "##" + white;
-                    s += "\r";
-                    publish_options |= GameView::SUPPRESS_NULL_MOVE;
-                    publish_options |= GameView::SUPPRESS_VARIATION_PARENS;
-                }
-#endif
-                if( suppress_move )
-                    publish_options |= GameView::SUPPRESS_MOVE;
-                const char *tags[] =
-                {
-                    "#SkipToDiagram",
-                    "#SkipIntro",
-                    "#SkipGame"
-                };
-                for( int j=0; j<nbrof(tags); j++ )
-                {
-                    for( int k=0; k<4; k++ )
-                    {
-                        char buf[80];
-                        strcpy( buf, tags[j] );
-                        switch( k )
+                        size_t at2;
+                        at2 = t.substr(1).find('@');
+                        if( at2 != std::string::npos )
                         {
-                            case 0: strcat(buf,", "); break;
-                            case 1: strcat(buf,",");  break;
-                            case 2: strcat(buf," ");  break;
-                            default:
-                            case 3: break;
+                            options = t.substr(0,at2+1);
+                            black = t.substr(at2+2);
                         }
-                        const char *pattern;
-                        size_t found;
-                        pattern = buf;
-                        found = s.find(pattern);
-                        if( found != std::string::npos )
+                    }
+
+                    bool heading_1 = (std::string::npos != options.find('1'));
+                    bool heading_2 = (std::string::npos != options.find('2'));
+                    bool suppress_move = (std::string::npos != options.find('N'));
+                    bool heading = (heading_1 || heading_2 || white_only);
+                    bool join = (std::string::npos != options.find('J'));
+                    if( join )
+                    {
+                        white = white + " " + black;
+                        black = "";
+                    }
+
+    #ifdef NOMARKDOWN
+                    //<h1>Introduction</h1>
+                    //<p>Sorry, this was rushed out, I may have time to embellish these brief highlights later. </p>
+                    //<h3>Russell Dive - Scott Wastney, Julian Mazur Memorial 2012</h3>
+                    std::string s = "";
+                    std::string pre = gd.prefix_txt;
+                    if( pre.size()>0 && pre[0] == '#' )
+                    {
+                        size_t off1 = pre.find_first_not_of("#");
+                        size_t off2 = pre.find('\n');
+                        if( off1!=std::string::npos && off2!=std::string::npos
+                            && off2>off1 )
                         {
-                            s = s.substr(0,found) + s.substr(found+strlen(pattern));
-                            switch( j )
+                            s += "<h1>";
+                            s += pre.substr(off1,off2-off1);
+                            s += "</h1>\n";
+                            pre = pre.substr(off2);
+                        }
+                    }
+                    s += "<p>";
+                    s += pre;
+                    s += "</p>\n";
+                    if( heading )
+                    {
+                        skip_intro = true;
+                        if( heading_1 )
+                            s = "<h1>" + white + "</h1>";
+                        else
+                            s = "<h2>" + white + "</h2>";
+                        s += "\n";
+                        publish_options |= GameView::SUPPRESS_NULL_MOVE;
+                        publish_options |= GameView::SUPPRESS_VARIATION_PARENS;
+                    }
+    #else
+                    // Write prefix
+                    std::string s = gd.prefix_txt;
+                    if( heading )
+                    {
+                        skip_intro = true;
+                        if( heading_1 )
+                            s = "#" + white;
+                        else
+                            s = "##" + white;
+                        s += "\r";
+                        publish_options |= GameView::SUPPRESS_NULL_MOVE;
+                        publish_options |= GameView::SUPPRESS_VARIATION_PARENS;
+                    }
+    #endif
+                    if( suppress_move )
+                        publish_options |= GameView::SUPPRESS_MOVE;
+                    const char *tags[] =
+                    {
+                        "#SkipToDiagram",
+                        "#SkipIntro",
+                        "#SkipGame"
+                    };
+                    for( int j=0; j<nbrof(tags); j++ )
+                    {
+                        for( int k=0; k<4; k++ )
+                        {
+                            char buf[80];
+                            strcpy( buf, tags[j] );
+                            switch( k )
                             {
-                                case 0: publish_options |= GameView::SKIP_TO_FIRST_DIAGRAM; break;
-                                case 1: skip_intro            = true;   break;
-                                case 2: skip_game             = true;   break;
+                                case 0: strcat(buf,", "); break;
+                                case 1: strcat(buf,",");  break;
+                                case 2: strcat(buf," ");  break;
+                                default:
+                                case 3: break;
                             }
-                            break;
+                            const char *pattern;
+                            size_t found;
+                            pattern = buf;
+                            found = s.find(pattern);
+                            if( found != std::string::npos )
+                            {
+                                s = s.substr(0,found) + s.substr(found+strlen(pattern));
+                                switch( j )
+                                {
+                                    case 0: publish_options |= GameView::SKIP_TO_FIRST_DIAGRAM; break;
+                                    case 1: skip_intro            = true;   break;
+                                    case 2: skip_game             = true;   break;
+                                }
+                                break;
+                            }
                         }
                     }
-                }
-                int len = s.length();
-                if( len > 0 )
-                {
-                    if( i != 0 )    // blank line needed before all but first prefix
+                    int len = s.length();
+                    if( len > 0 )
+                    {
+                        if( i != 0 )    // blank line needed before all but first prefix
+                            fwrite( "\n", 1, 1, md_out);
+                        fwrite( s.c_str(), 1, len, md_out);
                         fwrite( "\n", 1, 1, md_out);
-                    fwrite( s.c_str(), 1, len, md_out);
-                    fwrite( "\n", 1, 1, md_out);
-                }
-                if( !skip_game )
-                {
-
-                    if( !skip_intro )
-                    {
-                        // Write header
-                        //gd->ToFileTxtGameDetails( s );
-                
-                        s = markdown ? "### " : "<h3>";
-                        s += white;
-                        s += " - ";
-                        s += black;
-                        if( gd.r.event.find('?') == std::string::npos )
-                        {
-                            s += " ";
-                            s += gd.r.event;
-                        }
-                        std::string year = gd.r.date.substr(0,4);
-                        if( year.find('?') == std::string::npos )
-                        {
-                            s += " ";
-                            s += year;
-                        }
-                        s += (markdown ? "\n" : "</h3>\n");
-                        s += (markdown ? "\n" : "</h3>\n");
-                        fwrite(s.c_str(),1,s.length(),md_out);
                     }
+                    if( !skip_game )
+                    {
 
-                    // Write Game body
-                    if( gd.in_memory )
-                    {
-                        gd.ToPublishTxtGameBody( s, diagram_base, mv_base, neg_base, publish_options );
-                        fwrite(s.c_str(),1,s.length(),md_out);
-                    }
-                    else
-                    {
-                        FILE *pgn_in = objs.gl->pf.ReopenRead( gd.pgn_handle );
-                        if( pgn_in )
+                        if( !skip_intro )
                         {
-                            long fposn2 = gd.fposn2;
-                            long end    = gd.fposn3;
-                            fseek(pgn_in,fposn2,SEEK_SET);
-                            long len = end-fposn2;
-                            char *buf = new char [len];
-                            if( len == (long)fread(buf,1,len,pgn_in) )
+                            // Write header
+                            //gd->ToFileTxtGameDetails( s );
+                    
+                            s = markdown ? "### " : "<h3>";
+                            s += white;
+                            s += " - ";
+                            s += black;
+                            if( gd.r.event.find('?') == std::string::npos )
                             {
-                                std::string s(buf,len);
-                                thc::ChessRules cr;
-                                int nbr_converted;
-                                gd.PgnParse(true,nbr_converted,s,cr,NULL);
-                                gd.ToPublishTxtGameBody( s, diagram_base, mv_base, neg_base, publish_options );
-                                objs.gl->atom.NotUndoAble();
-                                fwrite(s.c_str(),1,s.length(),md_out);
+                                s += " ";
+                                s += gd.r.event;
                             }
-                            delete[] buf;
+                            std::string year = gd.r.date.substr(0,4);
+                            if( year.find('?') == std::string::npos )
+                            {
+                                s += " ";
+                                s += year;
+                            }
+                            s += (markdown ? "\n" : "</h3>\n");
+                            s += (markdown ? "\n" : "</h3>\n");
+                            fwrite(s.c_str(),1,s.length(),md_out);
+                        }
+
+                        // Write Game body
+                        if( gd.in_memory )
+                        {
+                            gd.ToPublishTxtGameBody( s, diagram_base, mv_base, neg_base, publish_options );
+                            fwrite(s.c_str(),1,s.length(),md_out);
+                        }
+                        else
+                        {
+                            FILE *pgn_in = objs.gl->pf.ReopenRead( gd.pgn_handle );
+                            if( pgn_in )
+                            {
+                                long fposn2 = gd.fposn2;
+                                long end    = gd.fposn3;
+                                fseek(pgn_in,fposn2,SEEK_SET);
+                                long len = end-fposn2;
+                                char *buf = new char [len];
+                                if( len == (long)fread(buf,1,len,pgn_in) )
+                                {
+                                    std::string s(buf,len);
+                                    thc::ChessRules cr;
+                                    int nbr_converted;
+                                    gd.PgnParse(true,nbr_converted,s,cr,NULL);
+                                    gd.ToPublishTxtGameBody( s, diagram_base, mv_base, neg_base, publish_options );
+                                    objs.gl->atom.NotUndoAble();
+                                    fwrite(s.c_str(),1,s.length(),md_out);
+                                }
+                                delete[] buf;
+                            }
                         }
                     }
                 }
-            }
 
 
-            // Restore sort order .game_nbr field is restored to its original value
-            if( !renumber )
-            {
-            /*  for( int i=0; i<gds_nbr; i++ )    
-                {   
-                    GameDocument *ptr = gds[i]->GetGameDocumentPtr();
-                    if( ptr )
-                    {
-                        int temp = ptr->sort_idx;
-                        ptr->sort_idx = ptr->game_nbr;
-                        ptr->game_nbr = temp;
+                // Restore sort order .game_nbr field is restored to its original value
+                if( !renumber )
+                {
+                /*  for( int i=0; i<gds_nbr; i++ )    
+                    {   
+                        GameDocument *ptr = gds[i]->GetGameDocumentPtr();
+                        if( ptr )
+                        {
+                            int temp = ptr->sort_idx;
+                            ptr->sort_idx = ptr->game_nbr;
+                            ptr->game_nbr = temp;
+                        }
                     }
+                    sort( gds.begin(), gds.end() ); */
+                } 
+                objs.gl->pf.Close( gc_clipboard );    // close all handles
+                fwrite("<br/>\n",1,6,md_out);
+                if( !markdown )
+                {
+                    fwrite("</div>\n"
+                           "</body>\n"
+                           "</html>\n",1,23,md_out);
                 }
-                sort( gds.begin(), gds.end() ); */
-            } 
-            objs.gl->pf.Close( gc_clipboard );    // close all handles
-            fwrite("<br/>\n",1,6,md_out);
-            if( !markdown )
-            {
-                fwrite("</div>\n"
-                       "</body>\n"
-                       "</html>\n",1,23,md_out);
             }
             fclose( md_out );
         }

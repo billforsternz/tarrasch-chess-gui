@@ -649,60 +649,6 @@ std::string DB_GAME_INFO::Description()
     return label;
 }
 
-void DB_GAME_INFO::Upscale( GameDocument &gd )
-{
-    CompactGame pact;
-    GetCompactGame( pact );
-    gd.r = pact.r;
-    gd.start_position =  pact.start_position;
-    std::vector<MoveTree> &variation = gd.tree.variations[0];
-    variation.clear();
-    MoveTree m;
-    for( int i=0; i<pact.moves.size(); i++ )
-    {
-        m.game_move.move = pact.moves[i];
-        variation.push_back(m);
-    }
-    gd.Rebuild();
-}
-
-
-void DB_GAME_INFO::Downscale( GameDocument &gd )
-{
-    r = gd.r;
-    transpo_nbr = 0;
-    CompressMoves press;
-    std::vector<MoveTree> &variation = gd.tree.variations[0];
-    std::string str;
-    for( int i=0; i<variation.size(); i++ )
-    {
-        thc::Move mv = variation[i].game_move.move;
-        char ch;
-        press.compress_move( mv, &ch );
-        str.push_back(ch);
-    }
-    str_blob = str;
-}
-
-void DB_GAME_INFO_FEN::Downscale( GameDocument &gd )
-{
-    r = gd.r;
-    transpo_nbr = 0;
-	start_position = gd.start_position;
-    CompressMoves press;
-	press.Init( start_position );  // temp temp slow
-    std::vector<MoveTree> &variation = gd.tree.variations[0];
-    std::string str;
-    for( int i=0; i<variation.size(); i++ )
-    {
-        thc::Move mv = variation[i].game_move.move;
-        char ch;
-        press.compress_move( mv, &ch );
-        str.push_back(ch);
-    }
-    str_blob = str;
-}
-
 std::string CompactGame::Description()
 {
     std::string white = this->r.white;

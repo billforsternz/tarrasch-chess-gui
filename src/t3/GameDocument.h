@@ -99,7 +99,7 @@ public:
     
     void FleshOutDate();
     virtual void Init( const thc::ChessPosition &start_position );
-    void GetGameDocument( GameDocument &gd );
+    void GetGameDocumentFromFile( GameDocument &gd );
 
     // Data
     Roster      r;  // white, black, event, site, date etc.
