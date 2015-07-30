@@ -53,7 +53,7 @@ void ReportOnProgress
     int   //   depth
 )
 {
-    DebugPrintf(( "Unexpected call to ReportOnProgress() in GUI rather than engine" ));
+    dbg_printf( "Unexpected call to ReportOnProgress() in GUI rather than engine" );
 }
 
 
@@ -213,8 +213,8 @@ void GameLogic::ShowNewDocument()
         else if( draw_type1==DRAWTYPE_REPITITION || draw_type2==DRAWTYPE_REPITITION )
             result = RESULT_DRAW_REPITITION;
     }
-    objs.repository->player.m_white = gd.white;
-    objs.repository->player.m_black = gd.black;
+    objs.repository->player.m_white = gd.r.white;
+    objs.repository->player.m_black = gd.r.black;
     LabelPlayers(false,true);
     if( objs.rybka )
     {
@@ -571,12 +571,14 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
         wxMessageBox( "Cannot read file", "Error", wxOK|wxICON_ERROR );
     else
     {
+        /* GameDocument doc = * std::dynamic_pointer_cast<GameDocument> (gds[i]); */
+
         bool have_game = false;
         if( gc.gds.size()==1 && objs.repository->general.m_straight_to_game )
         {
-            smart_ptr<GameDocument> gd_file = gc.gds[0];
-            have_game = gd_file->in_memory;
-            if( !have_game )
+            GameDocument *gd_file = gc.gds[0]->GetGameDocumentPtr();
+            bool have_game = gd_file && gd_file->in_memory;
+            if( !have_game && gd_file )
             {
                 FILE *pgn_in = pf.ReopenRead( gd_file->pgn_handle );
                 if( pgn_in )
@@ -591,7 +593,10 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
                         std::string s(buf,len);
                         thc::ChessRules cr;
                         int nbr_converted;
-                        gd_file->PgnParse(true,nbr_converted,s,cr,NULL);
+                        gd = *gd_file;
+                        gd.PgnParse(true,nbr_converted,s,cr,NULL);
+                        make_smart_ptr( HoldDocument,new_smart_ptr,gd);
+                        gc.gds[0] = std::move(new_smart_ptr);
                         have_game = true;
                     }
                     pf.Close( &gc_clipboard );
@@ -604,7 +609,7 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
                 objs.session->SaveGame(&gd);
                 IndicateNoCurrentDocument();
                 gd_file->game_being_edited = ++game_being_edited_tag;
-                gd = *gd_file;
+                gd_file->GetGameDocumentFromFile(gd);
                 gd_file->selected = true;
                 this->file_game_idx = 0;    // game 0
                 tabs->SetInfile(true);
@@ -669,42 +674,50 @@ void GameLogic::NextGamePreviousGame( int idx )
     Atomic begin;
     bool editing_log = objs.gl->EditingLog();
     bool have_game = false;
-    smart_ptr<GameDocument> gd_file = gc.gds[idx];
-    have_game = gd_file->in_memory;
-    if( !have_game )
+    GameDocument *ptr = gc.gds[idx]->GetGameDocumentPtr();
+    if( ptr )
     {
-        FILE *pgn_in = pf.ReopenRead( gd_file->pgn_handle );
-        if( pgn_in )
+        GameDocument gd_file = *ptr;
+        have_game = gd_file.in_memory;
+        if( !have_game )
         {
-            long fposn2 = gd_file->fposn2;
-            long end    = gd_file->fposn3;
-            fseek(pgn_in,fposn2,SEEK_SET);
-            long len = end-fposn2;
-            char *buf = new char [len];
-            if( len == (long)fread(buf,1,len,pgn_in) )
+            FILE *pgn_in = pf.ReopenRead( gd_file.pgn_handle );
+            if( pgn_in )
             {
-                std::string s(buf,len);
-                thc::ChessRules cr;
-                int nbr_converted;
-                gd_file->PgnParse(true,nbr_converted,s,cr,NULL);
-                have_game = true;
+                long fposn2 = gd_file.fposn2;
+                long end    = gd_file.fposn3;
+                fseek(pgn_in,fposn2,SEEK_SET);
+                long len = end-fposn2;
+                char *buf = new char [len];
+                if( len == (long)fread(buf,1,len,pgn_in) )
+                {
+                    std::string s(buf,len);
+                    thc::ChessRules cr;
+                    int nbr_converted;
+                    gd_file.PgnParse(true,nbr_converted,s,cr,NULL);
+                    make_smart_ptr( HoldDocument,new_smart_ptr,gd_file);
+                    gc.gds[idx] = std::move(new_smart_ptr);
+                    have_game = true;
+                }
+                pf.Close( &gc_clipboard );
+                delete[] buf;
             }
-            pf.Close( &gc_clipboard );
-            delete[] buf;
         }
-    }
-    if( have_game )
-    {
-        PutBackDocument();
-        objs.log->SaveGame(&gd,editing_log);
-        objs.session->SaveGame(&gd);
-        IndicateNoCurrentDocument();
-        gd_file->game_being_edited = ++game_being_edited_tag;
-        gd = *gd_file;
-        gd_file->selected = true;
-        this->file_game_idx = idx;
-        tabs->SetInfile(true);
-        ShowNewDocument();
+        if( have_game )
+        {
+            PutBackDocument();
+            objs.log->SaveGame(&gd,editing_log);
+            objs.session->SaveGame(&gd);
+            IndicateNoCurrentDocument();
+            gd_file.game_being_edited = ++game_being_edited_tag;
+            gd = gd_file;
+            GameDocument *ptr = gc.gds[idx]->GetGameDocumentPtr();
+            if( ptr )
+                ptr->selected = true;
+            this->file_game_idx = idx;
+            tabs->SetInfile(true);
+            ShowNewDocument();
+        }
     }
     atom.StatusUpdate();
 }
@@ -722,9 +735,9 @@ void GameLogic::CmdNextGame()
             objs.db->GetRow(&info, idx+1 );
             GameDocument gd_temp;
             std::vector<thc::Move> moves;
-            gd_temp.white = info.white;
-            gd_temp.black = info.black;
-            gd_temp.result = info.result;
+            gd_temp.r.white = info.r.white;
+            gd_temp.r.black = info.r.black;
+            gd_temp.r.result = info.r.result;
             int len = info.str_blob.length();
             const char *blob = info.str_blob.c_str();
             CompressMoves press;
@@ -771,9 +784,9 @@ void GameLogic::CmdPreviousGame()
             objs.db->GetRow( &info, idx-1 );
             GameDocument gd_temp;
             std::vector<thc::Move> moves;
-            gd_temp.white = info.white;
-            gd_temp.black = info.black;
-            gd_temp.result = info.result;
+            gd_temp.r.white = info.r.white;
+            gd_temp.r.black = info.r.black;
+            gd_temp.r.result = info.r.result;
             size_t len = info.str_blob.length();
             const char *blob = info.str_blob.c_str();
             CompressMoves press;
@@ -839,30 +852,33 @@ void trim( std::string &s )
 //  edited document is added to end of session instead)
 void GameLogic::PutBackDocument()
 {
-    smart_ptr<GameDocument> p;
-    bool found=false;
-    for( int i=0; !found && i<gc.gds.size(); i++ )
+    for( int i=0; i<gc.gds.size(); i++ )
     {
-        if( gc.gds[i]->game_being_edited == gd.game_being_edited )
+        GameDocument *ptr = gc.gds[i]->GetGameDocumentPtr();
+        if( ptr && ptr->game_being_edited == gd.game_being_edited )
         {
-            p = gc.gds[i];
-            found = true;
+            gd.FleshOutDate();
+            gd.FleshOutMoves();
+            GameDocument new_doc = gd;
+            new_doc.modified = gd.modified || undo.IsModified();
+            make_smart_ptr( HoldDocument, new_smart_ptr, new_doc);
+            gc.gds[i] = std::move(new_smart_ptr);
+            return;
         }
     }
-    for( int i=0; !p && i<gc_clipboard.gds.size(); i++ )
+    for( int i=0; i<gc_clipboard.gds.size(); i++ )
     {
-        if( gc_clipboard.gds[i]->game_being_edited == gd.game_being_edited  )
+        GameDocument *ptr = gc_clipboard.gds[i]->GetGameDocumentPtr();
+        if( ptr && ptr->game_being_edited == gd.game_being_edited  )
         {
-            p = gc_clipboard.gds[i];
-            found = true;
+            gd.FleshOutDate();
+            gd.FleshOutMoves();
+            GameDocument new_doc = gd;
+            new_doc.modified = gd.modified || undo.IsModified();
+            make_smart_ptr( HoldDocument, new_smart_ptr, new_doc );
+            gc_clipboard.gds[i] = std::move(new_smart_ptr);
+            return;
         }
-    }
-    if( found )
-    {
-        gd.FleshOutDate();
-        gd.FleshOutMoves();
-        *p = gd;
-        p->modified = gd.modified || undo.IsModified();
     }
 }
 
@@ -870,15 +886,19 @@ void GameLogic::IndicateNoCurrentDocument()
 {
     for( int i=0; i<gc.gds.size(); i++ )
     {
-        if( gc.gds[i]->game_being_edited == gd.game_being_edited )
-             gc.gds[i]->game_being_edited = 0;
-        gc.gds[i]->selected = false;
+        GameDocument *ptr = gc.gds[i]->GetGameDocumentPtr();
+        if( ptr && ptr->game_being_edited == gd.game_being_edited )
+             ptr->game_being_edited = 0;
+        if( ptr )
+            ptr->selected = false;
     }
     for( int i=0; i<gc_clipboard.gds.size(); i++ )
     {
-        if( gc_clipboard.gds[i]->game_being_edited == gd.game_being_edited )
-            gc_clipboard.gds[i]->game_being_edited = 0;
-        gc_clipboard.gds[i]->selected = false;
+        GameDocument *ptr = gc_clipboard.gds[i]->GetGameDocumentPtr();
+        if( ptr && ptr->game_being_edited == gd.game_being_edited )
+             ptr->game_being_edited = 0;
+        if( ptr )
+            ptr->selected = false;
     }
 }
 
@@ -940,7 +960,7 @@ void GameLogic::CmdFileDatabase()
         wxSize sz = objs.frame->GetSize();
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
-        DbDialog dialog( objs.frame, &cr, &gc_database/*gc_session*/, &gc_clipboard, ID_PGN_DIALOG_DATABASE, pt, sz );
+        DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard , ID_PGN_DIALOG_DATABASE, pt, sz );
         if( dialog.ShowModalOk() )
         {
             objs.log->SaveGame(&gd,editing_log);
@@ -948,9 +968,8 @@ void GameLogic::CmdFileDatabase()
             GameDocument temp = gd;
             GameDocument new_gd;
             PutBackDocument();
-            if( dialog.LoadGame(this,new_gd,this->file_game_idx) )
+            if( dialog.LoadGame(new_gd) )
             {
-                new_gd.SetNonZeroStartPosition(cr);
                 tabs->TabNew(new_gd);
                 tabs->SetInfile(false);
                 ShowNewDocument();
@@ -1168,7 +1187,7 @@ void GameLogic::FullUndo( GAME_STATE game_state )
                 if( legal )
                     pondering = StartPondering( ponder_move );
                 else
-                    DebugPrintfInner( "pondering failed\n" );
+                    release_printf( "pondering failed\n" );
             }
             chess_clock.GameStart( gd.master_position.WhiteToPlay() );
             NewState( pondering ? PONDERING : HUMAN );
@@ -1340,7 +1359,7 @@ void GameLogic::CmdDraw()
         }
         glc.Set( result );
         NewState( GAMEOVER );
-        gd.result = "1/2-1/2";
+        gd.r.result = "1/2-1/2";
         gd.Rebuild();
         unsigned long pos = gd.gv.FindEnd();
         atom.Redisplay( pos );
@@ -1360,7 +1379,7 @@ void GameLogic::CmdWhiteResigns()
         NewState( GAMEOVER );
         if( gd.AreWeInMain() )
         {
-            gd.result = "0-1";
+            gd.r.result = "0-1";
             gd.Rebuild();
             unsigned long pos = gd.gv.FindEnd();
             atom.Redisplay( pos );
@@ -1381,7 +1400,7 @@ void GameLogic::CmdBlackResigns()
         NewState( GAMEOVER );
         if( gd.AreWeInMain() )
         {
-            gd.result = "1-0";
+            gd.r.result = "1-0";
             gd.Rebuild();
             unsigned long pos = gd.gv.FindEnd();
             atom.Redisplay( pos );
@@ -1410,11 +1429,11 @@ void GameLogic::CmdClocks()
         objs.gl->chess_clock.Repository2Clocks();
         objs.gl->chess_clock.GameStart( gd.master_position.WhiteToPlay() );
         objs.canvas->RedrawClocks();
-        DebugPrintf(( "WHITE: time=%d, increment=%d, visible=%s, running=%s\n",
+        dbg_printf( "WHITE: time=%d, increment=%d, visible=%s, running=%s\n",
                 dialog.dat.m_white_time,
                 dialog.dat.m_white_increment,
                 dialog.dat.m_white_visible?"yes":"no",
-                dialog.dat.m_white_running?"yes":"no" ));
+                dialog.dat.m_white_running?"yes":"no" );
     }
     canvas->ClocksVisible();
 }
@@ -1427,11 +1446,11 @@ void GameLogic::CmdPlayers()
     if( wxID_OK == dialog.ShowModal() )
     {
         objs.repository->player = dialog.dat;
-        DebugPrintf(( "human=%s, computer=%s, white=%s, black=%s\n",
+        dbg_printf( "human=%s, computer=%s, white=%s, black=%s\n",
                      dialog.dat.m_human.c_str(),
                      dialog.dat.m_computer.c_str(),
                      dialog.dat.m_white.c_str(),
-                     dialog.dat.m_black.c_str() ));
+                     dialog.dat.m_black.c_str() );
         objs.gl->LabelPlayers(false,true);
     }
 }
@@ -1455,8 +1474,8 @@ void GameLogic::CmdEditGamePrefix()
 // If players or result (possibly) changed, redisplay it
 void GameLogic::GameRedisplayPlayersResult()
 {
-    objs.repository->player.m_white = gd.white;
-    objs.repository->player.m_black = gd.black;
+    objs.repository->player.m_white = gd.r.white;
+    objs.repository->player.m_black = gd.r.black;
     LabelPlayers(false,true);
     long pos = lb->GetInsertionPoint();
     gd.Rebuild();
@@ -1659,8 +1678,8 @@ void GameLogic::LabelPlayers( bool start_game, bool set_document_player_names )
     objs.repository->player.m_black = black;
     if( set_document_player_names )
     {
-        gd.white = objs.repository->player.m_white;
-        gd.black = objs.repository->player.m_black;
+        gd.r.white = objs.repository->player.m_white;
+        gd.r.black = objs.repository->player.m_black;
         canvas->SetPlayers( white.c_str(), black.c_str()  );
     }
 }
@@ -1719,7 +1738,7 @@ void GameLogic::OnIdle()
                 NewState( GAMEOVER );
                 if( gd.AreWeInMain() )
                 {
-                    gd.result = (white ? "0-1" : "1-0");
+                    gd.r.result = (white ? "0-1" : "1-0");
                     gd.Rebuild();
                     unsigned long pos = gd.gv.FindEnd();
                     atom.Redisplay( pos );
@@ -1759,12 +1778,12 @@ void GameLogic::OnIdle()
                             case RESULT_BLACK_CHECKMATED:
                             case RESULT_BLACK_RESIGNS:
                             case RESULT_BLACK_LOSE_TIME:
-                                gd.result = "1-0";
+                                gd.r.result = "1-0";
                                 break;
                             case RESULT_WHITE_CHECKMATED:
                             case RESULT_WHITE_RESIGNS:
                             case RESULT_WHITE_LOSE_TIME:
-                                gd.result = "0-1";
+                                gd.r.result = "0-1";
                                 break;
                             case RESULT_DRAW_WHITE_STALEMATED:
                             case RESULT_DRAW_BLACK_STALEMATED:
@@ -1772,7 +1791,7 @@ void GameLogic::OnIdle()
                             case RESULT_DRAW_50MOVE:
                             case RESULT_DRAW_INSUFFICIENT:
                             case RESULT_DRAW_REPITITION:
-                                gd.result = "1/2-1/2";
+                                gd.r.result = "1/2-1/2";
                                 break;
                         }
                         gd.Rebuild();
@@ -1806,7 +1825,7 @@ void GameLogic::OnIdle()
                     KibitzClearDisplay(true);
                 if( !have_data )
                     break;
-                DebugPrintf(( "Rybka kibitz engine to move; txt=%s\n", buf ));
+                dbg_printf( "Rybka kibitz engine to move; txt=%s\n", buf );
                 KibitzUpdateEngineToMove( true, buf );
             }
         }
@@ -1826,7 +1845,7 @@ void GameLogic::OnIdle()
                     KibitzClearDisplay( true );
                 if( !have_data )
                     break;
-                DebugPrintf(( "Rybka kibitz engine to move; txt=%s\n", buf ));
+                dbg_printf( "Rybka kibitz engine to move; txt=%s\n", buf );
                 KibitzUpdateEngineToMove( false, buf );
             }
         }
@@ -1834,7 +1853,7 @@ void GameLogic::OnIdle()
         Move bestmove = objs.rybka->CheckBestMove( ponder );
         if( bestmove.Valid() )
         {
-            DebugPrintfInner( "Engine returns. bestmove is %s, ponder is %s\n",
+            release_printf( "Engine returns. bestmove is %s, ponder is %s\n",
                  bestmove.TerseOut().c_str(), ponder.TerseOut().c_str() );
             ChessRules cr = gd.master_position;
             cr.PlayMove( bestmove );
@@ -1855,12 +1874,12 @@ void GameLogic::OnIdle()
                         case RESULT_BLACK_CHECKMATED:
                         case RESULT_BLACK_RESIGNS:
                         case RESULT_BLACK_LOSE_TIME:
-                            gd.result = "1-0";
+                            gd.r.result = "1-0";
                             break;
                         case RESULT_WHITE_CHECKMATED:
                         case RESULT_WHITE_RESIGNS:
                         case RESULT_WHITE_LOSE_TIME:
-                            gd.result = "0-1";
+                            gd.r.result = "0-1";
                             break;
                         case RESULT_DRAW_WHITE_STALEMATED:
                         case RESULT_DRAW_BLACK_STALEMATED:
@@ -1868,7 +1887,7 @@ void GameLogic::OnIdle()
                         case RESULT_DRAW_50MOVE:
                         case RESULT_DRAW_INSUFFICIENT:
                         case RESULT_DRAW_REPITITION:
-                            gd.result = "1/2-1/2";
+                            gd.r.result = "1/2-1/2";
                             break;
                     }
                     gd.Rebuild();
@@ -1906,7 +1925,7 @@ void GameLogic::OnIdle()
                         ponder_nmove_txt.sprintf( "%d%s%s", ponder_full_move_count, ponder_white_to_play?".":"...",nmove.c_str() );
                     }
                     else
-                        DebugPrintfInner( "pondering failed\n" );
+                        release_printf( "pondering failed\n" );
                 }
                 NewState( pondering ? PONDERING : HUMAN );
             }
@@ -1917,7 +1936,7 @@ void GameLogic::OnIdle()
     else if( kibitz && (state==MANUAL||state==RESET||state==HUMAN||state==GAMEOVER) )
 	{
         bool run=true;
-        //DebugPrintfInner( "Entering main kibitz display\n" );
+        //release_printf( "Entering main kibitz display\n" );
         //int cleared_events=0, have_data_events=0;
         for( int idx=0; idx<4; idx++ )
         {
@@ -1950,12 +1969,12 @@ void GameLogic::OnIdle()
                     break;
                 else
                 {
-                    DebugPrintf(( "Rybka kibitz; idx=%d, txt=%s\n", idx, buf ));
+                    dbg_printf( "Rybka kibitz; idx=%d, txt=%s\n", idx, buf );
                     KibitzUpdate( idx, buf );
                 }
             }
         }
-        //DebugPrintfInner( "Exiting main kibitz display %d cleared events, %d have_data events\n",
+        //release_printf( "Exiting main kibitz display %d cleared events, %d have_data events\n",
         //                    cleared_events, have_data_events );
     }
     else if( state == FAKE_BOOK_DELAY )
@@ -1981,12 +2000,12 @@ void GameLogic::OnIdle()
                         case RESULT_BLACK_CHECKMATED:
                         case RESULT_BLACK_RESIGNS:
                         case RESULT_BLACK_LOSE_TIME:
-                            gd.result = "1-0";
+                            gd.r.result = "1-0";
                             break;
                         case RESULT_WHITE_CHECKMATED:
                         case RESULT_WHITE_RESIGNS:
                         case RESULT_WHITE_LOSE_TIME:
-                            gd.result = "0-1";
+                            gd.r.result = "0-1";
                             break;
                         case RESULT_DRAW_WHITE_STALEMATED:
                         case RESULT_DRAW_BLACK_STALEMATED:
@@ -1994,7 +2013,7 @@ void GameLogic::OnIdle()
                         case RESULT_DRAW_50MOVE:
                         case RESULT_DRAW_INSUFFICIENT:
                         case RESULT_DRAW_REPITITION:
-                            gd.result = "1/2-1/2";
+                            gd.r.result = "1/2-1/2";
                             break;
                     }
                     gd.Rebuild();
@@ -2124,12 +2143,12 @@ void GameLogic::MouseUp( char file, char rank, wxPoint &point )
                             case RESULT_BLACK_CHECKMATED:
                             case RESULT_BLACK_RESIGNS:
                             case RESULT_BLACK_LOSE_TIME:
-                                gd.result = "1-0";
+                                gd.r.result = "1-0";
                                 break;
                             case RESULT_WHITE_CHECKMATED:
                             case RESULT_WHITE_RESIGNS:
                             case RESULT_WHITE_LOSE_TIME:
-                                gd.result = "0-1";
+                                gd.r.result = "0-1";
                                 break;
                             case RESULT_DRAW_WHITE_STALEMATED:
                             case RESULT_DRAW_BLACK_STALEMATED:
@@ -2137,7 +2156,7 @@ void GameLogic::MouseUp( char file, char rank, wxPoint &point )
                             case RESULT_DRAW_50MOVE:
                             case RESULT_DRAW_INSUFFICIENT:
                             case RESULT_DRAW_REPITITION:
-                                gd.result = "1/2-1/2";
+                                gd.r.result = "1/2-1/2";
                                 break;
                         }
                         gd.Rebuild();
@@ -2287,12 +2306,12 @@ bool GameLogic::MouseDown( char file, char rank, wxPoint &point )     // return 
                                 case RESULT_BLACK_CHECKMATED:
                                 case RESULT_BLACK_RESIGNS:
                                 case RESULT_BLACK_LOSE_TIME:
-                                    gd.result = "1-0";
+                                    gd.r.result = "1-0";
                                     break;
                                 case RESULT_WHITE_CHECKMATED:
                                 case RESULT_WHITE_RESIGNS:
                                 case RESULT_WHITE_LOSE_TIME:
-                                    gd.result = "0-1";
+                                    gd.r.result = "0-1";
                                     break;
                                 case RESULT_DRAW_WHITE_STALEMATED:
                                 case RESULT_DRAW_BLACK_STALEMATED:
@@ -2300,7 +2319,7 @@ bool GameLogic::MouseDown( char file, char rank, wxPoint &point )     // return 
                                 case RESULT_DRAW_50MOVE:
                                 case RESULT_DRAW_INSUFFICIENT:
                                 case RESULT_DRAW_REPITITION:
-                                    gd.result = "1/2-1/2";
+                                    gd.r.result = "1/2-1/2";
                                     break;
                             }
                             gd.Rebuild();
@@ -2577,15 +2596,19 @@ void GameLogic::StatusUpdate( int idx )
         {
             for( int i=0; i<gc.gds.size(); i++ )
             {
-                if( gc.gds[i]->modified || gc.gds[i]->game_prefix_edited  || gc.gds[i]->game_details_edited )
+                MagicBase *ptr = gc.gds[i].get();
+                uint32_t game_being_edited = ptr->GetGameBeingEdited();
+                if( ptr && ptr->IsModified() )
+                {
                     nbr_modified++;
-                else if( gc.gds[i]->game_being_edited )
+                }
+                else if( ptr && game_being_edited )
                 {
                     GameDocument *pd = tabs->Begin();
                     Undo *pu = tabs->BeginUndo();
                     while( pd && pu )
                     {
-                        if( gc.gds[i]->game_being_edited == pd->game_being_edited )
+                        if( game_being_edited == pd->game_being_edited )
                         {
                             bool doc_modified = (pd->game_details_edited || pd->game_prefix_edited || pd->modified || pu->IsModified());
                             if( doc_modified )
@@ -2750,7 +2773,7 @@ void GameLogic::DoPopup( wxPoint &point, vector<Move> &target_moves,
         gd.master_position.PlayMove(target_moves[0]);
     if( canvas->popup )
         delete canvas->popup;
-    //DebugPrintf(( "objs.frame is a %s window\n", objs.frame->IsTopLevel()?"top level":"child" ));
+    //dbg_printf( "objs.frame is a %s window\n", objs.frame->IsTopLevel()?"top level":"child" );
     canvas->popup = new PopupControl( objs.frame,strs,terses,book,popup_mode,hover,ID_POPUP,point );
 }
 

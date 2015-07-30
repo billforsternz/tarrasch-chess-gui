@@ -1,5 +1,5 @@
 /****************************************************************************
- * Custom dialog - Select UCI engine
+ * Custom dialog - Maintenance Dialog
  *  Author:  Bill Forster
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
@@ -30,7 +30,7 @@ EVT_BUTTON( ID_MAINTENANCE_CMD_2, MaintenanceDialog::OnMaintenanceCompress )
 EVT_BUTTON( ID_MAINTENANCE_CMD_3, MaintenanceDialog::OnMaintenanceDecompress )
 EVT_BUTTON( ID_MAINTENANCE_CMD_4, MaintenanceDialog::OnMaintenanceVerify )
 EVT_BUTTON( ID_MAINTENANCE_CMD_5, MaintenanceDialog::OnMaintenanceCreate )
-EVT_BUTTON( ID_MAINTENANCE_CMD_6, MaintenanceDialog::OnMaintenanceExtraIndexes )
+EVT_BUTTON( ID_MAINTENANCE_CMD_6, MaintenanceDialog::OnMaintenanceIndexes )
 
 EVT_BUTTON( wxID_HELP, MaintenanceDialog::OnHelpClick )
 EVT_FILEPICKER_CHANGED( ID_TEMP_ENGINE_PICKER, MaintenanceDialog::OnFilePicked )
@@ -115,19 +115,22 @@ void MaintenanceDialog::CreateControls()
            "This panel is a placeholder for a proper database management facility.\n"
            "At the moment the only functionality offered is some database\n"
            "test and rebuild functions. Be careful with these, experts only !\n"
-           "For example, feedback is text output to the debug console in the\n"
-           "developer IDE !\n"
            "For now the files involved are mainly hardwired at compile time - to\n"
            "change them, change the source code and recompile! See files\n"
            "DbPrimitives.h and DbMaintenance.cpp.\n\n"
-           "Before rebuilding the database, manually delete the maintenance database;\n"
+            #define DB_APPEND_ONLY
+            #ifdef DB_APPEND_ONLY
+           "Before appending to the database, make a copy of the production database;\n"
+            DB_FILE "\n"
+           "to a maintenance database;\n"
             DB_MAINTENANCE_FILE "\n"
            "Then use the append from .pgn button, for each .pgn you wish to add\n"
            "(a file picker GUI control does let you select that .pgn, at the\n"
-           "moment avoid .pgn files with overlapping games). Then add extra indexes\n"
+           "moment avoid .pgn files with overlapping games).\n"
            "Finally manually replace the production database;\n"
             DB_FILE "\n"
            "With the newly created maintenance database and restart Tarrasch.\n"
+            #endif
            , wxDefaultPosition, wxDefaultSize, 0 );
     box_sizer->Add(descr, 0, wxALIGN_LEFT|wxALL, 5);
     
@@ -142,8 +145,8 @@ void MaintenanceDialog::CreateControls()
     // File picker control
     wxString   database_file = DB_MAINTENANCE_FILE;
     wxFileName fn( database_file );
-    wxString directory = fn.GetPath();
-    wxFileName fn2( directory, "example.pgn" );
+    wxString   pgn_file= DB_MAINTENANCE_PGN_FILE;
+    wxFileName fn2( pgn_file );
     pgn_filename = fn2.GetFullPath();
     
     wxFilePickerCtrl *picker = new wxFilePickerCtrl( this, ID_TEMP_ENGINE_PICKER, pgn_filename, wxT("Select .pgn for append operation below"),
@@ -285,7 +288,7 @@ void MaintenanceDialog::CreateControls()
     wxButton* button_cmd_5 = new wxButton( this, ID_MAINTENANCE_CMD_5, wxT("&DANGER append to database from .pgn"),
                                           wxDefaultPosition, wxDefaultSize, 0 );
     db_vert->Add( button_cmd_5, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    wxButton* button_cmd_6 = new wxButton( this, ID_MAINTENANCE_CMD_6, wxT("&DANGER database add extra indexes"),
+    wxButton* button_cmd_6 = new wxButton( this, ID_MAINTENANCE_CMD_6, wxT("&DANGER database create indexes"),
                                           wxDefaultPosition, wxDefaultSize, 0 );
     db_vert->Add( button_cmd_6, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     
@@ -414,18 +417,47 @@ void MaintenanceDialog::OnMaintenanceVerify( wxCommandEvent& WXUNUSED(event) )
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_5
 void MaintenanceDialog::OnMaintenanceCreate( wxCommandEvent& WXUNUSED(event) )
 {
+    #ifdef DB_APPEND_ONLY
     db_maintenance_create_or_append_to_database( pgn_filename.c_str() );
+    const char *str_filename = pgn_filename.c_str();
+    cprintf(                     "Appending file: %s\n", str_filename );
+    #else
+    #ifdef THC_MAC
+    cprintf(                     "Appending file: /Users/billforster/Documents/Tarrasch/giant-base-part1-rebuilt.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/billforster/Documents/Tarrasch/giant-base-part1-rebuilt.pgn" );
+    cprintf(                     "Appending file: /Users/billforster/Documents/Tarrasch/giant-base-part2-rebuilt.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/billforster/Documents/Tarrasch/giant-base-part2-rebuilt.pgn" );
+    cprintf(                     "Appending file: /Users/billforster/Documents/Tarrasch/twic_minimal_overlap.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/billforster/Documents/Tarrasch/twic_minimal_overlap.pgn" );
+    cprintf(                     "Appending file: /Users/billforster/Documents/Tarrasch/twic-948-1010.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/billforster/Documents/Tarrasch/twic-948-1010.pgn" );
+    cprintf(                     "Appending file: /Users/billforster/Documents/Tarrasch/twic-1011-1048.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/billforster/Documents/Tarrasch/twic-1011-1048.pgn" );
+    #else
+    cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/giant1.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/giant1.pgn" );
+    cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/giant2.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/giant2.pgn" );
+    cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/twic_minimal_overlap.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/twic_minimal_overlap.pgn" );
+    cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/twic-948-1010.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/twic-948-1010.pgn" );
+    cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/twic-1011-1050.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/twic-1011-1050.pgn" );
+    cprintf(                     "Appending file: /Users/Bill/Documents/T3Database/twic-1051-1077.pgn\n" );
+    db_maintenance_create_or_append_to_database( "/Users/Bill/Documents/T3Database/twic-1051-1077.pgn" );
+    #endif
+    cprintf( "Appending files complete\n" );
+    db_maintenance_create_indexes();    // temp
+    cprintf( "TEMP - created indexes automatically\n" );
+    #endif
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_6
-void MaintenanceDialog::OnMaintenanceExtraIndexes( wxCommandEvent& WXUNUSED(event) )
+void MaintenanceDialog::OnMaintenanceIndexes( wxCommandEvent& WXUNUSED(event) )
 {
-    db_maintenance_create_extra_indexes();
+    db_maintenance_create_indexes();
 }
-
-
-
-
 
 // ID_TEMP_ENGINE_PICKER
 void MaintenanceDialog::OnFilePicked( wxFileDirPickerEvent& event )

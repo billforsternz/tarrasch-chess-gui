@@ -570,16 +570,16 @@ wxString GameDetailsDialog::remember_site;
 bool GameDetailsDialog::Run( GameDocument &gd )
 {
     bool ok=false;
-    white     = gd.white;          // "White"
-    black     = gd.black;          // "Black"
-    event     = gd.event;          // "Event"
-    site      = gd.site;           // "Site"
-    date      = gd.date;           // "Date"
-    round     = gd.round;          // "Round"
-    result    = gd.result;         // "Result"
-    eco       = gd.eco;            // "ECO"
-    white_elo = gd.white_elo;      // "WhiteElo"
-    black_elo = gd.black_elo;      // "BlackElo"
+    white     = gd.r.white;          // "White"
+    black     = gd.r.black;          // "Black"
+    event     = gd.r.event;          // "Event"
+    site      = gd.r.site;           // "Site"
+    date      = gd.r.date;           // "Date"
+    round     = gd.r.round;          // "Round"
+    result    = gd.r.result;         // "Result"
+    eco       = gd.r.eco;            // "ECO"
+    white_elo = gd.r.white_elo;      // "WhiteElo"
+    black_elo = gd.r.black_elo;      // "BlackElo"
     if( result!="1-0" && result!="0-1" && result!="1/2-1/2" )
         result = "(no result)";
     if( date=="" )
@@ -624,10 +624,10 @@ bool GameDetailsDialog::Run( GameDocument &gd )
         gd.game_details_edited = true;
         remember_event = event;
         remember_site = site;
-        gd.white      = white;        // "White"
-        gd.black      = black;        // "Black"
-        gd.event      = event;        // "Event"
-        gd.site       = site;         // "Site"
+        gd.r.white      = white;        // "White"
+        gd.r.black      = black;        // "Black"
+        gd.r.event      = event;        // "Event"
+        gd.r.site       = site;         // "Site"
         const char *s = date.c_str();
         if( 8<=strlen(s) && strlen(s)<=9 )
         {
@@ -658,12 +658,12 @@ bool GameDetailsDialog::Run( GameDocument &gd )
                 }
             }
         }
-        gd.date       = date;         // "Date"
-        gd.round      = round;        // "Round"
-        gd.result     = result;       // "Result"
-        gd.eco        = eco;          // "ECO"
-        gd.white_elo  = white_elo;    // "WhiteElo"
-        gd.black_elo  = black_elo;    // "BlackElo"
+        gd.r.date       = date;         // "Date"
+        gd.r.round      = round;        // "Round"
+        gd.r.result     = result;       // "Result"
+        gd.r.eco        = eco;          // "ECO"
+        gd.r.white_elo  = white_elo;    // "WhiteElo"
+        gd.r.black_elo  = black_elo;    // "BlackElo"
     }
     return ok;
 }

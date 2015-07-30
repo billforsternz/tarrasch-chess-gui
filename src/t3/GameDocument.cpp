@@ -18,7 +18,7 @@ using namespace std;
 using namespace thc;
 
 GameDocument::GameDocument( GameLogic *gl )
-                : gv(gl)
+    : gv(gl)
 {
     this->gl = gl;
     ChessPosition initial_position;
@@ -26,6 +26,7 @@ GameDocument::GameDocument( GameLogic *gl )
 }
 
 GameDocument::GameDocument()
+    : gv(objs.gl)
 {
     this->gl = objs.gl;
     ChessPosition initial_position;
@@ -45,30 +46,30 @@ void GameDocument::Init( const ChessPosition &start_position )
     pgn_handle = 0;
     game_nbr   = 0;
     sort_idx   = 0;
-    white     = "";
-    black     = "";
-    event     = "";
-    site      = "";
-    date      = "";
-    round     = "";
-    result    = "";
-    eco       = "";
-    white_elo = "";
-    black_elo = "";
+    r.white     = "";
+    r.black     = "";
+    r.event     = "";
+    r.site      = "";
+    r.date      = "";
+    r.round     = "";
+    r.result    = "";
+    r.eco       = "";
+    r.white_elo = "";
+    r.black_elo = "";
     this->start_position = start_position;
-    this->master_position = start_position;
     fposn1 = 0;
     fposn2 = 0;
     fposn3 = 0;
     moves_txt = "";
     prefix_txt = "";
+    this->master_position = start_position;
     tree.Init( this->start_position );
     Rebuild();
 }
 
 void GameDocument::FleshOutDate()
 {
-    if( date=="" )
+    if( r.date=="" )
     {
         time_t timer = time(NULL);
         struct tm *ptime = localtime( &timer );
@@ -77,7 +78,7 @@ void GameDocument::FleshOutDate()
         int dd   = ptime->tm_mday;
         char buf[20];
         sprintf( buf, "%04d.%02d.%02d", yyyy, mm, dd );
-        date = buf;
+        r.date = buf;
     }
 }
 
@@ -194,6 +195,94 @@ std::string RemoveLineEnds( std::string &s )
     return t;
 }
 
+void GameDocument::GetGameDocumentFromFile( GameDocument &read_from_file )
+{
+    GameDocument temp = *this;
+    if( !temp.in_memory )
+    {
+        temp.in_memory = true;
+        FILE *pgn_in = gl->pf.ReopenRead( temp.pgn_handle );
+        if( pgn_in )
+        {
+            fseek(pgn_in,temp.fposn2,SEEK_SET);
+            long len = temp.fposn3-temp.fposn2;
+            char *buf = new char [len];
+            if( len == (long)fread(buf,1,len,pgn_in) )
+            {
+                std::string s(buf,len);
+                thc::ChessRules cr;
+                int nbr_converted;
+                temp.PgnParse(true,nbr_converted,s,cr,NULL);
+            }
+            gl->pf.Close( &gl->gc_clipboard );
+            delete[] buf;
+        }
+    }
+    read_from_file = temp;
+    cprintf( "white = %s, moves = %d\n", read_from_file.r.white.c_str(), read_from_file.tree.variations[0].size() );
+}
+
+std::string GameDocument::Description()
+{
+    std::string white = this->r.white;
+    std::string black = this->r.black;
+    size_t comma = white.find(',');
+    if( comma != std::string::npos )
+        white = white.substr( 0, comma );
+    comma = black.find(',');
+    if( comma != std::string::npos )
+        black = black.substr( 0, comma );
+    int move_cnt = tree.variations[0].size();
+    std::string label = white;
+    if( r.white_elo != "" )
+    {
+        label += " (";
+        label += r.white_elo;
+        label += ")";
+    }
+    label += " - ";
+    label += black;
+    if( r.black_elo != "" )
+    {
+        label += " (";
+        label += r.black_elo;
+        label += ")";
+    }
+    if( r.site != "" )
+    {
+        label += ", ";
+        label += r.site;
+    }
+    else if( r.event != "" )
+    {
+        label += ", ";
+        label += r.event;
+    }
+    if( r.date.length() >= 4 )
+    {
+        label += " ";
+        label += r.date.substr(0,4);
+    }
+    bool result_or_moves = false;
+    if( r.result != "*" )
+    {
+        result_or_moves = true;
+        label += ", ";
+        label += r.result;
+        if( move_cnt > 0 )
+            label += " in";
+    }
+    if( move_cnt > 0 )
+    {
+        if( !result_or_moves )
+            label += ", ";
+        char buf[100];
+        sprintf( buf, " %d moves", (move_cnt+1)/2 );
+        label += std::string(buf);
+    }
+    return label;
+}
+
 bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language, int imove )
 {
 
@@ -282,8 +371,8 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
                 stk->pvar = &v2;
                 MoveTree  &m1 =  (*pvar)[imove];
                 MoveTree  &m2 = *(stk->m);
-                DebugPrintf(( "%s\n", stk->cr.squares ));
-                DebugPrintf(( "%d [%s%s]\n", stk_idx, stk->cr.white?"":"...", stk->m->game_move.move.NaturalOut( &stk->cr ).c_str() ));
+                dbg_printf( "%s\n", stk->cr.squares );
+                dbg_printf( "%d [%s%s]\n", stk_idx, stk->cr.white?"":"...", stk->m->game_move.move.NaturalOut( &stk->cr ).c_str() );
                 stk->cr.PushMove( stk->m->game_move.move );
                 if( &v1==&v2 && &m1==&m2 )
                 {
@@ -815,7 +904,7 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
 }
 
 // Load a GameDocument from a list of moves
-void GameDocument::LoadFromMoveList( std::vector<thc::Move> &moves )
+void GameDocument::LoadFromMoveList( std::vector<thc::Move> &moves, int move_idx )
 {
     thc::ChessRules cr;
     thc::ChessPosition start_position;
@@ -831,10 +920,23 @@ void GameDocument::LoadFromMoveList( std::vector<thc::Move> &moves )
         (*pvar).push_back( node );
     }
     Rebuild();
-    in_memory = true;
+    SetNonZeroStartPosition( move_idx );
+}
+
+// Set a non zero start position
+void GameDocument::SetNonZeroStartPosition( int main_line_idx )
+{
+    VARIATION &variation = tree.variations[0];
     gbl_plast_move = NULL;
-    if( (*pvar).size() > 0 )
-        gbl_plast_move = &(*pvar)[(*pvar).size()-1];
+    if( variation.size() > 0 )
+    {
+        gbl_plast_move = &(variation)[variation.size()-1];
+        if(  0<main_line_idx &&  main_line_idx <= variation.size() )
+        {
+            unsigned long pos = gv.GetMoveOffset( &variation[main_line_idx-1] );
+            non_zero_start_pos = pos;
+        }
+    }
 }
 
 // Return ptr to move played if any
@@ -1032,6 +1134,7 @@ unsigned long GameDocument::GetInsertionPoint()
 // Where are we in the document
 void GameDocument::SetInsertionPoint(unsigned long pos)
 {
+    // FIXME - this sets the physical insertion point in a control - is that really what we want ?
     gl->atom.SetInsertionPoint(pos);
 }
 
@@ -1851,42 +1954,42 @@ void GameDocument::ToFileTxtGameDetails( std::string &str )
     #endif
     string str1;
     str1 += "[Event \"";
-    str1 += (event=="" ? "?" : event);
+    str1 += (r.event=="" ? "?" : r.event);
     str1 += "\"]" EOL;
     str1 += "[Site \"";
-    str1 += (site=="" ? "?" : site);
+    str1 += (r.site=="" ? "?" : r.site);
     str1 += "\"]" EOL;
     str1 += "[Date \"";
-    str1 += (date=="" ? "????.??.??" : date);
+    str1 += (r.date=="" ? "????.??.??" : r.date);
     str1 += "\"]" EOL;
     str1 += "[Round \"";
-    str1 += (round=="" ? "?": round);
+    str1 += (r.round=="" ? "?": r.round);
     str1 += "\"]" EOL;
     str1 += "[White \"";
-    str1 += (white=="" ? "?": white);
+    str1 += (r.white=="" ? "?": r.white);
     str1 += "\"]" EOL;
     str1 += "[Black \"";
-    str1 += (black=="" ? "?": black);
+    str1 += (r.black=="" ? "?": r.black);
     str1 += "\"]" EOL;
     str1 += "[Result \"";
-    str1 += (result=="" ? "*" : result);
+    str1 += (r.result=="" ? "*" : r.result);
     str1 += "\"]" EOL;
-    if( eco != "" )
+    if( r.eco != "" )
     {
         str1 += "[ECO \"";
-        str1 += eco;
+        str1 += r.eco;
         str1 += "\"]" EOL;
     }
-    if( white_elo != "" )
+    if( r.white_elo != "" )
     {
         str1 += "[WhiteElo \"";
-        str1 += white_elo;
+        str1 += r.white_elo;
         str1 += "\"]" EOL;
     }
-    if( black_elo != "" )
+    if( r.black_elo != "" )
     {
         str1 += "[BlackElo \"";
-        str1 += black_elo;
+        str1 += r.black_elo;
         str1 += "\"]" EOL;
     }
     ChessPosition tmp;

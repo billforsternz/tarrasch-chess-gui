@@ -23,11 +23,14 @@
 #include <stdio.h>
 using namespace std;
 
+bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen );
+
+
 static bool operator < (const smart_ptr<GameDocument>& left,
                         const smart_ptr<GameDocument>& right)
 {
     bool result = ( *left < *right );
-    cprintf( "operator <; left->white=%s, right->white=%s, result=%s\n", left->white.c_str(),  right->white.c_str(), result?"true":"false" );
+    cprintf( "operator <; left->r.white=%s, right->r.white=%s, result=%s\n", left->r.white.c_str(),  right->r.white.c_str(), result?"true":"false" );
     return result;
 }
 
@@ -59,204 +62,234 @@ bool GamesCache::IsSynced()
     return( IsLoaded() && objs.gl->pf.IsAvailable(pgn_handle) );
 }
 
-bool GamesCache::Load( FILE *pgn_file )
+static GamesCache *gc_fixme;
+
+bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen )
 {
-    file_irrevocably_modified = false;
-    bool ok=true;
-    GameDocument gd;
-    game_nbr=0;
-    int fposn_base = 0;
-    gd.fposn0 = fposn_base;
-    const int BUFSIZE=10000;
-    char buf[BUFSIZE+5];
-    int req;
-    int len = fread(buf,1,req=BUFSIZE,pgn_file);
-    bool nomore = (len!=req);
-    const char *beg = buf;
-    const char *end = buf + (len>=0?len:0);
-    const char *s = beg;
-    bool done = (s>=end);
-    while( !done )
+    static enum {INIT,PREFIX,TAGLINES,PRE_MOVES,MOVES,SEARCH} state;
+    bool done=false;
+    typ = ' ';  // no-op
+    if( pgn_file == NULL )
     {
-        bool have_line=false;
-        const char *line = s;
-        while( s < end )
-        {
-            if( *s=='\r' || *s=='\n' )
-            {
-                have_line = true;
-                break;
-            }
-            s++;
-        }
-        if( !have_line )
-        {
-            // ragged, incomplete line
-            if( nomore )
-            {
-                done = true;
-                if( s > line )
-                    have_line = true;   // accept ragged final line with no "\n"
-            }
-            else
-            {
-
-                // move the incomplete line to the start of buffer and refill
-                fposn_base += (line-buf);
-                const char *src = line;
-                char *dst = buf;
-                int count = s-line;
-                req = BUFSIZE-count;
-                for( int i=0; i<count; i++ )
-                    *dst++ = *src++;
-                len = fread(buf+count,1,req,pgn_file);
-                nomore = (len!=req);
-                s = buf;
-                end = buf + count + (len>=0?len:0);
-            }    
-        }
-        if( have_line )
-        {
-            char *make_c_str = (char *)s;
-            char save = *make_c_str;
-            *make_c_str = '\0';
-            LoadLine( gd, fposn_base +(line-buf), line );
-            *make_c_str = save;
-            if( *s=='\r' && *(s+1)=='\n' )
-                s += 2;
-            else if( *s=='\n' && *(s+1)=='\r' )     // not so likely...
-                s += 2;
-            else
-                s++;
-        }
-    }
-
-    // terminate last game
-    fseek(pgn_file,0,SEEK_END);
-    long filelen = ftell(pgn_file);
-    fseek(pgn_file,0,SEEK_SET);
-    LoadLine( gd, filelen, NULL );
-    return ok;
-}
-            
-void GamesCache::LoadLine( GameDocument &gd, int fposn, const char *line )
-{            
-    bool end_of_game=false;
-    if( !line )     // end of file ?
-    {
-        switch( state )
-        {
-            case PREFIX:
-            {
-                // If some prefix text has accumulated - terminate a new "game"
-                //  that comprises only a prefix
-                if( gd.prefix_txt.length() > 2 )
-                {
-                    gd.fposn1 = fposn;
-                    gd.fposn2 = fposn;
-                    gd.fposn3 = fposn;
-                    end_of_game = true;
-                    state = PREFIX;
-                }
-                break;
-            }
-            case HEADER:
-            {
-                gd.fposn2 = fposn;
-                gd.fposn3 = fposn;
-                end_of_game = true;
-                state = PREFIX;
-                break;
-            }
-            case INGAME:
-            {
-                gd.fposn3 = fposn;
-                end_of_game = true;
-                state = PREFIX;
-                break;
-            }
-        }
+        state = INIT;
     }
     else
     {
-        const char *s = line;
-        while( *s==' ' || *s=='\t' )
-            s++;
-        switch( state )
+        char *null_if_eof = fgets( buf, buflen-2, pgn_file );
+        if( null_if_eof == NULL )
         {
-            case PREFIX:
+            done = true;
+            if( state==MOVES )
+                typ = 'G';  // completed game;
+        }
+        else
+        {
+            const char *p = buf;
+            while( *p==' ' || *p=='\t' )
+                p++;
+            bool blank   = (*p=='\n'||*p=='\r');
+            bool tagline = (*p=='[');
+
+            // Check that it really is a tagline
+            if( tagline )
             {
-                bool stay_in_prefix=true;
-                if( *s == '[' && Tagline(gd,s) )
-                    stay_in_prefix = false;
-                if( stay_in_prefix )
+                tagline = false;  // unless all checks pass
+                
+                // Skip '['
+                p++;
+                
+                // Skip whitespace
+                while( *p==' ' || *p=='\t' )
+                    p++;
+                
+                // Is there a tag before a leading " ?
+                bool tag=false;
+                while( *p && *p!=']' && *p!=' ' && *p!='\t' && *p!='\"' )
                 {
-                    gd.prefix_txt += s;
-                    gd.prefix_txt += "\r\n";
+                    tag = true;    // at least 1 non-whitespace
+                    p++;
                 }
-                else
+                if( tag )
                 {
-                    // remove blank line at end of prefix
-                    std::string s = gd.prefix_txt;
-                    int len = s.length();
-                    if( len>=2 && s[len-2]=='\r' && s[len-1]=='\n' )
-                        gd.prefix_txt = s.substr(0,len-2);
-                    state = HEADER;
-                    gd.fposn1 = fposn;
-                }
-                break;
-            }
-            case HEADER:
-            {
-                if( *s == '[' )
-                    Tagline(gd,s);
-                else if( *s )
-                {
-                    state = INGAME;
-                    gd.fposn2 = fposn;
-                    gd.game_nbr = game_nbr++;
-                    gd.moves_txt = s;
-                    LangLine( gd.moves_txt, NULL, LangGet() );  // English -> Current language
-                    int len = gd.moves_txt.length();
-                    if( len>=1 && gd.moves_txt[len-1] == '*' )
-                        gd.moves_txt = gd.moves_txt.substr(0,len-1);
-                    gd.pgn_handle = pgn_handle;
-                }
-                break;
-            }
-            case INGAME:
-            {
-                if( *s == '\0' )
-                {
-                    gd.fposn3 = fposn;
-                    end_of_game = true;
-                    state = PREFIX;
-                }
-                else if( *s == '[' )
-                {
-                    if( Tagline(gd,s) )
+                    
+                    // Make sure there is whitespace, but skip it
+                    tag = false;
+                    while( *p==' ' || *p=='\t' )
                     {
-                        gd.fposn3 = fposn;
-                        end_of_game = true;
-                        state = HEADER;
+                        tag = true;  // at least 1 whitespace
+                        p++;
                     }
                 }
+                
+                // If there is a tag, then whitespace, then a leading "
+                if( tag && *p=='\"')
+                {
+                    p++;
+                    
+                    // Skip to 2nd " or end of string
+                    while( *p && *p!='\"' )
+                        p++;
+                    
+                    // If we have a 2nd " then we have a tag and a val, i.e. a header
+                    if( *p == '\"' )
+                    {
+                        tagline = true;
+                    }
+                }
+            }
+            switch( state )
+            {
+                case INIT:
+                case SEARCH:
+                {
+                    if( tagline )
+                    {
+                        state = TAGLINES;
+                        typ = 'T';   // first tagline
+                    }
+                    else if( !blank )
+                    {
+                        state = PREFIX;
+                        typ = 'P';  // first prefix line
+                    }
+                    break;
+                }
+                case PREFIX:
+                {
+                    if( tagline )
+                    {
+                        state = TAGLINES;
+                        typ = 'T';   // first tagline
+                    }
+                    else
+                    {
+                        typ = 'p';  // next prefix line
+                    }
+                    break;
+                }
+                case TAGLINES:
+                {
+                    if( tagline )
+                    {
+                        typ = 't';   // next tagline
+                    }
+                    else if( blank )
+                    {
+                        state = PRE_MOVES;
+                    }
+                    else
+                    {
+                        state = MOVES;
+                        typ = 'M';    // first line of moves, (a pity there wasn't a blank line before them)
+                    }
+                    break;
+                }
+                case PRE_MOVES:
+                {
+                    if( !blank )
+                    {
+                        state = MOVES;
+                        typ = 'M';  // first line of moves, after one or more blank lines
+                    }
+                    break;
+                }
+                case MOVES:
+                {
+                    if( blank )
+                    {
+                        state = SEARCH;
+                        typ = 'G';  // completed game
+                    }
+                    else
+                    {
+                        typ = 'm';  // next line of moves
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    return done;
+}
+
+bool GamesCache::Load( FILE *pgn_file )
+{
+    gc_fixme = this;
+    file_irrevocably_modified = false;
+    int typ;
+    std::string str;
+    long fposn = ftell(pgn_file);
+    char buf[2048];
+    bool done = PgnStateMachine( NULL, typ,  buf, sizeof(buf) );
+    while( !done )
+    {
+        done = PgnStateMachine( pgn_file, typ, buf, sizeof(buf) );
+        if( typ == 'G' )
+        {
+            PgnDocument pgn_document(pgn_handle,fposn);
+            make_smart_ptr( PgnDocument, new_doc, pgn_document );
+            gds.push_back( std::move(new_doc) );
+            if( !done )
+                fposn = ftell(pgn_file);
+        }
+    }
+    return true;
+}
+
+void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &new_doc )
+{
+    cprintf( "ReadGameFromPgn(%d) %ld\n", pgn_handle, fposn );
+    GameDocument gd;
+    FILE *pgn_file = objs.gl->pf.ReopenRead( pgn_handle );
+    std::string moves;
+    int typ;
+    fseek( pgn_file, fposn, SEEK_SET );
+    char buf[2048];
+    bool done = PgnStateMachine( NULL, typ,  buf, sizeof(buf) );
+    while( !done )
+    {
+        done = PgnStateMachine( pgn_file, typ,  buf, sizeof(buf) );
+        switch( typ )
+        {
+            default:
+            {
+                break;
+            }
+            case 'T':
+            case 't':
+            {
+                gc_fixme->Tagline( static_cast<GameDocument &>(gd), buf );
+                break;
+            }
+            case 'P':
+            case 'p':
+            {
+				gd.prefix_txt += std::string(buf);
+				//gd.prefix_txt += '\n';
+                break;
+            }
+            case 'M':
+            case 'm':
+            {
+                moves += std::string(buf);
+                break;
+            }
+            case 'G':
+            {
+                done = true;
                 break;
             }
         }
     }
-    if( end_of_game )
-    {
-        make_smart_ptr( GameDocument, new_doc, gd );
-        gds.push_back( new_doc );
-        thc::ChessPosition initial_position;
-        gd.prefix_txt = "";
-        gd.Init(initial_position);
-        gd.fposn0 = fposn;
-        if( state == HEADER )
-            gd.fposn1 = fposn;
-    }
+    thc::ChessRules cr;
+    int nbr_converted;
+    gd.PgnParse(true,nbr_converted,moves,cr,NULL);
+    gd.fposn0 = fposn;
+    new_doc = gd;
+    objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
 }
+
+
 
 // Check whether text s is a valid header, return true if it is,
 //  add info to a GameDocument, optionally clearing it first
@@ -311,25 +344,25 @@ bool GamesCache::Tagline( GameDocument &gd,  const char *s )
             string tag(tag_begin,tag_end-tag_begin);
             string val(val_begin,val_end-val_begin);
             if( tag == "White" )
-                gd.white = val;
+                gd.r.white = val;
             if( tag == "Black" )
-                gd.black = val;
+                gd.r.black = val;
             if( tag == "Event" )
-                gd.event = val;
+                gd.r.event = val;
             if( tag == "Site" )
-                gd.site = val;
+                gd.r.site = val;
             if( tag == "Date" )
-                gd.date = val;
+                gd.r.date = val;
             if( tag == "Round" )
-                gd.round = val;
+                gd.r.round = val;
             if( tag == "Result" )
-                gd.result = val;
+                gd.r.result = val;
             if( tag == "ECO" )
-                gd.eco = val;
+                gd.r.eco = val;
             if( tag == "WhiteElo" )
-                gd.white_elo = val;
+                gd.r.white_elo = val;
             if( tag == "BlackElo" )
-                gd.black_elo = val;
+                gd.r.black_elo = val;
             if( tag == "FEN" )
                 gd.start_position.Forsyth(val.c_str());
         }
@@ -347,8 +380,8 @@ bool GamesCache::FileCreate( std::string &filename, GameDocument &gd )
     gds.clear();
     gd.in_memory = true;
     gd.pgn_handle = 0;
-    make_smart_ptr( GameDocument, new_doc, gd );
-    gds.push_back( new_doc );
+    make_smart_ptr( HoldDocument, new_doc, gd );
+    gds.push_back( std::move(new_doc) );
     FILE *pgn_out = objs.gl->pf.OpenCreate( pgn_filename, pgn_handle );
     if( pgn_out )
     {
@@ -378,20 +411,24 @@ void GamesCache::FileSave( GamesCache *gc_clipboard )
         int gds_nbr = gds.size();
         for( int i=0; i<gds_nbr; i++ )    
         {   
-            int handle     = gds[i]->pgn_handle;
-            bool modified  = gds[i]->modified;
-            bool in_memory = gds[i]->in_memory;
-            long fposn0 = gds[i]->fposn0;
-            long fposn1 = gds[i]->fposn1;
-            long fposn2 = gds[i]->fposn2;
-            long fposn3 = gds[i]->fposn3;
-            fprintf( debug, "handle=%d, modified=%d, in_memory=%d\n"
-                            " fposn0=%ld,\n"
-                            " fposn1=%ld,\n"
-                            " fposn2=%ld,\n"
-                            " fposn3=%ld,\n",
-                            handle, modified, in_memory, fposn0,
-                                            fposn1, fposn2, fposn3 );
+            GameDocument *ptr = gds[i]->GetGameDocumentPtr();
+            if( ptr )
+            {
+                int handle      = ptr->pgn_handle;
+                bool modified   = ptr->modified;
+                bool in_memory  = ptr->in_memory;
+                long fposn0     = ptr->fposn0;
+                long fposn1     = ptr->fposn1;
+                long fposn2     = ptr->fposn2;
+                long fposn3     = ptr->fposn3;
+                fprintf( debug, "handle=%d, modified=%d, in_memory=%d\n"
+                                " fposn0=%ld,\n"
+                                " fposn1=%ld,\n"
+                                " fposn2=%ld,\n"
+                                " fposn3=%ld,\n",
+                                handle, modified, in_memory, fposn0,
+                                               fposn1, fposn2, fposn3 );
+            }
         }
         FILE *in = fopen( "/Users/Bill/Documents/Tarrasch/bug5b.pgn", "rt" );
         if( in )
@@ -441,7 +478,207 @@ void GamesCache::FileSaveAllAsAFile( std::string &filename )
     }
 }
 
+
 // Save common
+void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pgn_out )
+{
+    char *buf;
+    int buflen=100;
+    file_irrevocably_modified = false;
+    buf = new char [buflen];
+    int gds_nbr = gds.size();
+    long posn=0;
+    for( int i=0; i<gds_nbr; i++ )
+    {
+        MagicBase *mptr = gds[i].get();
+        if( !mptr->IsInMemory() )
+        {
+            long fposn = mptr->GetFposn();
+            fseek( pgn_in, fposn, SEEK_SET );
+            char buf[2048];
+            int typ;
+            bool done = PgnStateMachine( NULL, typ,  buf, sizeof(buf) );
+            while( !done )
+            {
+                done = PgnStateMachine( pgn_in, typ,  buf, sizeof(buf) );
+                fputs( buf, pgn_out );
+                if( typ == 'G' )
+                    break;
+            }
+        }
+        else
+        {
+            GameDocument *ptr = mptr->GetGameDocumentPtr();
+            if( ptr )
+            {
+                bool replace_game_prefix = true;
+                bool replace_game_details = true;
+                bool replace_moves = true;
+                ptr->modified = false;
+                replace_game_prefix = ptr->game_prefix_edited || ptr->pgn_handle==0;
+                ptr->game_prefix_edited = false;
+                replace_game_details = ptr->game_details_edited || ptr->pgn_handle==0;
+                ptr->game_details_edited = false;
+                replace_moves = ptr->in_memory || ptr->pgn_handle==0;
+                bool no_replacements = (!replace_moves && !replace_game_details && !replace_game_prefix);
+                bool replace_all     = (replace_moves && replace_game_details && replace_game_prefix);
+                
+                //   fposn0
+                //     prefix text
+                //   fposn1
+                //     [game details]
+                //   fposn2
+                //     [game moves]
+                //   fposn3
+                //
+                long fposn0 = ptr->fposn0;
+                long fposn1 = ptr->fposn1;
+                long fposn2 = ptr->fposn2;
+                long fposn3 = ptr->fposn3;
+                long len;
+                bool same_file = (ptr->pgn_handle==pgn_handle);
+                FILE *pgn = pgn_in;
+                if( !same_file && !replace_all )
+                {
+                    pgn = objs.gl->pf.ReopenRead( ptr->pgn_handle );
+                    if( !pgn )
+                        continue; // whoops, can't read the game
+                }
+                ptr->pgn_handle = pgn_handle;  // irrespective of where it came from, now this
+                //  game is in this file
+                ptr->fposn0 = posn;
+
+                // TEMP TEMP FIXME
+                no_replacements = false;
+                replace_all = true;
+                replace_game_prefix = true;
+                replace_game_details = true;
+                replace_moves = true;
+                
+                if( no_replacements )
+                {
+                    len = fposn3-fposn0;
+                    fseek(pgn,fposn0,SEEK_SET);
+                    while( len >= buflen )
+                    {
+                        delete[] buf;
+                        buflen *= 2;
+                        buf = new char [buflen];
+                    }
+                    fread(buf,1,len,pgn);
+                    fwrite(buf,1,len,pgn_out);
+                    ptr->fposn1 = posn + (fposn1-fposn0);
+                    ptr->fposn2 = posn + (fposn2-fposn0);
+                    posn += len;
+                    ptr->fposn3 = posn;
+                }
+                else
+                {
+                    ptr->fposn0 = posn;
+                    std::string s = ptr->prefix_txt;
+                    int len = s.length();
+                    if( len > 0 )
+                    {
+                        if( i != 0 )    // blank line needed before all but first prefix
+                        {
+                            fwrite( "\r\n", 1, 2 ,pgn_out);
+                            posn += 2;
+                        }
+                        fwrite( s.c_str(),1,len,pgn_out);
+                        fwrite( "\r\n", 1, 2 ,pgn_out);
+                        posn += (len+2);
+                    }
+                    ptr->fposn1 = posn;
+                    if( replace_game_details )
+                    {
+                        std::string str;
+                        GameDocument temp = *ptr;
+                        temp.ToFileTxtGameDetails( str );
+                        fwrite(str.c_str(),1,str.length(),pgn_out);
+                        posn += str.length();
+                    }
+                    else
+                    {
+                        len = fposn2-fposn1;
+                        fseek(pgn,fposn1,SEEK_SET);
+                        while( len >= buflen )
+                        {
+                            delete[] buf;
+                            buflen *= 2;
+                            buf = new char [buflen];
+                        }
+                        fread(buf,1,len,pgn);
+                        fwrite(buf,1,len,pgn_out);
+                        posn += len;
+                    }
+                    ptr->fposn2 = posn;
+                    if( replace_moves )
+                    {
+                        std::string str;
+                        GameDocument temp = *ptr;
+                        temp.ToFileTxtGameBody( str );
+                        fwrite(str.c_str(),1,str.length(),pgn_out);
+                        posn += str.length();
+                    }
+                    else
+                    {
+                        len = fposn3-fposn2;
+                        fseek(pgn,fposn2,SEEK_SET);
+                        while( len >= buflen )
+                        {
+                            delete[] buf;
+                            buflen *= 2;
+                            buf = new char [buflen];
+                        }
+                        fread(buf,1,len,pgn);
+                        fwrite(buf,1,len,pgn_out);
+                        posn += len;
+                    }
+                    ptr->fposn3 = posn;
+                    
+                    // Fix a nasty bug in T2 up to and including V2.01. A later PutBackDocument()
+                    //  was overwriting the correctly calculated values of fposn0 etc. with stale
+                    //  values. Fix is to update those stale values here.
+                    GameDocument *p = objs.tabs->Begin();
+                    while( p )
+                    {
+                        if( ptr->game_being_edited == p->game_being_edited )
+                        {
+                            p->fposn0 = ptr->fposn0;
+                            p->fposn1 = ptr->fposn1;
+                            p->fposn2 = ptr->fposn2;
+                            p->fposn3 = ptr->fposn3;
+                            p->pgn_handle = ptr->pgn_handle;
+                        }
+                        p = objs.tabs->Next();
+                    }
+                }
+        }
+        }
+    }
+    
+    // Restore sort order .game_nbr field is restored to its original value
+/*    if( !renumber )
+    {
+        for( int i=0; i<gds_nbr; i++ )
+        {
+            GameDocument *ptr = gds[i]->GetGameDocumentPtr();
+            if( ptr )
+            {
+                int temp = ptr->sort_idx;
+                ptr->sort_idx = ptr->game_nbr;
+                ptr->game_nbr = temp;
+            }
+        }
+        sort( gds.begin(), gds.end() );
+    }  */
+    delete[] buf;
+}
+
+
+
+// Save common
+#if 0
 void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pgn_out )
 {
     char *buf;
@@ -455,20 +692,24 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
         fprintf( debug, "Before: pgn_handle=%d\n", pgn_handle );
         for( int i=0; i<gds_nbr; i++ )    
         {   
-            int handle     = gds[i]->pgn_handle;
-            bool modified  = gds[i]->modified;
-            bool in_memory = gds[i]->in_memory;
-            long fposn0 = gds[i]->fposn0;
-            long fposn1 = gds[i]->fposn1;
-            long fposn2 = gds[i]->fposn2;
-            long fposn3 = gds[i]->fposn3;
-            fprintf( debug, "handle=%d, modified=%d, in_memory=%d\n"
-                            " fposn0=%ld,\n"
-                            " fposn1=%ld,\n"
-                            " fposn2=%ld,\n"
-                            " fposn3=%ld,\n",
-                            handle, modified, in_memory, fposn0,
-                                            fposn1, fposn2, fposn3 );
+            GameDocument *ptr = gds[i]->GetGameDocumentPtr();
+            if( ptr )
+            {
+                int handle      = ptr->pgn_handle;
+                bool modified   = ptr->modified;
+                bool in_memory  = ptr->in_memory;
+                long fposn0     = ptr->fposn0;
+                long fposn1     = ptr->fposn1;
+                long fposn2     = ptr->fposn2;
+                long fposn3     = ptr->fposn3;
+                fprintf( debug, "handle=%d, modified=%d, in_memory=%d\n"
+                                " fposn0=%ld,\n"
+                                " fposn1=%ld,\n"
+                                " fposn2=%ld,\n"
+                                " fposn3=%ld,\n",
+                                handle, modified, in_memory, fposn0,
+                                               fposn1, fposn2, fposn3 );
+            }
         }
         fclose(debug);
     }
@@ -477,142 +718,155 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
     {
         for( int i=0; i<gds_nbr; i++ )    
         {   
-            gds[i]->sort_idx = gds[i]->game_nbr;
-            gds[i]->game_nbr = i;
+            GameDocument *ptr = gds[i]->GetGameDocumentPtr();
+            if( ptr )
+            {
+                ptr->sort_idx = ptr->game_nbr;
+                ptr->game_nbr = i;
+            }
         }
         sort( gds.begin(), gds.end() );
     }
     long posn=0;
     for( int i=0; i<gds_nbr; i++ )    
     {   
-        gds[i]->modified = false;
-        bool replace_game_prefix = gds[i]->game_prefix_edited || gds[i]->pgn_handle==0;
-        gds[i]->game_prefix_edited = false;
-        bool replace_game_details = gds[i]->game_details_edited || gds[i]->pgn_handle==0;
-        gds[i]->game_details_edited = false;
-        bool replace_moves = gds[i]->in_memory || gds[i]->pgn_handle==0;
-        bool no_replacements = (!replace_moves && !replace_game_details && !replace_game_prefix);
-        bool replace_all     = (replace_moves && replace_game_details && replace_game_prefix);
-
-        //   fposn0
-        //     prefix text
-        //   fposn1
-        //     [game details]
-        //   fposn2
-        //     [game moves]
-        //   fposn3
-        //
-        long fposn0 = gds[i]->fposn0;
-        long fposn1 = gds[i]->fposn1;
-        long fposn2 = gds[i]->fposn2;
-        long fposn3 = gds[i]->fposn3;
-        long len;
-        bool same_file = (gds[i]->pgn_handle==pgn_handle);
-        FILE *pgn = pgn_in;
-        if( !same_file && !replace_all )
+        GameDocument *ptr = gds[i]->GetGameDocumentPtr();
+        if( ptr )
         {
-            pgn = objs.gl->pf.ReopenRead( gds[i]->pgn_handle );
-            if( !pgn )
-                continue; // whoops, can't read the game
-        }
-        gds[i]->pgn_handle = pgn_handle;  // irrespective of where it came from, now this
-                                         //  game is in this file
-        gds[i]->fposn0 = posn;            
+            bool replace_game_prefix = true;
+            bool replace_game_details = true;
+            bool replace_moves = true;
+            ptr->modified = false;
+            replace_game_prefix = ptr->game_prefix_edited || ptr->pgn_handle==0;
+            ptr->game_prefix_edited = false;
+            replace_game_details = ptr->game_details_edited || ptr->pgn_handle==0;
+            ptr->game_details_edited = false;
+            replace_moves = ptr->in_memory || ptr->pgn_handle==0;
+            bool no_replacements = (!replace_moves && !replace_game_details && !replace_game_prefix);
+            bool replace_all     = (replace_moves && replace_game_details && replace_game_prefix);
+
+            //   fposn0
+            //     prefix text
+            //   fposn1
+            //     [game details]
+            //   fposn2
+            //     [game moves]
+            //   fposn3
+            //
+            long fposn0 = ptr->fposn0;
+            long fposn1 = ptr->fposn1;
+            long fposn2 = ptr->fposn2;
+            long fposn3 = ptr->fposn3;
+            long len;
+            bool same_file = (ptr->pgn_handle==pgn_handle);
+            FILE *pgn = pgn_in;
+            if( !same_file && !replace_all )
+            {
+                pgn = objs.gl->pf.ReopenRead( ptr->pgn_handle );
+                if( !pgn )
+                    continue; // whoops, can't read the game
+            }
+            ptr->pgn_handle = pgn_handle;  // irrespective of where it came from, now this
+                                             //  game is in this file
+            ptr->fposn0 = posn;            
                                             
-        if( no_replacements )
-        {
-            len = fposn3-fposn0;
-            fseek(pgn,fposn0,SEEK_SET);
-            while( len >= buflen )
+            if( no_replacements )
             {
-                delete[] buf;
-                buflen *= 2;
-                buf = new char [buflen];
-            }
-            fread(buf,1,len,pgn);
-            fwrite(buf,1,len,pgn_out);
-            gds[i]->fposn1 = posn + (fposn1-fposn0);
-            gds[i]->fposn2 = posn + (fposn2-fposn0);
-            posn += len;
-            gds[i]->fposn3 = posn;
-        }
-        else
-        {
-            gds[i]->fposn0 = posn;
-            std::string s = gds[i]->prefix_txt;
-            int len = s.length();
-            if( len > 0 )
-            {
-                if( i != 0 )    // blank line needed before all but first prefix
+                len = fposn3-fposn0;
+                fseek(pgn,fposn0,SEEK_SET);
+                while( len >= buflen )
                 {
+                    delete[] buf;
+                    buflen *= 2;
+                    buf = new char [buflen];
+                }
+                fread(buf,1,len,pgn);
+                fwrite(buf,1,len,pgn_out);
+                ptr->fposn1 = posn + (fposn1-fposn0);
+                ptr->fposn2 = posn + (fposn2-fposn0);
+                posn += len;
+                ptr->fposn3 = posn;
+            }
+            else
+            {
+                ptr->fposn0 = posn;
+                std::string s = ptr->prefix_txt;
+                int len = s.length();
+                if( len > 0 )
+                {
+                    if( i != 0 )    // blank line needed before all but first prefix
+                    {
+                        fwrite( "\r\n", 1, 2 ,pgn_out);
+                        posn += 2;
+                    }
+                    fwrite( s.c_str(),1,len,pgn_out);
                     fwrite( "\r\n", 1, 2 ,pgn_out);
-                    posn += 2;
+                    posn += (len+2);
                 }
-                fwrite( s.c_str(),1,len,pgn_out);
-                fwrite( "\r\n", 1, 2 ,pgn_out);
-                posn += (len+2);
-            }
-            gds[i]->fposn1 = posn;
-            if( replace_game_details )
-            {
-                std::string str;
-                gds[i]->ToFileTxtGameDetails( str );
-                fwrite(str.c_str(),1,str.length(),pgn_out);
-                posn += str.length();
-            }
-            else
-            {
-                len = fposn2-fposn1;
-                fseek(pgn,fposn1,SEEK_SET);
-                while( len >= buflen )
+                ptr->fposn1 = posn;
+                if( replace_game_details )
                 {
-                    delete[] buf;
-                    buflen *= 2;
-                    buf = new char [buflen];
+                    std::string str;
+                    GameDocument temp = *ptr;
+                    temp.ToFileTxtGameDetails( str );
+                    fwrite(str.c_str(),1,str.length(),pgn_out);
+                    posn += str.length();
                 }
-                fread(buf,1,len,pgn);
-                fwrite(buf,1,len,pgn_out);
-                posn += len;
-            }
-            gds[i]->fposn2 = posn;
-            if( replace_moves )
-            {
-                std::string str;
-                gds[i]->ToFileTxtGameBody( str );
-                fwrite(str.c_str(),1,str.length(),pgn_out);
-                posn += str.length();
-            }
-            else
-            {
-                len = fposn3-fposn2;
-                fseek(pgn,fposn2,SEEK_SET);
-                while( len >= buflen )
+                else
                 {
-                    delete[] buf;
-                    buflen *= 2;
-                    buf = new char [buflen];
+                    len = fposn2-fposn1;
+                    fseek(pgn,fposn1,SEEK_SET);
+                    while( len >= buflen )
+                    {
+                        delete[] buf;
+                        buflen *= 2;
+                        buf = new char [buflen];
+                    }
+                    fread(buf,1,len,pgn);
+                    fwrite(buf,1,len,pgn_out);
+                    posn += len;
                 }
-                fread(buf,1,len,pgn);
-                fwrite(buf,1,len,pgn_out);
-                posn += len;
-            }
-            gds[i]->fposn3 = posn;
+                ptr->fposn2 = posn;
+                if( replace_moves )
+                {
+                    std::string str;
+                    GameDocument temp = *ptr;
+                    temp.ToFileTxtGameBody( str );
+                    fwrite(str.c_str(),1,str.length(),pgn_out);
+                    posn += str.length();
+                }
+                else
+                {
+                    len = fposn3-fposn2;
+                    fseek(pgn,fposn2,SEEK_SET);
+                    while( len >= buflen )
+                    {
+                        delete[] buf;
+                        buflen *= 2;
+                        buf = new char [buflen];
+                    }
+                    fread(buf,1,len,pgn);
+                    fwrite(buf,1,len,pgn_out);
+                    posn += len;
+                }
+                ptr->fposn3 = posn;
 
-            // Fix a nasty bug in T2 up to and including V2.01. A later PutBackDocument()
-            //  was overwriting the correctly calculated values of fposn0 etc. with stale
-            //  values. Fix is to update those stale values here.
-            GameDocument *p = objs.tabs->Begin();
-            while( p )
-            {
-                if( gds[i]->game_being_edited == p->game_being_edited )
+                // Fix a nasty bug in T2 up to and including V2.01. A later PutBackDocument()
+                //  was overwriting the correctly calculated values of fposn0 etc. with stale
+                //  values. Fix is to update those stale values here.
+                GameDocument *p = objs.tabs->Begin();
+                while( p )
                 {
-                    p->fposn0 = gds[i]->fposn0;
-                    p->fposn1 = gds[i]->fposn1;
-                    p->fposn2 = gds[i]->fposn2;
-                    p->fposn3 = gds[i]->fposn3;
-                    p->pgn_handle = gds[i]->pgn_handle;
+                    if( ptr->game_being_edited == p->game_being_edited )
+                    {
+                        p->fposn0 = ptr->fposn0;
+                        p->fposn1 = ptr->fposn1;
+                        p->fposn2 = ptr->fposn2;
+                        p->fposn3 = ptr->fposn3;
+                        p->pgn_handle = ptr->pgn_handle;
+                    }
+                    p = objs.tabs->Next();
                 }
-                p = objs.tabs->Next();
             }
         }
     }
@@ -622,9 +876,13 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
     {
         for( int i=0; i<gds_nbr; i++ )    
         {   
-            int temp = gds[i]->sort_idx;
-            gds[i]->sort_idx = gds[i]->game_nbr;
-            gds[i]->game_nbr = temp;
+            GameDocument *ptr = gds[i]->GetGameDocumentPtr();
+            if( ptr )
+            {
+                int temp = ptr->sort_idx;
+                ptr->sort_idx = ptr->game_nbr;
+                ptr->game_nbr = temp;
+            }
         }
         sort( gds.begin(), gds.end() );
     }
@@ -635,52 +893,57 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
         fprintf( debug, "After: pgn_handle=%d\n", pgn_handle );
         for( int i=0; i<gds_nbr; i++ )    
         {   
-            int handle     = gds[i]->pgn_handle;
-            bool modified  = gds[i]->modified;
-            bool in_memory = gds[i]->in_memory;
-            long fposn0 = gds[i]->fposn0;
-            long fposn1 = gds[i]->fposn1;
-            long fposn2 = gds[i]->fposn2;
-            long fposn3 = gds[i]->fposn3;
-            fprintf( debug, "handle=%d, modified=%d, in_memory=%d\n"
-                            " fposn0=%ld,\n"
-                            " fposn1=%ld,\n"
-                            " fposn2=%ld,\n"
-                            " fposn3=%ld,\n",
-                            handle, modified, in_memory, fposn0,
-                                            fposn1, fposn2, fposn3 );
+            GameDocument *ptr = gds[i]->GetGameDocumentPtr();
+            if( ptr )
+            {
+                int handle      = ptr->pgn_handle;
+                bool modified   = ptr->modified;
+                bool in_memory  = ptr->in_memory;
+                long fposn0     = ptr->fposn0;
+                long fposn1     = ptr->fposn1;
+                long fposn2     = ptr->fposn2;
+                long fposn3     = ptr->fposn3;
+                fprintf( debug, "handle=%d, modified=%d, in_memory=%d\n"
+                                " fposn0=%ld,\n"
+                                " fposn1=%ld,\n"
+                                " fposn2=%ld,\n"
+                                " fposn3=%ld,\n",
+                                handle, modified, in_memory, fposn0,
+                                               fposn1, fposn2, fposn3 );
+            }
         }
         fclose(debug);
     }
 }
+#endif
 
 
 void GamesCache::Debug( const char *intro_message )
 {
-    DebugPrintf(( "Cache dump>%s\n", intro_message ));
+/*  dbg_printf( "Cache dump>%s\n", intro_message );
     int gds_nbr = gds.size();
     for( int i=0; i<gds_nbr; i++ )    
     {   
-        GameDocument doc = *gds[i];
-        dprintf( "game_nbr=%d, white=%s, moves_txt=%s, pgn_handle=%d\n",
+        GameDocument doc = gds[i]->GetGameDocument();
+        cprintf( "game_nbr=%d, white=%s, moves_txt=%s, pgn_handle=%d\n",
                         doc.game_nbr,
                         doc.white.c_str(),
                         doc.moves_txt.c_str(),
                         doc.pgn_handle
                    );
 
-        dprintf( " modified=%s, in_memory=%s, game_details_edited=%s\n",
+        cprintf( " modified=%s, in_memory=%s, game_details_edited=%s\n",
                         doc.modified ? "true":"false",
                         doc.in_memory ? "true":"false",
                         doc.game_details_edited ? "true":"false"
                    );
 
-        dprintf( " game_being_edited=%d, selected=%s, focus=%s\n",
+        cprintf( " game_being_edited=%d, selected=%s, focus=%s\n",
                         (int)doc.game_being_edited,
                         doc.selected ? "true":"false",
                         doc.focus ? "true":"false"
                    );
-    }
+    } */
 }
 
 //#define NOMARKDOWN x
@@ -745,15 +1008,19 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
             int gds_nbr = gds.size();
 
             // Sort by game_nbr, save current order in .game_nbr for restore later
-            if( !renumber )
+        /*  if( !renumber )
             {
                 for( int i=0; i<gds_nbr; i++ )    
-                {   
-                    gds[i]->sort_idx = gds[i]->game_nbr;
-                    gds[i]->game_nbr = i;
+                {
+                    GameDocument *ptr = gds[i]->GetGameDocumentPtr();
+                    if( ptr )
+                    {
+                        ptr->sort_idx = ptr->game_nbr;
+                        ptr->game_nbr = i;
+                    }
                 }
                 sort( gds.begin(), gds.end() );
-            }
+            }  */
 
             // For each game
             int diagram_base = 0;
@@ -761,214 +1028,221 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
             int neg_base = -2;
             for( int i=0; i<gds_nbr; i++ )    
             {   
-                const smart_ptr<GameDocument> gd = gds[i];
-                thc::ChessPosition tmp;
+                GameDocument *ptr = gds[i]->GetGameDocumentPtr();
+                if( ptr )
+                {
+                    GameDocument gd = *ptr;
+                    thc::ChessPosition tmp;
 
-                int publish_options = 0;
-                bool skip_intro = false;
-                bool skip_game = false;
-                std::string white = gd->white;
-                std::string black = gd->black;
-                std::string t = black;
-                std::string options = "";
-                bool white_only = (white!="" && white!="?") && (black=="" || black=="?");
-                if( !white_only && t[0]=='@' )
-                {
-                    size_t at2;
-                    at2 = t.substr(1).find('@');
-                    if( at2 != std::string::npos )
+                    int publish_options = 0;
+                    bool skip_intro = false;
+                    bool skip_game = false;
+                    std::string white = gd.r.white;
+                    std::string black = gd.r.black;
+                    std::string t = black;
+                    std::string options = "";
+                    bool white_only = (white!="" && white!="?") && (black=="" || black=="?");
+                    if( !white_only && t[0]=='@' )
                     {
-                        options = t.substr(0,at2+1);
-                        black = t.substr(at2+2);
-                    }
-                }
-
-                bool heading_1 = (std::string::npos != options.find('1'));
-                bool heading_2 = (std::string::npos != options.find('2'));
-                bool suppress_move = (std::string::npos != options.find('N'));
-                bool heading = (heading_1 || heading_2 || white_only);
-                bool join = (std::string::npos != options.find('J'));
-                if( join )
-                {
-                    white = white + " " + black;
-                    black = "";
-                }
-
-#ifdef NOMARKDOWN
-                //<h1>Introduction</h1>
-                //<p>Sorry, this was rushed out, I may have time to embellish these brief highlights later. </p>
-                //<h3>Russell Dive - Scott Wastney, Julian Mazur Memorial 2012</h3>
-                std::string s = "";
-                std::string pre = gds[i]->prefix_txt;
-                if( pre.size()>0 && pre[0] == '#' )
-                {
-                    size_t off1 = pre.find_first_not_of("#");
-                    size_t off2 = pre.find('\n');
-                    if( off1!=std::string::npos && off2!=std::string::npos
-                        && off2>off1 )
-                    {
-                        s += "<h1>";
-                        s += pre.substr(off1,off2-off1);
-                        s += "</h1>\n";
-                        pre = pre.substr(off2);
-                    }
-                }
-                s += "<p>";
-                s += pre;
-                s += "</p>\n";
-                if( heading )
-                {
-                    skip_intro = true;
-                    if( heading_1 )
-                        s = "<h1>" + white + "</h1>";
-                    else
-                        s = "<h2>" + white + "</h2>";
-                    s += "\n";
-                    publish_options |= GameView::SUPPRESS_NULL_MOVE;
-                    //publish_options |= GameView::SUPPRESS_VARIATION_PARENS;
-                }
-#else
-                // Write prefix
-                std::string s = gds[i]->prefix_txt;
-                if( heading )
-                {
-                    skip_intro = true;
-                    if( heading_1 )
-                        s = "#" + white;
-                    else
-                        s = "##" + white;
-                    s += "\r\n";
-                    publish_options |= GameView::SUPPRESS_NULL_MOVE;
-                    //publish_options |= GameView::SUPPRESS_VARIATION_PARENS;
-                }
-#endif
-                if( suppress_move )
-                    publish_options |= GameView::SUPPRESS_MOVE;
-                const char *tags[] =
-                {
-                    "#SkipToDiagram",
-                    "#SkipIntro",
-                    "#SkipGame"
-                };
-                for( int j=0; j<nbrof(tags); j++ )
-                {
-                    for( int k=0; k<4; k++ )
-                    {
-                        char buf[80];
-                        strcpy( buf, tags[j] );
-                        switch( k )
+                        size_t at2;
+                        at2 = t.substr(1).find('@');
+                        if( at2 != std::string::npos )
                         {
-                            case 0: strcat(buf,", "); break;
-                            case 1: strcat(buf,",");  break;
-                            case 2: strcat(buf," ");  break;
-                            default:
-                            case 3: break;
+                            options = t.substr(0,at2+1);
+                            black = t.substr(at2+2);
                         }
-                        const char *pattern;
-                        size_t found;
-                        pattern = buf;
-                        found = s.find(pattern);
-                        if( found != std::string::npos )
+                    }
+
+                    bool heading_1 = (std::string::npos != options.find('1'));
+                    bool heading_2 = (std::string::npos != options.find('2'));
+                    bool suppress_move = (std::string::npos != options.find('N'));
+                    bool heading = (heading_1 || heading_2 || white_only);
+                    bool join = (std::string::npos != options.find('J'));
+                    if( join )
+                    {
+                        white = white + " " + black;
+                        black = "";
+                    }
+
+    #ifdef NOMARKDOWN
+                    //<h1>Introduction</h1>
+                    //<p>Sorry, this was rushed out, I may have time to embellish these brief highlights later. </p>
+                    //<h3>Russell Dive - Scott Wastney, Julian Mazur Memorial 2012</h3>
+                    std::string s = "";
+                    std::string pre = gd.prefix_txt;
+                    if( pre.size()>0 && pre[0] == '#' )
+                    {
+                        size_t off1 = pre.find_first_not_of("#");
+                        size_t off2 = pre.find('\n');
+                        if( off1!=std::string::npos && off2!=std::string::npos
+                            && off2>off1 )
                         {
-                            s = s.substr(0,found) + s.substr(found+strlen(pattern));
-                            switch( j )
+                            s += "<h1>";
+                            s += pre.substr(off1,off2-off1);
+                            s += "</h1>\n";
+                            pre = pre.substr(off2);
+                        }
+                    }
+                    s += "<p>";
+                    s += pre;
+                    s += "</p>\n";
+                    if( heading )
+                    {
+                        skip_intro = true;
+                        if( heading_1 )
+                            s = "<h1>" + white + "</h1>";
+                        else
+                            s = "<h2>" + white + "</h2>";
+                        s += "\n";
+                        publish_options |= GameView::SUPPRESS_NULL_MOVE;
+                        publish_options |= GameView::SUPPRESS_VARIATION_PARENS;
+                    }
+    #else
+                    // Write prefix
+                    std::string s = gd.prefix_txt;
+                    if( heading )
+                    {
+                        skip_intro = true;
+                        if( heading_1 )
+                            s = "#" + white;
+                        else
+                            s = "##" + white;
+                        s += "\r";
+                        publish_options |= GameView::SUPPRESS_NULL_MOVE;
+                        publish_options |= GameView::SUPPRESS_VARIATION_PARENS;
+                    }
+    #endif
+                    if( suppress_move )
+                        publish_options |= GameView::SUPPRESS_MOVE;
+                    const char *tags[] =
+                    {
+                        "#SkipToDiagram",
+                        "#SkipIntro",
+                        "#SkipGame"
+                    };
+                    for( int j=0; j<nbrof(tags); j++ )
+                    {
+                        for( int k=0; k<4; k++ )
+                        {
+                            char buf[80];
+                            strcpy( buf, tags[j] );
+                            switch( k )
                             {
-                                case 0: publish_options |= GameView::SKIP_TO_FIRST_DIAGRAM; break;
-                                case 1: skip_intro            = true;   break;
-                                case 2: skip_game             = true;   break;
+                                case 0: strcat(buf,", "); break;
+                                case 1: strcat(buf,",");  break;
+                                case 2: strcat(buf," ");  break;
+                                default:
+                                case 3: break;
                             }
-                            break;
-                        }
-                    }
-                }
-                int len = s.length();
-                if( len > 0 )
-                {
-                    if( i != 0 )    // blank line needed before all but first prefix
-                        fwrite( "\r\n", 1, 2, md_out);
-                    fwrite( s.c_str(), 1, len, md_out);
-                    fwrite( "\r\n", 1, 2, md_out);
-                }
-                if( !skip_game )
-                {
-
-                    if( !skip_intro )
-                    {
-                        // Write header
-                        //gd->ToFileTxtGameDetails( s );
-                
-                        s = markdown ? "### " : "<h3>";
-                        s += white;
-                        s += " - ";
-                        s += black;
-                        if( gd->event.find('?') == std::string::npos )
-                        {
-                            s += " ";
-                            s += gd->event;
-                        }
-                        std::string year = gd->date.substr(0,4);
-                        if( year.find('?') == std::string::npos )
-                        {
-                            s += " ";
-                            s += year;
-                        }
-                        s += (markdown ? "\n" : "</h3>\n");
-                        s += (markdown ? "\n" : "</h3>\n");
-                        fwrite(s.c_str(),1,s.length(),md_out);
-                    }
-
-                    // Write Game body
-                    if( gd->in_memory )
-                    {
-                        gd->ToPublishTxtGameBody( s, diagram_base, mv_base, neg_base, publish_options );
-                        fwrite(s.c_str(),1,s.length(),md_out);
-                    }
-                    else
-                    {
-                        FILE *pgn_in = objs.gl->pf.ReopenRead( gd->pgn_handle );
-                        if( pgn_in )
-                        {
-                            long fposn2 = gd->fposn2;
-                            long end    = gd->fposn3;
-                            fseek(pgn_in,fposn2,SEEK_SET);
-                            long len = end-fposn2;
-                            char *buf = new char [len];
-                            if( len == (long)fread(buf,1,len,pgn_in) )
+                            const char *pattern;
+                            size_t found;
+                            pattern = buf;
+                            found = s.find(pattern);
+                            if( found != std::string::npos )
                             {
-                                std::string s(buf,len);
-                                thc::ChessRules cr;
-                                int nbr_converted;
-                                GameDocument temp = *gd;
-                                temp.PgnParse(true,nbr_converted,s,cr,NULL);
-                                temp.ToPublishTxtGameBody( s, diagram_base, mv_base, neg_base, publish_options );
-                                objs.gl->atom.NotUndoAble();
-                                fwrite(s.c_str(),1,s.length(),md_out);
+                                s = s.substr(0,found) + s.substr(found+strlen(pattern));
+                                switch( j )
+                                {
+                                    case 0: publish_options |= GameView::SKIP_TO_FIRST_DIAGRAM; break;
+                                    case 1: skip_intro            = true;   break;
+                                    case 2: skip_game             = true;   break;
+                                }
+                                break;
                             }
-                            delete[] buf;
+                        }
+                    }
+                    int len = s.length();
+                    if( len > 0 )
+                    {
+                        if( i != 0 )    // blank line needed before all but first prefix
+                            fwrite( "\n", 1, 1, md_out);
+                        fwrite( s.c_str(), 1, len, md_out);
+                        fwrite( "\n", 1, 1, md_out);
+                    }
+                    if( !skip_game )
+                    {
+
+                        if( !skip_intro )
+                        {
+                            // Write header
+                            //gd->ToFileTxtGameDetails( s );
+                    
+                            s = markdown ? "### " : "<h3>";
+                            s += white;
+                            s += " - ";
+                            s += black;
+                            if( gd.r.event.find('?') == std::string::npos )
+                            {
+                                s += " ";
+                                s += gd.r.event;
+                            }
+                            std::string year = gd.r.date.substr(0,4);
+                            if( year.find('?') == std::string::npos )
+                            {
+                                s += " ";
+                                s += year;
+                            }
+                            s += (markdown ? "\n" : "</h3>\n");
+                            s += (markdown ? "\n" : "</h3>\n");
+                            fwrite(s.c_str(),1,s.length(),md_out);
+                        }
+
+                        // Write Game body
+                        if( gd.in_memory )
+                        {
+                            gd.ToPublishTxtGameBody( s, diagram_base, mv_base, neg_base, publish_options );
+                            fwrite(s.c_str(),1,s.length(),md_out);
+                        }
+                        else
+                        {
+                            FILE *pgn_in = objs.gl->pf.ReopenRead( gd.pgn_handle );
+                            if( pgn_in )
+                            {
+                                long fposn2 = gd.fposn2;
+                                long end    = gd.fposn3;
+                                fseek(pgn_in,fposn2,SEEK_SET);
+                                long len = end-fposn2;
+                                char *buf = new char [len];
+                                if( len == (long)fread(buf,1,len,pgn_in) )
+                                {
+                                    std::string s(buf,len);
+                                    thc::ChessRules cr;
+                                    int nbr_converted;
+                                    gd.PgnParse(true,nbr_converted,s,cr,NULL);
+                                    gd.ToPublishTxtGameBody( s, diagram_base, mv_base, neg_base, publish_options );
+                                    objs.gl->atom.NotUndoAble();
+                                    fwrite(s.c_str(),1,s.length(),md_out);
+                                }
+                                delete[] buf;
+                            }
                         }
                     }
                 }
-            }
 
 
-            // Restore sort order .game_nbr field is restored to its original value
-            if( !renumber )
-            {
-                for( int i=0; i<gds_nbr; i++ )    
-                {   
-                    int temp = gds[i]->sort_idx;
-                    gds[i]->sort_idx = gds[i]->game_nbr;
-                    gds[i]->game_nbr = temp;
+                // Restore sort order .game_nbr field is restored to its original value
+                if( !renumber )
+                {
+                /*  for( int i=0; i<gds_nbr; i++ )    
+                    {   
+                        GameDocument *ptr = gds[i]->GetGameDocumentPtr();
+                        if( ptr )
+                        {
+                            int temp = ptr->sort_idx;
+                            ptr->sort_idx = ptr->game_nbr;
+                            ptr->game_nbr = temp;
+                        }
+                    }
+                    sort( gds.begin(), gds.end() ); */
+                } 
+                objs.gl->pf.Close( gc_clipboard );    // close all handles
+                fwrite("<br/>\n",1,6,md_out);
+                if( !markdown )
+                {
+                    fwrite("</div>\n"
+                           "</body>\n"
+                           "</html>\n",1,23,md_out);
                 }
-                sort( gds.begin(), gds.end() );
-            }
-            objs.gl->pf.Close( gc_clipboard );    // close all handles
-            fwrite("<br/>\n",1,6,md_out);
-            if( !markdown )
-            {
-                fwrite("</div>\n"
-                       "</body>\n"
-                       "</html>\n",1,23,md_out);
             }
             fclose( md_out );
         }

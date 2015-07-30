@@ -31,13 +31,14 @@ void Session::SaveGame( GameDocument *gd )
         int sz = objs.gl->gc_session.gds.size();
         if( sz )
         {
-            GameDocument temp = *objs.gl->gc_session.gds[sz-1];
-            diff = gd->IsDiff( temp );
+            GameDocument *p = objs.gl->gc_session.gds[sz-1]->GetGameDocumentPtr();
+            if(p)
+                diff = gd->IsDiff( *p );
         }
         if( diff )
         {
-            make_smart_ptr( GameDocument, new_doc, *gd );
-            objs.gl->gc_session.gds.push_back( new_doc );
+            make_smart_ptr( HoldDocument, new_doc, *gd );
+            objs.gl->gc_session.gds.push_back( std::move(new_doc) );
         }
     }
 }

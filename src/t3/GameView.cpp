@@ -56,9 +56,9 @@ void GameView::Debug()
         if( gve.type==MOVE && gve.offset1==3129 )
         {
             if( gve.node->move.src == a5 )
-                DebugPrintf(("no bug",gve.node));
+                dbg_printf("no bug",gve.node);
             else
-                DebugPrintf(("bug",gve.node));
+                dbg_printf("bug",gve.node);
         }
     } */
 }
@@ -1223,14 +1223,14 @@ void GameView::ToPublishString( std::string &str, int &diagram_base, int &mv_bas
             case START_OF_VARIATION:
             {
                 indent++;
-                if( !(publish_options & SUPPRESS_VARIATION_PARENS) )
+                if( 0 ) //!(publish_options & SUPPRESS_VARIATION_PARENS) )
                     frag = "("; //"<b>(</b>";
                 break;
             }
             case END_OF_VARIATION:
             {
                 indent--;
-                if( !(publish_options & SUPPRESS_VARIATION_PARENS) )
+                if( 0 ) //!(publish_options & SUPPRESS_VARIATION_PARENS) )
                     frag = ")\n"; //"<b>)</b>\n";
                 break;
             }
@@ -1418,23 +1418,7 @@ unsigned long GameView::NavigationKey( unsigned long pos, NAVIGATION_KEY nk )
     }
     return pos;
 }
-/*
-void GameView::SetNonZeroStartPosition( thc::ChessPosition cp )
-{
-    int ret=0;
-    int nbr = expansion.size();
-    for( int i=0; i<nbr; i++ )
-    {
-        GameViewElement gve = expansion[i];
-        if( gve.type==MOVE && gve )
-        {
-            ret = i;
-            break;
-        }
-    }
-    return ret;
-}
- */
+
 int GameView::GetInternalOffset( MoveTree *move )
 {
     int ret=0;

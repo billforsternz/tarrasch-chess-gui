@@ -57,9 +57,8 @@ bool CentralWorkSaver::TestFileModified()
         modified = gc->file_irrevocably_modified;
         for( unsigned int i=0; !modified && i<gc->gds.size(); i++ )
         {
-            if( gc->gds[i]->in_memory &&
-                    (gc->gds[i]->game_prefix_edited || gc->gds[i]->game_details_edited || gc->gds[i]->modified)
-              )
+            MagicBase *ptr = gc->gds[i].get();
+            if( ptr && ptr->IsModified() )
             {
                 modified = true;
                 break;
@@ -79,7 +78,8 @@ bool CentralWorkSaver::TestGameInFile()
     bool in_file=false;
     for( unsigned int i=0; i<gc->gds.size(); i++ )
     {
-        if( gc->gds[i]->game_being_edited  )
+        MagicBase *ptr = gc->gds[i].get();
+        if( ptr && ptr->GetGameBeingEdited()!=0 )
         {
             in_file = true;
             break;
@@ -97,14 +97,13 @@ void CentralWorkSaver::AddGameToFile()
     objs.log->SaveGame(gd,editing_log);         // ...and this now because we need to set...
     objs.gl->IndicateNoCurrentDocument();
     gd->in_memory = true;
-    gd->game_being_edited = true;
+    gd->game_being_edited = ++objs.gl->game_being_edited_tag;
     gd->modified = false;           // ...modified=false, which could mean the game
                                     // not getting to log or session later (not satisfactory I know - too many flags)
     int nbr = gc->gds.size();
-    if( nbr > 0 )
-        gd->game_nbr = gc->gds[nbr-1]->game_nbr + 1;
-    make_smart_ptr( GameDocument, new_doc, *gd );
-    gc->gds.push_back( new_doc );
+    gd->game_nbr = nbr + 1;
+    make_smart_ptr( HoldDocument, new_smart_ptr, *gd );  // smart_ptr event: document->cache
+    gc->gds.push_back( std::move(new_smart_ptr) );
     objs.gl->file_game_idx = gc->gds.size()-1;
 }
 
@@ -138,7 +137,7 @@ int CentralWorkSaver::SaveGamePrompt( bool prompt, FILE_MODE fm, bool save_as )
     }
     if( answer == wxYES )
     {
-        if( gd->white == "" ) // if( !game_details_edited )
+        if( gd->r.white == "" ) // if( !game_details_edited )
         {
             GameDetailsDialog dialog(objs.frame);
             if( dialog.Run(*gd) )
@@ -226,29 +225,33 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                             else if( fm == FILE_EXISTS_GAME_MODIFIED )
                                 PutBackDocument();
                             gc->Debug( "Games that are about to be added to an existing file" );
-                            std::vector< smart_ptr<GameDocument> > gds = gc->gds;
+                            std::vector< smart_ptr<GameDocument> > gds_temp; // FIXME! = gc->gds;   // copy existing file of games to temp
                             if( !gc->Load(filename) )
                             {
                                 wxString msg="Cannot append to existing file ";
                                 msg += wx_filename;
                                 wxMessageBox( msg, "Error reading file", wxOK|wxICON_ERROR );
-                                gc->gds = gds;
+                                //FIXME FIX ME  gc->gds = gds_temp;
                             }
                             else
                             {
                                 gc->Debug( "The existing file" );
                                 int existing_nbr = gc->gds.size();
-                                for( int i=0; i<gds.size(); i++ )
+                                
+                                // Append copied temp games to newly loaded file
+                                for( int i=0; i<gds_temp.size(); i++ )
                                 {
-                                    GameDocument doc = *gds[i];
+                                    //? gc_vecGet( i, GameDocument, doc ); 
+                                    GameDocument doc; //? = * std::dynamic_pointer_cast<GameDocument> (gds_temp[i]);
                                     doc.game_nbr = existing_nbr + i;
                                     if( doc.game_being_edited )
                                     {
                                         gd->game_nbr = doc.game_nbr+1;  // todo: why +1 ?
                                         objs.gl->file_game_idx = doc.game_nbr;
                                     }
-                                    make_smart_ptr( GameDocument, new_doc, doc );
-                                    gc->gds.push_back( new_doc );
+                                    //? gc->Put( GameDocument, doc ); 
+                                    make_smart_ptr( HoldDocument, new_smart_ptr, doc );
+                                    gc->gds.push_back( std::move(new_smart_ptr) );
                                 }
                                 gc->FileSave( gc_clipboard );
                                 gc->KillResumePreviousWindow();

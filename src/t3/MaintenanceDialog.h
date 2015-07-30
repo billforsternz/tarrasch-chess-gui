@@ -101,7 +101,7 @@ public:
     void OnMaintenanceCreate( wxCommandEvent& event );
     
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_6
-    void OnMaintenanceExtraIndexes( wxCommandEvent& event );
+    void OnMaintenanceIndexes( wxCommandEvent& event );
     
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_HELP
     void OnHelpClick( wxCommandEvent& event );

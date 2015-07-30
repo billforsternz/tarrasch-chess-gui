@@ -17,7 +17,7 @@ Undo::Undo( GameLogic *gl )
     this->gl = gl;
     no_front_pops_yet = true;
     state = NORMAL;
-    it_saved = stack.begin();
+    it_saved = 0; //stack.begin();
 }
 
 Undo::Undo()
@@ -25,7 +25,7 @@ Undo::Undo()
     this->gl = objs.gl;
     no_front_pops_yet = true;
     state = NORMAL;
-    it_saved = stack.begin();
+    it_saved = 0; //stack.begin();
 }
 
 // Copy constructor needed begin it_saved needs special attention
@@ -35,9 +35,8 @@ Undo::Undo( const Undo& copy_from_me )
     no_front_pops_yet = copy_from_me.no_front_pops_yet;
     gl                = copy_from_me.gl;
     stack             = copy_from_me.stack;
-#if 1 //FIXME later
-    it_saved = stack.begin();
-#else
+    it_saved = copy_from_me.it_saved;
+#if 0 // FIXME - should work but crashes
     if( copy_from_me.it_saved < copy_from_me.stack.begin() )
         cprintf( "Gotcha 1\n");
     if( copy_from_me.it_saved > copy_from_me.stack.end() )
@@ -45,6 +44,37 @@ Undo::Undo( const Undo& copy_from_me )
     it_saved = stack.begin() + (copy_from_me.it_saved - copy_from_me.stack.begin());
     cprintf( "it_saved offset=%d, stack.end() offset=%d\n", it_saved-stack.begin(), stack.end()-stack.begin() );
     assert_todo_fix( it_saved >= stack.begin() );
+#endif
+#if 0 // work's on Mac not on Windows (previous comment was "work in progress, but seems okay"
+    std::deque<RestorePoint>::iterator it;
+    std::deque<RestorePoint>::const_iterator it2;
+    for( it=stack.begin(), it2=copy_from_me.stack.begin(); it!=stack.end() && it2!=copy_from_me.stack.end(); it++, it2++ )
+    {
+        if( it2 == copy_from_me.it_saved )
+        {
+            it_saved = it;
+            break;
+        }
+    }
+#endif
+#if 0  // another attempt - remove all these if the simple fix of making it_saved an "int" instead of an iterator works
+    std::deque<RestorePoint>::const_iterator it2;
+    std::deque<RestorePoint>::const_iterator it3 = (std::deque<RestorePoint>::const_iterator)copy_from_me.it_saved;
+    it_saved=stack.begin();
+    it2 = copy_from_me.stack.begin();
+    while( true )
+    {
+        bool not_end1 = (it_saved!=stack.end());
+        bool not_end2 = (it2!=copy_from_me.stack.end());
+        if( !not_end1 || !not_end2 )
+            break;
+        if( it2 == it3 )
+        {
+            break;
+        }
+        it_saved++;
+        it2++;
+    }
 #endif
 }
 
@@ -54,16 +84,55 @@ Undo & Undo::operator= (const Undo & copy_from_me )
     no_front_pops_yet = copy_from_me.no_front_pops_yet;
     gl                = copy_from_me.gl;
     stack             = copy_from_me.stack;
-#if 1 //FIXME later
-    it_saved = stack.begin();
-#else
+    it_saved          = copy_from_me.it_saved;
+#if 0 // FIXME - should work but crashes
     if( copy_from_me.it_saved < copy_from_me.stack.begin() )
-        cprintf( "* Gotcha 1\n");
+        cprintf( "Gotcha 1\n");
     if( copy_from_me.it_saved > copy_from_me.stack.end() )
-        cprintf( "* Gotcha 2\n");
+        cprintf( "Gotcha 2\n");
     it_saved = stack.begin() + (copy_from_me.it_saved - copy_from_me.stack.begin());
-    cprintf( "* it_saved offset=%d, stack.end() offset=%d\n", it_saved-stack.begin(), stack.end()-stack.begin() );
+    cprintf( "it_saved offset=%d, stack.end() offset=%d\n", it_saved-stack.begin(), stack.end()-stack.begin() );
     assert_todo_fix( it_saved >= stack.begin() );
+#endif
+#if 0 // work's on Mac not on Windows (previous comment was "work in progress, but seems okay"
+    std::deque<RestorePoint>::iterator it;
+    std::deque<RestorePoint>::const_iterator it2;
+    for( it=stack.begin(), it2=copy_from_me.stack.begin(); it!=stack.end() && it2!=copy_from_me.stack.end(); it++, it2++ )
+    {
+        if( it2 == copy_from_me.it_saved )
+        {
+            it_saved = it;
+            break;
+        }
+    }
+#endif
+#if 0  // another attempt - remove all these if the simple fix of making it_saved an "int" instead of an iterator works
+    std::deque<RestorePoint>::const_iterator it2;
+    std::deque<RestorePoint>::const_iterator it3 = (std::deque<RestorePoint>::const_iterator)copy_from_me.it_saved;
+    it_saved=stack.begin();
+    it2 = copy_from_me.stack.begin();
+    while( true )
+    {
+        bool not_end1 = (it_saved!=stack.end());
+        bool not_end2 = (it2!=copy_from_me.stack.end());
+        if( !not_end1 || !not_end2 )
+            break;
+        if( it2 == it3 )
+        {
+            break;
+        }
+        it_saved++;
+        it2++;
+    }
+    std::deque<RestorePoint>::const_iterator it2 = copy_from_me.stack.begin();
+    if( copy_from_me.it_saved == copy_from_me.stack.begin() )
+        cprintf( "Ha!");
+    while( it2 != copy_from_me.stack.end() )
+    {
+        if( it2 == copy_from_me.it_saved )
+            cprintf( "Haha!" );
+        it2++;
+    }
 #endif
     return *this;
 }
@@ -71,13 +140,13 @@ Undo & Undo::operator= (const Undo & copy_from_me )
 void Undo::Clear( GameDocument &gd, GAME_STATE game_state )
 {
     stack.clear();
-    it_saved = stack.begin();
+    it_saved = 0; //stack.begin();
     cprintf( "clear() stack_size()=%d\n", stack.size() );
     state = NORMAL;
     no_front_pops_yet = true;
     Save( 0, gd, game_state );
     gl->atom.NotUndoAble();
-    assert_todo_fix( it_saved >= stack.begin() );
+    //assert_todo_fix( it_saved >= stack.begin() );
 }
 
 bool Undo::IsModified()
@@ -87,10 +156,10 @@ bool Undo::IsModified()
     {
         if( stack.size() <= 1 )
             modified = false;
-        else if( state==UNDOING && it_saved==stack.begin() )
+        else if( state==UNDOING && it_saved==0 /*stack.begin()*/ )
             modified = false;
     }
-    assert_todo_fix( it_saved >= stack.begin() );
+    //assert_todo_fix( it_saved >= stack.begin() );
     return modified;
 }
 
@@ -100,7 +169,7 @@ void Undo::Save( long undo_previous_posn, GameDocument &gd, GAME_STATE game_stat
     rp.tree = gd.tree;
     rp.previous_posn = undo_previous_posn;
     rp.posn = gd.GetInsertionPoint();
-    rp.result = gd.result;
+    rp.result = gd.r.result;
     rp.state = game_state;
     rp.ponder_move = gl->ponder_move;
     rp.human_is_white = gl->glc.human_is_white;
@@ -114,7 +183,7 @@ void Undo::Save( long undo_previous_posn, GameDocument &gd, GAME_STATE game_stat
         // remove the tail        }
         while( stack.size() )
         {
-            if( it_saved+1 == stack.end() )
+            if( stack.begin()+it_saved+1 == stack.end() )
                 break;
             stack.pop_back();
             cprintf( "pop_back() stack_size()=%d\n", stack.size() );
@@ -122,7 +191,7 @@ void Undo::Save( long undo_previous_posn, GameDocument &gd, GAME_STATE game_stat
     }
     stack.push_back(rp);
     cprintf( "push_back() stack_size()=%d\n", stack.size() );
-    assert_todo_fix( it_saved >= stack.begin() );
+    //assert_todo_fix( it_saved >= stack.begin() );
     state = NORMAL;
 }
 
@@ -136,17 +205,17 @@ GAME_STATE Undo::DoUndo( GameDocument &gd, bool takeback )
         if( state == NORMAL )
             it = stack.end()-1;
         else if( state==UNDOING )
-            it = it_saved;
+            it = stack.begin() + it_saved;
         if( it > stack.begin() )
         {
             it->takeback = takeback;
             long posn = it->previous_posn;
             it--;
-            it_saved = it;
+            it_saved = it-stack.begin();
             RestorePoint rp;
             rp = *it;
             ret = rp.state;
-            gd.result = rp.result;
+            gd.r.result = rp.result;
             gd.tree = rp.tree;
             gl->ponder_move = rp.ponder_move;
             gl->glc.human_is_white = rp.human_is_white;
@@ -157,7 +226,7 @@ GAME_STATE Undo::DoUndo( GameDocument &gd, bool takeback )
             state = UNDOING;
         }
     }
-    assert_todo_fix( it_saved >= stack.begin() );
+    //assert_todo_fix( it_saved >= stack.begin() );
     return ret;
 }
 
@@ -167,11 +236,11 @@ bool Undo::CanRedo()
     int len = stack.size();
     if( len && state==UNDOING )
     {
-        std::deque<RestorePoint>::iterator it = it_saved;
-        if( it+1 != stack.end() )
+        int /*std::deque<RestorePoint>::iterator*/ it = it_saved;
+        if( stack.begin()+(it+1) != stack.end() )
             can_redo = true;
     }
-    assert_todo_fix( it_saved >= stack.begin() );
+    //assert_todo_fix( it_saved >= stack.begin() );
     return can_redo;
 }
 
@@ -181,22 +250,22 @@ GAME_STATE Undo::DoRedo( GameDocument &gd )
     int len = stack.size();
     if( len && state==UNDOING )
     {
-        std::deque<RestorePoint>::iterator it = it_saved;
-        if( it+1 == stack.end() )
+        int /*std::deque<RestorePoint>::iterator*/ it = it_saved;
+        if( stack.begin()+(it+1) == stack.end() )
             state = NORMAL;
         else
         {
             it++;
             it_saved = it;
             RestorePoint rp;
-            rp = *it;
+            rp = *(stack.begin() + it);
             #if 0   //put this back if you want redo after takeback to restart the game
                     // (not very good because if say engine plays move that will kill
                     //  the redo tail)
             ret = rp.takeback ? rp.state : MANUAL;
             #endif
             gd.tree = rp.tree;
-            gd.result = rp.result;
+            gd.r.result = rp.result;
             gl->ponder_move = rp.ponder_move;
             gl->glc.human_is_white = rp.human_is_white;
             gl->glc.result = rp.game_result;
@@ -205,7 +274,7 @@ GAME_STATE Undo::DoRedo( GameDocument &gd )
             gd.Redisplay( rp.posn );
         }
     }
-    assert_todo_fix( it_saved >= stack.begin() );
+    //assert_todo_fix( it_saved >= stack.begin() );
     return ret;
 }
 

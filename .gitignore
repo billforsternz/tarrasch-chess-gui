@@ -8,3 +8,5 @@ vc_msw
 Tarrasch.suo
 Tarrasch.sdf
 Tarrasch.vcxproj.user
+*.xcscheme
+

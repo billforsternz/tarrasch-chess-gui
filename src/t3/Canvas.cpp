@@ -147,11 +147,11 @@ static int window_id_positions_40[NBR_OF_WIDS][4] =
 
 // 1st cut, create table
 #if 0
-#define LOCATE_R( name, rec  )      DebugPrintfInner( "TAG{%s,%d,%d,%d,%d},\n", #name, (rec).x, (rec).y, (rec).width, (rec).height )
-#define LOCATE_P( name, pos )       DebugPrintfInner( "TAG{%s,%d,%d},\n", #name, (pos).x, (pos).y )
-#define LOCATE_XY( name, x, y )     DebugPrintfInner( "TAG{%s,%d,%d},\n", #name, x, y )
-#define LOCATE_2( name, pos, siz )  DebugPrintfInner( "TAG{%s,%d,%d,%d,%d},\n", #name, (pos).x, (pos).y, (siz).x, (siz).y )
-#define LOCATE_4( name, x, y, w, h) DebugPrintfInner( "TAG{%s,%d,%d,%d,%d},\n", #name, x, y, w, h )
+#define LOCATE_R( name, rec  )      release_printf( "TAG{%s,%d,%d,%d,%d},\n", #name, (rec).x, (rec).y, (rec).width, (rec).height )
+#define LOCATE_P( name, pos )       release_printf( "TAG{%s,%d,%d},\n", #name, (pos).x, (pos).y )
+#define LOCATE_XY( name, x, y )     release_printf( "TAG{%s,%d,%d},\n", #name, x, y )
+#define LOCATE_2( name, pos, siz )  release_printf( "TAG{%s,%d,%d,%d,%d},\n", #name, (pos).x, (pos).y, (siz).x, (siz).y )
+#define LOCATE_4( name, x, y, w, h) release_printf( "TAG{%s,%d,%d,%d,%d},\n", #name, x, y, w, h )
 
 #else
 static bool using_large_chess_board = false;
@@ -511,12 +511,12 @@ Canvas::Canvas
     wxClientDC dc(kibitz_ctrl);
     wxCoord width, height, descent, external_leading;
     dc.GetTextExtent( "AbWy123456789", &width, &height, &descent, &external_leading );
-    DebugPrintf(( "Kibitz box height=%d; font height=%d, descent=%d, external_leading=%d\n", ksiz.y, height, descent, external_leading ));
+    dbg_printf( "Kibitz box height=%d; font height=%d, descent=%d, external_leading=%d\n", ksiz.y, height, descent, external_leading );
     // results of this: Kibitz box height=99; font height=16, descent=3, external_leading=0
     //  Theory, min height of kibitz box to avoid scroll bars is 99 = (16+3)*5 + 4
     //  So if only 4 lines say, 80
     wxSize client_siz = parent->GetClientSize();
-    DebugPrintf(( "Client size=%d,%d\n", client_siz.x, client_siz.y ));       // 692,629         tl=10,80  br=697,704   delta=687,624
+    dbg_printf( "Client size=%d,%d\n", client_siz.x, client_siz.y );       // 692,629         tl=10,80  br=697,704   delta=687,624
                                                                               // status box                  =20,564    delta=10,484
 
     // Is kibitz text same size as on dev system ?
@@ -922,7 +922,7 @@ void Canvas::BookUpdate( bool suppress )
             txt = "1 book move";
         else
             txt.Printf( "%d book moves", n );
-        DebugPrintf(( "Book moves updated: %s\n", txt.c_str() ));
+        dbg_printf( "Book moves updated: %s\n", txt.c_str() );
         book_moves->Show(true);
         book_moves->SetTxt(txt);
     }
@@ -1089,7 +1089,7 @@ void Canvas::Kibitz( int idx, const wxString &txt )
             {
                 str_kibitz1 = txt;
                 const char *temp = txt.c_str();
-                DebugPrintfInner( "kibitz1 = %s\n", temp );
+                release_printf( "kibitz1 = %s\n", temp );
                 //kibitz1->SetLabel(txt);
                 kibitz_ctrl->SetItem( 1, 0, txt );
             }
@@ -1101,7 +1101,7 @@ void Canvas::Kibitz( int idx, const wxString &txt )
             {
                 str_kibitz2 = txt;
                 const char *temp = txt.c_str();
-                DebugPrintfInner( "kibitz2 = %s\n", temp );
+                release_printf( "kibitz2 = %s\n", temp );
                 //kibitz2->SetLabel(txt);
                 kibitz_ctrl->SetItem( 2, 0, txt );
             }
@@ -1113,7 +1113,7 @@ void Canvas::Kibitz( int idx, const wxString &txt )
             {
                 str_kibitz3 = txt;
                 const char *temp = txt.c_str();
-                DebugPrintfInner( "kibitz3 = %s\n", temp );
+                release_printf( "kibitz3 = %s\n", temp );
                 //kibitz3->SetLabel(txt);
                 kibitz_ctrl->SetItem( 3, 0, txt );
             }
@@ -1125,7 +1125,7 @@ void Canvas::Kibitz( int idx, const wxString &txt )
             {
                 str_kibitz4 = txt;
                 const char *temp = txt.c_str();
-                DebugPrintfInner( "kibitz4 = %s\n", temp );
+                release_printf( "kibitz4 = %s\n", temp );
                 //kibitz4->SetLabel(txt);
                 extern bool gbl_small_screen_detected;
                 if( !gbl_small_screen_detected )      // on a small screen show only 3

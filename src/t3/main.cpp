@@ -6,13 +6,22 @@
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
 #define _CRT_SECURE_NO_DEPRECATE
+#include "Portability.h"
+#ifdef THC_WINDOWS
+#include <windows.h>    // Windows headers for RedirectIoToConsole()
+#include <stdio.h>
+#include <fcntl.h>
+#include <io.h>
+#include <iostream>
+#include <fstream>
 #include <time.h>
+#endif
 #include "wx/wx.h"
 #include "wx/file.h"
 #include "wx/listctrl.h"
 #include "wx/clipbrd.h"
 #include "wx/sysopt.h"
-#include "Portability.h"
+#include "wx/log.h"
 #include "Appdefs.h"
 #include "Canvas.h"
 #include "GraphicBoard.h"
@@ -82,6 +91,109 @@ public:
 // ----------------------------------------------------------------------------
 // main frame
 // ----------------------------------------------------------------------------
+
+//some old debug code
+#if 0
+static wxMessageOutputDebug msg;
+    #ifdef  DEBUG_TO_LOG_FILE
+    {
+        static FILE *log_file;
+        if( log_file == NULL )
+            log_file = fopen("log.txt","wt");
+        if( log_file )
+            fwrite( buf, 1, strlen(buf), log_file );
+    }
+    #endif
+#endif
+
+//  We also optionally prepend the time - to prepend the time instantiate a DebugPrintfTime object
+//  on the stack - no need to use it
+static int dbg_printf_prepend_time=0;
+DebugPrintfTime::DebugPrintfTime()  { dbg_printf_prepend_time++; }
+DebugPrintfTime::~DebugPrintfTime() { dbg_printf_prepend_time--; if(dbg_printf_prepend_time<0) dbg_printf_prepend_time=0; }
+#ifndef KILL_DEBUG_COMPLETELY
+int core_printf( const char *fmt, ... )
+{
+    int ret=0;
+    if( dbg_printf_prepend_time )
+    {
+        time_t rawtime;
+        struct tm * timeinfo;
+        time ( &rawtime );
+        timeinfo = localtime ( &rawtime );
+        char buf[200];
+        strcpy( buf, asctime(timeinfo) );
+        char *p = strchr(buf,'\n');
+        if( p )
+            *p = '\0';
+		printf( "%s ", buf );
+    }
+	va_list args;
+	va_start( args, fmt );
+    ret = vprintf(fmt,args);
+    va_end(args);
+    return ret;
+}
+#endif
+
+// New approach to logging - use a console window to simulate Mac behaviour on Windows
+#ifdef THC_WINDOWS
+static const WORD MAX_CONSOLE_LINES = 500;      // maximum mumber of lines the output console should have
+void RedirectIOToConsole()
+{
+    int hConHandle;
+    long lStdHandle;
+    CONSOLE_SCREEN_BUFFER_INFO coninfo;
+    FILE *fp;
+
+    // allocate a console for this app
+    AllocConsole();
+
+    // set the screen buffer to be big enough to let us scroll text
+    HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    GetConsoleScreenBufferInfo( handle , &coninfo);
+
+    coninfo.dwSize.Y = MAX_CONSOLE_LINES;
+    SetConsoleScreenBufferSize( handle, coninfo.dwSize);
+
+    int height = 60; 
+    int width = 80; 
+
+    _SMALL_RECT rect; 
+    rect.Top = 0; 
+    rect.Left = 0; 
+    rect.Bottom = height - 1; 
+    rect.Right = width - 1; 
+
+    SetConsoleWindowInfo( handle, TRUE, &rect);            // Set Window Size 
+
+    // redirect unbuffered STDOUT to the console
+    lStdHandle = (long)GetStdHandle(STD_OUTPUT_HANDLE);
+    hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
+    fp = _fdopen( hConHandle, "w" );
+    *stdout = *fp;
+    setvbuf( stdout, NULL, _IONBF, 0 );
+
+    // redirect unbuffered STDIN to the console
+    lStdHandle = (long)GetStdHandle(STD_INPUT_HANDLE);
+    hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
+    fp = _fdopen( hConHandle, "r" );
+    *stdin = *fp;
+    setvbuf( stdin, NULL, _IONBF, 0 );
+
+    // redirect unbuffered STDERR to the console
+    lStdHandle = (long)GetStdHandle(STD_ERROR_HANDLE);
+    hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
+    fp = _fdopen( hConHandle, "w" );
+    *stderr = *fp;
+    setvbuf( stderr, NULL, _IONBF, 0 );
+
+    // make cout, wcout, cin, wcin, wcerr, cerr, wclog and clog
+    // point to console as well
+    ios::sync_with_stdio();
+}
+#endif
+
 
 class ChessFrame: public wxFrame
 {
@@ -229,7 +341,7 @@ bool ChessApp::OnInit()
     srand(time(NULL));
     //_CrtSetBreakAlloc( 198300 ); //563242 );
     //_CrtSetBreakAlloc( 195274 );
-    //_CrtSetBreakAlloc( 272212 );
+    //_CrtSetBreakAlloc( 21007 );
     JobBegin();
     if( argc == 2 )
     {
@@ -238,7 +350,7 @@ bool ChessApp::OnInit()
     wxString error_msg;
     int disp_width, disp_height;
     wxDisplaySize(&disp_width, &disp_height);
-    DebugPrintf(( "Display size = %d x %d\n", disp_width, disp_height ));
+    dbg_printf( "Display size = %d x %d\n", disp_width, disp_height );
     objs.repository = new Repository;
     #if 0 // small screen testing
     wxSize  win_size  = wxSize(708, 596);
@@ -270,7 +382,7 @@ bool ChessApp::OnInit()
 
 int ChessApp::OnExit()
 {
-    DebugPrintf(( "ChessApp::OnExit()\n" ));
+    dbg_printf( "ChessApp::OnExit()\n" );
     if( objs.rybka )
     {
         delete objs.rybka;
@@ -444,10 +556,18 @@ BEGIN_EVENT_TABLE(ChessFrame, wxFrame)
 END_EVENT_TABLE()
 CtrlBoxBookMoves *gbl_book_moves;
 
+
+
 ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
     : wxFrame((wxFrame *)NULL, wxID_ANY, title, pos, size ) //, wxDEFAULT_FRAME_STYLE|wxCLIP_CHILDREN|
                                                             //        wxNO_FULL_REPAINT_ON_RESIZE )
 {
+    #ifndef KILL_DEBUG_COMPLETELY
+    #ifdef THC_WINDOWS
+    RedirectIOToConsole(); // SimpleDebugPrintf *sdf = new SimpleDebugPrintf(this);   // all child windows are automatically deleted
+    #endif
+    #endif
+
     // Timer
     m_timer.SetOwner(this,TIMER_ID);
 
@@ -683,9 +803,9 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     int nbr_buttons = nbr_tools - nbr_separators - 1;   // -1 is gbl_book_moves control
     float width_separator = ( x - sz1.x - nbr_buttons*sz2.x -(nbr_tools-1)*space1
                             ) / ((double)nbr_separators);
-    DebugPrintf(( "width of separator = %f (should be integer)\n", width_separator ));
-    DebugPrintf(( "margin.x=%d, nbr_tools=%d, nbr_separators=%d, toolsize.x=%d, packing=%d, separation=%d\n",
-            sz1.x, nbr_tools, nbr_separators, sz2.x, space1, space2 ));
+    dbg_printf( "width of separator = %f (should be integer)\n", width_separator );
+    dbg_printf( "margin.x=%d, nbr_tools=%d, nbr_separators=%d, toolsize.x=%d, packing=%d, separation=%d\n",
+            sz1.x, nbr_tools, nbr_separators, sz2.x, space1, space2 );
     int w,h;
     int X, Y;
     wxWindow *pw = gbl_book_moves;
@@ -695,7 +815,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
         pw->GetPosition( &x, &y );
         pw->GetScreenPosition( &X, &Y );
         bool top = pw->IsTopLevel();
-        DebugPrintf(( "Book moves(%d,%s) w=%d, h=%d, X=%d, Y=%d, x=%d, y=%d\n", i, top?"top":"child",w, h, X, Y, x, y ));
+        dbg_printf( "Book moves(%d,%s) w=%d, h=%d, X=%d, Y=%d, x=%d, y=%d\n", i, top?"top":"child",w, h, X, Y, x, y );
         if( top )
             break;
         pw = pw->GetParent();
@@ -1454,11 +1574,11 @@ void ChessFrame::OnBook(wxCommandEvent &)
     if( wxID_OK == dialog.ShowModal() )
     {
         objs.repository->book = dialog.dat;
-        DebugPrintf(( "file=%s, enabled=%s, limit=%d, percent=%d\n",
+        dbg_printf( "file=%s, enabled=%s, limit=%d, percent=%d\n",
             dialog.dat.m_file.c_str(),
             dialog.dat.m_enabled?"yes":"no",
             dialog.dat.m_limit_moves,
-            dialog.dat.m_post_limit_percent ));
+            dialog.dat.m_post_limit_percent );
         if( objs.repository->book.m_enabled != old_enabled ||
             objs.repository->book.m_file    != old_file )
         {
@@ -1488,9 +1608,9 @@ void ChessFrame::OnLog(wxCommandEvent &)
     if( wxID_OK == dialog.ShowModal() )
     {
         objs.repository->log = dialog.dat;
-        DebugPrintf(( "file=%s, enabled=%s\n",
+        dbg_printf( "file=%s, enabled=%s\n",
             dialog.dat.m_file.c_str(),
-            dialog.dat.m_enabled?"yes":"no" ));
+            dialog.dat.m_enabled?"yes":"no" );
     }
     SetFocusOnList();
 }
@@ -1508,8 +1628,8 @@ void ChessFrame::OnEngine(wxCommandEvent &)
     if( wxID_OK == dialog.ShowModal() )
     {
         objs.repository->engine = dialog.dat;
-        DebugPrintf(( "file=%s\n",
-            dialog.dat.m_file.c_str() ));
+        dbg_printf( "file=%s\n",
+            dialog.dat.m_file.c_str() );
         if( old_file != objs.repository->engine.m_file )
             objs.gl->EngineChanged();
     }
@@ -1523,8 +1643,8 @@ void ChessFrame::OnMaintenance(wxCommandEvent &)
     if( wxID_OK == dialog.ShowModal() )
     {
         objs.repository->engine = dialog.dat;
-        DebugPrintf(( "file=%s\n",
-                     dialog.dat.m_file.c_str() ));
+        dbg_printf( "file=%s\n",
+                     dialog.dat.m_file.c_str() );
         if( old_file != objs.repository->engine.m_file )
             objs.gl->EngineChanged();
     }
@@ -1555,10 +1675,10 @@ void ChessFrame::OnGeneral(wxCommandEvent &)
         objs.repository->general = dialog.dat;
         //if( changed )
         //    objs.gl->SetGroomedPosition();
-        DebugPrintf(( "notation language=%s, no italics=%d, straight to game=%d\n",
+        dbg_printf( "notation language=%s, no italics=%d, straight to game=%d\n",
                                  dialog.dat.m_notation_language.c_str(),
                                  dialog.dat.m_no_italics,
-                                 dialog.dat.m_straight_to_game ));
+                                 dialog.dat.m_straight_to_game );
         const char *to = LangCheckDiffEnd();
         bool after_large_font = objs.repository->general.m_large_font;
         bool after_no_italics = objs.repository->general.m_no_italics;
@@ -1594,7 +1714,11 @@ void ChessFrame::RefreshLanguageFont( const char *from, bool before_large_font, 
                 case 2: gc = &objs.gl->gc_session;   break;
             }
             for( int i=0; gc && i<gc->gds.size(); i++ )
-                LangLine( gc->gds[i]->moves_txt, from, to );
+            {
+                GameDocument *ptr = gc->gds[i]->GetGameDocumentPtr();
+                if( ptr )
+                    LangLine( ptr->moves_txt, from, to );
+            }
         }
     }
 
@@ -1633,13 +1757,13 @@ void ChessFrame::OnTraining(wxCommandEvent &)
         objs.repository->training = dialog.dat;
         //if( changed )
         //    objs.gl->SetGroomedPosition();
-        DebugPrintf(( "nbr_half=%d, hide wpawn=%d, hide wpiece=%d,"
+        dbg_printf( "nbr_half=%d, hide wpawn=%d, hide wpiece=%d,"
                                  " hide bpawn=%d, hide bpiece=%d\n",
                                  dialog.dat.m_nbr_half_moves_behind,
                                  dialog.dat.m_blindfold_hide_white_pawns,
                                  dialog.dat.m_blindfold_hide_white_pieces,
                                  dialog.dat.m_blindfold_hide_black_pawns,
-                                 dialog.dat.m_blindfold_hide_black_pieces ));
+                                 dialog.dat.m_blindfold_hide_black_pieces );
     }
     objs.gl->Refresh();
     SetFocusOnList();

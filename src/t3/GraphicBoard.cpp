@@ -22,79 +22,6 @@ using namespace std;
 using namespace thc;
 
 
-//#define KILL_DEBUG_COMPLETELY
-#ifdef KILL_DEBUG_COMPLETELY
-int DebugPrintfInner( const char *fmt, ... )
-{
-    return 0;
-}
-int DebugPrintfInnerTime( const char *fmt, ... )
-{
-    return 0;
-}
-int DebugPrintfInnerVoid( const char *fmt, ... )
-{
-    return 0;
-}
-#else
-static wxMessageOutputDebug msg;
-int DebugPrintfInnerVoid( const char *fmt, ... )
-{
-    return 0;
-}
-int DebugPrintfInner( const char *fmt, ... )
-{
-	static char buf[1024];
-	va_list stk;
-	va_start( stk, fmt );
-	vsnprintf( buf /*strchr(buf,'\0')*/, sizeof(buf)-2, fmt, stk );
-//  #define DEBUG_TO_LOG_FILE
-    #ifdef  DEBUG_TO_LOG_FILE
-    {
-        static FILE *log_file;
-        if( log_file == NULL )
-            log_file = fopen("log.txt","wt");
-        if( log_file )
-            fwrite( buf, 1, strlen(buf), log_file );
-    }
-    #else
-        msg.Printf("%s",buf);
-        //OutputDebugString( buf );
-    #endif
-	va_end(stk);
-    return 0;
-}
-int DebugPrintfInnerTime( const char *fmt, ... )
-{
-	static char buf[1024];
-    time_t t = time(NULL);
-    struct tm *p = localtime(&t);
-    const char *s = asctime(p);
-    strcpy( buf, s );
-    if( strchr(buf,'\n') )
-        *strchr(buf,'\n') = '\0';
-    strcat(buf,": ");
-	va_list stk;
-	va_start( stk, fmt );
-	vsnprintf( buf /*strchr(buf,'\0')*/, sizeof(buf)-2, fmt, stk );
-//  #define DEBUG_TO_LOG_FILE
-    #ifdef  DEBUG_TO_LOG_FILE
-    {
-        static FILE *log_file;
-        if( log_file == NULL )
-            log_file = fopen("log.txt","wt");
-        if( log_file )
-            fwrite( buf, 1, strlen(buf), log_file );
-    }
-    #else
-    msg.Printf(buf);
-    //OutputDebugString( buf );
-    #endif
-	va_end(stk);
-    return 0;
-}
-#endif
-
 // Initialise the graphic board
 GraphicBoard::GraphicBoard
 (
@@ -153,7 +80,7 @@ GraphicBoard::GraphicBoard
     wxPoint x = bmdata.GetOrigin();
     wxSize  z = bmdata.GetSize();
     int row_stride = bmdata.GetRowStride();
-    dprintf( "x=%d,%d z=%d,%d, height=%d, width=%d, row_stride=%d\n",x.x,x.y,z.x,z.y,height,width,row_stride);
+    cprintf( "x=%d,%d z=%d,%d, height=%d, width=%d, row_stride=%d\n",x.x,x.y,z.x,z.y,height,width,row_stride);
     width_bytes = row_stride;
 #else
 	BITMAP info;
@@ -167,10 +94,11 @@ GraphicBoard::GraphicBoard
   	assert( (info.bmWidthBytes%info.bmWidth) == 0 );
 	density      = info.bmWidthBytes/info.bmWidth;
 	height       = info.bmHeight;
-  	DebugPrintf(( "width_bytes=%lu, width=%lu, height=%lu\n",
+  	dbg_printf( "width_bytes=%lu, width=%lu, height=%lu\n",
 						(unsigned long)info.bmWidthBytes,
 						(unsigned long)info.bmWidth,
-						(unsigned long)info.bmHeight ));
+						(unsigned long)info.bmHeight );
+	OutputDebugStringA("hello world\n");
 #endif
 	xborder	     = (width_bytes%8) / 2;
 	yborder	     = (height%8) / 2;
@@ -194,11 +122,11 @@ GraphicBoard::GraphicBoard
         *dst++ = p.Blue();
         p++;
     }
-    dprintf("a,r,g,b = %d,%d,%d,%d\n", buf_board[0], buf_board[1], buf_board[2], buf_board[3] );
+    cprintf("a,r,g,b = %d,%d,%d,%d\n", buf_board[0], buf_board[1], buf_board[2], buf_board[3] );
 #else
 	//my_chess_bmp.GetBitmapBits( width_bytes*height, buf_board );   //@@
     int ret= ::GetBitmapBits((HBITMAP)(my_chess_bmp.GetHBITMAP()), width_bytes*height, buf_board );
-    //DebugPrintf(( "::GetBitmapBits() returns %d\n",ret));
+    //dbg_printf( "::GetBitmapBits() returns %d\n",ret);
 #endif
 
 	// Read from position on left below (the .bmp resource) into the box
@@ -425,7 +353,7 @@ void GraphicBoard::SetPosition( char *position_ascii )
 #else
 	//my_chess_bmp.SetBitmapBits( width_bytes*height, buf_board );
     /*int ret = ::*/SetBitmapBits( (HBITMAP)(my_chess_bmp.GetHBITMAP()), width_bytes*height, buf_board );  //@@
-    //DebugPrintf(( "::SetBitmapBits() returns %d\n", ret ));
+    //dbg_printf( "::SetBitmapBits() returns %d\n", ret );
 #endif
 
     // Now use GDI to add highlights
@@ -575,7 +503,7 @@ void GraphicBoard::HitTest( wxPoint hit, char &file, char &rank )
 {
 	unsigned long row = ( (hit.y   - yborder) / (height/8) );
 	unsigned long col = ( (hit.x*density - xborder) / (width_bytes/8) );
-    //DebugPrintf(( "Hit test: x=%ld y=%ld\n", hit.x, hit.y ));
+    //dbg_printf( "Hit test: x=%ld y=%ld\n", hit.x, hit.y );
 	if( normal_orientation )
 	{
 		rank = '1'+ (int)(7-row);
@@ -604,14 +532,14 @@ void GraphicBoard::HitTestEx( char &file, char &rank, wxPoint shift )
 	}
     y = row*(height/8) + yborder;
 	x = (col*(width_bytes/8) + xborder ) / density;
-    //DebugPrintf(( "Ex, shift:     x=%ld y=%ld\n", shift.x, shift.y ));
-    //DebugPrintf(( "Ex, src raw:   x=%ld y=%ld\n", x, y ));
+    //dbg_printf( "Ex, shift:     x=%ld y=%ld\n", shift.x, shift.y );
+    //dbg_printf( "Ex, src raw:   x=%ld y=%ld\n", x, y );
     y += height/16;
 	x += (width_bytes/16) / density;
-    //DebugPrintf(( "Ex  src+half:  x=%ld y=%ld\n", x, y ));
+    //dbg_printf( "Ex  src+half:  x=%ld y=%ld\n", x, y );
     y += shift.y;
 	x += shift.x;
-    //DebugPrintf(( "Ex  src+shift: x=%ld y=%ld\n", x, y ));
+    //dbg_printf( "Ex  src+shift: x=%ld y=%ld\n", x, y );
     if( y < (int)((height/16) + yborder) )
         y = ((height/16) + yborder);
     else if( y > (int)((height/16) + 7*(height/8) + yborder) )
@@ -620,12 +548,12 @@ void GraphicBoard::HitTestEx( char &file, char &rank, wxPoint shift )
 	    x = (int)((width_bytes/16 + xborder )/density);
 	else if( x > (int)(( width_bytes/16 + 7*(width_bytes/8) + xborder ) / density ) )
 	    x = (int)( (width_bytes/16 + 7*(width_bytes/8) + xborder ) / density );
-    //DebugPrintf(( "Ex  src+shift constrained: x=%ld y=%ld\n", x, y ));
+    //dbg_printf( "Ex  src+shift constrained: x=%ld y=%ld\n", x, y );
     wxPoint adjusted;
     adjusted.x = x;
     adjusted.y = y;
     HitTest( adjusted, file, rank );
-    //DebugPrintf(( "Ex result: file=%c rank=%c\n", file, rank ));
+    //dbg_printf( "Ex result: file=%c rank=%c\n", file, rank );
 }
 
 
@@ -781,7 +709,7 @@ void GraphicBoard::SetPositionEx( ChessPosition pos, bool blank_other_squares, c
 #else
 	//my_chess_bmp.SetBitmapBits( width_bytes*height, buf_board );
     /*int ret = ::*/SetBitmapBits( (HBITMAP)(my_chess_bmp.GetHBITMAP()), width_bytes*height, buf_board );  //@@
-    //DebugPrintf(( "::SetBitmapBits() returns %d\n", ret ));
+    //dbg_printf( "::SetBitmapBits() returns %d\n", ret );
 #endif
 
     // Now use GDI to add highlights
@@ -867,7 +795,7 @@ void GraphicBoard::PutEx( char piece,
 		default:	src_file='b';	src_rank='3';
 	}
 
-    //DebugPrintf(("%c%c\n", dst_file, dst_rank ));
+    //dbg_printf("%c%c\n", dst_file, dst_rank );
 	if( density != 4 )
 	{
 		// 16 bit (and other) graphics code
@@ -936,7 +864,7 @@ void GraphicBoard::OnMouseLeftDown( wxMouseEvent &event )
         pickup_file  = file;
         pickup_rank  = rank;
         pickup_point = point;
-        DebugPrintf(( "TODO check file=%c rank=%c\n", file, rank ));
+        dbg_printf( "TODO check file=%c rank=%c\n", file, rank );
         if( objs.gl->MouseDown(file,rank,click) )
         {
             pickup_file  = file;
@@ -954,7 +882,7 @@ void GraphicBoard::OnMouseMove( wxMouseEvent &event )
     wxPoint point = event.GetPosition();
     if( sliding )
     {
-        DebugPrintf(( "In board\n" ));
+        dbg_printf( "In board\n" );
         point.x -= pickup_point.x;
         point.y -= pickup_point.y;
         bool blank_other_squares = objs.gl->ShowSlidingPieceOnly();
@@ -978,12 +906,12 @@ void GraphicBoard::OnMouseLeftUp( wxMouseEvent &event )
   	HitTestEx( file, rank, point );
     if( 'a'<=file && file<='h' && '1'<=rank && rank<='8' )
     {
-        DebugPrintf(( "UP file=%c rank=%c\n", file, rank ));
+        dbg_printf( "UP file=%c rank=%c\n", file, rank );
         objs.gl->MouseUp(file,rank,click);
     }
     else
     {
-        DebugPrintf(( "UP out of range\n" ));
+        dbg_printf( "UP out of range\n" );
         objs.gl->MouseUp();
     }
 }

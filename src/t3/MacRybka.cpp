@@ -330,7 +330,7 @@ void Rybka::StartThinking( bool ponder, ChessPosition &pos, const char *forsyth,
 bool Rybka::Ponderhit( ChessPosition &pos )
 {
     bool okay = false;
-    DebugPrintfInner( "Ponderhit\n" );
+    release_printf( "Ponderhit\n" );
     if( gbl_state==SEND_PLAY_ENGINE1 ||
         gbl_state==SEND_PLAY_ENGINE2 ||
         gbl_state==SEND_PLAY_ENGINE3 ||
@@ -344,7 +344,7 @@ bool Rybka::Ponderhit( ChessPosition &pos )
         pos_engine_to_move = pos;
         send_stop = false;
         send_ponderhit = true;
-        DebugPrintfInner( "Ponderhit inside\n" );
+        release_printf( "Ponderhit inside\n" );
         Run();
     }
     return okay;
@@ -352,7 +352,7 @@ bool Rybka::Ponderhit( ChessPosition &pos )
 
 void Rybka::MoveNow()
 {
-    DebugPrintfInner( "MoveNow\n" );
+    release_printf( "MoveNow\n" );
     if( gbl_state==SEND_PLAY_ENGINE1 ||
         gbl_state==SEND_PLAY_ENGINE2 ||
         gbl_state==SEND_PLAY_ENGINE3 ||
@@ -365,14 +365,14 @@ void Rybka::MoveNow()
         send_ponderhit = false;
         send_stop = true;
         last_command_was_go_infinite = true;
-        DebugPrintfInner( "MoveNow inside\n" );
+        release_printf( "MoveNow inside\n" );
         Run();
     }
 }
 
 void Rybka::ForceStop()
 {
-    DebugPrintfInner( "ForceStop\n" );
+    release_printf( "ForceStop\n" );
     if( gbl_state==SEND_PLAY_ENGINE1 ||
         gbl_state==SEND_PLAY_ENGINE2 ||
         gbl_state==SEND_PLAY_ENGINE3 ||
@@ -387,17 +387,17 @@ void Rybka::ForceStop()
         last_command_was_go_infinite = false;
         if( gbl_state==SEND_ISREADY_P || gbl_state==WAIT_READYOK_P )
         {
-            DebugPrintfInner( "ForceStop 1\n" );
+            release_printf( "ForceStop 1\n" );
             readyok_next_state = READY;
         }
         else if( gbl_state == WAIT_EVALUATION )
         {
-            DebugPrintfInner( "ForceStop 2\n" );
+            release_printf( "ForceStop 2\n" );
             gbl_state = SEND_FORCE_STOP;
         }
         else
         {
-            DebugPrintfInner( "ForceStop 3\n" );
+            release_printf( "ForceStop 3\n" );
             gbl_state = READY;
         }
         Run();
@@ -488,10 +488,10 @@ void Rybka::Stop()
 {
     debug_trigger = true;
     if( !okay )
-        DebugPrintf(( "Stop: not okay\n" ));
+        dbg_printf( "Stop: not okay\n" );
     else
     {
-        DebugPrintf(( "Stop: okay\n" ));
+        dbg_printf( "Stop: okay\n" );
         if( gbl_state == WAIT_EVALUATION )
             last_command_was_go_infinite = true;    // usually only send stop if go infinite, but here if waiting
                                                     //  for engine to move, also need to send stop
@@ -505,7 +505,7 @@ void Rybka::Stop()
             unsigned long now_time = GetTickCount();	
             unsigned long elapsed_time = now_time-base_time;
             if( first || elapsed_time!=elapsed_time_changed )
-                DebugPrintfInner( "Waiting for engine to die: running=%s, elapsed_time=%lu, loops=%lu\n", running?"true":"false", elapsed_time, i );
+                release_printf( "Waiting for engine to die: running=%s, elapsed_time=%lu, loops=%lu\n", running?"true":"false", elapsed_time, i );
             elapsed_time_changed = elapsed_time;
             first = false;
             if( !running )
@@ -528,7 +528,7 @@ bool Rybka::Run()
         int nbr_bytes = MacReadNonBlocking(mac_fd_read,buf,sizeof(buf)-2);
         while( nbr_bytes > 0 )
         {
-            DebugPrintfInner( "Read nbr_bytes=%d\n", nbr_bytes );
+            release_printf( "Read nbr_bytes=%d\n", nbr_bytes );
             buf[nbr_bytes] = '\0';
             user_hook_out(buf);
             nbr_bytes = MacReadNonBlocking(mac_fd_read,buf,sizeof(buf)-2);
@@ -1013,7 +1013,7 @@ const char *Rybka::user_hook_in()
     }
     if( s )
     {
-        DebugPrintfInner( "in: %s\n", s );
+        release_printf( "in: %s\n", s );
         last_command_was_go_infinite = (
                                             0 == memcmp(s,"go infinite",11) ||
                                             0 == memcmp(s,"go ponder",9)
@@ -1047,7 +1047,7 @@ void Rybka::user_hook_out( const char *s )
 void Rybka::line_out( const char *s )
 {
     const char *p, *temp;
-    DebugPrintfInner( "out: %s\n", s );
+    release_printf( "out: %s\n", s );
     switch( gbl_state )
     {
         case WAIT_READYOK_P:
@@ -1077,7 +1077,7 @@ void Rybka::line_out( const char *s )
             if( 0 == memcmp(s,"info ",5) && strstr(s," pv ") )
             {
                 kq_engine_to_move.Put(s+4);
-                DebugPrintf(( "Kibitz engine to move info:%s\n", s+4 ));
+                dbg_printf( "Kibitz engine to move info:%s\n", s+4 );
             }
             p = strstr(s,temp="bestmove ");
             if( p )
@@ -1087,7 +1087,7 @@ void Rybka::line_out( const char *s )
                 ChessRules cr=pos_engine_to_move;
                 bool legal = move.TerseIn(&cr,p);
                 if( !legal )
-                    DebugPrintfInner( "**!! False bestmove %s detected !!**\n", p );
+                    release_printf( "**!! False bestmove %s detected !!**\n", p );
                 else
                 {
                     gbl_bestmove = move;
@@ -1113,7 +1113,7 @@ void Rybka::line_out( const char *s )
         case KIBITZING:
         {
             if( strstr(s," multipv 3 ") )
-                DebugPrintf(( "Break here"));
+                dbg_printf( "Break here");
             if( 0==memcmp(s,"info ",5) && strstr(s," pv ") )
             {
                 int idx = 0; // first attempt at V2 used 0, changed to -1 for when
@@ -1131,7 +1131,7 @@ void Rybka::line_out( const char *s )
                 if( idx >= 0 )
                 {
                     kq[idx].Put(s+4);
-                    DebugPrintf(( "Kibitz info(%d):%s\n", idx, s+4 ));
+                    dbg_printf( "Kibitz info(%d):%s\n", idx, s+4 );
                 }
             }
             break;
@@ -1503,7 +1503,7 @@ void Rybka::NewState( const char *comment, RYBKA_STATE new_state )
         }
     }
     gbl_state = new_state;
-    DebugPrintfInner( "State change %s -> %s (%s)\n", s1, s2, comment );
+    release_printf( "State change %s -> %s (%s)\n", s1, s2, comment );
 }
 
 #endif // THC_MAC

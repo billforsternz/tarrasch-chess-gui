@@ -82,14 +82,18 @@ public:
 
     bool Check( bool do_internal_check, const char *description, thc::ChessPosition *external );
     void Init();
+	void Init( thc::ChessPosition &cp );
     int  compress_move( thc::Move mv, char *storage );
     int  decompress_move( const char *storage, thc::Move &mv );
     void decompress_move_stay( const char *storage, thc::Move &mv ) const;  // decompress but don't advance
     
     
 private:
+    bool evil_queen_mode;
     std::string check_last_success;
     std::string check_last_description;
+    void compress_move_slow_mode( thc::Move mv, char &out );
+    void decompress_move_slow_mode( char in, thc::Move &out );
 };
 
 #endif /* defined(__readquick__CompressMoves__) */
