@@ -1250,3 +1250,475 @@ void CompressMoves::decompress_move_stay( const char *storage, thc::Move &mv ) c
     }
 }
 
+// EXPERIMENTAL
+#if 0
+
+#include <stdio.h>
+#include <string>
+#include <vector>
+#include "thc.h"
+
+int main()
+{
+    printf( "Hello world\n" );
+    return 0;
+}
+
+
+class MoveCompress
+{
+public:
+    MoveCompress() {}
+    
+};
+
+
+#define CODE_K_SPECIAL_WK_CASTLING              0x01
+#define CODE_K_SPECIAL_BK_CASTLING              0x02
+#define CODE_K_SPECIAL_WQ_CASTLING              0x03
+#define CODE_K_SPECIAL_BQ_CASTLING              0x04
+#define CODE_K_VECTOR_N                         0x05
+#define CODE_K_VECTOR_NE                        0x06
+#define CODE_K_VECTOR_E                         0x07
+#define CODE_K_VECTOR_SE                        0x08
+#define CODE_K_VECTOR_S                         0x09
+#define CODE_K_VECTOR_SW                        0x0b
+#define CODE_K_VECTOR_W                         0x0e
+#define CODE_K_VECTOR_NW                        0x0f
+
+#define CODE_N_VECTOR_NNE                       0x08
+#define CODE_N_VECTOR_NEE                       0x09
+#define CODE_N_VECTOR_SEE                       0x0a
+#define CODE_N_VECTOR_SSE                       0x0b
+#define CODE_N_VECTOR_SSW                       0x0c
+#define CODE_N_VECTOR_SWW                       0x0d
+#define CODE_N_VECTOR_NWW                       0x0e
+#define CODE_N_VECTOR_NNW                       0x0f
+
+#define KING            0
+#define QUEEN           1
+#define LIGHT_BISHOP    2
+#define DARK_BISHOP     3
+#define LO_ROOK         4
+#define HI_ROOK         5
+#define LO_KNIGHT       6
+#define HI_KNIGHT       7
+#define PAWN0           8
+#define PAWN1           9
+#define PAWN2           10
+#define PAWN3           11
+#define PAWN4           12
+#define PAWN5           13
+#define PAWN6           14
+#define PAWN7           15
+
+static inline bool is_dark( int sq )
+{
+    bool dark = (!(sq&8) &&  (sq&1))    // eg (a8,b8,c8...) && (b8|d8|f8|h8)
+             || ( (sq&8) && !(sq&1));   // eg (a7,b7,c7...) && (a7|c7|e7|g7)
+    return dark;
+}
+
+struct Side
+{
+    char pawn;
+    char rook;
+    char knight;
+    char bishop;
+    char queen;
+    char king;
+    int rooks[2];       // locations of each dynamic piece
+    int knights[2];     //
+    int pawns[8];
+    int nbr_pawns;      // 0-7
+    int nbr_rooks;      // 0,1 or 2
+    int nbr_knights;    // 0,1 or 2
+    int nbr_light_bishops;
+    int nbr_dark_bishops;
+    int nbr_queens;
+};
+
+
+static int pawn_ordering[64] =
+{
+    7, 15, 23, 31, 39, 47, 55, 63,
+    6, 14, 22, 30, 38, 46, 54, 62,
+    5, 13, 21, 29, 37, 45, 53, 61,
+    4, 12, 20, 28, 36, 44, 52, 60,
+    3, 11, 19, 27, 35, 43, 51, 59,
+    2, 10, 18, 26, 34, 42, 50, 58,
+    1,  9, 17, 25, 33, 41, 49, 57,
+    0,  8, 16, 24, 32, 40, 48, 56
+};
+
+static thc::Square traverse_order[64] =
+{
+    thc::a1, thc::a2, thc::a3, thc::a4, thc::a5, thc::a6, thc::a7, thc::a8,
+    thc::b1, thc::b2, thc::b3, thc::b4, thc::b5, thc::b6, thc::b7, thc::b8,
+    thc::c1, thc::c2, thc::c3, thc::c4, thc::c5, thc::c6, thc::c7, thc::c8,
+    thc::d1, thc::d2, thc::d3, thc::d4, thc::d5, thc::d6, thc::d7, thc::d8,
+    thc::e1, thc::e2, thc::e3, thc::e4, thc::e5, thc::e6, thc::e7, thc::e8,
+    thc::f1, thc::f2, thc::f3, thc::f4, thc::f5, thc::f6, thc::f7, thc::f8,
+    thc::g1, thc::g2, thc::g3, thc::g4, thc::g5, thc::g6, thc::g7, thc::g8,
+    thc::h1, thc::h2, thc::h3, thc::h4, thc::h5, thc::h6, thc::h7, thc::h8
+};
+
+static Side sides[2];   // Black and White
+std::string compress( thc::ChessPosition &cp, std::vector<thc::Move> &moves_in )
+{
+    memset( sides, 0, sizeof(sides) );
+    Side *white = &sides[0];
+    Side *black = &sides[1];
+    white->pawn   = 'P';
+    white->knight = 'N';
+    white->rook   = 'R';
+    white->bishop = 'B';
+    white->queen  = 'Q';
+    black->pawn   = 'p';
+    black->knight = 'n';
+    black->rook   = 'r';
+    black->bishop = 'b';
+    black->queen  = 'q';
+    for( int side=0; side<2; side++ )
+    {
+        Side *p = &sides[side];
+        for( int i=0; i<64; i++ )
+        {
+            int j = static_cast<int>(traverse_order[i]);
+            if( cp.squares[j] == p->pawn )
+            {
+                if( p->nbr_pawns >= 8 )
+                    err = true;
+                else
+                    p->pawns[p->nbr_pawns++] = j
+            }
+            if( cp.squares[j] == p->rook )
+            {
+                if( p->nbr_rooks >= 2 )
+                    err = true;
+                else
+                    p->rooks[p->nbr_rooks++] = j
+            }
+            if( cp.squares[j] == p->knight )
+            {
+                if( p->nbr_knights >= 2 )
+                    err = true;
+                else
+                    p->knights[p->nbr_knights++] = j
+            }
+            if( cp.squares[j] == p->bishop )
+            {
+                bool dark = (!(j&8) &&  (j&1))    // (a8,b8,c8...) && (b8|d8|f8|h8)
+                          || ((j&8) && !(j&1));   // (a7,b7,c7...) && (a7|c7|e7|g7)
+                if( dark )
+                {
+                    if( p->nbr_dark_bishops >= 1 )
+                        err = true;
+                    else
+                        p->nbr_dark_bishops++;
+                }
+                else
+                {
+                    if( p->nbr_light_bishops >= 1 )
+                        err = true;
+                    else
+                        p->nbr_light_bishops++;
+                }
+            }
+            if( cp.squares[j] == p->queen )
+            {
+                if( p->nbr_queens >= 1 )
+                    err = true;
+                else
+                    p->nbr_queens++;
+            }
+        }
+    }
+    
+    int len = moves_in.size();
+    for( int i=0; i<len; i++ )
+    {
+        Side *side = &sides[cp.white?0:1];
+        thc::Move mv = moves_in[i];
+        int src = static_cast<int>(mv.src);
+        int dst = static_cast<int>(mv.dst);
+        int capture_location = dst;
+        char piece = cp.squares[mv.src];
+        bool making_capture = isalpha(mv.capture);
+        switch( tolower(piece) )
+        {
+            case 'k':
+            {
+                switch(dst-src)          // 0, 1, 2
+                {                        // 8, 9, 10
+                                         // 16,17,18
+                    case -9:    code = CODE_K_VECTOR_NE;    break;  // 0-9
+                    case -8:    code = CODE_K_VECTOR_N;     break;  // 1-9
+                    case -7:    code = CODE_K_VECTOR_NE;    break;  // 2-9
+                    case -1:    code = CODE_K_VECTOR_W;     break;  // 8-9
+                    case 1:     code = CODE_K_VECTOR_E;     break;  // 10-9
+                    case 7:     code = CODE_K_VECTOR_SW;    break;  // 16-9
+                    case 8:     code = CODE_K_VECTOR_S;     break;  // 17-9
+                    case 9:     code = CODE_K_VECTOR_SE;    break;  // 18-9
+                    case 2:     code = CODE_K_K_CASTLING;   break;
+                    case -2:    code = CODE_K_Q_CASTLING;   break;
+                }
+                break;
+            }
+                
+            case 'q':
+            {
+				if( (src&7) == (dst&7) )                // same file ?
+				{
+                    code = CODE_LN + ((dst>>3)&7);      // low knight encodes rank
+				}
+				else if( (src&0x38) == (dst&0x38) )     // same rank ?
+				{
+					code = CODE_HN + (dst&7);           // high knight encodes file
+				}
+				else
+				{
+					int abs = (src>dst ? src-dst : dst-src);
+					if( abs%9 == 0 )  // do 9 first, as LCD of 9 and 7 is 63, i.e. diff between a8 and h1, a FALL\ diagonal
+						code = CODE_Q + CODE_FALL + (dst&7); // fall( = \) + dst file
+					else
+						code = CODE_Q + CODE_RISE + (dst&7); // rise( = /) + dst file
+				}
+                break;
+            }
+                
+            case 'b':
+            {
+                int code = is_dark(src) ? CODE_DARK_BISHOP : CODE_LIGHT_BISHOP;
+				int abs = (src>dst ? src-dst : dst-src);
+				if( abs%9 == 0 )  // do 9 first, as LCD of 9 and 7 is 63, i.e. diff between a8 and h1, a FALL\ diagonal
+					code = code + CODE_FALL + (dst&7); // fall( = \) + dst file
+				else
+					code = code + CODE_RISE + (dst&7); // rise( = /) + dst file
+                break;
+            }
+                
+            case 'n':
+            {
+                int knight_offset = (side->knights[0]==src ? 0 : 1);
+                int code = (knight_offset==0 ? CODE_KNIGHT_LO : CODE_KNIGHT_HI);
+                switch(dst-src)         // 0, 1, 2, 3
+                {                       // 8, 9, 10,11
+                                        // 16,17,18,19
+                                        // 24,25,26,27
+                    case -15:   code = code + VECTOR_NNE;   // 2-17
+                    case -6:    code = code + VECTOR_NEE;   // 11-17
+                    case 10:    code = code + VECTOR_SEE;   // 27-17
+                    case 17:    code = code + VECTOR_SSE;   // 27-10
+                    case 15:    code = code + VECTOR_SSW;   // 25-10
+                    case 6:     code = code + VECTOR_SWW;   // 16-10
+                    case -10:   code = code + VECTOR_NWW;   // 0-10
+                    case -17:   code = code + VECTOR_NNW;   // 0-17
+                }
+                side->knights[knight_offset] = dst;
+                // swap ?
+                if( side->nbr_knights==2 && side->knights[0]>side->knights[1] )
+                {
+                    char temp = side->knights[0];
+                    char side->knights[0] = side->knights[1];
+                    char side->knights[1] = temp;
+                }
+                break;
+            }
+                
+            case 'r'
+            {
+                int rook_offset = (side->rooks[0]==src ? 0 : 1);
+                int code = (rook_offset==0 ? CODE_ROOK_LO : CODE_ROOK_HI);
+				if( (src&7) == (dst&7) )                // same file ?
+				{
+                    code = code + CODE_SAME_FILE + ((dst>>3)&7);  // encode rank
+				}
+				else if( (src&0x38) == (dst&0x38) )     // same rank ?
+				{
+					code = code + (dst&7);           // encode file
+				}
+                side->rooks[rook_offset] = dst;
+                // swap ?
+                if( side->nbr_rooks==2 && side->rooks[0]>side->rooks[1] )
+                {
+                    char temp = side->rooks[0];
+                    char side->rooks[0] = side->rooks[1];
+                    char side->rooks[1] = temp;
+                }
+                break;
+            }
+                
+            case 'p':
+            {
+                int positive_delta = cp.white ? src-dst : dst-src;
+                switch( positive_delta )
+                {
+                    case 16: code = CODE_P_DOUBLE;  break;
+                    case 8:  code = CODE_P_SINGLE;  break;
+                    case 9:  code = CODE_P_LEFT;    break;
+                    case 7:  code = CODE_P_RIGHT;   break;
+                }
+                switch( mv.special )
+                {
+                    case thc::SPECIAL_WEN_PASSANT:
+                        capture_location = dst+8;
+                        break;
+                    case thc::SPECIAL_BEN_PASSANT:
+                        capture_location = dst-8;
+                        break;
+                    case thc::SPECIAL_PROMOTION_QUEEN:  code = (code<<2) + CODE_P_QUEEN;
+                        promoting = true;
+                        break;
+                    case thc::SPECIAL_PROMOTION_ROOK:   code = (code<<2) + CODE_P_ROOK;
+                        promoting = true;
+                        break;
+                    case thc::SPECIAL_PROMOTION_BISHOP: code = (code<<2) + CODE_P_BISHOP;
+                        promoting = true;
+                        break;
+                    case thc::SPECIAL_PROMOTION_KNIGHT: code = (code<<2) + CODE_P_KNIGHT;
+                        promoting = true;
+                        break;
+                }
+              
+                
+                bool reordering_possible = (code==CODE_P_LEFT || code==CODE_P_RIGHT);
+                if( !promoting && !reordering_possible )
+                {
+                    for( int i=0; !found && i<side->nbr_pawns; i++,p++ )
+                    {
+                        if( *p == src )
+                        {
+                            found = true;
+                            pawn_offset = i;
+                            *p = dst;
+                        }
+                    }
+                }
+                if( reordering_possible )
+                {
+                    if( pawn_ordering[dst] > pawn_ordering[src] ) // increasing capture?
+                    {
+                        char *p = side->pawns;
+                        bool found=false;
+                        for( int i=0; !found && i<side->nbr_pawns; i++,p++ )
+                        {
+                            if( *p == src )
+                            {
+                                found = true;
+                                pawn_offset = i;
+                                *p = dst;
+                                while( i+1<side->nbr_pawns && pawn_ordering[side->pawns[i]>pawn_ordering[side->pawns[i+1] )
+                                {
+                                    int temp = side->pawns[i];
+                                    side->pawns[i] = side->pawns[i+1];
+                                    side->pawns[i+1] = temp;
+                                    i++;
+                                }
+                            }
+                        }
+                    }
+                    else // else decreasing capture
+                    {
+                        char *p = side->pawns + side->nbr_pawns-1;
+                        bool found=false;
+                        for( int i=side->nbr_pawns-1; !found && i>=0; i--, p-- )
+                        {
+                            if( *p == src )
+                            {
+                                found = true;
+                                pawn_offset = i;
+                                *p = dst;
+                                while( i-1>=0 && pawn_ordering[side->pawns[i-1]>pawn_ordering[side->pawns[i] )
+                                {
+                                    int temp = side->pawns[i-1];
+                                    side->pawns[i-1] = side->pawns[i];
+                                    side->pawns[i] = temp;
+                                    i--;
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+            }   // end PAWN
+        }   // end switch on moving piece
+        
+        // Accomodate captured piece
+        if( making_capture )
+        {
+            switch( tolower(cp.squares[capture_location]) )
+            {
+                case 'n':
+                {
+                    if( other->nbr_knights==2 && other->knights[0]==capture_location )
+                        other->knights[0] = other->knights[1];
+                    other->nbr_knights--;
+                    break;
+                }
+                case 'r':
+                {
+                    if( other->nbr_rooks==2 && other->rooks[0]==capture_location )
+                        other->rooks[0] = other->rooks[1];
+                    other->nbr_rooks--;
+                    break;
+                }
+                case 'b':
+                {
+                    if( is_dark(capture_location) )
+                        other->nbr_dark_bishops--;
+                    else
+                        other->nbr_light_bishops--;
+                    break;
+                }
+                case 'q':
+                {
+                    other->nbr_queens--;
+                    break;
+                }
+                case 'p':
+                {
+                    bool found=false;
+                    for( int i=0; i<other->nbr_pawns; i++ )
+                    {
+                        if( !found )
+                        {
+                            if( other->pawns[i] == capture_location )
+                                found = true;
+                        }
+                        if( found && i+1<other->nbr_pawns )
+                            other->pawns[i] = other->pawns[i+1];
+                    }
+                }
+            }
+        }
+        
+        // Accomodate promotion, promoting pawn has disappeared
+        if( promotion )
+        {
+            for( int i=pawn_offset; i+1<side->nbr_pawns; i++ )
+                side->pawns[i] = side->pawns[i+1];
+
+            // And a new piece has emerged
+            switch( mv.special )
+            {
+                case thc::SPECIAL_PROMOTION_QUEEN:
+                {
+                    if( side->nbr_queens > 0 )
+                        goto_slow_mode = true;
+                    else
+                        side->nbr_queens++;
+                }
+            }
+        }
+        
+        // Make move
+        cp.MakeMove(mv);
+        
+        // Store code
+        compressed_string.push_back(code);
+
+    }   // end move loop
+}  // end compress()
+
+#endif
