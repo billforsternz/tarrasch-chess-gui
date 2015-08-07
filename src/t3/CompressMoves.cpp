@@ -1314,8 +1314,8 @@ public:
 
 static inline bool is_dark( int sq )
 {
-    bool dark = (!(sq&8) &&  (sq&1))    // eg (a8,b8,c8...) && (b8|d8|f8|h8)
-             || ( (sq&8) && !(sq&1));   // eg (a7,b7,c7...) && (a7|c7|e7|g7)
+    bool dark = (!(sq&8) &&  (sq&1))    // eg (a8,b8,c8...h8) && (b8|d8|f8|h8)
+             || ( (sq&8) && !(sq&1));   // eg (a7,b7,c7...c7) && (a7|c7|e7|g7)
     return dark;
 }
 
@@ -1336,6 +1336,20 @@ struct Side
     int nbr_light_bishops;
     int nbr_dark_bishops;
     int nbr_queens;
+};
+
+class CompressMoves
+{
+public:
+    CompressMoves() {}
+    void Init();
+    std::string Compress( std::vector<thc::Move> &moves );
+    std::string Compress( thc::ChessPosition &cp, std::vector<thc::Move> &moves );
+        
+private:
+    thc:ChessRules cr;
+    Side sides[2];
+    bool slow_mode;
 };
 
 
@@ -1363,9 +1377,9 @@ static thc::Square traverse_order[64] =
     thc::h1, thc::h2, thc::h3, thc::h4, thc::h5, thc::h6, thc::h7, thc::h8
 };
 
-static Side sides[2];   // Black and White
-std::string compress( thc::ChessPosition &cp, std::vector<thc::Move> &moves_in )
+void CompressMoves::Init()
 {
+    slow_mode = false;
     memset( sides, 0, sizeof(sides) );
     Side *white = &sides[0];
     Side *black = &sides[1];
@@ -1379,211 +1393,313 @@ std::string compress( thc::ChessPosition &cp, std::vector<thc::Move> &moves_in )
     black->rook   = 'r';
     black->bishop = 'b';
     black->queen  = 'q';
-    for( int side=0; side<2; side++ )
+    for( int side=0; !slow_mode && side<2; side++ )
     {
         Side *p = &sides[side];
         for( int i=0; i<64; i++ )
         {
             int j = static_cast<int>(traverse_order[i]);
-            if( cp.squares[j] == p->pawn )
+            if( cr.squares[j] == p->pawn )
             {
                 if( p->nbr_pawns >= 8 )
-                    err = true;
+                    slow_mode = true;
                 else
                     p->pawns[p->nbr_pawns++] = j
             }
-            if( cp.squares[j] == p->rook )
+            if( cr.squares[j] == p->rook )
             {
                 if( p->nbr_rooks >= 2 )
-                    err = true;
+                    slow_mode = true;
                 else
                     p->rooks[p->nbr_rooks++] = j
             }
-            if( cp.squares[j] == p->knight )
+            if( cr.squares[j] == p->knight )
             {
                 if( p->nbr_knights >= 2 )
-                    err = true;
+                    slow_mode = true;
                 else
                     p->knights[p->nbr_knights++] = j
             }
-            if( cp.squares[j] == p->bishop )
+            if( cr.squares[j] == p->bishop )
             {
-                bool dark = (!(j&8) &&  (j&1))    // (a8,b8,c8...) && (b8|d8|f8|h8)
-                          || ((j&8) && !(j&1));   // (a7,b7,c7...) && (a7|c7|e7|g7)
-                if( dark )
+                if( is_dark(j) )
                 {
                     if( p->nbr_dark_bishops >= 1 )
-                        err = true;
+                        slow_mode = true;
                     else
                         p->nbr_dark_bishops++;
                 }
                 else
                 {
                     if( p->nbr_light_bishops >= 1 )
-                        err = true;
+                        slow_mode = true;
                     else
                         p->nbr_light_bishops++;
                 }
             }
-            if( cp.squares[j] == p->queen )
+            if( cr.squares[j] == p->queen )
             {
                 if( p->nbr_queens >= 1 )
-                    err = true;
+                    slow_mode = true;
                 else
                     p->nbr_queens++;
             }
         }
     }
+    if( slow_mode )
+    {
+        // The ALLOW_CASTLING_EVEN_AFTER_KING_AND_ROOK_MOVES algorithm
+        //  anticipates future optimised implementations - Such implementations
+        //  might implement making moves using thc::Move independently
+        //  and without reference to the thc classes until they are forced
+        //  to use slow_mode. Upon transition to slow_mode, such implementations
+        //  rely on move generation algorithms, which in turn need to
+        //  know whether the kings and rooks have ever moved. Relieve the
+        //  future implementation's responsibility of tracking this information
+        //  by always acting as if the kings and rooks haven't moved (if they
+        //  are on their home squares).  This doesn't cause possible illegality
+        //  since Compress() only compresses legal moves, so reversing this
+        //  with Uncompress() only produces legal moves.
+
+        // ALLOW_CASTLING_EVEN_AFTER_KING_AND_ROOK_MOVES
+        if( cr.squares[thc::e1]=='K' && cr.squares[thc::h1]=='R' )
+            cr.wking = 1;
+        if( cr.squares[thc::e1]=='K' && cr.squares[thc::a1]=='R' )
+            cr.wqueen = 1;
+        if( cr.squares[thc::e8]=='k' && cr.squares[thc::h8]=='r' )
+            cr.bking = 1;
+        if( cr.squares[thc::e8]=='k' && cr.squares[thc::a8]=='r' )
+            cr.bqueen = 1;
+    }
+}
     
+std::string CompressMoves::Compress( thc::ChessPosition &cp, std::vector<thc::Move> &moves_in )
+{
+    cr = cp;
+    return CompressMoves::Compress( moves_in );
+}
+    
+
+
+std::string CompressMoves::Compress( std::vector<thc::Move> &moves_in );
+{
+    std::string ret;
+    Init();
     int len = moves_in.size();
     for( int i=0; i<len; i++ )
     {
-        Side *side = &sides[cp.white?0:1];
+        char c;
         thc::Move mv = moves_in[i];
-        int src = static_cast<int>(mv.src);
-        int dst = static_cast<int>(mv.dst);
-        int capture_location = dst;
-        char piece = cp.squares[mv.src];
-        bool making_capture = isalpha(mv.capture);
-        switch( tolower(piece) )
+        if( slow_mode )
         {
-            case 'k':
-            {
-                switch(dst-src)          // 0, 1, 2
-                {                        // 8, 9, 10
-                                         // 16,17,18
-                    case -9:    code = CODE_K_VECTOR_NE;    break;  // 0-9
-                    case -8:    code = CODE_K_VECTOR_N;     break;  // 1-9
-                    case -7:    code = CODE_K_VECTOR_NE;    break;  // 2-9
-                    case -1:    code = CODE_K_VECTOR_W;     break;  // 8-9
-                    case 1:     code = CODE_K_VECTOR_E;     break;  // 10-9
-                    case 7:     code = CODE_K_VECTOR_SW;    break;  // 16-9
-                    case 8:     code = CODE_K_VECTOR_S;     break;  // 17-9
-                    case 9:     code = CODE_K_VECTOR_SE;    break;  // 18-9
-                    case 2:     code = CODE_K_K_CASTLING;   break;
-                    case -2:    code = CODE_K_Q_CASTLING;   break;
-                }
-                break;
+            c = SlowMove(mv);
+            cr.MakeMove(mv);
+            if( !slow_mode )
+                Init();
+        }
+        else
+        {
+            c = FastMove(mv);
+            cr.MakeMove(mv);
+            if( slow_mode )
+                Init();
+        }
+
+        
+        // Store code
+        ret.push_back(c);
+
+    }   // end move loop
+    return ret;
+}  // end Compress()
+
+char CompressMoves::SlowMode( thc::Move mv )
+{
+    int code=0;
+    thc::MOVELIST list;
+    cr.GenMoveList( &list );
+    for( int i=0; i< list.count; i++ )
+    {
+        if( mv == list.moves[i] )
+        {
+            code = 255-i;
+            break;
+        }
+    }
+    if( isalpha(mv.capture) )
+    {
+        if( FastModePossible() )
+        {
+            slow_mode = false;
+            code = FastMode();
+        }
+    }
+    return static_cast<char>(code);
+}
+
+char CompressMoves::FastMode( thc::Move mv )
+{
+    Side *side  = &sides[cp.white?0:1];
+    Side *other = &sides[cp.white?1:0];
+    int src = static_cast<int>(mv.src);
+    int dst = static_cast<int>(mv.dst);
+    int capture_location = dst;
+    char piece = cp.squares[mv.src];
+    bool making_capture = isalpha(cp.squares[capture_location]);
+    switch( tolower(piece) )
+    {
+        case 'k':
+        {
+            switch(dst-src)          // 0, 1, 2
+            {                        // 8, 9, 10
+                                     // 16,17,18
+                case -9:    code = CODE_K_VECTOR_NE;    break;  // 0-9
+                case -8:    code = CODE_K_VECTOR_N;     break;  // 1-9
+                case -7:    code = CODE_K_VECTOR_NE;    break;  // 2-9
+                case -1:    code = CODE_K_VECTOR_W;     break;  // 8-9
+                case 1:     code = CODE_K_VECTOR_E;     break;  // 10-9
+                case 7:     code = CODE_K_VECTOR_SW;    break;  // 16-9
+                case 8:     code = CODE_K_VECTOR_S;     break;  // 17-9
+                case 9:     code = CODE_K_VECTOR_SE;    break;  // 18-9
+                case 2:     code = CODE_K_K_CASTLING;   break;
+                case -2:    code = CODE_K_Q_CASTLING;   break;
             }
-                
-            case 'q':
-            {
-				if( (src&7) == (dst&7) )                // same file ?
-				{
-                    code = CODE_LN + ((dst>>3)&7);      // low knight encodes rank
-				}
-				else if( (src&0x38) == (dst&0x38) )     // same rank ?
-				{
-					code = CODE_HN + (dst&7);           // high knight encodes file
-				}
-				else
-				{
-					int abs = (src>dst ? src-dst : dst-src);
-					if( abs%9 == 0 )  // do 9 first, as LCD of 9 and 7 is 63, i.e. diff between a8 and h1, a FALL\ diagonal
-						code = CODE_Q + CODE_FALL + (dst&7); // fall( = \) + dst file
-					else
-						code = CODE_Q + CODE_RISE + (dst&7); // rise( = /) + dst file
-				}
-                break;
-            }
-                
-            case 'b':
-            {
-                int code = is_dark(src) ? CODE_DARK_BISHOP : CODE_LIGHT_BISHOP;
+            break;
+        }
+            
+        case 'q':
+        {
+			if( (src&7) == (dst&7) )                // same file ?
+			{
+                code = CODE_LN + ((dst>>3)&7);      // low knight encodes rank
+			}
+			else if( (src&0x38) == (dst&0x38) )     // same rank ?
+			{
+				code = CODE_HN + (dst&7);           // high knight encodes file
+			}
+			else
+			{
 				int abs = (src>dst ? src-dst : dst-src);
 				if( abs%9 == 0 )  // do 9 first, as LCD of 9 and 7 is 63, i.e. diff between a8 and h1, a FALL\ diagonal
-					code = code + CODE_FALL + (dst&7); // fall( = \) + dst file
+					code = CODE_Q + CODE_FALL + (dst&7); // fall( = \) + dst file
 				else
-					code = code + CODE_RISE + (dst&7); // rise( = /) + dst file
-                break;
+					code = CODE_Q + CODE_RISE + (dst&7); // rise( = /) + dst file
+			}
+            break;
+        }
+            
+        case 'b':
+        {
+            int code = is_dark(src) ? CODE_DARK_BISHOP : CODE_LIGHT_BISHOP;
+			int abs = (src>dst ? src-dst : dst-src);
+			if( abs%9 == 0 )  // do 9 first, as LCD of 9 and 7 is 63, i.e. diff between a8 and h1, a FALL\ diagonal
+				code = code + CODE_FALL + (dst&7); // fall( = \) + dst file
+			else
+				code = code + CODE_RISE + (dst&7); // rise( = /) + dst file
+            break;
+        }
+            
+        case 'n':
+        {
+            int knight_offset = (side->knights[0]==src ? 0 : 1);
+            int code = (knight_offset==0 ? CODE_KNIGHT_LO : CODE_KNIGHT_HI);
+            switch(dst-src)         // 0, 1, 2, 3
+            {                       // 8, 9, 10,11
+                                    // 16,17,18,19
+                                    // 24,25,26,27
+                case -15:   code = code + VECTOR_NNE;   // 2-17
+                case -6:    code = code + VECTOR_NEE;   // 11-17
+                case 10:    code = code + VECTOR_SEE;   // 27-17
+                case 17:    code = code + VECTOR_SSE;   // 27-10
+                case 15:    code = code + VECTOR_SSW;   // 25-10
+                case 6:     code = code + VECTOR_SWW;   // 16-10
+                case -10:   code = code + VECTOR_NWW;   // 0-10
+                case -17:   code = code + VECTOR_NNW;   // 0-17
             }
-                
-            case 'n':
+            side->knights[knight_offset] = dst;
+            // swap ?
+            if( side->nbr_knights==2 && side->knights[0]>side->knights[1] )
             {
-                int knight_offset = (side->knights[0]==src ? 0 : 1);
-                int code = (knight_offset==0 ? CODE_KNIGHT_LO : CODE_KNIGHT_HI);
-                switch(dst-src)         // 0, 1, 2, 3
-                {                       // 8, 9, 10,11
-                                        // 16,17,18,19
-                                        // 24,25,26,27
-                    case -15:   code = code + VECTOR_NNE;   // 2-17
-                    case -6:    code = code + VECTOR_NEE;   // 11-17
-                    case 10:    code = code + VECTOR_SEE;   // 27-17
-                    case 17:    code = code + VECTOR_SSE;   // 27-10
-                    case 15:    code = code + VECTOR_SSW;   // 25-10
-                    case 6:     code = code + VECTOR_SWW;   // 16-10
-                    case -10:   code = code + VECTOR_NWW;   // 0-10
-                    case -17:   code = code + VECTOR_NNW;   // 0-17
-                }
-                side->knights[knight_offset] = dst;
-                // swap ?
-                if( side->nbr_knights==2 && side->knights[0]>side->knights[1] )
-                {
-                    char temp = side->knights[0];
-                    char side->knights[0] = side->knights[1];
-                    char side->knights[1] = temp;
-                }
-                break;
+                char temp = side->knights[0];
+                char side->knights[0] = side->knights[1];
+                char side->knights[1] = temp;
             }
-                
-            case 'r'
+            break;
+        }
+            
+        case 'r'
+        {
+            int rook_offset = (side->rooks[0]==src ? 0 : 1);
+            int code = (rook_offset==0 ? CODE_ROOK_LO : CODE_ROOK_HI);
+			if( (src&7) == (dst&7) )                // same file ?
+			{
+                code = code + CODE_SAME_FILE + ((dst>>3)&7);  // encode rank
+			}
+			else if( (src&0x38) == (dst&0x38) )     // same rank ?
+			{
+				code = code + (dst&7);           // encode file
+			}
+            side->rooks[rook_offset] = dst;
+            // swap ?
+            if( side->nbr_rooks==2 && side->rooks[0]>side->rooks[1] )
             {
-                int rook_offset = (side->rooks[0]==src ? 0 : 1);
-                int code = (rook_offset==0 ? CODE_ROOK_LO : CODE_ROOK_HI);
-				if( (src&7) == (dst&7) )                // same file ?
-				{
-                    code = code + CODE_SAME_FILE + ((dst>>3)&7);  // encode rank
-				}
-				else if( (src&0x38) == (dst&0x38) )     // same rank ?
-				{
-					code = code + (dst&7);           // encode file
-				}
-                side->rooks[rook_offset] = dst;
-                // swap ?
-                if( side->nbr_rooks==2 && side->rooks[0]>side->rooks[1] )
-                {
-                    char temp = side->rooks[0];
-                    char side->rooks[0] = side->rooks[1];
-                    char side->rooks[1] = temp;
-                }
-                break;
+                char temp = side->rooks[0];
+                char side->rooks[0] = side->rooks[1];
+                char side->rooks[1] = temp;
             }
-                
-            case 'p':
+            break;
+        }
+            
+        case 'p':
+        {
+            int positive_delta = cp.white ? src-dst : dst-src;
+            switch( positive_delta )
             {
-                int positive_delta = cp.white ? src-dst : dst-src;
-                switch( positive_delta )
-                {
-                    case 16: code = CODE_P_DOUBLE;  break;
-                    case 8:  code = CODE_P_SINGLE;  break;
-                    case 9:  code = CODE_P_LEFT;    break;
-                    case 7:  code = CODE_P_RIGHT;   break;
-                }
-                switch( mv.special )
-                {
-                    case thc::SPECIAL_WEN_PASSANT:
-                        capture_location = dst+8;
-                        break;
-                    case thc::SPECIAL_BEN_PASSANT:
-                        capture_location = dst-8;
-                        break;
-                    case thc::SPECIAL_PROMOTION_QUEEN:  code = (code<<2) + CODE_P_QUEEN;
-                        promoting = true;
-                        break;
-                    case thc::SPECIAL_PROMOTION_ROOK:   code = (code<<2) + CODE_P_ROOK;
-                        promoting = true;
-                        break;
-                    case thc::SPECIAL_PROMOTION_BISHOP: code = (code<<2) + CODE_P_BISHOP;
-                        promoting = true;
-                        break;
-                    case thc::SPECIAL_PROMOTION_KNIGHT: code = (code<<2) + CODE_P_KNIGHT;
-                        promoting = true;
-                        break;
-                }
-              
-                
+                case 16: code = CODE_P_DOUBLE;  break;
+                case 8:  code = CODE_P_SINGLE;  break;
+                case 9:  code = CODE_P_LEFT;    break;
+                case 7:  code = CODE_P_RIGHT;   break;
+            }
+            switch( mv.special )
+            {
+                case thc::SPECIAL_WEN_PASSANT:
+                    capture_location = dst+8;
+                    making_capture = true;
+                    break;
+                case thc::SPECIAL_BEN_PASSANT:
+                    capture_location = dst-8;
+                    making_capture = true;
+                    break;
+                case thc::SPECIAL_PROMOTION_QUEEN:  code = (code<<2) + CODE_P_QUEEN;
+                    promoting = true;
+                    break;
+                case thc::SPECIAL_PROMOTION_ROOK:   code = (code<<2) + CODE_P_ROOK;
+                    promoting = true;
+                    break;
+                case thc::SPECIAL_PROMOTION_BISHOP: code = (code<<2) + CODE_P_BISHOP;
+                    promoting = true;
+                    break;
+                case thc::SPECIAL_PROMOTION_KNIGHT: code = (code<<2) + CODE_P_KNIGHT;
+                    promoting = true;
+                    break;
+            }
+
+            // The simplest possible strategy is to automatically go to slow mode if
+            //  promoting. The UNDO_LAST_SLOW_MODE_MOVE algorithm anticipates future
+            //  optimised implementations that avoid going to slow mode for
+            //  promotions that are immediately captured - or promotions that don't
+            //  introduce a third knight/rook second queen/light bishop/dark bishop.
+            //  Because of UNDO_LAST_SLOW_MODE_MOVE those future implementations will
+            //  generate the same code for the move immediately after promotion as
+            //  this slow implementation (since the one slow mode move this implementation
+            //  generates in the simple promotion cases is UNDOne, and replaced with
+            //  a fast mode move).
+            if( promoting )
+                goto_slow_mode = true;
+            else
+            {
                 bool reordering_possible = (code==CODE_P_LEFT || code==CODE_P_RIGHT);
-                if( !promoting && !reordering_possible )
+                if( !reordering_possible )
                 {
                     for( int i=0; !found && i<side->nbr_pawns; i++,p++ )
                     {
@@ -1595,7 +1711,7 @@ std::string compress( thc::ChessPosition &cp, std::vector<thc::Move> &moves_in )
                         }
                     }
                 }
-                if( reordering_possible )
+                else
                 {
                     if( pawn_ordering[dst] > pawn_ordering[src] ) // increasing capture?
                     {
@@ -1640,85 +1756,62 @@ std::string compress( thc::ChessPosition &cp, std::vector<thc::Move> &moves_in )
                         }
                     }
                 }
+            }
+            break;
+        }   // end PAWN
+    }   // end switch on moving piece
+    
+    // Accomodate captured piece
+    if( !goto_slow_mode && making_capture )
+    {
+        switch( tolower(cp.squares[capture_location]) )
+        {
+            case 'n':
+            {
+                if( other->nbr_knights==2 && other->knights[0]==capture_location )
+                    other->knights[0] = other->knights[1];
+                other->nbr_knights--;
                 break;
-            }   // end PAWN
-        }   // end switch on moving piece
-        
-        // Accomodate captured piece
-        if( making_capture )
-        {
-            switch( tolower(cp.squares[capture_location]) )
+            }
+            case 'r':
             {
-                case 'n':
+                if( other->nbr_rooks==2 && other->rooks[0]==capture_location )
+                    other->rooks[0] = other->rooks[1];
+                other->nbr_rooks--;
+                break;
+            }
+            case 'b':
+            {
+                if( is_dark(capture_location) )
+                    other->nbr_dark_bishops--;
+                else
+                    other->nbr_light_bishops--;
+                break;
+            }
+            case 'q':
+            {
+                other->nbr_queens--;
+                break;
+            }
+            case 'p':
+            {
+                bool found=false;
+                for( int i=0; i<other->nbr_pawns; i++ )
                 {
-                    if( other->nbr_knights==2 && other->knights[0]==capture_location )
-                        other->knights[0] = other->knights[1];
-                    other->nbr_knights--;
-                    break;
-                }
-                case 'r':
-                {
-                    if( other->nbr_rooks==2 && other->rooks[0]==capture_location )
-                        other->rooks[0] = other->rooks[1];
-                    other->nbr_rooks--;
-                    break;
-                }
-                case 'b':
-                {
-                    if( is_dark(capture_location) )
-                        other->nbr_dark_bishops--;
-                    else
-                        other->nbr_light_bishops--;
-                    break;
-                }
-                case 'q':
-                {
-                    other->nbr_queens--;
-                    break;
-                }
-                case 'p':
-                {
-                    bool found=false;
-                    for( int i=0; i<other->nbr_pawns; i++ )
+                    if( !found )
                     {
-                        if( !found )
-                        {
-                            if( other->pawns[i] == capture_location )
-                                found = true;
-                        }
-                        if( found && i+1<other->nbr_pawns )
-                            other->pawns[i] = other->pawns[i+1];
+                        if( other->pawns[i] == capture_location )
+                            found = true;
                     }
+                    if( found && i+1<other->nbr_pawns )
+                        other->pawns[i] = other->pawns[i+1];
                 }
             }
         }
-        
-        // Accomodate promotion, promoting pawn has disappeared
-        if( promotion )
-        {
-            for( int i=pawn_offset; i+1<side->nbr_pawns; i++ )
-                side->pawns[i] = side->pawns[i+1];
+    }
 
-            // And a new piece has emerged
-            switch( mv.special )
-            {
-                case thc::SPECIAL_PROMOTION_QUEEN:
-                {
-                    if( side->nbr_queens > 0 )
-                        goto_slow_mode = true;
-                    else
-                        side->nbr_queens++;
-                }
-            }
-        }
-        
-        // Make move
-        cp.MakeMove(mv);
-        
-        // Store code
-        compressed_string.push_back(code);
-
-    }   // end move loop
-}  // end compress()
+    
+    return code;
+}
 
 #endif
