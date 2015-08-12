@@ -5,11 +5,17 @@
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
 
-#ifndef __readquick__CompressMoves__
-#define __readquick__CompressMoves__
+#ifndef COMPRESS_MOVES_H
+#define COMPRESS_MOVES_H
 
+#include <algorithm>
+#include <vector>
 #include <string>
 #include "thc.h"
+
+// Old version
+#define USE_OLD_VERSION // #define this until new version is fully tested
+#ifdef  USE_OLD_VERSION
 
 std::string SqToStr( int sq );
 std::string SqToStr( thc::Square sq );
@@ -96,4 +102,65 @@ private:
     void decompress_move_slow_mode( char in, thc::Move &out );
 };
 
-#endif /* defined(__readquick__CompressMoves__) */
+// New version
+#else
+
+struct Side
+{
+    bool white;
+    bool fast_mode;
+    int rooks[2];       // locations of each dynamic piece
+    int knights[2];     //
+    int pawns[8];
+    int bishop_dark;
+    int bishop_light;
+    int queen;
+    int king;
+    int nbr_pawns;      // 0-8
+    int nbr_rooks;      // 0,1 or 2
+    int nbr_knights;    // 0,1 or 2
+    int nbr_light_bishops;
+    int nbr_dark_bishops;
+    int nbr_queens;
+};
+
+class CompressMoves
+{
+public:
+    CompressMoves()
+    {
+        sides[0].white=true;
+        sides[0].fast_mode=false;
+        sides[1].white=false;
+        sides[1].fast_mode=false;
+    }
+    bool TryFastMode( Side *side );
+    std::string Compress( std::vector<thc::Move> &moves_in );
+    std::string Compress( thc::ChessPosition &cp, std::vector<thc::Move> &moves_in );
+    std::vector<thc::Move> Uncompress( std::string &moves_in );
+    std::vector<thc::Move> Uncompress( thc::ChessPosition &cp, std::string &moves_in );
+    
+    // For compatibility with old version, progressively replace
+    CompressMoves( const CompressMoves& copy_from_me ) { cr=copy_from_me.cr; sides[0]=copy_from_me.sides[0]; sides[1]=copy_from_me.sides[1]; }
+    CompressMoves & operator= (const CompressMoves & copy_from_me ) { cr=copy_from_me.cr; sides[0]=copy_from_me.sides[0]; sides[1]=copy_from_me.sides[1]; return *this; }
+    
+    bool Check( bool do_internal_check, const char *description, thc::ChessPosition *external ) { return true; }
+    void Init() { TryFastMode( &sides[0]); TryFastMode( &sides[1]); }
+	void Init( thc::ChessPosition &cp ) { cr = cp; Init(); }
+    int  compress_move( thc::Move mv, char *storage );
+    int  decompress_move( const char *storage, thc::Move &mv );
+    void decompress_move_stay( const char *storage, thc::Move &mv );  // decompress but don't advance
+    
+public:
+    thc::ChessRules cr;
+private:
+    Side sides[2];
+    char CompressSlowMode( thc::Move mv );
+    char CompressFastMode( thc::Move mv, Side *side, Side *other );
+    thc::Move UncompressSlowMode( char code );
+    thc::Move UncompressFastMode( char code, Side *side, Side *other );
+};
+
+#endif
+
+#endif // COMPRESS_MOVES_H

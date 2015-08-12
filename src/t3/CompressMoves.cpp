@@ -6,12 +6,15 @@
  ****************************************************************************/
 #define _CRT_SECURE_NO_DEPRECATE
 
-#if 0
 #include <algorithm>
 #include <vector>
 #include <stdlib.h>
 #include "CompressMoves.h"
 #include "DebugPrintf.h"
+
+// Old version
+#define USE_OLD_VERSION // #define this until new version is fully tested
+#ifdef  USE_OLD_VERSION
 
 // Compression method is basically hi nibble indicates one of 16 pieces, lo nibble indicates how piece moves
 #define CODE_SAME_FILE                          8          // Rank or file codes, this bit set indicates same file (so remaining 3 bits encode rank)
@@ -1252,16 +1255,8 @@ void CompressMoves::decompress_move_stay( const char *storage, thc::Move &mv ) c
     }
 }
 
-// EXPERIMENTAL
-#endif
-#if 1
-
-#include <algorithm>
-#include <vector>
-#include <string>
-#include <stdio.h>
-#include <stdlib.h>
-#include "thc.h"
+// New Version
+#else
 
 // The ALLOW_CASTLING_EVEN_AFTER_KING_AND_ROOK_MOVES algorithm
 //  anticipates future optimised implementations - Such implementations
@@ -1347,47 +1342,6 @@ static inline bool is_dark( int sq )
     return dark;
 }
 
-struct Side
-{
-    bool white;
-    bool fast_mode;
-    int rooks[2];       // locations of each dynamic piece
-    int knights[2];     //
-    int pawns[8];
-    int bishop_dark;
-    int bishop_light;
-    int queen;
-    int king;
-    int nbr_pawns;      // 0-8
-    int nbr_rooks;      // 0,1 or 2
-    int nbr_knights;    // 0,1 or 2
-    int nbr_light_bishops;
-    int nbr_dark_bishops;
-    int nbr_queens;
-};
-
-class CompressMoves
-{
-public:
-    CompressMoves()
-    {
-        sides[0].white=true;
-        sides[1].white=false;
-    }
-    bool TryFastMode( Side *side );
-    std::string Compress( std::vector<thc::Move> &moves_in );
-    std::string Compress( thc::ChessPosition &cp, std::vector<thc::Move> &moves_in );
-    std::vector<thc::Move> Uncompress( std::string &moves_in );
-    std::vector<thc::Move> Uncompress( thc::ChessPosition &cp, std::string &moves_in );
-    
-private:
-    thc::ChessRules cr;
-    Side sides[2];
-    char CompressSlowMode( thc::Move mv );
-    char CompressFastMode( thc::Move mv, Side *side, Side *other );
-    thc::Move UncompressSlowMode( char code );
-    thc::Move UncompressFastMode( char code, Side *side, Side *other );
-};
 
 // Pawns for each side are assigned logical numbers from 0 to nbr_pawns-1
 //  The ordering of the numbers is determined by consulting this table...
@@ -1530,6 +1484,118 @@ std::string CompressMoves::Compress( thc::ChessPosition &cp, std::vector<thc::Mo
     }
     return ret;
 }
+
+std::vector<thc::Move> CompressMoves::Uncompress( std::string &moves_in )
+{
+    thc::ChessPosition cp;
+    return Uncompress( cp, moves_in );
+}
+
+std::vector<thc::Move> CompressMoves::Uncompress( thc::ChessPosition &cp, std::string &moves_in )
+{
+    std::vector<thc::Move> ret;
+    cr = cp;
+    sides[0].fast_mode=false;
+    sides[1].fast_mode=false;
+    int len = moves_in.size();
+    for( int i=0; i<len; i++ )
+    {
+        Side *side  = cr.white ? &sides[0] : &sides[1];
+        Side *other = cr.white ? &sides[1] : &sides[0];
+        char code = moves_in[i];
+        thc::Move mv;
+        if( side->fast_mode )
+        {
+            mv = UncompressFastMode(code,side,other);
+        }
+        else if( TryFastMode(side) )
+        {
+            mv = UncompressFastMode(code,side,other);
+        }
+        else
+        {
+            mv = UncompressSlowMode(code);
+            other->fast_mode = false;   // force other side to reset and retry
+        }
+        cr.PlayMove(mv);
+        ret.push_back(mv);
+    }
+    return ret;
+}
+
+// Compatibility mode, remove later
+int CompressMoves::compress_move( thc::Move mv, char *storage )
+{
+    Side *side  = cr.white ? &sides[0] : &sides[1];
+    Side *other = cr.white ? &sides[1] : &sides[0];
+    char c;
+    if( side->fast_mode )
+    {
+        c = CompressFastMode(mv,side,other);
+    }
+    else if( TryFastMode(side) )
+    {
+        c = CompressFastMode(mv,side,other);
+    }
+    else
+    {
+        c = CompressSlowMode(mv);
+        other->fast_mode = false;   // force other side to reset and retry
+    }
+    *storage = c;
+    cr.PlayMove(mv);
+    return 1;
+}
+
+// Compatibility mode, remove later
+int CompressMoves::decompress_move( const char *storage, thc::Move &mv )
+{
+    Side *side  = cr.white ? &sides[0] : &sides[1];
+    Side *other = cr.white ? &sides[1] : &sides[0];
+    char code = *storage;
+    if( side->fast_mode )
+    {
+        mv = UncompressFastMode(code,side,other);
+    }
+    else if( TryFastMode(side) )
+    {
+        mv = UncompressFastMode(code,side,other);
+    }
+    else
+    {
+        mv = UncompressSlowMode(code);
+        other->fast_mode = false;   // force other side to reset and retry
+    }
+    cr.PlayMove(mv);
+    return 1;
+}
+
+// Compatibility mode, remove later
+void CompressMoves::decompress_move_stay( const char *storage, thc::Move &mv )
+{
+    Side temp0 = sides[0];
+    Side temp1 = sides[1];
+    Side *side  = cr.white ? &sides[0] : &sides[1];
+    Side *other = cr.white ? &sides[1] : &sides[0];
+    char code = *storage;
+    if( side->fast_mode )
+    {
+        mv = UncompressFastMode(code,side,other);
+    }
+    else if( TryFastMode(side) )
+    {
+        mv = UncompressFastMode(code,side,other);
+    }
+    else
+    {
+        mv = UncompressSlowMode(code);
+        other->fast_mode = false;   // force other side to reset and retry
+    }
+    sides[0] = temp0;
+    sides[1] = temp1;
+}
+
+
 
 // A slow method of compressing a move into one byte
 //  Scheme is;
@@ -1887,48 +1953,12 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
                     if( found && i+1<other->nbr_pawns )
                         other->pawns[i] = other->pawns[i+1];
                 }
+                other->nbr_pawns--;
+                break;
             }
         }
     }
     return static_cast<char>(code);
-}
-
-std::vector<thc::Move> CompressMoves::Uncompress( std::string &moves_in )
-{
-    thc::ChessPosition cp;
-    return Uncompress( cp, moves_in );
-}
-
-std::vector<thc::Move> CompressMoves::Uncompress( thc::ChessPosition &cp, std::string &moves_in )
-{
-    std::vector<thc::Move> ret;
-    cr = cp;
-    sides[0].fast_mode=false;
-    sides[1].fast_mode=false;
-    int len = moves_in.size();
-    for( int i=0; i<len; i++ )
-    {
-        Side *side  = cr.white ? &sides[0] : &sides[1];
-        Side *other = cr.white ? &sides[1] : &sides[0];
-        char code = moves_in[i];
-        thc::Move mv;
-        if( side->fast_mode )
-        {
-            mv = UncompressFastMode(code,side,other);
-        }
-        else if( TryFastMode(side) )
-        {
-            mv = UncompressFastMode(code,side,other);
-        }
-        else
-        {
-            mv = UncompressSlowMode(code);
-            other->fast_mode = false;   // force other side to reset and retry
-        }
-        cr.PlayMove(mv);
-        ret.push_back(mv);
-    }
-    return ret;
 }
 
 thc::Move CompressMoves::UncompressSlowMode( char code )
