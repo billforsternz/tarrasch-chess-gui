@@ -1288,7 +1288,7 @@ void CompressMoves::decompress_move_stay( const char *storage, thc::Move &mv ) c
 //  a fast mode move).
  
 #define CODE_KING           0x00
-#define CODE_KNIGHT_LO      0x10
+#define CODE_KNIGHT         0x10
 #define CODE_KNIGHT_HI      0x18
 #define CODE_ROOK_LO        0x20
 #define CODE_ROOK_HI        0x30
@@ -1335,9 +1335,9 @@ void CompressMoves::decompress_move_stay( const char *storage, thc::Move &mv ) c
 #define P_BISHOP            2     // dd10
 #define P_KNIGHT            3     // dd11
 
-#define R_RANK              8          // Rank or file (i.e. rook) codes, this bit set indicates same file (so remaining 3 bits encode rank)
+#define R_RANK              8     // Rank or file (i.e. rook) codes, this bit set indicates same file (so remaining 3 bits encode rank)
 #define R_FILE              0
-#define B_FALL              8          // Diagonal (i.e. bishop) codes, either RISE/ or FALL\, other 3 bits encode destination file
+#define B_FALL              8     // Diagonal (i.e. bishop) codes, either RISE/ or FALL\, other 3 bits encode destination file
 #define B_RISE              0
 
 static inline bool is_dark( int sq )
@@ -1354,6 +1354,10 @@ struct Side
     int rooks[2];       // locations of each dynamic piece
     int knights[2];     //
     int pawns[8];
+    int bishop_dark;
+    int bishop_light;
+    int queen;
+    int king;
     int nbr_pawns;      // 0-8
     int nbr_rooks;      // 0,1 or 2
     int nbr_knights;    // 0,1 or 2
@@ -1375,13 +1379,14 @@ public:
     std::string Compress( thc::ChessPosition &cp, std::vector<thc::Move> &moves_in );
     std::vector<thc::Move> Uncompress( std::string &moves_in );
     std::vector<thc::Move> Uncompress( thc::ChessPosition &cp, std::string &moves_in );
-        
+    
 private:
     thc::ChessRules cr;
     Side sides[2];
-    char CompressFastMode( thc::Move mv, Side *side, Side *other );
     char CompressSlowMode( thc::Move mv );
-
+    char CompressFastMode( thc::Move mv, Side *side, Side *other );
+    thc::Move UncompressSlowMode( char code );
+    thc::Move UncompressFastMode( char code, Side *side, Side *other );
 };
 
 // Pawns for each side are assigned logical numbers from 0 to nbr_pawns-1
@@ -1423,8 +1428,10 @@ bool CompressMoves::TryFastMode( Side *side )
     side->nbr_dark_bishops  = 0;
     side->nbr_light_bishops = 0;
     side->nbr_queens        = 0;
-    for( int i=0; i<64; i++ )
+    for( int i=0; okay && i<64; i++ )
     {
+        
+        // Pawns are traversed according to pawn_ordering[]
         int j = static_cast<int>(traverse_order[i]);
         if( cr.squares[j] == (side->white?'P':'p') )
         {
@@ -1433,6 +1440,8 @@ bool CompressMoves::TryFastMode( Side *side )
             else
                 okay = false;
         }
+        
+        // Other pieces are traversed in normal square convention order
         if( cr.squares[i] == (side->white?'R':'r') )
         {
             if( side->nbr_rooks < 2 )
@@ -1440,17 +1449,18 @@ bool CompressMoves::TryFastMode( Side *side )
             else
                 okay = false;
         }
-        if( cr.squares[i] == (side->white?'N':'n') )
+        else if( cr.squares[i] == (side->white?'N':'n') )
         {
             if( side->nbr_knights < 2 )
                 side->knights[side->nbr_knights++] = i;
             else
                 okay = false;
         }
-        if( cr.squares[i] == (side->white?'B':'b') )
+        else if( cr.squares[i] == (side->white?'B':'b') )
         {
             if( is_dark(i) )
             {
+                side->bishop_dark = i;
                 if( side->nbr_dark_bishops < 1 )
                     side->nbr_dark_bishops++;
                 else
@@ -1458,18 +1468,24 @@ bool CompressMoves::TryFastMode( Side *side )
             }
             else
             {
+                side->bishop_light = i;
                 if( side->nbr_light_bishops < 1 )
                     side->nbr_light_bishops++;
                 else
                     okay = false;
             }
         }
-        if( cr.squares[j] == (side->white?'Q':'q') )
+        else if( cr.squares[i] == (side->white?'Q':'q') )
         {
+            side->queen = i;
             if( side->nbr_queens < 1 )
                 side->nbr_queens++;
             else
                 okay = false;
+        }
+        else if( cr.squares[i] == (side->white?'K':'k') )
+        {
+            side->king = i;
         }
     }
     side->fast_mode = okay;
@@ -1583,16 +1599,16 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
     int capture_location = dst;
     char piece = cr.squares[mv.src];
     bool making_capture = (isalpha(cr.squares[capture_location]) ? true : false);
-    bool promoting = false;
     int  code=0;
     switch( tolower(piece) )
     {
         case 'k':
         {
+            side->king = dst;
             switch(dst-src)          // 0, 1, 2
             {                        // 8, 9, 10
                                      // 16,17,18
-                case -9:    code = CODE_KING + K_VECTOR_NE;    break;  // 0-9
+                case -9:    code = CODE_KING + K_VECTOR_NW;    break;  // 0-9
                 case -8:    code = CODE_KING + K_VECTOR_N;     break;  // 1-9
                 case -7:    code = CODE_KING + K_VECTOR_NE;    break;  // 2-9
                 case -1:    code = CODE_KING + K_VECTOR_W;     break;  // 8-9
@@ -1624,15 +1640,15 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
         {
             int rook_offset = (side->rooks[0]==src ? 0 : 1);
             code = (rook_offset==0 ? CODE_ROOK_LO : CODE_ROOK_HI);
-			if( (src&7) == (dst&7) )                // same file ?
+            side->rooks[rook_offset] = dst;
+			if( (src&7) == (dst&7) )                // if same file
 			{
                 code = code + R_RANK + ((dst>>3)&7);    // encode rank
 			}
-			else if( (src&0x38) == (dst&0x38) )     // same rank ?
+			else //if( (src&0x38) == (dst&0x38) )   // if same rank
 			{
 				code = code + R_FILE + (dst&7);         // encode file
 			}
-            side->rooks[rook_offset] = dst;
 
             // swap ?
             if( side->nbr_rooks==2 && side->rooks[0]>side->rooks[1] )
@@ -1646,7 +1662,16 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
             
         case 'b':
         {
-            code = is_dark(src) ? CODE_BISHOP_DARK : CODE_BISHOP_LIGHT;
+            if( is_dark(src) )
+            {
+                code = CODE_BISHOP_DARK;
+                side->bishop_dark = dst;
+            }
+            else
+            {
+                code = CODE_BISHOP_LIGHT;
+                side->bishop_light = dst;
+            }
 			int abs = (src>dst ? src-dst : dst-src);
 			if( abs%9 == 0 )  // do 9 first, as LCD of 9 and 7 is 63, i.e. diff between a8 and h1, a FALL\ diagonal
 				code = code + B_FALL + (dst&7); // fall( = \) + dst file
@@ -1657,11 +1682,12 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
             
         case 'q':
         {
-			if( (src&7) == (dst&7) )                        // same file ?
+            side->queen = dst;
+			if( (src&7) == (dst&7) )                        // if same file
 			{
                 code = CODE_QUEEN_ROOK + R_RANK + ((dst>>3)&7); // encode rank
 			}
-			else if( (src&0x38) == (dst&0x38) )             // same rank ?
+			else if( (src&0x38) == (dst&0x38) )             // if same rank
 			{
 				code = CODE_QUEEN_ROOK + R_FILE + (dst&7);      // encode file
 			}
@@ -1679,21 +1705,21 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
         case 'n':
         {
             int knight_offset = (side->knights[0]==src ? 0 : 1);
-            code = (knight_offset==0 ? CODE_KNIGHT_LO : CODE_KNIGHT_HI );
+            code = (knight_offset==0 ? CODE_KNIGHT : CODE_KNIGHT_HI );
+            side->knights[knight_offset] = dst;
             switch(dst-src)         // 0, 1, 2, 3
             {                       // 8, 9, 10,11
                                     // 16,17,18,19
                                     // 24,25,26,27
-                case -15:   code = code + N_VECTOR_NNE;   // 2-17
-                case -6:    code = code + N_VECTOR_NEE;   // 11-17
-                case 10:    code = code + N_VECTOR_SEE;   // 27-17
-                case 17:    code = code + N_VECTOR_SSE;   // 27-10
-                case 15:    code = code + N_VECTOR_SSW;   // 25-10
-                case 6:     code = code + N_VECTOR_SWW;   // 16-10
-                case -10:   code = code + N_VECTOR_NWW;   // 0-10
-                case -17:   code = code + N_VECTOR_NNW;   // 0-17
+                case -15:   code = code + N_VECTOR_NNE;   break; // 2-17
+                case -6:    code = code + N_VECTOR_NEE;   break; // 11-17
+                case 10:    code = code + N_VECTOR_SEE;   break; // 27-17
+                case 17:    code = code + N_VECTOR_SSE;   break; // 27-10
+                case 15:    code = code + N_VECTOR_SSW;   break; // 25-10
+                case 6:     code = code + N_VECTOR_SWW;   break; // 16-10
+                case -10:   code = code + N_VECTOR_NWW;   break; // 0-10
+                case -17:   code = code + N_VECTOR_NNW;   break; // 0-17
             }
-            side->knights[knight_offset] = dst;
             // swap ?
             if( side->nbr_knights==2 && side->knights[0]>side->knights[1] )
             {
@@ -1708,6 +1734,7 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
         {
             int positive_delta = cr.white ? src-dst : dst-src;
             int pawn_offset = 0;
+            bool promoting = false;
             switch( positive_delta )
             {
                 case 16: code = P_DOUBLE;  break;
@@ -1739,7 +1766,15 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
                     break;
             }
 
-            if( !promoting )
+            // If promoting piece, force a reset and retry next time for this side. This
+            //  way we accommodate our pawn disappearing, and a new piece appearing in
+            //  its place, and the possibility that we cannot remain in fast mode
+            //  (because we now have too many queens or other pieces). If the reset
+            //  and retry fails this side will generate slow mode moves but keep
+            //  retrying until fast is possible again.
+            if( promoting )
+                side->fast_mode = false;
+            else
             {
                 bool reordering_possible = (code==P_LEFT || code==P_RIGHT);
                 if( !reordering_possible )
@@ -1855,36 +1890,98 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
             }
         }
     }
-
-    // If promoting piece, we haven't accommodated our pawn disappearing, or a
-    //  a new piece appearing in its place. Nor have we accommodated the possibility
-    //  that we cannot remain in fast mode because we now have too many queens or
-    //  other pieces. So simply force this side to reset and retry entry to fast
-    //  mode next time, if that fails this side will generate slow mode moves.
-    if( promoting )
-        side->fast_mode = false;
-
     return static_cast<char>(code);
 }
 
 std::vector<thc::Move> CompressMoves::Uncompress( std::string &moves_in )
+{
+    thc::ChessPosition cp;
+    return Uncompress( cp, moves_in );
+}
+
+std::vector<thc::Move> CompressMoves::Uncompress( thc::ChessPosition &cp, std::string &moves_in )
+{
+    std::vector<thc::Move> ret;
+    cr = cp;
+    sides[0].fast_mode=false;
+    sides[1].fast_mode=false;
+    int len = moves_in.size();
+    for( int i=0; i<len; i++ )
+    {
+        Side *side  = cr.white ? &sides[0] : &sides[1];
+        Side *other = cr.white ? &sides[1] : &sides[0];
+        char code = moves_in[i];
+        thc::Move mv;
+        if( side->fast_mode )
+        {
+            mv = UncompressFastMode(code,side,other);
+        }
+        else if( TryFastMode(side) )
+        {
+            mv = UncompressFastMode(code,side,other);
+        }
+        else
+        {
+            mv = UncompressSlowMode(code);
+            other->fast_mode = false;   // force other side to reset and retry
+        }
+        cr.PlayMove(mv);
+        ret.push_back(mv);
+    }
+    return ret;
+}
+
+thc::Move CompressMoves::UncompressSlowMode( char code )
+{
+    // Support algorithm ALLOW_CASTLING_EVEN_AFTER_KING_AND_ROOK_MOVES
+    cr.wking = 1;
+    cr.wqueen = 1;
+    cr.bking = 1;
+    cr.bqueen = 1;
+    
+    // Generate a list of all legal moves, in string form, sorted
+    std::vector<thc::Move> moves;
+    cr.GenLegalMoveList( moves );
+    std::vector<std::string> moves_alpha;
+    
+    // Coding scheme relies on 254 valid codes 0x02-0xff and one error code 0x01,
+    size_t len = moves.size();
+    for( size_t i=0; i<len; i++ )
+    {
+        std::string s = moves[i].NaturalOut(&cr);
+        moves_alpha.push_back(s);
+    }
+    std::sort( moves_alpha.begin(), moves_alpha.end() );
+    
+    // '\xff' (i.e. 255) is first move in list, '\fe' (i.e. 254) is second etc
+    unsigned int ucode = static_cast<size_t>( code );
+    ucode &= 0xff;
+    size_t idx = 255-ucode;  // 255->0, 254->1 etc.
+    if( idx >= len )
+        idx = 0;    // all errors resolve to this - take first move from list
+    std::string the_move = moves_alpha[idx];
+    thc::Move mv;
+    mv.NaturalInFast( &cr, the_move.c_str() );
+    return mv;
+}
+
 thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other )
 {
-    int src = static_cast<int>(mv.src);
-    int dst = static_cast<int>(mv.dst);
-    int capture_location = dst;
-    char piece = cr.squares[mv.src];
-    bool making_capture = (isalpha(cr.squares[capture_location]) ? true : false);
-    bool promoting = false;
-    int  code=0;
-    switch( code & 0xf0 )
+    int src=0;
+    int dst=0;
+    int hi_nibble = code&0xf0;
+    thc::SPECIAL special = thc::NOT_SPECIAL;
+    switch( hi_nibble )
     {
         case CODE_KING:
         {
-            switch(dst-src)          // 0, 1, 2
-            {                        // 8, 9, 10
-                                     // 16,17,18
-                case K_VECTOR_NE:    delta = -9; break;  // 0-9
+            special = thc::SPECIAL_KING_MOVE;
+            src = side->king;
+            int delta;
+            switch( code&0x0f )     // 0, 1, 2
+            {                       // 8, 9, 10
+                                    // 16,17,18
+                case K_VECTOR_NW:    delta = -9; break;  // 0-9
                 case K_VECTOR_N:     delta = -8; break;  // 1-9
                 case K_VECTOR_NE:    delta = -7; break;  // 2-9
                 case K_VECTOR_W:     delta = -1; break;  // 8-9
@@ -1894,8 +1991,8 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other 
                 case K_VECTOR_SE:    delta =  9; break;  // 18-9
                 case K_K_CASTLING:
                 {
+                    special = cr.white ? thc::SPECIAL_BK_CASTLING : thc::SPECIAL_BK_CASTLING;
                     delta = 2;
-                    code = CODE_KING + K_K_CASTLING;
                     int rook_offset = (side->rooks[0]==src+3 ? 0 : 1);  // a rook will be 3 squares to right of king
                     side->rooks[rook_offset] = src+1;                   // that rook ends up 1 square right of king
                     // note that there is no way the rooks ordering can swap during castling
@@ -1903,31 +2000,30 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other 
                 }
                 case K_Q_CASTLING:
                 {
+                    special = cr.white ? thc::SPECIAL_BQ_CASTLING : thc::SPECIAL_BQ_CASTLING;
                     delta = -2;
-                    code = CODE_KING + K_Q_CASTLING;
                     int rook_offset = (side->rooks[0]==src-4 ? 0 : 1);  // a rook will be 4 squares to left of king
                     side->rooks[rook_offset] = src-1;                   // that rook ends up 1 square left of king
                     // note that there is no way the rooks ordering can swap during castling
                     break;
                 }
             }
-            int dst = src+delta;
-            
+            side->king = dst = src+delta;
             break;
         }
             
         case CODE_ROOK_LO:
         case CODE_ROOK_HI:
         {
-            int rook_offset = (side->rooks[0]==src ? 0 : 1);
-            code = (rook_offset==0 ? CODE_ROOK_LO : CODE_ROOK_HI);
-			if( (src&7) == (dst&7) )                // same file ?
+            int rook_offset = (hi_nibble==CODE_ROOK_LO ? 0 : 1 );
+            src = side->rooks[rook_offset];
+			if( code & R_RANK )                // code encodes rank ?
 			{
-                code = code + R_RANK + ((dst>>3)&7);    // encode rank
+                dst = ((code<<3)&0x38) | (src&7);   // same file as src, rank from code
 			}
-			else if( (src&0x38) == (dst&0x38) )     // same rank ?
+			else
 			{
-				code = code + R_FILE + (dst&7);         // encode file
+                dst = (src&0x38) | (code&7);        // same rank as src, file from code
 			}
             side->rooks[rook_offset] = dst;
 
@@ -1942,57 +2038,61 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other 
         }
             
         case CODE_BISHOP_DARK:
+        {
+            src = side->bishop_dark;
+            int delta = ((code&B_RISE)?7:9) * ((code&7)-(src&7));
+            side->bishop_dark = dst = src+delta;
+            break;
+        }
+            
         case CODE_BISHOP_LIGHT:
         {
-            code = is_dark(src) ? CODE_BISHOP_DARK : CODE_BISHOP_LIGHT;
-			int abs = (src>dst ? src-dst : dst-src);
-			if( abs%9 == 0 )  // do 9 first, as LCD of 9 and 7 is 63, i.e. diff between a8 and h1, a FALL\ diagonal
-				code = code + B_FALL + (dst&7); // fall( = \) + dst file
-			else
-				code = code + B_RISE + (dst&7); // rise( = /) + dst file
+            src = side->bishop_light;
+            int delta = ((code&B_RISE)?7:9) * ((code&7)-(src&7));
+            side->bishop_light = dst = src+delta;
             break;
         }
             
         case CODE_QUEEN_ROOK:
+        {
+            src = side->queen;
+			if( code & R_RANK )                // code encodes rank ?
+                dst = ((code<<3)&0x38) | (src&7);   // same file as src, rank from code
+			else
+                dst = (src&0x38) | (code&7);        // same rank as src, file from code
+            side->queen = dst;
+            break;
+        }
+
         case CODE_QUEEN_BISHOP:
         {
-			if( (src&7) == (dst&7) )                        // same file ?
-			{
-                code = CODE_QUEEN_ROOK + R_RANK + ((dst>>3)&7); // encode rank
-			}
-			else if( (src&0x38) == (dst&0x38) )             // same rank ?
-			{
-				code = CODE_QUEEN_ROOK + R_FILE + (dst&7);      // encode file
-			}
-			else
-			{
-				int abs = (src>dst ? src-dst : dst-src);
-				if( abs%9 == 0 )  // do 9 first, as LCD of 9 and 7 is 63, i.e. diff between a8 and h1, a FALL\ diagonal
-					code = CODE_QUEEN_BISHOP + B_FALL + (dst&7); // fall( = \) + dst file
-				else
-					code = CODE_QUEEN_BISHOP + B_RISE + (dst&7); // rise( = /) + dst file
-			}
+            src = side->queen;
+            int delta = ((code&B_RISE)?7:9) * ((code&7)-(src&7));
+            side->queen = dst = src+delta;
             break;
         }
             
         case CODE_KNIGHT:
         {
-            int knight_offset = (side->knights[0]==src ? 0 : 1);
-            code = (knight_offset==0 ? CODE_KNIGHT_LO : CODE_KNIGHT_HI );
-            switch(dst-src)         // 0, 1, 2, 3
+            int knight_offset = ((code&CODE_KNIGHT_HI) ? 1 : 0 );;
+            src = side->knights[knight_offset];
+            int delta;
+            switch(code&7)          // 0, 1, 2, 3
             {                       // 8, 9, 10,11
                                     // 16,17,18,19
                                     // 24,25,26,27
-                case -15:   code = code + N_VECTOR_NNE;   // 2-17
-                case -6:    code = code + N_VECTOR_NEE;   // 11-17
-                case 10:    code = code + N_VECTOR_SEE;   // 27-17
-                case 17:    code = code + N_VECTOR_SSE;   // 27-10
-                case 15:    code = code + N_VECTOR_SSW;   // 25-10
-                case 6:     code = code + N_VECTOR_SWW;   // 16-10
-                case -10:   code = code + N_VECTOR_NWW;   // 0-10
-                case -17:   code = code + N_VECTOR_NNW;   // 0-17
+                case N_VECTOR_NNE:   delta = -15;   break; // 2-17
+                case N_VECTOR_NEE:   delta = -6;    break; // 11-17
+                case N_VECTOR_SEE:   delta = 10;    break; // 27-17
+                case N_VECTOR_SSE:   delta = 17;    break; // 27-10
+                case N_VECTOR_SSW:   delta = 15;    break; // 25-10
+                case N_VECTOR_SWW:   delta = 6;     break; // 16-10
+                case N_VECTOR_NWW:   delta = -10;   break; // 0-10
+                case N_VECTOR_NNW:   delta = -17;   break; // 0-17
             }
+            dst = src+delta;
             side->knights[knight_offset] = dst;
+
             // swap ?
             if( side->nbr_knights==2 && side->knights[0]>side->knights[1] )
             {
@@ -2003,113 +2103,101 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other 
             break;
         }
             
-        case 'p':
+        // PAWN
+        default:
         {
-            int positive_delta = cr.white ? src-dst : dst-src;
-            int pawn_offset = 0;
-            switch( positive_delta )
+            int pawn_offset = (code>>4)&0x0f;
+            bool promoting = false;
+            int src = side->pawns[pawn_offset];
+            bool reordering_possible = false;
+            bool white = cr.white;
+            int delta;
+            switch( code&0x0f )
             {
-                case 16: code = P_DOUBLE;  break;
-                case 8:  code = P_SINGLE;  break;
-                case 9:  code = P_LEFT;    break;
-                case 7:  code = P_RIGHT;   break;
+                case P_DOUBLE:      special = white ? thc::SPECIAL_WPAWN_2SQUARES : thc::SPECIAL_BPAWN_2SQUARES;
+                                    delta = white?-16:16; break;
+                case P_SINGLE:      delta = white?-8:8;   break;
+                case P_LEFT:
+                {
+                    reordering_possible = true;
+                    delta = white?-9:9;
+                    if( !isalpha(cr.squares[src+delta]) )
+                        special = (white ? thc::SPECIAL_WEN_PASSANT : thc::SPECIAL_BEN_PASSANT);
+                    break;
+                }
+                case P_RIGHT:
+                {
+                    reordering_possible = true;
+                    delta = white?-7:7;
+                    if( !isalpha(cr.squares[src+delta]) )
+                        special = (white ? thc::SPECIAL_WEN_PASSANT : thc::SPECIAL_BEN_PASSANT);
+                    break;
+                }
+                default:
+                {
+                    promoting = true;
+                    switch( (code>>2)&3 )
+                    {
+                        case P_SINGLE:     delta = white?-8:8;   break;
+                        case P_LEFT:       delta = white?-9:9;   break;
+                        case P_RIGHT:      delta = white?-7:7;   break;
+                    }
+                    switch( code&3 )
+                    {
+                        case P_QUEEN:      special = thc::SPECIAL_PROMOTION_QUEEN;    break;
+                        case P_ROOK:       special = thc::SPECIAL_PROMOTION_ROOK;     break;
+                        case P_BISHOP:     special = thc::SPECIAL_PROMOTION_BISHOP;   break;
+                        case P_KNIGHT:     special = thc::SPECIAL_PROMOTION_KNIGHT;   break;
+                    }
+                    break;
+                }
             }
-            switch( mv.special )
-            {
-                case thc::SPECIAL_WEN_PASSANT:
-                    capture_location = dst+8;
-                    making_capture = true;
-                    break;
-                case thc::SPECIAL_BEN_PASSANT:
-                    capture_location = dst-8;
-                    making_capture = true;
-                    break;
-                case thc::SPECIAL_PROMOTION_QUEEN:  code = (code<<2) + P_QUEEN;
-                    promoting = true;
-                    break;
-                case thc::SPECIAL_PROMOTION_ROOK:   code = (code<<2) + P_ROOK;
-                    promoting = true;
-                    break;
-                case thc::SPECIAL_PROMOTION_BISHOP: code = (code<<2) + P_BISHOP;
-                    promoting = true;
-                    break;
-                case thc::SPECIAL_PROMOTION_KNIGHT: code = (code<<2) + P_KNIGHT;
-                    promoting = true;
-                    break;
-            }
+            side->pawns[pawn_offset] = dst = src+delta;
 
-            if( !promoting )
+            // If promoting piece, force a reset and retry next time for this side. This
+            //  way we accommodate our pawn disappearing, and a new piece appearing in
+            //  its place, and the possibility that we cannot remain in fast mode
+            //  (because we now have too many queens or other pieces). If the reset
+            //  and retry fails this side will generate slow mode moves but keep
+            //  retrying until fast is possible again.
+            if( promoting )
+                side->fast_mode = false;
+            else if( reordering_possible )
             {
-                bool reordering_possible = (code==P_LEFT || code==P_RIGHT);
-                if( !reordering_possible )
+                if( pawn_ordering[dst] > pawn_ordering[src] ) // increasing capture?
                 {
-                    int *p = side->pawns;
-                    bool found=false;
-                    for( int i=0; !found && i<side->nbr_pawns; i++,p++ )
+                    for( int i=pawn_offset; i+1<side->nbr_pawns && pawn_ordering[side->pawns[i]]>pawn_ordering[side->pawns[i+1]]; i++ )
                     {
-                        if( *p == src )
-                        {
-                            found = true;
-                            pawn_offset = i;
-                            *p = dst;
-                        }
+                        int temp = side->pawns[i];
+                        side->pawns[i] = side->pawns[i+1];
+                        side->pawns[i+1] = temp;
                     }
                 }
-                else
+                else // else decreasing capture
                 {
-                    if( pawn_ordering[dst] > pawn_ordering[src] ) // increasing capture?
+                    for( int i=pawn_offset; i-1>=0 && pawn_ordering[side->pawns[i-1]]>pawn_ordering[side->pawns[i]]; i-- )
                     {
-                        int *p = side->pawns;
-                        bool found=false;
-                        for( int i=0; !found && i<side->nbr_pawns; i++,p++ )
-                        {
-                            if( *p == src )
-                            {
-                                found = true;
-                                pawn_offset = i;
-                                *p = dst;
-                                while( i+1<side->nbr_pawns && pawn_ordering[side->pawns[i]]>pawn_ordering[side->pawns[i+1]] )
-                                {
-                                    int temp = side->pawns[i];
-                                    side->pawns[i] = side->pawns[i+1];
-                                    side->pawns[i+1] = temp;
-                                    i++;
-                                }
-                            }
-                        }
-                    }
-                    else // else decreasing capture
-                    {
-                        int *p = side->pawns + side->nbr_pawns-1;
-                        bool found=false;
-                        for( int i=side->nbr_pawns-1; !found && i>=0; i--, p-- )
-                        {
-                            if( *p == src )
-                            {
-                                found = true;
-                                pawn_offset = i;
-                                *p = dst;
-                                while( i-1>=0 && pawn_ordering[side->pawns[i-1]]>pawn_ordering[side->pawns[i]] )
-                                {
-                                    int temp = side->pawns[i-1];
-                                    side->pawns[i-1] = side->pawns[i];
-                                    side->pawns[i] = temp;
-                                    i--;
-                                }
-                            }
-                        }
+                        int temp = side->pawns[i-1];
+                        side->pawns[i-1] = side->pawns[i];
+                        side->pawns[i] = temp;
                     }
                 }
             }
-            code = CODE_PAWN + (pawn_offset<<4) + code;
             break;
         }   // end PAWN
     }   // end switch on moving piece
     
     // Accomodate captured piece on other side, if other side is in fast mode
+    int  capture_location=dst;
+    if( special == thc::SPECIAL_WEN_PASSANT )
+        capture_location = dst+8;
+    else if( special == thc::SPECIAL_BEN_PASSANT )
+        capture_location = dst-8;
+    char capture = cr.squares[capture_location];
+    bool making_capture = (isalpha(capture) ? true : false);
     if( making_capture && other->fast_mode )
     {
-        switch( tolower(cr.squares[capture_location]) )
+        switch( tolower(capture) )
         {
             case 'n':
             {
@@ -2154,16 +2242,12 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other 
             }
         }
     }
-
-    // If promoting piece, we haven't accommodated our pawn disappearing, or a
-    //  a new piece appearing in its place. Nor have we accommodated the possibility
-    //  that we cannot remain in fast mode because we now have too many queens or
-    //  other pieces. So simply force this side to reset and retry entry to fast
-    //  mode next time, if that fails this side will generate slow mode moves.
-    if( promoting )
-        side->fast_mode = false;
-
-    return static_cast<char>(code);
+    thc::Move mv;
+    mv.src = static_cast<thc::Square>(src);
+    mv.dst = static_cast<thc::Square>(dst);
+    mv.special = special;
+    mv.capture = capture;
+    return mv;
 }
 
 
