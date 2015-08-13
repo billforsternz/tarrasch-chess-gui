@@ -2070,16 +2070,24 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other 
         case CODE_BISHOP_DARK:
         {
             src = side->bishop_dark;
-            int delta = ((code&B_RISE)?7:9) * ((code&7)-(src&7));
-            side->bishop_dark = dst = src+delta;
+            int file_delta = (code&7) - (src&7);
+            if( code & B_FALL )  // FALL\ + file
+                dst = src + 9*file_delta;   // eg src=b8(1), dst=h2(55), file_delta=6  -> 9*6 =54
+            else                  // RISE/ + file
+                dst = src - 7*file_delta;   // eg src=h8(7), dst=a1(56), file_delta=7  -> 7*7 =49
+            side->bishop_dark = dst;
             break;
         }
             
         case CODE_BISHOP_LIGHT:
         {
             src = side->bishop_light;
-            int delta = ((code&B_RISE)?7:9) * ((code&7)-(src&7));
-            side->bishop_light = dst = src+delta;
+            int file_delta = (code&7) - (src&7);
+            if( code & B_FALL )  // FALL\ + file
+                dst = src + 9*file_delta;   // eg src=a8(0), dst=h1(63), file_delta=7  -> 9*7 =63
+            else                  // RISE/ + file
+                dst = src - 7*file_delta;   // eg src=g8(6), dst=a2(48), file_delta=6  -> 7*6 =42
+            side->bishop_light = dst;
             break;
         }
             
@@ -2097,8 +2105,12 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other 
         case CODE_QUEEN_BISHOP:
         {
             src = side->queen;
-            int delta = ((code&B_RISE)?7:9) * ((code&7)-(src&7));
-            side->queen = dst = src+delta;
+            int file_delta = (code&7) - (src&7);
+            if( code & B_FALL )  // FALL\ + file
+                dst = src + 9*file_delta;   // eg src=a8(0), dst=h1(63), file_delta=7  -> 9*7 =63
+            else                  // RISE/ + file
+                dst = src - 7*file_delta;   // eg src=h8(7), dst=a1(56), file_delta=7  -> 7*7 =49
+            side->queen = dst;
             break;
         }
             
@@ -2136,9 +2148,9 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other 
         // PAWN
         default:
         {
-            int pawn_offset = (code>>4)&0x0f;
+            int pawn_offset = (code>>4)&0x07;
             bool promoting = false;
-            int src = side->pawns[pawn_offset];
+            src = side->pawns[pawn_offset];
             bool reordering_possible = false;
             bool white = cr.white;
             int delta;

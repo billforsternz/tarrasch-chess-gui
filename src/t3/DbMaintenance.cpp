@@ -15,9 +15,9 @@
 
 //-- Temp - hardwire .pgn file and database name
 #ifdef THC_WINDOWS
-#define PGN_FILE        "/Users/Maria/Documents/Tarrasch/giant-base-part1-rebuilt.pgn"
-#define PGN_OUT_FILE    "/Users/Maria/Documents/BillsFiles/twic/twic_minimal_overlap_2.pgn"
-#define QGN_FILE        "/Users/Maria/Documents/BillsFiles/twic/twic_minimal_overlap.qgn"
+#define PGN_FILE        "/Users/Bill/Documents/T3Database/giant1.pgn"
+#define PGN_OUT_FILE    "/Users/Bill/Documents/T3Database/twic_minimal_overlap_2.pgn"
+#define QGN_FILE        "/Users/Bill/Documents/T3Database/giant-base-part1-rebuilt-again.qgn"
 #else
 #define PGN_FILE        "/Users/billforster/Documents/ChessDatabases/twic-948-1010.pgn"
 #define PGN_OUT_FILE    "/Users/billforster/Documents/ChessDatabases/twic_minimal_overlap_2.pgn"
