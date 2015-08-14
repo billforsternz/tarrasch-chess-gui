@@ -19,7 +19,7 @@
 #define PGN_OUT_FILE    "/Users/Bill/Documents/T3Database/twic_minimal_overlap_2.pgn"
 #define QGN_FILE        "/Users/Bill/Documents/T3Database/giant-base-part1-rebuilt-again.qgn"
 #else
-#define PGN_FILE        "/Users/billforster/Documents/ChessDatabases/twic-948-1010.pgn"
+#define PGN_FILE        "/Users/billforster/Documents/ChessDatabases/giant-base-part2-rebuilt.pgn" // twic-948-1010.pgn"
 #define PGN_OUT_FILE    "/Users/billforster/Documents/ChessDatabases/twic_minimal_overlap_2.pgn"
 #define QGN_FILE        "/Users/billforster/Documents/ChessDatabases/twic_minimal_overlap.qgn"
 #endif
@@ -33,7 +33,7 @@ static void game_to_qgn_file( const char *event, const char *site, const char *d
                              int nbr_moves, thc::Move *moves, uint64_t *hashes );
 static void compress_moves_to_str( int nbr_moves, thc::Move *moves, char *dst, thc::ChessPosition *positions );
 static void decompress_moves_from_str( int nbr_moves, char *src, thc::Move *moves, thc::ChessPosition *positions  );
-static void verify_compression_algorithm( int nbr_moves, thc::Move *moves );
+static bool verify_compression_algorithm( int nbr_moves, thc::Move *moves );
 
 void db_maintenance_speed_tests()
 {
@@ -94,8 +94,13 @@ void db_maintenance_verify_compression()
         cprintf( "Cannot open %s\n", PGN_FILE );
     else
     {
+        // Verify compression
+        void CompressMovesDiagBegin();
+        void CompressMovesDiagEnd();
+        CompressMovesDiagBegin();
         PgnRead *pgn = new PgnRead('V');
         pgn->Process(ifile);
+        CompressMovesDiagEnd();
     }
     if( ifile )
         fclose(ifile);
@@ -170,6 +175,7 @@ void hook_gameover( char callback_code, const char *event, const char *site, con
                   int nbr_moves, thc::Move *moves, uint64_t *hashes )
 {
     static int counter;
+    bool is_interesting = false;
     if( (++counter % 1000) == 0 )
         cprintf( "%d games processed so far\n", counter );
     switch( callback_code )
@@ -181,7 +187,11 @@ void hook_gameover( char callback_code, const char *event, const char *site, con
         case 'A': db_primitive_insert_game( white, black, event, site, result, date, white_elo, black_elo, nbr_moves, moves, hashes ); break;
             
         // Verify
-        case 'V': verify_compression_algorithm( nbr_moves, moves ); break;
+        case 'V': is_interesting = verify_compression_algorithm( nbr_moves, moves ); break;
+    }
+    if( is_interesting )
+    {
+        cprintf( "%s-%s %s, %s %s, %s\n", white, black, result, event, site, round );
     }
     if( gbl_evil_queen || gbl_double_byte )
     {
@@ -510,9 +520,18 @@ static void decompress_moves_from_str( int nbr_moves, char *src, thc::Move *move
     }
 }
 
-// Verify compression
-static void verify_compression_algorithm( int nbr_moves, thc::Move *moves )
+
+static bool verify_compression_algorithm( int nbr_moves, thc::Move *moves )
 {
+    bool is_interesting = false;
+#if 1  // OLD/NEW
+    std::vector<thc::Move> moves_in(moves,moves+nbr_moves);
+    CompressMoves press;
+    std::string compressed = press.Compress(moves_in);
+    std::vector<thc::Move> unpacked = press.Uncompress(compressed);
+    is_interesting = press.is_interesting;
+    bool match = (0 == memcmp( &moves_in[0], &unpacked[0], nbr_moves*sizeof(thc::Move)));
+#else // OLD/NEW
     char buf[2000];
     thc::Move unpacked[1000];
     static thc::ChessPosition positions_buffer[1000];
@@ -566,6 +585,7 @@ static void verify_compression_algorithm( int nbr_moves, thc::Move *moves )
     cprintf( "\n" );
 #endif
     bool match = (0 == memcmp( moves, unpacked, nbr_moves*sizeof(thc::Move)));
+#endif // OLD/NEW
     if( match )
     {
 #ifdef VERBOSE
@@ -574,6 +594,7 @@ static void verify_compression_algorithm( int nbr_moves, thc::Move *moves )
     }
     else
     {
+        is_interesting = true;
         cprintf( "Boo hoo, doesn't match\n" );
         for( int i=0; i<nbr_moves; i++ )
         {
@@ -595,6 +616,7 @@ static void verify_compression_algorithm( int nbr_moves, thc::Move *moves )
             }
         }
     }
+    return is_interesting;
 }
 
 

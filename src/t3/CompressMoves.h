@@ -133,6 +133,7 @@ public:
         sides[0].fast_mode=false;
         sides[1].white=false;
         sides[1].fast_mode=false;
+        is_interesting = false;
     }
     bool TryFastMode( Side *side );
     std::string Compress( std::vector<thc::Move> &moves_in );
@@ -153,6 +154,7 @@ public:
     
 public:
     thc::ChessRules cr;
+    bool is_interesting;
 private:
     Side sides[2];
     char CompressSlowMode( thc::Move mv );

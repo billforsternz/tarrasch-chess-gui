@@ -1284,7 +1284,6 @@ void CompressMoves::decompress_move_stay( const char *storage, thc::Move &mv ) c
  
 #define CODE_KING           0x00
 #define CODE_KNIGHT         0x10
-#define CODE_KNIGHT_HI      0x18
 #define CODE_ROOK_LO        0x20
 #define CODE_ROOK_HI        0x30
 #define CODE_BISHOP_DARK    0x40
@@ -1332,8 +1331,12 @@ void CompressMoves::decompress_move_stay( const char *storage, thc::Move &mv ) c
 
 #define R_RANK              8     // Rank or file (i.e. rook) codes, this bit set indicates same file (so remaining 3 bits encode rank)
 #define R_FILE              0
+
 #define B_FALL              8     // Diagonal (i.e. bishop) codes, either RISE/ or FALL\, other 3 bits encode destination file
 #define B_RISE              0
+
+#define N_HI                8     // CODE_KNIGHT encodes 8 vectors for each of 2 knights (HI and LO)
+#define N_LO                0
 
 static inline bool is_dark( int sq )
 {
@@ -1342,6 +1345,28 @@ static inline bool is_dark( int sq )
     return dark;
 }
 
+#define DIAG_ONLY(x) x
+
+static unsigned long nbr_compress_fast;
+static unsigned long nbr_compress_slow;
+static unsigned long nbr_uncompress_fast;
+static unsigned long nbr_uncompress_slow;
+
+void CompressMovesDiagBegin()
+{
+    nbr_compress_fast = 0;
+    nbr_compress_slow = 0;
+    nbr_uncompress_fast = 0;
+    nbr_uncompress_slow = 0;
+}
+
+void CompressMovesDiagEnd()
+{
+    cprintf( "nbr_compress_fast = %lu\n", nbr_compress_fast );
+    cprintf( "nbr_compress_slow = %lu\n", nbr_compress_slow );
+    cprintf( "nbr_uncompress_fast = %lu\n", nbr_uncompress_fast );
+    cprintf( "nbr_uncompress_slow = %lu\n", nbr_uncompress_slow );  // It turns out about 0.02% of moves are in slow mode
+}
 
 // Pawns for each side are assigned logical numbers from 0 to nbr_pawns-1
 //  The ordering of the numbers is determined by consulting this table...
@@ -1401,14 +1426,22 @@ bool CompressMoves::TryFastMode( Side *side )
             if( side->nbr_rooks < 2 )
                 side->rooks[side->nbr_rooks++] = i;
             else
+            {
+                cprintf( "Too many rooks!\n" );
+                is_interesting = true;
                 okay = false;
+            }
         }
         else if( cr.squares[i] == (side->white?'N':'n') )
         {
             if( side->nbr_knights < 2 )
                 side->knights[side->nbr_knights++] = i;
             else
+            {
+                cprintf( "Too many knights!\n" );
+                is_interesting = true;
                 okay = false;
+            }
         }
         else if( cr.squares[i] == (side->white?'B':'b') )
         {
@@ -1418,7 +1451,11 @@ bool CompressMoves::TryFastMode( Side *side )
                 if( side->nbr_dark_bishops < 1 )
                     side->nbr_dark_bishops++;
                 else
+                {
+                    cprintf( "Too many dark bishops!\n" );
+                    is_interesting = true;
                     okay = false;
+                }
             }
             else
             {
@@ -1426,7 +1463,11 @@ bool CompressMoves::TryFastMode( Side *side )
                 if( side->nbr_light_bishops < 1 )
                     side->nbr_light_bishops++;
                 else
+                {
+                    cprintf( "Too many light bishops!\n" );
+                    is_interesting = true;
                     okay = false;
+                }
             }
         }
         else if( cr.squares[i] == (side->white?'Q':'q') )
@@ -1617,6 +1658,7 @@ void CompressMoves::decompress_move_stay( const char *storage, thc::Move &mv )
 
 char CompressMoves::CompressSlowMode( thc::Move mv )
 {
+    DIAG_ONLY( nbr_compress_slow++ );
     int code=0;
 
     // Support algorithm ALLOW_CASTLING_EVEN_AFTER_KING_AND_ROOK_MOVES
@@ -1660,6 +1702,7 @@ char CompressMoves::CompressSlowMode( thc::Move mv )
 
 char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
 {
+    DIAG_ONLY( nbr_compress_fast++ );
     int src = static_cast<int>(mv.src);
     int dst = static_cast<int>(mv.dst);
     int capture_location = dst;
@@ -1771,7 +1814,7 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
         case 'n':
         {
             int knight_offset = (side->knights[0]==src ? 0 : 1);
-            code = (knight_offset==0 ? CODE_KNIGHT : CODE_KNIGHT_HI );
+            code = (knight_offset==0 ? CODE_KNIGHT+N_LO : CODE_KNIGHT+N_HI );
             side->knights[knight_offset] = dst;
             switch(dst-src)         // 0, 1, 2, 3
             {                       // 8, 9, 10,11
@@ -1799,8 +1842,18 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
         case 'p':
         {
             int positive_delta = cr.white ? src-dst : dst-src;
-            int pawn_offset = 0;
             bool promoting = false;
+            int pawn_offset = 0;
+            int *p = side->pawns;
+            for( int i=0; i<side->nbr_pawns; i++,p++ )
+            {
+                if( *p == src )
+                {
+                    pawn_offset = i;
+                    *p = dst;
+                    break;
+                }
+            }
             switch( positive_delta )
             {
                 case 16: code = P_DOUBLE;  break;
@@ -1843,62 +1896,24 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
             else
             {
                 bool reordering_possible = (code==P_LEFT || code==P_RIGHT);
-                if( !reordering_possible )
-                {
-                    int *p = side->pawns;
-                    bool found=false;
-                    for( int i=0; !found && i<side->nbr_pawns; i++,p++ )
-                    {
-                        if( *p == src )
-                        {
-                            found = true;
-                            pawn_offset = i;
-                            *p = dst;
-                        }
-                    }
-                }
-                else
+                if( reordering_possible )
                 {
                     if( pawn_ordering[dst] > pawn_ordering[src] ) // increasing capture?
                     {
-                        int *p = side->pawns;
-                        bool found=false;
-                        for( int i=0; !found && i<side->nbr_pawns; i++,p++ )
+                        for( int i=pawn_offset; i+1<side->nbr_pawns && pawn_ordering[side->pawns[i]]>pawn_ordering[side->pawns[i+1]]; i++ )
                         {
-                            if( *p == src )
-                            {
-                                found = true;
-                                pawn_offset = i;
-                                *p = dst;
-                                while( i+1<side->nbr_pawns && pawn_ordering[side->pawns[i]]>pawn_ordering[side->pawns[i+1]] )
-                                {
-                                    int temp = side->pawns[i];
-                                    side->pawns[i] = side->pawns[i+1];
-                                    side->pawns[i+1] = temp;
-                                    i++;
-                                }
-                            }
+                            int temp = side->pawns[i];
+                            side->pawns[i] = side->pawns[i+1];
+                            side->pawns[i+1] = temp;
                         }
                     }
                     else // else decreasing capture
                     {
-                        int *p = side->pawns + side->nbr_pawns-1;
-                        bool found=false;
-                        for( int i=side->nbr_pawns-1; !found && i>=0; i--, p-- )
+                        for( int i=pawn_offset; i-1>=0 && pawn_ordering[side->pawns[i-1]]>pawn_ordering[side->pawns[i]]; i-- )
                         {
-                            if( *p == src )
-                            {
-                                found = true;
-                                pawn_offset = i;
-                                *p = dst;
-                                while( i-1>=0 && pawn_ordering[side->pawns[i-1]]>pawn_ordering[side->pawns[i]] )
-                                {
-                                    int temp = side->pawns[i-1];
-                                    side->pawns[i-1] = side->pawns[i];
-                                    side->pawns[i] = temp;
-                                    i--;
-                                }
-                            }
+                            int temp = side->pawns[i-1];
+                            side->pawns[i-1] = side->pawns[i];
+                            side->pawns[i] = temp;
                         }
                     }
                 }
@@ -1942,16 +1957,18 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
             }
             case 'p':
             {
-                bool found=false;
+                int other_pawn_offset=0;
                 for( int i=0; i<other->nbr_pawns; i++ )
                 {
-                    if( !found )
+                    if( other->pawns[i] == capture_location )
                     {
-                        if( other->pawns[i] == capture_location )
-                            found = true;
+                        other_pawn_offset = i;
+                        break;
                     }
-                    if( found && i+1<other->nbr_pawns )
-                        other->pawns[i] = other->pawns[i+1];
+                }
+                for( int i=other_pawn_offset; i+1<other->nbr_pawns; i++ )
+                {
+                    other->pawns[i] = other->pawns[i+1];
                 }
                 other->nbr_pawns--;
                 break;
@@ -1963,6 +1980,8 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
 
 thc::Move CompressMoves::UncompressSlowMode( char code )
 {
+    DIAG_ONLY( nbr_uncompress_slow++ );
+
     // Support algorithm ALLOW_CASTLING_EVEN_AFTER_KING_AND_ROOK_MOVES
     cr.wking = 1;
     cr.wqueen = 1;
@@ -1997,6 +2016,7 @@ thc::Move CompressMoves::UncompressSlowMode( char code )
 
 thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other )
 {
+    DIAG_ONLY( nbr_uncompress_fast++ );
     int src=0;
     int dst=0;
     int hi_nibble = code&0xf0;
@@ -2021,7 +2041,7 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other 
                 case K_VECTOR_SE:    delta =  9; break;  // 18-9
                 case K_K_CASTLING:
                 {
-                    special = cr.white ? thc::SPECIAL_BK_CASTLING : thc::SPECIAL_BK_CASTLING;
+                    special = cr.white ? thc::SPECIAL_WK_CASTLING : thc::SPECIAL_BK_CASTLING;
                     delta = 2;
                     int rook_offset = (side->rooks[0]==src+3 ? 0 : 1);  // a rook will be 3 squares to right of king
                     side->rooks[rook_offset] = src+1;                   // that rook ends up 1 square right of king
@@ -2030,7 +2050,7 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other 
                 }
                 case K_Q_CASTLING:
                 {
-                    special = cr.white ? thc::SPECIAL_BQ_CASTLING : thc::SPECIAL_BQ_CASTLING;
+                    special = cr.white ? thc::SPECIAL_WQ_CASTLING : thc::SPECIAL_BQ_CASTLING;
                     delta = -2;
                     int rook_offset = (side->rooks[0]==src-4 ? 0 : 1);  // a rook will be 4 squares to left of king
                     side->rooks[rook_offset] = src-1;                   // that rook ends up 1 square left of king
@@ -2116,7 +2136,7 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other 
             
         case CODE_KNIGHT:
         {
-            int knight_offset = ((code&CODE_KNIGHT_HI) ? 1 : 0 );;
+            int knight_offset = ((code&N_HI) ? 1 : 0 );;
             src = side->knights[knight_offset];
             int delta;
             switch(code&7)          // 0, 1, 2, 3
@@ -2270,17 +2290,20 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other 
             }
             case 'p':
             {
-                bool found=false;
+                int other_pawn_offset=0;
                 for( int i=0; i<other->nbr_pawns; i++ )
                 {
-                    if( !found )
+                    if( other->pawns[i] == capture_location )
                     {
-                        if( other->pawns[i] == capture_location )
-                            found = true;
+                        other_pawn_offset = i;
+                        break;
                     }
-                    if( found && i+1<other->nbr_pawns )
-                        other->pawns[i] = other->pawns[i+1];
                 }
+                for( int i=other_pawn_offset; i+1<other->nbr_pawns; i++ )
+                {
+                    other->pawns[i] = other->pawns[i+1];
+                }
+                other->nbr_pawns--;
             }
         }
     }
