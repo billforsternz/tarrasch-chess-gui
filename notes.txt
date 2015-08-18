@@ -1,0 +1,525 @@
+In directory T3Database
+
+The BigDatabase 2007 as .pgn, in 2 parts, original and rebuilt.
+giant1.pgn
+giant-base-part1-rebuilt.pgn
+giant2.pgn
+giant-base-part2-rebuilt.pgn
+
+Some twic files we concatentated together to make giant3.pgn
+twic_minimal_overlap.pgn
+twic-948-1010.pgn
+twic-1011-1050.pgn
+twic-1051-1077.pgn
+
+Finally concatenate giant1.pgn, giant2.pgn and giant3.pgn
+giant123.pgn
+
+Note all concatenations used file 'b' between each concatenated file,
+file b is simply two blank lines (4 bytes, DOS format)
+
+
+*** Old algorithm, after elimination of double bytes (so uses ordered SAN list
+for slow mode)
+
+File is giant123.pgn
+
+ N8h7 a6 b6 Na2 Ng4 h3 Nh6 Nb4 Nf5 Ra3 Bh6 Qe1 Bd7 Nb1 Ng5 Kh2 Nh4 Rh1 Bxh3 f4 e
+xf3 Qxh4 fxg2 Qe1 gxh1=Q+ Kxh1 Ne4 Bf3 Qf6 Nd2 Nxd2 Bxa8 Nxc4 Rc3 Rxa8 e4 Ne3
+2700000 games
+2700000 games processed so far
+112 evil games, 0 double byte games, Kaya, Isa-Islek, Ali Ihsan, doesn't need do
+uble bytes
+d4 g6 e4 d6 Nf3 Bg7 Bc4 Nf6 Nc3 O-O O-O a6 Re1 Nbd7 Bg5 c5 e5 Ng4 exd6 Re8 Nd5 h
+6 Nxe7+ Kh7 Bxf7 Rxe7 dxe7 Qc7 e8=Q Nf8 Be7 Bd7 Qxa8 Qc6 d5
+113 evil games, 0 double byte games, Smith, Andrew I-Rothwell, Jonathan, doesn't
+ need double bytes
+d4 d5 c4 e6 Nf3 Nf6 e3 Bd7 Qb3 Qc8 Nc3 Bc6 Ne5 Ne4 Nxc6 Nxc6 cxd5 Nxc3 dxc6 Nd5
+cxb7 Qd8 Bb5+ Ke7 bxa8=Q Qxa8 O-O Kd8 e4 Nb4 d5 Qb7 Bc6 Qa6 Rd1 Bc5 dxe6+ Ke7 ex
+f7 Rf8 Bg5#
+114 evil games, 0 double byte games, Galonaki, K.-Mastrogiannopoulou, Despina, d
+oesn't need double bytes
+d4 Nc6 e4 e5 d5 Bb4+ Nc3 Be7 Nf3 Bh4 Bb5 d6 h3 Bf6 dxc6 Rb8 cxb7+ Bd7 Ba6 c6 Be3
+ c5 Qd5 Qa5 Qxd6 Rd8 b8=Q Rxb8 Qxb8+ Bd8 Qxa7 Nf6 Bxc5 Rf8 Bxf8 Kxf8 O-O-O Ba4 N
+xa4 Qxa4 Rxd8+ Ne8 Qc5+ Kg8 Bb5 Qxa2 Rxe8#
+115 evil games, 0 double byte games, Sippenauer, Werner-Kaeck, Ralf, doesn't nee
+d double bytes
+Nf3 g6 e4 Bg7 d4 d6 Be2 Nc6 Bg5 h6 Be3 e5 d5 Nce7 Nfd2 f5 f3 Nf6 c4 f4 Bf2 g5 Nc
+3 Ng6 Qb3 Nd7 O-O-O b6 Rdg1 Nc5 Qc2 Bd7 g3 Qe7 Nf1 O-O-O h4 Bf6 h5 fxg3 Bxc5 Nf4
+ Be3 g2 Rh2 gxf1=Q+ Bxf1 Rdg8 Bxf4 gxf4 Rhg2 Qf7 Rg6 Rxg6 hxg6 Qg7 b4 Be7 c5 dxc
+5 bxc5 Bxc5 Rg2 Kb7 Qd3 Kb8 Qa6 Bc8 Qa4 Qd7 Bb5 Qh3 Rc2 Qh1+ Kb2 Bd4 Bd7 Bxc3+ R
+xc3 Qg2+ Kb3 Qxg6 Qc4 Qd6 Be6 Bxe6 dxe6 Re8 Qa6 Qxe6+ Kc2 Rg8 Ra3 Qc6+ Rc3 Rg2+
+Kb3 Qe6+ Rc4 Rf2 Kb4 Qd6+ Kb3 Qd3+
+116 evil games, 0 double byte games, Bok, Tomas-Aron, Oto, doesn't need double b
+ytes
+e4 e5 c4 Nf6 Nc3 Nc6 d3 Bc5 Be2 d6 Bg5 Nd4 h3 h6 Bh4 g5 Bg3 Bd7 Nf3 Nxf3+ Bxf3 B
+d4 a3 Qe7 Rb1 O-O-O Nd5 Nxd5 exd5 f5 b4 Rdg8 Qb3 h5 c5 Be8 c6 b6 Qc4 Kd8 Qa6 b5
+Qb7 Qf6 Qb8+ Ke7 Qxc7+ Kf8 Qb8 Ke7 Qb7+ Kf8 c7 Rh7 c8=Q Rxb7 Qxb7 e4 dxe4 fxe4 B
+xe4 h4 Bxd6+
+2800000 games
+2800000 games processed so far
+117 evil games, 0 double byte games, Obels, Jiri-Munnik, Talitha, doesn't need d
+ouble bytes
+e4 e5 Nf3 Nc6 d4 exd4 c3 dxc3 Bc4 Be7 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qd2 cxb1=Q
+ Rxb1 Nc6 a3 d6 O-O Be6 Bd3 Qd7 Qf4 Ne5 Nxe5 dxe5 Qg3 Kh8 Rd1 f6 Be3 Qe8 Bc2 Qf7
+ Rd3 Bd6 Bd2 f5 Rf3 f4 Qg5 h6 Qh4 Be7 Rxf4 Bxh4 Rxf7 Rxf7 Be3 Rd8 Rf1 Bg5 Bxg5 h
+xg5 Ba4 Rd4 Be8 Rf8 Bg6 Bf7 Bf5 g6 Bg4 Rxe4 Bf3 Rd4 Re1 Rfd8 h3 Re8 Bxb7 Bd5 Ba6
+ Rd2 b4 Re6 Bc8 Re7 Ba6 Ra2 Re3 Kg7 Bf1 Kf6 Rd3 Ke6 Rg3 Ra1 Rc3 Rd7 f3 Bb7 Kf2 K
+f6 Bb5 Re7 Kg3 e4 fxe4 Bxe4 a4 Rg1 h4 Rxg2+ Kh3 g4#
+118 evil games, 0 double byte games, Vanhouwe, Jiri-Van Lanen, Giel, doesn't nee
+d double bytes
+e4 e5 c4 d6 Nc3 Nf6 d3 Bg4 Nf3 Bxf3 Qxf3 Nc6 Nd5 Nxd5 exd5 Nd4 Qd1 Qf6 Qa4+ Nc6
+dxc6 Be7 cxb7+ c6 bxa8=Q+ Bd8 Q4xc6+ Ke7 Qxa7+ Kf8 Qad7 g6 Qe8+ Kg7 Qxh8+ Kxh8 B
+h6 Qe7 Be2 Qe6 h3 f6 Bg4 Qe7 a4 Ba5+ Bd2 Bd8 a5 h5 Bd7
+119 evil games, 0 double byte games, Heiny, Johannes-Strubreiter, Markus, doesn'
+t need double bytes
+d4 Nf6 c4 e5 dxe5 Ne4 Qc2 d5 exd6 Bf5 Nc3 Ng3 Qa4+ Bd7 dxc7 Qc8 cxb8=Q Qxb8 Qc2
+Nxh1 Qe4+ Be6 g3 Bb4 Bg2 O-O Bf4 Qd8 Bxh1 Bxc3+ bxc3 Qa5 Qc2 Rac8 Bd6 Rfd8 Bb4 Q
+h5 h4 Rxc4 Rd1 Rb8 Qd3 h6 Be4 Re8 Bxb7 Rc7 Bf3 Qe5 Qd6 Qxd6 Rxd6 a5 Bxa5 Ra7 Bb4
+ Rxa2 Rd2 Ra1+ Rd1 Ra6 e3 Bb3 Rb1 Bc2 Rc1 Bd3 Ne2 g5 hxg5 hxg5 Nd4 Ra2 Bd5 Rb2 R
+a1 Re5 Bb3 g4 Ba3 Rb1+ Rxb1 Bxb1 Bd6 Rh5 Ke2 Rh1 c4 Be4 c5 Rb1 Bc2 Rb2 Kd2 f6 Kc
+3
+120 evil games, 0 double byte games, Olier, Anthony-Laviec, Alain, doesn't need
+double bytes
+e4 e5 Nf3 Nc6 Bc4 Nf6 d3 Bb4+ Bd2 Bc5 Be3 d6 Nc3 Bg4 h3 Bh5 g4 Bg6 Qe2 h6 O-O-O
+O-O Rhg1 h5 g5 Nd7 Nh4 Bh7 Qxh5 Qe8 g6 Nf6 Qg5 Kh8 gxh7 Rg8 hxg8=Q+ Qxg8 Nd5 Nd7
+ Qh5+ Qh7 Qxh7+ Kxh7 Bxc5 Nxc5 Nxc7 Rf8 Nb5 Rd8 Bxf7 Rd7 Be8 Re7 Bxc6 bxc6 Nxd6
+Re6 Nhf5 g6 b4 Nd7 Nc8 gxf5 Nxa7 c5 bxc5 Nxc5 exf5 Re7 Nc6 Rf7 Nxe5 Rxf5 Rde1 Rx
+f2 d4 Na4 d5 Rf8 Re4 Nc5 Rh4#
+2900000 games
+2900000 games processed so far
+121 evil games, 0 double byte games, Taha, Najla-Fernandes, Julya, doesn't need
+double bytes
+e4 c6 d4 d5 e5 Bf5 c4 e6 Nc3 Ne7 Be3 Bg6 Bg5 Nd7 c5 Qc7 Nf3 O-O-O Be2 f6 Bf4 Re8
+ b4 Kd8 g3 Be4 exf6 Qc8 f7 Ng6 fxe8=Q+ Kxe8 Nxe4 dxe4 Ng5 Nxf4 gxf4 Nf6 Qb3 Nd5
+Bg4 Nf6 Bxe6 Qd8 Nf7
+122 evil games, 0 double byte games, Navarro, Pau-Raro, Javier, doesn't need dou
+ble bytes
+e4 e5 d4 exd4 c3 dxc3 Bc4 Bb4 Qb3 cxb2+ Kd1 bxc1=Q+ Kxc1 Qg5+ Qe3 Qxe3+ fxe3 d6
+Nf3 Be6 Bd3 Nc6 Kc2 O-O-O Nc3 Bxc3 Kxc3 d5 a3 Nf6 Ng5 Nxe4+ Nxe4 dxe4 Bxe4 Rhe8
+Rhe1
+123 evil games, 0 double byte games, Paramasivam, M.-Tariq, Ahmed, doesn't need
+double bytes
+d4 Nc6 d5 Na5 e4 e5 Nf3 b6 Nc3 Nf6 Nxe5 d6 Bb5+ Bd7 Nxd7 Nxd7 O-O c6 dxc6 Nc5 c7
++ Nd7 cxd8=Q+ Kxd8 Qd5 Rb8 Qxf7 Rc8 Qxd7#
+124 evil games, 0 double byte games, Nardi, Hector Fernando-Lobo Gomez, Maria Lu
+isa, doesn't need double bytes
+d4 d5 c4 c6 e3 Nf6 Nf3 e6 Bd3 Bb4+ Nc3 O-O O-O Nbd7 h3 Re8 c5 Ba5 Bb1 Bc7 Qc2 g6
+ a3 Bb8 b4 Qc7 b5 e5 bxc6 e4 cxd7 exf3 dxe8=Q+ Nxe8 g3 Qd7 g4 Qc7 Nxd5 Qh2#
+125 evil games, 0 double byte games, Heimsoth, Holger-Bustillo, Joaquin, doesn't
+ need double bytes
+d4 d6 e4 Bd7 Nc3 Nc6 f4 f6 d5 Nb8 f5 c6 Qh5+ g6 fxg6 Bg7 gxh7+ Kf8 hxg8=Q+ Kxg8
+Qd1 Qa5 Nf3 f5 Bd2 fxe4 Nxe4 Qxd5 Bd3 b5 Bc3 Na6 Qe2 Bg4 a4 b4 Bc4 Bxf3 gxf3 bxc
+3 bxc3 Kh7 Bxd5 cxd5 Ng5+ Kh6 Nf7+ Kh7 Ng5+ Kg6 Qd3+ Kxg5 Rg1+ Kh4 Rg4+ Kh3 Qf1+
+ Kxh2 Qg2#
+126 evil games, 0 double byte games, Scholz, Gerd-Ernst, Klaus, doesn't need dou
+ble bytes
+d4 Nf6 c4 c5 d5 b5 Qc2 b4 e4 d6 Nf3 Nbd7 Be2 g6 Nbd2 Bg7 Rb1 O-O O-O Ng4 Ng5 Nh6
+ Ndf3 Kh8 Nh4 Ng8 f4 h6 Nxf7+ Rxf7 Nxg6+ Kh7 e5 Ndf6 e6 Bd7 exf7 e6 Nf8+ Kh8 fxg
+8=Q+ Kxg8 Nxe6 Bxe6 dxe6 Qe7 f5 Rf8 Qd3 Nh7 Qg3 Kh8 b3 Rg8 Qh3 Ng5 Qh5 Bd4+ Kh1
+Qf6 Bxg5 Rxg5 Qe8+ Kh7 Qf7+ Qxf7 exf7 Kg7 Bf3 Kxf7 Bd5+ Kf6 Rbe1 Be5 Rf3 Rh5 Rh3
+ Rxh3 gxh3 Kxf5 Kg2 h5
+127 evil games, 0 double byte games, Baehr, Madeleine-Fritsche, Miriam, doesn't
+need double bytes
+e4 e5 Nf3 Nc6 Bc4 Nf6 Nc3 Bc5 O-O d6 d3 Bg4 h3 Bh5 Nd5 h6 Nxf6+ Qxf6 g4 Bg6 Be3
+Nd4 Nxd4 exd4 Rc1 dxe3 Re1 exf2+ Kh1 fxe1=Q+ Qxe1 Qf3+ Kh2 Bf2 Qh1 Qg3#
+128 evil games, 0 double byte games, Mack, Carmen-Dieringer, Laura, doesn't need
+ double bytes
+e4 e5 Nf3 Nc6 Bc4 Nd4 Nxe5 Qg5 Ng4 Bc5 c3 Ne6 Qf3 f6 h4 Qg6 d4 Be7 d5 Nc5 Nd2 d6
+ Ne3 Bd7 b4 Na4 Nc2 O-O-O g3 a6 Bb3 Re8 Qe3 Nh6 c4 Ng4 Qa7 Bb5 cxb5 f5 Bxa4 Ne5
+bxa6 c6 Qxb7+ Kd8 a7 Nd7 a8=Q+ Nb8 Qaxb8#
+129 evil games, 0 double byte games, Pook, Rainer-Maas, Karl Heinz, doesn't need
+ double bytes
+d4 Nf6 Nc3 e6 e4 d5 e5 Nfd7 f4 Bb4 Nf3 O-O Bd3 f6 O-O c5 Ng5 Qe7 Nb5 Nb6 c3 Ba5
+Nd6 c4 Bc2 h6 Qh5 hxg5 fxg5 g6 Qxg6+ Qg7 Qh5 N6d7 g6 Bc7 Bh6 Qh8 g7 Qh7 gxf8=Q+
+Nxf8 Rf3 Bxd6 exd6 Nfd7 Rg3+ Kh8 Qe8+
+130 evil games, 0 double byte games, Straeter, Timo-Jeppel Klose, Ruediger, does
+n't need double bytes
+d4 e6 Nf3 c5 e3 Nf6 Bd3 b6 O-O g6 c4 Bg7 Nc3 O-O d5 Bb7 e4 d6 Bg5 h6 Be3 Ng4 Bd2
+ f5 Qe2 Ne5 Nxe5 dxe5 dxe6 Nc6 Nd5 Nd4 e7 Nc2 exd8=Q Raxd8 Bxc2
+3000000 games
+3000000 games processed so far
+131 evil games, 0 double byte games, Stross, Frantisek-Simon, Holger, doesn't ne
+ed double bytes
+e4 e6 d4 d5 Nc3 Nf6 Bg5 Bb4 e5 h6 Bc1 Bxc3+ bxc3 Ne4 Qg4 g6 Bd3 c5 Bxe4 dxe4 Qxe
+4 Nc6 Nf3 Qa5 Bd2 Qa3 O-O O-O Bxh6 Nxd4 cxd4 Qxf3 Qxf3 f5 Bxf8 Bd7 Qxb7 Bc6 Qxc6
+ Re8 Qxe8 c4 Qe7 g5 Qxe6+ Kh8 Qxf5 g4 Qxg4 c3 Bb4 a5 Bxa5 Kh7 Bxc3 Kh8 Qg5 Kh7 B
+b4 Kh8 Bf8 Kh7 e6 Kh8 d5 Kh7 d6 Kh8 e7 Kh7 d7 Kh8 c4 Kh7 c5 Kh8 c6 Kh7 a3 Kh8 a4
+ Kh7 a5 Kh8 f3 Kh7 g3 Kh8 h3 Kh7 f4 Kh8 g4 Kh7 h4 Kh8 a6 Kh7 c7 Kh8 a7 Kh7 a8=Q
+Kh8 c8=Q Kh7 d8=Q Kh8 e8=Q Kh7 f5 Kh8 f6 Kh7 h5 Kh8 Rab1 Kh7 Rb8 Kh8 Kg2 Kh7 Kg3
+ Kh8 Kf4 Kh7 Ke5 Kh8 Ke6 Kh7 Kf7 Kh8 Qf4 Kh7 g5 Kh8 h6 Kh7 Qde7 Kh8 Qce6 Kh7 Qa5
+ Kh8 Qae5 Kh7 Rb2 Kh8 Re2 Kh7 Rh2 Kh8 Rh5 Kh7 Rfh1 Kh8 Qg3 Kh7 Rf1 Kh8 Rf5 Kh7 Q
+g4 Kh8 Qgg3 Kh7 g6+ Kh8 g7+ Kh7 Qg6#
+132 evil games, 0 double byte games, Laforette, Remi-Bordes Guasch, Juan Ramon,
+doesn't need double bytes
+e4 c5 Nf3 Nc6 Nc3 d6 d3 Nf6 Bg5 g6 Be2 Bg7 O-O O-O Nh4 a6 a3 b5 a4 b4 Nd5 Nxd5 e
+xd5 Nd4 Bf3 Nxf3+ Qxf3 Bxb2 Rab1 Bc3 Qe4 Re8 Nf3 Bd7 Bh6 Bxa4 Ne1 Bd7 Qc4 a5 Rd1
+ a4 Nf3 a3 d4 a2 h3 a1=Q Rxa1 Rxa1 Rxa1 Bxa1 Qa6 Bxd4 Nxd4 cxd4 Bd2 Qa8 Qc4 e6 Q
+xb4 Qxd5 c3 Bc6 c4 Qxg2#
+133 evil games, 0 double byte games, Cekan, Petr-Tancer, M., doesn't need double
+ bytes
+e4 e5 Nf3 Nc6 d4 exd4 c3 dxc3 Bc4 Be7 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qd2 cxb1=Q
+ Rxb1 Nc6 a3 d6 h3 Ne5 Nxe5 dxe5 Qe2 Bf6 O-O Qe7 Rd1 Be6 Bd2 Rfd8 Bb4 c5 Bxe6 fx
+e6 Bc3 Rxd1+ Rxd1 Rd8 Rxd8+ Qxd8 Qc4 Qe7 b4 cxb4 Qc8+ Qd8 Qxe6+ Kf8 Bxb4+ Be7 Qf
+5+ Kg8 Qxe5 Bxb4 axb4 h6 Qe6+
+134 evil games, 0 double byte games, Harrison, Richard-Han, Tianchen, doesn't ne
+ed double bytes
+e4 e5 f4 Nc6 Nc3 exf4 Nf3 Be7 Bc4 Bh4+ g3 fxg3 O-O Nf6 d4 Ng4 Ng5 gxh2+ Kg2 h1=Q
++ Rxh1 Bxg5 Qxg4 Bxc1 Qxg7 Rf8 Rxh7 Qe7 e5 d6 Nd5 Qg5+ Qxg5 Bxg5 Nxc7+ Kd8 Nxa8
+Rg8 Bxf7 Rf8 exd6 Bf5 Re1 Bxh7 Be6 Nxd4 Nc7 Rg8
+135 evil games, 0 double byte games, Danieli, Enrico-Zanellato, Lorenzo, doesn't
+ need double bytes
+d4 d5 Nf3 Nf6 e3 c5 Bd3 e6 O-O Nc6 b3 Qb6 Bb2 c4 Be2 Bd7 Ne5 Nxe5 dxe5 Ne4 Bd4 Q
+c7 f3 cxb3 fxe4 bxc2 Qc1 cxb1=Q Qxc7 Qxe4 Rxf7 Be7 Rxg7 Qh4 Bc5 Rc8 Rxe7+ Qxe7 B
+h5+
+136 evil games, 0 double byte games, Frie, Michael-Steens, Rudolf, doesn't need
+double bytes
+e4 e6 d4 d5 e5 c5 c3 Nc6 Nf3 Qb6 a3 c4 Nbd2 Na5 g3 Bd7 Bg2 Be7 O-O h5 h3 g5 a4 O
+-O-O b3 cxb3 c4 b2 Rb1 bxc1=Q Qxc1 Qc7 c5 g4 hxg4 hxg4 Ne1 Bg5 Qc3 Bxd2 Qxd2 Ne7
+ Nd3 Bxa4 Qb4 Bc2
+3100000 games
+3100000 games processed so far
+137 evil games, 0 double byte games, Mandadijev, Marlon-Heidelberger, Colin, doe
+sn't need double bytes
+d4 d5 e4 dxe4 Bd3 exd3 Nf3 dxc2 Be3 cxd1=Q+ Kxd1 Nc6 Bg5 g6 Bf6 exf6 b4 Bxb4 Nc3
+ Nxd4 Rb1 Bxc3 Rc1 Nxf3+ Ke2 Bd2 Kd1 Bxc1+ Kxc1 Qd2+ Kb1 Bf5+ Ka1 Rd8 Rd1 Qxd1+
+Kb2 Rd2+ Kc3 Ne7 gxf3 Rd3+ Kc4 Be6+ Kc5 b6+ Kb5 Qb1+ Ka4 Qxa2+ Kb4 Rb3#
+138 evil games, 0 double byte games, Tischer, Marcel-Priese, Annika, doesn't nee
+d double bytes
+e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Bg4 f3 Bh5 dxc6 Bc5 cxb7 O-O bxa8=Q Qxa8 Nc3 Q
+d8 d3 Qd4 Qe2 Qh4+ Kd1 h6 Nge4 Nxe4 Nxe4 Bd4 c3 Bb6 Bd2 Qe7 g4 Bg6 h4 Bxe4 dxe4
+Qc5 b4 Qd6 Rf1 Rd8 a4 a5 bxa5 Bxa5 h5 Bxc3 Ra2 Qb4 Kc1 Bb2+ Rxb2 Qxa4 Bb3 Qa1+ K
+c2 Qa7 Be3 Qa5 Qc4 Rd6 Qxf7+ Kh7 Qc4 Qa8 Kc3 Rc6 Bc5 Qa5+ Kd3 Rxc5 Qg8#
+139 evil games, 0 double byte games, Wessendorf, Klaus-Winkelsett, Carsten, does
+n't need double bytes
+e4 g6 d4 Bg7 Be3 d6 c3 Nd7 Bc4 Ngf6 Qb3 O-O f3 Rb8 a4 b6 Na3 c5 Ne2 a6 Kf2 Bb7 d
+5 Ne5 Nf4 g5 Nd3 g4 Nxe5 dxe5 Be2 Bc8 Bxc5 Nd7 Be3 f5 d6+ Kh8 Bg5 Nc5 dxe7 Qe8 e
+xf8=Q+ Qxf8 Qd1 Bb7 Ke1 fxe4 fxg4 Nd3+ Bxd3 exd3 Rf1 Qd6 Nc4 Qg6 Qd2 Qe4+ Ne3 Bf
+8 Rd1 Qxa4 Qxd3 e4
+140 evil games, 0 double byte games, David, Vidya-Wheeler, John Francis, doesn't
+ need double bytes
+e4 e5 d3 Nc6 Nf3 Nf6 Nc3 d5 h4 Bb4 Bg5 d4 Be2 dxc3 Rb1 cxb2+ Kf1 Bc3 Kg1 Be6 a4
+Qd6 Bxf6 gxf6 h5 O-O-O g3 Nd4 Kg2 Qb4 Ra1 bxa1=Q Qxa1 Bxa1 Rxa1 Nxe2 Rc1 Nxc1 c4
+ Rxd3 Nh4 Qe1 c5 Rd1 Nf3 Qh1#
+141 evil games, 0 double byte games, McCann, Desia-Peters, Epiphany, doesn't nee
+d double bytes
+d4 d5 Nf3 Nc6 e3 Nf6 Bd3 e6 Nh4 e5 b3 exd4 e4 dxe4 Bc4 Bd6 a3 O-O Bb2 Re8 c3 Bg4
+ f3 exf3+ Kf1 fxg2+ Kg1 gxh1=Q+ Kxh1 Bxd1 Nd2 Re1+ Kg2 Qd7 Bd3 Qg4+ Kf2 Qxh4+ Kg
+2 Qxh2#
+142 evil games, 0 double byte games, Volz, Alexander-Kluss, Michelle, doesn't ne
+ed double bytes
+e4 d5 exd5 e5 Nc3 Nf6 Bc4 Bd6 h3 Bf5 d3 O-O Nf3 Qd7 O-O c6 dxc6 Qe7 cxb7 Nc6 bxa
+8=Q Rxa8 Nd5 Qe6 Nc7 Qc8 Nxa8 Qxa8 Ng5 Qb8 Nxf7 Bg6 Nxd6+ Kf8 Nb5 Bf5 Bg5 Nd7 Qh
+5 e4 Qf7#
+143 evil games, 0 double byte games, Johannes, Jan Hinnerk-Falke, Cynthia, doesn
+'t need double bytes
+e4 e5 Nf3 Nc6 Bc4 Bc5 Nc3 Nf6 d3 d6 Bg5 h6 Bh4 g5 Bg3 Ng4 O-O h5 h3 h4 hxg4 hxg3
+ Re1 gxf2+ Kf1 fxe1=Q+ Qxe1 Rh1+ Ke2 Rxe1+ Rxe1 Nd4+ Nxd4 exd4 Nb5 Bxg4+ Kd2 c6
+Nxd4 Bxd4 Rf1 Qa5+ c3 Bxc3+ bxc3 O-O-O Rxf7 Qa4 Bb3 Qa3 Ke3 Qc5+ d4 Qxc3+ Kf2 Qx
+d4+ Kg3 Qxe4 Rg7 Qf4#
+3200000 games
+3200000 games processed so far
+144 evil games, 0 double byte games, Nauth, Manuel-Mueller, Frank2, doesn't need
+ double bytes
+e4 e5 Nf3 Nc6 Bb5 Nf6 Nc3 Bb4 O-O O-O d3 Nd4 Nxd4 exd4 Nd5 Nxd5 exd5 a6 Bc4 d6 a
+3 Bc5 Re1 Qf6 Re4 Qg6 Qf3 f5 Re7 c6 dxc6+ Kh8 cxb7 Ra7 bxc8=Q Rxc8 Rxa7 Bxa7 Qb7
+ Re8 Bf4 Bc5 Bf7 Qxf7 Qxf7 Rg8 Re1 h6 Re8 Rxe8 Qxe8+ Kh7 Qf8 Kg6 Qe8+ Kf6 b4 Bb6
+ Bxd6 Kg5 Qc6 Bd8 g3 Bf6 h3 Kg6 Be5 a5 bxa5 h5 Bxf6 gxf6 Qe8+ Kh6 Qf7 h4 Qxf6+ K
+h5 Qxh4+ Kg6 Kg2
+145 evil games, 0 double byte games, Tochtermann, Georg-Polifka, Wilfried, doesn
+'t need double bytes
+e4 b6 g3 Bb7 Bg2 e5 Nc3 Nf6 d3 Bc5 Nge2 Ng4 d4 Qf6 f3 exd4 fxg4 dxc3 Rf1 cxb2 Rb
+1 bxc1=Q Nxc1 Qe7 Qd3 Ba6 c4 Nc6
+146 evil games, 0 double byte games, Battistella, Stefano-Schaefer, Michael, doe
+sn't need double bytes
+c4 g6 Nc3 Bg7 g3 f5 d4 Nf6 Bg2 O-O Nh3 d6 d5 Na6 O-O Qe8 Rb1 Nc5 Nb5 Qd8 Nd4 e5
+dxe6 c6 Ng5 Qe7 Bf4 Nh5 Nxc6 bxc6 Bxd6 Qxg5 e7 Ne4 exf8=Q+ Bxf8 Bxf8 Kxf8 Qd4 Qf
+6 Rfd1 Be6 Qxf6+ Nhxf6
+147 evil games, 0 double byte games, Pradzinski, Alex-Tuason, Alfred, doesn't ne
+ed double bytes
+e4 e6 d4 d5 e5 c5 c3 a6 Nf3 Nc6 Be2 Be7 O-O Qc7 h3 f6 Bf4 Bd7 Qd2 c4 exf6 Qd8 fx
+g7 Bf6 gxh8=Q Bxh8 Be5 Nxe5 dxe5 Qe7 Rd1 O-O-O Qg5 Rf8 Qxe7 Nxe7 Nd4 Bxe5 Bg4 Bx
+d4 cxd4 Nf5 Nc3 Kc7 Rac1 b5 Ne2 Nd6 b3 Kb6 bxc4 Nxc4 h4 Rg8 Bf3 Nb2 Rd2 Nc4 Rdc2
+ b4 g3 Be8 Nf4 Rf8 Nh5 Rxf3 Ng7 Bd7 Kg2 Rf7 Nh5 a5 Rb1 Na3 Rbc1 Nxc2 Rxc2 a4 Rb2
+ Kb5 a3 b3 f4 Kc4 g4 Kc3 Rb1 b2 Rf1 Kb3 g5 Ka2 Kg3 b1=Q Rxb1 Kxb1 Kg4 Kb2 Nf6 Kx
+a3 Nxd7 Rxd7 f5 exf5+ Kxf5 Kb3 Ke6 Ra7 Kxd5 a3 Ke6 a2 d5 a1=Q d6 Qe1+ Kf6 Qxh4 K
+e6 Qe4+ Kf6 Qg6+ Ke5 Rd7 Kd5 Qxd6+ Ke4 Re7+ Kf3 Qd5+ Kg3 Rf7 Kh4 Qe4+ Kh5 Rf4 Kh
+6 Qg6#
+148 evil games, 0 double byte games, Traerup, Jorgen-Mathiesen, Erik, doesn't ne
+ed double bytes
+e4 e5 Nc3 Nf6 Bc4 Nc6 Nge2 Bc5 Ng3 d6 O-O Ng4 Be2 h5 h3 Qh4 Qe1 Qxg3 Bxg4 hxg4 N
+e2 Qh4 d4 Nxd4 Be3 Nxc2 Qc3 Nxe3 fxe3 gxh3 g3 h2+ Kg2 Qxe4+ Kf2 Bg4 Ke1 Bb4 Rc1
+h1=Q Rxh1 Rxh1+ Kd2 Rxc1 Nxc1 Kd7 Nd3 Bxc3+ Kxc3 Rh8 Nf2 Qxe3+ Nd3 Bf5
+149 evil games, 0 double byte games, Galic, Ivan-Valkovic, Kristijan, doesn't ne
+ed double bytes
+c4 d6 Nc3 Nf6 Nf3 g6 g3 Bg7 Bg2 O-O O-O e5 d3 Nbd7 b4 h6 a4 Ne8 Bd2 f5 a5 g5 a6
+f4 Nxg5 hxg5 axb7 Rb8 Rxa7 Nb6 bxc8=Q Qxc8 Nd5 Kf7 b5 Nxd5 Bxd5+ Ke7 Ba5 Rh8 Bg2
+ Kf8 Bc3 Qe6 e3 Qh6 h3 Rc8 Qg4 Rd8 exf4 gxf4 Rfa1 Nf6 Qf3 Rd7 gxf4 Qxf4 Qxf4 exf
+4 Ra8+ Kf7 Rxh8 Bxh8 Ra7 Bg7 Bxf6 Bxf6 b6 Bd4 bxc7
+3300000 games
+3300000 games processed so far
+150 evil games, 0 double byte games, Herbold, Nora-Farzamfar, Bahram, doesn't ne
+ed double bytes
+e4 e5 Nf3 Nc6 d4 exd4 c3 dxc3 Bc4 Be7 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qd2 cxb1=Q
+ Rxb1 Nc6 O-O a6 a3 d6 Qf4 Bf6 Ng5 Ne5 Ba2 h6 Nf3 Be6 Bxe6 fxe6 Nd4 Qe7 Qd2 c5 N
+e2 Rad8 f4 Nc4 Qc2 b5 Ng3 Bd4+ Kh1 Ne3 Bxe3 Bxe3 f5 e5 Rbd1 Qh4 Ne2 Rf6 Rf3 Bd4
+Rh3 Qg4 Rg3 Qh5 Rh3 Qf7 Rdd3 d5 Rd2 dxe4 Qxe4 Rxf5 Rf3 Rxf3 Qxf3 e4 Qxf7+ Kxf7 N
+xd4 cxd4 Kg1 e3 Rd3 Ke6 Kf1 Ke5 Ke2 Ke4 b3 Rf8 Rd1 Rf2+ Ke1 Rxg2 h4 d3
+151 evil games, 0 double byte games, Luft, Helga-Shah, Anila, doesn't need doubl
+e bytes
+d4 d5 Bf4 Nc6 e3 Bf5 Nf3 e6 c3 Nf6 h3 a6 Nbd2 h6 Be2 Nh5 Bh2 Nf6 O-O Qe7 Ne5 Nxe
+5 Bxe5 O-O-O Nb3 g5 Nc5 a5 b4 Rg8 bxa5 Ne4 Nxe4 Bxe4 f3 Bh7 a4 f6 Bh2 f5 Qb3 c5
+Qb6 c4 a6 f4 a7 Qd6 a8=Q+ Kd7 Qaxd8#
+152 evil games, 0 double byte games, Wycisk, David-Schmale, Lina, doesn't need d
+ouble bytes
+d4 d5 Nf3 c5 c3 Bg4 Ne5 Nf6 Bg5 Nbd7 Qa4 Bf5 dxc5 Ne4 c6 Nxe5 cxb7+ Bd7 bxa8=Q Q
+xa8 Qc2 e6 Bh4 Bc5 Nd2 O-O Nxe4 dxe4 Bg3 Ng6 e3 f5 Bc4 Kh8 Rd1 Rd8 Bc7 Ba4 Rxd8+
+ Qxd8 Bxd8 Bxc2 Bxe6 Be7 Bxe7 Nxe7 b3 g6 Kd2 Bd3 c4 Kg7 Kc3 Kf6 Bd7 g5 b4 Ke5 h4
+ g4 g3 h6 a4 a6 a5 Kd6 Ba4 Ng6 Bc2 Bxc2 Kxc2 Ne5 Kc3 Nd3 Rd1 Kc6 Rxd3 exd3 Kxd3
+153 evil games, 0 double byte games, Demarche, Vladislav-Velasquez, Rene, doesn'
+t need double bytes
+e4 e5 Nf3 Nc6 Be2 d5 O-O dxe4 b3 exf3 Bb2 fxg2 Nc3 gxf1=Q+ Kxf1 Nf6 d4 Bd6 dxe5
+Nxe5 Nb5 O-O Nxd6 cxd6 Bxe5 Bh3+ Kg1 dxe5 Qxd8 Rfxd8 Kh1 Rd2
+3400000 games
+3400000 games processed so far
+154 evil games, 0 double byte games, Schlimpert, Vanessa-Schmaeschke, Teresa, do
+esn't need double bytes
+e4 e5 Nf3 Nc6 Bc4 Bc5 Nc3 Nf6 d3 O-O Bg5 d6 O-O Bg4 Bxf6 Qxf6 Nd5 Qg6 Qe1 Bxf3 g
+3 Qh6 Ne3 Qh3 d4 Bxd4 Be2 Bxe4 f3 Bxe3+ Kh1 Bd5 Rg1 e4 Bf1 Qf5 g4 Qf4 Rg3 exf3 R
+d1 f2+ Bg2 fxe1=Q+ Rxe1 Qf2 Rf1 Qxf1#
+155 evil games, 0 double byte games, Boehme, Matthis-Pueschel, Torben, doesn't n
+eed double bytes
+e4 e5 f4 exf4 Nf3 Nf6 d3 Nh5 Be2 d6 Nd4 Qh4+ g3 fxg3 Bf3 g2+ Kd2 gxh1=Q Qxh1 Qf2
++ Be2 Qxd4 Bxh5 g6 Bf3 Qf2+ Be2 Bh6+ Kc3 Bxc1 Qxc1 Qxe2 Qg5 Qxh2 Qf6 Qe5+ Qxe5+
+dxe5 Nd2 Nc6 Rf1 h5 Nf3 h4 Ng5 Be6 Nxe6 fxe6 Rf6 O-O-O Rxe6 h3 Rxg6 h2 d4 exd4+
+Kb3 h1=Q c3 d3 Rg2 Qxg2 e5 Qd5+ Ka3 Rh2 e6 d2 e7 Nxe7 c4 Qd3+ Kb4 d1=Q
+156 evil games, 0 double byte games, Gibbons, Lorne-Anderson, George, doesn't ne
+ed double bytes
+d4 f5 c4 g6 Nf3 Nf6 Nc3 Bg7 Bf4 a6 e3 O-O h3 Ne4 Nxe4 fxe4 Nd2 d5 cxd5 b5 Qb3 Bb
+7 d6+ Kh8 dxc7 Qd7 cxb8=Q Raxb8 Bxb8 Rxb8 Be2 Rf8 Bg4 Qd8 Be6 Rf6 d5 Qf8 Nxe4 Rx
+e6 dxe6 Bxe4 f3 Bb7 O-O Qf5 Rf2 Bd5 Qd1 Bxe6 Qd8+ Bg8 Qxe7 Qd3 Qe4 Qd8 Rc2 Qa5 a
+3 Qd8 Rac1 Qd7 b4 Bf6 Rc7 Qd2 R7c2 Qd7 Kf1 Bc4+ Rxc4 bxc4 Qxc4 Bb2 Qc8+ Qxc8 Rxc
+8+ Kg7 a4 Ba3 Rc6 Bxb4 Rxa6 h6 Rb6 Ba5 Rb5 Bd2 Ke2 Bc3 e4 g5 g4 Bd4 Kd3 Bg1 a5 K
+g6 a6 h5 Rf5 hxg4 hxg4 Bf2 e5 Kh6 e6 Bc5 Rxc5
+157 evil games, 0 double byte games, Fink, Leander-Minju, Kim, doesn't need doub
+le bytes
+e4 e5 Nf3 Nf6 Nc3 Nc6 a3 d5 Bb5 a6 exd5 e4 Qe2 Bg4 Nxe4 Be7 Nxf6+ gxf6 dxc6 Rg8
+cxb7+ Kf8 bxa8=Q Qxa8 Bc4 Qc6 d3 f5 Bd2 h5 Bb4 Rg6 Qxe7+ Kg7 Qxf7+ Kh6 Bf8+ Rg7
+Qxg7#
+3500000 games
+158 evil games, 0 double byte games, Mikavica, Dragoljub-Vuckovic, Nebojsa, does
+n't need double bytes
+e4 d6 d4 Nf6 Nc3 g6 Bg5 Bg7 Qd2 O-O O-O-O Nbd7 h4 c5 Nf3 a6 Kb1 b5 e5 b4 exf6 bx
+c3 fxe7 Qb6 exf8=Q+ Nxf8 Qxc3 cxd4 Qa3 Ne6 Bc1 Rb8 Bc4 Nc5 Nxd4 Bd7 Nb3 Na4 Qxd6
+
+3500000 games processed so far
+159 evil games, 0 double byte games, Neelotpal,D-Poobesh Anand,S, doesn't need d
+ouble bytes
+e4 c5 Nf3 Nc6 Nc3 Nf6 Bb5 Qc7 O-O Nd4 Nxd4 cxd4 Nd5 Nxd5 exd5 Qc5 c4 a6 b4 Qxb4
+Ba4 b5 Bc2 bxc4 Rb1 Qa5 d3 c3 d6 Qc5 Bf4 e6 Qf3 Qc6 Qg3 f6 Bd1 c2 Bf3 cxb1=Q Rxb
+1 Qc5
+160 evil games, 0 double byte games, Carlsen,M-Morozevich,A, doesn't need double
+ bytes
+d4 Nf6 c4 g6 g3 Bg7 Bg2 O-O Nc3 d6 Nf3 c5 O-O Nc6 d5 Na5 Nd2 e5 b3 Ng4 h3 Nh6 Nd
+e4 f6 Nxd6 Qxd6 Ne4 Qd8 Nxc5 f5 d6 e4 d7 Nf7 Rb1 Qe7 dxc8=Q Raxc8 Na4 Rfd8 Qe1 N
+c6 Nc3 Nd4 Bb2 b5 Nd5 Qd6 Bxd4 Bxd4 Rd1 Be5 Qa5 bxc4 Ne3 Qc7 Qxc7 Bxc7 Nxc4 Ne5
+Rxd8+ Rxd8 Rc1 Nxc4 Rxc4 Rd1+ Bf1 Bd6 e3 a5 Kg2 Kf7 Rc2 Ke7 Be2 Rd5 Bc4 Rd1 g4 f
+4 exf4 Bxf4 Re2 Rd4 Bd3 Kf6 Bxe4 Rd2 Rxd2 Bxd2 Kg3 Be1 Kf3 Bb4 h4 h6 Ke2 Bd6 Kd3
+ Bc5 f4 h5 g5+ Kg7 Kc4 Bd6 Kb5 Bxf4 Kxa5 Bg3 Kb5 Bxh4 a4 Bxg5 a5 Kf6 a6 Be3 Kc6
+g5 b4 Ke5 b5 Kxe4 b6 g4 a7 g3 a8=Q Kf3 b7 Bf4 Qf8 Ke4 Qe8+
+3600000 games
+3600000 games processed so far
+161 evil games, 0 double byte games, Sharma,RP-Shashikant,K, doesn't need double
+ bytes
+Nf3 Nf6 c4 g6 Nc3 Bg7 d4 O-O g3 d6 Bg2 Nc6 O-O a6 Qd3 Nb4 Qb1 Bg4 h3 Bd7 Rd1 Qc8
+ Kh2 Re8 a3 Nc6 b4 e5 d5 Nd4 Nd2 h5 e3 Nf5 c5 Qd8 Nb3 Nh6 Na5 Bc8 Qc2 h4 g4 Nfxg
+4+ hxg4 Nxg4+ Kg1 h3 f3 hxg2 fxg4 Bxg4 e4 Qh4 Be3 Qh1+ Kf2 g1=Q+ Rxg1 Qf3+ Ke1 Q
+xe3+
+3700000 games
+3700000 games processed so far
+162 evil games, 0 double byte games, Matoussi,Amina-Solomons,A, doesn't need dou
+ble bytes
+e4 e5 Nf3 Nc6 d4 exd4 Bc4 Be7 c3 dxc3 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qd2 cxb1=Q
+ Rxb1 Nc6 a3 d6 Qf4 Bf6 h4 Qe7 Ng5 Ne5 Be2 Re8 f3 d5 Kf1 Ng6 Qh2 dxe4 Nxe4 Bf5 B
+d3 Rad8 Bc2 Bxe4 Bxe4 Rd1+ Ke2 Rxh1 Qxh1 Bxh4 Be3 f5 Bxf5 Qxe3+ Kd1 Qe2+
+163 evil games, 0 double byte games, Mateo,Ra-Caruana,F, doesn't need double byt
+es
+d4 Nf6 Nf3 e6 g3 b5 Bg2 Bb7 O-O c5 Nc3 a6 Bg5 h6 Bxf6 Qxf6 d5 b4 Ne4 Qxb2 c4 bxc
+3 Rb1 c2 Qd3 cxb1=Q Rxb1 Qxb1+ Qxb1 Bxd5 Nc3 Bc6 Ne5 Bd6 Nxc6 Nxc6 Bxc6 dxc6 Ne4
+ Rd8 Qb7 O-O Qxc6 Be7 Qxa6 Rd4 Qb7 Rb4 Qc6 Rbb8 Qa6 Rfd8 a4 Rbc8 Nd2 Ra8 Qc6 Rac
+8 Qa6 Ra8 Qc6 Rdc8 Qb7 Bf8 Nc4 Rcb8 Qc7 Rc8 Qb7 Rab8 Qd7 Rd8 Qc7 Rdc8 Qd7 Re8 a5
+ Re7 Qc6 Ra7 Kg2 Be7 Nb6 Rxa5 Qc7 Re8 Qc6 Rf8 e4 Ra2 e5 Rd8 Nc8 Bf8 g4 Rdd2 Qe8
+Rxf2+ Kg3 g5 Nd6 Rf4 h3 Raf2
+164 evil games, 0 double byte games, Ozanne,M2-Bongo,Akanga Ndjila Barthelemy, d
+oesn't need double bytes
+e4 c6 d4 d5 f3 Nf6 e5 Ng8 f4 Bf5 Nf3 e6 Be2 c5 c3 Nc6 O-O h6 Be3 Qb6 Qd2 c4 Nh4
+Be4 f5 Be7 fxe6 Bxh4 exf7+ Kf8 fxg8=Q+ Kxg8 Na3 Ne7 Bf3 Bd3 Rfd1 Qg6 g3 Rf8 Bg2
+Nf5 Bf4 Nxg3 hxg3 Rxf4 gxf4 Bg3 Qe3 Be4 Bxe4 dxe4 Kf1 Kh7 Ke2 Qg4+ Kf1 Rf8 Qxe4+
+ Kh8 Kg1 Bf2+ Kxf2 Rxf4+ Qxf4 Qxf4+ Kg1 Qg3+ Kh1 Qf4
+165 evil games, 0 double byte games, Vandervorst,JP-Tonneau,Bastien, doesn't nee
+d double bytes
+d4 d5 Nc3 Nf6 Bd2 g6 e3 Bg7 Bb5+ c6 Bd3 O-O Nge2 Bf5 e4 dxe4 Bc4 b5 Bb3 Bg4 f3 e
+xf3 Ng3 fxg2 Nge2 Ne4 Nxe4 gxh1=Q+ Kf2 Qxh2+ Ke1 Bxd4 c3 Qh1+ Ng1 Qxg1#
+166 evil games, 0 double byte games, Rasmussen,A-Karlsson,J, doesn't need double
+ bytes
+e4 g6 d4 Bg7 Nc3 a6 a4 b6 Nf3 Bb7 Bc4 e6 O-O Ne7 d5 O-O Bg5 h6 Bh4 g5 Bg3 Ng6 Qd
+2 Kh7 Rfe1 e5 d6 g4 Nd4 exd4 dxc7 dxc3 cxd8=Q cxd2 Qxb6 dxe1=Q+ Rxe1 Bc6 Bd6 Rc8
+ Qa5 Bb5 Bxb5 Nc6 Bxc6 Rxc6 Qd5 Re8 e5 Re6 c4 Rcxd6 Qxd6 Rxd6 exd6 a5 Re7 Ne5 c5
+ Bf6 Kf1 Kg7 Re8 Nc6 Rc8 Bxb2 Rc7 Kf6 Rxd7 Ke6 Rc7 Kd5 Rxf7 Kxc5 d7 Be5 Rh7 Bf4
+Ke2 Bg5 Kd3 Kd5 h4 gxh3 gxh3 Ne5+ Ke2 Ke4 Rg7 Bf6 h4 Kf5 h5 Ke6 Rh7 Nxd7 Rxh6 Nf
+8 Kd3 Kf7 Kc4 Kg7 Rxf6 Kxf6 Kb5 Kg5 Kxa5 Ne6 Kb6 Nf4 Kc6 Nd3 Kb5 Nf4 a5 Nd5 Kc5
+Nc7 Kd6 Na6 f4+ Kxh5 f5 Kg5 Ke5 Nb8 f6 Kg6 Ke6 Nc6 a6 Nd4+ Kd7 Nb5 Ke7 Nc7 f7
+3800000 games
+3800000 games processed so far
+167 evil games, 0 double byte games, Do Santos Julio,J-Farmer Negrini,L, doesn't
+ need double bytes
+e4 e5 Nf3 Nc6 d4 d5 Nxe5 Nxe5 dxe5 d4 Bc4 Bc5 e6 Qh4 exf7+ Kf8 fxg8=Q+ Rxg8 Qf3+
+ Ke7 Bxg8 Bd7 Qf7+ Kd6 O-O Qxe4 Nd2 Qf5 Nc4+ Kc6 Qxg7 Kb5 a4+ Ka6 Bxh7 Qd5 Bd3 b
+5 Qg6+ Bb6 axb5+ Kb7 Be4
+168 evil games, 0 double byte games, Maldonado,Hector-Cano Acosta,Luis, doesn't
+need double bytes
+d4 d5 c4 Nc6 Nc3 Nf6 cxd5 Na5 Qa4+ c6 b4 Nc4 dxc6 Nb6 cxb7+ Bd7 bxa8=Q Qxa8 Qc2
+e6 Rb1 Ba4 Nxa4 Bxb4+ Rxb4 O-O Nxb6 axb6 e3 Rc8 Rc4 Re8 Nf3 Ne4 Bd3 Nd6 Rc6 Nc8
+Bxh7+ Kf8 a4 f6 Ba3+ Kf7 Rxc8 Rxc8 Qg6#
+169 evil games, 0 double byte games, Khaziev,A-Ryskanov,Ildar, doesn't need doub
+le bytes
+e4 e5 Nc3 Bc5 Bc4 Nf6 d3 d6 f4 Ng4 f5 Nf2 Qh5 g6 Qh6 Nd7 Bg5 f6 fxg6 c6 g7 Ke7 g
+xh8=Q Qxh8 Be3 Nxh1 Ke2 b5 Bb3 Bxe3 Kxe3 Nc5 Nf3 Nxb3 axb3 Qg8 g3 Nxg3 hxg3 d5 K
+f2 Bg4 Rh1 Kd6 Qxf6+ Kc5 Rh6 Rc8 Qe7+ Kb6 Nxd5+ Ka6 Nb4+ Kb6 Nd5+ Ka6 Nc7+ Kb6 N
+xb5 Kxb5 Qb7+ Ka5 Qxa7+ Kb5 c4+ Kb4 Qb6#
+3900000 games
+3900000 games processed so far
+170 evil games, 0 double byte games, Wakabayashi,Hisako-Vazquez Maccarini,Danitz
+a, doesn't need double bytes
+e4 c5 f4 Nc6 Nf3 e6 g3 g6 Bg2 Bg7 c3 Nge7 O-O d6 d3 O-O Be3 Rb8 Nbd2 b5 a3 a5 Qe
+2 b4 Rac1 Ba6 c4 Bxb2 Rb1 bxa3 Ne1 a2 Rd1 a1=Q Rxa1 Bxa1 Nef3 Bb2 Ng5 a4 Qg4 h5
+Qh4 Bf6 g4 Bxg5 fxg5 hxg4 Qxg4 a3 Qd1 a2 Nb3 Qb6 Rf2 Qxb3 Qxb3 Rxb3 Rxa2 Nb4 Bf4
+ Nxa2 Bxd6 Re8 Bxc5 Rxd3
+171 evil games, 0 double byte games, Kacakovski,D-Imeri,Nazmedin, doesn't need d
+ouble bytes
+e4 e5 Nf3 Nc6 Bc4 Be7 d4 exd4 c3 dxc3 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qe2 cxb1=Q
+ Rxb1 c5 O-O d6 h3 a6 a3 Nc6 Rd1 Be6 Bf4 Qc7 Rbc1 Bxc4 Rxc4 Ne5 Bxe5 dxe5 Rd5 f6
+ Rc3 b5 Nh4 Rfd8 Qg4 Rxd5 exd5 Bf8 Rg3 g6 Nf5 Kh8 Ne3 f5 Qd1 f4
+172 evil games, 0 double byte games, Rigonati,Eduardo Santana-Santana,A, doesn't
+ need double bytes
+e4 e5 Nf3 Nc6 d4 exd4 Bc4 Be7 c3 dxc3 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qd2 cxb1=Q
+ Rxb1 Nc6 O-O d6 a3 Be6 Bd5 Qd7 b3 Bxd5 exd5 Ne5 Nxe5 dxe5 Bb2 Bd6 Rfe1 f6 Rbc1
+Rad8 Red1 Rfe8 Qa5 a6 Qc3 Re7 Rc2 Qg4 Qc4 Qxc4 bxc4 Bc5 Rcd2 Red7 Bc3 b6 a4 a5 K
+f1 Kf7 Ke2 Ke7 f3 Kd6 g4 Bb4 Kd3 Kc5 Kc2 Kxc4
+173 evil games, 0 double byte games, Lubbe,N-Gustafsson,J, doesn't need double b
+ytes
+d4 Nf6 Nc3 d5 Bf4 e6 e3 Be7 Bd3 O-O Nf3 c5 dxc5 Nbd7 b4 b6 Nd4 Bb7 c6 Qc8 cxb7 Q
+xc3+ Kf1 Rae8 Nb5 Qc6 b8=Q Nxb8 a3 a6 Nc7 Rc8 Nxa6 Nbd7 b5 Qc3 g4 Nxg4 Rb1 Nge5
+Rb3 Qa5 Rg1 Ng6 Bg3 f5 f4 Qa4 Be1 Nc5 Bb4 Nxd3 Qxd3 Rf7 Rg2 Bf6 Be1 Rc4 Rb4 Rxb4
+ Bxb4 d4 Qc4 dxe3 Re2 h6 Rxe3 Nxf4 Kg1 g5 Qc6 Bd4 Kf2 Nd5 Kf3 g4+ Kg3 Nxe3 Nc7 B
+e5+ Kh4 Bxc7 Kh5 Qxc2 Qxe6 f4 Qe8+ Kg7
+4000000 games
+4000000 games processed so far
+174 evil games, 0 double byte games, Lisiecki,Robert-Bienkowski,Tadeusz, doesn't
+ need double bytes
+e4 e5 Nf3 Nc6 d4 exd4 Bc4 Be7 c3 dxc3 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qd2 cxb1=Q
+ Rxb1 Nc6 O-O d6 b3 a6 Qe2 Na5 Bd3 b5 Bd2 Nc6 Rbd1 Be6 Bf4 Re8 e5 dxe5 Bxh7+ Kxh
+7 Rxd8 Rexd8 Qe4+ Bf5 Qxf5+ Kg8 Bg5 Bxg5 Qxg5 Nd4 Nxd4 Rxd4 Qxe5 Rad8 Qxc7 Rd1
+175 evil games, 0 double byte games, Nadjezhdin,D-Tantsiura,M, doesn't need doub
+le bytes
+d4 g6 e4 d6 Nc3 Bg7 f4 a6 Nf3 b5 a3 Bb7 Bd3 Nd7 O-O c5 d5 c4 Be2 Qb6+ Kh1 Ngf6 N
+g5 h6 Nh3 O-O Bf3 a5 Qe1 b4 Be3 Qd8 Nd1 Nc5 Bd4 b3 Bxc5 bxc2 Bd4 cxd1=Q Rxd1 Re8
+ Qc3 a4 Nf2 Qa5 Rc1 Qxc3 Bxc3 h5 Rfe1 Bh6 g3 Bg7 Kg2 Rab8 h3 Bh6 Rc2 Kf8 Nd1 h4
+Ne3 hxg3 Kxg3 Rbc8 Ng4 Nh5+ Kf2 Bxf4 Rg1 e6 Re2 exd5 exd5 Rxe2+ Kxe2 Re8+ Kd1 f5
+ Nf2 Ng3 Nh1 Nxh1 Bxh1 Kf7 h4 Be5 h5 gxh5 Bf3 Rh8 Rg5 Bxc3 bxc3 Kf6 Rxh5 Rxh5 Bx
+h5 Bxd5
+176 evil games, 0 double byte games, Priwitzer,Viliam-Karaivanova,Petya F, doesn
+'t need double bytes
+e4 e5 Nf3 Nc6 Bc4 d5 exd5 Bf5 dxc6 Bc5 O-O Nf6 Nxe5 O-O cxb7 Qb8 bxa8=Q Qxa8 Nc3
+ c6 d4 g6 dxc5 Kh8 Nxf7+ Kg7 Bh6+ Kg8 Nd6+ Kh8 Nxf5 Qb8 Bg7#
+177 evil games, 0 double byte games, Elbasuny,F-Abdel Ghany,S, doesn't need doub
+le bytes
+d4 d5 Nf3 Nf6 g3 c6 Bg2 Bf5 O-O h6 c4 e6 Nc3 Nbd7 c5 b6 b4 a5 b5 Be7 bxc6 Nb8 Qa
+4 O-O Bf4 Qc8 c7 Na6 cxb6 Qb7 Qb5 g5 Be5 Ne8 Nd2 Bb4 Rac1 Bxc3 Rxc3 f6 c8=Q Rxc8
+ Rxc8 Qxc8 b7 Qd8 b8=Q Nxb8 Bxb8 Nc7 Bxc7 Qxc7 e4 dxe4 Nxe4 Qc2 Re1 Qxa2 d5 Bxe4
+ Bxe4 Qd2 Re3 f5 Bg2 Qd1+ Qf1 Qxf1+ Kxf1 exd5 Bxd5+ Kg7 Re7+ Kf6 Ra7 Re8 Rxa5 Re
+5 Ra6+ Kg7 Bc4 Rc5 Bd3 Rc1+ Ke2 Rh1 Bxf5 Rxh2 Be4 Kf7 Ke3 Kg7 g4 Rh3+ f3 Kf8 Bg6
+ Rh1 Kd4 Kg7 Ke5 Re1+ Be4
+4100000 games
+4100000 games processed so far
+178 evil games, 0 double byte games, Xiu Deshun-Wen Yang, doesn't need double by
+tes
+d4 Nf6 c4 g6 Nc3 Bg7 e4 d6 f3 O-O Be3 e5 Nge2 c6 Qd2 Nbd7 O-O-O a6 Kb1 b5 c5 Qa5
+ Qc2 d5 exd5 b4 dxc6 bxc3 cxd7 Nd5 dxc8=Q Rfxc8 Qe4 Rab8 Bc1 Rxb2+ Bxb2 Rb8 Ka1
+Rxb2 Nxc3 Qxc3 Qd3 exd4 Qxc3 dxc3 Rxd5 Rb8 Rd8+ Rxd8 Kb1 Rd2 g3 Bd4
+179 evil games, 0 double byte games, Kreisl,R-Brunello,S, doesn't need double by
+tes
+Nf3 c5 c4 g6 e4 Bg7 d4 Qa5+ Nc3 Nc6 d5 Nd4 Bd2 d6 Nxd4 cxd4 Nb5 Qd8 Bb4 a5 Ba3 N
+f6 e5 Ne4 Qe2 Bf5 exd6 O-O dxe7 Qb6 g4 d3 c5 Qf6 exf8=Q+ Rxf8 Qxd3 Nxf2 Qf3 Nxh1
+ gxf5 Re8+ Kd1 Qh4 Kc2 Qxh2+ Bg2 Ng3 Rd1 Nxf5 Kb1 Re3 Qf2 Rg3 c6 Be5 c7 Bxc7 Nxc
+7 Rxg2 Qc5 Kg7 Qf8+ Kf6 Qd8+ Ke5 Re1+ Kf4 Bd6+ Nxd6 Qxd6+ Kg4 Qxh2 Rxh2 Rd1
+4200000 games
+4200000 games processed so far
+4300000 games
+4300000 games processed so far
+180 evil games, 0 double byte games, Sukhareva,E-Zasypkina,E, doesn't need doubl
+e bytes
+d4 d5 Nf3 Nf6 c4 e6 Bg5 c6 Qc2 Qa5+ Nbd2 Ne4 Bf4 Nd7 a3 Ndf6 c5 Be7 h3 h6 e3 Nxd
+2 Nxd2 O-O Be2 Qd8 b4 Nd7 a4 Re8 Qc3 Bf6 Nf3 Qe7 Bd6 Qd8 O-O Be7 Bh2 Nf6 Rfb1 Bd
+7 b5 Qc8 Ne5 Bd8 b6 a6 Qc2 Be7 Nd3 Ne4 f3 Nf6 a5 Qd8 Bc7 Qc8 Nb4 Rf8 Be5 Nh7 Nxa
+6 bxa6 b7 Qd8 b8=Q Rxb8 Rxb8 Bc8 Bxa6 Qd7 Bxc8 Rxc8 a6
+181 evil games, 0 double byte games, Azhar,Puteri Rifqah Fahada-Nithyalakshmi,Si
+vanesan, doesn't need double bytes
+Nf3 Nf6 c4 g6 g3 Bg7 Bg2 O-O Nc3 d6 Qc2 e5 d3 Nc6 a3 a5 O-O Nh5 Bg5 f6 Bd2 f5 Ng
+5 Ne7 Qb3 c6 c5+ d5 e4 h6 exd5 hxg5 dxc6+ Kh7 cxb7 Rb8 bxc8=Q Qxc8 Qc2 Qxc5 Bxg5
+ Nc6 Bxc6 Qxc6 Rab1 Qd7 h3 f4 Kh2 Qf5 Ne4 Qe6 g4 Nf6 Bxf6 Bxf6 Qc4 Qd7 Rfc1 Bg7
+Ng5+ Kh6 Ne6 Rfc8 Qa2 Qxd3 Nxg7 Kxg7 Qe6 Qd4 Qe7+ Kh8 Qf6+ Kh7 Qf7+ Kh6 g5+ Kxg5
+ Rg1+
+182 evil games, 0 double byte games, Kocur,M-Tremblay,Mario, doesn't need double
+ bytes
+Nf3 d6 g3 Nc6 Bg2 e5 d3 h6 c4 Nge7 Nc3 g6 Rb1 Bg7 b4 Nf5 e3 O-O b5 Nb8 a4 Nd7 O-
+O Ne7 Qc2 f5 a5 Rb8 Nd5 Nxd5 cxd5 Nf6 Qc4 g5 Bb2 Bd7 Nxe5 dxe5 d6+ Kh7 dxc7 Qe7
+cxb8=Q Rxb8 Qc7 b6
+4400000 games
+183 evil games, 0 double byte games, Eroglu,Celik-Alagoz,Ramazan, doesn't need d
+ouble bytes
+d4 c6 Nf3 d6 e4 Bg4 h3 Bxf3 Qxf3 g6 Nc3 Bg7 Bc4 a6 d5 e5 dxc6 Qe7 Nd5 Qd8 c7 Qd7
+ c8=Q+ Qxc8 Nb6 Qc7 Nxa8 Qxc4 b3 Qc3+ Qxc3 Nc6
+4400000 games processed so far
+184 evil games, 0 double byte games, Hedlerfog,Robert-Hinrichs,Kurt, doesn't nee
+d double bytes
+b3 d5 Bb2 e6 e3 Ne7 g3 f6 Be2 Bd7 c4 Nf5 Qc2 Bc6 Nf3 Nd7 d4 Bd6 c5 Be7 b4 b6 cxb
+6 Nb8 b5 Bd7 bxc7 Qc8 cxb8=Q Rxb8 Qxc8+ Rxc8 Bd3 Nd6 a4 Bd8 O-O O-O Ba3 Bc7 Nbd2
+ Rfe8 Rac1 Red8 Rc2 Ne8 Be7
+185 evil games, 0 double byte games, Tapp,Jacob-Metaxasz,V, doesn't need double
+bytes
+d4 d5 Bf4 Nf6 Nf3 c6 e3 Bg4 Be2 e6 c3 Be7 Nbd2 Nbd7 Qc2 O-O O-O c5 Nb3 Bf5 Qd1 h
+6 Bb5 a6 Bxd7 Nxd7 Ne5 Nxe5 Bxe5 c4 Nc5 b6 Na4 b5 Nc5 Qc8 b4 cxb3 Nd3 Qxc3 Nf4 b
+2 Ne2 bxa1=Q Qxa1 Qxa1 Rxa1 Rac8 Ng3 Rc2 Nh5 Rfc8 Rf1 Bd3 Rd1 Rc1 h3 Rxd1+ Kh2 f
+6 Bf4 g5 Bxg5 hxg5 Kg3 Bg6 Nxf6+ Bxf6 f4 Rc3 Kf3 Be4+ Kg4 gxf4 Kh5 Rxe3 g4 Rxh3#
+
+4500000 games
+4500000 games processed so far
+186 evil games, 0 double byte games, Mosallam,Mohammad-Al Naimi,Sultan Mohamed,
+doesn't need double bytes
+e4 e5 Nc3 Nc6 g3 d6 Bg2 Bd7 Nge2 Qc8 Nd5 Nce7 Nec3 Nxd5 Nxd5 Ne7 Nxe7 Bxe7 O-O O
+-O d3 Re8 f4 Bf6 f5 g6 fxg6 Be7 gxf7+ Kh8 fxe8=Q+ Qxe8 Qf3 Qc8 Qf7 Bd8 Qf8#
+187 evil games, 0 double byte games, Tveten,Per-Bullock,Lee, doesn't need double
+ bytes
+e4 c5 c4 d6 Nc3 Nf6 h3 g6 d3 Bg7 Nf3 O-O g3 a6 Bd2 Nc6 Qc1 Re8 Bg2 Nb4 Bf1 Rb8 a
+3 Nc6 Rb1 b5 b3 b4 Nd5 Nxd5 cxd5 Nd4 Bg2 bxa3 Nxd4 a2 Nc6 axb1=Q Qxb1 Qb6 Nxb8 Q
+xb8 O-O e6 Qc2 exd5 exd5 Bf5 Re1 Rxe1+ Bxe1 Qb5 Be4 Bxh3 Qc4 Qb6 Kh2 Bg4 Bxg6 Bd
+1 Be4 Bxb3 Qc1 Qd8 Qf4 Bd1 f3 Qf6 Qg4 Qh6+ Kg2 Qe3 Bc3 Qh6 Qc8+ Bf8 Qg4+ Bg7 Qc8
++ Bf8
+188 evil games, 0 double byte games, Bulcourf,C-Laurnagaray,Santiago, doesn't ne
+ed double bytes
+b4 d5 Nf3 Bf5 e3 e6 Bb2 Nf6 c4 c6 b5 Be7 a4 O-O Nc3 Nbd7 Nd4 Bg6 bxc6 e5 cxb7 ex
+d4 bxa8=Q Qxa8 Nxd5 Nxd5 cxd5 d3 h4 h5 Ba3 Bxa3 Rxa3 Qxd5 Qb3 Rb8 Qd1 Ne5 f3 Ng4
+ fxg4 Qd6 Kf2 Qxa3 gxh5 Bf5 g4 Be4 Bg2 Bxg2 Kxg2 Rb4 Rf1 Qxa4 Qxa4 Rxa4 Kf3 a5 e
+4 Kf8 Ke3 Ra3 g5 Ke7 g6 f6 e5 Ra4 h6 Rg4 exf6+ gxf6 h7
+189 evil games, 0 double byte games, Ekdyshman,M-Raznikov,D, doesn't need double
+ bytes
+d4 Nf6 Nf3 d5 c4 c6 e3 Bf5 Nc3 e6 Bd3 Bg6 O-O Nbd7 b3 Bd6 Bb2 Qe7 Re1 Ne4 Bxe4 d
+xe4 Nd2 f5 b4 Qh4 Nf1 Nf6 c5 Bc7 Ne2 Nd5 Qb3 Bh5 Neg3 Bg4 b5 h5 Bc1 Qf6 Nd2 h4 N
+gf1 Qg5 f4 exf3 e4 fxg2 exd5 gxf1=Q+ Nxf1 f4 Kf2 Qxd5 Qxd5 cxd5 Nd2 Kf7 Rg1 Bf5
+Nf3 Kf6 Ne5 g5 a4 h3 a5 Be4 a6 bxa6 Rxa6 Bxe5 dxe5+ Kf5 Rd1 g4 Kg1 g3 Rf1 f3
+Finished 4591729 total games
+nbr_compress_fast = 350668612
+nbr_compress_slow = 5317
+nbr_uncompress_fast = 350668612
+nbr_uncompress_slow = 5317
