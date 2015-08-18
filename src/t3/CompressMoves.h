@@ -14,7 +14,7 @@
 #include "thc.h"
 
 // Old version
-#define USE_OLD_VERSION // #define this until new version is fully tested
+//#define USE_OLD_VERSION // #define this until new version is fully tested
 #ifdef  USE_OLD_VERSION
 
 std::string SqToStr( int sq );

@@ -12,8 +12,32 @@
 #include "CompressMoves.h"
 #include "DebugPrintf.h"
 
+#define DIAG_ONLY(x) x
+
+static unsigned long nbr_compress_fast;
+static unsigned long nbr_compress_slow;
+static unsigned long nbr_uncompress_fast;
+static unsigned long nbr_uncompress_slow;
+
+void CompressMovesDiagBegin()
+{
+    nbr_compress_fast = 0;
+    nbr_compress_slow = 0;
+    nbr_uncompress_fast = 0;
+    nbr_uncompress_slow = 0;
+}
+
+void CompressMovesDiagEnd()
+{
+    cprintf( "nbr_compress_fast = %lu\n", nbr_compress_fast );
+    cprintf( "nbr_compress_slow = %lu\n", nbr_compress_slow );
+    cprintf( "nbr_uncompress_fast = %lu\n", nbr_uncompress_fast );
+    cprintf( "nbr_uncompress_slow = %lu\n", nbr_uncompress_slow );  // It turns out about 0.02% of moves are in slow mode
+}
+
+
 // Old version
-#define USE_OLD_VERSION // #define this until new version is fully tested
+//#define USE_OLD_VERSION // #define this until new version is fully tested
 #ifdef  USE_OLD_VERSION
 
 // Compression method is basically hi nibble indicates one of 16 pieces, lo nibble indicates how piece moves
@@ -255,6 +279,7 @@ int CompressMoves::compress_move( thc::Move mv, char *storage )
 	int nbr_bytes=1;
     if( evil_queen_mode )
     {
+        DIAG_ONLY( nbr_compress_slow++ );
         char ch;
         compress_move_slow_mode( mv, ch );
         *storage = ch;
@@ -262,6 +287,7 @@ int CompressMoves::compress_move( thc::Move mv, char *storage )
     }
     else
     {
+        DIAG_ONLY( nbr_compress_fast++ );
 		int code=0;
 		int src = mv.src;
 		int dst = mv.dst;
@@ -627,6 +653,7 @@ int CompressMoves::decompress_move( const char *storage, thc::Move &mv )
     // Slow decompression ?
     if( evil_queen_mode )
     {
+        DIAG_ONLY( nbr_uncompress_slow++ );
         char val = *storage;
         decompress_move_slow_mode( val, mv );
         cr.PlayMove(mv);
@@ -635,6 +662,7 @@ int CompressMoves::decompress_move( const char *storage, thc::Move &mv )
     // Otherwise normal fast decompression
     else
     {
+        DIAG_ONLY( nbr_uncompress_fast++ );
         char val = *storage;
         int lo = val & 0x0f;
         int hi = 0x0f & (val>>4);
@@ -1345,29 +1373,6 @@ static inline bool is_dark( int sq )
     return dark;
 }
 
-#define DIAG_ONLY(x) x
-
-static unsigned long nbr_compress_fast;
-static unsigned long nbr_compress_slow;
-static unsigned long nbr_uncompress_fast;
-static unsigned long nbr_uncompress_slow;
-
-void CompressMovesDiagBegin()
-{
-    nbr_compress_fast = 0;
-    nbr_compress_slow = 0;
-    nbr_uncompress_fast = 0;
-    nbr_uncompress_slow = 0;
-}
-
-void CompressMovesDiagEnd()
-{
-    cprintf( "nbr_compress_fast = %lu\n", nbr_compress_fast );
-    cprintf( "nbr_compress_slow = %lu\n", nbr_compress_slow );
-    cprintf( "nbr_uncompress_fast = %lu\n", nbr_uncompress_fast );
-    cprintf( "nbr_uncompress_slow = %lu\n", nbr_uncompress_slow );  // It turns out about 0.02% of moves are in slow mode
-}
-
 // Pawns for each side are assigned logical numbers from 0 to nbr_pawns-1
 //  The ordering of the numbers is determined by consulting this table...
 static int pawn_ordering[64] =
@@ -1545,6 +1550,7 @@ std::vector<thc::Move> CompressMoves::Uncompress( thc::ChessPosition &cp, std::s
         Side *other = cr.white ? &sides[1] : &sides[0];
         char code = moves_in[i];
         thc::Move mv;
+        cprintf( "pos = %s\n", cr.ToDebugStr().c_str() );
         if( side->fast_mode )
         {
             mv = UncompressFastMode(code,side,other);
@@ -1604,6 +1610,7 @@ int CompressMoves::decompress_move( const char *storage, thc::Move &mv )
     }
     else
     {
+        cprintf( "pos = %s\n", cr.ToDebugStr().c_str() );
         mv = UncompressSlowMode(code);
         other->fast_mode = false;   // force other side to reset and retry
     }

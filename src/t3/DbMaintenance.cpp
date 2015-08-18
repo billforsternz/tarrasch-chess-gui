@@ -15,7 +15,7 @@
 
 //-- Temp - hardwire .pgn file and database name
 #ifdef THC_WINDOWS
-#define PGN_FILE        "/Users/Bill/Documents/T3Database/giant1.pgn"
+#define PGN_FILE        "/Users/Bill/Documents/T3Database/Nedeljkovic.pgn" //"giant123.pgn"
 #define PGN_OUT_FILE    "/Users/Bill/Documents/T3Database/twic_minimal_overlap_2.pgn"
 #define QGN_FILE        "/Users/Bill/Documents/T3Database/giant-base-part1-rebuilt-again.qgn"
 #else
@@ -176,7 +176,7 @@ void hook_gameover( char callback_code, const char *event, const char *site, con
 {
     static int counter;
     bool is_interesting = false;
-    if( (++counter % 1000) == 0 )
+    if( (++counter % 100000) == 0 )
         cprintf( "%d games processed so far\n", counter );
     switch( callback_code )
     {
@@ -481,7 +481,7 @@ static void compress_moves_to_str( int nbr_moves, thc::Move *moves, char *dst, t
         thc::Move mv = *moves++;
         int nbr = press.compress_move( mv, dst );
         std::string s = mv.TerseOut();
-//#define VERBOSE
+#define VERBOSE
 #ifdef VERBOSE
         if( nbr == 1 )
             cprintf( "compress temp> %s -> %02x\n", s.c_str(), *dst&0xff );
@@ -524,7 +524,7 @@ static void decompress_moves_from_str( int nbr_moves, char *src, thc::Move *move
 static bool verify_compression_algorithm( int nbr_moves, thc::Move *moves )
 {
     bool is_interesting = false;
-#if 1  // OLD/NEW
+#if 0  // OLD/NEW
     std::vector<thc::Move> moves_in(moves,moves+nbr_moves);
     CompressMoves press;
     std::string compressed = press.Compress(moves_in);
@@ -539,7 +539,7 @@ static bool verify_compression_algorithm( int nbr_moves, thc::Move *moves )
     if( sizeof(buf) < 2*nbr_moves )
     {
         cprintf( "Buffer too small" );
-        return;
+        return true;
     }
     for( int i=0; i<nbr_moves; i++ )
     {
@@ -588,9 +588,6 @@ static bool verify_compression_algorithm( int nbr_moves, thc::Move *moves )
 #endif // OLD/NEW
     if( match )
     {
-#ifdef VERBOSE
-        cprintf( "Woo hoo, %d games match\n", ++nbr_games );
-#endif
     }
     else
     {
