@@ -708,10 +708,10 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                                     {
                                         const lte *ptr = ray_lookup[mv.dst];
                                         lte nbr_rays = *ptr++;
-                                        while( nbr_rays-- )
+                                        while( !found && nbr_rays-- )
                                         {
                                             lte ray_len = *ptr++;
-                                            while( ray_len-- )
+                                            while( !found && ray_len-- )
                                             {
                                                 Square src = (Square)*ptr++;
                                                 if( !IsEmptySquare(cr->squares[src]) )
@@ -1057,10 +1057,10 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                                     {
                                         const lte *ptr = ray_lookup[mv.dst];
                                         lte nbr_rays = *ptr++;
-                                        while( nbr_rays-- )
+                                        while( !found && nbr_rays-- )
                                         {
                                             lte ray_len = *ptr++;
-                                            while( ray_len-- )
+                                            while( !found && ray_len-- )
                                             {
                                                 Square src = (Square)*ptr++;
                                                 if( !IsEmptySquare(cr->squares[src]) )
