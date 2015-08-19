@@ -15,11 +15,11 @@
 
 //-- Temp - hardwire .pgn file and database name
 #ifdef THC_WINDOWS
-#define PGN_FILE        "/Users/Bill/Documents/T3Database/Nedeljkovic.pgn" //"giant123.pgn"
+#define PGN_FILE        "/Users/Bill/Documents/T3Database/giant123.pgn"
 #define PGN_OUT_FILE    "/Users/Bill/Documents/T3Database/twic_minimal_overlap_2.pgn"
 #define QGN_FILE        "/Users/Bill/Documents/T3Database/giant-base-part1-rebuilt-again.qgn"
 #else
-#define PGN_FILE        "/Users/billforster/Documents/ChessDatabases/giant-base-part2-rebuilt.pgn" // twic-948-1010.pgn"
+#define PGN_FILE        "/Users/billforster/Documents/ChessDatabases/giant123.pgn"
 #define PGN_OUT_FILE    "/Users/billforster/Documents/ChessDatabases/twic_minimal_overlap_2.pgn"
 #define QGN_FILE        "/Users/billforster/Documents/ChessDatabases/twic_minimal_overlap.qgn"
 #endif
@@ -87,6 +87,8 @@ void db_maintenance_decompress_pgn()
         fclose(ofile);
 }
 
+unsigned long static_total_moves;
+
 void db_maintenance_verify_compression()
 {
     ifile = fopen( PGN_FILE, "rt" );
@@ -98,8 +100,10 @@ void db_maintenance_verify_compression()
         void CompressMovesDiagBegin();
         void CompressMovesDiagEnd();
         CompressMovesDiagBegin();
+        static_total_moves = 0;
         PgnRead *pgn = new PgnRead('V');
         pgn->Process(ifile);
+        cprintf( "total_moves=%lu\n", static_total_moves );
         CompressMovesDiagEnd();
     }
     if( ifile )
@@ -167,7 +171,6 @@ void db_maintenance_create_indexes()
 }
 
 
-
 bool gbl_evil_queen;
 bool gbl_double_byte;
 void hook_gameover( char callback_code, const char *event, const char *site, const char *date, const char *round,
@@ -187,11 +190,30 @@ void hook_gameover( char callback_code, const char *event, const char *site, con
         case 'A': db_primitive_insert_game( white, black, event, site, result, date, white_elo, black_elo, nbr_moves, moves, hashes ); break;
             
         // Verify
-        case 'V': is_interesting = verify_compression_algorithm( nbr_moves, moves ); break;
+        case 'V': static_total_moves += nbr_moves; is_interesting = verify_compression_algorithm( nbr_moves, moves );
+            extern unsigned long nbr_compress_fast;
+            extern unsigned long nbr_compress_slow;
+            if( nbr_compress_fast+nbr_compress_slow != static_total_moves )
+                cprintf( "counter=%d\n",counter);
+            break;
     }
     if( is_interesting )
     {
         cprintf( "%s-%s %s, %s %s, %s\n", white, black, result, event, site, round );
+        thc::ChessRules cr;
+        for( int i=0; i<nbr_moves; i++ )
+        {
+            thc::Move mv = moves[i];
+            std::string s = mv.NaturalOut(&cr);
+            if( cr.white )
+                cprintf( "%s%d. ", (i%15)==0 ? "" : " ", cr.full_move_count );
+            else if( (i&15) == 15 )
+                cprintf( "\n" );
+            else
+                cprintf( " " );
+            cprintf( "%s", s.c_str() );
+            cr.PlayMove(mv);
+        }
     }
     if( gbl_evil_queen || gbl_double_byte )
     {
@@ -481,7 +503,7 @@ static void compress_moves_to_str( int nbr_moves, thc::Move *moves, char *dst, t
         thc::Move mv = *moves++;
         int nbr = press.compress_move( mv, dst );
         std::string s = mv.TerseOut();
-#define VERBOSE
+//#define VERBOSE
 #ifdef VERBOSE
         if( nbr == 1 )
             cprintf( "compress temp> %s -> %02x\n", s.c_str(), *dst&0xff );
@@ -520,11 +542,10 @@ static void decompress_moves_from_str( int nbr_moves, char *src, thc::Move *move
     }
 }
 
-
 static bool verify_compression_algorithm( int nbr_moves, thc::Move *moves )
 {
     bool is_interesting = false;
-#if 0  // OLD/NEW
+#if 1  // OLD/NEW
     std::vector<thc::Move> moves_in(moves,moves+nbr_moves);
     CompressMoves press;
     std::string compressed = press.Compress(moves_in);

@@ -14,8 +14,8 @@
 
 #define DIAG_ONLY(x) x
 
-static unsigned long nbr_compress_fast;
-static unsigned long nbr_compress_slow;
+unsigned long nbr_compress_fast;
+unsigned long nbr_compress_slow;
 static unsigned long nbr_uncompress_fast;
 static unsigned long nbr_uncompress_slow;
 
@@ -1550,7 +1550,6 @@ std::vector<thc::Move> CompressMoves::Uncompress( thc::ChessPosition &cp, std::s
         Side *other = cr.white ? &sides[1] : &sides[0];
         char code = moves_in[i];
         thc::Move mv;
-        cprintf( "pos = %s\n", cr.ToDebugStr().c_str() );
         if( side->fast_mode )
         {
             mv = UncompressFastMode(code,side,other);
@@ -1610,7 +1609,7 @@ int CompressMoves::decompress_move( const char *storage, thc::Move &mv )
     }
     else
     {
-        cprintf( "pos = %s\n", cr.ToDebugStr().c_str() );
+        static int static_count;
         mv = UncompressSlowMode(code);
         other->fast_mode = false;   // force other side to reset and retry
     }

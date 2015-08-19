@@ -7522,10 +7522,10 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                                     {
                                         const lte *ptr = ray_lookup[mv.dst];
                                         lte nbr_rays = *ptr++;
-                                        while( nbr_rays-- )
-                                        {
+                                        while( !found && nbr_rays-- )   // BUG FIX 2015-08-19 add !found here
+                                        {                               //  Questions arising: What is the significance of count? and probe?
                                             lte ray_len = *ptr++;
-                                            while( ray_len-- )
+                                            while( !found && ray_len-- )   // BUG FIX 2015-08-19 add !found here
                                             {
                                                 Square src = (Square)*ptr++;
                                                 if( !IsEmptySquare(cr->squares[src]) )
@@ -7871,10 +7871,10 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                                     {
                                         const lte *ptr = ray_lookup[mv.dst];
                                         lte nbr_rays = *ptr++;
-                                        while( nbr_rays-- )
+                                        while( !found && nbr_rays-- )   // BUG FIX 2015-08-19 add !found here
                                         {
                                             lte ray_len = *ptr++;
-                                            while( ray_len-- )
+                                            while( !found && ray_len-- )   // BUG FIX 2015-08-19 add !found here
                                             {
                                                 Square src = (Square)*ptr++;
                                                 if( !IsEmptySquare(cr->squares[src]) )
