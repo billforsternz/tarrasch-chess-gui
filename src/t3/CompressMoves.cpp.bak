@@ -14,8 +14,8 @@
 
 #define DIAG_ONLY(x) x
 
-static unsigned long nbr_compress_fast;
-static unsigned long nbr_compress_slow;
+unsigned long nbr_compress_fast;
+unsigned long nbr_compress_slow;
 static unsigned long nbr_uncompress_fast;
 static unsigned long nbr_uncompress_slow;
 
@@ -1432,7 +1432,8 @@ bool CompressMoves::TryFastMode( Side *side )
                 side->rooks[side->nbr_rooks++] = i;
             else
             {
-                is_interesting |= 8;
+                cprintf( "Too many rooks!\n" );
+                is_interesting = true;
                 okay = false;
             }
         }
@@ -1442,7 +1443,8 @@ bool CompressMoves::TryFastMode( Side *side )
                 side->knights[side->nbr_knights++] = i;
             else
             {
-                is_interesting |= 4;
+                cprintf( "Too many knights!\n" );
+                is_interesting = true;
                 okay = false;
             }
         }
@@ -1455,7 +1457,8 @@ bool CompressMoves::TryFastMode( Side *side )
                     side->nbr_dark_bishops++;
                 else
                 {
-                    is_interesting  |= 1;
+                    cprintf( "Too many dark bishops!\n" );
+                    is_interesting = true;
                     okay = false;
                 }
             }
@@ -1466,7 +1469,8 @@ bool CompressMoves::TryFastMode( Side *side )
                     side->nbr_light_bishops++;
                 else
                 {
-                    is_interesting  |= 2;
+                    cprintf( "Too many light bishops!\n" );
+                    is_interesting = true;
                     okay = false;
                 }
             }
@@ -1477,10 +1481,7 @@ bool CompressMoves::TryFastMode( Side *side )
             if( side->nbr_queens < 1 )
                 side->nbr_queens++;
             else
-            {
-                is_interesting |= 16;
                 okay = false;
-            }
         }
         else if( cr.squares[i] == (side->white?'K':'k') )
         {
