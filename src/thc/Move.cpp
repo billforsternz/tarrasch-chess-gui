@@ -704,6 +704,9 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                                 else // if( rook, bishop, queen )
                                 {
                                     int count = 0;
+                                else // if( rook, bishop, queen )
+                                {
+                                    int count = 0;
                                     for( int probe=0; !found && probe<2; probe++ )
                                     {
                                         const lte *ptr = ray_lookup[mv.dst];
@@ -740,10 +743,11 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                                                             }
                                                         }
                                                     }
-
                                                 }
                                             }
                                         }    
+                                        if( probe==0 && count==1 )
+                                            found = true; // done, no need for disambiguation by check
                                     }
                                 }
                             }
@@ -1092,6 +1096,8 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                                                 }
                                             }
                                         }
+                                        if( probe==0 && count==1 )
+                                            found = true; // done, no need for disambiguation by check
                                     }
                                 }
                             }

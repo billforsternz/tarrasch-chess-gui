@@ -7522,10 +7522,10 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                                     {
                                         const lte *ptr = ray_lookup[mv.dst];
                                         lte nbr_rays = *ptr++;
-                                        while( !found && nbr_rays-- )   // BUG FIX 2015-08-19 add !found here
-                                        {                               //  Questions arising: What is the significance of count? and probe?
+                                        while( !found && nbr_rays-- )
+                                        {
                                             lte ray_len = *ptr++;
-                                            while( !found && ray_len-- )   // BUG FIX 2015-08-19 add !found here
+                                            while( !found && ray_len-- )
                                             {
                                                 Square src = (Square)*ptr++;
                                                 if( !IsEmptySquare(cr->squares[src]) )
@@ -7554,10 +7554,11 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                                                             }
                                                         }
                                                     }
-
                                                 }
                                             }
                                         }    
+                                        if( probe==0 && count==1 )
+                                            found = true; // done, no need for disambiguation by check
                                     }
                                 }
                             }
@@ -7871,10 +7872,10 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                                     {
                                         const lte *ptr = ray_lookup[mv.dst];
                                         lte nbr_rays = *ptr++;
-                                        while( !found && nbr_rays-- )   // BUG FIX 2015-08-19 add !found here
+                                        while( !found && nbr_rays-- )
                                         {
                                             lte ray_len = *ptr++;
-                                            while( !found && ray_len-- )   // BUG FIX 2015-08-19 add !found here
+                                            while( !found && ray_len-- )
                                             {
                                                 Square src = (Square)*ptr++;
                                                 if( !IsEmptySquare(cr->squares[src]) )
@@ -7906,6 +7907,8 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                                                 }
                                             }
                                         }
+                                        if( probe==0 && count==1 )
+                                            found = true; // done, no need for disambiguation by check
                                     }
                                 }
                             }
