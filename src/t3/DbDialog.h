@@ -41,8 +41,6 @@ struct PATH_TO_POSITION
     PATH_TO_POSITION() { frequency=0; }
     int frequency;
     std::string blob;
-    CompressMoves press;    // Each of the different blobs has its own decompressor - necessary for situations where
-    //  for example the knights have swapped places - position is same but compressor state is not
     
     // Sort according to frequency
     bool operator < (const PATH_TO_POSITION& ptp)  const { return frequency < ptp.frequency; }

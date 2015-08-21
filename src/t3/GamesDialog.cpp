@@ -382,10 +382,9 @@ void GamesDialog::CreateControls()
     if( !init_position_specified )
     {
         // FIXME FIXME FIXME
-        CompressMoves press;
-        uint64_t hash = press.cr.Hash64Calculate();
+        thc::ChessRules cr;
+        uint64_t hash = cr.Hash64Calculate();
         objs.db->gbl_hash = hash;
-        
         nbr_games_in_list_ctrl = gc->gds.size();
         sprintf(buf,"%d games in file",nbr_games_in_list_ctrl);
     }

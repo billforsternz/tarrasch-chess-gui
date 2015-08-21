@@ -182,6 +182,7 @@ void DbDialog::ReadItem( int item, CompactGame &pact )
         info.transpo_nbr = 0;
     }
     info.GetCompactGame( pact );
+    pact.transpo_nbr = info.transpo_nbr;    // temp temp
 }
 
 bool DbDialog::ReadItemFromMemory( int item, DB_GAME_INFO &info )
@@ -919,6 +920,7 @@ void DbDialog::StatsCalculate()
 
     // hash to match
     uint64_t gbl_hash = cr_to_match.Hash64Calculate();
+    CompressMoves press_to_match(cr_to_match);
     objs.db->gbl_hash = gbl_hash;
     objs.db->gbl_position = cr_to_match;
     int maxlen = 1000000;   // absurdly large until a match found
@@ -948,10 +950,11 @@ void DbDialog::StatsCalculate()
             int found_idx=0;
             for( unsigned int j=0; !found && j<transpositions.size(); j++ )
             {
-                std::string &this_one = transpositions[j].blob;
-                const char *p = this_one.c_str();
-                size_t len = this_one.length();
-                if( info->str_blob.length()>=len && 0 == memcmp(p,info->str_blob.c_str(),len) )
+                size_t len = transpositions[j].blob.size();
+                std::string s1 = info->str_blob.substr(0,len);
+                std::string s2 = transpositions[j].blob;
+                // if( info->str_blob.substr(len) == transpositions[j].blob )
+                if( s1 == s2 )
                 {
                     found = true;
                     found_idx = j;
@@ -962,22 +965,23 @@ void DbDialog::StatsCalculate()
             if( !found )
             {
                 PATH_TO_POSITION ptp;
+                CompressMoves press;
                 size_t len = info->str_blob.length();
                 const char *blob = (const char*)info->str_blob.c_str();
-                uint64_t hash = ptp.press.cr.Hash64Calculate();
+                uint64_t hash = press.cr.Hash64Calculate();
                 int nbr=0;
-                found = (hash==gbl_hash && ptp.press.cr==cr_to_match );
+                found = (hash==gbl_hash && press.cr==cr_to_match );
                 while( !found && nbr<len && nbr<maxlen )
                 {
-                    thc::ChessRules cr_hash = ptp.press.cr;
+                    thc::ChessRules cr_hash = press.cr;
                     thc::Move mv;
-                    int nbr_used = ptp.press.decompress_move( blob, mv );
+                    int nbr_used = press.decompress_move( blob, mv );
                     if( nbr_used == 0 )
                         break;
                     blob += nbr_used;
                     nbr += nbr_used;
                     hash = cr_hash.Hash64Update( hash, mv );
-                    if( hash == gbl_hash && ptp.press.cr==cr_to_match )
+                    if( hash == gbl_hash && press.cr==cr_to_match )
                         found = true;
                 }
                 if( found )
@@ -1010,7 +1014,8 @@ void DbDialog::StatsCalculate()
                 {
                     const char *compress_move_ptr = info->str_blob.c_str()+len;
                     thc::Move mv;
-                    p->press.decompress_move_stay( compress_move_ptr, mv );
+                    CompressMoves press = press_to_match;
+                    press.decompress_move( compress_move_ptr, mv );
                     uint32_t imv = 0;
                     assert( sizeof(imv) == sizeof(mv) );
                     memcpy( &imv, &mv, sizeof(mv) ); // FIXME
@@ -1090,30 +1095,23 @@ void DbDialog::StatsCalculate()
     for( unsigned int j=0; j<transpositions.size(); j++ )
     {
         PATH_TO_POSITION *p = &transpositions[j];
-        const char *blob = p->blob.c_str();
         size_t len = p->blob.length();
-        std::string txt;
         CompressMoves press;
-        int nbr = 0;
-        int count = 0;
-        while( nbr < len )
+        std::vector<thc::Move> unpacked = press.Uncompress(p->blob);
+        std::string txt;
+        thc::ChessRules cr;
+        for( int k=0; k<len; k++ )
         {
-            thc::ChessRules cr_before = press.cr;
-            thc::Move mv;
-            int nbr_used = press.decompress_move( blob, mv );
-            if( nbr_used == 0 )
-                break;
-            if( count%2 == 0 )
+            thc::Move mv = unpacked[k];
+            if( cr.white )
             {
                 char buf[100];
-                sprintf( buf, "%d.", count/2+1 );
+                sprintf( buf, "%d.", cr.full_move_count );
                 txt += buf;
             }
-            txt += mv.NaturalOut(&cr_before);
+            txt += mv.NaturalOut(&cr);
             txt += " ";
-            blob += nbr_used;
-            nbr += nbr_used;
-            count++;
+            cr.PlayMove(mv);
         }
         char buf[200];
         sprintf( buf, "T%d: %s: %d occurences", j+1, txt.c_str(), p->frequency );

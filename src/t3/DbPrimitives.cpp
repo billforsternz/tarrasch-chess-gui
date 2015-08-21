@@ -707,20 +707,16 @@ static void dump_game( FILE *f, int game_id )
         fprintf(f,"Move len = %d\n",len);
         const char *blob = (const char*)sqlite3_column_blob(stmt,0);
         fprintf(f,"Moves:\n");
-        //for( int i=0; i<len; i++ )
-        //    fprintf(f," %02x", *blob++ & 0x0ff );
         CompressMoves press;
-        for( int nbr=0; nbr<len;  )
+        std::string compressed(blob,blob+len);
+        std::vector<thc::Move> unpacked = press.Uncompress(compressed);
+        thc::ChessRules cr;
+        for( int i=0; i<len; i++ )
         {
-            thc::ChessRules cr = press.cr;
-            thc::Move mv;
-            int nbr_used = press.decompress_move( blob, mv );
-            if( nbr_used == 0 )
-                break;
+            thc::Move mv=unpacked[i];
             std::string s = mv.NaturalOut(&cr);
             fprintf(f," %s",s.c_str());
-            blob += nbr_used;
-            nbr += nbr_used;
+            cr.PlayMove(mv);
         }
         fprintf(f,"\n");
     }

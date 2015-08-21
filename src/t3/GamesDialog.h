@@ -16,7 +16,6 @@
 #include "GameDocument.h"
 #include "Repository.h"
 #include "MiniBoard.h"
-#include "CompressMoves.h"
 #include "Database.h"
 #include "PgnDialog.h"
 

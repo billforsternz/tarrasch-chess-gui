@@ -31,8 +31,6 @@ static void decompress_game( const char *compressed_header, const char *compress
 static void game_to_qgn_file( const char *event, const char *site, const char *date, const char *round,
                              const char *white, const char *black, const char *result, const char *white_elo, const char *black_elo, const char *eco,
                              int nbr_moves, thc::Move *moves, uint64_t *hashes );
-static void compress_moves_to_str( int nbr_moves, thc::Move *moves, char *dst, thc::ChessPosition *positions );
-static void decompress_moves_from_str( int nbr_moves, char *src, thc::Move *moves, thc::ChessPosition *positions  );
 static int  verify_compression_algorithm( int nbr_moves, thc::Move *moves );
 
 void db_maintenance_speed_tests()
@@ -167,8 +165,6 @@ void db_maintenance_create_indexes()
 }
 
 
-bool gbl_evil_queen;
-bool gbl_double_byte;
 void hook_gameover( char callback_code, const char *event, const char *site, const char *date, const char *round,
                   const char *white, const char *black, const char *result, const char *white_elo, const char *black_elo, const char *eco,
                   int nbr_moves, thc::Move *moves, uint64_t *hashes )
@@ -219,6 +215,7 @@ void hook_gameover( char callback_code, const char *event, const char *site, con
             fprintf( f, "\n" );
             //cprintf( "%s-%s %s, %s %s, %s\n", white, black, result, event, site, round );
             thc::ChessRules cr;
+            bool end=true;
             for( int i=0; i<nbr_moves; i++ )
             {
                 bool start = ((i%10) == 0);
@@ -229,38 +226,16 @@ void hook_gameover( char callback_code, const char *event, const char *site, con
                 thc::Move mv = moves[i];
                 std::string s = mv.NaturalOut(&cr);
                 fprintf( f, "%s", s.c_str() );
-                bool end = (((i+1)%10) == 0);
+                end = (((i+1)%10) == 0);
                 if( end )
                     fprintf( f, "\n" );
                 cr.PlayMove(mv);
             }
+            if( !end )
+                fprintf( f, " " );
             fprintf( f, "%s\n\n", result );
             fclose(f);
         }
-    }
-    if( gbl_evil_queen || gbl_double_byte )
-    {
-        static int evil_queen_count;
-        static int double_byte_count;
-        if( gbl_evil_queen )
-            evil_queen_count++;
-        if( gbl_double_byte )
-            double_byte_count++;
-        cprintf( "%d evil games, %d double byte games, %s-%s, %s\n",  evil_queen_count, double_byte_count, white, black, gbl_double_byte?"needs double bytes":"doesn't need double bytes");
-        gbl_evil_queen = false;
-        gbl_double_byte = false;
-        thc::ChessRules cr;
-        std::string sgame;
-        for( int i=0; i<nbr_moves; i++ )
-        {
-            thc::Move mv = moves[i];
-            std::string s = mv.NaturalOut( &cr );
-            sgame += s;
-            if( i+1 < nbr_moves )
-                sgame += " ";
-            cr.PlayMove(mv);
-        }
-        cprintf( "%s\n", sgame.c_str() );
     }
 }
 
@@ -518,122 +493,16 @@ static void decompress_game( const char *compressed_header, const char *compress
 }
 
 
-static void compress_moves_to_str( int nbr_moves, thc::Move *moves, char *dst, thc::ChessPosition *positions )
-{
-    CompressMoves press;
-    for( int i=0; i<nbr_moves; i++ )
-    {
-        thc::Move mv = *moves++;
-        int nbr = press.compress_move( mv, dst );
-        std::string s = mv.TerseOut();
-//#define VERBOSE
-#ifdef VERBOSE
-        if( nbr == 1 )
-            cprintf( "compress temp> %s -> %02x\n", s.c_str(), *dst&0xff );
-        else
-            cprintf( "compress temp> %s -> %02x,%02x\n", s.c_str(), *dst&0xff, *(dst+1)&0xff );
-#endif
-        dst += nbr;
-        if( positions[i] != press.cr )
-        {
-            press.Check( false, "Compress progress check", &positions[i] );
-        }
-    }
-    *dst = '\0';
-}
-
-static void decompress_moves_from_str( int nbr_moves, char *src, thc::Move *moves, thc::ChessPosition *positions  )
-{
-    CompressMoves press;
-    for( int i=0; i<nbr_moves; i++ )
-    {
-        thc::Move mv;
-        int nbr = press.decompress_move( src, mv );
-        std::string s = mv.TerseOut();
-#ifdef VERBOSE
-        if( nbr == 1 )
-            cprintf( "decompress temp> %02x -> %s\n", *src&0xff, s.c_str() );
-        else
-            cprintf( "decompress temp> %02x,%02x -> %s\n", *src&0xff, *(src+1)&0xff, s.c_str() );
-#endif
-        src += nbr;
-        *moves++ = mv;
-        if( positions[i] != press.cr )
-        {
-            press.Check( false, "Decompress progress check", &positions[i] );
-        }
-    }
-}
-
 static int verify_compression_algorithm( int nbr_moves, thc::Move *moves )
 {
     int is_interesting = false;
-#if 1  // OLD/NEW
     std::vector<thc::Move> moves_in(moves,moves+nbr_moves);
     CompressMoves press;
     std::string compressed = press.Compress(moves_in);
     std::vector<thc::Move> unpacked = press.Uncompress(compressed);
     is_interesting = press.is_interesting;
     bool match = (0 == memcmp( &moves_in[0], &unpacked[0], nbr_moves*sizeof(thc::Move)));
-#else // OLD/NEW
-    char buf[2000];
-    thc::Move unpacked[1000];
-    static thc::ChessPosition positions_buffer[1000];
-    thc::ChessRules cr;
-    if( sizeof(buf) < 2*nbr_moves )
-    {
-        cprintf( "Buffer too small" );
-        return true;
-    }
-    for( int i=0; i<nbr_moves; i++ )
-    {
-        thc::Move mv = moves[i];
-        cr.PlayMove(mv);
-        positions_buffer[i] = cr;
-    }
-    compress_moves_to_str( nbr_moves, moves, buf, positions_buffer );
-#ifdef VERBOSE
-    for( int i=0; i<nbr_moves; i++ )
-    {
-        thc::Move mv = moves[i];
-        std::string s = mv.TerseOut();
-        if( i==0 )
-            cprintf( "Moves>" );
-        cprintf( " " );
-        cprintf( s.c_str() );
-    }
-    cprintf( "\n" );
-    for( int i=0; ; i++ )
-    {
-        char c = buf[i];
-        if( c == '\0' )
-            break;
-        if( i==0 )
-            cprintf( "Compressed>" );
-        cprintf( " " );
-        cprintf( "%02x", c&0xff );
-    }
-    cprintf( "\n" );
-#endif
-    decompress_moves_from_str( nbr_moves, buf, unpacked, positions_buffer );
-#ifdef VERBOSE
-    for( int i=0; i<nbr_moves; i++ )
-    {
-        thc::Move mv = unpacked[i];
-        std::string s = mv.TerseOut();
-        if( i==0 )
-            cprintf( "Unpacked Moves>" );
-        cprintf( " " );
-        cprintf( s.c_str() );
-    }
-    cprintf( "\n" );
-#endif
-    bool match = (0 == memcmp( moves, unpacked, nbr_moves*sizeof(thc::Move)));
-#endif // OLD/NEW
-    if( match )
-    {
-    }
-    else
+    if( !match )
     {
         is_interesting |= 256;
         cprintf( "Boo hoo, doesn't match\n" );

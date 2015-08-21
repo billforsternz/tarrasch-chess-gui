@@ -735,23 +735,9 @@ void GameLogic::CmdNextGame()
             objs.db->GetRow(&info, idx+1 );
             GameDocument gd_temp;
             std::vector<thc::Move> moves;
-            gd_temp.r.white = info.r.white;
-            gd_temp.r.black = info.r.black;
-            gd_temp.r.result = info.r.result;
-            int len = info.str_blob.length();
-            const char *blob = info.str_blob.c_str();
+            gd_temp.r = info.r;
             CompressMoves press;
-            for( int nbr=0; nbr<len;  )
-            {
-                thc::ChessRules cr = press.cr;
-                thc::Move mv;
-                int nbr_used = press.decompress_move( blob, mv );
-                if( nbr_used == 0 )
-                    break;
-                moves.push_back(mv);
-                blob += nbr_used;
-                nbr += nbr_used;
-            }
+            moves = press.Uncompress(info.str_blob);
             gd_temp.LoadFromMoveList(moves);
             PutBackDocument();
             objs.log->SaveGame(&gd,editing_log);

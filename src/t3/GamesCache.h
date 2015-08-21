@@ -128,19 +128,8 @@ public:
     virtual std::vector<thc::Move> &RefMoves()
     {
         static std::vector<thc::Move> moves;
-        moves.clear();
         CompressMoves press;
-        int len = str_blob.size();
-        const char *blob = str_blob.c_str();
-        for( int i=0; i<len; i++ )
-        {
-            thc::Move mv;
-            int nbr = press.decompress_move( blob, mv );
-            blob++;
-            if( nbr == 0 )
-                break;
-            moves.push_back(mv);
-        }
+        moves = press.Uncompress(str_blob);
         return moves;
     }
     virtual thc::ChessPosition &RefStartPosition() { static thc::ChessPosition start; return start;  }
