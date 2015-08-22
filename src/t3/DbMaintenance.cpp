@@ -15,9 +15,9 @@
 
 //-- Temp - hardwire .pgn file and database name
 #ifdef THC_WINDOWS
-#define PGN_FILE        "/Users/Bill/Documents/T3Database/giant123.pgn"
-#define PGN_OUT_FILE    "/Users/Bill/Documents/T3Database/twic_minimal_overlap_2.pgn"
-#define QGN_FILE        "/Users/Bill/Documents/T3Database/giant-base-part1-rebuilt-again.qgn"
+#define PGN_FILE        "/Users/Bill/Documents/T3Database/twic-1051-1077.pgn" //"giant123.pgn"
+#define PGN_OUT_FILE    "/Users/Bill/Documents/T3Database/x.pgn"
+#define QGN_FILE        "/Users/Bill/Documents/T3Database/x.qgn"
 #else
 #define PGN_FILE        "/Users/billforster/Documents/ChessDatabases/giant123.pgn"
 #define PGN_OUT_FILE    "/Users/billforster/Documents/ChessDatabases/twic_minimal_overlap_2.pgn"
@@ -70,7 +70,7 @@ void db_maintenance_decompress_pgn()
         decompress_game( header_buf, moves_buf );
         nbr_games++;
         if(
-           ((nbr_games%100) == 0 ) /* ||
+           ((nbr_games%1000) == 0 ) /* ||
                                       (
                                       (nbr_games < 100) &&
                                       ((nbr_games%10) == 0 )
@@ -213,7 +213,6 @@ void hook_gameover( char callback_code, const char *event, const char *site, con
             fprintf( f, "[Black \"%s\"]\n", black );
             fprintf( f, "[Result \"%s\"]\n", result );
             fprintf( f, "\n" );
-            //cprintf( "%s-%s %s, %s %s, %s\n", white, black, result, event, site, round );
             thc::ChessRules cr;
             bool end=true;
             for( int i=0; i<nbr_moves; i++ )
@@ -329,15 +328,9 @@ static void game_to_qgn_file( const char *event, const char *site, const char *d
     fputs( buf,  ofile );    
     fputs( "\n", ofile );    
     CompressMoves press;
-    dst = buf;
-    for( int i=0; i<nbr_moves && dst<buf+sizeof(buf)-5; i++ )
-    {
-        thc::Move mv = *moves++;
-        int nbr = press.compress_move( mv, dst );
-        dst += nbr;
-    }
-    *dst = '\0';
-    fputs( buf, ofile );    
+    std::vector<thc::Move> v(moves,moves+nbr_moves);
+    std::string compressed = press.Compress(v); 
+    fputs( compressed.c_str(), ofile );    
     fputs( "\n", ofile );    
 }
 
@@ -436,34 +429,29 @@ static void decompress_game( const char *compressed_header, const char *compress
     fprintf( ofile, "[WhiteElo \"%s\"]\n",  white_elo );
     fprintf( ofile, "[BlackElo \"%s\"]\n",  black_elo );
     fprintf( ofile, "[ECO \"%s\"]\n\n",     eco );
+
     CompressMoves press;
-    src = compressed_moves;
+    std::string compressed( compressed_moves, compressed_moves+strlen(compressed_moves) );
+    std::vector<thc::Move> moves = press.Uncompress(compressed);
+    int nbr_moves = moves.size();
     std::string moves_txt;
-    int count=0;
-    while( *src )
+    thc::ChessRules cr;
+    for( int i=0; i<nbr_moves; i++ )
     {
-        thc::Move mv;
-        thc::ChessRules before = press.cr;
-        int nbr = press.decompress_move( src, mv );
-        if( nbr == 0 )
-            break;
-        src += nbr;
-        char buf[20];
-        if( count%2 == 0 )
+        if( i != 0 )
+            moves_txt += " ";
+        if( cr.white )
         {
-            if( count == 0 )
-                sprintf( buf, "%d. ", count/2+1 );
-            else
-                sprintf( buf, " %d. ", count/2+1 );
+            char buf[100];
+            sprintf( buf, "%d. ", cr.full_move_count );
+            moves_txt += buf;
         }
-        else
-            strcpy( buf, " " );
-        moves_txt += buf;
-        moves_txt += mv.NaturalOut( &before );
-        count++;    
+        thc::Move mv = moves[i];
+        std::string s = mv.NaturalOut(&cr);
+        moves_txt += s;
+        cr.PlayMove(mv);
     }
-    if( count > 0 )
-        moves_txt += " ";
+    moves_txt += " ";
     moves_txt += result;
     std::string justified;
     const char *s = moves_txt.c_str();
@@ -481,7 +469,7 @@ static void decompress_game( const char *compressed_header, const char *compress
                 col_end_of_next_word++;    
                 t++;
             }
-            if( col_end_of_next_word > 76 )
+            if( col_end_of_next_word > 81 )
             {
                 c = '\n';
                 col = 0;
@@ -491,7 +479,6 @@ static void decompress_game( const char *compressed_header, const char *compress
     }
     fprintf( ofile, "%s\n\n",  justified.c_str() );
 }
-
 
 static int verify_compression_algorithm( int nbr_moves, thc::Move *moves )
 {

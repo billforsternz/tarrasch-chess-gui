@@ -1105,11 +1105,8 @@ void db_primitive_insert_game( const char *white, const char *black, const char 
     char *put = blob_buf;
     for( int i=0; i<nbr_moves && put_txt<blob_txt_buf+sizeof(blob_txt_buf)-10; i++ )
     {
-        char c;
         thc::Move mv = moves[i];
-        int nbr = press.compress_move( mv, &c );   // Note: compress_move() now returns 0 or 1 only
-        if( nbr == 0 )
-            break;
+        char c = press.CompressMove(mv);
         *put++ = c;
         char hi = (c>>4)&0x0f;
         *put_txt++ = (hi>=10 ? hi-10+'A' : hi+'0');

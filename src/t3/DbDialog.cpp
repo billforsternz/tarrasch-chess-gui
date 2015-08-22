@@ -953,7 +953,6 @@ void DbDialog::StatsCalculate()
                 size_t len = transpositions[j].blob.size();
                 std::string s1 = info->str_blob.substr(0,len);
                 std::string s2 = transpositions[j].blob;
-                // if( info->str_blob.substr(len) == transpositions[j].blob )
                 if( s1 == s2 )
                 {
                     found = true;
@@ -969,28 +968,23 @@ void DbDialog::StatsCalculate()
                 size_t len = info->str_blob.length();
                 const char *blob = (const char*)info->str_blob.c_str();
                 uint64_t hash = press.cr.Hash64Calculate();
-                int nbr=0;
                 found = (hash==gbl_hash && press.cr==cr_to_match );
-                while( !found && nbr<len && nbr<maxlen )
+                int offset=0;
+                while( !found && offset<len && offset<maxlen )
                 {
                     thc::ChessRules cr_hash = press.cr;
-                    thc::Move mv;
-                    int nbr_used = press.decompress_move( blob, mv );
-                    if( nbr_used == 0 )
-                        break;
-                    blob += nbr_used;
-                    nbr += nbr_used;
+                    thc::Move mv = press.UncompressMove( *blob++ );
                     hash = cr_hash.Hash64Update( hash, mv );
+                    offset++;
                     if( hash == gbl_hash && press.cr==cr_to_match )
+                    {
                         found = true;
-                }
-                if( found )
-                {
-                    maxlen = nbr+8;
-                    new_transposition_found = true;
-                    ptp.blob =info->str_blob.substr(0,nbr);
-                    transpositions.push_back(ptp);
-                    found_idx = transpositions.size()-1;
+                        new_transposition_found = true;
+                        ptp.blob = info->str_blob.substr(0,offset);
+                        transpositions.push_back(ptp);
+                        found_idx = transpositions.size()-1;
+                        maxlen = offset+16; // stops unbounded searching through unrelated game
+                    }
                 }
             }
 
@@ -1012,10 +1006,9 @@ void DbDialog::StatsCalculate()
                 size_t len = p->blob.length();
                 if( len < info->str_blob.length() ) // must be more moves
                 {
-                    const char *compress_move_ptr = info->str_blob.c_str()+len;
-                    thc::Move mv;
+                    const char *next_compressed_move = info->str_blob.c_str()+len;
                     CompressMoves press = press_to_match;
-                    press.decompress_move( compress_move_ptr, mv );
+                    thc::Move mv = press.UncompressMove( *next_compressed_move );
                     uint32_t imv = 0;
                     assert( sizeof(imv) == sizeof(mv) );
                     memcpy( &imv, &mv, sizeof(mv) ); // FIXME
@@ -1040,7 +1033,8 @@ void DbDialog::StatsCalculate()
                         it->second.nbr_draws++;
                 }
             }
-        
+
+            // For speed, have the most frequent transpositions first        
             if( new_transposition_found )
             {
                 std::sort( transpositions.rbegin(), transpositions.rend() );
@@ -1048,9 +1042,7 @@ void DbDialog::StatsCalculate()
         }
     }
     
-
     // Sort the stats according to number of games
-
     std::multimap< MOVE_STATS,  uint32_t > dst = flip_and_sort_map(stats);
     std::multimap< MOVE_STATS,  uint32_t >::reverse_iterator it;
     moves_in_this_position.clear();
@@ -1204,7 +1196,4 @@ void DbDialog::OnNextMove( int idx )
     StatsCalculate();
 #endif
 }
-
-
-
 

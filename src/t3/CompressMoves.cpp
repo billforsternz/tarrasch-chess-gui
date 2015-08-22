@@ -307,8 +307,7 @@ std::vector<thc::Move> CompressMoves::Uncompress( thc::ChessPosition &cp, std::s
     return ret;
 }
 
-// Compatibility mode, remove later
-int CompressMoves::compress_move( thc::Move mv, char *storage )
+char CompressMoves::CompressMove( thc::Move mv )
 {
     Side *side  = cr.white ? &sides[0] : &sides[1];
     Side *other = cr.white ? &sides[1] : &sides[0];
@@ -326,34 +325,31 @@ int CompressMoves::compress_move( thc::Move mv, char *storage )
         c = CompressSlowMode(mv);
         other->fast_mode = false;   // force other side to reset and retry
     }
-    *storage = c;
     cr.PlayMove(mv);
-    return 1;
+    return c;
 }
 
-// Compatibility mode, remove later
-int CompressMoves::decompress_move( const char *storage, thc::Move &mv )
+thc::Move CompressMoves::UncompressMove( char c )
 {
     Side *side  = cr.white ? &sides[0] : &sides[1];
     Side *other = cr.white ? &sides[1] : &sides[0];
-    char code = *storage;
+    thc::Move mv;
     if( side->fast_mode )
     {
-        mv = UncompressFastMode(code,side,other);
+        mv = UncompressFastMode(c,side,other);
     }
     else if( TryFastMode(side) )
     {
-        mv = UncompressFastMode(code,side,other);
+        mv = UncompressFastMode(c,side,other);
     }
     else
     {
-        mv = UncompressSlowMode(code);
+        mv = UncompressSlowMode(c);
         other->fast_mode = false;   // force other side to reset and retry
     }
     cr.PlayMove(mv);
-    return 1;
+    return mv;
 }
-
 
 // A slow method of compressing a move into one byte
 //  Scheme is;

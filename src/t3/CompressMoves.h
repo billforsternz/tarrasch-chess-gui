@@ -55,16 +55,12 @@ public:
     std::string Compress( thc::ChessPosition &cp, std::vector<thc::Move> &moves_in );
     std::vector<thc::Move> Uncompress( std::string &moves_in );
     std::vector<thc::Move> Uncompress( thc::ChessPosition &cp, std::string &moves_in );
-    
-    // For compatibility with old version, progressively replace
+    char      CompressMove( thc::Move mv );
+    thc::Move UncompressMove( char c );
     CompressMoves( const CompressMoves& copy_from_me ) { cr=copy_from_me.cr; sides[0]=copy_from_me.sides[0]; sides[1]=copy_from_me.sides[1]; }
     CompressMoves & operator= (const CompressMoves & copy_from_me ) { cr=copy_from_me.cr; sides[0]=copy_from_me.sides[0]; sides[1]=copy_from_me.sides[1]; return *this; }
-    
-    bool Check( bool do_internal_check, const char *description, thc::ChessPosition *external ) { return true; }
     void Init() { TryFastMode( &sides[0]); TryFastMode( &sides[1]); }
 	void Init( thc::ChessPosition &cp ) { cr = cp; Init(); }
-    int  compress_move( thc::Move mv, char *storage );
-    int  decompress_move( const char *storage, thc::Move &mv );
     
 public:
     thc::ChessRules cr;
