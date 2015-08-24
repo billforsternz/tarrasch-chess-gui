@@ -977,17 +977,17 @@ void DbDialog::StatsCalculate()
                     hash = cr_hash.Hash64Update( hash, mv );
                     offset++;
                     if( hash == gbl_hash && press.cr==cr_to_match )
-                    {
                         found = true;
-                        new_transposition_found = true;
-                        ptp.blob = info->str_blob.substr(0,offset);
-                        transpositions.push_back(ptp);
-                        found_idx = transpositions.size()-1;
-                        maxlen = offset+16; // stops unbounded searching through unrelated game
-                    }
+                }
+                if( found )
+                {
+                    new_transposition_found = true;
+                    ptp.blob = info->str_blob.substr(0,offset);
+                    transpositions.push_back(ptp);
+                    found_idx = transpositions.size()-1;
+                    maxlen = offset+16; // stops unbounded searching through unrelated game
                 }
             }
-
             if( found )
             {
                 bool white_wins = (info->r.result=="1-0");
