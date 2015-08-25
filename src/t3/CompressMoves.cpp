@@ -18,6 +18,23 @@ static unsigned long nbr_compress_fast;
 static unsigned long nbr_compress_slow;
 static unsigned long nbr_uncompress_fast;
 static unsigned long nbr_uncompress_slow;
+static unsigned long nbr_pawn_swaps_histo[8];
+static unsigned long nbr_pawn_swaps_histo_wl[8];
+static unsigned long nbr_pawn_swaps_histo_wr[8];
+static unsigned long nbr_pawn_swaps_histo_bl[8];
+static unsigned long nbr_pawn_swaps_histo_br[8];
+static unsigned long nbr_knight_moves;
+static unsigned long nbr_knight_swaps;
+static unsigned long nbr_knight_swaps_alt;
+static unsigned long nbr_rook_moves;
+static unsigned long nbr_rook_swaps;
+static unsigned long nbr_rook_swaps_alt;
+static int nbr_swaps_max_so_far;
+int max_nbr_slow_moves_other;
+int max_nbr_slow_moves_queen;
+int nbr_games_with_promotions;
+int nbr_games_with_slow_mode;
+int nbr_games_with_two_queens;
 
 void CompressMovesDiagBegin()
 {
@@ -25,14 +42,56 @@ void CompressMovesDiagBegin()
     nbr_compress_slow = 0;
     nbr_uncompress_fast = 0;
     nbr_uncompress_slow = 0;
+    for(int i=0; i<8; i++)
+        nbr_pawn_swaps_histo[i] = 0;
+    for(int i=0; i<8; i++)
+        nbr_pawn_swaps_histo_wl[i] = 0;
+    for(int i=0; i<8; i++)
+        nbr_pawn_swaps_histo_wr[i] = 0;
+    for(int i=0; i<8; i++)
+        nbr_pawn_swaps_histo_bl[i] = 0;
+    for(int i=0; i<8; i++)
+        nbr_pawn_swaps_histo_br[i] = 0;
+    nbr_swaps_max_so_far = 0;
+    nbr_knight_moves = 0;
+    nbr_knight_swaps = 0;
+    nbr_knight_swaps_alt = 0;
+    nbr_rook_moves = 0;
+    nbr_rook_swaps = 0;
+    nbr_rook_swaps_alt = 0;
+    max_nbr_slow_moves_other = 0;
+    max_nbr_slow_moves_queen = 0;
+    nbr_swaps_max_so_far = 0;
+    nbr_games_with_promotions = 0;
+    nbr_games_with_slow_mode = 0;
+    nbr_games_with_two_queens = 0;
 }
 
 void CompressMovesDiagEnd()
 {
-    cprintf( "nbr_compress_fast = %lu\n", nbr_compress_fast );
-    cprintf( "nbr_compress_slow = %lu\n", nbr_compress_slow );
+    cprintf( "nbr_compress_fast   = %lu\n", nbr_compress_fast );
+    cprintf( "nbr_compress_slow   = %lu\n", nbr_compress_slow );
     cprintf( "nbr_uncompress_fast = %lu\n", nbr_uncompress_fast );
-    cprintf( "nbr_uncompress_slow = %lu\n", nbr_uncompress_slow );  // It turns out about 0.02% of moves are in slow mode
+    cprintf( "nbr_uncompress_slow = %lu\n", nbr_uncompress_slow );  // It turns out about 0.015% of moves are in slow mode
+    for(int i=0; i<8; i++)
+        cprintf( "nbr_pawn_swaps_histo[%d] = %lu\n", i, nbr_pawn_swaps_histo[i] );
+    for(int i=0; i<8; i++)
+        cprintf( "nbr_pawn_swaps_histo_wl[%d] = %lu\n", i, nbr_pawn_swaps_histo_wl[i] );
+    for(int i=0; i<8; i++)
+        cprintf( "nbr_pawn_swaps_histo_wr[%d] = %lu\n", i, nbr_pawn_swaps_histo_wr[i] );
+    for(int i=0; i<8; i++)
+        cprintf( "nbr_pawn_swaps_histo_bl[%d] = %lu\n", i, nbr_pawn_swaps_histo_bl[i] );
+    for(int i=0; i<8; i++)
+        cprintf( "nbr_pawn_swaps_histo_br[%d] = %lu\n", i, nbr_pawn_swaps_histo_br[i] );
+    cprintf( "nbr_knight_moves     = %lu\n",       nbr_knight_moves );
+    cprintf( "nbr_knight_swaps     = %lu\n",       nbr_knight_swaps );
+    cprintf( "nbr_knight_swaps_alt = %lu\n",       nbr_knight_swaps_alt );
+    cprintf( "nbr_rook_moves       = %lu\n",         nbr_rook_moves );
+    cprintf( "nbr_rook_swaps       = %lu\n",         nbr_rook_swaps );
+    cprintf( "nbr_rook_swaps_alt   = %lu\n",         nbr_rook_swaps_alt );
+    cprintf( "nbr_games_with_promotions = %lu\n",     nbr_games_with_promotions );
+    cprintf( "nbr_games_with_slow_mode  = %lu\n",     nbr_games_with_slow_mode  );
+    cprintf( "nbr_games_with_two_queens = %lu\n",     nbr_games_with_two_queens );
 }
 
 
@@ -171,7 +230,7 @@ bool CompressMoves::TryFastMode( Side *side )
                 side->rooks[side->nbr_rooks++] = i;
             else
             {
-                is_interesting |= 8;
+                DIAG_ONLY( is_interesting |= 8 );
                 okay = false;
             }
         }
@@ -181,7 +240,7 @@ bool CompressMoves::TryFastMode( Side *side )
                 side->knights[side->nbr_knights++] = i;
             else
             {
-                is_interesting |= 4;
+                DIAG_ONLY( is_interesting |= 4 );
                 okay = false;
             }
         }
@@ -194,7 +253,7 @@ bool CompressMoves::TryFastMode( Side *side )
                     side->nbr_dark_bishops++;
                 else
                 {
-                    is_interesting  |= 1;
+                    DIAG_ONLY( is_interesting  |= 1 );
                     okay = false;
                 }
             }
@@ -205,7 +264,7 @@ bool CompressMoves::TryFastMode( Side *side )
                     side->nbr_light_bishops++;
                 else
                 {
-                    is_interesting  |= 2;
+                    DIAG_ONLY( is_interesting |= 2 );
                     okay = false;
                 }
             }
@@ -217,7 +276,7 @@ bool CompressMoves::TryFastMode( Side *side )
                 side->nbr_queens++;
             else
             {
-                is_interesting |= 16;
+                DIAG_ONLY( is_interesting |= 16 );
                 okay = false;
             }
         }
@@ -408,10 +467,11 @@ char CompressMoves::CompressSlowMode( thc::Move mv )
     }
     
     // char generated is '\xff' for first move in list, '\fe' for second etc
-    // '\x01 is an error
+    // '\x01' is an error
     code = 255-idx;
     if( code < 1 )
         code = 1;
+    DIAG_ONLY( nbr_slow_moves++; )
     return static_cast<char>(code);
 }
 
@@ -447,6 +507,8 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
                     int rook_offset = (side->rooks[0]==src+3 ? 0 : 1);  // a rook will be 3 squares to right of king
                     side->rooks[rook_offset] = src+1;                   // that rook ends up 1 square right of king
                     // note that there is no way the rooks ordering can swap during castling
+                    DIAG_ONLY( if( side->nbr_rooks==2 && pawn_ordering[side->rooks[0]]>pawn_ordering[side->rooks[1]] ) nbr_rook_swaps_alt++; ) // but alt swap possible
+                    DIAG_ONLY( nbr_rook_moves++; )
                     break;
                 }
                 case -2:
@@ -455,6 +517,8 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
                     int rook_offset = (side->rooks[0]==src-4 ? 0 : 1);  // a rook will be 4 squares to left of king
                     side->rooks[rook_offset] = src-1;                   // that rook ends up 1 square left of king
                     // note that there is no way the rooks ordering can swap during castling
+                    DIAG_ONLY( if( side->nbr_rooks==2 && pawn_ordering[side->rooks[0]]>pawn_ordering[side->rooks[1]] ) nbr_rook_swaps_alt++; ) // but alt swap possible
+                    DIAG_ONLY( nbr_rook_moves++; )
                     break;
                 }
             }
@@ -463,6 +527,7 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
             
         case 'r':
         {
+            DIAG_ONLY( nbr_rook_moves++; )
             int rook_offset = (side->rooks[0]==src ? 0 : 1);
             code = (rook_offset==0 ? CODE_ROOK_LO : CODE_ROOK_HI);
             side->rooks[rook_offset] = dst;
@@ -481,7 +546,9 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
                 int temp = side->rooks[0];
                 side->rooks[0] = side->rooks[1];
                 side->rooks[1] = temp;
+                DIAG_ONLY( nbr_rook_swaps++; )
             }
+            DIAG_ONLY( if( side->nbr_rooks==2 && pawn_ordering[side->rooks[0]]>pawn_ordering[side->rooks[1]] ) nbr_rook_swaps_alt++; )
             break;
         }
             
@@ -529,6 +596,7 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
             
         case 'n':
         {
+            DIAG_ONLY( nbr_knight_moves++; )
             int knight_offset = (side->knights[0]==src ? 0 : 1);
             code = (knight_offset==0 ? CODE_KNIGHT+N_LO : CODE_KNIGHT+N_HI );
             side->knights[knight_offset] = dst;
@@ -551,7 +619,9 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
                 int temp = side->knights[0];
                 side->knights[0] = side->knights[1];
                 side->knights[1] = temp;
+                DIAG_ONLY( nbr_knight_swaps++; )
             }
+            DIAG_ONLY( if( side->nbr_knights==2 && pawn_ordering[side->knights[0]]>pawn_ordering[side->knights[1]] ) nbr_knight_swaps_alt++; )
             break;
         }
             
@@ -589,6 +659,7 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
                     break;
                 case thc::SPECIAL_PROMOTION_QUEEN:  code = (code<<2) + P_QUEEN;
                     promoting = true;
+                    DIAG_ONLY( if(side->nbr_queens>0) is_interesting |= 4096; )
                     break;
                 case thc::SPECIAL_PROMOTION_ROOK:   code = (code<<2) + P_ROOK;
                     promoting = true;
@@ -608,9 +679,13 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
             //  and retry fails this side will generate slow mode moves but keep
             //  retrying until fast is possible again.
             if( promoting )
+            {
                 side->fast_mode = false;
+                DIAG_ONLY( is_interesting |= 512; )
+            }
             else
             {
+                DIAG_ONLY( int nbr_swaps=0; )
                 bool reordering_possible = (code==P_LEFT || code==P_RIGHT);
                 if( reordering_possible )
                 {
@@ -618,21 +693,33 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
                     {
                         for( int i=pawn_offset; i+1<side->nbr_pawns && pawn_ordering[side->pawns[i]]>pawn_ordering[side->pawns[i+1]]; i++ )
                         {
+                            DIAG_ONLY( nbr_swaps++; )
                             int temp = side->pawns[i];
                             side->pawns[i] = side->pawns[i+1];
                             side->pawns[i+1] = temp;
                         }
+                        if( cr.white )
+                            { DIAG_ONLY( nbr_pawn_swaps_histo_wr[nbr_swaps]++; ) }
+                        else
+                            { DIAG_ONLY( nbr_pawn_swaps_histo_br[nbr_swaps]++; ) }
                     }
                     else // else decreasing capture
                     {
                         for( int i=pawn_offset; i-1>=0 && pawn_ordering[side->pawns[i-1]]>pawn_ordering[side->pawns[i]]; i-- )
                         {
+                            DIAG_ONLY( nbr_swaps++; )
                             int temp = side->pawns[i-1];
                             side->pawns[i-1] = side->pawns[i];
                             side->pawns[i] = temp;
                         }
+                        if( cr.white )
+                            { DIAG_ONLY( nbr_pawn_swaps_histo_wl[nbr_swaps]++; ) }
+                        else
+                            { DIAG_ONLY( nbr_pawn_swaps_histo_bl[nbr_swaps]++; ) }
                     }
                 }
+                DIAG_ONLY( if(nbr_swaps>1 && nbr_swaps>=3) is_interesting|=32; )
+                DIAG_ONLY( nbr_pawn_swaps_histo[nbr_swaps]++; )
             }
             code = CODE_PAWN + (pawn_offset<<4) + code;
             break;

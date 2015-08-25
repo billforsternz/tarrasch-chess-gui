@@ -15,7 +15,7 @@
 
 //-- Temp - hardwire .pgn file and database name
 #ifdef THC_WINDOWS
-#define PGN_FILE        "/Users/Bill/Documents/T3Database/twic-1051-1077.pgn" //"giant123.pgn"
+#define PGN_FILE        "/Users/Bill/Documents/T3Database/giant123.pgn"
 #define PGN_OUT_FILE    "/Users/Bill/Documents/T3Database/x.pgn"
 #define QGN_FILE        "/Users/Bill/Documents/T3Database/x.qgn"
 #else
@@ -184,10 +184,25 @@ void hook_gameover( char callback_code, const char *event, const char *site, con
         // Verify
         case 'V': is_interesting = verify_compression_algorithm( nbr_moves, moves ); break;
     }
+    extern int nbr_games_with_two_queens;
+    extern int nbr_games_with_promotions;
+    extern int nbr_games_with_slow_mode;
+    if( is_interesting&4096 )
+    {
+        nbr_games_with_two_queens++;
+        is_interesting &= (~4096);
+    }
+    if( is_interesting&512 )
+    {
+        nbr_games_with_promotions++;
+        is_interesting &= (~512);
+    }
     if( is_interesting )
     {
         char buf[200];
         buf[0] = '\0';
+        if( is_interesting&0x1f)
+            nbr_games_with_slow_mode++;
         if(is_interesting&1)
             strcat(buf,"Dark Bishop ");
         if(is_interesting&2)
@@ -198,15 +213,25 @@ void hook_gameover( char callback_code, const char *event, const char *site, con
             strcat(buf,"Rook ");
         if(is_interesting&16)
             strcat(buf,"Queen ");
+        if(is_interesting&32)
+            strcat(buf,"New record pawn swap ");
+        if(is_interesting&64)
+            strcat(buf,"New record nbr slow moves - queen ");
+        if(is_interesting&128)
+            strcat(buf,"New record nbr slow moves - not queen ");
         if(is_interesting&256)
-            strcat(buf,"No Match ");
+            strcat(buf,"Verification error ");
+        if(is_interesting&1024)
+            strcat(buf,"Ten or more slow moves - queen ");
+        if(is_interesting&2048)
+            strcat(buf,"Ten or more slow moves - not queen ");
         if(is_interesting!=16)
             cprintf( "Adding game with issues; %s\n", buf );
-        FILE *f = fopen( is_interesting==16 ? "TwoOrMoreQueens.pgn" : "TooManyKnightsEtc.pgn", "at" );
+        FILE *f = fopen( (is_interesting&0x0f) ? "TooManyKnightsEtc.pgn" : "TwoOrMoreQueens.pgn", "at" );
         if( f )
         {
-            fprintf( f, "[Event \"%s - %s\"]\n", buf, event );
-            fprintf( f, "[Site \"%s\"]\n", site );
+            fprintf( f, "[Event \"%s\"]\n", event );
+            fprintf( f, "[Site \"%s - %s\"]\n", buf, site );
             fprintf( f, "[Date \"%s\"]\n", date );
             fprintf( f, "[Round \"%s\"]\n", round );
             fprintf( f, "[White \"%s\"]\n", white );
@@ -483,11 +508,37 @@ static void decompress_game( const char *compressed_header, const char *compress
 static int verify_compression_algorithm( int nbr_moves, thc::Move *moves )
 {
     int is_interesting = false;
+    extern int max_nbr_slow_moves_other;
+    extern int max_nbr_slow_moves_queen;
     std::vector<thc::Move> moves_in(moves,moves+nbr_moves);
     CompressMoves press;
     std::string compressed = press.Compress(moves_in);
     std::vector<thc::Move> unpacked = press.Uncompress(compressed);
     is_interesting = press.is_interesting;
+    if( is_interesting & 0x0f )
+    {
+        if( press.nbr_slow_moves>0 && press.nbr_slow_moves>=max_nbr_slow_moves_other )
+        {
+            max_nbr_slow_moves_other = press.nbr_slow_moves;
+            is_interesting |= 128;
+        }
+        else if( press.nbr_slow_moves >= 10 )
+        {
+            is_interesting |= 2048;
+        }
+    }
+    else
+    {
+        if( press.nbr_slow_moves>0 && press.nbr_slow_moves>=max_nbr_slow_moves_queen )
+        {
+            max_nbr_slow_moves_queen = press.nbr_slow_moves;
+            is_interesting |= 64;
+        }
+        else if( press.nbr_slow_moves >= 10 )
+        {
+            is_interesting |= 1024;
+        }
+    }
     bool match = (0 == memcmp( &moves_in[0], &unpacked[0], nbr_moves*sizeof(thc::Move)));
     if( !match )
     {

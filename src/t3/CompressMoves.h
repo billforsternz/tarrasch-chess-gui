@@ -42,12 +42,14 @@ public:
         sides[1].white=false;
         sides[1].fast_mode=false;
         is_interesting = 0;
+        nbr_slow_moves = 0;
     }
     CompressMoves( thc::ChessPosition &cp )
     {
         sides[0].white=true;
         sides[1].white=false;
         is_interesting = 0;
+        nbr_slow_moves = 0;
         Init(cp);
     }
     bool TryFastMode( Side *side );
@@ -65,6 +67,7 @@ public:
 public:
     thc::ChessRules cr;
     int is_interesting;
+    int nbr_slow_moves;
 private:
     Side sides[2];
     char CompressSlowMode( thc::Move mv );
