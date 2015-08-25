@@ -18,6 +18,60 @@ giant123.pgn
 Note all concatenations used file 'b' between each concatenated file,
 file b is simply two blank lines (4 bytes, DOS format)
 
+Finished 4591729 total games
+nbr_compress_fast   = 350937972
+nbr_compress_slow   = 57354
+nbr_uncompress_fast = 350937972
+nbr_uncompress_slow = 57354
+nbr_pawn_swaps_histo[0] = 88574741
+nbr_pawn_swaps_histo[1] = 5620389
+nbr_pawn_swaps_histo[2] = 58118
+nbr_pawn_swaps_histo[3] = 186
+nbr_pawn_swaps_histo[4] = 0
+nbr_pawn_swaps_histo[5] = 0
+nbr_pawn_swaps_histo[6] = 0
+nbr_pawn_swaps_histo[7] = 0
+nbr_pawn_swaps_histo_wl[0] = 4484385
+nbr_pawn_swaps_histo_wl[1] = 255981
+nbr_pawn_swaps_histo_wl[2] = 2092
+nbr_pawn_swaps_histo_wl[3] = 1
+nbr_pawn_swaps_histo_wl[4] = 0
+nbr_pawn_swaps_histo_wl[5] = 0
+nbr_pawn_swaps_histo_wl[6] = 0
+nbr_pawn_swaps_histo_wl[7] = 0
+nbr_pawn_swaps_histo_wr[0] = 2829570
+nbr_pawn_swaps_histo_wr[1] = 2681239
+nbr_pawn_swaps_histo_wr[2] = 25961
+nbr_pawn_swaps_histo_wr[3] = 113
+nbr_pawn_swaps_histo_wr[4] = 0
+nbr_pawn_swaps_histo_wr[5] = 0
+nbr_pawn_swaps_histo_wr[6] = 0
+nbr_pawn_swaps_histo_wr[7] = 0
+nbr_pawn_swaps_histo_bl[0] = 2524363
+nbr_pawn_swaps_histo_bl[1] = 2429938
+nbr_pawn_swaps_histo_bl[2] = 28406
+nbr_pawn_swaps_histo_bl[3] = 71
+nbr_pawn_swaps_histo_bl[4] = 0
+nbr_pawn_swaps_histo_bl[5] = 0
+nbr_pawn_swaps_histo_bl[6] = 0
+nbr_pawn_swaps_histo_bl[7] = 0
+nbr_pawn_swaps_histo_br[0] = 5914376
+nbr_pawn_swaps_histo_br[1] = 253231
+nbr_pawn_swaps_histo_br[2] = 1659
+nbr_pawn_swaps_histo_br[3] = 1
+nbr_pawn_swaps_histo_br[4] = 0
+nbr_pawn_swaps_histo_br[5] = 0
+nbr_pawn_swaps_histo_br[6] = 0
+nbr_pawn_swaps_histo_br[7] = 0
+nbr_knight_moves     = 63304435
+nbr_knight_swaps     = 14216881
+nbr_knight_swaps_alt = 17328060
+nbr_rook_moves       = 64653865
+nbr_rook_swaps       = 4942713
+nbr_rook_swaps_alt   = 13008081
+nbr_games_with_promotions = 241383
+nbr_games_with_slow_mode  = 17889
+nbr_games_with_two_queens = 49748
 
 *** Old algorithm, after elimination of double bytes (so uses ordered SAN list
 for slow mode)
