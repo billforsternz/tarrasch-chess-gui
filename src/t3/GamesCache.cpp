@@ -380,7 +380,7 @@ bool GamesCache::FileCreate( std::string &filename, GameDocument &gd )
     gds.clear();
     gd.in_memory = true;
     gd.pgn_handle = 0;
-    make_smart_ptr( HoldDocument, new_doc, gd );
+    make_smart_ptr( GameDocument, new_doc, gd );
     gds.push_back( std::move(new_doc) );
     FILE *pgn_out = objs.gl->pf.OpenCreate( pgn_filename, pgn_handle );
     if( pgn_out )

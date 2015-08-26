@@ -1255,7 +1255,7 @@ void GamesDialog::CopyOrAdd( bool clear_clipboard )
                     gc_clipboard->gds.clear();
                 }
                 GameDocument gd = gc->gds[i]->GetGameDocument();
-                make_smart_ptr( HoldDocument, new_doc, gd );
+                make_smart_ptr( GameDocument, new_doc, gd );
                 gc_clipboard->gds.push_back(std::move(new_doc));
                 nbr_copied++;
             }
@@ -1268,7 +1268,7 @@ void GamesDialog::CopyOrAdd( bool clear_clipboard )
                 gc_clipboard->gds.clear();
             }
             GameDocument gd = gc->gds[idx_focus]->GetGameDocument();
-            make_smart_ptr( HoldDocument, new_doc, gd );
+            make_smart_ptr( GameDocument, new_doc, gd );
             gc_clipboard->gds.push_back(std::move(new_doc));
             nbr_copied++;
         }
@@ -1297,7 +1297,7 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
             gd.game_nbr = 0;
             gd.modified = true;
             gc->file_irrevocably_modified = true;
-            make_smart_ptr( HoldDocument, new_doc, gd );
+            make_smart_ptr( GameDocument, new_doc, gd );
             gc->gds.insert( iter, std::move(new_doc) );
             wxListItem item;              
             list_ctrl->InsertItem( idx_focus, item );
@@ -1362,7 +1362,7 @@ void GamesDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
                 }
                 MagicBase &mb = **iter;
                 GameDocument gd = mb.GetGameDocument();
-                make_smart_ptr( HoldDocument, new_doc, gd );
+                make_smart_ptr( GameDocument, new_doc, gd );
                 gc_clipboard->gds.push_back(std::move(new_doc));
                 list_ctrl->DeleteItem(i);
                 iter = gc->gds.erase(iter);
@@ -1383,7 +1383,7 @@ void GamesDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
             GameDocument gd = mb.GetGameDocument();
             // This is required because for some reason it doesn't work if you don't use the intermediate reference, i.e.:
             //   GameDocument gd = **iter_focus.GetGameDocument();   // doesn't work
-            make_smart_ptr( HoldDocument,new_doc,gd);
+            make_smart_ptr( GameDocument,new_doc,gd);
             gc_clipboard->gds.push_back(std::move(new_doc));
             list_ctrl->DeleteItem(idx_focus);
             iter = gc->gds.erase(iter_focus);
@@ -1453,7 +1453,7 @@ void GamesDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
             gc_clipboard->gds[i]->GetGameDocument(gd);
             gd.game_nbr = 0;
             gd.modified = true;
-            make_smart_ptr( HoldDocument,new_doc,gd);
+            make_smart_ptr( GameDocument,new_doc,gd);
             gc->gds.insert( iter, std::move(new_doc) );
             gc->file_irrevocably_modified = true;
             wxListItem item;              

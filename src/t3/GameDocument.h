@@ -36,13 +36,111 @@ public:
     std::string black_elo;
 };
 
+class GameDocument;
+class DB_GAME_INFO;
+
+class CompactGame
+{
+public:
+    Roster r;
+    thc::ChessPosition start_position;
+    std::vector< thc::Move > moves;
+    
+    // temp stuff hopefully
+    int game_id;
+    int transpo_nbr;
+    
+    std::string Description();
+    void Upscale( GameDocument &gd );       // to GameDocument
+    void Downscale( GameDocument &gd );     // from GameDocument
+    bool HaveStartPosition() {
+        bool is_initial_position = ( 0 == strcmp(start_position.squares,"rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR")
+                                    ) && start_position.white;
+        return !is_initial_position; }
+    thc::ChessPosition &GetStartPosition() { return start_position; }
+    
+    // Return index into vector where start position found
+    bool FindPositionInGame( uint64_t hash_to_match, int &idx )
+    {
+        thc::ChessRules cr = start_position;
+        size_t len = moves.size();
+        uint64_t hash = cr.Hash64Calculate();
+        bool found = (hash==hash_to_match);
+        idx = 0;
+        for( size_t i=0; !found && i<len; i++  )
+        {
+            thc::Move mv = moves[i];
+            hash = cr.Hash64Update( hash, mv );
+            if( hash == hash_to_match )
+            {
+                found = true;
+                idx = static_cast<int>(i+1);
+                break;
+            }
+            cr.PlayMove(mv);
+        }
+        return found;
+    }
+    
+};
+
+
+class MagicBase
+{
+public:
+    MagicBase() { transpo_nbr=0; }
+    virtual ~MagicBase() {}
+    virtual DB_GAME_INFO *GetDbGameInfoPtr() { return NULL; }
+    virtual GameDocument *GetGameDocumentPtr()  {
+        cprintf("FIXME DANGER WILL ROBINSON 3\n");  return NULL; }
+    virtual bool GetPgnHandle( int &png_handle ) { return false; }
+    virtual void SetPgnHandle( int png_handle )  {}
+    virtual bool IsInMemory()        { return false; }
+    virtual bool IsModified()        { return false; }
+    virtual uint32_t GetGameBeingEdited() { return 0; }
+    virtual long GetFposn() { return 0; }
+    
+    // High performance
+    virtual Roster &RefRoster() { static Roster r; return r; }
+    virtual std::vector<thc::Move> &RefMoves() { static std::vector<thc::Move> moves; return moves; }
+    virtual thc::ChessPosition     &RefStartPosition() { static thc::ChessPosition cp; return cp; }
+    
+    // Easy to use
+    virtual void GetCompactGame( CompactGame &pact )
+    {
+        pact.r     = RefRoster();
+        pact.moves = RefMoves();
+        pact.start_position = RefStartPosition();
+        pact.transpo_nbr = transpo_nbr;
+    }
+    
+    int transpo_nbr;
+};
+
 class GameLogic;
-class GameDocument
+class GameDocument : public MagicBase
 {
     
 public:
     GameDocument( GameLogic *gl );
     GameDocument();
+	virtual GameDocument        *GetGameDocumentPtr()           { return this; }
+    virtual bool IsInMemory()        { return true; }
+    virtual long GetFposn() { return fposn0; }
+    virtual Roster &RefRoster() { return r; }
+    virtual std::vector<thc::Move> &RefMoves()
+    {
+        static std::vector<thc::Move> moves;
+        moves.clear();
+        std::vector<MoveTree> &variation = tree.variations[0];
+        for( int i=0; i<variation.size(); i++ )
+        {
+            thc::Move mv = variation[i].game_move.move;
+            moves.push_back(mv);
+        }
+        return moves;
+    }
+    virtual thc::ChessPosition &RefStartPosition() { return start_position; }
     
     // Copy constructor
     GameDocument( const GameDocument& src )
@@ -94,8 +192,8 @@ public:
     }
 
     // Overrides
-    bool IsModified() { return (game_prefix_edited || game_details_edited || modified); }
-    uint32_t GetGameBeingEdited() { return game_being_edited; }
+    virtual bool IsModified() { return (game_prefix_edited || game_details_edited || modified); }
+    virtual uint32_t GetGameBeingEdited() { return game_being_edited; }
     
     void FleshOutDate();
     virtual void Init( const thc::ChessPosition &start_position );

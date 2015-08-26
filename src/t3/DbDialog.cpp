@@ -182,7 +182,6 @@ void DbDialog::ReadItem( int item, CompactGame &pact )
         info.transpo_nbr = 0;
     }
     info.GetCompactGame( pact );
-    pact.transpo_nbr = info.transpo_nbr;    // temp temp
 }
 
 bool DbDialog::ReadItemFromMemory( int item, DB_GAME_INFO &info )

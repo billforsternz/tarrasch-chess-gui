@@ -595,7 +595,7 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
                         int nbr_converted;
                         gd = *gd_file;
                         gd.PgnParse(true,nbr_converted,s,cr,NULL);
-                        make_smart_ptr( HoldDocument,new_smart_ptr,gd);
+                        make_smart_ptr( GameDocument,new_smart_ptr,gd);
                         gc.gds[0] = std::move(new_smart_ptr);
                         have_game = true;
                     }
@@ -695,7 +695,7 @@ void GameLogic::NextGamePreviousGame( int idx )
                     thc::ChessRules cr;
                     int nbr_converted;
                     gd_file.PgnParse(true,nbr_converted,s,cr,NULL);
-                    make_smart_ptr( HoldDocument,new_smart_ptr,gd_file);
+                    make_smart_ptr( GameDocument,new_smart_ptr,gd_file);
                     gc.gds[idx] = std::move(new_smart_ptr);
                     have_game = true;
                 }
@@ -833,7 +833,7 @@ void GameLogic::PutBackDocument()
             gd.FleshOutMoves();
             GameDocument new_doc = gd;
             new_doc.modified = gd.modified || undo.IsModified();
-            make_smart_ptr( HoldDocument, new_smart_ptr, new_doc);
+            make_smart_ptr( GameDocument, new_smart_ptr, new_doc);
             gc.gds[i] = std::move(new_smart_ptr);
             return;
         }
@@ -847,7 +847,7 @@ void GameLogic::PutBackDocument()
             gd.FleshOutMoves();
             GameDocument new_doc = gd;
             new_doc.modified = gd.modified || undo.IsModified();
-            make_smart_ptr( HoldDocument, new_smart_ptr, new_doc );
+            make_smart_ptr( GameDocument, new_smart_ptr, new_doc );
             gc_clipboard.gds[i] = std::move(new_smart_ptr);
             return;
         }
