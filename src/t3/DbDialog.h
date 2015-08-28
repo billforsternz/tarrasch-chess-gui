@@ -97,7 +97,6 @@ public:
     int          selected_game;
     void         SyncCacheOrderBefore();
     void         SyncCacheOrderAfter();
-    void         CopyOrAdd( bool clear_clipboard );
 
     // Data members
 private:
@@ -109,8 +108,7 @@ private:
 
 private:
    
-    //std::vector<DB_GAME_INFO> cache;    // games from database
-    std::vector< smart_ptr<MagicBase> >  cache;
+    //std::vector< smart_ptr<MagicBase> >  cache;
     std::unordered_set<int>   games_set;    // game_ids for all games in memory
     std::unordered_set<uint64_t> drill_down_set;  // positions already encountered drilling down
     std::vector<thc::Move> moves_in_this_position;

@@ -115,7 +115,7 @@ void PgnDialog::AddExtraControls()
 
 void PgnDialog::GetCachedDocumentRaw( int idx, GameDocument &gd )
 {
-    std::unique_ptr<MagicBase> &mb = gc->gds[idx];
+    smart_ptr<MagicBase> &mb = gc->gds[idx];
     gd = *mb->GetGameDocumentPtr();
 }
 

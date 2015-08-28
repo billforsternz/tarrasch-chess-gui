@@ -801,6 +801,7 @@ void DbDialog::OnButton1()
 
 void DbDialog::OnButton2()
 {
+    CopyOrAdd( true );
 }
 
 void DbDialog::OnButton3()
@@ -872,7 +873,7 @@ void DbDialog::LoadGamesIntoMemory()
     AutoTimer at("Load games into memory");
     
     // Load all the matching games from the database
-    objs.db->LoadAllGames( cache, nbr_games_in_list_ctrl );
+    objs.db->LoadAllGames( gc->gds, nbr_games_in_list_ctrl );
     moves_from_base_position.clear();
     
     // No need to look for more games in database in base position
@@ -880,9 +881,9 @@ void DbDialog::LoadGamesIntoMemory()
     uint64_t base_hash = this->cr.Hash64Calculate();
     drill_down_set.insert(base_hash);
     games_set.clear();
-    for( unsigned int i=0; i<cache.size(); i++ )
+    for( unsigned int i=0; i<gc->gds.size(); i++ )
     {
-        DB_GAME_INFO *p = cache[i]->GetDbGameInfoPtr();
+        DB_GAME_INFO *p = gc->gds[i]->GetDbGameInfoPtr();
         if( p )
             games_set.insert( p->game_id );
     }
@@ -932,11 +933,11 @@ void DbDialog::StatsCalculate()
     else
     {
         drill_down_set.insert(gbl_hash);
-        objs.db->LoadGamesWithQuery( gbl_hash, cache, games_set );
+        objs.db->LoadGamesWithQuery( gbl_hash, gc->gds, games_set );
     }
     
     // For each cached game
-    std::vector< smart_ptr<MagicBase> > &source = (clipboard_db ? objs.gl->gc_clipboard.gds : cache );
+    std::vector< smart_ptr<MagicBase> > &source = (clipboard_db ? objs.gl->gc_clipboard.gds : gc->gds );
     for( unsigned int i=0; i<source.size(); i++ )
     {
         DB_GAME_INFO *info = source[i]->GetDbGameInfoPtr();

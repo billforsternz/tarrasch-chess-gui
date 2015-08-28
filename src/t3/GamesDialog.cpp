@@ -1099,6 +1099,7 @@ void GamesDialog::OnButton2( wxCommandEvent& WXUNUSED(event) )
 // overide
 void GamesDialog::OnButton2()
 {
+    OnButton2();
 }
 
 void GamesDialog::OnButton3( wxCommandEvent& WXUNUSED(event) )
@@ -1239,7 +1240,8 @@ void GamesDialog::OnCopy( wxCommandEvent& WXUNUSED(event) )
 
 void GamesDialog::CopyOrAdd( bool clear_clipboard )
 {
-/*    int nbr_copied=0, idx_focus=-1;
+    int idx_focus = -1;
+    int nbr_copied = 0;
     if( list_ctrl )
     {
         int sz=gc->gds.size();
@@ -1254,9 +1256,7 @@ void GamesDialog::CopyOrAdd( bool clear_clipboard )
                     clear_clipboard = false;
                     gc_clipboard->gds.clear();
                 }
-                GameDocument gd = gc->gds[i]->GetGameDocument();
-                make_smart_ptr( GameDocument, new_doc, gd );
-                gc_clipboard->gds.push_back(std::move(new_doc));
+                gc_clipboard->gds.push_back( gc->gds[i] ); // assumes smart_ptr is std::shared_ptr
                 nbr_copied++;
             }
         }
@@ -1267,13 +1267,11 @@ void GamesDialog::CopyOrAdd( bool clear_clipboard )
                 clear_clipboard = false;
                 gc_clipboard->gds.clear();
             }
-            GameDocument gd = gc->gds[idx_focus]->GetGameDocument();
-            make_smart_ptr( GameDocument, new_doc, gd );
-            gc_clipboard->gds.push_back(std::move(new_doc));
+            gc_clipboard->gds.push_back( gc->gds[idx_focus] ); // assumes smart_ptr is std::shared_ptr
             nbr_copied++;
         }
     }
-    dbg_printf( "%d games copied\n", nbr_copied ); */
+    dbg_printf( "%d games copied\n", nbr_copied );
 }
 
 void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )

@@ -18,7 +18,6 @@ public:
     int game_id;
     Roster r;
     std::string str_blob;
-    int transpo_nbr;
     
     std::string Description();
     virtual bool HaveStartPosition() { return false; }
