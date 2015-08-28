@@ -34,7 +34,7 @@ nbr_pawn_swaps_histo[7] = 0
 nbr_pawn_swaps_histo_wl[0] = 4484385
 nbr_pawn_swaps_histo_wl[1] = 255981
 nbr_pawn_swaps_histo_wl[2] = 2092
-nbr_pawn_swaps_histo_wl[3] = 1
+nbr_pawn_swaps_histo_wl[3] = 1         sum=4742459 white less, = white left, = toward queenside
 nbr_pawn_swaps_histo_wl[4] = 0
 nbr_pawn_swaps_histo_wl[5] = 0
 nbr_pawn_swaps_histo_wl[6] = 0
@@ -42,7 +42,7 @@ nbr_pawn_swaps_histo_wl[7] = 0
 nbr_pawn_swaps_histo_wr[0] = 2829570
 nbr_pawn_swaps_histo_wr[1] = 2681239
 nbr_pawn_swaps_histo_wr[2] = 25961
-nbr_pawn_swaps_histo_wr[3] = 113
+nbr_pawn_swaps_histo_wr[3] = 113       sum=5536883 white right, = toward kingside
 nbr_pawn_swaps_histo_wr[4] = 0
 nbr_pawn_swaps_histo_wr[5] = 0
 nbr_pawn_swaps_histo_wr[6] = 0
@@ -50,7 +50,7 @@ nbr_pawn_swaps_histo_wr[7] = 0
 nbr_pawn_swaps_histo_bl[0] = 2524363
 nbr_pawn_swaps_histo_bl[1] = 2429938
 nbr_pawn_swaps_histo_bl[2] = 28406
-nbr_pawn_swaps_histo_bl[3] = 71
+nbr_pawn_swaps_histo_bl[3] = 71        sum=4982778 black less, = black right, = toward queenside
 nbr_pawn_swaps_histo_bl[4] = 0
 nbr_pawn_swaps_histo_bl[5] = 0
 nbr_pawn_swaps_histo_bl[6] = 0
@@ -58,7 +58,7 @@ nbr_pawn_swaps_histo_bl[7] = 0
 nbr_pawn_swaps_histo_br[0] = 5914376
 nbr_pawn_swaps_histo_br[1] = 253231
 nbr_pawn_swaps_histo_br[2] = 1659
-nbr_pawn_swaps_histo_br[3] = 1
+nbr_pawn_swaps_histo_br[3] = 1         sum=6169267 black left, = toward kingside
 nbr_pawn_swaps_histo_br[4] = 0
 nbr_pawn_swaps_histo_br[5] = 0
 nbr_pawn_swaps_histo_br[6] = 0
