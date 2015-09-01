@@ -683,12 +683,11 @@ void DbDialog::OnCancel()
     int sz=gc->gds.size();
     for( int i=0; i<sz; i++ )
     {
-        GameDocument *ptr = gc->gds[i]->GetGameDocumentPtr();
-        if( ptr )
-        {
-            ptr->selected =  ( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED)) ? true : false;
-            ptr->focus    =  ( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED)  ) ? true : false;
-        }
+        smart_ptr<MagicBase> smp = gc->gds[i];
+        bool selected = (wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED)) ? true : false;
+        smp->SetSelected(selected);
+        bool focused  =  (wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED)  ) ? true : false;
+        smp->SetFocused(focused);
     }
 }
 

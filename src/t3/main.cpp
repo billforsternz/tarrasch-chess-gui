@@ -1702,24 +1702,6 @@ void ChessFrame::RefreshLanguageFont( const char *from, bool before_large_font, 
         objs.gl->gd.Rebuild();
         objs.gl->gd.Redisplay(pos);
         redisplayed = true;
-
-        // Change move_txt for all games in the caches
-        for( int j=0; j<3; j++ )
-        {
-            GamesCache *gc=NULL;
-            switch( j )
-            {
-                case 0: gc = &objs.gl->gc;           break;
-                case 1: gc = &objs.gl->gc_clipboard; break;
-                case 2: gc = &objs.gl->gc_session;   break;
-            }
-            for( int i=0; gc && i<gc->gds.size(); i++ )
-            {
-                GameDocument *ptr = gc->gds[i]->GetGameDocumentPtr();
-                if( ptr )
-                    LangLine( ptr->moves_txt, from, to );
-            }
-        }
     }
 
     // If the italics setting has changed, redisplay

@@ -15,6 +15,15 @@ class DB_GAME_INFO : public MagicBase
 {
 public:
     virtual DB_GAME_INFO  *GetDbGameInfoPtr()  { return this; }
+	virtual GameDocument  *GetGameDocumentPtr()
+    {
+        static GameDocument  the_game;
+        CompactGame pact;
+        GetCompactGame( pact );
+        pact.Upscale(the_game);
+        return &the_game;
+    }
+
     int game_id;
     Roster r;
     std::string str_blob;
@@ -42,7 +51,7 @@ private:
     long fposn;
 public:
     PgnDocument( int pgn_handle, long fposn ) { this->pgn_handle=pgn_handle, this->fposn = fposn; }
-	virtual GameDocument        *GetGameDocumentPtr()
+	virtual GameDocument  *GetGameDocumentPtr()
     {
         static GameDocument  the_game;
         cprintf("FIXME DANGER WILL ROBINSON (ptr to static 1)\n");

@@ -42,6 +42,7 @@ class DB_GAME_INFO;
 class CompactGame
 {
 public:
+    CompactGame() { game_id=0; transpo_nbr=0; }
     Roster r;
     thc::ChessPosition start_position;
     std::vector< thc::Move > moves;
@@ -97,6 +98,11 @@ public:
     virtual void SetPgnHandle( int png_handle )  {}
     virtual bool IsInMemory()        { return false; }
     virtual bool IsModified()        { return false; }
+    virtual void SetSelected( bool selected ) {}
+    virtual void SetFocused( bool focused ) {}
+    virtual bool GetSelected() { return false; }
+    virtual bool GetFocused() { return false; }
+    virtual void SetGameBeingEdited( uint32_t game_being_edited ) {}
     virtual uint32_t GetGameBeingEdited() { return 0; }
     virtual long GetFposn() { return 0; }
     

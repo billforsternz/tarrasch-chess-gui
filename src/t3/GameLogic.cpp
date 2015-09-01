@@ -571,8 +571,6 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
         wxMessageBox( "Cannot read file", "Error", wxOK|wxICON_ERROR );
     else
     {
-        /* GameDocument doc = * std::dynamic_pointer_cast<GameDocument> (gds[i]); */
-
         bool have_game = false;
         if( gc.gds.size()==1 && objs.repository->general.m_straight_to_game )
         {
@@ -711,9 +709,8 @@ void GameLogic::NextGamePreviousGame( int idx )
             IndicateNoCurrentDocument();
             gd_file.game_being_edited = ++game_being_edited_tag;
             gd = gd_file;
-            GameDocument *ptr = gc.gds[idx]->GetGameDocumentPtr();
-            if( ptr )
-                ptr->selected = true;
+            smart_ptr<MagicBase> smp = gc.gds[idx];
+            smp->SetSelected(true);
             this->file_game_idx = idx;
             tabs->SetInfile(true);
             ShowNewDocument();
@@ -826,8 +823,8 @@ void GameLogic::PutBackDocument()
 {
     for( int i=0; i<gc.gds.size(); i++ )
     {
-        GameDocument *ptr = gc.gds[i]->GetGameDocumentPtr();
-        if( ptr && ptr->game_being_edited == gd.game_being_edited )
+        smart_ptr<MagicBase> smp = gc.gds[i];
+        if( smp->GetGameBeingEdited() == gd.game_being_edited )
         {
             gd.FleshOutDate();
             gd.FleshOutMoves();
@@ -840,8 +837,8 @@ void GameLogic::PutBackDocument()
     }
     for( int i=0; i<gc_clipboard.gds.size(); i++ )
     {
-        GameDocument *ptr = gc_clipboard.gds[i]->GetGameDocumentPtr();
-        if( ptr && ptr->game_being_edited == gd.game_being_edited  )
+        smart_ptr<MagicBase> smp = gc_clipboard.gds[i];
+        if( smp->GetGameBeingEdited() == gd.game_being_edited )
         {
             gd.FleshOutDate();
             gd.FleshOutMoves();
@@ -858,19 +855,17 @@ void GameLogic::IndicateNoCurrentDocument()
 {
     for( int i=0; i<gc.gds.size(); i++ )
     {
-        GameDocument *ptr = gc.gds[i]->GetGameDocumentPtr();
-        if( ptr && ptr->game_being_edited == gd.game_being_edited )
-             ptr->game_being_edited = 0;
-        if( ptr )
-            ptr->selected = false;
+        smart_ptr<MagicBase> smp = gc.gds[i];
+        if( smp->GetGameBeingEdited() == gd.game_being_edited )
+             smp->SetGameBeingEdited(0);
+        smp->SetSelected(false);
     }
     for( int i=0; i<gc_clipboard.gds.size(); i++ )
     {
-        GameDocument *ptr = gc_clipboard.gds[i]->GetGameDocumentPtr();
-        if( ptr && ptr->game_being_edited == gd.game_being_edited )
-             ptr->game_being_edited = 0;
-        if( ptr )
-            ptr->selected = false;
+        smart_ptr<MagicBase> smp = gc_clipboard.gds[i];
+        if( smp->GetGameBeingEdited() == gd.game_being_edited )
+             smp->SetGameBeingEdited(0);
+        smp->SetSelected(false);
     }
 }
 
