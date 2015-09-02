@@ -192,7 +192,7 @@ bool DbDialog::ReadItemFromMemory( int item, DB_GAME_INFO &info )
     if( 0<=item && item<nbr_games )
     {
         in_memory = true;
-        info = displayed_games[nbr_games-1-item];
+        info = *displayed_games[nbr_games-1-item]->GetDbGameInfoPtr();
         info.transpo_nbr = 0;
         //cprintf( "ReadItemFromMemory(%d), white=%s\n", item, info.white.c_str() );
         //if( info.move_txt.length() == 0 )
@@ -263,183 +263,62 @@ DbDialog::DbDialog
 
 
 static DbDialog *backdoor;
-static bool compare( const DB_GAME_INFO &g1, const DB_GAME_INFO &g2 )
+static bool compare( const smart_ptr<DB_GAME_INFO> g1, const smart_ptr<DB_GAME_INFO> g2 )
 {
     bool lt=false;
     switch( backdoor->compare_col )
     {
-        case 1: lt = g1.r.white < g2.r.white;
+        case 1: lt = g1->r.white < g2->r.white;
                 break;
         case 2:
         {       
-                int elo_1 = atoi( g1.r.white_elo.c_str() );
-                int elo_2 = atoi( g2.r.white_elo.c_str() );
+                int elo_1 = atoi( g1->r.white_elo.c_str() );
+                int elo_2 = atoi( g2->r.white_elo.c_str() );
                 lt = elo_1 < elo_2;
                 break;
         }
-        case 3: lt = g1.r.black < g2.r.black;
+        case 3: lt = g1->r.black < g2->r.black;
                 break;
         case 4:
         {
-                int elo_1 = atoi( g1.r.black_elo.c_str() );
-                int elo_2 = atoi( g2.r.black_elo.c_str() );
+                int elo_1 = atoi( g1->r.black_elo.c_str() );
+                int elo_2 = atoi( g2->r.black_elo.c_str() );
                 lt = elo_1 < elo_2;
                 break;
         }
-        case 5: lt = g1.r.date < g2.r.date;
+        case 5: lt = g1->r.date < g2->r.date;
                 break;
-        case 6: lt = g1.r.site < g2.r.site;
+        case 6: lt = g1->r.site < g2->r.site;
                 break;
-        case 8: lt = g1.r.result < g2.r.result;
+        case 8: lt = g1->r.result < g2->r.result;
                 break;
     }
     return lt;
 }
         
-/*        default:
-        {
-            /* if( is_target1 )
-            {
-                DebugDumpBlob("compare(g1,g2) g1 is match, g2 is", g2 );
-            }
-            if( is_target2 )
-            {
-                DebugDumpBlob("compare(g1,g2) g2 is match, g1 is", g1 );
-            } */
-     /*       unsigned int sz = backdoor->transpositions.size();
-            for( unsigned int i=0; i<sz; i++ )
-            {
-                PATH_TO_POSITION *ptp1 = &backdoor->transpositions[i];
-                unsigned int offset1 = ptp1->blob.length();
-                if( 0 == memcmp( ptp1->blob.c_str(), g1.str_blob.c_str(), offset1 ) )
-                {
-                    for( unsigned int j=0; j<sz; j++ )
-                    {
-                        PATH_TO_POSITION *ptp2 = &backdoor->transpositions[j];
-                        unsigned int offset2 = ptp2->blob.length();
-                        if( 0 == memcmp( ptp2->blob.c_str(), g2.str_blob.c_str(), offset2 ) )
-                        {
-                            if( backdoor->transpo_activated && i!=j )
-                            {
-                                lt = i<j;
-                            }
-                            else
-                            {
-                                // lt = g1.str_blob.substr(offset1) < g2.str_blob.substr(offset2);
-                                unsigned int len1 = g1.str_blob.length();
-                                unsigned int len2 = g2.str_blob.length();
-                                const char *p = g1.str_blob.c_str() + offset1;
-                                const char *q = g2.str_blob.c_str() + offset2;
-                                int idx = 0;
-                                while( *p == *q )
-                                {
-                                    idx++;
-                                    if( offset1+idx >= len1 || offset2+idx >= len2 )
-                                        break;
-                                    p++;
-                                    q++;
-                                }
-                                if( offset1+idx>=len1 && offset2+idx<len2 )
-                                    lt = true;
-                                else if( offset1+idx<len1 && offset2+idx<len2 )
-                                {
-                                    unsigned int c = *p;
-                                    unsigned int d = *q;
-                                    unsigned int hi = c&0xf0;
-                                    unsigned int lo = c&0x0f;
-                                    if( hi == 0x00 )
-                                    {
-                                        if( 1<=lo && lo<=4 )
-                                            hi = 0x30; // O-O or O-O-O
-                                        else
-                                            hi = 0x10; // K
-                                    }
-                                    else if( hi==0x10 || hi==0x20 )
-                                    {
-                                        if( lo < 8 )
-                                            hi = 0x20; // N
-                                        else
-                                            hi = 0x40; // Q (shadow)
-                                    }
-                                    else if( hi==0x30 || hi==0x40 )
-                                    {
-                                        hi = 0x60;     // R
-                                    }
-                                    else if( hi==0x50 || hi==0x60 )
-                                    {
-                                        hi = 0x00;     // B
-                                    }
-                                    else if( hi == 0x70 )
-                                    {
-                                        hi = 0x50; // Q
-                                    }
-                                    c = hi|lo;
-                                    hi = d&0xf0;
-                                    lo = d&0x0f;
-                                    if( hi == 0x00 )
-                                    {
-                                        if( 1<=lo && lo<=4 )
-                                            hi = 0x30; // O-O or O-O-O
-                                        else
-                                            hi = 0x10; // K
-                                    }
-                                    else if( hi==0x10 || hi==0x20 )
-                                    {
-                                        if( lo < 8 )
-                                            hi = 0x20; // N
-                                        else
-                                            hi = 0x40; // Q (shadow)
-                                    }
-                                    else if( hi==0x30 || hi==0x40 )
-                                    {
-                                        hi = 0x60;     // R
-                                    }
-                                    else if( hi==0x50 || hi==0x60 )
-                                    {
-                                        hi = 0x00;     // B
-                                    }
-                                    else if( hi == 0x70 )
-                                    {
-                                        hi = 0x50; // Q
-                                    }
-                                    d = hi|lo;
-                                    lt = c<d;
-                                }
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-            break; 
-        }  */
-    /* if( is_target1 || is_target2 )
-    {
-        cprintf( "compare() returns lt is %s\n", lt?"true":"false" );
-    }  */
 
-static bool rev_compare( const DB_GAME_INFO &g1, const DB_GAME_INFO &g2 )
+static bool rev_compare( const smart_ptr<DB_GAME_INFO> g1, const smart_ptr<DB_GAME_INFO> g2 )
 {
     bool lt=true;
     switch( backdoor->compare_col )
     {
-        case 1: lt = g1.r.white > g2.r.white;           break;
+        case 1: lt = g1->r.white > g2->r.white;           break;
         case 2:
-        {       int elo_1 = atoi( g1.r.white_elo.c_str() );
-                int elo_2 = atoi( g2.r.white_elo.c_str() );
+        {       int elo_1 = atoi( g1->r.white_elo.c_str() );
+                int elo_2 = atoi( g2->r.white_elo.c_str() );
                 lt = elo_1 > elo_2;
                 break;
         }
-        case 3: lt = g1.r.black > g2.r.black;           break;
+        case 3: lt = g1->r.black > g2->r.black;           break;
         case 4:
-        {       int elo_1 = atoi( g1.r.black_elo.c_str() );
-                int elo_2 = atoi( g2.r.black_elo.c_str() );
+        {       int elo_1 = atoi( g1->r.black_elo.c_str() );
+                int elo_2 = atoi( g2->r.black_elo.c_str() );
                 lt = elo_1 > elo_2;
                 break;
         }
-        case 5: lt = g1.r.date > g2.r.date;             break;
-        case 6: lt = g1.r.site > g2.r.site;             break;
-        case 8: lt = g1.r.result > g2.r.result;         break;
+        case 5: lt = g1->r.date > g2->r.date;             break;
+        case 6: lt = g1->r.site > g2->r.site;             break;
+        case 8: lt = g1->r.result > g2->r.result;         break;
     }
     return lt;
 }
@@ -493,7 +372,7 @@ void DbDialog::SmartCompare()
     unsigned int sz = displayed_games.size();
     for( unsigned int i=0; i<sz; i++ )
     {
-        DB_GAME_INFO &g = displayed_games[i];
+        DB_GAME_INFO &g = *displayed_games[i]->GetDbGameInfoPtr();
         TempElement e;
         unsigned int sz2 = transpositions.size();
         for( unsigned int j=0; j<sz2; j++ )
@@ -585,7 +464,7 @@ void DbDialog::SmartCompare()
     std::sort( inter.begin(), inter.end(), compare_counts );
     
     // Step 4 build sorted version of games list
-    std::vector<DB_GAME_INFO> temp;
+    std::vector< smart_ptr<DB_GAME_INFO> > temp;
     sz = inter.size();
     for( unsigned int i=0; i<sz; i++ )
     {
@@ -906,8 +785,7 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
                     clear_clipboard = false;
                     gc_clipboard->gds.clear();
                 }
-                make_smart_ptr( DB_GAME_INFO, temp, displayed_games[sz-1-i] );
-                gc_clipboard->gds.push_back( std::move(temp) ); // assumes smart_ptr is std::shared_ptr
+                gc_clipboard->gds.push_back( displayed_games[sz-1-i] ); // assumes smart_ptr is std::shared_ptr
                 nbr_copied++;
             }
         }
@@ -918,8 +796,7 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
                 clear_clipboard = false;
                 gc_clipboard->gds.clear();
             }
-            make_smart_ptr( DB_GAME_INFO, temp, displayed_games[sz-1-idx_focus] );
-            gc_clipboard->gds.push_back( std::move(temp) ); // assumes smart_ptr is std::shared_ptr
+            gc_clipboard->gds.push_back( displayed_games[sz-1-idx_focus] ); // assumes smart_ptr is std::shared_ptr
             nbr_copied++;
         }
     }
@@ -1037,8 +914,8 @@ void DbDialog::StatsCalculate()
                 bool draw       = (info->r.result=="1/2-1/2");
                 if( draw )
                     total_draws++;
-
-                displayed_games.push_back(*info);
+                make_smart_ptr( DB_GAME_INFO, temp, *info );
+                displayed_games.push_back(temp);
                 PATH_TO_POSITION *p = &transpositions[found_idx];
                 p->frequency++;
                 size_t len = p->blob.length();
