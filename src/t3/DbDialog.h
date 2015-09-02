@@ -91,6 +91,7 @@ public:
 
     // Helpers
     void LoadGamesIntoMemory();
+    void CopyOrAdd( bool clear_clipboard );
     void StatsCalculate();
     GameDocument *GetFocusGame( int &idx );
     void DeselectOthers();
@@ -101,20 +102,14 @@ public:
     // Data members
 private:
     
-    // Map each move in the position to move stats
-    std::map< uint32_t, MOVE_STATS > stats;
+    std::map< uint32_t, MOVE_STATS > stats; // map each move in the position to move stats
     bool clipboard_db;          // fixme temp
     bool white_player_search;
-
-private:
-   
-    //std::vector< smart_ptr<MagicBase> >  cache;
     std::unordered_set<int>   games_set;    // game_ids for all games in memory
     std::unordered_set<uint64_t> drill_down_set;  // positions already encountered drilling down
     std::vector<thc::Move> moves_in_this_position;
     std::vector<thc::Move> moves_from_base_position;
-public:
-    std::vector<DB_GAME_INFO> games;    // games being displayed
+    std::vector<DB_GAME_INFO> displayed_games;
 };
 
 #endif    // DB_DIALOG_H

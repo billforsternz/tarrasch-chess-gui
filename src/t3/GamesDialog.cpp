@@ -1255,7 +1255,7 @@ void GamesDialog::CopyOrAdd( bool clear_clipboard )
                 {
                     clear_clipboard = false;
                     gc_clipboard->gds.clear();
-                }                               // temp temp sz-1-
+                }
                 gc_clipboard->gds.push_back( gc->gds[sz-1-i] ); // assumes smart_ptr is std::shared_ptr
                 nbr_copied++;
             }
@@ -1266,8 +1266,8 @@ void GamesDialog::CopyOrAdd( bool clear_clipboard )
             {
                 clear_clipboard = false;
                 gc_clipboard->gds.clear();
-            }                                   // temp temp sz-1-
-            gc_clipboard->gds.push_back( gc->gds[sz-1-idx_focus] ); // assumes smart_ptr is std::shared_ptr
+            }
+            gc_clipboard->gds.push_back( gc->gds[idx_focus] ); // assumes smart_ptr is std::shared_ptr
             nbr_copied++;
         }
     }

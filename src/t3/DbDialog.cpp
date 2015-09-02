@@ -188,11 +188,11 @@ bool DbDialog::ReadItemFromMemory( int item, DB_GAME_INFO &info )
 {
     bool in_memory = false;
     info.transpo_nbr = 0;
-    int nbr_games = games.size();
+    int nbr_games = displayed_games.size();
     if( 0<=item && item<nbr_games )
     {
         in_memory = true;
-        info = games[nbr_games-1-item];
+        info = displayed_games[nbr_games-1-item];
         info.transpo_nbr = 0;
         //cprintf( "ReadItemFromMemory(%d), white=%s\n", item, info.white.c_str() );
         //if( info.move_txt.length() == 0 )
@@ -490,10 +490,10 @@ void DbDialog::SmartCompare()
     std::vector<TempElement> inter;     // intermediate representation
     
     // Step 1, do a conventional string sort, beginning at our offset into the blob
-    unsigned int sz = games.size();
+    unsigned int sz = displayed_games.size();
     for( unsigned int i=0; i<sz; i++ )
     {
-        DB_GAME_INFO &g = games[i];
+        DB_GAME_INFO &g = displayed_games[i];
         TempElement e;
         unsigned int sz2 = transpositions.size();
         for( unsigned int j=0; j<sz2; j++ )
@@ -590,16 +590,16 @@ void DbDialog::SmartCompare()
     for( unsigned int i=0; i<sz; i++ )
     {
         TempElement &e = inter[i];
-        temp.push_back( games[e.idx] );
+        temp.push_back( displayed_games[e.idx] );
     }
 
     // Step 5 replace original games list
-    games = temp;
+    displayed_games = temp;
 }
 
 void DbDialog::OnListColClick( int compare_col )
 {
-    if( games.size() > 0 )
+    if( displayed_games.size() > 0 )
     {
         static int last_time;
         static int consecutive;
@@ -612,8 +612,8 @@ void DbDialog::OnListColClick( int compare_col )
         if( compare_col == 10 )
             SmartCompare();
         else
-            std::sort( games.begin(), games.end(), (consecutive%2==0)?rev_compare:compare );
-        nbr_games_in_list_ctrl = games.size();
+            std::sort( displayed_games.begin(), displayed_games.end(), (consecutive%2==0)?rev_compare:compare );
+        nbr_games_in_list_ctrl = displayed_games.size();
         list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
         list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
         int top = list_ctrl->GetTopItem();
@@ -854,7 +854,7 @@ void DbDialog::OnCheckBox( bool checked )
     // No need to look for more games in database in base position
     clipboard_db = checked;
         
-    if( clipboard_db || games.size()>0 )
+    if( clipboard_db || displayed_games.size()>0 )
         StatsCalculate();
     else
     {
@@ -888,6 +888,45 @@ void DbDialog::LoadGamesIntoMemory()
     }
 }
 
+void DbDialog::CopyOrAdd( bool clear_clipboard )
+{
+    int idx_focus = -1;
+    int nbr_copied = 0;
+    if( list_ctrl )
+    {
+        int sz=displayed_games.size();
+        for( int i=0; i<sz; i++ )
+        {
+            if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
+                idx_focus = i;
+            if( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED) )
+            {
+                if( clear_clipboard )
+                {
+                    clear_clipboard = false;
+                    gc_clipboard->gds.clear();
+                }
+                make_smart_ptr( DB_GAME_INFO, temp, displayed_games[sz-1-i] );
+                gc_clipboard->gds.push_back( std::move(temp) ); // assumes smart_ptr is std::shared_ptr
+                nbr_copied++;
+            }
+        }
+        if( nbr_copied==0 && idx_focus>=0 )
+        {
+            if( clear_clipboard )
+            {
+                clear_clipboard = false;
+                gc_clipboard->gds.clear();
+            }
+            make_smart_ptr( DB_GAME_INFO, temp, displayed_games[sz-1-idx_focus] );
+            gc_clipboard->gds.push_back( std::move(temp) ); // assumes smart_ptr is std::shared_ptr
+            nbr_copied++;
+        }
+    }
+    dbg_printf( "%d games copied\n", nbr_copied );
+}
+
+
 void DbDialog::StatsCalculate()
 {
     int total_white_wins = 0;
@@ -896,7 +935,7 @@ void DbDialog::StatsCalculate()
     transpositions.clear();
     stats.clear();
     dirty = true;
-    games.clear();
+    displayed_games.clear();
     cprintf( "Remove focus %d\n", track->focus_idx );
     list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_FOCUSED );
     list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_SELECTED );
@@ -999,7 +1038,7 @@ void DbDialog::StatsCalculate()
                 if( draw )
                     total_draws++;
 
-                games.push_back(*info);
+                displayed_games.push_back(*info);
                 PATH_TO_POSITION *p = &transpositions[found_idx];
                 p->frequency++;
                 size_t len = p->blob.length();
@@ -1111,7 +1150,7 @@ void DbDialog::StatsCalculate()
         strings_transpos.Add(wstr);
     }
 
-    nbr_games_in_list_ctrl = games.size();
+    nbr_games_in_list_ctrl = displayed_games.size();
     dirty = true;
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
     list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
