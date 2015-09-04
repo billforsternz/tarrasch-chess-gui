@@ -560,14 +560,14 @@ void DbDialog::OnCancel()
 {
     gc->PrepareForResumePreviousWindow( list_ctrl->GetTopItem() );
     int sz=gc->gds.size();
-    for( int i=0; i<sz; i++ )
+ /* for( int i=0; i<sz; i++ )
     {
         smart_ptr<MagicBase> smp = gc->gds[i];
         bool selected = (wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED)) ? true : false;
         smp->SetSelected(selected);
         bool focused  =  (wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED)  ) ? true : false;
         smp->SetFocused(focused);
-    }
+    } */
 }
 
 void DbDialog::OnHelpClick()

@@ -466,6 +466,16 @@ bool CentralWorkSaver::FileSaveGameAs()
         if( file )
         {
             fseek(file,0,SEEK_END);
+            if( append )
+            {
+                std::string eol =
+#ifdef THC
+                '\n';
+#else
+                '\r\n';
+#endif
+                fwrite( eol.c_str(), 1, eol.length(), file );
+            }
             fwrite( head.c_str(), 1, head.length(), file );
             fwrite( body.c_str(), 1, body.length(), file );
             fclose( file );
