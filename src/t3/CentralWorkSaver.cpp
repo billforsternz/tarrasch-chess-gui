@@ -430,7 +430,7 @@ bool CentralWorkSaver::FileSaveGameAs()
         ok = false;
     if( ok )
     {
-        wxFileDialog fd( objs.frame, "Select new .pgn file or existing .pgn file", "", "", "*.pgn", wxFD_SAVE ); //|wxFD_CHANGE_DIR );
+        wxFileDialog fd( objs.frame, "Select .pgn file to create, replace or append to", "", "", "*.pgn", wxFD_SAVE ); //|wxFD_CHANGE_DIR );
         wxString dir = objs.repository->nv.m_doc_dir;
         fd.SetDirectory(dir);
         int answer = fd.ShowModal();
@@ -469,10 +469,10 @@ bool CentralWorkSaver::FileSaveGameAs()
             if( append )
             {
                 std::string eol =
-#ifdef THC
-                '\n';
+#ifdef THC_WINDOWS
+                "\r\n";
 #else
-                '\r\n';
+                "\n";
 #endif
                 fwrite( eol.c_str(), 1, eol.length(), file );
             }
