@@ -395,6 +395,9 @@ void GameLogic::CmdTabClose()
 
 void GameLogic::CmdTabInclude()
 {
+    Atomic begin;
+    objs.cws->AddTabToFile();
+    atom.StatusUpdate();
 }
 
 void GameLogic::CmdSwapSides()
@@ -629,9 +632,9 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
                 objs.session->SaveGame(&gd);
                 if( dialog.LoadGame(this,gd,this->file_game_idx) )
                 {
-                    tabs->SetInfile(true);
                     if( !is_empty )
                         tabs->TabNew(gd);
+                    tabs->SetInfile(true);
                     ShowNewDocument();
                 }
             }

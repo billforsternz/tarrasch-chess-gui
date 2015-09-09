@@ -88,6 +88,20 @@ bool CentralWorkSaver::TestGameInFile()
     return in_file;
 }
 
+void CentralWorkSaver::AddTabToFile()
+{
+    //if( !TestGameInFile() )
+    {
+        if( gd->r.white == "" ) // if( !game_details_edited )
+        {
+            GameDetailsDialog dialog(objs.frame);
+            if( dialog.Run(*gd) )
+                objs.gl->GameRedisplayPlayersResult();
+        }
+        AddGameToFile();
+    }
+}
+
 // When saving a game, either add it to file ...(see below)
 void CentralWorkSaver::AddGameToFile()
 {
@@ -105,6 +119,7 @@ void CentralWorkSaver::AddGameToFile()
     make_smart_ptr( GameDocument, new_smart_ptr, *gd );  // smart_ptr event: document->cache
     gc->gds.push_back( std::move(new_smart_ptr) );
     objs.gl->file_game_idx = gc->gds.size()-1;
+    objs.gl->tabs->SetInfile(true);
 }
 
 // ...(see above) Or put it back where it came from
