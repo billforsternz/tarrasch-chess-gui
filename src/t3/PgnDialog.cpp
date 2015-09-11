@@ -539,8 +539,8 @@ bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx )
         gd.game_being_edited = temp;
         gd.selected = false;
         ptr->selected = true;
-        if( &gl->gc == gc )
-            file_game_idx = this->file_game_idx;    // update this only if loading game from current file
+        //if( &gl->gc == gc )
+        file_game_idx = selected_game; //this->file_game_idx;    // update this only if loading game from current file
     }
     return selected_game != -1;
 }

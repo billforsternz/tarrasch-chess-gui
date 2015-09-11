@@ -895,7 +895,6 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
     if( was_empty && okay && buffered_comment!="" )
         tree.game_move.comment = buffered_comment;  // just a comment
     Rebuild();
-    gl->atom.Undo();
     in_memory = true;
     gbl_plast_move = NULL;
     if( (*pvar).size() > 0 )

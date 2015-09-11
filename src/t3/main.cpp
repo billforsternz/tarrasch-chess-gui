@@ -746,8 +746,8 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 #endif
     toolbar->AddSeparator();
     nbr_separators++;
-    ADD_TOOL( ID_CMD_NEXT_GAME,     bmp_next,      "Next game from file or database"     );
-    ADD_TOOL( ID_CMD_PREVIOUS_GAME, bmp_previous,  "Previous game from file or database" );
+    ADD_TOOL( ID_CMD_NEXT_GAME,     bmp_next,      "Next game from file"     );
+    ADD_TOOL( ID_CMD_PREVIOUS_GAME, bmp_previous,  "Previous game from file" );
 #ifdef THC_WINDOWS
     toolbar->AddSeparator();
     nbr_separators++;

@@ -646,7 +646,7 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
 
 bool GameLogic::CmdUpdateNextGame()
 {
-    if( true )
+    if( false )
     {
         return objs.db->TestNextRow();
     }
@@ -659,7 +659,7 @@ bool GameLogic::CmdUpdateNextGame()
 
 bool GameLogic::CmdUpdatePreviousGame()
 {
-    if( true )
+    if( false )
     {
         return objs.db->TestPrevRow();
     }
@@ -726,7 +726,7 @@ void GameLogic::CmdNextGame()
 {
     if( CmdUpdateNextGame() )
     {
-        if( true )
+        if( false )
         {
             Atomic begin;
             bool editing_log = objs.gl->EditingLog();
@@ -761,7 +761,7 @@ void GameLogic::CmdPreviousGame()
 {
     if( CmdUpdatePreviousGame() )
     {
-        if( true )
+        if( false )
         {
             Atomic begin;
             bool editing_log = objs.gl->EditingLog();
