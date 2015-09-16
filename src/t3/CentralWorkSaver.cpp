@@ -79,7 +79,7 @@ bool CentralWorkSaver::TestGameInFile()
     for( unsigned int i=0; i<gc->gds.size(); i++ )
     {
         MagicBase *ptr = gc->gds[i].get();
-        if( ptr && ptr->GetGameBeingEdited()!=0 )
+        if( ptr && ptr->GetGameBeingEdited()==gd->game_being_edited )
         {
             in_file = true;
             break;

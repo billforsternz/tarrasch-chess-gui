@@ -199,7 +199,7 @@ public:
     
 //  void OnClose( wxCloseEvent& event );
 //  void SaveColumns();
-    bool ShowModalOk();
+    bool ShowModalOk( std::string title );
     
     // Return true if a game has been selected
     bool LoadGame(  GameDocument &gd );

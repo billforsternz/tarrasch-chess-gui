@@ -626,7 +626,8 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
             sz.x = (sz.x*9)/10;
             sz.y = (sz.y*9)/10;
             PgnDialog dialog( objs.frame, &gc, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );
-            if( dialog.ShowModalOk() )
+            std::string title = "File: " + filename;
+            if( dialog.ShowModalOk(title) )
             {
                 objs.log->SaveGame(&gd,editing_log);
                 objs.session->SaveGame(&gd);
@@ -896,7 +897,7 @@ void GameLogic::CmdFileCurrent()
         sz.y = (sz.y*9)/10;
         gc.Debug( "Before loading current file games dialog" );
         PgnDialog dialog( objs.frame, &gc, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );
-        if( dialog.ShowModalOk() )
+        if( dialog.ShowModalOk("Current file") )
         {
             objs.log->SaveGame(&gd,editing_log);
             objs.session->SaveGame(&gd);
@@ -931,7 +932,7 @@ void GameLogic::CmdFileDatabase()
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
         DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard , ID_PGN_DIALOG_DATABASE, pt, sz );
-        if( dialog.ShowModalOk() )
+        if( dialog.ShowModalOk("Database games") )
         {
             objs.log->SaveGame(&gd,editing_log);
           //objs.session->SaveGame(&gd);        //careful...
@@ -964,7 +965,7 @@ void GameLogic::CmdFileSession()
         sz.y = (sz.y*9)/10;
         gc_session.Debug( "Before loading session games dialog" );
         PgnDialog dialog( objs.frame, &gc_session, &gc_clipboard, ID_PGN_DIALOG_SESSION, pt, sz );
-        if( dialog.ShowModalOk() )
+        if( dialog.ShowModalOk("Games in this session") )
         {
             objs.log->SaveGame(&gd,editing_log);
             //objs.session->SaveGame(&gd);        //careful...
@@ -995,7 +996,7 @@ void GameLogic::CmdFileClipboard()
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
         PgnDialog dialog( objs.frame, &gc_clipboard, &gc_clipboard, ID_PGN_DIALOG_CLIPBOARD, pt, sz );
-        if( dialog.ShowModalOk() )
+        if( dialog.ShowModalOk("Clipboard") )
         {
             objs.log->SaveGame(&gd,editing_log);
             objs.session->SaveGame(&gd);

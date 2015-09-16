@@ -1149,10 +1149,10 @@ void GamesDialog::OnNextMove( int idx )
 }
    
     
-bool GamesDialog::ShowModalOk()
+bool GamesDialog::ShowModalOk( std::string title )
 {
     Init();
-    Create( parent2, id, "Title FIXME", pos, size, style );
+    Create( parent2, id, wxString(title.c_str()), pos, size, style );
     bool ok = (wxID_OK == ShowModal());
     objs.repository->nv.m_col0  = list_ctrl->GetColumnWidth( 0 );    // "Game #"
     objs.repository->nv.m_col1  = list_ctrl->GetColumnWidth( 1 );    // "White"
@@ -1256,7 +1256,7 @@ void GamesDialog::CopyOrAdd( bool clear_clipboard )
                     clear_clipboard = false;
                     gc_clipboard->gds.clear();
                 }
-                gc_clipboard->gds.push_back( gc->gds[sz-1-i] ); // assumes smart_ptr is std::shared_ptr
+                gc_clipboard->gds.push_back( gc->gds[i] ); // assumes smart_ptr is std::shared_ptr
                 nbr_copied++;
             }
         }

@@ -679,7 +679,7 @@ void DbDialog::OnButton1()
 
 void DbDialog::OnButton2()
 {
-    CopyOrAdd( true );
+    CopyOrAdd( false );
 }
 
 void DbDialog::OnButton3()
