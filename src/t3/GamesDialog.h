@@ -17,7 +17,6 @@
 #include "Repository.h"
 #include "MiniBoard.h"
 #include "Database.h"
-#include "PgnDialog.h"
 
 // Control identifiers
 enum
@@ -56,7 +55,6 @@ struct MiniBoardGame
 {
     thc::ChessPosition  updated_position;
     CompactGame         info;
-    //std::vector< thc::Move > focus_moves;  //temp temp
     int                 focus_idx;
     int                 focus_offset;
 };

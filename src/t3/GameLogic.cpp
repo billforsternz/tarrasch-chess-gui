@@ -31,6 +31,7 @@
 #include "ClockDialog.h"
 #include "PlayerDialog.h"
 #include "PgnDialog.h"
+#include "ClipboardDialog.h"
 #include "DbDialog.h"
 #include "Objects.h"
 #include "CompressMoves.h"
@@ -995,7 +996,7 @@ void GameLogic::CmdFileClipboard()
         wxSize sz = objs.frame->GetSize();
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
-        PgnDialog dialog( objs.frame, &gc_clipboard, &gc_clipboard, ID_PGN_DIALOG_CLIPBOARD, pt, sz );
+        ClipboardDialog dialog( objs.frame, &gc_clipboard, &gc_clipboard, ID_PGN_DIALOG_CLIPBOARD, pt, sz );
         if( dialog.ShowModalOk("Clipboard") )
         {
             objs.log->SaveGame(&gd,editing_log);
