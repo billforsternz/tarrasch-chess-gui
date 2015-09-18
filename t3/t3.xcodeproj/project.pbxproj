@@ -10,7 +10,6 @@
 		E6043C3618B5709300EAB5BD /* thc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6043C3318B5709300EAB5BD /* thc.cpp */; };
 		E6043C3718B5709300EAB5BD /* WinRybka.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6043C3518B5709300EAB5BD /* WinRybka.cpp */; };
 		E6407D1D1A216AD8004E5634 /* GamesDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6407D1B1A216AD8004E5634 /* GamesDialog.cpp */; };
-		E6495BDA18F79FB6007C4B73 /* StoredGame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6495BD818F79FB6007C4B73 /* StoredGame.cpp */; };
 		E65C86F9183D9620008E1266 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E65C86F8183D9620008E1266 /* Cocoa.framework */; };
 		E65C8703183D9620008E1266 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = E65C8701183D9620008E1266 /* InfoPlist.strings */; };
 		E65C8709183D9620008E1266 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = E65C8707183D9620008E1266 /* Credits.rtf */; };
@@ -62,7 +61,6 @@
 		E65C87DB183D97F9008E1266 /* GameLogic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C8777183D97F9008E1266 /* GameLogic.cpp */; };
 		E65C87DC183D97F9008E1266 /* GamePrefixDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C8779183D97F9008E1266 /* GamePrefixDialog.cpp */; };
 		E65C87DD183D97F9008E1266 /* GamesCache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C877B183D97F9008E1266 /* GamesCache.cpp */; };
-		E65C87DE183D97F9008E1266 /* GameSkeleton.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C877D183D97F9008E1266 /* GameSkeleton.cpp */; };
 		E65C87DF183D97F9008E1266 /* GameView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C8780183D97F9008E1266 /* GameView.cpp */; };
 		E65C87E0183D97F9008E1266 /* GeneralDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C8782183D97F9008E1266 /* GeneralDialog.cpp */; };
 		E65C87E1183D97F9008E1266 /* GraphicBoard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C8784183D97F9008E1266 /* GraphicBoard.cpp */; };
@@ -84,8 +82,8 @@
 		E65C87F2183D97F9008E1266 /* Tabs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C87A8183D97F9008E1266 /* Tabs.cpp */; };
 		E65C87F3183D97F9008E1266 /* TrainingDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C87AA183D97F9008E1266 /* TrainingDialog.cpp */; };
 		E65C87F4183D97F9008E1266 /* Undo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C87AC183D97F9008E1266 /* Undo.cpp */; };
-		E65C881A183D99A1008E1266 /* libthc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E65C8819183D99A1008E1266 /* libthc.a */; };
 		E6AF490018A4881C00463137 /* MaintenanceDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6AF48FE18A4881C00463137 /* MaintenanceDialog.cpp */; };
+		E6C97A811BABB07100F87894 /* ClipboardDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6C97A801BABB07100F87894 /* ClipboardDialog.cpp */; };
 		E6F862F31888D7D20088F2F6 /* DbMaintenance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6F862F01888D7D20088F2F6 /* DbMaintenance.cpp */; };
 		E6F862F41888D7D20088F2F6 /* PgnRead.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6F862F11888D7D20088F2F6 /* PgnRead.cpp */; };
 		E6F862F71888DDD30088F2F6 /* DbPrimitives.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6F862F51888DDD30088F2F6 /* DbPrimitives.cpp */; };
@@ -107,10 +105,8 @@
 		E6043C3318B5709300EAB5BD /* thc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = thc.cpp; path = ../src/t3/thc.cpp; sourceTree = "<group>"; };
 		E6043C3418B5709300EAB5BD /* thc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = thc.h; path = ../src/t3/thc.h; sourceTree = "<group>"; };
 		E6043C3518B5709300EAB5BD /* WinRybka.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = WinRybka.cpp; path = ../src/t3/WinRybka.cpp; sourceTree = "<group>"; };
-		E6407D1B1A216AD8004E5634 /* GamesDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GamesDialog.cpp; path = ../src/t3/GamesDialog.cpp; sourceTree = "<group>"; };
+		E6407D1B1A216AD8004E5634 /* GamesDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = GamesDialog.cpp; path = ../src/t3/GamesDialog.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		E6407D1C1A216AD8004E5634 /* GamesDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GamesDialog.h; path = ../src/t3/GamesDialog.h; sourceTree = "<group>"; };
-		E6495BD818F79FB6007C4B73 /* StoredGame.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StoredGame.cpp; path = ../src/t3/StoredGame.cpp; sourceTree = "<group>"; };
-		E6495BD918F79FB6007C4B73 /* StoredGame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StoredGame.h; path = ../src/t3/StoredGame.h; sourceTree = "<group>"; };
 		E65C86F5183D9620008E1266 /* t3.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = t3.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E65C86F8183D9620008E1266 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		E65C86FB183D9620008E1266 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -161,7 +157,7 @@
 		E65C8753183D97F9008E1266 /* BookDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BookDialog.h; path = ../src/t3/BookDialog.h; sourceTree = "<group>"; };
 		E65C8754183D97F9008E1266 /* Canvas.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Canvas.cpp; path = ../src/t3/Canvas.cpp; sourceTree = "<group>"; };
 		E65C8755183D97F9008E1266 /* Canvas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Canvas.h; path = ../src/t3/Canvas.h; sourceTree = "<group>"; };
-		E65C8756183D97F9008E1266 /* CentralWorkSaver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = CentralWorkSaver.cpp; path = ../src/t3/CentralWorkSaver.cpp; sourceTree = "<group>"; wrapsLines = 0; };
+		E65C8756183D97F9008E1266 /* CentralWorkSaver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = CentralWorkSaver.cpp; path = ../src/t3/CentralWorkSaver.cpp; sourceTree = "<group>"; wrapsLines = 0; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		E65C8757183D97F9008E1266 /* CentralWorkSaver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CentralWorkSaver.h; path = ../src/t3/CentralWorkSaver.h; sourceTree = "<group>"; };
 		E65C875A183D97F9008E1266 /* ClockDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ClockDialog.cpp; path = ../src/t3/ClockDialog.cpp; sourceTree = "<group>"; };
 		E65C875B183D97F9008E1266 /* ClockDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ClockDialog.h; path = ../src/t3/ClockDialog.h; sourceTree = "<group>"; };
@@ -192,14 +188,12 @@
 		E65C8774183D97F9008E1266 /* GameDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GameDocument.h; path = ../src/t3/GameDocument.h; sourceTree = "<group>"; };
 		E65C8775183D97F9008E1266 /* GameLifecycle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GameLifecycle.cpp; path = ../src/t3/GameLifecycle.cpp; sourceTree = "<group>"; };
 		E65C8776183D97F9008E1266 /* GameLifecycle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GameLifecycle.h; path = ../src/t3/GameLifecycle.h; sourceTree = "<group>"; };
-		E65C8777183D97F9008E1266 /* GameLogic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GameLogic.cpp; path = ../src/t3/GameLogic.cpp; sourceTree = "<group>"; };
+		E65C8777183D97F9008E1266 /* GameLogic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = GameLogic.cpp; path = ../src/t3/GameLogic.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		E65C8778183D97F9008E1266 /* GameLogic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GameLogic.h; path = ../src/t3/GameLogic.h; sourceTree = "<group>"; };
 		E65C8779183D97F9008E1266 /* GamePrefixDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GamePrefixDialog.cpp; path = ../src/t3/GamePrefixDialog.cpp; sourceTree = "<group>"; };
 		E65C877A183D97F9008E1266 /* GamePrefixDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GamePrefixDialog.h; path = ../src/t3/GamePrefixDialog.h; sourceTree = "<group>"; };
-		E65C877B183D97F9008E1266 /* GamesCache.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GamesCache.cpp; path = ../src/t3/GamesCache.cpp; sourceTree = "<group>"; };
-		E65C877C183D97F9008E1266 /* GamesCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GamesCache.h; path = ../src/t3/GamesCache.h; sourceTree = "<group>"; };
-		E65C877D183D97F9008E1266 /* GameSkeleton.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GameSkeleton.cpp; path = ../src/t3/GameSkeleton.cpp; sourceTree = "<group>"; };
-		E65C877E183D97F9008E1266 /* GameSkeleton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GameSkeleton.h; path = ../src/t3/GameSkeleton.h; sourceTree = "<group>"; };
+		E65C877B183D97F9008E1266 /* GamesCache.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = GamesCache.cpp; path = ../src/t3/GamesCache.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		E65C877C183D97F9008E1266 /* GamesCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = GamesCache.h; path = ../src/t3/GamesCache.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		E65C877F183D97F9008E1266 /* GameState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GameState.h; path = ../src/t3/GameState.h; sourceTree = "<group>"; };
 		E65C8780183D97F9008E1266 /* GameView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GameView.cpp; path = ../src/t3/GameView.cpp; sourceTree = "<group>"; };
 		E65C8781183D97F9008E1266 /* GameView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GameView.h; path = ../src/t3/GameView.h; sourceTree = "<group>"; };
@@ -222,7 +216,7 @@
 		E65C8792183D97F9008E1266 /* MoveTree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MoveTree.h; path = ../src/t3/MoveTree.h; sourceTree = "<group>"; };
 		E65C8793183D97F9008E1266 /* NavigationKey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NavigationKey.h; path = ../src/t3/NavigationKey.h; sourceTree = "<group>"; };
 		E65C8794183D97F9008E1266 /* Objects.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Objects.h; path = ../src/t3/Objects.h; sourceTree = "<group>"; };
-		E65C8795183D97F9008E1266 /* PgnDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PgnDialog.cpp; path = ../src/t3/PgnDialog.cpp; sourceTree = "<group>"; };
+		E65C8795183D97F9008E1266 /* PgnDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = PgnDialog.cpp; path = ../src/t3/PgnDialog.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		E65C8796183D97F9008E1266 /* PgnDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PgnDialog.h; path = ../src/t3/PgnDialog.h; sourceTree = "<group>"; };
 		E65C8797183D97F9008E1266 /* PgnFiles.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PgnFiles.cpp; path = ../src/t3/PgnFiles.cpp; sourceTree = "<group>"; };
 		E65C8798183D97F9008E1266 /* PgnFiles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PgnFiles.h; path = ../src/t3/PgnFiles.h; sourceTree = "<group>"; };
@@ -235,7 +229,7 @@
 		E65C87A0183D97F9008E1266 /* Repository.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Repository.cpp; path = ../src/t3/Repository.cpp; sourceTree = "<group>"; };
 		E65C87A1183D97F9008E1266 /* Repository.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Repository.h; path = ../src/t3/Repository.h; sourceTree = "<group>"; };
 		E65C87A2183D97F9008E1266 /* Rybka.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Rybka.h; path = ../src/t3/Rybka.h; sourceTree = "<group>"; };
-		E65C87A3183D97F9008E1266 /* Session.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Session.cpp; path = ../src/t3/Session.cpp; sourceTree = "<group>"; };
+		E65C87A3183D97F9008E1266 /* Session.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = Session.cpp; path = ../src/t3/Session.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		E65C87A4183D97F9008E1266 /* Session.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Session.h; path = ../src/t3/Session.h; sourceTree = "<group>"; };
 		E65C87A5183D97F9008E1266 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = ../src/t3/sqlite3.c; sourceTree = "<group>"; };
 		E65C87A6183D97F9008E1266 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = ../src/t3/sqlite3.h; sourceTree = "<group>"; };
@@ -250,6 +244,8 @@
 		E673327F1895F371006B75A5 /* DbMaintenance.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DbMaintenance.h; path = ../src/t3/DbMaintenance.h; sourceTree = "<group>"; };
 		E6AF48FE18A4881C00463137 /* MaintenanceDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MaintenanceDialog.cpp; path = ../src/t3/MaintenanceDialog.cpp; sourceTree = "<group>"; };
 		E6AF48FF18A4881C00463137 /* MaintenanceDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MaintenanceDialog.h; path = ../src/t3/MaintenanceDialog.h; sourceTree = "<group>"; };
+		E6C97A7F1BABB07100F87894 /* ClipboardDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ClipboardDialog.h; path = ../src/t3/ClipboardDialog.h; sourceTree = "<group>"; };
+		E6C97A801BABB07100F87894 /* ClipboardDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ClipboardDialog.cpp; path = ../src/t3/ClipboardDialog.cpp; sourceTree = "<group>"; };
 		E6F862F01888D7D20088F2F6 /* DbMaintenance.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DbMaintenance.cpp; path = ../src/t3/DbMaintenance.cpp; sourceTree = "<group>"; };
 		E6F862F11888D7D20088F2F6 /* PgnRead.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PgnRead.cpp; path = ../src/t3/PgnRead.cpp; sourceTree = "<group>"; };
 		E6F862F21888D7D20088F2F6 /* PgnRead.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PgnRead.h; path = ../src/t3/PgnRead.h; sourceTree = "<group>"; };
@@ -262,7 +258,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E65C881A183D99A1008E1266 /* libthc.a in Frameworks */,
 				E65C86F9183D9620008E1266 /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -360,21 +355,6 @@
 		E65C872C183D97AD008E1266 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				E6495BD818F79FB6007C4B73 /* StoredGame.cpp */,
-				E6495BD918F79FB6007C4B73 /* StoredGame.h */,
-				E6043C3118B5709300EAB5BD /* DebugPrintf.h */,
-				E6043C3218B5709300EAB5BD /* Portability.h */,
-				E6043C3318B5709300EAB5BD /* thc.cpp */,
-				E6043C3418B5709300EAB5BD /* thc.h */,
-				E6043C3518B5709300EAB5BD /* WinRybka.cpp */,
-				E6AF48FE18A4881C00463137 /* MaintenanceDialog.cpp */,
-				E6AF48FF18A4881C00463137 /* MaintenanceDialog.h */,
-				E673327F1895F371006B75A5 /* DbMaintenance.h */,
-				E6F862F51888DDD30088F2F6 /* DbPrimitives.cpp */,
-				E6F862F61888DDD30088F2F6 /* DbPrimitives.h */,
-				E6F862F01888D7D20088F2F6 /* DbMaintenance.cpp */,
-				E6F862F11888D7D20088F2F6 /* PgnRead.cpp */,
-				E6F862F21888D7D20088F2F6 /* PgnRead.h */,
 				E65C872E183D97F9008E1266 /* Appdefs.h */,
 				E65C872F183D97F9008E1266 /* Atom.cpp */,
 				E65C8730183D97F9008E1266 /* Atom.h */,
@@ -396,6 +376,8 @@
 				E65C8755183D97F9008E1266 /* Canvas.h */,
 				E65C8756183D97F9008E1266 /* CentralWorkSaver.cpp */,
 				E65C8757183D97F9008E1266 /* CentralWorkSaver.h */,
+				E6C97A801BABB07100F87894 /* ClipboardDialog.cpp */,
+				E6C97A7F1BABB07100F87894 /* ClipboardDialog.h */,
 				E65C875A183D97F9008E1266 /* ClockDialog.cpp */,
 				E65C875B183D97F9008E1266 /* ClockDialog.h */,
 				E65C875C183D97F9008E1266 /* CompressMoves.cpp */,
@@ -412,8 +394,11 @@
 				E65C8767183D97F9008E1266 /* Database.h */,
 				E65C8768183D97F9008E1266 /* DbDialog.cpp */,
 				E65C8769183D97F9008E1266 /* DbDialog.h */,
-				E6407D1B1A216AD8004E5634 /* GamesDialog.cpp */,
-				E6407D1C1A216AD8004E5634 /* GamesDialog.h */,
+				E6F862F01888D7D20088F2F6 /* DbMaintenance.cpp */,
+				E673327F1895F371006B75A5 /* DbMaintenance.h */,
+				E6F862F51888DDD30088F2F6 /* DbPrimitives.cpp */,
+				E6F862F61888DDD30088F2F6 /* DbPrimitives.h */,
+				E6043C3118B5709300EAB5BD /* DebugPrintf.h */,
 				E65C876A183D97F9008E1266 /* EngineDialog.cpp */,
 				E65C876B183D97F9008E1266 /* EngineDialog.h */,
 				E65C876C183D97F9008E1266 /* GameClock.cpp */,
@@ -433,8 +418,8 @@
 				E65C877A183D97F9008E1266 /* GamePrefixDialog.h */,
 				E65C877B183D97F9008E1266 /* GamesCache.cpp */,
 				E65C877C183D97F9008E1266 /* GamesCache.h */,
-				E65C877D183D97F9008E1266 /* GameSkeleton.cpp */,
-				E65C877E183D97F9008E1266 /* GameSkeleton.h */,
+				E6407D1B1A216AD8004E5634 /* GamesDialog.cpp */,
+				E6407D1C1A216AD8004E5634 /* GamesDialog.h */,
 				E65C877F183D97F9008E1266 /* GameState.h */,
 				E65C8780183D97F9008E1266 /* GameView.cpp */,
 				E65C8781183D97F9008E1266 /* GameView.h */,
@@ -451,6 +436,8 @@
 				E65C878C183D97F9008E1266 /* LogDialog.h */,
 				E65C878D183D97F9008E1266 /* MacRybka.cpp */,
 				E65C878E183D97F9008E1266 /* main.cpp */,
+				E6AF48FE18A4881C00463137 /* MaintenanceDialog.cpp */,
+				E6AF48FF18A4881C00463137 /* MaintenanceDialog.h */,
 				E65C878F183D97F9008E1266 /* MiniBoard.cpp */,
 				E65C8790183D97F9008E1266 /* MiniBoard.h */,
 				E65C8791183D97F9008E1266 /* MoveTree.cpp */,
@@ -461,10 +448,13 @@
 				E65C8796183D97F9008E1266 /* PgnDialog.h */,
 				E65C8797183D97F9008E1266 /* PgnFiles.cpp */,
 				E65C8798183D97F9008E1266 /* PgnFiles.h */,
+				E6F862F11888D7D20088F2F6 /* PgnRead.cpp */,
+				E6F862F21888D7D20088F2F6 /* PgnRead.h */,
 				E65C8799183D97F9008E1266 /* PlayerDialog.cpp */,
 				E65C879A183D97F9008E1266 /* PlayerDialog.h */,
 				E65C879B183D97F9008E1266 /* PopupControl.cpp */,
 				E65C879C183D97F9008E1266 /* PopupControl.h */,
+				E6043C3218B5709300EAB5BD /* Portability.h */,
 				E65C879D183D97F9008E1266 /* PositionDialog.cpp */,
 				E65C879E183D97F9008E1266 /* PositionDialog.h */,
 				E65C87A0183D97F9008E1266 /* Repository.cpp */,
@@ -477,10 +467,13 @@
 				E65C87A7183D97F9008E1266 /* SuspendEngine.h */,
 				E65C87A8183D97F9008E1266 /* Tabs.cpp */,
 				E65C87A9183D97F9008E1266 /* Tabs.h */,
+				E6043C3318B5709300EAB5BD /* thc.cpp */,
+				E6043C3418B5709300EAB5BD /* thc.h */,
 				E65C87AA183D97F9008E1266 /* TrainingDialog.cpp */,
 				E65C87AB183D97F9008E1266 /* TrainingDialog.h */,
 				E65C87AC183D97F9008E1266 /* Undo.cpp */,
 				E65C87AD183D97F9008E1266 /* Undo.h */,
+				E6043C3518B5709300EAB5BD /* WinRybka.cpp */,
 			);
 			name = src;
 			sourceTree = "<group>";
@@ -627,7 +620,6 @@
 			files = (
 				E65C87ED183D97F9008E1266 /* PositionDialog.cpp in Sources */,
 				E65C87DF183D97F9008E1266 /* GameView.cpp in Sources */,
-				E65C87DE183D97F9008E1266 /* GameSkeleton.cpp in Sources */,
 				E65C87CF183D97F9008E1266 /* CtrlBox.cpp in Sources */,
 				E65C87AE183D97F9008E1266 /* Atom.cpp in Sources */,
 				E65C87CE183D97F9008E1266 /* CompressMoves.cpp in Sources */,
@@ -671,7 +663,6 @@
 				E65C87F3183D97F9008E1266 /* TrainingDialog.cpp in Sources */,
 				E65C87E6183D97F9008E1266 /* main.cpp in Sources */,
 				E65C87D6183D97F9008E1266 /* GameClock.cpp in Sources */,
-				E6495BDA18F79FB6007C4B73 /* StoredGame.cpp in Sources */,
 				E65C87E4183D97F9008E1266 /* LogDialog.cpp in Sources */,
 				E65C87D0183D97F9008E1266 /* CtrlBox2.cpp in Sources */,
 				E6AF490018A4881C00463137 /* MaintenanceDialog.cpp in Sources */,
@@ -681,6 +672,7 @@
 				E6F862F31888D7D20088F2F6 /* DbMaintenance.cpp in Sources */,
 				E65C87C4183D97F9008E1266 /* BoardBitmap40.cpp in Sources */,
 				E65C87C5183D97F9008E1266 /* BoardBitmap54.cpp in Sources */,
+				E6C97A811BABB07100F87894 /* ClipboardDialog.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
