@@ -38,7 +38,7 @@
 using namespace std;
 
 
-void DbDialog::AddExtraControls()
+wxSizer *DbDialog::AddExtraControls()
 {
     // Stats list box
     //    wxSize sz4 = sz;
@@ -106,7 +106,7 @@ void DbDialog::AddExtraControls()
     filter_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX,
                                  wxT("&Clipboard as temp database"), wxDefaultPosition, wxDefaultSize, 0 );
     vsiz_panel_button1->Add(filter_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    filter_ctrl->SetValue( false );
+    filter_ctrl->SetValue( objs.gl->db_clipboard );
     
     /*radio_ctrl = new wxRadioButton( this,  ID_DB_RADIO,
      wxT("&Radio"), wxDefaultPosition, wxDefaultSize,  wxRB_GROUP );
@@ -128,7 +128,7 @@ void DbDialog::AddExtraControls()
     wxSize sz3=combo_ctrl->GetSize();
     combo_ctrl->SetSize((sz3.x*118)/32,sz3.y);      // temp temp
 #endif
-   
+    return vsiz_panel_button1;   
 }
 
 void DbDialog::OnActivate()
@@ -164,7 +164,9 @@ void DbDialog::OnActivate()
         wxSize sz_button = utility->GetSize();
         wxPoint pos_button = utility->GetPosition();
         //utility->SetPosition( pos_button );
-        
+        extern bool gbl_db_clipboard;
+        if( gbl_db_clipboard )
+            StatsCalculate();        
         Goto(0); // list_ctrl->SetFocus();
     }
 }
@@ -257,7 +259,6 @@ DbDialog::DbDialog
 {
     activated_at_least_once = false;
     transpo_activated = false;
-    clipboard_db = false;
     white_player_search = true;
 }
 
@@ -731,9 +732,9 @@ void DbDialog::OnCheckBox( bool checked )
     moves_from_base_position.clear();
         
     // No need to look for more games in database in base position
-    clipboard_db = checked;
+    objs.gl->db_clipboard = checked;
         
-    if( clipboard_db || displayed_games.size()>0 )
+    if( objs.gl->db_clipboard || displayed_games.size()>0 )
         StatsCalculate();
     else
     {
@@ -841,7 +842,7 @@ void DbDialog::StatsCalculate()
     int maxlen = 1000000;   // absurdly large until a match found
 
     // Only if we haven't seen this position, look for and load extra games (due to transposition) from database
-    if( clipboard_db || drill_down_set.count(gbl_hash) > 0 )
+    if( objs.gl->db_clipboard || drill_down_set.count(gbl_hash) > 0 )
     {
         cprintf( "Already seen this position\n" );
     }
@@ -852,11 +853,12 @@ void DbDialog::StatsCalculate()
     }
     
     // For each cached game
-    std::vector< smart_ptr<MagicBase> > &source = (clipboard_db ? objs.gl->gc_clipboard.gds : gc->gds );
+    std::vector< smart_ptr<MagicBase> > &source = (objs.gl->db_clipboard ? objs.gl->gc_clipboard.gds : gc->gds );
     for( unsigned int i=0; i<source.size(); i++ )
     {
-        DB_GAME_INFO *info = source[i]->GetDbGameInfoPtr();
-        if( info )
+        Roster r         = source[i]->RefRoster();
+        std::string blob = source[i]->RefCompressedMoves();
+        if( blob.size() > 0 )
         {
     
             // Search for a match to this game
@@ -866,7 +868,7 @@ void DbDialog::StatsCalculate()
             for( unsigned int j=0; !found && j<transpositions.size(); j++ )
             {
                 size_t len = transpositions[j].blob.size();
-                std::string s1 = info->str_blob.substr(0,len);
+                std::string s1 = blob.substr(0,len);
                 std::string s2 = transpositions[j].blob;
                 if( s1 == s2 )
                 {
@@ -880,15 +882,15 @@ void DbDialog::StatsCalculate()
             {
                 PATH_TO_POSITION ptp;
                 CompressMoves press;
-                size_t len = info->str_blob.length();
-                const char *blob = (const char*)info->str_blob.c_str();
+                size_t len = blob.length();
+                const char *b = (const char*)blob.c_str();
                 uint64_t hash = press.cr.Hash64Calculate();
                 found = (hash==gbl_hash && press.cr==cr_to_match );
                 int offset=0;
                 while( !found && offset<len && offset<maxlen )
                 {
                     thc::ChessRules cr_hash = press.cr;
-                    thc::Move mv = press.UncompressMove( *blob++ );
+                    thc::Move mv = press.UncompressMove( *b++ );
                     hash = cr_hash.Hash64Update( hash, mv );
                     offset++;
                     if( hash == gbl_hash && press.cr==cr_to_match )
@@ -897,7 +899,7 @@ void DbDialog::StatsCalculate()
                 if( found )
                 {
                     new_transposition_found = true;
-                    ptp.blob = info->str_blob.substr(0,offset);
+                    ptp.blob = blob.substr(0,offset);
                     transpositions.push_back(ptp);
                     found_idx = transpositions.size()-1;
                     maxlen = offset+16; // stops unbounded searching through unrelated game
@@ -905,23 +907,26 @@ void DbDialog::StatsCalculate()
             }
             if( found )
             {
-                bool white_wins = (info->r.result=="1-0");
+                bool white_wins = (r.result=="1-0");
                 if( white_wins )
                     total_white_wins++;
-                bool black_wins = (info->r.result=="0-1");
+                bool black_wins = (r.result=="0-1");
                 if( black_wins )
                     total_black_wins++;
-                bool draw       = (info->r.result=="1/2-1/2");
+                bool draw       = (r.result=="1/2-1/2");
                 if( draw )
                     total_draws++;
-                make_smart_ptr( DB_GAME_INFO, temp, *info );
-                displayed_games.push_back(temp);
+                DB_GAME_INFO temp;
+                temp.r = r;
+                temp.str_blob = blob;
+                make_smart_ptr( DB_GAME_INFO, smptr, temp );
+                displayed_games.push_back(smptr);
                 PATH_TO_POSITION *p = &transpositions[found_idx];
                 p->frequency++;
                 size_t len = p->blob.length();
-                if( len < info->str_blob.length() ) // must be more moves
+                if( len < blob.length() ) // must be more moves
                 {
-                    const char *next_compressed_move = info->str_blob.c_str()+len;
+                    const char *next_compressed_move = blob.c_str()+len;
                     CompressMoves press = press_to_match;
                     thc::Move mv = press.UncompressMove( *next_compressed_move );
                     uint32_t imv = 0;

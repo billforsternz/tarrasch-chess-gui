@@ -1021,6 +1021,7 @@
     <ClInclude Include="src\t3\BookDialog.h" />
     <ClInclude Include="src\t3\Canvas.h" />
     <ClInclude Include="src\t3\CentralWorkSaver.h" />
+    <ClInclude Include="src\t3\ClipboardDialog.h" />
     <ClInclude Include="src\t3\ClockDialog.h" />
     <ClInclude Include="src\t3\CompressMoves.h" />
     <ClInclude Include="src\t3\CtrlBox.h" />
@@ -1043,7 +1044,6 @@
     <ClInclude Include="src\t3\GamePrefixDialog.h" />
     <ClInclude Include="src\t3\GamesCache.h" />
     <ClInclude Include="src\t3\GamesDialog.h" />
-    <ClInclude Include="src\t3\GameSkeleton.h" />
     <ClInclude Include="src\t3\GameState.h" />
     <ClInclude Include="src\t3\GameView.h" />
     <ClInclude Include="src\t3\GeneralDialog.h" />
@@ -1084,6 +1084,7 @@
     <ClCompile Include="src\t3\BookDialog.cpp" />
     <ClCompile Include="src\t3\Canvas.cpp" />
     <ClCompile Include="src\t3\CentralWorkSaver.cpp" />
+    <ClCompile Include="src\t3\ClipboardDialog.cpp" />
     <ClCompile Include="src\t3\ClockDialog.cpp" />
     <ClCompile Include="src\t3\CompressMoves.cpp" />
     <ClCompile Include="src\t3\CtrlBox.cpp" />
@@ -1104,7 +1105,6 @@
     <ClCompile Include="src\t3\GamePrefixDialog.cpp" />
     <ClCompile Include="src\t3\GamesCache.cpp" />
     <ClCompile Include="src\t3\GamesDialog.cpp" />
-    <ClCompile Include="src\t3\GameSkeleton.cpp" />
     <ClCompile Include="src\t3\GameView.cpp" />
     <ClCompile Include="src\t3\GeneralDialog.cpp" />
     <ClCompile Include="src\t3\GraphicBoard.cpp" />

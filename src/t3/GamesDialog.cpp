@@ -379,7 +379,12 @@ void GamesDialog::CreateControls()
 
     // A friendly message
     char buf[200];
-    if( !init_position_specified )
+    if( objs.gl->db_clipboard )
+    {
+        nbr_games_in_list_ctrl = 0;
+        sprintf(buf,"Using clipboard as database" );
+    }
+    else if( !init_position_specified )
     {
         // FIXME FIXME FIXME
         thc::ChessRules cr;

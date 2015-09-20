@@ -12,10 +12,17 @@ Test plan
 6) Open file, load 2nd game, Ok
 7) Use Previous, Next buttons to load 1st and last games
     (Problem, up and down buttons are disabled)
-8) Create a pgn file with two Sicilian games, copy them to clickboard
-9) Open an existing pgn file and add two Sicilian games to the clipboard
-10) Do a database search, Calculate Stats, and from the listed games add two more Sicilian games to the clipboard
-11) Check that the clipboard has the correct 6 Sicilian games
-12) Check "Clipboard is temp database"
-13) Start a new game, play 1.e4 and do a database search, confirm that 6 games are found, all replying 1...c5
+8) Create a pgn file with two Sicilian games, copy them to clickboard, Ok
+9) Open an existing pgn file and add two Sicilian games to the clipboard, Ok
+10) Do a database search, Calculate Stats, and from the listed games add two more Sicilian games to the clipboard, Ok
+11) Check that the clipboard has the correct 6 Sicilian games, Ok
+12) Check "Clipboard is temp database", Ok
+13) Start a new game, play 1.e4 and do a database search, confirm that 6 games are found, all replying 1...c5, Ok
+    (Some problems though
+        - Database search is always automatically loading games
+        - It says "searching for extra games" whilst doing it
+        - No result games aren't shown as draws in stats - actually this is probably a good thing
+        - I noticed that if opening a .pgn but cancelling without loading a game, the .pgn is allegedly open
+        - If clipboard is temp database when you do a database search, unchecking should do a brand new db search (it doesn't)
+    )
  

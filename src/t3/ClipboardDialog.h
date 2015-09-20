@@ -37,6 +37,10 @@ public:
      long style = wxCAPTION|wxRESIZE_BORDER|wxSYSTEM_MENU|wxCLOSE_BOX
      );
     
+    // Overrides
+    virtual wxSizer *AddExtraControls();
+    virtual void OnCheckBox( bool checked );
+
 };
 
 #else
@@ -65,7 +69,7 @@ public:
     );
     
     // Overrides
-    virtual void AddExtraControls();
+    virtual wxSizer *AddExtraControls();
     virtual void GetButtonGridDimensions( int &row1, int &col1, int &row2, int &col2 ) { row1=8; col1=2; row2=0; col2=0; }
     virtual void ReadItem( int item, CompactGame &info );
     virtual void OnListColClick( int compare_col );

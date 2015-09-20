@@ -39,6 +39,10 @@ public:
         moves = press.Uncompress(str_blob);
         return moves;
     }
+    virtual std::string &RefCompressedMoves()
+    {
+        return str_blob;
+    }
     virtual thc::ChessPosition &RefStartPosition() { static thc::ChessPosition start; return start;  }
 };
 
@@ -49,8 +53,11 @@ class PgnDocument : public MagicBase
 private:
     int  pgn_handle;
     long fposn;
+    bool in_memory;
+    Roster roster;
+    std::string blob;
 public:
-    PgnDocument( int pgn_handle, long fposn ) { this->pgn_handle=pgn_handle, this->fposn = fposn; }
+    PgnDocument( int pgn_handle, long fposn ) { this->pgn_handle=pgn_handle, this->fposn = fposn; in_memory=false; }
 	virtual GameDocument  *GetGameDocumentPtr()
     {
         static GameDocument  the_game;
@@ -78,6 +85,26 @@ public:
             moves.push_back(mv);
         }
         return moves;
+    }
+    virtual std::string &RefCompressedMoves()
+    {
+        GameDocument the_game;
+        ReadGameFromPgn( pgn_handle, fposn, the_game );
+        std::vector<MoveTree> &variation = the_game.tree.variations[0];
+        CompressMoves press;
+        static std::string blob;
+        blob.clear();
+        if( press.cr == the_game.start_position )
+        {
+            std::vector<thc::Move> moves;
+            for( int i=0; i<variation.size(); i++ )
+            {
+                thc::Move mv = variation[i].game_move.move;
+                moves.push_back(mv);
+            }
+            blob = press.Compress( moves );
+        }
+        return blob;
     }
     virtual thc::ChessPosition &RefStartPosition()
     {

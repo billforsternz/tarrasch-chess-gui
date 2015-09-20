@@ -41,10 +41,23 @@ ClipboardDialog::ClipboardDialog
 {
 }
 
+wxSizer *ClipboardDialog::AddExtraControls()
+{
+    wxSizer *vsiz_panel_button1 = PgnDialog::AddExtraControls();
+    filter_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX,
+                                 wxT("&Clipboard as temp database"), wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(filter_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    filter_ctrl->SetValue( objs.gl->db_clipboard );
+    return vsiz_panel_button1;
+}
 
+void ClipboardDialog::OnCheckBox( bool checked )
+{
+    objs.gl->db_clipboard = checked;
+}
 
 #else
-void ClipboardDialog::AddExtraControls()
+wxSizer *ClipboardDialog::AddExtraControls()
 {
     // Edit game details
     wxButton* edit_game_details = new wxButton ( this, ID_PGN_DIALOG_GAME_DETAILS, wxT("Edit Game Details"),

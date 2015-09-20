@@ -63,6 +63,7 @@ GameLogic::GameLogic( Canvas *canvas, CtrlChessTxt *lb )
     : atom(this), gd(this), undo(this)
 {
     state    = RESET;
+    db_clipboard = false;
     game_being_edited_tag = 0;
     engine_name[0] = '\0';
     under_our_program_control = false;
@@ -913,6 +914,7 @@ void GameLogic::CmdFileCurrent()
     atom.StatusUpdate();
 }
 
+bool gbl_db_clipboard=true;
 void GameLogic::CmdFileDatabase()
 {
     Atomic begin;
@@ -932,7 +934,8 @@ void GameLogic::CmdFileDatabase()
         wxSize sz = objs.frame->GetSize();
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
-        DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard , ID_PGN_DIALOG_DATABASE, pt, sz );
+        extern bool gbl_db_clipboard;
+        DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard, ID_PGN_DIALOG_DATABASE, pt, sz );
         if( dialog.ShowModalOk("Database games") )
         {
             objs.log->SaveGame(&gd,editing_log);

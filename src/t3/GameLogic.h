@@ -217,6 +217,7 @@ public:
     GamesCache gc_database;
     PgnFiles pf;
     GameClock chess_clock;
+    bool db_clipboard;
     Undo undo;
     Atom atom;
 };

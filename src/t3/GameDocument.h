@@ -16,6 +16,7 @@
 #include "NavigationKey.h"
 #include "GameView.h"
 #include "GameLifecycle.h"
+#include "CompressMoves.h"
 
 
 #define smart_ptr std::shared_ptr //std::unique_ptr
@@ -94,8 +95,8 @@ public:
     virtual DB_GAME_INFO *GetDbGameInfoPtr() { return NULL; }
     virtual GameDocument *GetGameDocumentPtr()  {
         cprintf("FIXME DANGER WILL ROBINSON 3\n");  return NULL; }
-    virtual bool GetPgnHandle( int &png_handle ) { return false; }
-    virtual void SetPgnHandle( int png_handle )  {}
+    virtual bool GetPgnHandle( int &pgn_handle ) { return false; }
+    virtual void SetPgnHandle( int pgn_handle )  {}
     virtual bool IsInMemory()        { return false; }
     virtual bool IsModified()        { return false; }
     virtual void SetSelected( bool selected ) {}
@@ -107,9 +108,10 @@ public:
     virtual long GetFposn() { return 0; }
     
     // High performance
-    virtual Roster &RefRoster() { static Roster r; return r; }
-    virtual std::vector<thc::Move> &RefMoves() { static std::vector<thc::Move> moves; return moves; }
-    virtual thc::ChessPosition     &RefStartPosition() { static thc::ChessPosition cp; return cp; }
+    virtual Roster                  &RefRoster()          { static Roster r; return r; }
+    virtual std::vector<thc::Move>  &RefMoves()           { static std::vector<thc::Move> moves; return moves; }
+    virtual std::string             &RefCompressedMoves() { static std::string moves; return moves; }
+    virtual thc::ChessPosition      &RefStartPosition()   { static thc::ChessPosition cp; return cp; }
     
     // Easy to use
     virtual void GetCompactGame( CompactGame &pact )
@@ -145,6 +147,24 @@ public:
             moves.push_back(mv);
         }
         return moves;
+    }
+    virtual std::string &RefCompressedMoves()
+    {
+        static std::string blob;
+        blob.clear();
+        CompressMoves press;
+        if( press.cr == start_position )
+        {
+            std::vector<thc::Move> moves;
+            std::vector<MoveTree> &variation = tree.variations[0];
+            for( int i=0; i<variation.size(); i++ )
+            {
+                thc::Move mv = variation[i].game_move.move;
+                moves.push_back(mv);
+            }
+            blob = press.Compress( moves );
+        }
+        return blob;
     }
     virtual thc::ChessPosition &RefStartPosition() { return start_position; }
     

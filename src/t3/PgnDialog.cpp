@@ -54,7 +54,7 @@ BEGIN_EVENT_TABLE( PgnDialog, wxDialog )
 END_EVENT_TABLE()
 #endif
 
-void PgnDialog::AddExtraControls()
+wxSizer *PgnDialog::AddExtraControls()
 {
     // Edit game details
     wxButton* edit_game_details = new wxButton ( this, ID_PGN_DIALOG_GAME_DETAILS, wxT("Edit Game Details"),
@@ -110,6 +110,7 @@ void PgnDialog::AddExtraControls()
     wxButton* publish = new wxButton ( this, ID_PGN_DIALOG_PUBLISH, wxT("Publish"),
         wxDefaultPosition, wxDefaultSize, 0 );
     vsiz_panel_button1->Add(publish, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    return vsiz_panel_button1;
 }
 
 

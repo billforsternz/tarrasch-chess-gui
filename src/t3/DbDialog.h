@@ -73,7 +73,7 @@ public:
 
     // Overrides
     virtual void OnActivate();
-    virtual void AddExtraControls();
+    virtual wxSizer *AddExtraControls();
     virtual void ReadItem( int item, CompactGame &info );
     virtual void OnListColClick( int compare_col );
     virtual void OnSaveAllToAFile();
@@ -103,7 +103,6 @@ public:
 private:
     
     std::map< uint32_t, MOVE_STATS > stats; // map each move in the position to move stats
-    bool clipboard_db;          // fixme temp
     bool white_player_search;
     std::unordered_set<int>   games_set;    // game_ids for all games in memory
     std::unordered_set<uint64_t> drill_down_set;  // positions already encountered drilling down
