@@ -914,7 +914,6 @@ void GameLogic::CmdFileCurrent()
     atom.StatusUpdate();
 }
 
-bool gbl_db_clipboard=true;
 void GameLogic::CmdFileDatabase()
 {
     Atomic begin;
@@ -934,7 +933,6 @@ void GameLogic::CmdFileDatabase()
         wxSize sz = objs.frame->GetSize();
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
-        extern bool gbl_db_clipboard;
         DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard, ID_PGN_DIALOG_DATABASE, pt, sz );
         if( dialog.ShowModalOk("Database games") )
         {

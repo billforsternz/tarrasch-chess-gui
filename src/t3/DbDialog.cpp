@@ -164,8 +164,7 @@ void DbDialog::OnActivate()
         wxSize sz_button = utility->GetSize();
         wxPoint pos_button = utility->GetPosition();
         //utility->SetPosition( pos_button );
-        extern bool gbl_db_clipboard;
-        if( gbl_db_clipboard )
+        if( objs.gl->db_clipboard )
             StatsCalculate();        
         Goto(0); // list_ctrl->SetFocus();
     }
