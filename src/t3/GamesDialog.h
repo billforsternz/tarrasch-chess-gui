@@ -250,7 +250,7 @@ protected:
     bool activated_at_least_once;
 
 private:    //TODO - move more vars to private
-    bool init_position_specified;
+    bool db_search;
 public:
     bool transpo_activated;
     int nbr_games_in_list_ctrl;

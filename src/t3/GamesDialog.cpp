@@ -304,8 +304,8 @@ GamesDialog::GamesDialog
     this->style = style;
     this->gc = gc;
     this->gc_clipboard = gc_clipboard;
-    init_position_specified = (cr!=NULL);
-    if( init_position_specified )
+    db_search = (cr!=NULL);
+    if( cr )
         this->cr = *cr;
     single_line_cache_idx = -1;
     file_game_idx = -1;
@@ -379,19 +379,15 @@ void GamesDialog::CreateControls()
 
     // A friendly message
     char buf[200];
-    if( objs.gl->db_clipboard )
+    if( !db_search )
+    {
+        nbr_games_in_list_ctrl = gc->gds.size();
+        sprintf(buf,"%d games",nbr_games_in_list_ctrl);
+    }
+    else if( objs.gl->db_clipboard )
     {
         nbr_games_in_list_ctrl = 0;
         sprintf(buf,"Using clipboard as database" );
-    }
-    else if( !init_position_specified )
-    {
-        // FIXME FIXME FIXME
-        thc::ChessRules cr;
-        uint64_t hash = cr.Hash64Calculate();
-        objs.db->gbl_hash = hash;
-        nbr_games_in_list_ctrl = gc->gds.size();
-        sprintf(buf,"%d games in file",nbr_games_in_list_ctrl);
     }
     else
     {
