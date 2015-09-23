@@ -306,7 +306,10 @@ GamesDialog::GamesDialog
     this->gc_clipboard = gc_clipboard;
     db_search = (cr!=NULL);
     if( cr )
+    {
         this->cr = *cr;
+        this->cr_base = *cr;
+    }
     single_line_cache_idx = -1;
     file_game_idx = -1;
     nbr_games_in_list_ctrl = 0;
@@ -386,7 +389,7 @@ void GamesDialog::CreateControls()
     }
     else if( objs.gl->db_clipboard )
     {
-        nbr_games_in_list_ctrl = 0;
+        nbr_games_in_list_ctrl = gc_clipboard->gds.size();
         sprintf(buf,"Using clipboard as database" );
     }
     else
@@ -394,7 +397,6 @@ void GamesDialog::CreateControls()
         nbr_games_in_list_ctrl = objs.db->SetPosition( cr ); //gc->gds.size();
         sprintf(buf,"List of %d matching games from the database",nbr_games_in_list_ctrl);
     }
-    orig_nbr_games_in_list_ctrl = nbr_games_in_list_ctrl;
 
     title_ctrl = new wxStaticText( this, wxID_STATIC,
         buf, wxDefaultPosition, wxDefaultSize, 0 );

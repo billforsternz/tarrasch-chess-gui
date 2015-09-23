@@ -725,24 +725,28 @@ void DbDialog::OnCheckBox2( bool checked )
 
 void DbDialog::OnCheckBox( bool checked )
 {
-    // Clear the base position
-    thc::ChessRules cr;
-    this->cr = cr;
-    moves_from_base_position.clear();
-        
-    // No need to look for more games in database in base position
     objs.gl->db_clipboard = checked;
-        
-    if( objs.gl->db_clipboard || displayed_games.size()>0 )
-        StatsCalculate();
-    else
+
+    // Clear back to the base position
+    this->cr = cr_base;
+    moves_from_base_position.clear();
+    displayed_games.clear();
+    drill_down_set.clear();
+    if( objs.gl->db_clipboard )
     {
-        nbr_games_in_list_ctrl = orig_nbr_games_in_list_ctrl;
-        dirty = true;
-        list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
-        list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
+        nbr_games_in_list_ctrl = gc_clipboard->gds.size();
     }
-    Goto(0);
+    else   // TODO need special handling for initial position
+    {
+        nbr_games_in_list_ctrl = objs.db->SetPosition( cr );
+        
+        // We have shown stats while db_clipboard was true. So to avoid going back to
+        //  situation where stats must be requested, unconditionally load games into
+        //  memory (Calculate Stats button loads games into memory)
+        gc->gds.clear();
+        LoadGamesIntoMemory();
+    }
+    StatsCalculate();
 }
 
 
