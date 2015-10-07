@@ -35,6 +35,7 @@ public:
     std::string eco;
     std::string white_elo;
     std::string black_elo;
+    std::string fen;
 };
 
 class GameDocument;
