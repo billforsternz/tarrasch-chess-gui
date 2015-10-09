@@ -18,9 +18,9 @@ private:
 public:
     bool Empty() { return fields.size() == 0; }
     void Pack( CompactGame &pact );
-    void Pack( Roster &r, std::string &moves );
+    void Pack( Roster &r, std::string &blob );
     void Unpack( CompactGame &pact );
-    void Unpack( Roster &r, std::string &moves );
+    void Unpack( Roster &r, std::string &blob );
 };
 
 #endif // PACKED_GAME_H

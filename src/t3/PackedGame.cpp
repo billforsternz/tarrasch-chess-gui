@@ -5,14 +5,10 @@
  *  Copyright 2010-2015, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
 
+#include "CompressMoves.h"
 #include "PackedGame.h"
 
-void PackedGame::Pack( CompactGame &pact )
-{
-    
-}
-
-void PackedGame::Pack( Roster &r, std::string &moves )
+void PackedGame::Pack( Roster &r, std::string &blob )
 {
     fields.clear();
     for( int i=0; i<11; i++ )
@@ -31,7 +27,7 @@ void PackedGame::Pack( Roster &r, std::string &moves )
             case 7: s = r.eco;          break;
             case 8: s = r.white_elo;    break;
             case 9: s = r.black_elo;    break;
-            case 10: s = moves;         break;
+            case 10: s = blob;          break;
         }
         unsigned int len = s.length();
         if( len < 255 )
@@ -60,12 +56,22 @@ void PackedGame::Pack( Roster &r, std::string &moves )
     }
 }
 
-void PackedGame::Unpack( CompactGame &pact )
+void PackedGame::Pack( CompactGame &pact )
 {
-    
+    CompressMoves press( pact.GetStartPosition() );
+    std::string blob = press.Compress( pact.moves );
+    Pack( pact.r, blob );
 }
 
-void PackedGame::Unpack( Roster &r, std::string &moves )
+void PackedGame::Unpack( CompactGame &pact )
+{
+    std::string blob;
+    Unpack( pact.r, blob );
+    CompressMoves press( pact.GetStartPosition() );
+    pact.moves = press.Uncompress( blob );
+}
+
+void PackedGame::Unpack( Roster &r, std::string &blob )
 {
     int idx=0;
     for( int i=0; i<11; i++ )
@@ -102,7 +108,7 @@ void PackedGame::Unpack( Roster &r, std::string &moves )
                 case 7: r.eco = s;          break;
                 case 8: r.white_elo = s;    break;
                 case 9: r.black_elo = s;    break;
-                case 10: moves = s;         break;
+                case 10: blob = s;          break;
             }
             idx += len;
         }

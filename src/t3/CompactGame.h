@@ -11,15 +11,6 @@
 #include <vector>
 #include <memory>
 #include "thc.h"
-#include "DebugPrintf.h"
-#include "MoveTree.h"
-#include "NavigationKey.h"
-#include "GameView.h"
-#include "GameLifecycle.h"
-#include "CompressMoves.h"
-
-#define smart_ptr std::shared_ptr //std::unique_ptr
-#define make_smart_ptr(T,to,from) smart_ptr<T> to; to.reset(new T(from))
 
 class Roster
 {
@@ -38,7 +29,6 @@ public:
 };
 
 class GameDocument;
-class DB_GAME_INFO;
 
 class CompactGame
 {
@@ -55,16 +45,13 @@ public:
     std::string Description();
     void Upscale( GameDocument &gd );       // to GameDocument
     void Downscale( GameDocument &gd );     // from GameDocument
-    bool HaveStartPosition() {
-        bool is_initial_position = ( 0 == strcmp(start_position.squares,"rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR")
-                                    ) && start_position.white;
-        return !is_initial_position; }
-    thc::ChessPosition &GetStartPosition() { return start_position; }
+    bool HaveStartPosition() { return (r.fen.length() > 0 ); }
+    thc::ChessPosition &GetStartPosition() { if( r.fen.length()>0 ) start_position.Forsyth(r.fen.c_str()); return start_position; }
     
     // Return index into vector where start position found
     bool FindPositionInGame( uint64_t hash_to_match, int &idx )
     {
-        thc::ChessRules cr = start_position;
+        thc::ChessRules cr = GetStartPosition();
         size_t len = moves.size();
         uint64_t hash = cr.Hash64Calculate();
         bool found = (hash==hash_to_match);

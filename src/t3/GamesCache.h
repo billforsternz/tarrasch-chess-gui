@@ -6,10 +6,9 @@
  ****************************************************************************/
 #ifndef GAMES_CACHE_H
 #define GAMES_CACHE_H
+#include <time.h> // time_t
 #include "GameDocument.h"
 #include "CompressMoves.h"
-#include <time.h> // time_t
-
 
 class DB_GAME_INFO : public MagicBase
 {
@@ -53,11 +52,11 @@ class PgnDocument : public MagicBase
 private:
     int  pgn_handle;
     long fposn;
-    bool in_memory;
-    Roster roster;
-    std::string blob;
+    //bool in_memory;
+    //Roster roster;
+    //std::string blob;
 public:
-    PgnDocument( int pgn_handle, long fposn ) { this->pgn_handle=pgn_handle, this->fposn = fposn; in_memory=false; }
+    PgnDocument( int pgn_handle, long fposn ) { this->pgn_handle=pgn_handle, this->fposn = fposn; /*in_memory=false;*/ }
 	virtual GameDocument  *GetGameDocumentPtr()
     {
         static GameDocument  the_game;
@@ -91,19 +90,16 @@ public:
         GameDocument the_game;
         ReadGameFromPgn( pgn_handle, fposn, the_game );
         std::vector<MoveTree> &variation = the_game.tree.variations[0];
-        CompressMoves press;
+        CompressMoves press( the_game.start_position );
         static std::string blob;
         blob.clear();
-        if( press.cr == the_game.start_position )
+        std::vector<thc::Move> moves;
+        for( int i=0; i<variation.size(); i++ )
         {
-            std::vector<thc::Move> moves;
-            for( int i=0; i<variation.size(); i++ )
-            {
-                thc::Move mv = variation[i].game_move.move;
-                moves.push_back(mv);
-            }
-            blob = press.Compress( moves );
+            thc::Move mv = variation[i].game_move.move;
+            moves.push_back(mv);
         }
+        blob = press.Compress( moves );
         return blob;
     }
     virtual thc::ChessPosition &RefStartPosition()
