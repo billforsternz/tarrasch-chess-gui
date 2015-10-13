@@ -25,4 +25,4 @@ Test plan
         - I noticed that if opening a .pgn but cancelling without loading a game, the .pgn is allegedly open
         - If clipboard is temp database when you do a database search, unchecking should do a brand new db search (it doesn't)
     )
- 
+14) Create game and save to existing file with one game - on Mac end of first game is garbled? if first game was created on PC? 

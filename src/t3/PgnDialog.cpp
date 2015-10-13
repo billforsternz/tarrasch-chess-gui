@@ -122,6 +122,14 @@ void PgnDialog::GetCachedDocumentRaw( int idx, GameDocument &gd )
 
 GameDocument * PgnDialog::GetCachedDocument( int idx )
 {
+#if 1
+    static GameDocument gd;
+    CompactGame pact;
+    smart_ptr<MagicBase> &mb = gc->gds[idx];
+    mb->GetCompactGame(pact);
+    pact.Upscale( gd );
+    return &gd;
+#else
     if( 0 != local_cache.count(idx) )
     {
         cprintf( "PgnDialog cache hit, idx %d\n", idx );
@@ -162,6 +170,7 @@ GameDocument * PgnDialog::GetCachedDocument( int idx )
         }
     }
     return &local_cache.at(idx);
+#endif
 }
 
 void PgnDialog::ReadItem( int item, CompactGame &info )

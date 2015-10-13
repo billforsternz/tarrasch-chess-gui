@@ -4,7 +4,7 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2015, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-
+#define _CRT_SECURE_NO_DEPRECATE
 #include "CompressMoves.h"
 #include "PackedGame.h"
 
@@ -33,6 +33,7 @@ void PackedGame::Pack( Roster &r, std::string &blob )
         if( len < 255 )
         {
             unsigned char c = static_cast<unsigned char>(len);
+            fields.push_back(c);
         }
         else if( len < 65535 )
         {
@@ -84,7 +85,7 @@ void PackedGame::Unpack( Roster &r, std::string &blob )
         {
             len = static_cast<unsigned int>(c);
         }
-        else if( len < 65535 )
+        else
         {
             unsigned char d = fields[idx++];
             unsigned char e = fields[idx++];

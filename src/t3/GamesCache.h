@@ -8,6 +8,7 @@
 #define GAMES_CACHE_H
 #include <time.h> // time_t
 #include "GameDocument.h"
+#include "PackedGame.h"
 #include "CompressMoves.h"
 
 class DB_GAME_INFO : public MagicBase
@@ -55,8 +56,23 @@ private:
     //bool in_memory;
     //Roster roster;
     //std::string blob;
+    PackedGame pack;
 public:
     PgnDocument( int pgn_handle, long fposn ) { this->pgn_handle=pgn_handle, this->fposn = fposn; /*in_memory=false;*/ }
+
+    virtual void GetCompactGame( CompactGame &pact )
+    {
+        if( !pack.Empty() )
+            pack.Unpack(pact);
+        else
+        {
+            GameDocument the_game;
+            ReadGameFromPgn( pgn_handle, fposn, the_game );
+            pact.Downscale( the_game );
+            pack.Pack(pact);
+        }
+    }
+    
 	virtual GameDocument  *GetGameDocumentPtr()
     {
         static GameDocument  the_game;
@@ -67,46 +83,31 @@ public:
     virtual long GetFposn() { return fposn; }
     virtual Roster &RefRoster()
     {
-        static GameDocument  the_game;
-        ReadGameFromPgn( pgn_handle, fposn, the_game );
-        return the_game.r;
+        static CompactGame pact;
+        GetCompactGame( pact );
+        return pact.r;
     }
     virtual std::vector<thc::Move> &RefMoves()
     {
-        static GameDocument  the_game;
-        ReadGameFromPgn( pgn_handle, fposn, the_game );
-        static std::vector<thc::Move> moves;
-        moves.clear();
-        std::vector<MoveTree> &variation = the_game.tree.variations[0];
-        for( int i=0; i<variation.size(); i++ )
-        {
-            thc::Move mv = variation[i].game_move.move;
-            moves.push_back(mv);
-        }
-        return moves;
+        static CompactGame pact;
+        GetCompactGame( pact );
+        return pact.moves;
     }
     virtual std::string &RefCompressedMoves()
     {
-        GameDocument the_game;
-        ReadGameFromPgn( pgn_handle, fposn, the_game );
-        std::vector<MoveTree> &variation = the_game.tree.variations[0];
-        CompressMoves press( the_game.start_position );
+        static CompactGame pact;
+        GetCompactGame( pact );
+        CompressMoves press( pact.start_position );
         static std::string blob;
         blob.clear();
-        std::vector<thc::Move> moves;
-        for( int i=0; i<variation.size(); i++ )
-        {
-            thc::Move mv = variation[i].game_move.move;
-            moves.push_back(mv);
-        }
-        blob = press.Compress( moves );
+        blob = press.Compress( pact.moves );
         return blob;
     }
     virtual thc::ChessPosition &RefStartPosition()
     {
-        static GameDocument  the_game;
-        ReadGameFromPgn( pgn_handle, fposn, the_game );
-        return the_game.start_position;
+        static CompactGame pact;
+        GetCompactGame( pact );
+        return pact.start_position;
     }
     
 };

@@ -1034,6 +1034,7 @@
     <ClInclude Include="src\t3\DbPrimitives.h" />
     <ClInclude Include="src\t3\DebugPrintf.h" />
     <ClInclude Include="src\t3\EngineDialog.h" />
+    <ClInclude Include="src\t3\GameBase.h" />
     <ClInclude Include="src\t3\GameClock.h" />
     <ClInclude Include="src\t3\GameClockHalf.h" />
     <ClInclude Include="src\t3\GameDetails.h" />
@@ -1057,6 +1058,7 @@
     <ClInclude Include="src\t3\MoveTree.h" />
     <ClInclude Include="src\t3\NavigationKey.h" />
     <ClInclude Include="src\t3\Objects.h" />
+    <ClInclude Include="src\t3\PackedGame.h" />
     <ClInclude Include="src\t3\PgnDialog.h" />
     <ClInclude Include="src\t3\PgnFiles.h" />
     <ClInclude Include="src\t3\PgnRead.h" />
@@ -1116,6 +1118,7 @@
     <ClCompile Include="src\t3\MaintenanceDialog.cpp" />
     <ClCompile Include="src\t3\MiniBoard.cpp" />
     <ClCompile Include="src\t3\MoveTree.cpp" />
+    <ClCompile Include="src\t3\PackedGame.cpp" />
     <ClCompile Include="src\t3\PgnDialog.cpp" />
     <ClCompile Include="src\t3\PgnFiles.cpp" />
     <ClCompile Include="src\t3\PgnRead.cpp" />
