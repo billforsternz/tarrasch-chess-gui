@@ -175,73 +175,41 @@ void DbDialog::OnActivate()
 // Read game information from games or database
 void DbDialog::ReadItem( int item, CompactGame &pact )
 {
-    DB_GAME_INFO info;
-    bool in_memory = ReadItemFromMemory( item, info );
+    bool in_memory = ReadItemFromMemory( item, pact );
     if( !in_memory )
     {
-        objs.db->GetRow( &info, item );
-        info.transpo_nbr = 0;
+        objs.db->GetRow( item, &pact );
+        pact.transpo_nbr = 0;
     }
-    info.GetCompactGame( pact );
 }
 
-bool DbDialog::ReadItemFromMemory( int item, DB_GAME_INFO &info )
+bool DbDialog::ReadItemFromMemory( int item, CompactGame &pact )
 {
     bool in_memory = false;
-    info.transpo_nbr = 0;
+    pact.transpo_nbr = 0;
     int nbr_games = displayed_games.size();
     if( 0<=item && item<nbr_games )
     {
         in_memory = true;
-        info = *displayed_games[nbr_games-1-item]->GetDbGameInfoPtr();
-        info.transpo_nbr = 0;
-        //cprintf( "ReadItemFromMemory(%d), white=%s\n", item, info.white.c_str() );
-        //if( info.move_txt.length() == 0 )
+        displayed_games[nbr_games-1-item]->GetCompactGame(pact);
+        if( transpo_activated && transpositions.size() > 1 )
         {
-            //info.db_calculate_move_txt( objs.db->gbl_hash );
-            if( transpo_activated && transpositions.size() > 1 )
+            for( unsigned int j=0; j<transpositions.size(); j++ )
             {
-                for( unsigned int j=0; j<transpositions.size(); j++ )
+                std::string &this_one = transpositions[j].blob;
+                const char *p = this_one.c_str();
+                size_t len = this_one.length();
+                std::string str_blob = displayed_games[nbr_games-1-item]->RefCompressedMoves();
+                if( str_blob.length()>=len && 0 == memcmp(p,str_blob.c_str(),len) )
                 {
-                    std::string &this_one = transpositions[j].blob;
-                    const char *p = this_one.c_str();
-                    size_t len = this_one.length();
-                    if( info.str_blob.length()>=len && 0 == memcmp(p,info.str_blob.c_str(),len) )
-                    {
-                        info.transpo_nbr = j+1;
-                        break;
-                    }
+                    pact.transpo_nbr = j+1;
+                    break;
                 }
             }
         }
     }
     return in_memory;
 }
-
-static bool DebugIsTarget( const DB_GAME_INFO &info )
-{
-    bool match = (info.str_blob == "\xc3\xa3\x93\xa0\xb3\xc1\x10\xb3\xc1\x54\x81\xd1\x80\x51\xa1\x54\x5b\xd0\x10\x15\x66\x26\xd3\x02\x01\x24\x6d\x25\x6c\x7c\x1d\x6b\x23\x81\x2c\x3a\x34\x45\xe1\x73\x23\xf1\x20\x64\x31\x7a\x3e\x61\xf3\x0f\x35\x91\x06\x81\xf1\xe3\xf2\x08\x47\x47\xe1\x2c\x06\x64\xd1\x73\x0e\x81\x4a\xc2\x48\x6e\x77");
-    return match;
-}
-
-static void DebugDumpBlob( const char *msg, const DB_GAME_INFO &info )
-{
-    char buf[2000];
-    char *p = buf;
-    for( int i=0; i<info.str_blob.length(); i++ )
-    {
-        char c = info.str_blob[i];
-        unsigned u = (unsigned)c;
-        u &= 0xff;
-        if( i == 0 )
-            sprintf( p, "%02x", u );
-        else
-            sprintf( p, " %02x", u );
-        p = strchr(p,'\0');
-    }
-    cprintf( "%s [%s]\n", msg, buf );
-}
-
 
 // DbDialog constructors
 DbDialog::DbDialog
@@ -372,17 +340,17 @@ void DbDialog::SmartCompare()
     unsigned int sz = displayed_games.size();
     for( unsigned int i=0; i<sz; i++ )
     {
-        DB_GAME_INFO &g = *displayed_games[i]->GetDbGameInfoPtr();
+        std::string str_blob = displayed_games[i]->RefCompressedMoves();
         TempElement e;
         unsigned int sz2 = transpositions.size();
         for( unsigned int j=0; j<sz2; j++ )
         {
             PATH_TO_POSITION *ptp = &transpositions[j];
             unsigned int offset = ptp->blob.length();
-            if( 0 == memcmp( ptp->blob.c_str(), g.str_blob.c_str(), offset ) )
+            if( 0 == memcmp( ptp->blob.c_str(), str_blob.c_str(), offset ) )
             {
                 e.idx = i;
-                e.blob = g.str_blob.substr(offset);
+                e.blob = str_blob.substr(offset);
                 e.counts.resize( e.blob.length() );
                 e.transpo = transpo_activated ? j+1 : 0;
                 inter.push_back(e);
@@ -765,9 +733,9 @@ void DbDialog::LoadGamesIntoMemory()
     games_set.clear();
     for( unsigned int i=0; i<gc->gds.size(); i++ )
     {
-        DB_GAME_INFO *p = gc->gds[i]->GetDbGameInfoPtr();
-        if( p )
-            games_set.insert( p->game_id );
+        int game_id = gc->gds[i]->GetGameId();
+        if( game_id )
+            games_set.insert( game_id );
     }
 }
 
@@ -919,9 +887,7 @@ void DbDialog::StatsCalculate()
                 bool draw       = (r.result=="1/2-1/2");
                 if( draw )
                     total_draws++;
-                DB_GAME_INFO temp;
-                temp.r = r;
-                temp.str_blob = blob;
+                DB_GAME_INFO temp(0,r,blob);
                 make_smart_ptr( DB_GAME_INFO, smptr, temp );
                 displayed_games.push_back(smptr);
                 PATH_TO_POSITION *p = &transpositions[found_idx];

@@ -733,15 +733,13 @@ void GameLogic::CmdNextGame()
         {
             Atomic begin;
             bool editing_log = objs.gl->EditingLog();
-            static DB_GAME_INFO info;
+            static CompactGame pact;
             int idx = objs.db->GetCurrent();
-            objs.db->GetRow(&info, idx+1 );
+            objs.db->GetRow(idx+1,&pact);
             GameDocument gd_temp;
             std::vector<thc::Move> moves;
-            gd_temp.r = info.r;
-            CompressMoves press;
-            moves = press.Uncompress(info.str_blob);
-            gd_temp.LoadFromMoveList(moves);
+            gd_temp.r = pact.r;
+            gd_temp.LoadFromMoveList(pact.moves);
             PutBackDocument();
             objs.log->SaveGame(&gd,editing_log);
             objs.session->SaveGame(&gd);
@@ -768,15 +766,13 @@ void GameLogic::CmdPreviousGame()
         {
             Atomic begin;
             bool editing_log = objs.gl->EditingLog();
-            static DB_GAME_INFO info;
+            static CompactGame pact;
             int idx = objs.db->GetCurrent();
-            objs.db->GetRow( &info, idx-1 );
+            objs.db->GetRow( idx-1, &pact );
             GameDocument gd_temp;
             std::vector<thc::Move> moves;
-            gd_temp.r = info.r;
-            CompressMoves press;
-            moves = press.Uncompress(info.str_blob);
-            gd_temp.LoadFromMoveList(moves);
+            gd_temp.r = pact.r;
+            gd_temp.LoadFromMoveList(pact.moves);
             PutBackDocument();
             objs.log->SaveGame(&gd,editing_log);
             objs.session->SaveGame(&gd);

@@ -8,13 +8,16 @@
 #define GAMES_CACHE_H
 #include <time.h> // time_t
 #include "GameDocument.h"
+#include "CompactGame.h"
 #include "PackedGame.h"
 #include "CompressMoves.h"
 
 class DB_GAME_INFO : public MagicBase
 {
 public:
-    virtual DB_GAME_INFO  *GetDbGameInfoPtr()  { return this; }
+    DB_GAME_INFO( int game_id, Roster &r, std::string str_blob ) { this->game_id=game_id; this->r=r; this->str_blob=str_blob; }
+
+    virtual int GetGameId()  { return game_id; }
 	virtual GameDocument  *GetGameDocumentPtr()
     {
         static GameDocument  the_game;
@@ -53,9 +56,6 @@ class PgnDocument : public MagicBase
 private:
     int  pgn_handle;
     long fposn;
-    //bool in_memory;
-    //Roster roster;
-    //std::string blob;
     PackedGame pack;
 public:
     PgnDocument( int pgn_handle, long fposn ) { this->pgn_handle=pgn_handle, this->fposn = fposn; /*in_memory=false;*/ }
