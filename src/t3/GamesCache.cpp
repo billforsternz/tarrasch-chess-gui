@@ -364,7 +364,10 @@ bool GamesCache::Tagline( GameDocument &gd,  const char *s )
             if( tag == "BlackElo" )
                 gd.r.black_elo = val;
             if( tag == "FEN" )
+            {
+                gd.r.fen = val;
                 gd.start_position.Forsyth(val.c_str());
+            }
         }
     }
     return is_header;

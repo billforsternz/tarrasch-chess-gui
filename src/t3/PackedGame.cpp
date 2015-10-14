@@ -11,7 +11,7 @@
 void PackedGame::Pack( Roster &r, std::string &blob )
 {
     fields.clear();
-    for( int i=0; i<11; i++ )
+    for( int i=0; i<12; i++ )
     {
         std::string s;
         bool bad=false;
@@ -27,7 +27,8 @@ void PackedGame::Pack( Roster &r, std::string &blob )
             case 7: s = r.eco;          break;
             case 8: s = r.white_elo;    break;
             case 9: s = r.black_elo;    break;
-            case 10: s = blob;          break;
+            case 10: s = r.fen;         break;
+            case 11: s = blob;          break;
         }
         unsigned int len = s.length();
         if( len < 255 )
@@ -75,7 +76,7 @@ void PackedGame::Unpack( CompactGame &pact )
 void PackedGame::Unpack( Roster &r, std::string &blob )
 {
     int idx=0;
-    for( int i=0; i<11; i++ )
+    for( int i=0; i<12; i++ )
     {
         std::string s;
         bool bad=false;
@@ -109,7 +110,8 @@ void PackedGame::Unpack( Roster &r, std::string &blob )
                 case 7: r.eco = s;          break;
                 case 8: r.white_elo = s;    break;
                 case 9: r.black_elo = s;    break;
-                case 10: blob = s;          break;
+                case 10: r.fen = s;         break;
+                case 11: blob = s;          break;
             }
             idx += len;
         }
