@@ -17,18 +17,18 @@ void PackedGame::Pack( Roster &r, std::string &blob )
         bool bad=false;
         switch(i)
         {
-            case 0: s = r.white;        break;
-            case 1: s = r.black;        break;
-            case 2: s = r.event;        break;
-            case 3: s = r.site;         break;
-            case 4: s = r.result;       break;
-            case 5: s = r.round;        break;
-            case 6: s = r.date;         break;
-            case 7: s = r.eco;          break;
-            case 8: s = r.white_elo;    break;
-            case 9: s = r.black_elo;    break;
-            case 10: s = r.fen;         break;
-            case 11: s = blob;          break;
+            case 0: s = blob;           break;
+            case 1: s = r.white;        break;
+            case 2: s = r.black;        break;
+            case 3: s = r.event;        break;
+            case 4: s = r.site;         break;
+            case 5: s = r.result;       break;
+            case 6: s = r.round;        break;
+            case 7: s = r.date;         break;
+            case 8: s = r.eco;          break;
+            case 9: s = r.white_elo;    break;
+            case 10: s = r.black_elo;   break;
+            case 11: s = r.fen;         break;
         }
         unsigned int len = s.length();
         if( len < 255 )
@@ -73,7 +73,36 @@ void PackedGame::Unpack( CompactGame &pact )
     pact.moves = press.Uncompress( blob );
 }
 
+
 void PackedGame::Unpack( Roster &r, std::string &blob )
+{
+    Unpack(blob);
+    Unpack(r);
+}
+
+void PackedGame::Unpack( std::string &blob )
+{
+    int idx=0;
+    bool bad=false;
+    unsigned char c = fields[idx++];
+    unsigned int len = 0;
+    if( c < 255 )
+    {
+        len = static_cast<unsigned int>(c);
+    }
+    else
+    {
+        unsigned char d = fields[idx++];
+        unsigned char e = fields[idx++];
+        if( d==255 && e==255 )
+            bad = true;
+        else
+            len = static_cast<unsigned int>(d) + 256*static_cast<unsigned int>(e);
+    }
+    blob = bad ? "" : fields.substr(idx,len);
+}
+
+void PackedGame::Unpack( Roster &r )
 {
     int idx=0;
     for( int i=0; i<12; i++ )
@@ -95,26 +124,25 @@ void PackedGame::Unpack( Roster &r, std::string &blob )
             else
                 len = static_cast<unsigned int>(d) + 256*static_cast<unsigned int>(e);
         }
-        if( !bad )
+        if( i > 0 )
         {
-            std::string s = fields.substr(idx,len);
+            std::string s = bad ? "" : fields.substr(idx,len);
             switch(i)
             {
-                case 0: r.white = s;        break;
-                case 1: r.black = s;        break;
-                case 2: r.event = s;        break;
-                case 3: r.site = s;         break;
-                case 4: r.result = s;       break;
-                case 5: r.round = s;        break;
-                case 6: r.date = s;         break;
-                case 7: r.eco = s;          break;
-                case 8: r.white_elo = s;    break;
-                case 9: r.black_elo = s;    break;
-                case 10: r.fen = s;         break;
-                case 11: blob = s;          break;
+                case 1: r.white = s;        break;
+                case 2: r.black = s;        break;
+                case 3: r.event = s;        break;
+                case 4: r.site = s;         break;
+                case 5: r.result = s;       break;
+                case 6: r.round = s;        break;
+                case 7: r.date = s;         break;
+                case 8: r.eco = s;          break;
+                case 9: r.white_elo = s;    break;
+                case 10: r.black_elo = s;   break;
+                case 11: r.fen = s;         break;
             }
-            idx += len;
         }
+        idx += len;
     }
 }
 

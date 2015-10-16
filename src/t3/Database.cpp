@@ -13,6 +13,7 @@
 #include "Portability.h"
 #include "DebugPrintf.h"
 #include "CompressMoves.h"
+#include "DbDocument.h"
 #include "DbPrimitives.h"
 #include "Database.h"
 #include "wx/msgout.h"
@@ -420,8 +421,8 @@ int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::ve
                         std::string temp(blob,len);
                         str_blob = temp;
                     }
-                    DB_GAME_INFO info( game_id, r, str_blob );
-                    make_smart_ptr( DB_GAME_INFO, new_info, info );
+                    DbDocument info( game_id, r, str_blob );
+                    make_smart_ptr( DbDocument, new_info, info );
                     games.push_back( std::move(new_info) );
                 }
             }
@@ -553,10 +554,10 @@ int Database::LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<MagicBas
                         std::string temp(blob,len);
                         str_blob = temp;
                     }
-                    DB_GAME_INFO info( game_id, r, str_blob );
-                    make_smart_ptr( DB_GAME_INFO, new_info, info );
+                    DbDocument info( game_id, r, str_blob );
+                    make_smart_ptr( DbDocument, new_info, info );
                     games.push_back( std::move(new_info) );
-                    games_set.insert(info.game_id);
+                    games_set.insert( info.GetGameId() );
                     if( nbr_new > 5 )
                     {
                         int estimated_total = (nbr_before * (nbr_new+nbr_already) ) / (nbr_already?nbr_already:1);
@@ -941,8 +942,8 @@ int Database::LoadAllGames( std::vector< smart_ptr<MagicBase> > &cache, int nbr_
                     }
                 }
             }
-            DB_GAME_INFO info( game_id, r, str_blob );
-            make_smart_ptr( DB_GAME_INFO, new_info, info );
+            DbDocument info( game_id, r, str_blob );
+            make_smart_ptr( DbDocument, new_info, info );
             cache.push_back( std::move(new_info) );
 
             int percent = (cache.size()*100) / (nbr_games?nbr_games:1);

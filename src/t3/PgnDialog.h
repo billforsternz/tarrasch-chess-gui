@@ -42,15 +42,15 @@ public:
     );
     
     // Overrides
-    virtual wxSizer *AddExtraControls();
-    virtual void GetButtonGridDimensions( int &row1, int &col1, int &row2, int &col2 ) { row1=8; col1=2; row2=0; col2=0; }
-    virtual void ReadItem( int item, CompactGame &info );
-    virtual void OnListColClick( int compare_col );
-    virtual void OnSaveAllToAFile();
-    virtual void OnHelpClick();
-    virtual void OnSearch();
-    virtual void OnUtility();
-    virtual void OnCancel();
+    virtual wxSizer *GdvAddExtraControls();
+    virtual void GdvGetButtonGridDimensions( int &row1, int &col1, int &row2, int &col2 ) { row1=8; col1=2; row2=0; col2=0; }
+    virtual void GdvReadItem( int item, CompactGame &info );
+    virtual void GdvListColClick( int compare_col );
+    virtual void GdvSaveAllToAFile();
+    virtual void GdvHelpClick();
+    virtual void GdvSearch();
+    virtual void GdvUtility();
+    virtual void GdvOnCancel();
     virtual void OnNextMove( int idx );
 
 

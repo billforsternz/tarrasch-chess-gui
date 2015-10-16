@@ -161,21 +161,21 @@ public:
     void Goto( int idx );
     void ReadItemWithSingleLineCache( int item, CompactGame &info );
 
-    // Overrides
-    virtual void OnActivate();
-    virtual wxSizer *AddExtraControls() { return NULL; }
-    virtual void GetButtonGridDimensions( int &row1, int &col1, int &row2, int &col2 ) { row1=8; col1=2; row2=0; col2=0; }
+    // Overrides - Gdv = Games Dialog Override
+    virtual void GdvOnActivate();
+    virtual wxSizer *GdvAddExtraControls() { return NULL; }
+    virtual void GdvGetButtonGridDimensions( int &row1, int &col1, int &row2, int &col2 ) { row1=8; col1=2; row2=0; col2=0; }
     bool dirty;
-    virtual bool TestAndClearIsCacheDirty() { bool was=dirty; dirty=false; return was; }
-    virtual void ReadItem( int item, CompactGame &info ) = 0;
-    virtual void OnCancel();
-    virtual void OnListColClick( int compare_col );
-    virtual void OnSaveAllToAFile();
-    virtual void OnHelpClick();
-    virtual void OnCheckBox( bool checked );
-    virtual void OnCheckBox2( bool checked );
-    virtual void OnSearch();
-    virtual void OnUtility();
+    virtual bool GdvTestAndClearIsCacheDirty() { bool was=dirty; dirty=false; return was; }
+    virtual void GdvReadItem( int item, CompactGame &info ) = 0;
+    virtual void GdvOnCancel();
+    virtual void GdvListColClick( int compare_col );
+    virtual void GdvSaveAllToAFile();
+    virtual void GdvHelpClick();
+    virtual void GdvCheckBox( bool checked );
+    virtual void GdvCheckBox2( bool checked );
+    virtual void GdvSearch();
+    virtual void GdvUtility();
     virtual void OnButton1();
     virtual void OnButton2();
     virtual void OnButton3();

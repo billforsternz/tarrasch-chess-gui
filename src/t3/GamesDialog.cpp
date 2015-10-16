@@ -543,7 +543,7 @@ void GamesDialog::CreateControls()
     hsiz_panel->Add(button_panel, 0, wxALIGN_TOP|wxALL, 10);
 
     int row1, col1, row2, col2;
-    GetButtonGridDimensions( row1, col1, row2, col2 );
+    GdvGetButtonGridDimensions( row1, col1, row2, col2 );
     if( row1>0 && col1>0 )
         vsiz_panel_button1 = new wxFlexGridSizer(row1,col1,0,0);
     else
@@ -582,7 +582,7 @@ void GamesDialog::CreateControls()
     box_sizer->Add(player_names, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxBOTTOM, 10);
     
     // Overridden by specialised classes
-    AddExtraControls();
+    GdvAddExtraControls();
 }
 
 
@@ -627,7 +627,7 @@ void GamesDialog::SetDialogHelp()
 void GamesDialog::OnListColClick( wxListEvent &event )
 {
     int compare_col = event.GetColumn();
-    OnListColClick( compare_col );
+    GdvListColClick( compare_col );
 }
 
 
@@ -740,7 +740,7 @@ static bool compare_counts( const TempElement &e1, const TempElement &e2 )
 
 
 // override
-void GamesDialog::OnListColClick( int compare_col )
+void GamesDialog::GdvListColClick( int compare_col )
 {
     if( gc->gds.size() > 0 )
     {
@@ -779,11 +779,11 @@ void GamesDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
 
 void GamesDialog::OnActivate(wxActivateEvent& event)
 {
-    OnActivate();
+    GdvOnActivate();
 }
 
 // override
-void GamesDialog::OnActivate()
+void GamesDialog::GdvOnActivate()
 {
     if( !activated_at_least_once )
     {
@@ -816,7 +816,7 @@ void GamesDialog::ReadItemWithSingleLineCache( int item, CompactGame &info )
 {
     //if( item==0 )
     //    cprintf( "** In ReadItemWithSingleLineCache(0)\n" );        
-    if( !TestAndClearIsCacheDirty() && (item==single_line_cache_idx) )
+    if( !GdvTestAndClearIsCacheDirty() && (item==single_line_cache_idx) )
     {
         //if( item==0 )
         //    cprintf( " single line cache\n" );        
@@ -826,7 +826,7 @@ void GamesDialog::ReadItemWithSingleLineCache( int item, CompactGame &info )
     {
         //if( item==0 )
         //    cprintf( " not single line cache\n" );        
-        ReadItem( item, info );
+        GdvReadItem( item, info );
         single_line_cache_idx = item;
         single_line_cache = info;
     }
@@ -886,55 +886,55 @@ void GamesDialog::OnOk()
 
 void GamesDialog::OnSaveAllToAFile( wxCommandEvent& WXUNUSED(event) )
 {
-    OnSaveAllToAFile();
+    GdvSaveAllToAFile();
 }
 
 // override
-void GamesDialog::OnSaveAllToAFile()
+void GamesDialog::GdvSaveAllToAFile()
 {
 }
 
 void GamesDialog::OnCancel( wxCommandEvent& WXUNUSED(event) )
 {
-    OnCancel();
+    GdvOnCancel();
     EndDialog( wxID_CANCEL );
 }
 
 // override
-void GamesDialog::OnCancel()
+void GamesDialog::GdvOnCancel()
 {
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_HELP
 void GamesDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
 {
-    OnHelpClick();
+    GdvHelpClick();
 }
 
 // overide
-void GamesDialog::OnHelpClick()
+void GamesDialog::GdvHelpClick()
 {
 }
 
 void GamesDialog::OnCheckBox( wxCommandEvent& event )
 {
     bool checked = event.IsChecked();
-    OnCheckBox( checked );
+    GdvCheckBox( checked );
 }
 
 // overide
-void GamesDialog::OnCheckBox( bool checked )
+void GamesDialog::GdvCheckBox( bool checked )
 {
 }
 
 void GamesDialog::OnCheckBox2( wxCommandEvent& event )
 {
     bool checked = event.IsChecked();
-    OnCheckBox2( checked );
+    GdvCheckBox2( checked );
 }
 
 // overide
-void GamesDialog::OnCheckBox2( bool checked )
+void GamesDialog::GdvCheckBox2( bool checked )
 {
 }
 
@@ -953,21 +953,21 @@ void GamesDialog::OnComboBox( wxCommandEvent& event )
 
 void GamesDialog::OnUtility( wxCommandEvent& WXUNUSED(event) )
 {
-    OnUtility();
+    GdvUtility();
 }
 
 // overide
-void GamesDialog::OnUtility()
+void GamesDialog::GdvUtility()
 {
 }
 
 void GamesDialog::OnSearch( wxCommandEvent& WXUNUSED(event) )
 {
-    OnSearch();
+    GdvSearch();
 }
 
 // overide
-void GamesDialog::OnSearch()
+void GamesDialog::GdvSearch()
 {
 }
 
@@ -1206,7 +1206,7 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
 
 
 #if 0
-void GamesDialog::OnSaveAllToAFile()
+void GamesDialog::GdvSaveAllToAFile()
 {
 /*    wxFileDialog fd( objs.frame, "Save all listed games to a new .pgn file", "", "", "*.pgn", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
     wxString dir = objs.repository->nv.m_doc_dir;

@@ -31,7 +31,7 @@ using namespace std;
 BEGIN_EVENT_TABLE( PgnDialog, wxDialog )
 //  EVT_CLOSE( PgnDialog::OnClose )
     EVT_BUTTON( wxID_OK,                PgnDialog::OnOkClick )
-    EVT_BUTTON( wxID_CANCEL,            PgnDialog::OnCancel )
+    EVT_BUTTON( wxID_CANCEL,            PgnDialog::GdvOnCancel )
     EVT_BUTTON( ID_BOARD2GAME,          PgnDialog::OnBoard2Game )
     EVT_CHECKBOX( ID_REORDER,           PgnDialog::OnRenumber )
     EVT_BUTTON( ID_ADD_TO_CLIPBOARD,    PgnDialog::OnAddToClipboard )
@@ -54,7 +54,7 @@ BEGIN_EVENT_TABLE( PgnDialog, wxDialog )
 END_EVENT_TABLE()
 #endif
 
-wxSizer *PgnDialog::AddExtraControls()
+wxSizer *PgnDialog::GdvAddExtraControls()
 {
     // Edit game details
     wxButton* edit_game_details = new wxButton ( this, ID_PGN_DIALOG_GAME_DETAILS, wxT("Edit Game Details"),
@@ -173,18 +173,18 @@ GameDocument * PgnDialog::GetCachedDocument( int idx )
 #endif
 }
 
-void PgnDialog::ReadItem( int item, CompactGame &info )
+void PgnDialog::GdvReadItem( int item, CompactGame &info )
 {
     GameDocument *ptr = GetCachedDocument(item);
     info.Downscale( *ptr );
 }
 
 
-void PgnDialog::OnSaveAllToAFile() {}
-void PgnDialog::OnHelpClick() {}
-void PgnDialog::OnSearch() {}
-void PgnDialog::OnUtility() {}
-void PgnDialog::OnCancel() {}
+void PgnDialog::GdvSaveAllToAFile() {}
+void PgnDialog::GdvHelpClick() {}
+void PgnDialog::GdvSearch() {}
+void PgnDialog::GdvUtility() {}
+void PgnDialog::GdvOnCancel() {}
 void PgnDialog::OnNextMove( int idx ) {}
 
 
@@ -493,11 +493,11 @@ int wxCALLBACK sort_callback( long item1, long item2, long col )
     } */
     
 
-void PgnDialog::OnListColClick( int compare_col )
+void PgnDialog::GdvListColClick( int compare_col )
 {
     local_cache.clear();
     stack.clear();
-    GamesDialog::OnListColClick( compare_col );
+    GamesDialog::GdvListColClick( compare_col );
 }
 
 /*
@@ -780,7 +780,7 @@ void PgnDialog::OnEditGamePrefix( wxCommandEvent& WXUNUSED(event) )
     }
 }
 
-void PgnDialog::OnSaveAllToAFile()
+void PgnDialog::GdvSaveAllToAFile()
 {
     wxFileDialog fd( objs.frame, "Save all listed games to a new .pgn file", "", "", "*.pgn", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
     wxString dir = objs.repository->nv.m_doc_dir;

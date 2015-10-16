@@ -38,7 +38,7 @@
 using namespace std;
 
 
-wxSizer *DbDialog::AddExtraControls()
+wxSizer *DbDialog::GdvAddExtraControls()
 {
     // Stats list box
     //    wxSize sz4 = sz;
@@ -131,15 +131,11 @@ wxSizer *DbDialog::AddExtraControls()
     return vsiz_panel_button1;   
 }
 
-void DbDialog::OnActivate()
+void DbDialog::GdvOnActivate()
 {
     if( !activated_at_least_once )
     {
         activated_at_least_once = true;
-        //cprintf( "GamesDialog::OnActivate\n");
-        //wxPoint pos = notebook->GetPosition();
-        //list_ctrl_stats->Hide();
-        //list_ctrl_transpo->Hide();
         
         wxPoint pos = ok_button->GetPosition();
         wxSize  sz  = ok_button->GetSize();
@@ -173,7 +169,7 @@ void DbDialog::OnActivate()
 
 
 // Read game information from games or database
-void DbDialog::ReadItem( int item, CompactGame &pact )
+void DbDialog::GdvReadItem( int item, CompactGame &pact )
 {
     bool in_memory = ReadItemFromMemory( item, pact );
     if( !in_memory )
@@ -231,62 +227,66 @@ DbDialog::DbDialog
 
 
 static DbDialog *backdoor;
-static bool compare( const smart_ptr<DB_GAME_INFO> g1, const smart_ptr<DB_GAME_INFO> g2 )
+static bool compare( const smart_ptr<DbDocument> g1, const smart_ptr<DbDocument> g2 )
 {
     bool lt=false;
+    Roster r1 = g1->RefRoster();
+    Roster r2 = g2->RefRoster();
     switch( backdoor->compare_col )
     {
-        case 1: lt = g1->r.white < g2->r.white;
+        case 1: lt = r1.white < r2.white;
                 break;
         case 2:
         {       
-                int elo_1 = atoi( g1->r.white_elo.c_str() );
-                int elo_2 = atoi( g2->r.white_elo.c_str() );
+                int elo_1 = atoi( r1.white_elo.c_str() );
+                int elo_2 = atoi( r2.white_elo.c_str() );
                 lt = elo_1 < elo_2;
                 break;
         }
-        case 3: lt = g1->r.black < g2->r.black;
+        case 3: lt = r1.black < r2.black;
                 break;
         case 4:
         {
-                int elo_1 = atoi( g1->r.black_elo.c_str() );
-                int elo_2 = atoi( g2->r.black_elo.c_str() );
+                int elo_1 = atoi( r1.black_elo.c_str() );
+                int elo_2 = atoi( r2.black_elo.c_str() );
                 lt = elo_1 < elo_2;
                 break;
         }
-        case 5: lt = g1->r.date < g2->r.date;
+        case 5: lt = r1.date < r2.date;
                 break;
-        case 6: lt = g1->r.site < g2->r.site;
+        case 6: lt = r1.site < r2.site;
                 break;
-        case 8: lt = g1->r.result < g2->r.result;
+        case 8: lt = r1.result < r2.result;
                 break;
     }
     return lt;
 }
         
 
-static bool rev_compare( const smart_ptr<DB_GAME_INFO> g1, const smart_ptr<DB_GAME_INFO> g2 )
+static bool rev_compare( const smart_ptr<DbDocument> g1, const smart_ptr<DbDocument> g2 )
 {
     bool lt=true;
+    Roster r1 = g1->RefRoster();
+    Roster r2 = g2->RefRoster();
     switch( backdoor->compare_col )
     {
-        case 1: lt = g1->r.white > g2->r.white;           break;
+        case 1: lt = r1.white > r2.white;           break;
         case 2:
-        {       int elo_1 = atoi( g1->r.white_elo.c_str() );
-                int elo_2 = atoi( g2->r.white_elo.c_str() );
+        {       int elo_1 = atoi( r1.white_elo.c_str() );
+                int elo_2 = atoi( r2.white_elo.c_str() );
                 lt = elo_1 > elo_2;
                 break;
         }
-        case 3: lt = g1->r.black > g2->r.black;           break;
+        case 3: lt = r1.black > r2.black;           break;
         case 4:
-        {       int elo_1 = atoi( g1->r.black_elo.c_str() );
-                int elo_2 = atoi( g2->r.black_elo.c_str() );
+        {       int elo_1 = atoi( r1.black_elo.c_str() );
+                int elo_2 = atoi( r2.black_elo.c_str() );
                 lt = elo_1 > elo_2;
                 break;
         }
-        case 5: lt = g1->r.date > g2->r.date;             break;
-        case 6: lt = g1->r.site > g2->r.site;             break;
-        case 8: lt = g1->r.result > g2->r.result;         break;
+        case 5: lt = r1.date > r2.date;             break;
+        case 6: lt = r1.site > r2.site;             break;
+        case 8: lt = r1.result > r2.result;         break;
     }
     return lt;
 }
@@ -432,7 +432,7 @@ void DbDialog::SmartCompare()
     std::sort( inter.begin(), inter.end(), compare_counts );
     
     // Step 4 build sorted version of games list
-    std::vector< smart_ptr<DB_GAME_INFO> > temp;
+    std::vector< smart_ptr<DbDocument> > temp;
     sz = inter.size();
     for( unsigned int i=0; i<sz; i++ )
     {
@@ -444,7 +444,7 @@ void DbDialog::SmartCompare()
     displayed_games = temp;
 }
 
-void DbDialog::OnListColClick( int compare_col )
+void DbDialog::GdvListColClick( int compare_col )
 {
     if( displayed_games.size() > 0 )
     {
@@ -474,7 +474,7 @@ void DbDialog::OnListColClick( int compare_col )
     }
 }
 
-void DbDialog::OnSearch()
+void DbDialog::GdvSearch()
 {
     wxString name = text_ctrl->GetValue();
     std::string sname(name.c_str());
@@ -506,7 +506,7 @@ void DbDialog::OnSearch()
 }
 
 
-void DbDialog::OnSaveAllToAFile()
+void DbDialog::GdvSaveAllToAFile()
 {
     wxFileDialog fd( objs.frame, "Save all listed games to a new .pgn file", "", "", "*.pgn", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
     wxString dir = objs.repository->nv.m_doc_dir;
@@ -524,7 +524,7 @@ void DbDialog::OnSaveAllToAFile()
 }
 
 
-void DbDialog::OnCancel()
+void DbDialog::GdvOnCancel()
 {
     gc->PrepareForResumePreviousWindow( list_ctrl->GetTopItem() );
     int sz=gc->gds.size();
@@ -538,7 +538,7 @@ void DbDialog::OnCancel()
     } */
 }
 
-void DbDialog::OnHelpClick()
+void DbDialog::GdvHelpClick()
 {
     // Normally we would wish to display proper online help.
     // For this example, we're just using a message box.
@@ -633,7 +633,7 @@ double AutoTimer::End()
     return elapsed_time;
 }
 
-void DbDialog::OnUtility()
+void DbDialog::GdvUtility()
 {
     LoadGamesIntoMemory();
     StatsCalculate();
@@ -676,7 +676,7 @@ void DbDialog::OnButton4()
     Goto( track->focus_idx );
 }
 
-void DbDialog::OnCheckBox2( bool checked )
+void DbDialog::GdvCheckBox2( bool checked )
 {
     white_player_search = checked;
     std::string s(text_ctrl->GetValue());
@@ -691,7 +691,7 @@ void DbDialog::OnCheckBox2( bool checked )
     Goto( track->focus_idx );
 }
 
-void DbDialog::OnCheckBox( bool checked )
+void DbDialog::GdvCheckBox( bool checked )
 {
     objs.gl->db_clipboard = checked;
 
@@ -887,8 +887,8 @@ void DbDialog::StatsCalculate()
                 bool draw       = (r.result=="1/2-1/2");
                 if( draw )
                     total_draws++;
-                DB_GAME_INFO temp(0,r,blob);
-                make_smart_ptr( DB_GAME_INFO, smptr, temp );
+                DbDocument temp(0,r,blob);
+                make_smart_ptr( DbDocument, smptr, temp );
                 displayed_games.push_back(smptr);
                 PATH_TO_POSITION *p = &transpositions[found_idx];
                 p->frequency++;
