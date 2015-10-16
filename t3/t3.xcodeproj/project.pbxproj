@@ -112,6 +112,8 @@
 		E6407D1B1A216AD8004E5634 /* GamesDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = GamesDialog.cpp; path = ../src/t3/GamesDialog.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		E6407D1C1A216AD8004E5634 /* GamesDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GamesDialog.h; path = ../src/t3/GamesDialog.h; sourceTree = "<group>"; };
 		E6440FCE1BC75CF20055C6F0 /* GameBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GameBase.h; path = ../src/t3/GameBase.h; sourceTree = "<group>"; };
+		E6440FCF1BD068AD0055C6F0 /* PgnDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PgnDocument.h; path = ../src/t3/PgnDocument.h; sourceTree = "<group>"; };
+		E6440FD01BD068AD0055C6F0 /* DbDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DbDocument.h; path = ../src/t3/DbDocument.h; sourceTree = "<group>"; };
 		E65C86F5183D9620008E1266 /* t3.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = t3.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E65C86F8183D9620008E1266 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		E65C86FB183D9620008E1266 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -360,6 +362,8 @@
 		E65C872C183D97AD008E1266 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				E6440FCF1BD068AD0055C6F0 /* PgnDocument.h */,
+				E6440FD01BD068AD0055C6F0 /* DbDocument.h */,
 				E6440FCE1BC75CF20055C6F0 /* GameBase.h */,
 				E65C872E183D97F9008E1266 /* Appdefs.h */,
 				E65C872F183D97F9008E1266 /* Atom.cpp */,
