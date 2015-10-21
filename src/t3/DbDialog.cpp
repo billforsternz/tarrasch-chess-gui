@@ -393,6 +393,66 @@ void DbDialog::SmartCompare()
     std::sort( inter.begin(), inter.end(), compare_blob );
     
     // Step 2, work out the nbr of moves in clumps of moves
+/*
+     // Imagine that the compressed one byte codes sort in the same order as multi-char ascii move
+     //  representations (they don't but the key thing is that they are deterministic - the actual order
+     //  doesn't matter)
+     A)  1.d4 Nf6 2.c4 e6 3.Nc3
+     B)  1.d4 Nf6 2.c4 e6 3.Nf3
+     C)  1.d4 Nf6 2.c4 e6 3.Nf3
+     D)  1.d4 d5 2.c4 e6 3.Nc3
+     E)  1.d4 d5 2.c4 e6 3.Nf3
+     F)  1.d4 d5 2.c4 e6 3.Nf3
+     G)  1.d4 d5 2.c4 c5 3.d5
+
+     // Calculate the counts like this
+              j=0 j=1 j=2 j=3 j=4
+     i=0  A)  7
+     i=1  B)  7
+     i=2  C)  7
+     i=3  D)  7      j=0 count 7 '1.d4's at offset 0 into each game 
+     i=4  E)  7
+     i=5  F)  7
+     i=6  G)  7
+
+              j=0 j=1 j=2 j=3 j=4
+     i=0  A)  7   3
+     i=1  B)  7   3
+     i=2  C)  7   3
+     i=3  D)  7   4    j=1 count 3 '1...Nf6's and 4 '1...d5's 
+     i=4  E)  7   4
+     i=5  F)  7   4
+     i=6  G)  7   4
+
+              j=0 j=1 j=2 j=3 j=4
+     i=0  A)  7   3   7   6   1
+     i=1  B)  7   3   7   6   2
+     i=2  C)  7   3   7   6   2     etc.
+     i=3  D)  7   4   7   6   1
+     i=4  E)  7   4   7   6   2
+     i=5  F)  7   4   7   6   2
+     i=6  G)  7   4   7   1   1
+
+     //  Now re-sort based on these counts, bigger counts come first
+     E)  7   4   7   6   2
+     F)  7   4   7   6   2
+     D)  7   4   7   6   1
+     G)  7   4   7   1   1
+     B)  7   3   7   6   2
+     C)  7   3   7   6   2 
+     A)  7   3   7   6   1
+
+     // So final ordering is according to line popularity
+     E)  1.d4 d5 2.c4 e6 3.Nf3
+     F)  1.d4 d5 2.c4 e6 3.Nf3
+     D)  1.d4 d5 2.c4 e6 3.Nc3
+     G)  1.d4 d5 2.c4 c5 3.d5
+     B)  1.d4 Nf6 2.c4 e6 3.Nf3
+     C)  1.d4 Nf6 2.c4 e6 3.Nf3
+     A)  1.d4 Nf6 2.c4 e6 3.Nc3
+*/
+
+
     sz = inter.size();
     bool at_least_one = true;
     for( unsigned int j=0; at_least_one; j++ )
