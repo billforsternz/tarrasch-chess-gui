@@ -79,7 +79,7 @@ BEGIN_EVENT_TABLE( GamesDialog, wxDialog )
 END_EVENT_TABLE()
 
 
-wxVirtualListCtrl::wxVirtualListCtrl( GamesDialog *parent, wxWindowID id, const wxPoint &pos, const wxSize &size, long style )
+GamesListCtrl::GamesListCtrl( GamesDialog *parent, wxWindowID id, const wxPoint &pos, const wxSize &size, long style )
     : wxListCtrl( (wxWindow *)parent, id, pos, size, wxLC_REPORT|wxLC_VIRTUAL )
 {
     this->parent = parent;
@@ -87,14 +87,11 @@ wxVirtualListCtrl::wxVirtualListCtrl( GamesDialog *parent, wxWindowID id, const 
 }
 
 // Focus changes to new item;
-void wxVirtualListCtrl::ReceiveFocus( int focus_idx )
+void GamesListCtrl::ReceiveFocus( int focus_idx )
 {
-    //cprintf( "ListCtrl::ReceiveFocus(%d)\n", focus_idx );
     if( focus_idx >= 0 )
     {
         track->focus_idx = focus_idx;
-        //if( focus_idx==0 ) 
-        //    cprintf( "** ReceiveFocus(0) calling ReadItemWithSingleLineCache\n" );
         parent->ReadItemWithSingleLineCache( focus_idx, track->info );
 
         int offset=0;
@@ -116,25 +113,25 @@ void wxVirtualListCtrl::ReceiveFocus( int focus_idx )
     }
 }
 
-std::string wxVirtualListCtrl::CalculateMoveTxt() const
+std::string GamesListCtrl::CalculateMoveTxt() const
 {
     std::string previous_move_not_needed;
     return CalculateMoveTxt(previous_move_not_needed,track->info,track->focus_offset,track->updated_position);
 }
 
-std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move ) const
+std::string GamesListCtrl::CalculateMoveTxt( std::string &previous_move ) const
 {
     return CalculateMoveTxt(previous_move,track->info,track->focus_offset,track->updated_position);
 }
 
-std::string wxVirtualListCtrl::CalculateMoveTxt( CompactGame &info, int offset ) const
+std::string GamesListCtrl::CalculateMoveTxt( CompactGame &info, int offset ) const
 {
     std::string previous_move_not_needed;
     thc::ChessPosition updated_position_not_needed;
     return CalculateMoveTxt(previous_move_not_needed,info,offset,updated_position_not_needed);
 }
 
-std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move, CompactGame &info, int focus_offset, thc::ChessPosition &updated_position ) const
+std::string GamesListCtrl::CalculateMoveTxt( std::string &previous_move, CompactGame &info, int focus_offset, thc::ChessPosition &updated_position ) const
 {
     bool position_updated = false;
     std::string move_txt;
@@ -189,13 +186,11 @@ std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move, Com
     return move_txt;
 }
     
-wxString wxVirtualListCtrl::OnGetItemText( long item, long column) const
+wxString GamesListCtrl::OnGetItemText( long item, long column) const
 {
     CompactGame info;
     std::string move_txt;
     const char *txt;
-    //if( item==0 && column==10 ) 
-    //    cprintf( "** OnGetItemText(0) calling ReadItemWithSingleLineCache\n" );
     parent->ReadItemWithSingleLineCache( item, info );
     switch( column )
     {
@@ -229,8 +224,6 @@ wxString wxVirtualListCtrl::OnGetItemText( long item, long column) const
                 move_txt = buf + move_txt;
             }
             txt = move_txt.c_str();
-            //if( item == 0 )
-            //    cprintf( "item 0, column 10: %s\n", txt );
             break;
         }
     }
@@ -240,11 +233,11 @@ wxString wxVirtualListCtrl::OnGetItemText( long item, long column) const
 
 
 // GamesDialog event table definition
-BEGIN_EVENT_TABLE( wxVirtualListCtrl, wxListCtrl )
-    EVT_CHAR(wxVirtualListCtrl::OnChar)
+BEGIN_EVENT_TABLE( GamesListCtrl, wxListCtrl )
+    EVT_CHAR(GamesListCtrl::OnChar)
 END_EVENT_TABLE()
 
-void wxVirtualListCtrl::OnChar( wxKeyEvent &event )
+void GamesListCtrl::OnChar( wxKeyEvent &event )
 {
     bool update = false;
     switch ( event.GetKeyCode() )
@@ -414,7 +407,7 @@ void GamesDialog::CreateControls()
         disp_height = 768;
     sz.x = (disp_width*90)/100;
     sz.y = (disp_height*36)/100;
-    list_ctrl  = new wxVirtualListCtrl( this, ID_PGN_LISTBOX, wxDefaultPosition, sz/*wxDefaultSize*/,wxLC_REPORT|wxLC_VIRTUAL );
+    list_ctrl  = new GamesListCtrl( this, ID_PGN_LISTBOX, wxDefaultPosition, sz/*wxDefaultSize*/,wxLC_REPORT|wxLC_VIRTUAL );
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
     if( nbr_games_in_list_ctrl > 0 )
     {
@@ -516,7 +509,7 @@ void GamesDialog::CreateControls()
     list_ctrl->SetColumnWidth(10, cols[10] );   // "Moves"
     gc->col_flags.push_back(col_flag);
     //int top_item;
-    //bool resuming = data_src->gc->IsResumingPreviousWindow(top_item);
+    //bool resuming = gc->IsResumingPreviousWindow(top_item);
     box_sizer->Add(list_ctrl, 0, wxGROW|wxALL, 5);
 
     // A dividing line before the details
@@ -814,24 +807,14 @@ void GamesDialog::Goto( int idx )
 
 void GamesDialog::ReadItemWithSingleLineCache( int item, CompactGame &info )
 {
-    //if( item==0 )
-    //    cprintf( "** In ReadItemWithSingleLineCache(0)\n" );        
     if( !GdvTestAndClearIsCacheDirty() && (item==single_line_cache_idx) )
-    {
-        //if( item==0 )
-        //    cprintf( " single line cache\n" );        
         info = single_line_cache;
-    }
     else
     {
-        //if( item==0 )
-        //    cprintf( " not single line cache\n" );        
         GdvReadItem( item, info );
         single_line_cache_idx = item;
         single_line_cache = info;
     }
-    //if( item==0 )
-    //    cprintf( " nbr moves=%d\n", info.str_blob.size() );        
 }
 
 void GamesDialog::LoadGame( int idx, int focus_offset )
@@ -973,42 +956,42 @@ void GamesDialog::GdvSearch()
 
 void GamesDialog::OnButton1( wxCommandEvent& WXUNUSED(event) )
 {
-    OnButton1();
+    GdvButton1();
 }
 
 // overide
-void GamesDialog::OnButton1()
+void GamesDialog::GdvButton1()
 {
 }
 
 void GamesDialog::OnButton2( wxCommandEvent& WXUNUSED(event) )
 {
-    OnButton2();
+    GdvButton2();
 }
 
 // overide
-void GamesDialog::OnButton2()
+void GamesDialog::GdvButton2()
 {
-    OnButton2();
+    GdvButton2();
 }
 
 void GamesDialog::OnButton3( wxCommandEvent& WXUNUSED(event) )
 {
-    OnButton3();
+    GdvButton3();
 }
 
 // overide
-void GamesDialog::OnButton3()
+void GamesDialog::GdvButton3()
 {
 }
 
 void GamesDialog::OnButton4( wxCommandEvent& WXUNUSED(event) )
 {
-    OnButton4();
+    GdvButton4();
 }
 
 // overide
-void GamesDialog::OnButton4()
+void GamesDialog::GdvButton4()
 {
 }
 
@@ -1029,12 +1012,12 @@ void GamesDialog::OnTabSelected( wxBookCtrlEvent& event )
 void GamesDialog::OnNextMove( wxCommandEvent &event )
 {
     int idx = event.GetSelection();
-    OnNextMove(idx);
+    GdvNextMove(idx);
 }
 
 
 // overide
-void GamesDialog::OnNextMove( int idx )
+void GamesDialog::GdvNextMove( int idx )
 {
 }
    

@@ -51,7 +51,7 @@ public:
     virtual void GdvSearch();
     virtual void GdvUtility();
     virtual void GdvOnCancel();
-    virtual void OnNextMove( int idx );
+    virtual void GdvNextMove( int idx );
 
 
     // Return true if a game has been selected

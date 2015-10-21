@@ -83,12 +83,12 @@ public:
     virtual void GdvCheckBox2( bool checked );
     virtual void GdvUtility();
     virtual void GdvSearch();
-    virtual void OnButton1();
-    virtual void OnButton2();
-    virtual void OnButton3();
-    virtual void OnButton4();
+    virtual void GdvButton1();
+    virtual void GdvButton2();
+    virtual void GdvButton3();
+    virtual void GdvButton4();
     virtual void GdvOnCancel();
-    virtual void OnNextMove( int idx );
+    virtual void GdvNextMove( int idx );
 
     // Helpers
     void LoadGamesIntoMemory();

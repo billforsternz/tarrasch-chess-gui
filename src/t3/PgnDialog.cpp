@@ -185,7 +185,7 @@ void PgnDialog::GdvHelpClick() {}
 void PgnDialog::GdvSearch() {}
 void PgnDialog::GdvUtility() {}
 void PgnDialog::GdvOnCancel() {}
-void PgnDialog::OnNextMove( int idx ) {}
+void PgnDialog::GdvNextMove( int idx ) {}
 
 
 

@@ -639,18 +639,18 @@ void DbDialog::GdvUtility()
     StatsCalculate();
 }
 
-void DbDialog::OnButton1()
+void DbDialog::GdvButton1()
 {
     objs.gl->gc_clipboard.gds.clear();
     Goto( track->focus_idx );
 }
 
-void DbDialog::OnButton2()
+void DbDialog::GdvButton2()
 {
     CopyOrAdd( false );
 }
 
-void DbDialog::OnButton3()
+void DbDialog::GdvButton3()
 {
     std::string player_name = white_player_search ? track->info.r.white : track->info.r.black;
     int nbr_loaded = objs.db->LoadGamesWithQuery( player_name, true, objs.gl->gc_clipboard.gds );
@@ -663,7 +663,7 @@ void DbDialog::OnButton3()
     Goto( track->focus_idx );
 }
 
-void DbDialog::OnButton4()
+void DbDialog::GdvButton4()
 {
     std::string player_name = white_player_search ? track->info.r.white : track->info.r.black;
     int nbr_loaded = objs.db->LoadGamesWithQuery( player_name, false, objs.gl->gc_clipboard.gds );
@@ -1046,7 +1046,7 @@ void DbDialog::StatsCalculate()
 }
 
 // One of the moves in move stats is clicked
-void DbDialog::OnNextMove( int idx )
+void DbDialog::GdvNextMove( int idx )
 {
     dirty = true;
     if( idx==0 && moves_from_base_position.size()>0 )
