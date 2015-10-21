@@ -21,6 +21,8 @@ public:
     void Pack( Roster &r, std::string &blob );
     void Unpack( CompactGame &pact );
     void Unpack( Roster &r, std::string &blob );
+    void Unpack( Roster &r );
+    void Unpack( std::string &blob );
 };
 
 #endif // PACKED_GAME_H

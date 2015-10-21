@@ -16,6 +16,7 @@
 #include "Repository.h"
 #include "MiniBoard.h"
 #include "CompressMoves.h"
+#include "DbDocument.h"
 #include "Database.h"
 #include "PgnDialog.h"
 #include "GamesDialog.h"
@@ -68,26 +69,26 @@ public:
 
     // We calculate a vector of all blobs in the games that leading to the search position
     std::vector< PATH_TO_POSITION > transpositions;
-    bool ReadItemFromMemory( int item, DB_GAME_INFO &info );
+    bool ReadItemFromMemory( int item, CompactGame &info );
     void SmartCompare();
 
-    // Overrides
-    virtual void OnActivate();
-    virtual wxSizer *AddExtraControls();
-    virtual void ReadItem( int item, CompactGame &info );
-    virtual void OnListColClick( int compare_col );
-    virtual void OnSaveAllToAFile();
-    virtual void OnHelpClick();
-    virtual void OnCheckBox( bool checked );
-    virtual void OnCheckBox2( bool checked );
-    virtual void OnUtility();
-    virtual void OnSearch();
-    virtual void OnButton1();
-    virtual void OnButton2();
-    virtual void OnButton3();
-    virtual void OnButton4();
-    virtual void OnCancel();
-    virtual void OnNextMove( int idx );
+    // Overrides - Gdv = Games Dialog Override
+    virtual void GdvOnActivate();
+    virtual wxSizer *GdvAddExtraControls();
+    virtual void GdvReadItem( int item, CompactGame &info );
+    virtual void GdvListColClick( int compare_col );
+    virtual void GdvSaveAllToAFile();
+    virtual void GdvHelpClick();
+    virtual void GdvCheckBox( bool checked );
+    virtual void GdvCheckBox2( bool checked );
+    virtual void GdvUtility();
+    virtual void GdvSearch();
+    virtual void GdvButton1();
+    virtual void GdvButton2();
+    virtual void GdvButton3();
+    virtual void GdvButton4();
+    virtual void GdvOnCancel();
+    virtual void GdvNextMove( int idx );
 
     // Helpers
     void LoadGamesIntoMemory();
@@ -108,7 +109,7 @@ private:
     std::unordered_set<uint64_t> drill_down_set;  // positions already encountered drilling down
     std::vector<thc::Move> moves_in_this_position;
     std::vector<thc::Move> moves_from_base_position;
-    std::vector< smart_ptr<DB_GAME_INFO> > displayed_games;
+    std::vector< smart_ptr<DbDocument> > displayed_games;
 };
 
 #endif    // DB_DIALOG_H

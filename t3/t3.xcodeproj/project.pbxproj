@@ -112,6 +112,8 @@
 		E6407D1B1A216AD8004E5634 /* GamesDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = GamesDialog.cpp; path = ../src/t3/GamesDialog.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		E6407D1C1A216AD8004E5634 /* GamesDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GamesDialog.h; path = ../src/t3/GamesDialog.h; sourceTree = "<group>"; };
 		E6440FCE1BC75CF20055C6F0 /* GameBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GameBase.h; path = ../src/t3/GameBase.h; sourceTree = "<group>"; };
+		E6440FCF1BD068AD0055C6F0 /* PgnDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PgnDocument.h; path = ../src/t3/PgnDocument.h; sourceTree = "<group>"; };
+		E6440FD01BD068AD0055C6F0 /* DbDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DbDocument.h; path = ../src/t3/DbDocument.h; sourceTree = "<group>"; };
 		E65C86F5183D9620008E1266 /* t3.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = t3.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E65C86F8183D9620008E1266 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		E65C86FB183D9620008E1266 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -176,10 +178,10 @@
 		E65C8763183D97F9008E1266 /* CtrlBoxBookMoves.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CtrlBoxBookMoves.h; path = ../src/t3/CtrlBoxBookMoves.h; sourceTree = "<group>"; };
 		E65C8764183D97F9008E1266 /* CtrlChessTxt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CtrlChessTxt.cpp; path = ../src/t3/CtrlChessTxt.cpp; sourceTree = "<group>"; };
 		E65C8765183D97F9008E1266 /* CtrlChessTxt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CtrlChessTxt.h; path = ../src/t3/CtrlChessTxt.h; sourceTree = "<group>"; };
-		E65C8766183D97F9008E1266 /* Database.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Database.cpp; path = ../src/t3/Database.cpp; sourceTree = "<group>"; };
-		E65C8767183D97F9008E1266 /* Database.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Database.h; path = ../src/t3/Database.h; sourceTree = "<group>"; };
-		E65C8768183D97F9008E1266 /* DbDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DbDialog.cpp; path = ../src/t3/DbDialog.cpp; sourceTree = "<group>"; };
-		E65C8769183D97F9008E1266 /* DbDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DbDialog.h; path = ../src/t3/DbDialog.h; sourceTree = "<group>"; };
+		E65C8766183D97F9008E1266 /* Database.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = Database.cpp; path = ../src/t3/Database.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		E65C8767183D97F9008E1266 /* Database.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = Database.h; path = ../src/t3/Database.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		E65C8768183D97F9008E1266 /* DbDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = DbDialog.cpp; path = ../src/t3/DbDialog.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		E65C8769183D97F9008E1266 /* DbDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = DbDialog.h; path = ../src/t3/DbDialog.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		E65C876A183D97F9008E1266 /* EngineDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EngineDialog.cpp; path = ../src/t3/EngineDialog.cpp; sourceTree = "<group>"; };
 		E65C876B183D97F9008E1266 /* EngineDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EngineDialog.h; path = ../src/t3/EngineDialog.h; sourceTree = "<group>"; };
 		E65C876C183D97F9008E1266 /* GameClock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GameClock.cpp; path = ../src/t3/GameClock.cpp; sourceTree = "<group>"; };
@@ -360,6 +362,8 @@
 		E65C872C183D97AD008E1266 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				E6440FCF1BD068AD0055C6F0 /* PgnDocument.h */,
+				E6440FD01BD068AD0055C6F0 /* DbDocument.h */,
 				E6440FCE1BC75CF20055C6F0 /* GameBase.h */,
 				E65C872E183D97F9008E1266 /* Appdefs.h */,
 				E65C872F183D97F9008E1266 /* Atom.cpp */,

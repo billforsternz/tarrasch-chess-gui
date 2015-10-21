@@ -289,17 +289,16 @@ bool CompressMoves::TryFastMode( Side *side )
     return okay;
 }
     
-std::string CompressMoves::Compress( std::vector<thc::Move> &moves_in )
+std::string CompressMoves::Compress( thc::ChessPosition &cp, std::vector<thc::Move> &moves_in )
 {
-    thc::ChessPosition cp;
-    return CompressMoves::Compress( cp, moves_in );
+    Init( cp );
+    return CompressMoves::Compress( moves_in );
 }
 
 
-std::string CompressMoves::Compress( thc::ChessPosition &cp, std::vector<thc::Move> &moves_in )
+std::string CompressMoves::Compress( std::vector<thc::Move> &moves_in )
 {
     std::string ret;
-    cr = cp;
     sides[0].fast_mode=false;
     sides[1].fast_mode=false;
     int len = moves_in.size();
@@ -328,16 +327,15 @@ std::string CompressMoves::Compress( thc::ChessPosition &cp, std::vector<thc::Mo
     return ret;
 }
 
-std::vector<thc::Move> CompressMoves::Uncompress( std::string &moves_in )
-{
-    thc::ChessPosition cp;
-    return Uncompress( cp, moves_in );
-}
-
 std::vector<thc::Move> CompressMoves::Uncompress( thc::ChessPosition &cp, std::string &moves_in )
 {
+    Init( cp );
+    return Uncompress( moves_in );
+}
+
+std::vector<thc::Move> CompressMoves::Uncompress( std::string &moves_in )
+{
     std::vector<thc::Move> ret;
-    cr = cp;
     sides[0].fast_mode=false;
     sides[1].fast_mode=false;
     int len = moves_in.size();

@@ -26,8 +26,8 @@ public:
     int SetPosition( thc::ChessRules &cr );
     int SetPosition( thc::ChessRules &cr, std::string &player_name );
     int GetNbrGames( thc::ChessRules &cr );
-    int GetRow( DB_GAME_INFO *info, int row );
-    int GetRowRaw( DB_GAME_INFO *info, int row );
+    int GetRow( int row, CompactGame *info );
+    int GetRowRaw( CompactGame *info, int row );
     int LoadAllGames( std::vector< smart_ptr<MagicBase> > &cache, int nbr_games );
     bool TestNextRow();
     bool TestPrevRow();
@@ -35,7 +35,7 @@ public:
     int  FindPlayer( std::string &name, std::string &current, int start_row, bool white );
     void FindPlayerEnd();
 
-    int LoadGameWithQuery( DB_GAME_INFO *info, int game_id );
+    int LoadGameWithQuery( CompactGame *info, int game_id );
     int LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<MagicBase> > &games, std::unordered_set<int> &games_set );
     int LoadGamesWithQuery( std::string &player_name, bool white, std::vector< smart_ptr<MagicBase> > &games );
   
@@ -56,7 +56,7 @@ private:
     int gbl_current;
     
     // Misc
-    std::map<int,DB_GAME_INFO>  cache;
+    std::map<int,CompactGame>  cache;
     std::list<int>              stack;
     std::string player_name;
     bool is_start_pos;

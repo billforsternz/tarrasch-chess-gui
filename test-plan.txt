@@ -25,4 +25,9 @@ Test plan
         - I noticed that if opening a .pgn but cancelling without loading a game, the .pgn is allegedly open
         - If clipboard is temp database when you do a database search, unchecking should do a brand new db search (it doesn't)
     )
-14) Create game and save to existing file with one game - on Mac end of first game is garbled? if first game was created on PC? 
+14) Create game and save to existing file with one game - on Mac end of first game is garbled? if first game was created on PC?
+
+(Note 14th Oct 2015; Play 1.e4 c5 2.b3 Database -> Calculate Stats -> click on 2...d6 in database pane, then click on moves column,
+First 3 games and next 4 games are identical up until 7...g6 and 7...e6 respectively. So why don't the 4 7...e6 games come ahead of
+the 3 7...g6 games ?)
+ 

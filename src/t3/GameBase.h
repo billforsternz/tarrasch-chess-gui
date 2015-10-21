@@ -17,14 +17,12 @@
 #define smart_ptr std::shared_ptr //std::unique_ptr
 #define make_smart_ptr(T,to,from) smart_ptr<T> to; to.reset(new T(from))
 
-class DB_GAME_INFO;
-
 class MagicBase
 {
 public:
     MagicBase() { transpo_nbr=0; }
     virtual ~MagicBase() {}
-    virtual DB_GAME_INFO *GetDbGameInfoPtr() { return NULL; }
+    virtual int GetGameId() { return 0; }
     virtual GameDocument *GetGameDocumentPtr()  {
         cprintf("FIXME DANGER WILL ROBINSON 3\n");  return NULL; }
     virtual bool GetPgnHandle( int &pgn_handle ) { return false; }

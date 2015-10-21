@@ -5,6 +5,8 @@
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
 #define _CRT_SECURE_NO_DEPRECATE
+#include <time.h> // time_t
+#include <stdio.h>
 #include "wx/wx.h"
 #include "wx/valtext.h"
 #include "wx/valgen.h"
@@ -19,8 +21,8 @@
 #include "Repository.h"
 #include "PgnFiles.h"
 #include "Lang.h"
+#include "PgnDocument.h"
 #include "GamesCache.h"
-#include <stdio.h>
 using namespace std;
 
 bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen );
@@ -364,7 +366,10 @@ bool GamesCache::Tagline( GameDocument &gd,  const char *s )
             if( tag == "BlackElo" )
                 gd.r.black_elo = val;
             if( tag == "FEN" )
+            {
+                gd.r.fen = val;
                 gd.start_position.Forsyth(val.c_str());
+            }
         }
     }
     return is_header;
