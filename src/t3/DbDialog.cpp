@@ -360,6 +360,7 @@ void DbDialog::SmartCompare()
     }
     std::sort( inter.begin(), inter.end(), compare_blob );
     
+    
     // Step 2, work out the nbr of moves in clumps of moves
     sz = inter.size();
     bool at_least_one = true;
