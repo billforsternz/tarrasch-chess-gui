@@ -38,7 +38,7 @@
 using namespace std;
 
 
-wxSizer *DbDialog::GdvAddExtraControls()
+wxSizer *DbDialog::AddExtraControls()
 {
     // Stats list box
     //    wxSize sz4 = sz;
@@ -131,11 +131,15 @@ wxSizer *DbDialog::GdvAddExtraControls()
     return vsiz_panel_button1;   
 }
 
-void DbDialog::GdvOnActivate()
+void DbDialog::OnActivate()
 {
     if( !activated_at_least_once )
     {
         activated_at_least_once = true;
+        //cprintf( "GamesDialog::OnActivate\n");
+        //wxPoint pos = notebook->GetPosition();
+        //list_ctrl_stats->Hide();
+        //list_ctrl_transpo->Hide();
         
         wxPoint pos = ok_button->GetPosition();
         wxSize  sz  = ok_button->GetSize();
@@ -169,43 +173,75 @@ void DbDialog::GdvOnActivate()
 
 
 // Read game information from games or database
-void DbDialog::GdvReadItem( int item, CompactGame &pact )
+void DbDialog::ReadItem( int item, CompactGame &pact )
 {
-    bool in_memory = ReadItemFromMemory( item, pact );
+    DB_GAME_INFO info;
+    bool in_memory = ReadItemFromMemory( item, info );
     if( !in_memory )
     {
-        objs.db->GetRow( item, &pact );
-        pact.transpo_nbr = 0;
+        objs.db->GetRow( &info, item );
+        info.transpo_nbr = 0;
     }
+    info.GetCompactGame( pact );
 }
 
-bool DbDialog::ReadItemFromMemory( int item, CompactGame &pact )
+bool DbDialog::ReadItemFromMemory( int item, DB_GAME_INFO &info )
 {
     bool in_memory = false;
-    pact.transpo_nbr = 0;
+    info.transpo_nbr = 0;
     int nbr_games = displayed_games.size();
     if( 0<=item && item<nbr_games )
     {
         in_memory = true;
-        displayed_games[nbr_games-1-item]->GetCompactGame(pact);
-        if( transpo_activated && transpositions.size() > 1 )
+        info = *displayed_games[nbr_games-1-item]->GetDbGameInfoPtr();
+        info.transpo_nbr = 0;
+        //cprintf( "ReadItemFromMemory(%d), white=%s\n", item, info.white.c_str() );
+        //if( info.move_txt.length() == 0 )
         {
-            for( unsigned int j=0; j<transpositions.size(); j++ )
+            //info.db_calculate_move_txt( objs.db->gbl_hash );
+            if( transpo_activated && transpositions.size() > 1 )
             {
-                std::string &this_one = transpositions[j].blob;
-                const char *p = this_one.c_str();
-                size_t len = this_one.length();
-                std::string str_blob = displayed_games[nbr_games-1-item]->RefCompressedMoves();
-                if( str_blob.length()>=len && 0 == memcmp(p,str_blob.c_str(),len) )
+                for( unsigned int j=0; j<transpositions.size(); j++ )
                 {
-                    pact.transpo_nbr = j+1;
-                    break;
+                    std::string &this_one = transpositions[j].blob;
+                    const char *p = this_one.c_str();
+                    size_t len = this_one.length();
+                    if( info.str_blob.length()>=len && 0 == memcmp(p,info.str_blob.c_str(),len) )
+                    {
+                        info.transpo_nbr = j+1;
+                        break;
+                    }
                 }
             }
         }
     }
     return in_memory;
 }
+
+static bool DebugIsTarget( const DB_GAME_INFO &info )
+{
+    bool match = (info.str_blob == "\xc3\xa3\x93\xa0\xb3\xc1\x10\xb3\xc1\x54\x81\xd1\x80\x51\xa1\x54\x5b\xd0\x10\x15\x66\x26\xd3\x02\x01\x24\x6d\x25\x6c\x7c\x1d\x6b\x23\x81\x2c\x3a\x34\x45\xe1\x73\x23\xf1\x20\x64\x31\x7a\x3e\x61\xf3\x0f\x35\x91\x06\x81\xf1\xe3\xf2\x08\x47\x47\xe1\x2c\x06\x64\xd1\x73\x0e\x81\x4a\xc2\x48\x6e\x77");
+    return match;
+}
+
+static void DebugDumpBlob( const char *msg, const DB_GAME_INFO &info )
+{
+    char buf[2000];
+    char *p = buf;
+    for( int i=0; i<info.str_blob.length(); i++ )
+    {
+        char c = info.str_blob[i];
+        unsigned u = (unsigned)c;
+        u &= 0xff;
+        if( i == 0 )
+            sprintf( p, "%02x", u );
+        else
+            sprintf( p, " %02x", u );
+        p = strchr(p,'\0');
+    }
+    cprintf( "%s [%s]\n", msg, buf );
+}
+
 
 // DbDialog constructors
 DbDialog::DbDialog
@@ -227,66 +263,62 @@ DbDialog::DbDialog
 
 
 static DbDialog *backdoor;
-static bool compare( const smart_ptr<DbDocument> g1, const smart_ptr<DbDocument> g2 )
+static bool compare( const smart_ptr<DB_GAME_INFO> g1, const smart_ptr<DB_GAME_INFO> g2 )
 {
     bool lt=false;
-    Roster r1 = g1->RefRoster();
-    Roster r2 = g2->RefRoster();
     switch( backdoor->compare_col )
     {
-        case 1: lt = r1.white < r2.white;
+        case 1: lt = g1->r.white < g2->r.white;
                 break;
         case 2:
         {       
-                int elo_1 = atoi( r1.white_elo.c_str() );
-                int elo_2 = atoi( r2.white_elo.c_str() );
+                int elo_1 = atoi( g1->r.white_elo.c_str() );
+                int elo_2 = atoi( g2->r.white_elo.c_str() );
                 lt = elo_1 < elo_2;
                 break;
         }
-        case 3: lt = r1.black < r2.black;
+        case 3: lt = g1->r.black < g2->r.black;
                 break;
         case 4:
         {
-                int elo_1 = atoi( r1.black_elo.c_str() );
-                int elo_2 = atoi( r2.black_elo.c_str() );
+                int elo_1 = atoi( g1->r.black_elo.c_str() );
+                int elo_2 = atoi( g2->r.black_elo.c_str() );
                 lt = elo_1 < elo_2;
                 break;
         }
-        case 5: lt = r1.date < r2.date;
+        case 5: lt = g1->r.date < g2->r.date;
                 break;
-        case 6: lt = r1.site < r2.site;
+        case 6: lt = g1->r.site < g2->r.site;
                 break;
-        case 8: lt = r1.result < r2.result;
+        case 8: lt = g1->r.result < g2->r.result;
                 break;
     }
     return lt;
 }
         
 
-static bool rev_compare( const smart_ptr<DbDocument> g1, const smart_ptr<DbDocument> g2 )
+static bool rev_compare( const smart_ptr<DB_GAME_INFO> g1, const smart_ptr<DB_GAME_INFO> g2 )
 {
     bool lt=true;
-    Roster r1 = g1->RefRoster();
-    Roster r2 = g2->RefRoster();
     switch( backdoor->compare_col )
     {
-        case 1: lt = r1.white > r2.white;           break;
+        case 1: lt = g1->r.white > g2->r.white;           break;
         case 2:
-        {       int elo_1 = atoi( r1.white_elo.c_str() );
-                int elo_2 = atoi( r2.white_elo.c_str() );
+        {       int elo_1 = atoi( g1->r.white_elo.c_str() );
+                int elo_2 = atoi( g2->r.white_elo.c_str() );
                 lt = elo_1 > elo_2;
                 break;
         }
-        case 3: lt = r1.black > r2.black;           break;
+        case 3: lt = g1->r.black > g2->r.black;           break;
         case 4:
-        {       int elo_1 = atoi( r1.black_elo.c_str() );
-                int elo_2 = atoi( r2.black_elo.c_str() );
+        {       int elo_1 = atoi( g1->r.black_elo.c_str() );
+                int elo_2 = atoi( g2->r.black_elo.c_str() );
                 lt = elo_1 > elo_2;
                 break;
         }
-        case 5: lt = r1.date > r2.date;             break;
-        case 6: lt = r1.site > r2.site;             break;
-        case 8: lt = r1.result > r2.result;         break;
+        case 5: lt = g1->r.date > g2->r.date;             break;
+        case 6: lt = g1->r.site > g2->r.site;             break;
+        case 8: lt = g1->r.result > g2->r.result;         break;
     }
     return lt;
 }
@@ -340,17 +372,17 @@ void DbDialog::SmartCompare()
     unsigned int sz = displayed_games.size();
     for( unsigned int i=0; i<sz; i++ )
     {
-        std::string str_blob = displayed_games[i]->RefCompressedMoves();
+        DB_GAME_INFO &g = *displayed_games[i]->GetDbGameInfoPtr();
         TempElement e;
         unsigned int sz2 = transpositions.size();
         for( unsigned int j=0; j<sz2; j++ )
         {
             PATH_TO_POSITION *ptp = &transpositions[j];
             unsigned int offset = ptp->blob.length();
-            if( 0 == memcmp( ptp->blob.c_str(), str_blob.c_str(), offset ) )
+            if( 0 == memcmp( ptp->blob.c_str(), g.str_blob.c_str(), offset ) )
             {
                 e.idx = i;
-                e.blob = str_blob.substr(offset);
+                e.blob = g.str_blob.substr(offset);
                 e.counts.resize( e.blob.length() );
                 e.transpo = transpo_activated ? j+1 : 0;
                 inter.push_back(e);
@@ -359,7 +391,6 @@ void DbDialog::SmartCompare()
         }
     }
     std::sort( inter.begin(), inter.end(), compare_blob );
-    
     
     // Step 2, work out the nbr of moves in clumps of moves
 /*
@@ -493,7 +524,7 @@ void DbDialog::SmartCompare()
     std::sort( inter.begin(), inter.end(), compare_counts );
     
     // Step 4 build sorted version of games list
-    std::vector< smart_ptr<DbDocument> > temp;
+    std::vector< smart_ptr<DB_GAME_INFO> > temp;
     sz = inter.size();
     for( unsigned int i=0; i<sz; i++ )
     {
@@ -505,7 +536,7 @@ void DbDialog::SmartCompare()
     displayed_games = temp;
 }
 
-void DbDialog::GdvListColClick( int compare_col )
+void DbDialog::OnListColClick( int compare_col )
 {
     if( displayed_games.size() > 0 )
     {
@@ -535,7 +566,7 @@ void DbDialog::GdvListColClick( int compare_col )
     }
 }
 
-void DbDialog::GdvSearch()
+void DbDialog::OnSearch()
 {
     wxString name = text_ctrl->GetValue();
     std::string sname(name.c_str());
@@ -567,7 +598,7 @@ void DbDialog::GdvSearch()
 }
 
 
-void DbDialog::GdvSaveAllToAFile()
+void DbDialog::OnSaveAllToAFile()
 {
     wxFileDialog fd( objs.frame, "Save all listed games to a new .pgn file", "", "", "*.pgn", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
     wxString dir = objs.repository->nv.m_doc_dir;
@@ -585,7 +616,7 @@ void DbDialog::GdvSaveAllToAFile()
 }
 
 
-void DbDialog::GdvOnCancel()
+void DbDialog::OnCancel()
 {
     gc->PrepareForResumePreviousWindow( list_ctrl->GetTopItem() );
     int sz=gc->gds.size();
@@ -599,7 +630,7 @@ void DbDialog::GdvOnCancel()
     } */
 }
 
-void DbDialog::GdvHelpClick()
+void DbDialog::OnHelpClick()
 {
     // Normally we would wish to display proper online help.
     // For this example, we're just using a message box.
@@ -694,24 +725,24 @@ double AutoTimer::End()
     return elapsed_time;
 }
 
-void DbDialog::GdvUtility()
+void DbDialog::OnUtility()
 {
     LoadGamesIntoMemory();
     StatsCalculate();
 }
 
-void DbDialog::GdvButton1()
+void DbDialog::OnButton1()
 {
     objs.gl->gc_clipboard.gds.clear();
     Goto( track->focus_idx );
 }
 
-void DbDialog::GdvButton2()
+void DbDialog::OnButton2()
 {
     CopyOrAdd( false );
 }
 
-void DbDialog::GdvButton3()
+void DbDialog::OnButton3()
 {
     std::string player_name = white_player_search ? track->info.r.white : track->info.r.black;
     int nbr_loaded = objs.db->LoadGamesWithQuery( player_name, true, objs.gl->gc_clipboard.gds );
@@ -724,7 +755,7 @@ void DbDialog::GdvButton3()
     Goto( track->focus_idx );
 }
 
-void DbDialog::GdvButton4()
+void DbDialog::OnButton4()
 {
     std::string player_name = white_player_search ? track->info.r.white : track->info.r.black;
     int nbr_loaded = objs.db->LoadGamesWithQuery( player_name, false, objs.gl->gc_clipboard.gds );
@@ -737,7 +768,7 @@ void DbDialog::GdvButton4()
     Goto( track->focus_idx );
 }
 
-void DbDialog::GdvCheckBox2( bool checked )
+void DbDialog::OnCheckBox2( bool checked )
 {
     white_player_search = checked;
     std::string s(text_ctrl->GetValue());
@@ -752,7 +783,7 @@ void DbDialog::GdvCheckBox2( bool checked )
     Goto( track->focus_idx );
 }
 
-void DbDialog::GdvCheckBox( bool checked )
+void DbDialog::OnCheckBox( bool checked )
 {
     objs.gl->db_clipboard = checked;
 
@@ -794,9 +825,9 @@ void DbDialog::LoadGamesIntoMemory()
     games_set.clear();
     for( unsigned int i=0; i<gc->gds.size(); i++ )
     {
-        int game_id = gc->gds[i]->GetGameId();
-        if( game_id )
-            games_set.insert( game_id );
+        DB_GAME_INFO *p = gc->gds[i]->GetDbGameInfoPtr();
+        if( p )
+            games_set.insert( p->game_id );
     }
 }
 
@@ -948,8 +979,10 @@ void DbDialog::StatsCalculate()
                 bool draw       = (r.result=="1/2-1/2");
                 if( draw )
                     total_draws++;
-                DbDocument temp(0,r,blob);
-                make_smart_ptr( DbDocument, smptr, temp );
+                DB_GAME_INFO temp;
+                temp.r = r;
+                temp.str_blob = blob;
+                make_smart_ptr( DB_GAME_INFO, smptr, temp );
                 displayed_games.push_back(smptr);
                 PATH_TO_POSITION *p = &transpositions[found_idx];
                 p->frequency++;
@@ -1107,7 +1140,7 @@ void DbDialog::StatsCalculate()
 }
 
 // One of the moves in move stats is clicked
-void DbDialog::GdvNextMove( int idx )
+void DbDialog::OnNextMove( int idx )
 {
     dirty = true;
     if( idx==0 && moves_from_base_position.size()>0 )
