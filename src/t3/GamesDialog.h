@@ -235,6 +235,7 @@ public:
     GameDocument *GetFocusGame( int &idx );
     void DeselectOthers();
     void OnOk();
+    void SmartCompare( std::vector< smart_ptr<MagicBase> > &gds );
     
     // GamesDialog member variables
 public:

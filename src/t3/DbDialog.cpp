@@ -131,12 +131,14 @@ wxSizer *DbDialog::GdvAddExtraControls()
     return vsiz_panel_button1;   
 }
 
+#define LOAD_INTO_MEMORY_THRESHOLD 2000
+#define QUERY_LOAD_INTO_MEMORY_THRESHOLD 10000
+
 void DbDialog::GdvOnActivate()
 {
     if( !activated_at_least_once )
     {
         activated_at_least_once = true;
-        
         wxPoint pos = ok_button->GetPosition();
         wxSize  sz  = ok_button->GetSize();
         pos.x += 3*(sz.x);
@@ -161,7 +163,14 @@ void DbDialog::GdvOnActivate()
         wxPoint pos_button = utility->GetPosition();
         //utility->SetPosition( pos_button );
         if( objs.gl->db_clipboard )
-            StatsCalculate();        
+        {
+            StatsCalculate();
+        }
+        else if( nbr_games_in_list_ctrl <= LOAD_INTO_MEMORY_THRESHOLD )
+        {
+            LoadGamesIntoMemory();
+            StatsCalculate();
+        }
         Goto(0); // list_ctrl->SetFocus();
     }
 }
@@ -507,32 +516,43 @@ void DbDialog::SmartCompare()
 
 void DbDialog::GdvListColClick( int compare_col )
 {
-    if( displayed_games.size() > 0 )
+    bool in_memory = (displayed_games.size() > 0);
+    if( !in_memory )
     {
-        static int last_time;
-        static int consecutive;
-        if( compare_col == last_time )
-            consecutive++;
-        else
-            consecutive=0;
-        this->compare_col = compare_col;
-        backdoor = this;
-        if( compare_col == 10 )
-            SmartCompare();
-        else
-            std::sort( displayed_games.begin(), displayed_games.end(), (consecutive%2==0)?rev_compare:compare );
-        nbr_games_in_list_ctrl = displayed_games.size();
-        list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
-        list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
-        int top = list_ctrl->GetTopItem();
-        int count = 1 + list_ctrl->GetCountPerPage();
-        if( count > nbr_games_in_list_ctrl )
-            count = nbr_games_in_list_ctrl;
-        for( int i=0; i<count; i++ )
-            list_ctrl->RefreshItem(top++);
-        Goto(0);
-        last_time = compare_col;
+        if( nbr_games_in_list_ctrl >= QUERY_LOAD_INTO_MEMORY_THRESHOLD )
+        {
+            wxString msg( "This column sort requires loading a large number of games into memory, is that okay?" );
+            int answer = wxMessageBox( msg, "Press Yes to load games",  wxYES_NO|wxCANCEL, this );
+            bool ok = (answer == wxYES);
+            if( !ok )
+                return;
+        }
+        LoadGamesIntoMemory();
+        StatsCalculate();
     }
+    static int last_time;
+    static int consecutive;
+    if( compare_col == last_time )
+        consecutive++;
+    else
+        consecutive=0;
+    this->compare_col = compare_col;
+    backdoor = this;
+    if( compare_col == 10 )
+        SmartCompare();
+    else
+        std::sort( displayed_games.begin(), displayed_games.end(), (consecutive%2==0)?rev_compare:compare );
+    nbr_games_in_list_ctrl = displayed_games.size();
+    list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
+    list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
+    int top = list_ctrl->GetTopItem();
+    int count = 1 + list_ctrl->GetCountPerPage();
+    if( count > nbr_games_in_list_ctrl )
+        count = nbr_games_in_list_ctrl;
+    for( int i=0; i<count; i++ )
+        list_ctrl->RefreshItem(top++);
+    Goto(0);
+    last_time = compare_col;
 }
 
 void DbDialog::GdvSearch()

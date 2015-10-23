@@ -497,6 +497,25 @@ void PgnDialog::GdvListColClick( int compare_col )
 {
     local_cache.clear();
     stack.clear();
+    
+    // Load all games into memory
+    wxProgressDialog progress( "Loading games", "Loading games", 100, NULL,
+                              wxPD_APP_MODAL+
+                              wxPD_AUTO_HIDE+
+                              wxPD_ELAPSED_TIME+
+                              wxPD_CAN_ABORT+
+                              wxPD_ESTIMATED_TIME );
+    int nbr = gc->gds.size();
+    for( int i=0; i<nbr; i++ )
+    {
+        CompactGame pact;
+        gc->gds[i]->GetCompactGame( pact );
+        int percent = (i*100) / (nbr?nbr:1);
+        if( percent < 1 )
+            percent = 1;
+        if( !progress.Update( percent>100 ? 100 : percent ) )
+            return;
+    }
     GamesDialog::GdvListColClick( compare_col );
 }
 
