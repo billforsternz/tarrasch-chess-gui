@@ -22,6 +22,7 @@
 #include "PgnFiles.h"
 #include "Lang.h"
 #include "PgnDocument.h"
+#include "PgnRead.h"
 #include "GamesCache.h"
 using namespace std;
 
@@ -236,6 +237,52 @@ bool GamesCache::Load( FILE *pgn_file )
         }
     }
     return true;
+}
+
+static CompactGame *phook;
+void pgn_read_hook( const char *white, const char *black, const char *event, const char *site, const char *result,
+                                    const char *date, const char *white_elo, const char *black_elo,
+                                    int nbr_moves, thc::Move *moves, uint64_t *hashes  )
+{
+    phook->r.white     = std::string(white);
+    phook->r.black     = std::string(black);
+    phook->r.event     = std::string(event);
+    phook->r.site      = std::string(site);
+    //phook->r.round   = std::string(round);
+    phook->r.result    = std::string(result);
+    phook->r.date      = std::string(date);
+    //phook->r.eco     = std::string(eco);
+    phook->r.white_elo = std::string(white_elo);
+    phook->r.black_elo = std::string(black_elo);
+    phook->moves       = std::vector<thc::Move>(moves,moves+nbr_moves);
+}
+
+void ReadGameFromPgn( int pgn_handle, long fposn, CompactGame &pact, bool end )
+{
+    cprintf( "ReadGameFromPgnInLoop(%d,%s) %ld\n", pgn_handle, end?"true":"false", fposn );
+    static FILE *pgn_file;
+    static int save_pgn_handle;
+    if( pgn_file && pgn_handle!=save_pgn_handle )
+    {
+        objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
+        pgn_file = NULL;
+        save_pgn_handle = 0;
+    }
+    if( !pgn_file )
+    {
+        pgn_file  = objs.gl->pf.ReopenRead( pgn_handle );
+        save_pgn_handle = pgn_handle;
+    }
+    fseek( pgn_file, fposn, SEEK_SET );
+    phook = &pact;
+    PgnRead *pgn = new PgnRead('R');
+    pgn->Process(pgn_file);
+    if( end )
+    {
+        objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
+        pgn_file = NULL;
+        save_pgn_handle = 0;
+    }
 }
 
 void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &new_doc )

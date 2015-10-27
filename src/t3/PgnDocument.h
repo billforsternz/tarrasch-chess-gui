@@ -13,6 +13,7 @@
 
 
 void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &gd );
+void ReadGameFromPgn( int pgn_handle, long fposn, CompactGame &pact, bool end=true );
 
 class PgnDocument : public MagicBase
 {
@@ -23,15 +24,26 @@ private:
 public:
     PgnDocument( int pgn_handle, long fposn ) { this->pgn_handle=pgn_handle, this->fposn = fposn;  }
 
+    virtual void LoadIntoMemory( bool end )
+    {
+        if( pack.Empty() )
+        {
+            CompactGame pact;
+            ReadGameFromPgn( pgn_handle, fposn, pact, end );
+            pack.Pack(pact);
+        }
+    }
+
     virtual void GetCompactGame( CompactGame &pact )
     {
         if( !pack.Empty() )
             pack.Unpack(pact);
         else
         {
-            GameDocument the_game;
-            ReadGameFromPgn( pgn_handle, fposn, the_game );
-            pact.Downscale( the_game );
+            //GameDocument the_game;
+            //ReadGameFromPgn( pgn_handle, fposn, the_game );
+            //pact.Downscale( the_game );
+            ReadGameFromPgn( pgn_handle, fposn, pact );
             pack.Pack(pact);
         }
     }

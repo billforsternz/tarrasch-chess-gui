@@ -513,7 +513,8 @@ bool PgnRead::Process( FILE *infile )
                                  )
               )
             {
-                GameOver();
+                if( GameOver() )
+                    return true;
             }
             if( state==PREFIX && old_state!=HEADER && old_state!=IN_COMMENT )
             {
@@ -540,7 +541,10 @@ bool PgnRead::Process( FILE *infile )
                                 state==BETWEEN_MOVES
                             )
               )
-                GameOver();
+            {
+                if( GameOver() )
+                    return true;
+            }
         }
     }
     FileOver();
@@ -686,18 +690,22 @@ void PgnRead::GameBegin()
         cprintf( "%d games\n", nbr_games );
 }
 
-void PgnRead::GameOver()
+bool PgnRead::GameOver()
 {
+    bool aborted = false;
     STACK_ELEMENT *s;
     s = &stack_array[0];
     if( !fen_flag )
-        hook_gameover( callback_code, event, site, date, round, white, black, result, white_elo, black_elo, eco, s->nbr_moves, s->big_move_array, s->big_hash_array  );
+    {
+        aborted = hook_gameover( callback_code, event, site, date, round, white, black, result, white_elo, black_elo, eco, s->nbr_moves, s->big_move_array, s->big_hash_array  );
+    }
     //cprintf( "GameOver()\n" );
     stack_idx = 0;
     ChessRules temp;
     chess_rules = temp;    // init
     stack_array[0].nbr_moves = 0;
     stack_array[0].position = chess_rules;
+    return aborted;
 }
 
 

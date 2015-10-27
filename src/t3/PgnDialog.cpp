@@ -508,8 +508,7 @@ void PgnDialog::GdvListColClick( int compare_col )
     int nbr = gc->gds.size();
     for( int i=0; i<nbr; i++ )
     {
-        CompactGame pact;
-        gc->gds[i]->GetCompactGame( pact );
+        gc->gds[i]->LoadIntoMemory( i+1 >= nbr );
         int percent = (i*100) / (nbr?nbr:1);
         if( percent < 1 )
             percent = 1;

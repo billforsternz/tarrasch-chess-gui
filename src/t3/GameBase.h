@@ -36,6 +36,8 @@ public:
     virtual void SetGameBeingEdited( uint32_t game_being_edited ) {}
     virtual uint32_t GetGameBeingEdited() { return 0; }
     virtual long GetFposn() { return 0; }
+    virtual void LoadIntoMemory( bool end )  {}
+
     
     // High performance
     virtual Roster                  &RefRoster()          { static Roster r; return r; }

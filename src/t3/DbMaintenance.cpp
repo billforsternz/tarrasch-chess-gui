@@ -164,11 +164,16 @@ void db_maintenance_create_indexes()
     db_primitive_close();
 }
 
+extern void pgn_read_hook( const char *white, const char *black, const char *event, const char *site, const char *result,
+                                    const char *date, const char *white_elo, const char *black_elo,
+                                    int nbr_moves, thc::Move *moves, uint64_t *hashes  );
 
-void hook_gameover( char callback_code, const char *event, const char *site, const char *date, const char *round,
+
+bool hook_gameover( char callback_code, const char *event, const char *site, const char *date, const char *round,
                   const char *white, const char *black, const char *result, const char *white_elo, const char *black_elo, const char *eco,
                   int nbr_moves, thc::Move *moves, uint64_t *hashes )
 {
+    bool aborted = false;
     static int counter;
     int is_interesting = 0;
     if( (++counter % 100000) == 0 )
@@ -181,6 +186,9 @@ void hook_gameover( char callback_code, const char *event, const char *site, con
         // Append
         case 'A': db_primitive_insert_game( white, black, event, site, result, date, white_elo, black_elo, nbr_moves, moves, hashes ); break;
             
+        // Read one game
+        case 'R': pgn_read_hook( white, black, event, site, result, date, white_elo, black_elo, nbr_moves, moves, hashes ); return true;
+
         // Verify
         case 'V': is_interesting = verify_compression_algorithm( nbr_moves, moves ); break;
     }
@@ -261,6 +269,7 @@ void hook_gameover( char callback_code, const char *event, const char *site, con
             fclose(f);
         }
     }
+    return aborted;
 }
 
 
