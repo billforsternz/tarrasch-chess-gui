@@ -1030,6 +1030,7 @@
     <ClInclude Include="src\t3\CtrlChessTxt.h" />
     <ClInclude Include="src\t3\Database.h" />
     <ClInclude Include="src\t3\DbDialog.h" />
+    <ClInclude Include="src\t3\DbDocument.h" />
     <ClInclude Include="src\t3\DbMaintenance.h" />
     <ClInclude Include="src\t3\DbPrimitives.h" />
     <ClInclude Include="src\t3\DebugPrintf.h" />
@@ -1060,6 +1061,7 @@
     <ClInclude Include="src\t3\Objects.h" />
     <ClInclude Include="src\t3\PackedGame.h" />
     <ClInclude Include="src\t3\PgnDialog.h" />
+    <ClInclude Include="src\t3\PgnDocument.h" />
     <ClInclude Include="src\t3\PgnFiles.h" />
     <ClInclude Include="src\t3\PgnRead.h" />
     <ClInclude Include="src\t3\PlayerDialog.h" />
