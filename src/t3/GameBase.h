@@ -37,6 +37,8 @@ public:
     virtual uint32_t GetGameBeingEdited() { return 0; }
     virtual long GetFposn() { return 0; }
     virtual void LoadIntoMemory( bool end )  {}
+    virtual const char *White() {return "";}
+    virtual const std::string &GetWhite() {return "";}
 
     
     // High performance

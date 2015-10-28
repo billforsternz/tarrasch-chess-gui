@@ -84,6 +84,14 @@ public:
         GetCompactGame( pact );
         return pact.start_position;
     }
+    virtual const char *White()
+    {
+        return pack.White();
+    }
+    virtual const std::string &GetWhite()
+    {
+        return pack.GetWhite();
+    }
     
 };
 

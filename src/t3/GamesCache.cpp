@@ -259,7 +259,7 @@ void pgn_read_hook( const char *white, const char *black, const char *event, con
 
 void ReadGameFromPgn( int pgn_handle, long fposn, CompactGame &pact, bool end )
 {
-    cprintf( "ReadGameFromPgnInLoop(%d,%s) %ld\n", pgn_handle, end?"true":"false", fposn );
+    //cprintf( "ReadGameFromPgnInLoop(%d,%s) %ld\n", pgn_handle, end?"true":"false", fposn );
     static FILE *pgn_file;
     static int save_pgn_handle;
     if( pgn_file && pgn_handle!=save_pgn_handle )

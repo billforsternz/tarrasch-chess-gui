@@ -1226,34 +1226,44 @@ static GamesDialog *backdoor;
 static bool compare( const smart_ptr<MagicBase> g1, const smart_ptr<MagicBase> g2 )
 {
     bool lt=false;
-    Roster r1 = g1->RefRoster();
-    Roster r2 = g2->RefRoster();
-    switch( backdoor->compare_col )
+    if( backdoor->compare_col == 1 )
     {
-        case 1: lt = r1.white < r2.white;
-            break;
-        case 2:
+        const char *white1 = g1->White();
+        const char *white2 = g2->White();
+        int negative_if_lt0 = strcmp( white1, white2 );
+        lt = (negative_if_lt0 < 0);
+    }
+    else
+    {
+        Roster r1 = g1->RefRoster();
+        Roster r2 = g2->RefRoster();
+        switch( backdoor->compare_col )
         {
-            int elo_1 = atoi( r1.white_elo.c_str() );
-            int elo_2 = atoi( r2.white_elo.c_str() );
-            lt = elo_1 < elo_2;
-            break;
+            case 1: lt = r1.white < r2.white;
+                break;
+            case 2:
+            {
+                int elo_1 = atoi( r1.white_elo.c_str() );
+                int elo_2 = atoi( r2.white_elo.c_str() );
+                lt = elo_1 < elo_2;
+                break;
+            }
+            case 3: lt = r1.black < r2.black;
+                break;
+            case 4:
+            {
+                int elo_1 = atoi( r1.black_elo.c_str() );
+                int elo_2 = atoi( r2.black_elo.c_str() );
+                lt = elo_1 < elo_2;
+                break;
+            }
+            case 5: lt = r1.date < r2.date;
+                break;
+            case 6: lt = r1.site < r2.site;
+                break;
+            case 8: lt = r1.result < r2.result;
+                break;
         }
-        case 3: lt = r1.black < r2.black;
-            break;
-        case 4:
-        {
-            int elo_1 = atoi( r1.black_elo.c_str() );
-            int elo_2 = atoi( r2.black_elo.c_str() );
-            lt = elo_1 < elo_2;
-            break;
-        }
-        case 5: lt = r1.date < r2.date;
-            break;
-        case 6: lt = r1.site < r2.site;
-            break;
-        case 8: lt = r1.result < r2.result;
-            break;
     }
     return lt;
 }
@@ -1300,19 +1310,19 @@ struct TempElement
 static bool compare_blob( const TempElement &e1, const TempElement &e2 )
 {
     bool lt = false;
-    if( e1.transpo == e2.transpo )
+    //if( e1.transpo == e2.transpo )
         lt = (e1.blob < e2.blob);
-    else
-        lt = (e1.transpo > e2.transpo);     // smaller transpo nbr should come first
+    //else
+    //    lt = (e1.transpo > e2.transpo);     // smaller transpo nbr should come first
     return lt;
 }
 
 static bool compare_counts( const TempElement &e1, const TempElement &e2 )
 {
     bool lt = false;
-    if( e1.transpo != e2.transpo )
-        lt = (e1.transpo > e2.transpo);     // smaller transpo nbr should come first
-    else
+    //if( e1.transpo != e2.transpo )
+    //    lt = (e1.transpo > e2.transpo);     // smaller transpo nbr should come first
+    //else
     {
         unsigned int len = e1.blob.length();
         if( e2.blob.length() < len )

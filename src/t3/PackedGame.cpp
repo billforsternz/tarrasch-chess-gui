@@ -54,7 +54,10 @@ void PackedGame::Pack( Roster &r, std::string &blob )
             fields.push_back(c);
         }
         if( !bad )
+        {
             fields += s;
+            fields += '\0';
+        }
     }
 }
 
@@ -102,6 +105,50 @@ void PackedGame::Unpack( std::string &blob )
     blob = bad ? "" : fields.substr(idx,len);
 }
 
+const char *PackedGame::White()
+{
+    int idx=0;
+    bool bad=false;
+    unsigned char c = fields[idx++];
+    unsigned int len = 0;
+    if( c < 255 )
+    {
+        len = static_cast<unsigned int>(c);
+    }
+    else
+    {
+        unsigned char d = fields[idx++];
+        unsigned char e = fields[idx++];
+        if( d==255 && e==255 )
+            bad = true;
+        else
+            len = static_cast<unsigned int>(d) + 256*static_cast<unsigned int>(e);
+    }
+    return &fields[idx+len+1];
+}
+
+const std::string &PackedGame::GetWhite()
+{
+    int idx=0;
+    bool bad=false;
+    unsigned char c = fields[idx++];
+    unsigned int len = 0;
+    if( c < 255 )
+    {
+        len = static_cast<unsigned int>(c);
+    }
+    else
+    {
+        unsigned char d = fields[idx++];
+        unsigned char e = fields[idx++];
+        if( d==255 && e==255 )
+            bad = true;
+        else
+            len = static_cast<unsigned int>(d) + 256*static_cast<unsigned int>(e);
+    }
+    return ""; //&std::string(fields[idx+len+1]);
+}
+
 void PackedGame::Unpack( Roster &r )
 {
     int idx=0;
@@ -142,7 +189,7 @@ void PackedGame::Unpack( Roster &r )
                 case 11: r.fen = s;         break;
             }
         }
-        idx += len;
+        idx += (len+1);
     }
 }
 
