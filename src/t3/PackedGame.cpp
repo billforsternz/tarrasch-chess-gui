@@ -10,53 +10,57 @@
 
 void PackedGame::Pack( Roster &r, std::string &blob )
 {
-    fields.clear();
-    for( int i=0; i<12; i++ )
+    bool complete=false;
+    for( int attempt=0; !complete && attempt<2; attempt++ )
     {
-        std::string s;
-        bool bad=false;
-        switch(i)
+        complete = true; // normally only one attempt required
+        fields = (attempt==0 ? "1123456789012" : "2x1x2x3x4x5x6x7x8x9x0x1x2");
+        unsigned int offset_idx=1;
+        unsigned int offset=0;
+        for( int i=0; i<12; i++ )
         {
-            case 0: s = blob;           break;
-            case 1: s = r.white;        break;
-            case 2: s = r.black;        break;
-            case 3: s = r.event;        break;
-            case 4: s = r.site;         break;
-            case 5: s = r.result;       break;
-            case 6: s = r.round;        break;
-            case 7: s = r.date;         break;
-            case 8: s = r.eco;          break;
-            case 9: s = r.white_elo;    break;
-            case 10: s = r.black_elo;   break;
-            case 11: s = r.fen;         break;
-        }
-        unsigned int len = s.length();
-        if( len < 255 )
-        {
-            unsigned char c = static_cast<unsigned char>(len);
-            fields.push_back(c);
-        }
-        else if( len < 65535 )
-        {
-            unsigned char c = 255;
-            fields.push_back(c);
-            c = static_cast<unsigned char>(len&0xff);
-            fields.push_back(c);
-            c = static_cast<unsigned char>((len>>8)&0xff);
-            fields.push_back(c);
-        }
-        else
-        {
-            bad = true;
-            unsigned char c = 255;
-            fields.push_back(c);
-            fields.push_back(c);
-            fields.push_back(c);
-        }
-        if( !bad )
-        {
+            std::string s;
+            switch(i)
+            {
+                case 0: s = r.white;        break;
+                case 1: s = r.black;        break;
+                case 2: s = r.event;        break;
+                case 3: s = r.site;         break;
+                case 4: s = r.result;       break;
+                case 5: s = r.round;        break;
+                case 6: s = r.date;         break;
+                case 7: s = r.eco;          break;
+                case 8: s = r.white_elo;    break;
+                case 9: s = r.black_elo;    break;
+                case 10: s = r.fen;         break;
+                case 11: s = blob;          break;
+            }
+            if( attempt == 0 )
+            {
+                if( offset > 255 )
+                {
+                    complete = false; // move on to second attempt
+                    break;
+                }
+                unsigned char c = static_cast<unsigned char>(offset);
+                fields[offset_idx++] = c;
+            }
+            else
+            {
+                unsigned char c = static_cast<unsigned char>(offset&0xff);
+                unsigned char d = static_cast<unsigned char>((offset>>8)&0xff);
+                if( offset > 65535 )
+                {
+                    c = 255;
+                    d = 255;
+                }
+                fields[offset_idx++] = c;
+                fields[offset_idx++] = d;
+            }
             fields += s;
+            offset += s.length();
             fields += '\0';
+            offset++;
         }
     }
 }
@@ -85,111 +89,111 @@ void PackedGame::Unpack( Roster &r, std::string &blob )
 
 void PackedGame::Unpack( std::string &blob )
 {
-    int idx=0;
+    int i=11;
+    bool single = (fields[0] == '1');
+    int begin_idx = single ? 1+i : 1+2*i;
     bool bad=false;
-    unsigned char c = fields[idx++];
-    unsigned int len = 0;
-    if( c < 255 )
+    unsigned char c, d;
+    unsigned int end_offset;
+    unsigned int begin_offset;
+    if( single )
     {
-        len = static_cast<unsigned int>(c);
+        c = fields[begin_idx++];
+        begin_offset = static_cast<unsigned int>(c);
+        end_offset = fields.length()-13;
     }
     else
     {
-        unsigned char d = fields[idx++];
-        unsigned char e = fields[idx++];
-        if( d==255 && e==255 )
+        c = fields[begin_idx++];
+        d = fields[begin_idx++];
+        if( c==255 && d==255 )
             bad = true;
         else
-            len = static_cast<unsigned int>(d) + 256*static_cast<unsigned int>(e);
+            begin_offset = static_cast<unsigned int>(c) + 256*static_cast<unsigned int>(d);
+        end_offset = fields.length()-25;
     }
-    blob = bad ? "" : fields.substr(idx,len);
-}
-
-const char *PackedGame::White()
-{
-    int idx=0;
-    bool bad=false;
-    unsigned char c = fields[idx++];
-    unsigned int len = 0;
-    if( c < 255 )
-    {
-        len = static_cast<unsigned int>(c);
-    }
-    else
-    {
-        unsigned char d = fields[idx++];
-        unsigned char e = fields[idx++];
-        if( d==255 && e==255 )
-            bad = true;
-        else
-            len = static_cast<unsigned int>(d) + 256*static_cast<unsigned int>(e);
-    }
-    return &fields[idx+len+1];
-}
-
-const std::string &PackedGame::GetWhite()
-{
-    int idx=0;
-    bool bad=false;
-    unsigned char c = fields[idx++];
-    unsigned int len = 0;
-    if( c < 255 )
-    {
-        len = static_cast<unsigned int>(c);
-    }
-    else
-    {
-        unsigned char d = fields[idx++];
-        unsigned char e = fields[idx++];
-        if( d==255 && e==255 )
-            bad = true;
-        else
-            len = static_cast<unsigned int>(d) + 256*static_cast<unsigned int>(e);
-    }
-    return ""; //&std::string(fields[idx+len+1]);
+    blob = bad ? "" : fields.substr( (single?13:25)+begin_offset, end_offset-begin_offset-1 );
 }
 
 void PackedGame::Unpack( Roster &r )
 {
-    int idx=0;
-    for( int i=0; i<12; i++ )
+    bool single = (fields[0] == '1');
+    for( int i=0; i<11; i++ )
     {
-        std::string s;
+        int begin_idx = single ? 1+i : 1+2*i;
+        int end_idx   = single ? 1+(i+1) : 1+2*(i+1);
         bool bad=false;
-        unsigned char c = fields[idx++];
-        unsigned int len = 0;
-        if( c < 255 )
+        unsigned char c, d;
+        unsigned int end_offset;
+        unsigned int begin_offset;
+        if( single )
         {
-            len = static_cast<unsigned int>(c);
+            c = fields[begin_idx++];
+            begin_offset = static_cast<unsigned int>(c);
+            c = fields[end_idx++];
+            end_offset = static_cast<unsigned int>(c);
         }
         else
         {
-            unsigned char d = fields[idx++];
-            unsigned char e = fields[idx++];
-            if( d==255 && e==255 )
+            c = fields[begin_idx++];
+            d = fields[begin_idx++];
+            if( c==255 && d==255 )
                 bad = true;
             else
-                len = static_cast<unsigned int>(d) + 256*static_cast<unsigned int>(e);
+                begin_offset = static_cast<unsigned int>(c) + 256*static_cast<unsigned int>(d);
+            c = fields[end_idx++];
+            d = fields[end_idx++];
+            if( c==255 && d==255 )
+                bad = true;
+            else
+                end_offset = static_cast<unsigned int>(c) + 256*static_cast<unsigned int>(d);
         }
-        if( i > 0 )
+        std::string s = bad ? "" : fields.substr( (single?13:25)+begin_offset, end_offset-begin_offset-1 );
+        switch(i)
         {
-            std::string s = bad ? "" : fields.substr(idx,len);
-            switch(i)
-            {
-                case 1: r.white = s;        break;
-                case 2: r.black = s;        break;
-                case 3: r.event = s;        break;
-                case 4: r.site = s;         break;
-                case 5: r.result = s;       break;
-                case 6: r.round = s;        break;
-                case 7: r.date = s;         break;
-                case 8: r.eco = s;          break;
-                case 9: r.white_elo = s;    break;
-                case 10: r.black_elo = s;   break;
-                case 11: r.fen = s;         break;
-            }
+            case 0: r.white = s;        break;
+            case 1: r.black = s;        break;
+            case 2: r.event = s;        break;
+            case 3: r.site = s;         break;
+            case 4: r.result = s;       break;
+            case 5: r.round = s;        break;
+            case 6: r.date = s;         break;
+            case 7: r.eco = s;          break;
+            case 8: r.white_elo = s;    break;
+            case 9: r.black_elo = s;    break;
+            case 10: r.fen = s;         break;
         }
-        idx += (len+1);
     }
 }
 
+
+const char *PackedGame::White()
+{
+    bool single = (fields[0] == '1');
+    return &fields[single?13:25];
+}
+
+const char *PackedGame::Black()
+{
+    bool single = (fields[0] == '1');
+    int i=1;
+    int begin_idx = single ? 1+i : 1+2*i;
+    bool bad=false;
+    unsigned char c, d;
+    unsigned int begin_offset;
+    if( single )
+    {
+        c = fields[begin_idx++];
+        begin_offset = static_cast<unsigned int>(c);
+    }
+    else
+    {
+        c = fields[begin_idx++];
+        d = fields[begin_idx++];
+        if( c==255 && d==255 )
+            bad = true;
+        else
+            begin_offset = static_cast<unsigned int>(c) + 256*static_cast<unsigned int>(d);
+    }
+    return bad ? "" : &fields[ (single?13:25)+begin_offset ];
+}

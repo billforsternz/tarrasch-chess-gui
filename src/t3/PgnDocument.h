@@ -13,7 +13,7 @@
 
 
 void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &gd );
-void ReadGameFromPgn( int pgn_handle, long fposn, CompactGame &pact, bool end=true );
+void *ReadGameFromPgn( int pgn_handle, long fposn, CompactGame &pact, void *context, bool end=true );
 
 class PgnDocument : public MagicBase
 {
@@ -24,14 +24,15 @@ private:
 public:
     PgnDocument( int pgn_handle, long fposn ) { this->pgn_handle=pgn_handle, this->fposn = fposn;  }
 
-    virtual void LoadIntoMemory( bool end )
+    virtual void *LoadIntoMemory( void *context, bool end )
     {
         if( pack.Empty() )
         {
             CompactGame pact;
-            ReadGameFromPgn( pgn_handle, fposn, pact, end );
+            context = ReadGameFromPgn( pgn_handle, fposn, pact, context, end );
             pack.Pack(pact);
         }
+        return context;
     }
 
     virtual void GetCompactGame( CompactGame &pact )
@@ -40,11 +41,9 @@ public:
             pack.Unpack(pact);
         else
         {
-            //GameDocument the_game;
-            //ReadGameFromPgn( pgn_handle, fposn, the_game );
-            //pact.Downscale( the_game );
-            ReadGameFromPgn( pgn_handle, fposn, pact );
-            pack.Pack(pact);
+            GameDocument the_game;
+            ReadGameFromPgn( pgn_handle, fposn, the_game );
+            pact.Downscale( the_game );
         }
     }
     
@@ -84,14 +83,8 @@ public:
         GetCompactGame( pact );
         return pact.start_position;
     }
-    virtual const char *White()
-    {
-        return pack.White();
-    }
-    virtual const std::string &GetWhite()
-    {
-        return pack.GetWhite();
-    }
+    virtual const char *White() { return pack.White(); }
+    virtual const char *Black() { return pack.Black(); }
     
 };
 

@@ -1233,6 +1233,13 @@ static bool compare( const smart_ptr<MagicBase> g1, const smart_ptr<MagicBase> g
         int negative_if_lt0 = strcmp( white1, white2 );
         lt = (negative_if_lt0 < 0);
     }
+    else if( backdoor->compare_col == 3 )
+    {
+        const char *black1 = g1->Black();
+        const char *black2 = g2->Black();
+        int negative_if_lt0 = strcmp( black1, black2 );
+        lt = (negative_if_lt0 < 0);
+    }
     else
     {
         Roster r1 = g1->RefRoster();
@@ -1274,27 +1281,44 @@ static bool compare( const smart_ptr<MagicBase> g1, const smart_ptr<MagicBase> g
 static bool rev_compare( const smart_ptr<MagicBase> g1, const smart_ptr<MagicBase> g2 )
 {
     bool lt=true;
-    Roster r1 = g1->RefRoster();
-    Roster r2 = g2->RefRoster();
-    switch( backdoor->compare_col )
+    if( backdoor->compare_col == 1 )
     {
-        case 1: lt = r1.white > r2.white;           break;
-        case 2:
-        {       int elo_1 = atoi( r1.white_elo.c_str() );
-            int elo_2 = atoi( r2.white_elo.c_str() );
-            lt = elo_1 > elo_2;
-            break;
+        const char *white1 = g2->White();
+        const char *white2 = g1->White();
+        int negative_if_lt0 = strcmp( white1, white2 );
+        lt = (negative_if_lt0 < 0);
+    }
+    else if( backdoor->compare_col == 3 )
+    {
+        const char *black1 = g2->Black();
+        const char *black2 = g1->Black();
+        int negative_if_lt0 = strcmp( black1, black2 );
+        lt = (negative_if_lt0 < 0);
+    }
+    else
+    {
+        Roster r1 = g1->RefRoster();
+        Roster r2 = g2->RefRoster();
+        switch( backdoor->compare_col )
+        {
+            case 1: lt = r1.white > r2.white;           break;
+            case 2:
+            {       int elo_1 = atoi( r1.white_elo.c_str() );
+                int elo_2 = atoi( r2.white_elo.c_str() );
+                lt = elo_1 > elo_2;
+                break;
+            }
+            case 3: lt = r1.black > r2.black;           break;
+            case 4:
+            {       int elo_1 = atoi( r1.black_elo.c_str() );
+                int elo_2 = atoi( r2.black_elo.c_str() );
+                lt = elo_1 > elo_2;
+                break;
+            }
+            case 5: lt = r1.date > r2.date;             break;
+            case 6: lt = r1.site > r2.site;             break;
+            case 8: lt = r1.result > r2.result;         break;
         }
-        case 3: lt = r1.black > r2.black;           break;
-        case 4:
-        {       int elo_1 = atoi( r1.black_elo.c_str() );
-            int elo_2 = atoi( r2.black_elo.c_str() );
-            lt = elo_1 > elo_2;
-            break;
-        }
-        case 5: lt = r1.date > r2.date;             break;
-        case 6: lt = r1.site > r2.site;             break;
-        case 8: lt = r1.result > r2.result;         break;
     }
     return lt;
 }
@@ -1518,7 +1542,7 @@ void GamesDialog::GdvListColClick( int compare_col )
         if( compare_col == 10 )
             SmartCompare(gc->gds);
         else
-            std::sort( gc->gds.begin(), gc->gds.end(), (consecutive%2==0)?rev_compare:compare );
+            std::sort( gc->gds.begin(), gc->gds.end(), (consecutive%2==0)?compare:rev_compare );
         nbr_games_in_list_ctrl = gc->gds.size();
         list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
         list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );

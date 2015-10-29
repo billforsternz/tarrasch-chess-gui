@@ -257,11 +257,15 @@ void pgn_read_hook( const char *white, const char *black, const char *event, con
     phook->moves       = std::vector<thc::Move>(moves,moves+nbr_moves);
 }
 
-void ReadGameFromPgn( int pgn_handle, long fposn, CompactGame &pact, bool end )
+void *ReadGameFromPgn( int pgn_handle, long fposn, CompactGame &pact, void *context, bool end )
 {
-    //cprintf( "ReadGameFromPgnInLoop(%d,%s) %ld\n", pgn_handle, end?"true":"false", fposn );
     static FILE *pgn_file;
     static int save_pgn_handle;
+    PgnRead *pgn;
+    if( context )
+        pgn = static_cast<PgnRead*>( context );
+    else
+        pgn = new PgnRead('R'); 
     if( pgn_file && pgn_handle!=save_pgn_handle )
     {
         objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
@@ -275,14 +279,17 @@ void ReadGameFromPgn( int pgn_handle, long fposn, CompactGame &pact, bool end )
     }
     fseek( pgn_file, fposn, SEEK_SET );
     phook = &pact;
-    PgnRead *pgn = new PgnRead('R');
     pgn->Process(pgn_file);
     if( end )
     {
         objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
         pgn_file = NULL;
         save_pgn_handle = 0;
+        delete pgn;
+        pgn = 0;
     }
+    //cprintf( "ReadGameFromPgn(%d,%s) %ld (%s-%s)\n", pgn_handle, end?"true":"false", fposn, pact.r.white.c_str(), pact.r.black.c_str() );
+    return( pgn );
 }
 
 void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &new_doc )

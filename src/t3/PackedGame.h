@@ -24,7 +24,7 @@ public:
     void Unpack( Roster &r );
     void Unpack( std::string &blob );
     const char *White();
-    const std::string &GetWhite();
+    const char *Black();
 };
 
 #endif // PACKED_GAME_H
