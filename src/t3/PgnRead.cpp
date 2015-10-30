@@ -514,7 +514,13 @@ bool PgnRead::Process( FILE *infile )
               )
             {
                 if( GameOver() )
+                {
+                    //int err =
+                    fseek( infile, 860, SEEK_SET );
+                    //if( err != 0 )
+                    //    cprintf("Whoops");
                     return true;
+                }
             }
             if( state==PREFIX && old_state!=HEADER && old_state!=IN_COMMENT )
             {

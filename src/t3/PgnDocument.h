@@ -13,7 +13,7 @@
 
 
 void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &gd );
-void *ReadGameFromPgn( int pgn_handle, long fposn, CompactGame &pact, void *context, bool end=true );
+void *ReadGameFromPgnInLoop( int pgn_handle, long fposn, CompactGame &pact, void *context, bool end=true );
 
 class PgnDocument : public MagicBase
 {
@@ -29,7 +29,7 @@ public:
         if( pack.Empty() )
         {
             CompactGame pact;
-            context = ReadGameFromPgn( pgn_handle, fposn, pact, context, end );
+            context = ReadGameFromPgnInLoop( pgn_handle, fposn, pact, context, end );
             pack.Pack(pact);
         }
         return context;

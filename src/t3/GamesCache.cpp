@@ -257,8 +257,13 @@ void pgn_read_hook( const char *white, const char *black, const char *event, con
     phook->moves       = std::vector<thc::Move>(moves,moves+nbr_moves);
 }
 
-void *ReadGameFromPgn( int pgn_handle, long fposn, CompactGame &pact, void *context, bool end )
+// Work around to a very annoying bug on OSX - while we ReadGameFromPgnInLoop(), ReadGameFromPgn() was
+//  being called by the OS Windowing system and closing the file we were using in the loop!
+static bool reentry_protection;
+
+void *ReadGameFromPgnInLoop( int pgn_handle, long fposn, CompactGame &pact, void *context, bool end )
 {
+    reentry_protection = true;
     static FILE *pgn_file;
     static int save_pgn_handle;
     PgnRead *pgn;
@@ -282,13 +287,14 @@ void *ReadGameFromPgn( int pgn_handle, long fposn, CompactGame &pact, void *cont
     pgn->Process(pgn_file);
     if( end )
     {
+        reentry_protection = false;
         objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
         pgn_file = NULL;
         save_pgn_handle = 0;
         delete pgn;
         pgn = 0;
     }
-    //cprintf( "ReadGameFromPgn(%d,%s) %ld (%s-%s)\n", pgn_handle, end?"true":"false", fposn, pact.r.white.c_str(), pact.r.black.c_str() );
+    //cprintf( "ReadGameFromPgnInLoop(%d,%s) %ld (%s-%s)\n", pgn_handle, end?"true":"false", fposn, pact.r.white.c_str(), pact.r.black.c_str() );
     return( pgn );
 }
 
@@ -342,7 +348,8 @@ void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &new_doc )
     gd.PgnParse(true,nbr_converted,moves,cr,NULL);
     gd.fposn0 = fposn;
     new_doc = gd;
-    objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
+    if( !reentry_protection )
+        objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
 }
 
 
