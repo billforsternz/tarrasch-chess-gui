@@ -497,29 +497,42 @@ void PgnDialog::GdvListColClick( int compare_col )
 {
     local_cache.clear();
     stack.clear();
-    
+
     // Load all games into memory
+    int nbr = gc->gds.size();
+    int old_percent = -1;
+    void *context=0;
+    bool end=false;
+    for( int i=0; !end && i<nbr; i++ )
     {
-        wxProgressDialog progress( "Loading games", "Loading games", 100, NULL,
-                                  wxPD_APP_MODAL+
-                                  wxPD_AUTO_HIDE+
-                                  wxPD_ELAPSED_TIME+
-                                  wxPD_CAN_ABORT+
-                                  wxPD_ESTIMATED_TIME );
-        int nbr = gc->gds.size();
-        int old_percent = -1;
-        void *context=0;
-        for( int i=0; i<nbr; i++ )
-        {
+        
+        // If all the games are already in memory, the whole loop will operate here
+        if( !context )
             context = gc->gds[i]->LoadIntoMemory( context, i+1 >= nbr );
-            int percent = (i*100) / (nbr?nbr:1);
-            if( percent < 1 )
-                percent = 1;
-            if( percent != old_percent )
+
+        // If we need to load games, put up a progress dialog box
+        else
+        {
+            wxProgressDialog progress( "Loading games", "Loading games", 100, NULL,
+                                      wxPD_APP_MODAL+
+                                      wxPD_AUTO_HIDE+
+                                      wxPD_ELAPSED_TIME+
+                                      wxPD_CAN_ABORT+
+                                      wxPD_ESTIMATED_TIME );
+            for( ; !end && i<nbr; i++ )
             {
-                old_percent = percent;
-                if( !progress.Update( percent>100 ? 100 : percent ) )
-                    return;
+                end = (i+1 >= nbr);
+                int percent = (i*100) / (nbr?nbr:1);
+                if( percent < 1 )
+                    percent = 1;
+                if( percent != old_percent )
+                {
+                    old_percent = percent;
+                    if( !progress.Update( percent>100 ? 100 : percent ) )
+                        end = true;
+                }
+                context = gc->gds[i]->LoadIntoMemory( context, end );   // never exit without an end=true call
+                                                                        //  prevents resource leaks
             }
         }
     }
