@@ -8,21 +8,28 @@
 #include "CompressMoves.h"
 #include "PackedGame.h"
 
+#define HDR_LEN_SINGLE 12    // '1' + single byte offsets of 11 fields
+#define HDR_LEN_DOUBLE 23    // '2' + double byte offsets of 11 fields
+
 void PackedGame::Pack( Roster &r, std::string &blob )
 {
     bool complete=false;
     for( int attempt=0; !complete && attempt<2; attempt++ )
     {
         complete = true; // normally only one attempt required
-        fields = (attempt==0 ? "1123456789012" : "2x1x2x3x4x5x6x7x8x9x0x1x2");
+        fields = (attempt==0 ? "112345678901" : "2x1x2x3x4x5x6x7x8x9x0x1");
         unsigned int offset_idx=1;
         unsigned int offset=0;
-        for( int i=0; i<12; i++ )
+        fields += r.white;
+        offset += r.white.length();
+        fields += '\0';
+        offset++;
+        for( int i=1; i<12; i++ )
         {
             std::string s;
             switch(i)
             {
-                case 0: s = r.white;        break;
+                //case 0: s = r.white;        break;
                 case 1: s = r.black;        break;
                 case 2: s = r.event;        break;
                 case 3: s = r.site;         break;
@@ -91,7 +98,7 @@ void PackedGame::Unpack( std::string &blob )
 {
     int i=11;
     bool single = (fields[0] == '1');
-    int begin_idx = single ? 1+i : 1+2*i;
+    int begin_idx = single ? 1+(i-1) : 1+2*(i-1);
     bool bad=false;
     unsigned char c, d;
     unsigned int end_offset;
@@ -100,7 +107,7 @@ void PackedGame::Unpack( std::string &blob )
     {
         c = fields[begin_idx++];
         begin_offset = static_cast<unsigned int>(c);
-        end_offset = fields.length()-13;
+        end_offset = fields.length()-HDR_LEN_SINGLE;
     }
     else
     {
@@ -110,9 +117,9 @@ void PackedGame::Unpack( std::string &blob )
             bad = true;
         else
             begin_offset = static_cast<unsigned int>(c) + 256*static_cast<unsigned int>(d);
-        end_offset = fields.length()-25;
+        end_offset = fields.length()-HDR_LEN_DOUBLE;
     }
-    blob = bad ? "" : fields.substr( (single?13:25)+begin_offset, end_offset-begin_offset-1 );
+    blob = bad ? "" : fields.substr( (single?HDR_LEN_SINGLE:HDR_LEN_DOUBLE)+begin_offset, end_offset-begin_offset-1 );
 }
 
 void PackedGame::Unpack( Roster &r )
@@ -120,27 +127,33 @@ void PackedGame::Unpack( Roster &r )
     bool single = (fields[0] == '1');
     for( int i=0; i<11; i++ )
     {
-        int begin_idx = single ? 1+i : 1+2*i;
-        int end_idx   = single ? 1+(i+1) : 1+2*(i+1);
+        int begin_idx = single ? 1+(i-1) : 1+2*(i-1);
+        int end_idx   = single ? 1+i : 1+2*i;
         bool bad=false;
         unsigned char c, d;
         unsigned int end_offset;
-        unsigned int begin_offset;
+        unsigned int begin_offset=0;
         if( single )
         {
-            c = fields[begin_idx++];
-            begin_offset = static_cast<unsigned int>(c);
+            if( i != 0 )
+            {
+                c = fields[begin_idx++];
+                begin_offset = static_cast<unsigned int>(c);
+            }
             c = fields[end_idx++];
             end_offset = static_cast<unsigned int>(c);
         }
         else
         {
-            c = fields[begin_idx++];
-            d = fields[begin_idx++];
-            if( c==255 && d==255 )
-                bad = true;
-            else
-                begin_offset = static_cast<unsigned int>(c) + 256*static_cast<unsigned int>(d);
+            if( i != 0 )
+            {
+                c = fields[begin_idx++];
+                d = fields[begin_idx++];
+                if( c==255 && d==255 )
+                    bad = true;
+                else
+                    begin_offset = static_cast<unsigned int>(c) + 256*static_cast<unsigned int>(d);
+            }
             c = fields[end_idx++];
             d = fields[end_idx++];
             if( c==255 && d==255 )
@@ -148,7 +161,7 @@ void PackedGame::Unpack( Roster &r )
             else
                 end_offset = static_cast<unsigned int>(c) + 256*static_cast<unsigned int>(d);
         }
-        std::string s = bad ? "" : fields.substr( (single?13:25)+begin_offset, end_offset-begin_offset-1 );
+        std::string s = bad ? "" : fields.substr( (single?HDR_LEN_SINGLE:HDR_LEN_DOUBLE)+begin_offset, end_offset-begin_offset-1 );
         switch(i)
         {
             case 0: r.white = s;        break;
@@ -166,34 +179,90 @@ void PackedGame::Unpack( Roster &r )
     }
 }
 
+const char *PackedGame::Black()
+{
+    return GetField(1);
+}
+
+const char *PackedGame::Event()
+{
+    return GetField(2);
+}
+
+const char *PackedGame::Site()
+{
+    return GetField(3);
+}
+
+const char *PackedGame::Result()
+{
+    return GetField(4);
+}
+
+const char *PackedGame::Round()
+{
+    return GetField(5);
+}
+
+const char *PackedGame::Date()
+{
+    return GetField(6);
+}
+
+const char *PackedGame::Eco()
+{
+    return GetField(7);
+}
+
+const char *PackedGame::WhiteElo()
+{
+    return GetField(8);
+}
+
+const char *PackedGame::BlackElo()
+{
+    return GetField(9);
+}
+
+const char *PackedGame::Fen()
+{
+    return GetField(10);
+}
+
+const char *PackedGame::Blob()
+{
+    return GetField(11);
+}
 
 const char *PackedGame::White()
 {
     bool single = (fields[0] == '1');
-    return &fields[single?13:25];
+    return &fields[single?HDR_LEN_SINGLE:HDR_LEN_DOUBLE];
 }
 
-const char *PackedGame::Black()
+const char *PackedGame::GetField( int field_nbr )
 {
     bool single = (fields[0] == '1');
-    int i=1;
-    int begin_idx = single ? 1+i : 1+2*i;
+    unsigned int begin_offset=0;
     bool bad=false;
-    unsigned char c, d;
-    unsigned int begin_offset;
-    if( single )
+    if( field_nbr > 0 )
     {
-        c = fields[begin_idx++];
-        begin_offset = static_cast<unsigned int>(c);
-    }
-    else
-    {
-        c = fields[begin_idx++];
-        d = fields[begin_idx++];
-        if( c==255 && d==255 )
-            bad = true;
+        int begin_idx = (single ? 1+(field_nbr-1) : 1+2*(field_nbr-1));
+        unsigned char c, d;
+        if( single )
+        {
+            c = fields[begin_idx++];
+            begin_offset = static_cast<unsigned int>(c);
+        }
         else
-            begin_offset = static_cast<unsigned int>(c) + 256*static_cast<unsigned int>(d);
+        {
+            c = fields[begin_idx++];
+            d = fields[begin_idx++];
+            if( c==255 && d==255 )
+                bad = true;
+            else
+                begin_offset = static_cast<unsigned int>(c) + 256*static_cast<unsigned int>(d);
+        }
     }
-    return bad ? "" : &fields[ (single?13:25)+begin_offset ];
+    return bad ? "" : &fields[ (single?HDR_LEN_SINGLE:HDR_LEN_DOUBLE)+begin_offset ];
 }

@@ -25,6 +25,18 @@ public:
     void Unpack( std::string &blob );
     const char *White();
     const char *Black();
+    const char *Event();
+    const char *Site();
+    const char *Result();
+    const char *Round();
+    const char *Date();
+    const char *Eco();
+    const char *WhiteElo();
+    const char *BlackElo();
+    const char *Fen();
+    const char *Blob();
+private:
+    const char *GetField( int field_nbr );
 };
 
 #endif // PACKED_GAME_H
