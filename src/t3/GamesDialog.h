@@ -250,6 +250,7 @@ protected:
     wxPoint pos;
     wxSize size;
     long style;
+    DB_REQ db_req;
 
     GamesListCtrl  *list_ctrl;
     wxBoxSizer*  hsiz_panel;

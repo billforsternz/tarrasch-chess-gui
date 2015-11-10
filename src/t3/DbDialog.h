@@ -59,6 +59,7 @@ public:
         thc::ChessRules *cr,
         GamesCache  *gc,
         GamesCache  *gc_clipboard,
+        DB_REQ      db_req,
         wxWindowID  id,
         const wxPoint& pos = wxDefaultPosition,
         const wxSize& size = wxDefaultSize,
@@ -102,7 +103,6 @@ public:
 
     // Data members
 private:
-    
     std::map< uint32_t, MOVE_STATS > stats; // map each move in the position to move stats
     bool white_player_search;
     std::unordered_set<int>   games_set;    // game_ids for all games in memory

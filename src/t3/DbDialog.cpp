@@ -57,20 +57,22 @@ wxSizer *DbDialog::GdvAddExtraControls()
     sz5.x = (sz4.x*55)/100;
     //sz5.y = (sz4.y*2)/10;
 
-    //text_ctrl->SetSize( sz3.x*2, sz3.y );      // temp temp
-    text_ctrl = new wxTextCtrl ( this, ID_DB_TEXT, wxT(""), wxDefaultPosition, sz5, 0 );
-    vsiz_panel_button1->Add(text_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    wxSize sz2=text_ctrl->GetSize();
-    //text_ctrl->SetSize((sz2.x*10)/32,sz2.y);      // temp temp
-    //text_ctrl->SetSize((sz.x*7)/2,sz2.y);      // temp temp
-    text_ctrl->SetValue("White Player");
+    //if( db_req == REQ_PLAYERS )
+    {
+        //text_ctrl->SetSize( sz3.x*2, sz3.y );      // temp temp
+        text_ctrl = new wxTextCtrl ( this, ID_DB_TEXT, wxT(""), wxDefaultPosition, sz5, 0 );
+        vsiz_panel_button1->Add(text_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxSize sz2=text_ctrl->GetSize();
+        //text_ctrl->SetSize((sz2.x*10)/32,sz2.y);      // temp temp
+        //text_ctrl->SetSize((sz.x*7)/2,sz2.y);      // temp temp
+        text_ctrl->SetValue("White Player");
 
-    wxButton* reload = new wxButton ( this, ID_DB_RELOAD, wxT("Search"),
-                                     wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_button1->Add(reload, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-
-    //wxSize sz3=reload->GetSize();
-    //text_ctrl->SetSize( sz3.x*2, sz3.y );      // temp temp
+        wxButton* reload = new wxButton ( this, ID_DB_RELOAD, wxT("Search"),
+                                         wxDefaultPosition, wxDefaultSize, 0 );
+        vsiz_panel_button1->Add(reload, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        //wxSize sz3=reload->GetSize();
+        //text_ctrl->SetSize( sz3.x*2, sz3.y );      // temp temp
+    }
  
     
     wxStaticText* spacer1 = new wxStaticText( this, wxID_ANY, wxT(""),
@@ -223,12 +225,14 @@ DbDialog::DbDialog
     thc::ChessRules *cr,
     GamesCache  *gc,
     GamesCache  *gc_clipboard,
+    DB_REQ      db_req,
     wxWindowID  id,
     const wxPoint& pos,
     const wxSize& size,
     long style
  ) : GamesDialog( parent, cr, gc, gc_clipboard, id, pos, size )
 {
+    this->db_req = db_req;
     activated_at_least_once = false;
     transpo_activated = false;
     white_player_search = true;
@@ -559,22 +563,20 @@ void DbDialog::GdvSearch()
 {
     wxString name = text_ctrl->GetValue();
     std::string sname(name.c_str());
-    thc::ChessPosition start_cp;
     
-    // Temp - do a "find on page type feature"
-    if( sname.length()>0 && cr==start_cp )
+    // Do a "find on page type feature"
+    if( sname.length()>0 && db_req == REQ_PLAYERS )
     {
         std::string current = white_player_search ? track->info.r.white : track->info.r.black;
         int row = objs.db->FindPlayer( sname, current, track->focus_idx, white_player_search );
-        Goto(row); /*
-        list_ctrl->EnsureVisible( row );   // get vaguely close
-        list_ctrl->SetItemState( row, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
-        list_ctrl->SetItemState( row, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
-        list_ctrl->SetFocus( ); */
+        Goto(row);
     }
+
+    #if 0 // not useful, maybe replace with something else
+    // Else limit search to particular player
     else
     {
-        nbr_games_in_list_ctrl = objs.db->SetPosition( cr, sname );
+        nbr_games_in_list_ctrl = objs.db->SetDbPosition( db_req, cr, sname );
         char buf[200];
         sprintf(buf,"List of %d matching games from the database",nbr_games_in_list_ctrl);
         title_ctrl->SetLabel( buf );
@@ -584,6 +586,7 @@ void DbDialog::GdvSearch()
         if( nbr_games_in_list_ctrl > 0 )
             Goto(0);
     }
+    #endif
 }
 
 
@@ -787,7 +790,7 @@ void DbDialog::GdvCheckBox( bool checked )
     }
     else   // TODO need special handling for initial position
     {
-        nbr_games_in_list_ctrl = objs.db->SetPosition( cr );
+        nbr_games_in_list_ctrl = objs.db->SetDbPosition( db_req, cr );
         
         // We have shown stats while db_clipboard was true. So to avoid going back to
         //  situation where stats must be requested, unconditionally load games into

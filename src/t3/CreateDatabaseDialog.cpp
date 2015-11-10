@@ -15,65 +15,49 @@
 #include "Appdefs.h"
 #include "DbPrimitives.h"
 #include "DbMaintenance.h"
-#include "MaintenanceDialog.h"
+#include "CreateDatabaseDialog.h"
 
-// MaintenanceDialog type definition
-IMPLEMENT_CLASS( MaintenanceDialog, wxDialog )
+// CreateDatabaseDialog type definition
+IMPLEMENT_CLASS( CreateDatabaseDialog, wxDialog )
 
-// MaintenanceDialog event table definition
-BEGIN_EVENT_TABLE( MaintenanceDialog, wxDialog )
-// EVT_UPDATE_UI( ID_TEMP_VOTE, MaintenanceDialog::OnVoteUpdate )
-// EVT_BUTTON( ID_TEMP_ENGINE_BROWSE, MaintenanceDialog::OnBrowseClick )
+// CreateDatabaseDialog event table definition
+BEGIN_EVENT_TABLE( CreateDatabaseDialog, wxDialog )
 
-EVT_BUTTON( ID_MAINTENANCE_CMD_1, MaintenanceDialog::OnMaintenanceSpeed )
-EVT_BUTTON( ID_MAINTENANCE_CMD_2, MaintenanceDialog::OnMaintenanceCompress )
-EVT_BUTTON( ID_MAINTENANCE_CMD_3, MaintenanceDialog::OnMaintenanceDecompress )
-EVT_BUTTON( ID_MAINTENANCE_CMD_4, MaintenanceDialog::OnMaintenanceVerify )
-EVT_BUTTON( ID_MAINTENANCE_CMD_5, MaintenanceDialog::OnMaintenanceCreate )
-EVT_BUTTON( ID_CREATE_DB_APPEND, MaintenanceDialog::OnMaintenanceIndexes )
+EVT_BUTTON( ID_CREATE_DB_CREATE, CreateDatabaseDialog::OnMaintenanceCreate )
 
-EVT_BUTTON( wxID_HELP, MaintenanceDialog::OnHelpClick )
-EVT_FILEPICKER_CHANGED( ID_TEMP_ENGINE_PICKER, MaintenanceDialog::OnFilePicked )
+EVT_BUTTON( wxID_HELP, CreateDatabaseDialog::OnHelpClick )
+EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER_DB, CreateDatabaseDialog::OnDbFilePicked )
+EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER1,   CreateDatabaseDialog::OnPgnFile1Picked )
+EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER2,   CreateDatabaseDialog::OnPgnFile2Picked )
+EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER3,   CreateDatabaseDialog::OnPgnFile3Picked )
 END_EVENT_TABLE()
 
-// MaintenanceDialog constructors
-MaintenanceDialog::MaintenanceDialog()
+// CreateDatabaseDialog constructors
+CreateDatabaseDialog::CreateDatabaseDialog()
 {
     Init();
 }
 
-MaintenanceDialog::MaintenanceDialog(
-                           const EngineConfig &dat,
+CreateDatabaseDialog::CreateDatabaseDialog(
                            wxWindow* parent,
                            wxWindowID id, const wxString& caption,
                            const wxPoint& pos, const wxSize& size, long style )
 {
     Init();
-    this->dat = dat;
     Create(parent, id, caption, pos, size, style);
 }
 
 // Initialisation
-void MaintenanceDialog::Init()
+void CreateDatabaseDialog::Init()
 {
-    dat.m_file = "";
 }
 
 // Dialog create
-bool MaintenanceDialog::Create( wxWindow* parent,
+bool CreateDatabaseDialog::Create( wxWindow* parent,
                           wxWindowID id, const wxString& caption,
                           const wxPoint& pos, const wxSize& size, long style )
 {
     bool okay=true;
-    
-    // Get nbr of CPUs
-#ifdef WINDOWS_FIX_LATER
-    SYSTEM_INFO sysinfo;
-    GetSystemInfo( &sysinfo );
-    nbr_cpus = sysinfo.dwNumberOfProcessors;
-#else
-    nbr_cpus = 1;
-#endif
     
     // We have to set extra styles before creating the dialog
     SetExtraStyle( wxWS_EX_BLOCK_EVENTS|wxDIALOG_EX_CONTEXTHELP );
@@ -98,8 +82,8 @@ bool MaintenanceDialog::Create( wxWindow* parent,
     return okay;
 }
 
-// Control creation for MaintenanceDialog
-void MaintenanceDialog::CreateControls()
+// Control creation for CreateDatabaseDialog
+void CreateDatabaseDialog::CreateControls()
 {
     
     // A top-level sizer
@@ -138,28 +122,41 @@ void MaintenanceDialog::CreateControls()
     box_sizer->Add(5, 5, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
     
     // Label for file
-    wxStaticText* file_label = new wxStaticText ( this, wxID_STATIC,
-                                                 wxT("&Choose the next .pgn file with games to append to the database:"), wxDefaultPosition, wxDefaultSize, 0 );
-    box_sizer->Add(file_label, 0, wxALIGN_LEFT|wxALL, 5);
+    wxStaticText* db_file_label = new wxStaticText ( this, wxID_STATIC,
+                                                 wxT("&Choose a new database file"), wxDefaultPosition, wxDefaultSize, 0 );
+    box_sizer->Add(db_file_label, 0, wxALIGN_LEFT|wxALL, 5);
     
-    // File picker control
-    wxString   database_file = DB_MAINTENANCE_FILE;
-    wxFileName fn( database_file );
-    wxString   pgn_file= DB_MAINTENANCE_PGN_FILE;
-    wxFileName fn2( pgn_file );
-    pgn_filename = fn2.GetFullPath();
+    // File picker controls
     
-    wxFilePickerCtrl *picker = new wxFilePickerCtrl( this, ID_TEMP_ENGINE_PICKER, pgn_filename, wxT("Select .pgn for append operation below"),
+    wxFilePickerCtrl *picker_db = new wxFilePickerCtrl( this, ID_CREATE_DB_PICKER_DB, db_filename, wxT("Select database to create"),
+                                                    "*.tarrasch_db", wxDefaultPosition, wxDefaultSize,
+                                                    wxFLP_USE_TEXTCTRL|wxFLP_OPEN ); //|wxFLP_CHANGE_DIR );
+    box_sizer->Add(picker_db, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
+
+    // Label for file
+    wxStaticText* pgn_file_label = new wxStaticText ( this, wxID_STATIC,
+                                                 wxT("&Select one or more .pgn files to add to the database"), wxDefaultPosition, wxDefaultSize, 0 );
+    box_sizer->Add(pgn_file_label, 0, wxALIGN_LEFT|wxALL, 5);
+    wxFilePickerCtrl *picker1 = new wxFilePickerCtrl( this, ID_CREATE_DB_PICKER1, pgn_filename1, wxT("Select 1st .pgn"),
                                                     "*.pgn", wxDefaultPosition, wxDefaultSize,
                                                     wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST ); //|wxFLP_CHANGE_DIR );
-    box_sizer->Add(picker, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
+    box_sizer->Add(picker1, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
 
+    wxFilePickerCtrl *picker2 = new wxFilePickerCtrl( this, ID_CREATE_DB_PICKER2, pgn_filename2, wxT("Select 2nd .pgn"),
+                                                    "*.pgn", wxDefaultPosition, wxDefaultSize,
+                                                    wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST ); //|wxFLP_CHANGE_DIR );
+    box_sizer->Add(picker2, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
+
+    wxFilePickerCtrl *picker3 = new wxFilePickerCtrl( this, ID_CREATE_DB_PICKER3, pgn_filename3, wxT("Select next .pgn"),
+                                                    "*.pgn", wxDefaultPosition, wxDefaultSize,
+                                                    wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST ); //|wxFLP_CHANGE_DIR );
+    box_sizer->Add(picker3, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
 /*
  
  I've left this stuff lying around in case it provides useful examples for future maintenance features
  
     // Ponder enabled
-    wxCheckBox* ponder_box = new wxCheckBox( this, ID_TEMP_PONDER,
+    wxCheckBox* ponder_box = new wxCheckBox( this, ID_CREATE_DB_PONDER,
                                             wxT("&Ponder"), wxDefaultPosition, wxDefaultSize, 0 );
     ponder_box->SetValue( dat.m_ponder );
     box_sizer->Add( ponder_box, 0,
@@ -170,7 +167,7 @@ void MaintenanceDialog::CreateControls()
      box_sizer->Add(hash_label, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
      
      // A spin control for the hash
-     wxSpinCtrl* hash_spin = new wxSpinCtrl ( this, ID_TEMP_HASH,
+     wxSpinCtrl* hash_spin = new wxSpinCtrl ( this, ID_CREATE_DB_HASH,
      wxEmptyString, wxDefaultPosition, wxSize(60, -1),
      wxSP_ARROW_KEYS, 1, 4096, 64 );
      box_sizer->Add(hash_spin, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
@@ -180,7 +177,7 @@ void MaintenanceDialog::CreateControls()
                                                  wxT("&Hash size:"), wxDefaultPosition, wxDefaultSize, 0 );
     
     // A spin control for the hash
-    wxSpinCtrl* hash_spin = new wxSpinCtrl ( this, ID_TEMP_HASH,
+    wxSpinCtrl* hash_spin = new wxSpinCtrl ( this, ID_CREATE_DB_HASH,
                                             wxEmptyString, wxDefaultPosition, wxSize(60, -1),
                                             wxSP_ARROW_KEYS, 1, 4096, 64 );
     wxBoxSizer* hash_horiz  = new wxBoxSizer(wxHORIZONTAL);
@@ -194,7 +191,7 @@ void MaintenanceDialog::CreateControls()
      box_sizer->Add(max_cpu_cores_label, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
      
      // A spin control for max cpu cores
-     wxSpinCtrl* max_cpu_cores_spin = new wxSpinCtrl ( this, ID_TEMP_MAX_CPU_CORES,
+     wxSpinCtrl* max_cpu_cores_spin = new wxSpinCtrl ( this, ID_CREATE_DB_MAX_CPU_CORES,
      wxEmptyString, wxDefaultPosition, wxSize(60, -1),
      wxSP_ARROW_KEYS, 1, nbr_cpus, 1 );
      box_sizer->Add(max_cpu_cores_spin, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
@@ -204,7 +201,7 @@ void MaintenanceDialog::CreateControls()
                                                           wxT("&Max CPU cores:"), wxDefaultPosition, wxDefaultSize, 0 );
     
     // A spin control for max cpu cores
-    wxSpinCtrl* max_cpu_cores_spin = new wxSpinCtrl ( this, ID_TEMP_MAX_CPU_CORES,
+    wxSpinCtrl* max_cpu_cores_spin = new wxSpinCtrl ( this, ID_CREATE_DB_MAX_CPU_CORES,
                                                      wxEmptyString, wxDefaultPosition, wxSize(60, -1),
                                                      wxSP_ARROW_KEYS, 1, nbr_cpus, 1 );
     wxBoxSizer* max_cpu_cores_horiz  = new wxBoxSizer(wxHORIZONTAL);
@@ -213,8 +210,8 @@ void MaintenanceDialog::CreateControls()
     box_sizer->Add( max_cpu_cores_horiz, 0, wxALIGN_CENTER_VERTICAL|wxTOP|wxBOTTOM|wxRIGHT, 5);
     
     // Text controls for custom parameter 1
-    wxTextCtrl *custom1a_ctrl = new wxTextCtrl ( this, ID_TEMP_CUSTOM1A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
-    wxTextCtrl *custom1b_ctrl = new wxTextCtrl ( this, ID_TEMP_CUSTOM1B, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
+    wxTextCtrl *custom1a_ctrl = new wxTextCtrl ( this, ID_CREATE_DB_CUSTOM1A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
+    wxTextCtrl *custom1b_ctrl = new wxTextCtrl ( this, ID_CREATE_DB_CUSTOM1B, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
     
     // Label for custom parameter 1
     wxStaticText* custom1_label = new wxStaticText ( this, wxID_STATIC,
@@ -226,8 +223,8 @@ void MaintenanceDialog::CreateControls()
     box_sizer->Add( custom1_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 5 );
     
     // Text controls for custom parameter 2
-    wxTextCtrl *custom2a_ctrl = new wxTextCtrl ( this, ID_TEMP_CUSTOM2A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
-    wxTextCtrl *custom2b_ctrl = new wxTextCtrl ( this, ID_TEMP_CUSTOM2B, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
+    wxTextCtrl *custom2a_ctrl = new wxTextCtrl ( this, ID_CREATE_DB_CUSTOM2A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
+    wxTextCtrl *custom2b_ctrl = new wxTextCtrl ( this, ID_CREATE_DB_CUSTOM2B, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
     
     // Label for custom parameter 2
     wxStaticText* custom2_label = new wxStaticText ( this, wxID_STATIC,
@@ -239,8 +236,8 @@ void MaintenanceDialog::CreateControls()
     box_sizer->Add( custom2_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 5 );
     
     // Text controls for custom parameter 3
-    wxTextCtrl *custom3a_ctrl = new wxTextCtrl ( this, ID_TEMP_CUSTOM3A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
-    wxTextCtrl *custom3b_ctrl = new wxTextCtrl ( this, ID_TEMP_CUSTOM3B, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
+    wxTextCtrl *custom3a_ctrl = new wxTextCtrl ( this, ID_CREATE_DB_CUSTOM3A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
+    wxTextCtrl *custom3b_ctrl = new wxTextCtrl ( this, ID_CREATE_DB_CUSTOM3B, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
     
     // Label for custom parameter 3
     wxStaticText* custom3_label = new wxStaticText ( this, wxID_STATIC,
@@ -252,8 +249,8 @@ void MaintenanceDialog::CreateControls()
     box_sizer->Add( custom3_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 5 );
     
     // Text controls for custom parameter 4
-    wxTextCtrl *custom4a_ctrl = new wxTextCtrl ( this, ID_TEMP_CUSTOM4A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
-    wxTextCtrl *custom4b_ctrl = new wxTextCtrl ( this, ID_TEMP_CUSTOM4B, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
+    wxTextCtrl *custom4a_ctrl = new wxTextCtrl ( this, ID_CREATE_DB_CUSTOM4A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
+    wxTextCtrl *custom4b_ctrl = new wxTextCtrl ( this, ID_CREATE_DB_CUSTOM4B, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
     
     // Label for custom parameter 4
     wxStaticText* custom4_label = new wxStaticText ( this, wxID_STATIC,
@@ -273,19 +270,7 @@ void MaintenanceDialog::CreateControls()
     // Temporary primitive database management functions
     wxBoxSizer* db_vert  = new wxBoxSizer(wxVERTICAL);
     box_sizer->Add( db_vert, 0, wxALIGN_CENTER_VERTICAL|wxTOP|wxBOTTOM|wxRIGHT, 5);
-    wxButton* button_cmd_1 = new wxButton( this, ID_MAINTENANCE_CMD_1, wxT("&Database speed test"),
-                                          wxDefaultPosition, wxDefaultSize, 0 );
-    db_vert->Add( button_cmd_1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    wxButton* button_cmd_2 = new wxButton( this, ID_MAINTENANCE_CMD_2, wxT("&Test compress file .pgn -> .qgn"),
-                                          wxDefaultPosition, wxDefaultSize, 0 );
-    db_vert->Add( button_cmd_2, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    wxButton* button_cmd_3 = new wxButton( this, ID_MAINTENANCE_CMD_3, wxT("&Test decompress file .qgn -> .pgn"),
-                                          wxDefaultPosition, wxDefaultSize, 0 );
-    db_vert->Add( button_cmd_3, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    wxButton* button_cmd_4 = new wxButton( this, ID_MAINTENANCE_CMD_4, wxT("&Test move compression algorithm"),
-                                          wxDefaultPosition, wxDefaultSize, 0 );
-    db_vert->Add( button_cmd_4, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    wxButton* button_cmd_5 = new wxButton( this, ID_MAINTENANCE_CMD_5, wxT("&DANGER append to database from .pgn"),
+    wxButton* button_cmd_5 = new wxButton( this, ID_CREATE_DB_CREATE, wxT("&DANGER append to database from .pgn"),
                                           wxDefaultPosition, wxDefaultSize, 0 );
     db_vert->Add( button_cmd_5, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     wxButton* button_cmd_6 = new wxButton( this, ID_CREATE_DB_APPEND, wxT("&DANGER database create indexes"),
@@ -305,9 +290,9 @@ void MaintenanceDialog::CreateControls()
    
     
     // The OK button
-    wxButton* ok = new wxButton ( this, wxID_OK, wxT("&OK"),
-                                 wxDefaultPosition, wxDefaultSize, 0 );
-    okCancelBox->Add(ok, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    //wxButton* ok = new wxButton ( this, wxID_OK, wxT("&OK"),
+    //                             wxDefaultPosition, wxDefaultSize, 0 );
+    //okCancelBox->Add(ok, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     
     // The Cancel button
     wxButton* cancel = new wxButton ( this, wxID_CANCEL,
@@ -321,105 +306,82 @@ void MaintenanceDialog::CreateControls()
 }
 
 // Set the validators for the dialog controls
-void MaintenanceDialog::SetDialogValidators()
+void CreateDatabaseDialog::SetDialogValidators()
 {
     /*
-    FindWindow(ID_TEMP_PONDER)->SetValidator(
+    FindWindow(ID_CREATE_DB_PONDER)->SetValidator(
                                         wxGenericValidator(& dat.m_ponder));
-    FindWindow(ID_TEMP_HASH)->SetValidator(
+    FindWindow(ID_CREATE_DB_HASH)->SetValidator(
                                       wxGenericValidator(& dat.m_hash));
-    FindWindow(ID_TEMP_MAX_CPU_CORES)->SetValidator(
+    FindWindow(ID_CREATE_DB_MAX_CPU_CORES)->SetValidator(
                                                wxGenericValidator(& dat.m_max_cpu_cores));
-    FindWindow(ID_TEMP_CUSTOM1A)->SetValidator(
+    FindWindow(ID_CREATE_DB_CUSTOM1A)->SetValidator(
                                           wxTextValidator(wxFILTER_ASCII, &dat.m_custom1a));
-    FindWindow(ID_TEMP_CUSTOM1B)->SetValidator(
+    FindWindow(ID_CREATE_DB_CUSTOM1B)->SetValidator(
                                           wxTextValidator(wxFILTER_ASCII, &dat.m_custom1b));
-    FindWindow(ID_TEMP_CUSTOM2A)->SetValidator(
+    FindWindow(ID_CREATE_DB_CUSTOM2A)->SetValidator(
                                           wxTextValidator(wxFILTER_ASCII, &dat.m_custom2a));
-    FindWindow(ID_TEMP_CUSTOM2B)->SetValidator(
+    FindWindow(ID_CREATE_DB_CUSTOM2B)->SetValidator(
                                           wxTextValidator(wxFILTER_ASCII, &dat.m_custom2b));
-    FindWindow(ID_TEMP_CUSTOM3A)->SetValidator(
+    FindWindow(ID_CREATE_DB_CUSTOM3A)->SetValidator(
                                           wxTextValidator(wxFILTER_ASCII, &dat.m_custom3a));
-    FindWindow(ID_TEMP_CUSTOM3B)->SetValidator(
+    FindWindow(ID_CREATE_DB_CUSTOM3B)->SetValidator(
                                           wxTextValidator(wxFILTER_ASCII, &dat.m_custom3b));
-    FindWindow(ID_TEMP_CUSTOM4A)->SetValidator(
+    FindWindow(ID_CREATE_DB_CUSTOM4A)->SetValidator(
                                           wxTextValidator(wxFILTER_ASCII, &dat.m_custom4a));
-    FindWindow(ID_TEMP_CUSTOM4B)->SetValidator(
+    FindWindow(ID_CREATE_DB_CUSTOM4B)->SetValidator(
                                           wxTextValidator(wxFILTER_ASCII, &dat.m_custom4b));
      */
 }
 
 // Sets the help text for the dialog controls
-void MaintenanceDialog::SetDialogHelp()
+void CreateDatabaseDialog::SetDialogHelp()
 {
     /*
     wxString file_help = wxT("The UCI engine to use (a .exe file, eg Rybka v2.3.2a.mp.w32.exe, or komodo3-64.exe).");
-    FindWindow(ID_TEMP_ENGINE_PICKER)->SetHelpText(file_help);
-    FindWindow(ID_TEMP_ENGINE_PICKER)->SetToolTip(file_help);
+    FindWindow(ID_CREATE_DB_ENGINE_PICKER)->SetHelpText(file_help);
+    FindWindow(ID_CREATE_DB_ENGINE_PICKER)->SetToolTip(file_help);
     wxString ponder_help = wxT("Allow the engine to think on human's time (if capable).");
-    FindWindow(ID_TEMP_PONDER)->SetHelpText(ponder_help);
-    FindWindow(ID_TEMP_PONDER)->SetToolTip(ponder_help);
+    FindWindow(ID_CREATE_DB_PONDER)->SetHelpText(ponder_help);
+    FindWindow(ID_CREATE_DB_PONDER)->SetToolTip(ponder_help);
     wxString hash_help = wxT("The maximum size of hash table the engine is allowed (in megabytes).");
-    FindWindow(ID_TEMP_HASH)->SetHelpText(hash_help);
-    FindWindow(ID_TEMP_HASH)->SetToolTip(hash_help);
+    FindWindow(ID_CREATE_DB_HASH)->SetHelpText(hash_help);
+    FindWindow(ID_CREATE_DB_HASH)->SetToolTip(hash_help);
     wxString max_cpu_cores_help = wxT("The number of CPU cores the engine can use.");
-    FindWindow(ID_TEMP_MAX_CPU_CORES)->SetHelpText(max_cpu_cores_help);
-    FindWindow(ID_TEMP_MAX_CPU_CORES)->SetToolTip(max_cpu_cores_help);
+    FindWindow(ID_CREATE_DB_MAX_CPU_CORES)->SetHelpText(max_cpu_cores_help);
+    FindWindow(ID_CREATE_DB_MAX_CPU_CORES)->SetToolTip(max_cpu_cores_help);
     wxString custom_1a_help = wxT("Optional extra parameter, specify name here, eg UCI_Elo");
-    FindWindow(ID_TEMP_CUSTOM1A)->SetHelpText(custom_1a_help);
-    FindWindow(ID_TEMP_CUSTOM1A)->SetToolTip(custom_1a_help);
+    FindWindow(ID_CREATE_DB_CUSTOM1A)->SetHelpText(custom_1a_help);
+    FindWindow(ID_CREATE_DB_CUSTOM1A)->SetToolTip(custom_1a_help);
     wxString custom_1b_help = wxT("Optional extra parameter, specify value here, eg 1600");
-    FindWindow(ID_TEMP_CUSTOM1B)->SetHelpText(custom_1b_help);
-    FindWindow(ID_TEMP_CUSTOM1B)->SetToolTip(custom_1b_help);
+    FindWindow(ID_CREATE_DB_CUSTOM1B)->SetHelpText(custom_1b_help);
+    FindWindow(ID_CREATE_DB_CUSTOM1B)->SetToolTip(custom_1b_help);
     wxString custom_2a_help = wxT("Optional extra parameter, specify name here, eg UCI_LimitStrength");
-    FindWindow(ID_TEMP_CUSTOM2A)->SetHelpText(custom_2a_help);
-    FindWindow(ID_TEMP_CUSTOM2A)->SetToolTip(custom_2a_help);
+    FindWindow(ID_CREATE_DB_CUSTOM2A)->SetHelpText(custom_2a_help);
+    FindWindow(ID_CREATE_DB_CUSTOM2A)->SetToolTip(custom_2a_help);
     wxString custom_2b_help = wxT("Optional extra parameter, specify value here, eg true");
-    FindWindow(ID_TEMP_CUSTOM2B)->SetHelpText(custom_2b_help);
-    FindWindow(ID_TEMP_CUSTOM2B)->SetToolTip(custom_2b_help);
+    FindWindow(ID_CREATE_DB_CUSTOM2B)->SetHelpText(custom_2b_help);
+    FindWindow(ID_CREATE_DB_CUSTOM2B)->SetToolTip(custom_2b_help);
     wxString custom_a_help = wxT("Optional extra parameter, specify name here");
-    FindWindow(ID_TEMP_CUSTOM3A)->SetHelpText(custom_a_help);
-    FindWindow(ID_TEMP_CUSTOM3A)->SetToolTip(custom_a_help);
-    FindWindow(ID_TEMP_CUSTOM4A)->SetHelpText(custom_a_help);
-    FindWindow(ID_TEMP_CUSTOM4A)->SetToolTip(custom_a_help);
+    FindWindow(ID_CREATE_DB_CUSTOM3A)->SetHelpText(custom_a_help);
+    FindWindow(ID_CREATE_DB_CUSTOM3A)->SetToolTip(custom_a_help);
+    FindWindow(ID_CREATE_DB_CUSTOM4A)->SetHelpText(custom_a_help);
+    FindWindow(ID_CREATE_DB_CUSTOM4A)->SetToolTip(custom_a_help);
     wxString custom_b_help = wxT("Optional extra parameter, specify value here");
-    FindWindow(ID_TEMP_CUSTOM3B)->SetHelpText(custom_b_help);
-    FindWindow(ID_TEMP_CUSTOM3B)->SetToolTip(custom_b_help);
-    FindWindow(ID_TEMP_CUSTOM4B)->SetHelpText(custom_b_help);
-    FindWindow(ID_TEMP_CUSTOM4B)->SetToolTip(custom_b_help);
+    FindWindow(ID_CREATE_DB_CUSTOM3B)->SetHelpText(custom_b_help);
+    FindWindow(ID_CREATE_DB_CUSTOM3B)->SetToolTip(custom_b_help);
+    FindWindow(ID_CREATE_DB_CUSTOM4B)->SetHelpText(custom_b_help);
+    FindWindow(ID_CREATE_DB_CUSTOM4B)->SetToolTip(custom_b_help);
      */
 }
 
-// wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_1
-void MaintenanceDialog::OnMaintenanceSpeed( wxCommandEvent& WXUNUSED(event) )
-{
-    db_maintenance_speed_tests();
-}
 
-// wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_2
-void MaintenanceDialog::OnMaintenanceCompress( wxCommandEvent& WXUNUSED(event) )
-{
-    db_maintenance_compress_pgn();
-}
-
-// wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_3
-void MaintenanceDialog::OnMaintenanceDecompress( wxCommandEvent& WXUNUSED(event) )
-{
-    db_maintenance_decompress_pgn();
-}
-
-// wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_4
-void MaintenanceDialog::OnMaintenanceVerify( wxCommandEvent& WXUNUSED(event) )
-{
-    db_maintenance_verify_compression();
-}
-
-// wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_5
-void MaintenanceDialog::OnMaintenanceCreate( wxCommandEvent& WXUNUSED(event) )
+// wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_CREATE_DB_CREATE
+void CreateDatabaseDialog::OnMaintenanceCreate( wxCommandEvent& WXUNUSED(event) )
 {
     #ifdef DB_APPEND_ONLY
-    db_maintenance_create_or_append_to_database( pgn_filename.c_str() );
-    const char *str_filename = pgn_filename.c_str();
+    db_maintenance_create_or_append_to_database( pgn_filename1.c_str() );
+    const char *str_filename = pgn_filename1.c_str();
     cprintf(                     "Appending file: %s\n", str_filename );
     #else
     #ifdef THC_MAC
@@ -454,20 +416,36 @@ void MaintenanceDialog::OnMaintenanceCreate( wxCommandEvent& WXUNUSED(event) )
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_CREATE_DB_APPEND
-void MaintenanceDialog::OnMaintenanceIndexes( wxCommandEvent& WXUNUSED(event) )
+void CreateDatabaseDialog::OnMaintenanceAppend( wxCommandEvent& WXUNUSED(event) )
 {
     db_maintenance_create_indexes();
 }
 
-// ID_TEMP_ENGINE_PICKER
-void MaintenanceDialog::OnFilePicked( wxFileDirPickerEvent& event )
+void CreateDatabaseDialog::OnDbFilePicked( wxFileDirPickerEvent& event )
 {
     wxString file = event.GetPath();
-    pgn_filename = file;
+    db_filename = file;
 }
 
-// wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_HELP
-void MaintenanceDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
+void CreateDatabaseDialog::OnPgnFile1Picked( wxFileDirPickerEvent& event )
+{
+    wxString file = event.GetPath();
+    pgn_filename1 = file;
+}
+
+void CreateDatabaseDialog::OnPgnFile2Picked( wxFileDirPickerEvent& event )
+{
+    wxString file = event.GetPath();
+    pgn_filename2 = file;
+}
+
+void CreateDatabaseDialog::OnPgnFile3Picked( wxFileDirPickerEvent& event )
+{
+    wxString file = event.GetPath();
+    pgn_filename3 = file;
+}
+
+void CreateDatabaseDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
 {
     // Normally we would wish to display proper online help.
     // For this example, we're just using a message box.

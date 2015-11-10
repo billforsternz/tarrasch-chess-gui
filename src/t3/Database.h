@@ -17,15 +17,21 @@
 #include "GameDocument.h"
 #include "GamesCache.h"
 
+enum DB_REQ
+{
+    REQ_POSITION, REQ_SHOW_ALL, REQ_PLAYERS
+};
+
+
 class Database
 {
 public:
     Database();
     ~Database();
 
-    int SetPosition( thc::ChessRules &cr );
-    int SetPosition( thc::ChessRules &cr, std::string &player_name );
-    int GetNbrGames( thc::ChessRules &cr );
+    int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr );
+    int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &player_name );
+    // int GetNbrGames( thc::ChessRules &cr );
     int GetRow( int row, CompactGame *info );
     int GetRowRaw( CompactGame *info, int row );
     int LoadAllGames( std::vector< smart_ptr<MagicBase> > &cache, int nbr_games );
@@ -40,6 +46,8 @@ public:
     int LoadGamesWithQuery( std::string &player_name, bool white, std::vector< smart_ptr<MagicBase> > &games );
   
 private:
+    DB_REQ db_req;
+
     // Create a handle for database connection, create a pointer to sqlite3
     sqlite3 *gbl_handle;
     
@@ -59,7 +67,6 @@ private:
     std::map<int,CompactGame>  cache;
     std::list<int>              stack;
     std::string player_name;
-    bool is_start_pos;
     std::string where_white;
     std::string white_and;
     std::string prev_name;

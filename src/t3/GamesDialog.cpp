@@ -387,7 +387,7 @@ void GamesDialog::CreateControls()
     }
     else
     {
-        nbr_games_in_list_ctrl = objs.db->SetPosition( cr ); //gc->gds.size();
+        nbr_games_in_list_ctrl = objs.db->SetDbPosition( db_req, cr );
         sprintf(buf,"List of %d matching games from the database",nbr_games_in_list_ctrl);
     }
 

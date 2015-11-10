@@ -21,6 +21,7 @@
 #include "kibitzq.h"
 #include "Canvas.h"
 #include "GameState.h"
+#include "Database.h"
 class GraphicBoard;
 
 class GameLogic
@@ -78,10 +79,18 @@ public:
     void CmdFileSaveAs();
     void CmdFileSaveGameAs();
     void CmdFileSaveCommon(bool save_as);
-    void CmdFileCurrent();
-    void CmdFileClipboard();
-    void CmdFileSession();
-    void CmdFileDatabase();
+    void CmdGamesCurrent();
+    void CmdGamesClipboard();
+    void CmdGamesSession();
+    void CmdGamesDatabase();
+    void CmdDatabaseSearch();
+    void CmdDatabaseShowAll();
+    void CmdDatabasePlayers();
+    void CmdDatabaseSelect();
+    void CmdDatabaseCreate();
+    void CmdDatabaseAppend();
+
+    void CmdDatabase( thc::ChessRules &cr, DB_REQ db_req );
     void CmdNextGame();
     void CmdPreviousGame();
     void NextGamePreviousGame( int idx );
@@ -119,9 +128,9 @@ public:
     bool CmdUpdateMoveNow  ();
     bool CmdUpdateFileOpen ();
     bool CmdUpdateFileOpenLog ();
-    bool CmdUpdateFileCurrent ();
-    bool CmdUpdateFileClipboard ();
-    bool CmdUpdateFileSession ();
+    bool CmdUpdateGamesCurrent ();
+    bool CmdUpdateGamesClipboard ();
+    bool CmdUpdateGamesSession ();
     bool CmdUpdateNextGame();
     bool CmdUpdatePreviousGame();
     bool CmdUpdateDraw     ();

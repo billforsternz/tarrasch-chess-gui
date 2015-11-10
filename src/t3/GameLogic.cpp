@@ -32,6 +32,7 @@
 #include "PlayerDialog.h"
 #include "PgnDialog.h"
 #include "ClipboardDialog.h"
+#include "CreateDatabaseDialog.h"
 #include "DbDialog.h"
 #include "Objects.h"
 #include "CompressMoves.h"
@@ -627,7 +628,7 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
             wxSize sz = objs.frame->GetSize();
             sz.x = (sz.x*9)/10;
             sz.y = (sz.y*9)/10;
-            PgnDialog dialog( objs.frame, &gc, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );
+            PgnDialog dialog( objs.frame, &gc, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );   // GamesDialog instance
             std::string title = "File: " + filename;
             if( dialog.ShowModalOk(title) )
             {
@@ -871,11 +872,11 @@ void GameLogic::IndicateNoCurrentDocument()
     }
 }
 
-void GameLogic::CmdFileCurrent()
+void GameLogic::CmdGamesCurrent()
 {
     Atomic begin;
     bool editing_log = objs.gl->EditingLog();
-    bool ok=CmdUpdateFileCurrent();
+    bool ok=CmdUpdateGamesCurrent();
     if( ok )
     {
         if( !gc.IsSynced() )
@@ -894,7 +895,7 @@ void GameLogic::CmdFileCurrent()
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
         gc.Debug( "Before loading current file games dialog" );
-        PgnDialog dialog( objs.frame, &gc, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );
+        PgnDialog dialog( objs.frame, &gc, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );   // GamesDialog instance
         if( dialog.ShowModalOk("Current file") )
         {
             objs.log->SaveGame(&gd,editing_log);
@@ -910,51 +911,105 @@ void GameLogic::CmdFileCurrent()
     atom.StatusUpdate();
 }
 
-void GameLogic::CmdFileDatabase()
+void GameLogic::CmdGamesDatabase()
+{
+    thc::ChessRules cr;
+    thc::ChessRules start_position;
+    std::string title_txt;
+    gd.GetSummary( cr, title_txt );
+    DB_REQ db_req;
+    if( cr == start_position )
+        db_req = REQ_SHOW_ALL;
+    else
+        db_req = REQ_POSITION;
+    CmdDatabase( cr, db_req );
+}
+
+void GameLogic::CmdDatabaseSearch()
+{
+    thc::ChessRules cr;
+    thc::ChessRules start_position;
+    std::string title_txt;
+    gd.GetSummary( cr, title_txt );
+    CmdDatabase( cr, REQ_POSITION );
+}
+
+void GameLogic::CmdDatabaseShowAll()
+{
+    thc::ChessRules cr;
+    thc::ChessRules start_position;
+    std::string title_txt;
+    gd.GetSummary( cr, title_txt );
+    CmdDatabase( cr, REQ_SHOW_ALL );
+}
+
+void GameLogic::CmdDatabasePlayers()
+{
+    thc::ChessRules cr;
+    thc::ChessRules start_position;
+    std::string title_txt;
+    gd.GetSummary( cr, title_txt );
+    CmdDatabase( cr, REQ_PLAYERS );
+}
+
+void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req )
 {
     Atomic begin;
     bool editing_log = objs.gl->EditingLog();
-    //bool ok=CmdUpdateFileDatabase();
-    //if( ok )
-    //{
-        thc::ChessRules cr;
-        std::string title_txt;
-        gd.GetSummary( cr, title_txt );
-        std::vector<GameDocument> games;
-        //db_find_matching_games(cr,games);
-        //gc_database.gds.clear();
-        //for( int i=0; i<games.size(); i++ )
-        //    gc_database.gds.push_back(games[i]);
-        wxPoint pt(0,0);
-        wxSize sz = objs.frame->GetSize();
-        sz.x = (sz.x*9)/10;
-        sz.y = (sz.y*9)/10;
-        DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard, ID_PGN_DIALOG_DATABASE, pt, sz );
-        if( dialog.ShowModalOk("Database games") )
+    std::vector<GameDocument> games;
+    wxPoint pt(0,0);
+    wxSize sz = objs.frame->GetSize();
+    sz.x = (sz.x*9)/10;
+    sz.y = (sz.y*9)/10;
+    DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard, db_req, ID_PGN_DIALOG_DATABASE, pt, sz );   // GamesDialog instance
+    if( dialog.ShowModalOk("Database games") )
+    {
+        objs.log->SaveGame(&gd,editing_log);
+        //objs.session->SaveGame(&gd);        //careful...
+        GameDocument temp = gd;
+        GameDocument new_gd;
+        PutBackDocument();
+        if( dialog.LoadGame(new_gd) )
         {
-            objs.log->SaveGame(&gd,editing_log);
-          //objs.session->SaveGame(&gd);        //careful...
-            GameDocument temp = gd;
-            GameDocument new_gd;
-            PutBackDocument();
-            if( dialog.LoadGame(new_gd) )
-            {
-                tabs->TabNew(new_gd);
-                tabs->SetInfile(false);
-                ShowNewDocument();
-            }
-            objs.session->SaveGame(&temp);      // ...modify session only after loading old game
+            tabs->TabNew(new_gd);
+            tabs->SetInfile(false);
+            ShowNewDocument();
         }
-    //}
+        objs.session->SaveGame(&temp);      // ...modify session only after loading old game
+    }
     atom.StatusUpdate();
 }
 
+void GameLogic::CmdDatabaseSelect()
+{
+}
 
-void GameLogic::CmdFileSession()
+void GameLogic::CmdDatabaseCreate()
 {
     Atomic begin;
     bool editing_log = objs.gl->EditingLog();
-    bool ok=CmdUpdateFileSession();
+    std::vector<GameDocument> games;
+    wxPoint pt(0,0);
+    wxSize sz = objs.frame->GetSize();
+    sz.x = (sz.x*9)/10;
+    sz.y = (sz.y*9)/10;
+    CreateDatabaseDialog dialog( objs.frame );
+    dialog.Create( objs.frame );
+    if( wxID_OK == dialog.ShowModal() )
+    {
+    }
+    atom.StatusUpdate();
+}
+
+void GameLogic::CmdDatabaseAppend()
+{
+}
+
+void GameLogic::CmdGamesSession()
+{
+    Atomic begin;
+    bool editing_log = objs.gl->EditingLog();
+    bool ok=CmdUpdateGamesSession();
     if( ok )
     {
         wxPoint pt(0,0);
@@ -962,7 +1017,7 @@ void GameLogic::CmdFileSession()
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
         gc_session.Debug( "Before loading session games dialog" );
-        PgnDialog dialog( objs.frame, &gc_session, &gc_clipboard, ID_PGN_DIALOG_SESSION, pt, sz );
+        PgnDialog dialog( objs.frame, &gc_session, &gc_clipboard, ID_PGN_DIALOG_SESSION, pt, sz );   // GamesDialog instance
         if( dialog.ShowModalOk("Games in this session") )
         {
             objs.log->SaveGame(&gd,editing_log);
@@ -982,18 +1037,18 @@ void GameLogic::CmdFileSession()
 
 
 
-void GameLogic::CmdFileClipboard()
+void GameLogic::CmdGamesClipboard()
 {
     Atomic begin;
     bool editing_log = objs.gl->EditingLog();
-    bool ok=CmdUpdateFileClipboard();
+    bool ok=CmdUpdateGamesClipboard();
     if( ok )
     {
         wxPoint pt(0,0);
         wxSize sz = objs.frame->GetSize();
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
-        ClipboardDialog dialog( objs.frame, &gc_clipboard, &gc_clipboard, ID_PGN_DIALOG_CLIPBOARD, pt, sz );
+        ClipboardDialog dialog( objs.frame, &gc_clipboard, &gc_clipboard, ID_PGN_DIALOG_CLIPBOARD, pt, sz );   // GamesDialog instance
         if( dialog.ShowModalOk("Clipboard") )
         {
             objs.log->SaveGame(&gd,editing_log);
@@ -1539,7 +1594,7 @@ bool GameLogic::CmdUpdateFileOpenLog()
     return enabled;
 }
 
-bool GameLogic::CmdUpdateFileCurrent()
+bool GameLogic::CmdUpdateGamesCurrent()
 {
     bool enabled = (state==MANUAL || state==RESET || state==HUMAN || state==PONDERING || state==GAMEOVER);
     if( enabled )
@@ -1547,7 +1602,7 @@ bool GameLogic::CmdUpdateFileCurrent()
     return enabled;
 }
 
-bool GameLogic::CmdUpdateFileClipboard()
+bool GameLogic::CmdUpdateGamesClipboard()
 {
     bool enabled = (state==MANUAL || state==RESET || state==HUMAN || state==PONDERING || state==GAMEOVER);
     //if( enabled )
@@ -1555,7 +1610,7 @@ bool GameLogic::CmdUpdateFileClipboard()
     return enabled;
 }
 
-bool GameLogic::CmdUpdateFileSession()
+bool GameLogic::CmdUpdateGamesSession()
 {
     bool enabled = (state==MANUAL || state==RESET || state==HUMAN || state==PONDERING || state==GAMEOVER);
     return enabled;

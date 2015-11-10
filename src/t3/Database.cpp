@@ -53,15 +53,16 @@ Database::~Database()
     }
 }
 
-int Database::SetPosition( thc::ChessRules &cr )
+int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr )
 {
     std::string empty;
-    return SetPosition( cr, empty );
+    return SetDbPosition( db_req, cr, empty );
 }
 
 
-int Database::SetPosition( thc::ChessRules &cr, std::string &player_name )
+int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &player_name )
 {
+    this->db_req = db_req;
     if( !gbl_handle )
         return 0;
     gbl_expected = -1;
@@ -81,8 +82,6 @@ int Database::SetPosition( thc::ChessRules &cr, std::string &player_name )
     uint64_t temp=gbl_hash;
     table_nbr = ((int)(temp>>32))&(NBR_BUCKETS-1);
     hash = (int)(temp);
-    thc::ChessPosition start_pos;
-    is_start_pos = false;
     if( player_name.length() == 0 )
         where_white="";
     else
@@ -99,12 +98,15 @@ int Database::SetPosition( thc::ChessRules &cr, std::string &player_name )
         white_and += player_name;
         white_and += + "' AND ";
     }
-    if( cr == start_pos )
+    if( db_req == REQ_PLAYERS )
     {
-        is_start_pos = true;
         sprintf( buf, "SELECT COUNT(*) from games%s", where_white.c_str() );
     }
-    else
+    else if( db_req == REQ_SHOW_ALL )
+    {
+        sprintf( buf, "SELECT COUNT(*) from games" );
+    }
+    else if( db_req == REQ_POSITION )
     {
         sprintf( buf, "SELECT COUNT(*) from games, positions_%d WHERE %spositions_%d.position_hash=%d AND games.game_id = positions_%d.game_id",
                 table_nbr, white_and.c_str(), table_nbr, hash, table_nbr );
@@ -163,7 +165,8 @@ int Database::SetPosition( thc::ChessRules &cr, std::string &player_name )
     return game_count;
 }
 
-int Database::GetNbrGames( thc::ChessRules &cr )
+#if 0
+int Database::GetNbrGames( DB_REQ db_req, thc::ChessRules &cr )
 {
     if( !gbl_handle )
         return 0;
@@ -172,16 +175,14 @@ int Database::GetNbrGames( thc::ChessRules &cr )
     int table_nbr = ((int)(temp>>32))&(NBR_BUCKETS-1);
     int hash = (int)(temp);
     int game_count=0;
-    thc::ChessPosition start_pos;
-    is_start_pos = false;
-    if( cr == start_pos )
-    {
-        sprintf( buf, "SELECT COUNT(*) from games"  );
-    }
-    else
+    if( db_req == REQ_POSITION )
     {
         sprintf( buf, "SELECT COUNT(*) from games, positions_%d WHERE positions_%d.position_hash=%d AND games.game_id = positions_%d.game_id",
                 table_nbr, table_nbr, hash, table_nbr );
+    }
+    else
+    {
+        sprintf( buf, "SELECT COUNT(*) from games"  );
     }
     cprintf("QUERY IN: %s\n",buf);
     int retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &gbl_stmt, 0 );
@@ -230,7 +231,7 @@ int Database::GetNbrGames( thc::ChessRules &cr )
     cprintf("Get games count end\n");
     return game_count;
 }
-
+#endif
 
 int Database::LoadGameWithQuery( CompactGame *pact, int game_id )
 {
@@ -241,7 +242,9 @@ int Database::LoadGameWithQuery( CompactGame *pact, int game_id )
     sqlite3_stmt *stmt;    // A prepared statement for fetching from games table
     int retval;
     sprintf( buf, "SELECT white,black,event,site,result,date,white_elo,black_elo,moves from games WHERE game_id=%d", game_id );
+    cprintf("QUERY IN: %s\n",buf);
     retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &stmt, 0 );
+    cprintf("QUERY OUT: %s\n",buf);
     if( retval )
     {
         cprintf("SELECTING DATA FROM DB FAILED\n");
@@ -343,8 +346,9 @@ int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::ve
     sprintf( buf,
             "SELECT games.game_id, games.white, games.black, games.event, games.site, games.result, games.date, games.white_elo, games.black_elo, games.moves from games "
             "WHERE games.%s='%s'",  white?"white":"black",  player_name.c_str() );
-    cprintf( "LoadGamesWithQuery() START query: %s\n",buf);
+    cprintf( "LoadGamesWithQuery(), player; QUERY IN: %s\n",buf);
     retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &gbl_stmt, 0 );
+    cprintf( "LoadGamesWithQuery(), player; QUERY OUT: %s\n",buf);
     if( retval )
     {
         cprintf("SELECTING DATA FROM DB FAILED 2\n");
@@ -467,8 +471,9 @@ int Database::LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<MagicBas
     sprintf( buf,
             "SELECT games.game_id, games.white, games.black, games.event, games.site, games.result, games.date, games.white_elo, games.black_elo, games.moves from games JOIN positions_%d ON games.game_id = positions_%d.game_id WHERE %spositions_%d.position_hash=%d",
             table_nbr, table_nbr, white_and.c_str(), table_nbr, hash32);
-    cprintf( "LoadGamesWithQuery() START query: %s\n",buf);
+    cprintf( "LoadGamesWithQuery(), position; QUERY IN: %s\n",buf);
     retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &gbl_stmt, 0 );
+    cprintf( "LoadGamesWithQuery(), position; QUERY OUT: %s\n",buf);
     if( retval )
     {
         cprintf("SELECTING DATA FROM DB FAILED 2\n");
@@ -793,13 +798,23 @@ int Database::GetRowRaw( CompactGame *pact, int row )
             int table_nbr = (int)((temp>>32)&(NBR_BUCKETS-1));
             // sprintf( buf, "SELECT positions_%d.game_id from positions_%d JOIN games ON games.game_id = positions_%d.game_id AND positions_%d.position_hash=%d LIMIT %d,100",
             //        table_nbr, table_nbr, table_nbr, table_nbr, hash, row );
-            if( is_start_pos )
+            if( db_req == REQ_PLAYERS )
             {
                 sprintf( buf, 
                         "SELECT games.game_id from games%s ORDER BY games.white ASC LIMIT %d,100", where_white.c_str(), row );
                   //      "SELECT games.game_id from games%s ORDER BY games.rowid LIMIT %d,100", where_white.c_str(), row );
             }
-            else
+            else if( db_req == REQ_SHOW_ALL )
+            {
+                sprintf( buf,
+//#define NO_REVERSE
+#ifdef NO_REVERSE
+                        "SELECT games.game_id from games LIMIT %d,100", row );
+#else
+                        "SELECT games.game_id from games ORDER BY games.rowid DESC LIMIT %d,100", row );
+#endif
+            }
+            else if( db_req == REQ_POSITION )
             {
                 sprintf( buf,
 //#define NO_REVERSE
@@ -845,12 +860,21 @@ int Database::LoadAllGames( std::vector< smart_ptr<MagicBase> > &cache, int nbr_
     uint64_t temp = gbl_hash;
     int hash = (int)(temp);
     int table_nbr = (int)((temp>>32)&(NBR_BUCKETS-1));
-    if( is_start_pos )
+    if( db_req == REQ_PLAYERS )
     {
         sprintf( buf,
                 "SELECT games.game_id from games%s ORDER BY games.white ASC", where_white.c_str() );
     }
-    else
+    else if( db_req == REQ_SHOW_ALL )
+    {
+        sprintf( buf,
+#if 1 //def NO_REVERSE
+                "SELECT games.game_id, games.white, games.black, games.event, games.site, games.result, games.date, games.white_elo, games.black_elo, games.moves from games" );
+#else
+                "SELECT games.game_id, games.white, games.black, games.event, games.site, games.result, games.date, games.white_elo, games.black_elo, games.moves from games ORDER BY games.rowid DESC" );
+#endif
+    }
+    else if( db_req == REQ_POSITION )
     {
         sprintf( buf,
 #if 1 //def NO_REVERSE
@@ -860,8 +884,9 @@ int Database::LoadAllGames( std::vector< smart_ptr<MagicBase> > &cache, int nbr_
 #endif
                 table_nbr, table_nbr, white_and.c_str(), table_nbr, hash);
     }
-    cprintf( "LoadAllGames() START query: %s\n",buf);
+    cprintf( "LoadAllGames() QUERY IN: %s\n",buf);
     retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &gbl_stmt, 0 );
+    cprintf( "LoadAllGames() QUERY OUT: %s\n",buf);
     if( retval )
     {
         cprintf("SELECTING DATA FROM DB FAILED 2\n");
@@ -1011,7 +1036,10 @@ int Database::FindPlayer( std::string &name, std::string &current, int start_row
             sqlite3_finalize(player_search_stmt);
             player_search_stmt = NULL;
         }
-        retval = sqlite3_prepare_v2( gbl_handle, white ? "SELECT games.white from games ORDER BY games.white ASC" : "SELECT games.black from games ORDER BY games.white ASC", -1, &player_search_stmt, 0 );
+        const char *txt = white ? "SELECT games.white from games ORDER BY games.white ASC" : "SELECT games.black from games ORDER BY games.white ASC";
+        cprintf( "FindPlayer() QUERY IN: %s\n",txt);
+        retval = sqlite3_prepare_v2( gbl_handle, txt, -1, &player_search_stmt, 0 );
+        cprintf( "FindPlayer() QUERY OUT: %s\n",txt);
         okay = !retval;
     }
     while( okay )
