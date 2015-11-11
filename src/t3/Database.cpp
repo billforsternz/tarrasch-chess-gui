@@ -53,6 +53,32 @@ Database::~Database()
     }
 }
 
+void Database::Reopen( const char *db_file )
+{
+    if( gbl_stmt )
+    {
+        sqlite3_finalize(gbl_stmt);
+        gbl_stmt = NULL;
+    }
+    if( gbl_handle )
+    {
+        sqlite3_close(gbl_handle);
+        gbl_handle = NULL;
+    }
+    gbl_handle = 0;
+    gbl_stmt = 0;
+    player_search_stmt = 0;
+    gbl_expected = 0;
+    gbl_current = 0;
+    gbl_count = 0;
+    
+    // Access the database.
+    int retval = sqlite3_open(db_file,&gbl_handle);
+    
+    // If connection failed, handle returns NULL
+    dbg_printf( "DATABASE REOPEN %s\n", retval ? "FAILED" : "SUCCESSFUL" );
+}
+
 int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr )
 {
     std::string empty;

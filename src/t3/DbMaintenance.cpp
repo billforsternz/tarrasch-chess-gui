@@ -33,11 +33,6 @@ static void game_to_qgn_file( const char *event, const char *site, const char *d
                              int nbr_moves, thc::Move *moves, uint64_t *hashes );
 static int  verify_compression_algorithm( int nbr_moves, thc::Move *moves );
 
-void db_maintenance_speed_tests()
-{
-    db_primitive_speed_tests();
-}
-
 void db_maintenance_decompress_pgn()
 {
     static char header_buf[2000];
@@ -129,7 +124,7 @@ void db_maintenance_compress_pgn()
 }
 
 
-void db_maintenance_create_or_append_to_database(  const char *pgn_filename )
+void db_maintenance_create_or_append_to_database(  const char *db_filename, const char *pgn_filename )
 {
     ifile = fopen( pgn_filename , "rt" );
     if( !ifile )
@@ -138,7 +133,7 @@ void db_maintenance_create_or_append_to_database(  const char *pgn_filename )
     {
         DebugPrintfTime turn_on_time_display;
         PgnRead *pgn = new PgnRead('A');
-        db_primitive_open();
+        db_primitive_open( db_filename );
         db_primitive_transaction_begin();
         db_primitive_create_tables();
         db_primitive_count_games();
@@ -153,10 +148,10 @@ void db_maintenance_create_or_append_to_database(  const char *pgn_filename )
 }
 
 void db_utility_test();
-void db_maintenance_create_indexes()
+void db_maintenance_create_indexes(const char *db_filename )
 {
     //db_utility_test();
-    db_primitive_open();
+    db_primitive_open(db_filename);
     db_primitive_transaction_begin();
     db_primitive_create_indexes();
     db_primitive_create_extra_indexes();

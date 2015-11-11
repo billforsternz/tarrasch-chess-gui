@@ -982,22 +982,34 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req )
 
 void GameLogic::CmdDatabaseSelect()
 {
+    wxFileDialog fd( objs.frame, "Select current database", "", "", "*.tarrasch_db", wxFD_FILE_MUST_EXIST );//|wxFD_CHANGE_DIR );
+    wxString path( "/Users/billforster/Documents/ChessDatabases/small.tarrasch_db" ); //objs.repository->engine.m_file;
+    fd.SetPath(path);
+    if( wxID_OK == fd.ShowModal() )
+    {
+        wxString s = fd.GetPath();
+        const char *filename = s.c_str();
+        cprintf( "File is %s\n", filename );
+        objs.db->Reopen(filename);
+        /* wxString dir;
+        wxFileName::SplitPath( fd.GetPath(), &dir, NULL, NULL );
+        objs.repository->nv.m_doc_dir = dir;
+        wxString wx_filename = fd.GetPath();
+        std::string filename( wx_filename.c_str() );
+        CmdFileOpenInner( filename ); */
+    }
+
 }
 
 void GameLogic::CmdDatabaseCreate()
 {
     Atomic begin;
-    bool editing_log = objs.gl->EditingLog();
-    std::vector<GameDocument> games;
     wxPoint pt(0,0);
     wxSize sz = objs.frame->GetSize();
     sz.x = (sz.x*9)/10;
     sz.y = (sz.y*9)/10;
     CreateDatabaseDialog dialog( objs.frame );
-    dialog.Create( objs.frame );
-    if( wxID_OK == dialog.ShowModal() )
-    {
-    }
+    dialog.ShowModal();
     atom.StatusUpdate();
 }
 

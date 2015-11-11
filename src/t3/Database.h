@@ -28,7 +28,7 @@ class Database
 public:
     Database();
     ~Database();
-
+    void Reopen( const char *db_file );
     int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr );
     int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &player_name );
     // int GetNbrGames( thc::ChessRules &cr );
