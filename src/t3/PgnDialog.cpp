@@ -175,10 +175,9 @@ GameDocument * PgnDialog::GetCachedDocument( int idx )
 
 void PgnDialog::GdvReadItem( int item, CompactGame &info )
 {
-    GameDocument *ptr = GetCachedDocument(item);
-    info.Downscale( *ptr );
+    smart_ptr<MagicBase> &mb = gc->gds[item];
+    mb->GetCompactGame( info );
 }
-
 
 void PgnDialog::GdvSaveAllToAFile() {}
 void PgnDialog::GdvHelpClick() {}

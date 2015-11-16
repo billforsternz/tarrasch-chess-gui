@@ -41,7 +41,6 @@ public:
             pack.Unpack(pact);
         else
         {
-            CompactGame pact;
             ReadGameFromPgnInLoop( pgn_handle, fposn, pact, NULL, true );
             pack.Pack(pact);
         }

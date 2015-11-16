@@ -217,6 +217,8 @@ bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen )
 
 bool GamesCache::Load( FILE *pgn_file )
 {
+    cprintf( "GamesCache::Load() begin\n" );
+    int game_count=0;
     gc_fixme = this;
     file_irrevocably_modified = false;
     int typ;
@@ -234,8 +236,10 @@ bool GamesCache::Load( FILE *pgn_file )
             gds.push_back( std::move(new_doc) );
             if( !done )
                 fposn = ftell(pgn_file);
+            game_count++;
         }
     }
+    cprintf( "GamesCache::Load() end count = %d\n", game_count );
     return true;
 }
 
@@ -294,7 +298,7 @@ void *ReadGameFromPgnInLoop( int pgn_handle, long fposn, CompactGame &pact, void
 
 void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &new_doc )
 {
-    cprintf( "ReadGameFromPgn(%d) %ld\n", pgn_handle, fposn );
+    //cprintf( "ReadGameFromPgn(%d) %ld\n", pgn_handle, fposn );
     GameDocument gd;
     FILE *pgn_file = objs.gl->pf.ReopenRead( pgn_handle );
     std::string moves;

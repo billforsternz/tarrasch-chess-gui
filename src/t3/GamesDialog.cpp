@@ -674,6 +674,7 @@ void GamesDialog::ReadItemWithSingleLineCache( int item, CompactGame &info )
     else
     {
         GdvReadItem( item, info );
+        cprintf( "GdvReadItem(%d) = %s-%s\n", item, info.r.white.c_str(), info.r.black.c_str() );
         single_line_cache_idx = item;
         single_line_cache = info;
     }

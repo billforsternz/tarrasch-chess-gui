@@ -8,6 +8,7 @@
 #include "wx/wx.h"
 #include "wx/valtext.h"
 #include "wx/valgen.h"
+#include "wx/file.h"
 #include "wx/filename.h"
 #include "wx/filepicker.h"
 #include "DebugPrintf.h"
