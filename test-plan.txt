@@ -1,0 +1,33 @@
+Test plan
+
+1) Make moves, File, Save [new file], Ok
+   (Problem - "This tab not in file" after save) <-fixed
+2) Make moves, File, Save [existing file]
+    (Problem - Dialog claims file will be replaced [actually appends] - Probably Mac only)
+3) Make moves, File, Save As [new file], Ok
+4) Make moves, File, Save As [existing file]
+    (Problem - Dialog claims file will be replaced [actually appends] - Probably Mac only)
+5) Open file, cancel, quit, Ok
+    (Problem, game is allegedly modified, so you are asked to save it) <- fixed
+6) Open file, load 2nd game, Ok
+7) Use Previous, Next buttons to load 1st and last games
+    (Problem, up and down buttons are disabled)
+8) Create a pgn file with two Sicilian games, copy them to clickboard, Ok
+9) Open an existing pgn file and add two Sicilian games to the clipboard, Ok
+10) Do a database search, Calculate Stats, and from the listed games add two more Sicilian games to the clipboard, Ok
+11) Check that the clipboard has the correct 6 Sicilian games, Ok
+12) Check "Clipboard is temp database", Ok
+13) Start a new game, play 1.e4 and do a database search, confirm that 6 games are found, all replying 1...c5, Ok
+    (Some problems though
+        - Database search is always automatically loading games
+        - It says "searching for extra games" whilst doing it
+        - No result games aren't shown as draws in stats - actually this is probably a good thing
+        - I noticed that if opening a .pgn but cancelling without loading a game, the .pgn is allegedly open
+        - If clipboard is temp database when you do a database search, unchecking should do a brand new db search (it doesn't)
+    )
+14) Create game and save to existing file with one game - on Mac end of first game is garbled? if first game was created on PC?
+
+(Note 14th Oct 2015; Play 1.e4 c5 2.b3 Database -> Calculate Stats -> click on 2...d6 in database pane, then click on moves column,
+First 3 games and next 4 games are identical up until 7...g6 and 7...e6 respectively. So why don't the 4 7...e6 games come ahead of
+the 3 7...g6 games ?)
+ 

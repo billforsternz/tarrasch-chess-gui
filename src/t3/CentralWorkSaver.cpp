@@ -79,13 +79,27 @@ bool CentralWorkSaver::TestGameInFile()
     for( unsigned int i=0; i<gc->gds.size(); i++ )
     {
         MagicBase *ptr = gc->gds[i].get();
-        if( ptr && ptr->GetGameBeingEdited()!=0 )
+        if( ptr && ptr->GetGameBeingEdited()==gd->game_being_edited )
         {
             in_file = true;
             break;
         }
     }
     return in_file;
+}
+
+void CentralWorkSaver::AddTabToFile()
+{
+    //if( !TestGameInFile() )
+    {
+        if( gd->r.white == "" ) // if( !game_details_edited )
+        {
+            GameDetailsDialog dialog(objs.frame);
+            if( dialog.Run(*gd) )
+                objs.gl->GameRedisplayPlayersResult();
+        }
+        AddGameToFile();
+    }
 }
 
 // When saving a game, either add it to file ...(see below)
@@ -102,9 +116,10 @@ void CentralWorkSaver::AddGameToFile()
                                     // not getting to log or session later (not satisfactory I know - too many flags)
     int nbr = gc->gds.size();
     gd->game_nbr = nbr + 1;
-    make_smart_ptr( HoldDocument, new_smart_ptr, *gd );  // smart_ptr event: document->cache
+    make_smart_ptr( GameDocument, new_smart_ptr, *gd );  // smart_ptr event: document->cache
     gc->gds.push_back( std::move(new_smart_ptr) );
     objs.gl->file_game_idx = gc->gds.size()-1;
+    objs.gl->tabs->SetInfile(true);
 }
 
 // ...(see above) Or put it back where it came from
@@ -250,7 +265,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                                         objs.gl->file_game_idx = doc.game_nbr;
                                     }
                                     //? gc->Put( GameDocument, doc ); 
-                                    make_smart_ptr( HoldDocument, new_smart_ptr, doc );
+                                    make_smart_ptr( GameDocument, new_smart_ptr, doc );
                                     gc->gds.push_back( std::move(new_smart_ptr) );
                                 }
                                 gc->FileSave( gc_clipboard );
@@ -430,7 +445,7 @@ bool CentralWorkSaver::FileSaveGameAs()
         ok = false;
     if( ok )
     {
-        wxFileDialog fd( objs.frame, "Select new .pgn file or existing .pgn file", "", "", "*.pgn", wxFD_SAVE ); //|wxFD_CHANGE_DIR );
+        wxFileDialog fd( objs.frame, "Select .pgn file to create, replace or append to", "", "", "*.pgn", wxFD_SAVE ); //|wxFD_CHANGE_DIR );
         wxString dir = objs.repository->nv.m_doc_dir;
         fd.SetDirectory(dir);
         int answer = fd.ShowModal();
@@ -466,6 +481,16 @@ bool CentralWorkSaver::FileSaveGameAs()
         if( file )
         {
             fseek(file,0,SEEK_END);
+            if( append )
+            {
+                std::string eol =
+#ifdef THC_WINDOWS
+                "\r\n";
+#else
+                "\n";
+#endif
+                fwrite( eol.c_str(), 1, eol.length(), file );
+            }
             fwrite( head.c_str(), 1, head.length(), file );
             fwrite( body.c_str(), 1, body.length(), file );
             fclose( file );

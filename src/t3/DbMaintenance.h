@@ -10,9 +10,7 @@
 void db_maintenance_compress_pgn();
 void db_maintenance_decompress_pgn();
 void db_maintenance_verify_compression();
-void db_maintenance_create_or_append_to_database( const char *pgn_filename );
-void db_maintenance_create_indexes();
-//void db_maintenance_append_to_database();
-void db_maintenance_speed_tests();
+void db_maintenance_create_or_append_to_database( const char *db_filename, const char *pgn_filename );
+void db_maintenance_create_indexes( const char *db_filename );
 
 #endif // DB_MAINTENANCE_H

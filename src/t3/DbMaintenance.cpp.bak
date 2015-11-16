@@ -16,8 +16,8 @@
 //-- Temp - hardwire .pgn file and database name
 #ifdef THC_WINDOWS
 #define PGN_FILE        "/Users/Bill/Documents/T3Database/giant123.pgn"
-#define PGN_OUT_FILE    "/Users/Bill/Documents/T3Database/x.pgn"
-#define QGN_FILE        "/Users/Bill/Documents/T3Database/x.qgn"
+#define PGN_OUT_FILE    "/Users/Bill/Documents/T3Database/twic_minimal_overlap_2.pgn"
+#define QGN_FILE        "/Users/Bill/Documents/T3Database/giant-base-part1-rebuilt-again.qgn"
 #else
 #define PGN_FILE        "/Users/billforster/Documents/ChessDatabases/giant123.pgn"
 #define PGN_OUT_FILE    "/Users/billforster/Documents/ChessDatabases/twic_minimal_overlap_2.pgn"
@@ -31,7 +31,14 @@ static void decompress_game( const char *compressed_header, const char *compress
 static void game_to_qgn_file( const char *event, const char *site, const char *date, const char *round,
                              const char *white, const char *black, const char *result, const char *white_elo, const char *black_elo, const char *eco,
                              int nbr_moves, thc::Move *moves, uint64_t *hashes );
-static int  verify_compression_algorithm( int nbr_moves, thc::Move *moves );
+static void compress_moves_to_str( int nbr_moves, thc::Move *moves, char *dst, thc::ChessPosition *positions );
+static void decompress_moves_from_str( int nbr_moves, char *src, thc::Move *moves, thc::ChessPosition *positions  );
+static bool verify_compression_algorithm( int nbr_moves, thc::Move *moves );
+
+void db_maintenance_speed_tests()
+{
+    db_primitive_speed_tests();
+}
 
 void db_maintenance_decompress_pgn()
 {
@@ -65,7 +72,7 @@ void db_maintenance_decompress_pgn()
         decompress_game( header_buf, moves_buf );
         nbr_games++;
         if(
-           ((nbr_games%1000) == 0 ) /* ||
+           ((nbr_games%100) == 0 ) /* ||
                                       (
                                       (nbr_games < 100) &&
                                       ((nbr_games%10) == 0 )
@@ -80,6 +87,8 @@ void db_maintenance_decompress_pgn()
         fclose(ofile);
 }
 
+unsigned long static_total_moves;
+
 void db_maintenance_verify_compression()
 {
     ifile = fopen( PGN_FILE, "rt" );
@@ -91,8 +100,10 @@ void db_maintenance_verify_compression()
         void CompressMovesDiagBegin();
         void CompressMovesDiagEnd();
         CompressMovesDiagBegin();
+        static_total_moves = 0;
         PgnRead *pgn = new PgnRead('V');
         pgn->Process(ifile);
+        cprintf( "total_moves=%lu\n", static_total_moves );
         CompressMovesDiagEnd();
     }
     if( ifile )
@@ -124,7 +135,7 @@ void db_maintenance_compress_pgn()
 }
 
 
-void db_maintenance_create_or_append_to_database(  const char *db_filename, const char *pgn_filename )
+void db_maintenance_create_or_append_to_database(  const char *pgn_filename )
 {
     ifile = fopen( pgn_filename , "rt" );
     if( !ifile )
@@ -133,7 +144,7 @@ void db_maintenance_create_or_append_to_database(  const char *db_filename, cons
     {
         DebugPrintfTime turn_on_time_display;
         PgnRead *pgn = new PgnRead('A');
-        db_primitive_open( db_filename );
+        db_primitive_open();
         db_primitive_transaction_begin();
         db_primitive_create_tables();
         db_primitive_count_games();
@@ -148,10 +159,10 @@ void db_maintenance_create_or_append_to_database(  const char *db_filename, cons
 }
 
 void db_utility_test();
-void db_maintenance_create_indexes(const char *db_filename )
+void db_maintenance_create_indexes()
 {
     //db_utility_test();
-    db_primitive_open(db_filename);
+    db_primitive_open();
     db_primitive_transaction_begin();
     db_primitive_create_indexes();
     db_primitive_create_extra_indexes();
@@ -159,18 +170,15 @@ void db_maintenance_create_indexes(const char *db_filename )
     db_primitive_close();
 }
 
-extern void pgn_read_hook( const char *white, const char *black, const char *event, const char *site, const char *result,
-                                    const char *date, const char *white_elo, const char *black_elo,
-                                    int nbr_moves, thc::Move *moves, uint64_t *hashes  );
 
-
-bool hook_gameover( char callback_code, const char *event, const char *site, const char *date, const char *round,
+bool gbl_evil_queen;
+bool gbl_double_byte;
+void hook_gameover( char callback_code, const char *event, const char *site, const char *date, const char *round,
                   const char *white, const char *black, const char *result, const char *white_elo, const char *black_elo, const char *eco,
                   int nbr_moves, thc::Move *moves, uint64_t *hashes )
 {
-    bool aborted = false;
     static int counter;
-    int is_interesting = 0;
+    bool is_interesting = false;
     if( (++counter % 100000) == 0 )
         cprintf( "%d games processed so far\n", counter );
     switch( callback_code )
@@ -181,90 +189,56 @@ bool hook_gameover( char callback_code, const char *event, const char *site, con
         // Append
         case 'A': db_primitive_insert_game( white, black, event, site, result, date, white_elo, black_elo, nbr_moves, moves, hashes ); break;
             
-        // Read one game
-        case 'R': pgn_read_hook( white, black, event, site, result, date, white_elo, black_elo, nbr_moves, moves, hashes ); return true;
-
         // Verify
-        case 'V': is_interesting = verify_compression_algorithm( nbr_moves, moves ); break;
-    }
-    extern int nbr_games_with_two_queens;
-    extern int nbr_games_with_promotions;
-    extern int nbr_games_with_slow_mode;
-    if( is_interesting&4096 )
-    {
-        nbr_games_with_two_queens++;
-        is_interesting &= (~4096);
-    }
-    if( is_interesting&512 )
-    {
-        nbr_games_with_promotions++;
-        is_interesting &= (~512);
+        case 'V': static_total_moves += nbr_moves; is_interesting = verify_compression_algorithm( nbr_moves, moves );
+            extern unsigned long nbr_compress_fast;
+            extern unsigned long nbr_compress_slow;
+            if( nbr_compress_fast+nbr_compress_slow != static_total_moves )
+                cprintf( "counter=%d\n",counter);
+            break;
     }
     if( is_interesting )
     {
-        char buf[200];
-        buf[0] = '\0';
-        if( is_interesting&0x1f)
-            nbr_games_with_slow_mode++;
-        if(is_interesting&1)
-            strcat(buf,"Dark Bishop ");
-        if(is_interesting&2)
-            strcat(buf,"Light Bishop ");
-        if(is_interesting&4)
-            strcat(buf,"Knight ");
-        if(is_interesting&8)
-            strcat(buf,"Rook ");
-        if(is_interesting&16)
-            strcat(buf,"Queen ");
-        if(is_interesting&32)
-            strcat(buf,"New record pawn swap ");
-        if(is_interesting&64)
-            strcat(buf,"New record nbr slow moves - queen ");
-        if(is_interesting&128)
-            strcat(buf,"New record nbr slow moves - not queen ");
-        if(is_interesting&256)
-            strcat(buf,"Verification error ");
-        if(is_interesting&1024)
-            strcat(buf,"Ten or more slow moves - queen ");
-        if(is_interesting&2048)
-            strcat(buf,"Ten or more slow moves - not queen ");
-        if(is_interesting!=16)
-            cprintf( "Adding game with issues; %s\n", buf );
-        FILE *f = fopen( (is_interesting&0x0f) ? "TooManyKnightsEtc.pgn" : "TwoOrMoreQueens.pgn", "at" );
-        if( f )
+        cprintf( "%s-%s %s, %s %s, %s\n", white, black, result, event, site, round );
+        thc::ChessRules cr;
+        for( int i=0; i<nbr_moves; i++ )
         {
-            fprintf( f, "[Event \"%s\"]\n", event );
-            fprintf( f, "[Site \"%s - %s\"]\n", buf, site );
-            fprintf( f, "[Date \"%s\"]\n", date );
-            fprintf( f, "[Round \"%s\"]\n", round );
-            fprintf( f, "[White \"%s\"]\n", white );
-            fprintf( f, "[Black \"%s\"]\n", black );
-            fprintf( f, "[Result \"%s\"]\n", result );
-            fprintf( f, "\n" );
-            thc::ChessRules cr;
-            bool end=true;
-            for( int i=0; i<nbr_moves; i++ )
-            {
-                bool start = ((i%10) == 0);
-                if( !start )
-                    fprintf( f, " " );
-                if( cr.white )
-                    fprintf( f, "%d. ", cr.full_move_count );
-                thc::Move mv = moves[i];
-                std::string s = mv.NaturalOut(&cr);
-                fprintf( f, "%s", s.c_str() );
-                end = (((i+1)%10) == 0);
-                if( end )
-                    fprintf( f, "\n" );
-                cr.PlayMove(mv);
-            }
-            if( !end )
-                fprintf( f, " " );
-            fprintf( f, "%s\n\n", result );
-            fclose(f);
+            thc::Move mv = moves[i];
+            std::string s = mv.NaturalOut(&cr);
+            if( cr.white )
+                cprintf( "%s%d. ", (i%15)==0 ? "" : " ", cr.full_move_count );
+            else if( (i&15) == 15 )
+                cprintf( "\n" );
+            else
+                cprintf( " " );
+            cprintf( "%s", s.c_str() );
+            cr.PlayMove(mv);
         }
     }
-    return aborted;
+    if( gbl_evil_queen || gbl_double_byte )
+    {
+        static int evil_queen_count;
+        static int double_byte_count;
+        if( gbl_evil_queen )
+            evil_queen_count++;
+        if( gbl_double_byte )
+            double_byte_count++;
+        cprintf( "%d evil games, %d double byte games, %s-%s, %s\n",  evil_queen_count, double_byte_count, white, black, gbl_double_byte?"needs double bytes":"doesn't need double bytes");
+        gbl_evil_queen = false;
+        gbl_double_byte = false;
+        thc::ChessRules cr;
+        std::string sgame;
+        for( int i=0; i<nbr_moves; i++ )
+        {
+            thc::Move mv = moves[i];
+            std::string s = mv.NaturalOut( &cr );
+            sgame += s;
+            if( i+1 < nbr_moves )
+                sgame += " ";
+            cr.PlayMove(mv);
+        }
+        cprintf( "%s\n", sgame.c_str() );
+    }
 }
 
 
@@ -357,9 +331,15 @@ static void game_to_qgn_file( const char *event, const char *site, const char *d
     fputs( buf,  ofile );    
     fputs( "\n", ofile );    
     CompressMoves press;
-    std::vector<thc::Move> v(moves,moves+nbr_moves);
-    std::string compressed = press.Compress(v); 
-    fputs( compressed.c_str(), ofile );    
+    dst = buf;
+    for( int i=0; i<nbr_moves && dst<buf+sizeof(buf)-5; i++ )
+    {
+        thc::Move mv = *moves++;
+        int nbr = press.compress_move( mv, dst );
+        dst += nbr;
+    }
+    *dst = '\0';
+    fputs( buf, ofile );    
     fputs( "\n", ofile );    
 }
 
@@ -458,29 +438,34 @@ static void decompress_game( const char *compressed_header, const char *compress
     fprintf( ofile, "[WhiteElo \"%s\"]\n",  white_elo );
     fprintf( ofile, "[BlackElo \"%s\"]\n",  black_elo );
     fprintf( ofile, "[ECO \"%s\"]\n\n",     eco );
-
     CompressMoves press;
-    std::string compressed( compressed_moves, compressed_moves+strlen(compressed_moves) );
-    std::vector<thc::Move> moves = press.Uncompress(compressed);
-    int nbr_moves = moves.size();
+    src = compressed_moves;
     std::string moves_txt;
-    thc::ChessRules cr;
-    for( int i=0; i<nbr_moves; i++ )
+    int count=0;
+    while( *src )
     {
-        if( i != 0 )
-            moves_txt += " ";
-        if( cr.white )
+        thc::Move mv;
+        thc::ChessRules before = press.cr;
+        int nbr = press.decompress_move( src, mv );
+        if( nbr == 0 )
+            break;
+        src += nbr;
+        char buf[20];
+        if( count%2 == 0 )
         {
-            char buf[100];
-            sprintf( buf, "%d. ", cr.full_move_count );
-            moves_txt += buf;
+            if( count == 0 )
+                sprintf( buf, "%d. ", count/2+1 );
+            else
+                sprintf( buf, " %d. ", count/2+1 );
         }
-        thc::Move mv = moves[i];
-        std::string s = mv.NaturalOut(&cr);
-        moves_txt += s;
-        cr.PlayMove(mv);
+        else
+            strcpy( buf, " " );
+        moves_txt += buf;
+        moves_txt += mv.NaturalOut( &before );
+        count++;    
     }
-    moves_txt += " ";
+    if( count > 0 )
+        moves_txt += " ";
     moves_txt += result;
     std::string justified;
     const char *s = moves_txt.c_str();
@@ -498,7 +483,7 @@ static void decompress_game( const char *compressed_header, const char *compress
                 col_end_of_next_word++;    
                 t++;
             }
-            if( col_end_of_next_word > 81 )
+            if( col_end_of_next_word > 76 )
             {
                 c = '\n';
                 col = 0;
@@ -509,44 +494,125 @@ static void decompress_game( const char *compressed_header, const char *compress
     fprintf( ofile, "%s\n\n",  justified.c_str() );
 }
 
-static int verify_compression_algorithm( int nbr_moves, thc::Move *moves )
+
+static void compress_moves_to_str( int nbr_moves, thc::Move *moves, char *dst, thc::ChessPosition *positions )
 {
-    int is_interesting = false;
-    extern int max_nbr_slow_moves_other;
-    extern int max_nbr_slow_moves_queen;
+    CompressMoves press;
+    for( int i=0; i<nbr_moves; i++ )
+    {
+        thc::Move mv = *moves++;
+        int nbr = press.compress_move( mv, dst );
+        std::string s = mv.TerseOut();
+//#define VERBOSE
+#ifdef VERBOSE
+        if( nbr == 1 )
+            cprintf( "compress temp> %s -> %02x\n", s.c_str(), *dst&0xff );
+        else
+            cprintf( "compress temp> %s -> %02x,%02x\n", s.c_str(), *dst&0xff, *(dst+1)&0xff );
+#endif
+        dst += nbr;
+        if( positions[i] != press.cr )
+        {
+            press.Check( false, "Compress progress check", &positions[i] );
+        }
+    }
+    *dst = '\0';
+}
+
+static void decompress_moves_from_str( int nbr_moves, char *src, thc::Move *moves, thc::ChessPosition *positions  )
+{
+    CompressMoves press;
+    for( int i=0; i<nbr_moves; i++ )
+    {
+        thc::Move mv;
+        int nbr = press.decompress_move( src, mv );
+        std::string s = mv.TerseOut();
+#ifdef VERBOSE
+        if( nbr == 1 )
+            cprintf( "decompress temp> %02x -> %s\n", *src&0xff, s.c_str() );
+        else
+            cprintf( "decompress temp> %02x,%02x -> %s\n", *src&0xff, *(src+1)&0xff, s.c_str() );
+#endif
+        src += nbr;
+        *moves++ = mv;
+        if( positions[i] != press.cr )
+        {
+            press.Check( false, "Decompress progress check", &positions[i] );
+        }
+    }
+}
+
+static bool verify_compression_algorithm( int nbr_moves, thc::Move *moves )
+{
+    bool is_interesting = false;
+#if 1  // OLD/NEW
     std::vector<thc::Move> moves_in(moves,moves+nbr_moves);
     CompressMoves press;
     std::string compressed = press.Compress(moves_in);
     std::vector<thc::Move> unpacked = press.Uncompress(compressed);
     is_interesting = press.is_interesting;
-    if( is_interesting & 0x0f )
+    bool match = (0 == memcmp( &moves_in[0], &unpacked[0], nbr_moves*sizeof(thc::Move)));
+#else // OLD/NEW
+    char buf[2000];
+    thc::Move unpacked[1000];
+    static thc::ChessPosition positions_buffer[1000];
+    thc::ChessRules cr;
+    if( sizeof(buf) < 2*nbr_moves )
     {
-        if( press.nbr_slow_moves>0 && press.nbr_slow_moves>=max_nbr_slow_moves_other )
-        {
-            max_nbr_slow_moves_other = press.nbr_slow_moves;
-            is_interesting |= 128;
-        }
-        else if( press.nbr_slow_moves >= 10 )
-        {
-            is_interesting |= 2048;
-        }
+        cprintf( "Buffer too small" );
+        return true;
+    }
+    for( int i=0; i<nbr_moves; i++ )
+    {
+        thc::Move mv = moves[i];
+        cr.PlayMove(mv);
+        positions_buffer[i] = cr;
+    }
+    compress_moves_to_str( nbr_moves, moves, buf, positions_buffer );
+#ifdef VERBOSE
+    for( int i=0; i<nbr_moves; i++ )
+    {
+        thc::Move mv = moves[i];
+        std::string s = mv.TerseOut();
+        if( i==0 )
+            cprintf( "Moves>" );
+        cprintf( " " );
+        cprintf( s.c_str() );
+    }
+    cprintf( "\n" );
+    for( int i=0; ; i++ )
+    {
+        char c = buf[i];
+        if( c == '\0' )
+            break;
+        if( i==0 )
+            cprintf( "Compressed>" );
+        cprintf( " " );
+        cprintf( "%02x", c&0xff );
+    }
+    cprintf( "\n" );
+#endif
+    decompress_moves_from_str( nbr_moves, buf, unpacked, positions_buffer );
+#ifdef VERBOSE
+    for( int i=0; i<nbr_moves; i++ )
+    {
+        thc::Move mv = unpacked[i];
+        std::string s = mv.TerseOut();
+        if( i==0 )
+            cprintf( "Unpacked Moves>" );
+        cprintf( " " );
+        cprintf( s.c_str() );
+    }
+    cprintf( "\n" );
+#endif
+    bool match = (0 == memcmp( moves, unpacked, nbr_moves*sizeof(thc::Move)));
+#endif // OLD/NEW
+    if( match )
+    {
     }
     else
     {
-        if( press.nbr_slow_moves>0 && press.nbr_slow_moves>=max_nbr_slow_moves_queen )
-        {
-            max_nbr_slow_moves_queen = press.nbr_slow_moves;
-            is_interesting |= 64;
-        }
-        else if( press.nbr_slow_moves >= 10 )
-        {
-            is_interesting |= 1024;
-        }
-    }
-    bool match = (0 == memcmp( &moves_in[0], &unpacked[0], nbr_moves*sizeof(thc::Move)));
-    if( !match )
-    {
-        is_interesting |= 256;
+        is_interesting = true;
         cprintf( "Boo hoo, doesn't match\n" );
         for( int i=0; i<nbr_moves; i++ )
         {

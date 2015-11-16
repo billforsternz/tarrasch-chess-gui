@@ -93,12 +93,16 @@ const char *PgnRead::ShowState( STATE state )
 
 FILE *PgnRead::debug_log_file()
 {
+    #ifndef _DEBUG
+    return stderr;
+    #else
     if( debug_log_file_txt == NULL )
         debug_log_file_txt = fopen( "debug_log_file.txt", "wt" );
     FILE *ret = debug_log_file_txt;
     if( ret == NULL )
         ret = stderr;
     return( ret );
+    #endif
 }
 
 bool PgnRead::TestResult( const char *buf )
@@ -118,6 +122,7 @@ bool PgnRead::TestResult( const char *buf )
 
 void PgnRead::debug_dump()
 {
+    #ifdef _DEBUG
     int i;
     for( i=0; i<nbrof(debug_buf); i++ )
     {
@@ -126,8 +131,10 @@ void PgnRead::debug_dump()
         debug_ptr++;
         debug_ptr &= (nbrof(debug_buf)-1);
         if( c )
-            fprintf( debug_log_file(), "[%s]%c", ShowState(state), c );
+            //fprintf( debug_log_file(), "[%s]%c", ShowState(state), c );
+            cprintf( "[%s]%c", ShowState(state), c );
     }    
+    #endif
 }
 
 bool PgnRead::Process( FILE *infile )
@@ -214,11 +221,16 @@ bool PgnRead::Process( FILE *infile )
             if( comment_ch == ';' )
                 push_back = ch;
             comment_buf[len] = '\0';
-            state = save_state;
+
+            // Added the following to fix an ugly bug we were going IN_DOLLAR->IN_COMMENT then back to IN_DOLLAR
+            //  and never escaping from IN_DOLLAR because save_state was IN_DOLLAR. Yuk. Maybe we should adopt
+            //  the main tarrasch pgn parser practice of only going to IN_COMMENT and IN_DOLLAR from BETWEEN_MOVES
+            state = (save_state==IN_DOLLAR?BETWEEN_MOVES:save_state);
         }
         else if( ch == '$' && (
                                 state!=HEADER     &&
                                 state!=IN_COMMENT &&
+                                state!=IN_DOLLAR &&
                                 state!=IN_MOVE_BLACK &&
                                 state!=IN_MOVE_WHITE
                          )
@@ -260,7 +272,11 @@ bool PgnRead::Process( FILE *infile )
                 " -+"     // $21
             };   */
             push_back = ch;
-            state = save_state;
+
+            // Added the following to fix an ugly bug we were going IN_DOLLAR->IN_COMMENT then back to IN_DOLLAR
+            //  and never escaping from IN_DOLLAR because save_state was IN_DOLLAR. Yuk. Maybe we should adopt
+            //  the main tarrasch pgn parser practice of only going to IN_COMMENT and IN_DOLLAR from BETWEEN_MOVES
+            state = (save_state==IN_COMMENT?BETWEEN_MOVES:save_state);
         }
         else if( ch == '(' && (
                                 state!=HEADER     &&
@@ -491,7 +507,6 @@ bool PgnRead::Process( FILE *infile )
         // State changes
         if( state != old_state )
         {
-            //cprintf( "State change %s->%s\n", ShowState(old_state), ShowState(state) );
             if( old_state == HEADER )
             {
                 buf[len++] = '\0';
@@ -513,7 +528,14 @@ bool PgnRead::Process( FILE *infile )
                                  )
               )
             {
-                GameOver();
+                if( GameOver() )
+                {
+                    //int err =
+                    //fseek( infile, 860, SEEK_SET );
+                    //if( err != 0 )
+                    //    cprintf("Whoops");
+                    return true;
+                }
             }
             if( state==PREFIX && old_state!=HEADER && old_state!=IN_COMMENT )
             {
@@ -540,7 +562,10 @@ bool PgnRead::Process( FILE *infile )
                                 state==BETWEEN_MOVES
                             )
               )
-                GameOver();
+            {
+                if( GameOver() )
+                    return true;
+            }
         }
     }
     FileOver();
@@ -677,7 +702,7 @@ void PgnRead::GameBegin()
     hash = 0x0f6e2dc7837aa12f; //  0x837AA12F; //2205851951; //chess_rules.HashCalculate();
     nbr_games++;
     if(
-       ((nbr_games%10000) == 0 ) /* ||
+       ((nbr_games%100000) == 0 ) /* ||
                                   (
                                   (nbr_games < 100) &&
                                   ((nbr_games%10) == 0 )
@@ -686,18 +711,22 @@ void PgnRead::GameBegin()
         cprintf( "%d games\n", nbr_games );
 }
 
-void PgnRead::GameOver()
+bool PgnRead::GameOver()
 {
+    bool aborted = false;
     STACK_ELEMENT *s;
     s = &stack_array[0];
     if( !fen_flag )
-        hook_gameover( callback_code, event, site, date, round, white, black, result, white_elo, black_elo, eco, s->nbr_moves, s->big_move_array, s->big_hash_array  );
+    {
+        aborted = hook_gameover( callback_code, event, site, date, round, white, black, result, white_elo, black_elo, eco, s->nbr_moves, s->big_move_array, s->big_hash_array  );
+    }
     //cprintf( "GameOver()\n" );
     stack_idx = 0;
     ChessRules temp;
     chess_rules = temp;    // init
     stack_array[0].nbr_moves = 0;
     stack_array[0].position = chess_rules;
+    return aborted;
 }
 
 
@@ -766,16 +795,6 @@ void PgnRead::Error( const char *msg )
     }
     #endif
 }
-
-/* It will be good to get rid of this
-void PgnRead::FatalError( const char *msg )
-{
-    #ifdef _DEBUG
-    fprintf( debug_log_file(), "Fatal error: %s\n", msg );
-    exit(-1);
-    #endif
-} */
-
 
 
 bool PgnRead::DoMove( bool white, int move_number, char *buf )

@@ -1,0 +1,1961 @@
+In directory T3Database
+
+The BigDatabase 2007 as .pgn, in 2 parts, original and rebuilt.
+giant1.pgn
+giant-base-part1-rebuilt.pgn
+giant2.pgn
+giant-base-part2-rebuilt.pgn
+
+Some twic files we concatentated together to make giant3.pgn
+twic_minimal_overlap.pgn
+twic-948-1010.pgn
+twic-1011-1050.pgn
+twic-1051-1077.pgn
+
+Finally concatenate giant1.pgn, giant2.pgn and giant3.pgn
+giant123.pgn
+
+Note all concatenations used file 'b' between each concatenated file,
+file b is simply two blank lines (4 bytes, DOS format)
+
+Finished 4591729 total games
+nbr_compress_fast   = 350937972
+nbr_compress_slow   = 57354
+nbr_uncompress_fast = 350937972
+nbr_uncompress_slow = 57354
+nbr_pawn_swaps_histo[0] = 88574741
+nbr_pawn_swaps_histo[1] = 5620389
+nbr_pawn_swaps_histo[2] = 58118
+nbr_pawn_swaps_histo[3] = 186
+nbr_pawn_swaps_histo[4] = 0
+nbr_pawn_swaps_histo[5] = 0
+nbr_pawn_swaps_histo[6] = 0
+nbr_pawn_swaps_histo[7] = 0
+nbr_pawn_swaps_histo_wl[0] = 4484385
+nbr_pawn_swaps_histo_wl[1] = 255981
+nbr_pawn_swaps_histo_wl[2] = 2092
+nbr_pawn_swaps_histo_wl[3] = 1         sum=4742459 white less, = white left, = toward queenside
+nbr_pawn_swaps_histo_wl[4] = 0
+nbr_pawn_swaps_histo_wl[5] = 0
+nbr_pawn_swaps_histo_wl[6] = 0
+nbr_pawn_swaps_histo_wl[7] = 0
+nbr_pawn_swaps_histo_wr[0] = 2829570
+nbr_pawn_swaps_histo_wr[1] = 2681239
+nbr_pawn_swaps_histo_wr[2] = 25961
+nbr_pawn_swaps_histo_wr[3] = 113       sum=5536883 white right, = toward kingside
+nbr_pawn_swaps_histo_wr[4] = 0
+nbr_pawn_swaps_histo_wr[5] = 0
+nbr_pawn_swaps_histo_wr[6] = 0
+nbr_pawn_swaps_histo_wr[7] = 0
+nbr_pawn_swaps_histo_bl[0] = 2524363
+nbr_pawn_swaps_histo_bl[1] = 2429938
+nbr_pawn_swaps_histo_bl[2] = 28406
+nbr_pawn_swaps_histo_bl[3] = 71        sum=4982778 black less, = black right, = toward queenside
+nbr_pawn_swaps_histo_bl[4] = 0
+nbr_pawn_swaps_histo_bl[5] = 0
+nbr_pawn_swaps_histo_bl[6] = 0
+nbr_pawn_swaps_histo_bl[7] = 0
+nbr_pawn_swaps_histo_br[0] = 5914376
+nbr_pawn_swaps_histo_br[1] = 253231
+nbr_pawn_swaps_histo_br[2] = 1659
+nbr_pawn_swaps_histo_br[3] = 1         sum=6169267 black left, = toward kingside
+nbr_pawn_swaps_histo_br[4] = 0
+nbr_pawn_swaps_histo_br[5] = 0
+nbr_pawn_swaps_histo_br[6] = 0
+nbr_pawn_swaps_histo_br[7] = 0
+nbr_knight_moves     = 63304435
+nbr_knight_swaps     = 14216881
+nbr_knight_swaps_alt = 17328060
+nbr_rook_moves       = 64653865
+nbr_rook_swaps       = 4942713
+nbr_rook_swaps_alt   = 13008081
+nbr_games_with_promotions = 241383
+nbr_games_with_slow_mode  = 17889
+nbr_games_with_two_queens = 49748
+
+*** Old algorithm, after elimination of double bytes (so uses ordered SAN list
+for slow mode)
+
+File is giant123.pgn
+
+
+x=0,0 z=432,432, height=432, width=432, row_stride=1728
+a,r,g,b = 255,255,0,0
+2015-08-19 15:37:33.405 t3[90758:303] CoreText performance note: Client called CTFontCreateWithName() using name "Times" and got font with PostScript name "Times-Roman". For best performance, only use PostScript names when calling this API.
+2015-08-19 15:37:33.406 t3[90758:303] CoreText performance note: Set a breakpoint on CTFontLogSuboptimalRequest to debug.
+2015-08-19 15:37:33.412 t3[90758:303] CoreText performance note: Client called CTFontCreateWithName() using name "Times" and got font with PostScript name "Times-Roman". For best performance, only use PostScript names when calling this API.
+SetGameDocument() pos = 0
+clear() stack_size()=0
+push_back() stack_size()=1
+New tab idx=0, pos=0
+2015-08-19 15:37:33.540 t3[90758:303] CoreText performance note: Client called CTFontCreateWithName() using name ".Lucida Grande UI" and got font with PostScript name ".LucidaGrandeUI". For best performance, only use PostScript names when calling this API.
+1 evil games, 0 double byte games, O'Sullivan, Bartholomew-Szabo, Laszlo, doesn't need double bytes
+c4 Nf6 Nf3 g6 Nc3 d6 e4 Bg7 d4 O-O Be2 Nbd7 O-O e5 d5 Nc5 Qc2 a5 Be3 Nh5 Nd2 Nf4 Bxf4 exf4 Nb3 Nd7 Qd2 g5 g4 Qf6 f3 a4 Nc1 a3 e5 Qxe5 Nd3 Qd4+ Kg2 axb2 Nb5 bxa1=Q
+100000 games
+100000 games processed so far
+2 evil games, 0 double byte games, Latka, Dieter-Lachmann, Hans Georg, doesn't need double bytes
+Nf3 d5 c4 d4 e3 c5 b4 f6 bxc5 e5 Nxe5 fxe5 Qh5+ Ke7 c6 Nf6 Qxe5+ Kf7 c7 Qd6 cxb8=Q Rxb8 Qxd6 Bxd6 Bd3 Ng4 f3 Ne5 Be4 dxe3 dxe3 Nxf3+ Bxf3 Be5 Ba3 Bxa1 O-O Bf6 Bd6 Ra8 Nd2 Ke6 c5 Be5 Bg4+ Kd5 e4+ Kc6 Bxe5 Bxg4 Bd6 Be6 a3 b6 e5 bxc5 Rc1 Rhc8 Ne4 c4 Nc3 a6 Na4 Rd8 Nb2 Rac8 Nxc4 Bxc4 Rxc4+ Kd5 Ra4 Rc6 h3 Rd7 Kh2 Rb7 Kg3 Rb2 Ra5+ Ke6 Bb4 Re2 Bd6 Rc3+ Kh4 Rxg2 Bb4 g5+
+200000 games
+200000 games processed so far
+3 evil games, 0 double byte games, Pommerening, Michael-Jacob, Alfred, doesn't need double bytes
+e4 d6 g3 Nf6 Bg2 g6 Ne2 Bg7 O-O O-O c3 c5 f4 Nc6 d3 a6 Na3 Rb8 Nc2 Bd7 Ne3 Ne8 f5 b5 Bd2 Nc7 Ng4 h5 Nh6+ Bxh6 Bxh6 Re8 Nf4 e5 fxg6 Bg4 gxf7+ Kh7 fxe8=Q Qxe8 Ne2 Kxh6 Qd2+ Kg6 h3 Be6 h4 Qe7 Rf2 Rg8 Raf1 Ne8 Kh2 Nd8 Bh3 Kh7 Bf5+ Bxf5 Rxf5 Ng7 Rf6
+4 evil games, 0 double byte games, Gelfer, Israel-Bukacek, Emil, doesn't need double bytes
+d4 f5 c4 Nf6 Nc3 g6 g3 Bg7 Bg2 O-O Nf3 d6 d5 Nbd7 Nd4 Nc5 O-O e5 dxe6 c6 Bf4 Nh5 Nxc6 bxc6 e7 Qb6 exf8=Q+
+300000 games
+300000 games processed so far
+400000 games
+400000 games processed so far
+500000 games
+500000 games processed so far
+5 evil games, 0 double byte games, Capron, Daniel-Baldy, Philippe, doesn't need double bytes
+e4 e6 Nf3 d5 e5 c5 b4 cxb4 d4 Nc6 a3 bxa3 c3 Bd7 Bd3 h6 h4 h5 Ng5 Qa5 Bd2 a2 Qc2 axb1=Q+ Qxb1 Qc7 Nxf7 Kxf7 Bg6+ Ke7 Bg5+ Nf6 Rh3 Nxe5 dxe5 Qxe5+ Re3 Qh2 Qxb7 Rb8 Qxa7 Kd8 Bf7 Qg1+ Ke2 Rb2+ Kd3 Qxf2 Qa8+ Ke7 Rxe6+ Kxf7 Rxf6+ gxf6 Qxd5+ Kg6
+600000 games
+600000 games processed so far
+6 evil games, 0 double byte games, Iosif, Marcel-Tewski, R., doesn't need double bytes
+e4 c6 Nc3 d5 Nf3 g6 h3 Bg7 d4 Nh6 Bd3 f6 O-O Nf7 Re1 O-O Bf1 b6 a4 e6 Ra3 Nd7 h4 f5 e5 c5 Ng5 Qe7 Nxd5 exd5 e6 Nxg5 exd7 Ne4 dxc8=Q Raxc8 dxc5 Qxc5 Re2 d4 Bf4 Nc3 bxc3 Qxa3 cxd4 Qxa4 Rd2 Rfd8 Be3 f4 Bxf4 Rxd4 Rxd4 Qxd4 Qg4 Rf8 g3 Kh8 h5 Be5 Bxe5+ Qxe5 hxg6 Qf6 g7+ Qxg7 Qe4 Qg6 Qe5+ Qf6 Qe3 a5 f4 Rd8 Kh2 Qh6+ Bh3 Qd6 Bg2 a4 c4 Qd4 Qe7 Qd6 Qe1 Qh6+ Kg1 Qg7 Qb4 Qxg3 Qxa4 Rg8 Qa1+ Qg7 Qa2 Qxg2+ Qxg2 Rxg2+ Kxg2 Kg7 Kf3 Kf6
+7 evil games, 0 double byte games, Palos, Osman-Sinanovic, Muhamed, doesn't need double bytes
+e4 Nf6 e5 Nd5 Nf3 g6 c4 Nb6 c5 Nd5 Bc4 c6 Nc3 Nxc3 dxc3 Bg7 Ng5 O-O Nxf7 Rxf7 e6 Rf8 exd7+ Kh8 dxc8=Q Qxc8 h4 Qf5 Be3 Nd7 h5 Ne5 Qe2 Rad8 hxg6 Qxg6 Bb3 Nd3+ Kf1 e5 Bc2 e4 Bxd3 exd3 Qh5 Kg8 Qxg6 hxg6 Rh4 Rf5 Rd1 Rfd5 Ke1 Bf8 Rc4 Rc8 Kd2 b5 cxb6 axb6 Rd4 Rxd4 cxd4 c5 dxc5 bxc5 Kxd3 c4+ Ke2 Ra8 a3 Kf7
+8 evil games, 0 double byte games, Arribas Robaina, Maritza-Nguyen Thi Kim Ngan, doesn't need double bytes
+e4 d6 d4 g6 Be3 Bg7 c4 Nd7 Nc3 Ngf6 f3 O-O Qd2 c5 d5 Ne5 h3 Nh5 Bd3 f5 Nge2 f4 Bf2 Bd7 Nc1 a6 a4 Qa5 Ra3 Rab8 Ke2 Qd8 Qc2 Qe8 Qb3 Ng3+ Bxg3 fxg3 Nb1 Nxf3 gxf3 g2 Qd1 gxh1=Q Qxh1 Bxb2 Ra2 Bxc1 Qxc1 Bxa4 Qh6 Bd7 Ke3 Qf7 Rf2 Qf6 Nd2 b5 Rg2 bxc4 Bxc4 Bb5 Bxb5 Rxb5 f4 Rb2 f5 Qd4+ Kf3 Qc3+ Ke2 Rfb8 Kd1 Qc2+ Ke1 Qc1+ Ke2 Rxd2+ Ke3 Rb3+
+9 evil games, 0 double byte games, Peters, Harry-Strik, Aart, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bb5 Bc5 c3 Nf6 d4 exd4 e5 Ne4 O-O dxc3 Qd5 c2 Qxe4 cxb1=Q Rxb1 Ne7 Qc4 a6 Ng5 O-O Qh4 h6 Bd3 d5 exd6 Qxd6 Bh7+ Kh8 Ne4 Qc6 Nxc5 Qxc5 Be3 Qd6 Rbd1 Ng6 Bxg6 Qxg6 Bf4 Be6
+10 evil games, 0 double byte games, Carpenter, George-Vangilder, W., doesn't need double bytes
+Nf3 Nf6 g3 g6 Bg2 Bg7 O-O O-O d3 d6 Nbd2 e6 e4 c5 Re1 Nfd7 c3 Nc6 h4 b5 e5 Rb8 exd6 Nde5 Nxe5 Nxe5 Ne4 Qb6 Be3 f5 Bxc5 Qa6 d4 Nc4 d7 Rd8 dxc8=Q Rbxc8 Be7 Rd7 Nf6+ Bxf6 Bxf6 Nxb2 Qb3 Nc4 Re2 Re8 Rb1 Na3 Rbe1 Kf7 d5 Rxd5 Bxd5 Nc4 Rxe6 Nd2 Rxa6+ Kf8 Qb4+
+700000 games
+700000 games processed so far
+11 evil games, 0 double byte games, Haub, Thorsten Michael-Steinkohl, Thomas, doesn't need double bytes
+g3 Nf6 Bg2 g6 Nf3 Bg7 O-O O-O c4 d6 Nc3 e5 b4 a5 b5 e4 Ng5 Re8 Ba3 Qe7 Rc1 Nh5 Ngxe4 f5 Nd5 Qd8 Nxc7 Qxc7 Nxd6 Rf8 d4 Nd7 c5 Ndf6 b6 Qe7 Qb3+ Kh8 c6 a4 Qb2 Be6 Nxb7 Qf7 Nd6 Qg8 b7 Bd5 bxa8=Q Rxa8 c7 Bxg2 Kxg2 Qd5+ f3 Rc8 Qb8 Rg8 e4 Qxa2+ Rf2 Qxa3 Nf7#
+800000 games
+800000 games processed so far
+12 evil games, 0 double byte games, Walter, Jens-Klein, Thomas, doesn't need double bytes
+e4 e5 Nf3 Nc6 d4 exd4 Bc4 Be7 c3 dxc3 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qe2 cxb1=Q Rxb1 d6 O-O Nc6 Be3 Bg4 Kh1 Ne5 Bb3 Nxf3 gxf3 Bh5 Rg1 Bf6 Bh6 Qe7 Qe3 Rfe8 Rg3 c6 Rbg1 Bg6 Bf4 Be5 Rxg6 hxg6 Bxe5 Qxe5 Rxg6 d5 Rg4 Qh5 Qc5 Re5 Qd6 dxe4 Qf6 Kf8 Qxg7+ Ke7 Bxf7 Qxf7 Qxe5+ Kf8 Rf4 exf3 Rxf7+ Kxf7 Qf5+ Ke7 Qxf3
+13 evil games, 0 double byte games, Pernutz, Hans Gerhard-Haberer, Michael, doesn't need double bytes
+e4 c6 c4 e5 Nf3 d6 d4 Qc7 Nc3 Nf6 Be2 Be7 O-O O-O Re1 Nbd7 b3 a6 a4 d5 exd5 e4 dxc6 exf3 Bxf3 Bb4 cxd7 Bxc3 dxc8=Q Raxc8 Bd2 Bxa1 Qxa1 Qb6 Qc3
+14 evil games, 0 double byte games, Mayoh, Daniel-Woodward, Stephen, doesn't need double bytes
+e4 Nc6 Nf3 d6 d4 Bg4 Bb5 Nh6 d5 e6 dxc6 Qf6 cxb7+ c6 bxa8=Q+ Ke7 Qxa7+ Ke8 Bxc6+ Kd8 Qd7#
+15 evil games, 0 double byte games, Young, O.-Morris, Devin, doesn't need double bytes
+e4 e5 d3 Bc5 Qh5 Nf6 Qxe5+ Kf8 Qxc5+ d6 Qa3 Nc6 e5 Nd4 Qa4 Bd7 Qxd4 Bg4 exf6 Qe8+ Ne2 Be6 fxg7+ Kg8 gxh8=Q#
+900000 games
+900000 games processed so far
+16 evil games, 0 double byte games, Angot, Dominique-San Marco, Jean, doesn't need double bytes
+e4 c5 Nc3 Nc6 g3 g6 Bg2 Bg7 d3 d6 f4 e6 Nf3 Nge7 O-O Rb8 Be3 Nd4 e5 Qb6 Rb1 d5 Na4 Qa5 Nxc5 Nxf3+ Bxf3 Nf5 Bf2 d4 b4 Qd8 c4 O-O Qa4 a6 b5 Qb6 bxa6 Qxc5 axb7 Ne3 bxc8=Q Rfxc8 Rfc1 g5 Rb7 gxf4 gxf4 Rxb7 Bxb7 Rb8 Rb1 Bh6 Bg3 Qf8 Qa7 Nf5 Kf2 Qd8 Ke2 Qc7 Rb5 Kg7 a4 Ne7 Qa6 Ng6 Kf3 Qe7 Be4 Rxb5 Qxb5 Nxf4 Qb1 Nh3 Kg2 Nf4+ Kh1 Ne2 Qe1 Nc3 Bh4 Bg5 Bf2 f5 exf6+ Bxf6 Bc6 Qd6 Qg1+ Kf8 Qg2 Qf4 a5 Qc7 Qf3 Ke7 a6 Qb6 Bb5 Nd5 a7
+17 evil games, 0 double byte games, Hector, Stephan-Hoelzer, Christian, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bc4 Bc5 Nc3 d6 d3 f5 Ng5 f4 Nf7 Qh4 O-O Bg4 Ne2 f3 Ng3 fxg2 Qe1 gxf1=Q+ Qxf1 Nd4 Qg2 Nf3+ Kh1 Ne1 Bg5
+18 evil games, 0 double byte games, Sereinig, Eduard-Horvath, Jozsef, doesn't need double bytes
+Nf3 Nf6 g3 g6 Bg2 Bg7 O-O c5 d3 d5 Nc3 Nc6 e4 O-O Bg5 d4 Ne2 h6 Bd2 e5 Ne1 b5 f4 Ng4 f5 c4 Nf4 c3 Qxg4 cxd2 Nd5 dxe1=Q Raxe1 Ne7 Nxe7+ Qxe7 Qf3 Qf6 c3 dxc3 bxc3 Bd7 Kh1 Rac8 d4 b4 cxb4 exd4 Qd1 Qe5 a4 h5 b5 Bh6 g4 hxg4 Qxg4 d3 Qh4 d2 Rd1 Be3 Bh3 g5 Rg1 f6 Qh5 Be8
+1000000 games
+1000000 games processed so far
+19 evil games, 0 double byte games, Grams, Paul-Rutkofske, L., doesn't need double bytes
+d4 f5 c4 g6 Nc3 Nf6 Nf3 Bg7 e3 O-O Be2 c6 O-O d6 Qc2 Na6 a3 Nc7 d5 e5 Rd1 e4 Nd4 c5 Ndb5 Nce8 Na4 Nd7 Rb1 Ne5 b4 Qg5 Kh1 b6 h3 Qh4 Kg1 Bh6 Nxa7 Rxa7 Nxb6 Nf6 Nxc8 Rxc8 b5 f4 Bf1 f3 g3 Qg5 a4 Re7 a5 Nh5 Kh2 Qf5 b6 Qd7 b7 Nf7 a6 Re5 bxc8=Q+ Qxc8 a7 Qf5 a8=Q+
+20 evil games, 0 double byte games, Kiss, H.-Toth, Szilvia, doesn't need double bytes
+e4 c5 Nf3 e6 b4 cxb4 d4 Nf6 Bd3 Nc6 a3 a6 Bg5 Be7 c3 Qa5 Qb3 bxc3 h4 c2+ Bd2 cxb1=Q+ Bxb1 Qh5 Ba2 Nxe4
+21 evil games, 0 double byte games, Khan, Daniel-Cochran, Ben, doesn't need double bytes
+e4 e5 Nf3 d5 Nc3 Nc6 exd5 Nd4 Nxd4 Bc5 Bb5+ c6 dxc6 Qf6 cxb7+ Bd7 bxa8=Q+ Ke7 Nd5+ Kd6 Nxf6 gxf6 Bxd7
+22 evil games, 0 double byte games, Roet, S.-Bloemhard, Rudy, doesn't need double bytes
+c4 f5 d4 Nf6 Nc3 g6 Nf3 Bg7 Bg5 O-O Qd2 Ne4 Nxe4 fxe4 Ng1 Qe8 Be3 Qf7 f3 Nc6 Rc1 d6 b4 e5 d5 Nd4 Bf2 Bd7 e3 exf3 exd4 Bh6 Be3 f2+ Kd1 Ba4+ Ke2 fxg1=Q Rxg1 Bxe3 Qxe3 Rae8 Kd2 Qg7 Bd3 exd4 Qg5 Rf2+
+23 evil games, 0 double byte games, Hickey, Am-Jackson, K., doesn't need double bytes
+e4 d5 f4 dxe4 d3 exd3 f5 dxc2 Be3 cxd1=Q+ Kf2 Qxf1+ Kg3 Qxf5 Bf4 Qxf4+ Kxf4 e6 g3 Qd4+ Kf3 Qd5+ Kg4 Qxh1 Ne2 e5+ Kh4 Qxh2+ Kg5 Qxe2 g4 Qxg4#
+24 evil games, 0 double byte games, Le Thanh Tu-Zaksaite, Salomeja, doesn't need double bytes
+d4 Nf6 Nf3 g6 c4 Bg7 Nc3 d6 h3 O-O e4 e5 d5 Nbd7 Be3 Ne8 Be2 f5 Ng5 Ndf6 Qb3 f4 Bd2 h6 Ne6 Bxe6 dxe6 c6 c5 Rb8 e7+ Kh8 exd8=Q Rxd8 Qxb7 dxc5 Qxc6 g5 Qxc5 Nd7 Qxa7 Nb8 Nd5 Nc6 Qb6 Rd6 Nb4 Nxb4 Qxb4
+25 evil games, 0 double byte games, Holveck, J.-Aguet, G., doesn't need double bytes
+e4 e5 Nf3 Nc6 Bb5 Bc5 c3 Qf6 O-O d6 d4 Bb6 d5 a6 Ba4 Qg6 dxc6 Ne7 cxb7+ c6 bxa8=Q O-O Qb8 Bh3 Nh4 Rxb8 Nxg6 Nxg6 gxh3
+26 evil games, 0 double byte games, Jones, Guy-Musumeci, John, doesn't need double bytes
+Nc3 e5 Nf3 Nf6 Nxe5 d6 Nf3 Be7 d4 O-O e4 c5 d5 Qa5 Bg5 h6 Bh4 g5 Bg3 Bh3 gxh3 Na6 e5 Ne8 exd6 Bf6 d7 Ng7 Be2 Rfe8 dxe8=Q+ Nxe8 O-O Bxc3 Bxa6 Qxa6 bxc3 Qc4 Rb1 Nf6 d6 Rd8 Ne5 Ne4 Nxc4 Rxd6 Nxd6 Nxd6 Qxd6 h5 Qh6 h4 Be5 b5 Qg7#
+1100000 games
+1100000 games processed so far
+27 evil games, 0 double byte games, Diaz Fernandez, Ivan-Fuente Gutierrez, Jose Ramon, doesn't need double bytes
+e4 d6 f4 e6 Nf3 Be7 d4 c6 Bd3 Nd7 O-O Qc7 Be3 b6 Nbd2 a6 c3 Bb7 Rc1 Qd8 Qe1 Ngf6 Qg3 O-O Ng5 h6 Nh3 Nh5 Qf3 g6 f5 Kg7 g4 Nhf6 Nf4 e5 fxg6 exf4 Qxf4 Ng8 gxf7 Bg5 fxg8=Q+ Kxg8 Qg3 Qe7 Rf5 Rxf5 gxf5 Kf7 Bxg5 hxg5 Nc4 Kf6 Qxd6+ Qxd6 Nxd6 Rb8 e5+ Nxe5 dxe5+ Kxe5 Nxb7 Rxb7 Re1+ Kf4 Kf2 Kg4 Re4+ Kh3 Bf1+ Kxh2 Re6 Rh7 Bg2 Rh4 Re1 Rf4+ Bf3
+28 evil games, 0 double byte games, Hoek, Martijn-Fontaine, David, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bc4 Bc5 b4 b5 Bxb5 Bd4 c3 Bb6 a4 Nf6 a5 Ba6 Bxa6 Ng4 axb6 Qf6 bxc7 O-O c8=Q Rfxc8 Bxc8 Rxc8 O-O Qf4 d3 Qf6 h3 Nh6 Bxh6 Qxh6 d4 exd4 Nxd4 Re8 Nxc6 dxc6 Rxa7 Rxe4 Qd8+ Re8 Qxe8#
+29 evil games, 0 double byte games, Nill, Jessica-Arnetta, Maria Teresa, doesn't need double bytes
+d4 Nf6 Nf3 e6 Bf4 b6 e3 Bb7 Nbd2 Nc6 h3 Be7 Be2 O-O O-O d6 c4 Re8 Rc1 Bf8 Bg5 Rc8 a3 h6 Bh4 g5 Bg3 Bg7 b4 Ne7 c5 Qd7 Bd3 Nh7 Nc4 b5 Na5 Ba8 c6 Qd8 Bxb5 Rb8 Bd3 Nf6 b5 Rb6 Nc4 Rb8 Nxd6 cxd6 c7 Qd7 cxb8=Q Rxb8 a4 Ned5 e4 Nb4 Re1 Rd8 Qb3 Nxd3 Qxd3 Nh5 Bh2 Nf4 Bxf4 gxf4 Qd2
+30 evil games, 0 double byte games, Lange, Corinna-Schulz, Anja, doesn't need double bytes
+e4 g6 d4 Bg7 Be3 d6 Nc3 Nc6 Qd2 Nf6 f3 a6 O-O-O b5 a3 Bd7 Nge2 Qb8 d5 Ne5 Nf4 a5 g4 Nxf3 Qf2 b4 Nb1 Ne5 h3 Nxe4 Qg2 bxa3 Qxe4 a2 Bd4 a1=Q b3 Qa2 Bb2 f5 Qg2 g5 gxf5 Bxf5 Qxg5 Bxc2 Kxc2 Qbxb3+ Kd2 Qaxb2+ Ke1 Nf3#
+31 evil games, 0 double byte games, Morks, Ewout-Neels, Iris, doesn't need double bytes
+e4 e5 Nf3 d6 Bc4 Nf6 Ng5 d5 exd5 h6 Nf3 e4 Qe2 Bc5 d4 O-O dxc5 exf3 Qxf3 Qe7+ Qe3 Qd7 Qd3 Qg4 O-O Bf5 Qb3 Bc8 Be3 Nbd7 Nc3 Ne5 Be2 Qd7 Rad1 Re8 Bb5 c6 dxc6 Qg4 Be2 Qg6 cxb7 Bh3 bxa8=Q
+32 evil games, 0 double byte games, Azadmanesh, Moosa-Van de Weijer, Charmaine, doesn't need double bytes
+e4 e5 Nf3 Nc6 d4 f6 d5 Nb8 Bc4 d6 O-O Bd7 Qe2 c6 Be3 Nh6 Nc3 Be7 Rad1 O-O dxc6+ Kh8 cxb7 Nc6 bxa8=Q Qxa8 Nd5 Qe8 Bb5 Qg6 Nxe7 Qe8 Nxc6 Bxc6 Bxc6 Qxc6 Bxh6 gxh6 Nh4 Rg8 Nf5 Qd7 Rxd6 Qc7 Rfd1 Qb8 Nxh6 Rf8 Qh5 Qb4 Nf7+ Kg7 Qh6+ Kxf7 Qxh7+ Ke8 Rd8#
+33 evil games, 0 double byte games, Waltermann, Jens-Vijselaar, Liselotte, doesn't need double bytes
+Nf3 d5 g3 Nf6 Bg2 Nc6 d3 h6 Nbd2 e5 e4 d4 O-O Bd6 a4 O-O Nc4 Re8 h3 b6 Nfd2 Ba6 f4 Rc8 f5 Nh7 b3 Qf6 Nf3 Nb4 Rf2 c5 Nh2 Rc7 Ng4 Qd8 Nxh6+ Kf8 Ng4 Nf6 Nh2 Qd7 g4 Bxc4 bxc4 a5 g5 Ng8 h4 Rb8 Qf3 Ke8 Bh3 Qd8 f6 g6 h5 Rbb7 h6 Bf8 h7 Ne7 h8=Q Nec6 Qg3 Qd6 Nf3 Ra7 Rh2 Rab7 Bg4 Na6 Qg8 Nab8 Rh8 Nd7 Qh2 Nd8 Bxd7+ Rxd7 Qxe5+ Qxe5 Qxf8#
+1200000 games
+1200000 games processed so far
+34 evil games, 0 double byte games, Ehret, Benjamin-Schweigert, Werner, doesn't need double bytes
+e4 e5 Nf3 Nc6 Nc3 Bc5 Nxe5 d6 Nxc6 bxc6 d4 Bb4 Bd2 Nf6 Bd3 O-O f3 Bb7 O-O c5 d5 c4 Bxc4 Bc5+ Kh1 Qd7 Qe2 Qe7 Na4 Bd4 c3 Bc5 Nxc5 dxc5 Rad1 Rad8 Be3 h6 Qf2 Rfe8 Bxc5 Qe5 Bxa7 Bc8 Bd4 Qg5 a4 Bd7 a5 Nh5 Be3 Qg6 a6 Re5 a7 Kf8 Ra1 Ree8 Ba6 Bc8 a8=Q Bxa6 Qxa6
+35 evil games, 0 double byte games, Blatt, Robert-Peek, R., doesn't need double bytes
+e4 e5 Qh5 d6 Bc4 g6 Qf3 Nf6 d3 Nc6 Bg5 Nd4 Qd1 h6 Bxf6 Qxf6 c3 Nc6 d4 exd4 b4 dxc3 Qd3 c2 Nc3 Nxb4 Qd2 Be6 Rb1 cxb1=Q+ Nxb1 d5 exd5 O-O-O Na3 Bc5 Nb5 c6 Nxa7+ Bxa7 Qxb4 Qxf2+ Kd1 Qxg2 d6 Qxh1
+36 evil games, 0 double byte games, Ostradicky, Dusan-Machalova, Veronika, doesn't need double bytes
+e4 e5 Bc4 Nc6 Nc3 Nf6 d3 Bc5 f4 O-O a3 d6 f5 h6 g4 Bd7 h4 Re8 g5 Nh7 g6 Nf6 gxf7+ Kf8 fxe8=Q+ Qxe8 Nd5 Nxd5 Bxd5 Qe7 Qg4 Rb8 Nf3 Nd4 Nxd4 Bxd4 c3 Bc5 Bxh6 Qf6 Bg5 Qe7 Bxe7+ Kxe7 Qxg7+ Kd8 Qf6+ Ke8 Bf7+ Kf8 Be6+ Ke8 Qf7+ Kd8 Qxd7#
+1300000 games
+1300000 games processed so far
+37 evil games, 0 double byte games, Hackbusch, Jana-Ranft, Sandra, doesn't need double bytes
+e4 Nf6 e5 Nd5 d4 d6 Nf3 g6 Bc4 Nb6 Bb3 Bg7 a4 a5 O-O O-O h3 Nc6 Qe2 Bf5 Nc3 Nb4 Bf4 d5 Nh2 Bd7 Ng4 f5 Nh6+ Kh8 e6 Bc8 Nf7+ Rxf7 exf7 e6 Nb5 Na6 Be5 Qe7 f8=Q+ Qxf8 Bxc7 Bxd4 Be5+ Bxe5 Qxe5+ Kg8 Nc7 Nxc7 Qxc7 Nd7 Rfe1 Qf6 Bxd5 Nf8 Bxb7 Bxb7 Qxb7 Re8 Rad1 Re7 Qb5 Kf7 c4 Rc7 Rd6 Qe7 Red1 Rb7 Rb6 Rc7 Rc6 Rb7 Qxa5
+38 evil games, 0 double byte games, Rigo, Zsolt-Frindt, Kornel, doesn't need double bytes
+e4 c5 Nc3 Nc6 g3 g6 Bg2 Bg7 d3 d6 Be3 Rb8 Nge2 Nd4 O-O b5 Qd2 Qa5 f4 e6 Rf2 Ne7 g4 f5 g5 Bd7 Ng3 O-O h4 b4 Nd1 Qa6 h5 b3 c3 Nc2 Rc1 bxa2 Qxc2 a1=Q Rxa1 Qxa1 Rf1 Ba4 Qc1 Qa2 e5 Bxd1 Rxd1 Rxb2 Bf3 Rfb8
+39 evil games, 0 double byte games, Dreyer, Michael-Christ, Ralf, doesn't need double bytes
+e4 f5 Bd3 f4 Ne2 f3 O-O fxe2 f4 e1=Q Qe2 Qxd2 Kf2 Qa5 Rh1 Qxa2 Ke1 Qf7
+40 evil games, 0 double byte games, Krajnak, Jan-Sturc, Gustav, doesn't need double bytes
+e4 e5 f4 exf4 Nf3 Nf6 Nc3 Be7 d4 Nh5 Ne5 Bh4+ g3 fxg3 Qxh5 g2+ Kd1 g6 Qf3 gxf1=Q+ Rxf1 f6 Ng4 d6 Nd5 f5 exf5 Bxf5 Nge3 O-O Qg2 Qd7 Nxf5 Rxf5 Rxf5 Qxf5 Nxc7 Qa5 Qd5+ Qxd5 Nxd5 Nc6 Be3 Ne7 Nc7 Rf8 Ke2 Rc8 Nb5 Rxc2+ Kd3 Rxh2 Nxd6 Rxb2 Rc1 Rxa2 Rc7 Ra3+ Kd2 Rxe3
+41 evil games, 0 double byte games, Wittstock, Bjoern-Philippin, Otto, doesn't need double bytes
+e4 e5 Nf3 d6 d4 Nf6 Nc3 Nbd7 Bc4 h6 Be3 Be7 Qd2 c6 O-O-O b5 Bd3 a6 Rdg1 Ng4 h3 Nxe3 fxe3 Bb7 Qf2 c5 d5 c4 Be2 Nc5 Nd2 Bc8 Rf1 O-O g3 f5 Qh2 Bg5 Nd1 Bd7 h4 Be7 Nf2 Qa5 a3 c3 Nb3 Nxb3+ cxb3 cxb2+ Kb1 Qxa3 Nd3 Qa1+ Kc2 Rac8+ Kd2 b1=Q Rxb1 Qc3+ Kd1 Qc2+ Ke1 Qxb1+ Kf2 fxe4+ Kg2 Qa2 Kg1 Qb1+ Kg2 Qa2 Kg1 exd3 Bxd3 Rc1+ Bf1 Rfxf1#
+1400000 games
+1400000 games processed so far
+42 evil games, 0 double byte games, Rudolph, Hans Joachim-Krueger, A., doesn't need double bytes
+e4 e5 d4 Nc6 Nf3 exd4 Bc4 h6 O-O Bc5 c3 dxc3 Qd5 Qe7 e5 Nb4 Qd1 c2 Qe2 cxb1=Q Rxb1 d6 Re1 d5 Bb3 Bf5 Ra1 O-O-O a3 Nc6 Ba4 Nd4 Nxd4 Bxd4 Qf3 Be4 Qg4+ Qe6 Qd1 Qxe5 Ra2 Nf6 Be3 Bxe3 Rxe3 d4 Re1 Qg5
+43 evil games, 0 double byte games, Pfaff, Timo-Goeke, Bernd, doesn't need double bytes
+c4 e5 Nc3 Nf6 g3 c6 Nf3 e4 Nd4 Ng4 e3 d5 cxd5 Ne5 dxc6 Bg4 cxb7 Nbc6 bxa8=Q Qxa8 Qa4 Bc5 Be2 Bxd4 exd4 Nf3+ Bxf3 Bxf3 d5 O-O Qxc6 Qb8 Rg1 Rc8 Qb5 Qe5
+44 evil games, 0 double byte games, Kharatyan, Anahit-Szydlowska, Marta, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bc4 Be7 d4 exd4 c3 dxc3 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qe2 cxb1=Q Rxb1 d6 Bd2 Nc6 O-O Bg4 Qe3 Qd7 Bd5 Rae8 b4 a6 Rfc1 Kh8
+1500000 games
+1500000 games processed so far
+45 evil games, 0 double byte games, Kuzik, I.-Gajsin, Evgenij, doesn't need double bytes
+Nf3 g6 c4 Nf6 Nc3 Bg7 e4 d6 d4 O-O Be2 e5 O-O Nc6 d5 Ne7 Ne1 Nd7 Be3 f5 f3 f4 Bf2 g5 a4 h5 a5 Nf6 Nb5 a6 Na7 Bd7 c5 Rxa7 c6 Ra8 cxb7 Rb8 Bxa6 Kh7 Ba7 Ra8 bxa8=Q Qxa8 Bf2 Qxa6 Nc2 g4 Kh1 Ng6 Nb4 Qb5 Qe1 g3 Bg1 gxh2 Bf2 h4 a6 Nh5 a7 Ng3+ Kxh2 Nxf1+ Qxf1 Qxb4 a8=Q Rxa8 Rxa8 Qxb2 Ra7 Qc2 Ra1 c5 dxc6 Qxc6 Qc1 Qxc1 Rxc1 Kg8 Rc7 Be6 Be1 Bf8 Ra7 d5 exd5 Bxd5 Bc3 Be6 Ra5 Bg7 Ra7 Bf6 Bb4 Bg7 Bc3 Kh7 Ra6 Bf5 Be1 Kg8 Ra7 Bf8 Bf2 Be7 Rb7 Kf7 Rb6 Be6 Ra6 Kf6 Rb6 Ba3 Rb1 Kg5 Bb6 Bf5 Rd1 Be7 Rd2 h3 Bf2 hxg2 Kxg2 Nh4+ Bxh4+ Kxh4 Rd5 Bf6 Ra5 Kg5 Ra4 Kg6 Rb4 Kf7 Ra4 Ke7 Ra7+ Bd7 Ra6 Bh4 Ra7 Be1 Ra6 Bb4 Rb6 Bd6 Ra6 Ke6 Rb6 Kd5 Ra6 Bc5 Ra8 Bb5 Rd8+ Kc4 Rd1 Be3
+46 evil games, 0 double byte games, Solis, Enrique-Baeza, Enrique, doesn't need double bytes
+e4 e5 f4 exf4 d4 Qh4+ g3 fxg3 Bg2 gxh2+ Kf1 hxg1=Q+ Kxg1 Qf6 Be3 Nc6 c3 d6 Nd2 Nh6 d5 Ne5 Qh5 Bg4 Qh2 Nd3 Bd4 Qf4 Nc4 c5 dxc6 bxc6 Rf1 Qxh2+ Rxh2 c5 Be3 Be2 Rb1 Rd8 b4 Ng4 Rh3 Ndf2 Bxf2 Nxf2 Nxd6+ Rxd6 Kxf2 Bc4 bxc5 Rd2+ Kg1 Bxc5+ Kh1 O-O a4 g6 e5 f6 Rb7 Rd1+ Kh2 Bg1+ Kh1 Bd4+ Kh2 Bxe5+
+47 evil games, 0 double byte games, Marjankowski, Sandra-Boehme, Maria, doesn't need double bytes
+d4 d5 Bf4 e6 e3 Nf6 c4 Nbd7 Nc3 Bb4 a3 Be7 Nb5 O-O Nxc7 Rb8 Nb5 Ra8 c5 a6 Nc3 h6 Qf3 Re8 Be2 b6 c6 Nb8 c7 Qd7 cxb8=Q Rxb8 Bxb8
+1600000 games
+1600000 games processed so far
+48 evil games, 0 double byte games, Vetter, Hans Peter-Mueller, Erich, doesn't need double bytes
+d4 f5 Nf3 Nf6 g3 g6 Bg2 Bg7 O-O O-O c4 d6 Nc3 c6 Qb3 Na6 Bg5 h6 Be3 Kh7 Rad1 Nc7 d5 e5 dxc6 e4 cxb7 Rb8 bxc8=Q Qxc8 Qa3 exf3 Bxf3 Ne4 Nxe4 fxe4 Bxe4 Rxb2 Qxd6 Ne6 Bd5 Ng5 Bxg5 hxg5 Be4 Rf6 Qa3 Rxe2 Bd5 a6 Rd3 g4 Re3 Rd2 Re7 Qf8 Qe3 Rxa2 Re8 Qa3 Qa7 Qc3 Re7 Rf8 Kg2 Kh6 Rf7 Rxf7 Qxf7 Rc2 Be4
+49 evil games, 0 double byte games, Pauch, Jan-Chalupecky, Vladimir, doesn't need double bytes
+e4 e5 Nf3 Nc6 d4 exd4 Bc4 Be7 c3 dxc3 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qe2 cxb1=Q Rxb1 d5 Bd3 Nxd3+ Qxd3 Bb4+ Bd2 Bxd2+ Nxd2 dxe4 Qxd8 Rxd8 Nxe4 Re8
+50 evil games, 0 double byte games, Roesch, Remi-Delorme, Axel, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bc4 Be7 d4 exd4 c3 dxc3 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qd2 cxb1=Q Rxb1 b6 a3 a5 O-O Nc6 Qc2 Ba6 Bxa6 Rxa6 Qd3 Ra8 Ne1 Ne5 Qg3 Ng6 Nf3 d6 h3 Bf6 Be3 Re8 Nd2 Rc8 b4 axb4 Rxb4 Ra8 Ra1 Bxa1 Nb1 Be5 Qf3 Qf6 Qxf6 Bxf6 g4 h6 f4 Rad8 g5 hxg5 fxg5 Be5 Nd2 d5 Nf3 dxe4 Rxe4 Bh2+
+51 evil games, 0 double byte games, Ammerlaan, Stefan-Wever, Dennis, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nd4 c3 Nf5 Qb3 h6 d6 hxg5 Bxf7+ Kd7 Qe6+ Kc6 d7+ Nd6 dxc8=Q Qxc8 d3 Qxe6 Bxe6 Re8 Bb3 g4 Be3 Nf5 g3 Nxe3 fxe3 e4 d4 Bd6 Kf2 Ref8 Kg2 Nh7 Be6 Rf3 d5+ Kc5 Nd2 Ng5 b4+ Kb6 Nxf3 exf3+ Kf1 Bxg3 Bxg4 Bh4 Rd1 Re8 Rd3 f2 c4 Re4 c5+ Ka6 Rd4 b5 Bc8#
+52 evil games, 0 double byte games, Grosse, Bodo-Sorba, Matthias, doesn't need double bytes
+e4 e5 Nf3 Nc6 d4 d6 Bc4 Be6 d5 Nd4 dxe6 Qe7 exf7+ Kd8 fxg8=Q Rxg8 Bg5
+53 evil games, 0 double byte games, Moody, David-Calton, Bill J, doesn't need double bytes
+e4 Nf6 Nc3 d5 e5 Ne4 Nce2 d4 c3 dxc3 Qa4+ Nd7 Qxe4 Nc5 Qh4 Nd3+ Kd1 cxb2 Rb1 bxc1=Q+ Nxc1 Nxe5 f4 Ng6 Qg3 e6 Nf3 Bd6 Nd3 Qf6 Nfe5 Nxf4 Nc4 Nxd3 Nxd6+ cxd6 Qxd6 Ne5 Rxb7 Bd7 Bb5 Qe7
+54 evil games, 0 double byte games, Mittelmaier, Stefan-Tobisch, Alexander, doesn't need double bytes
+e4 c5 Nc3 Nc6 Bc4 g6 Nf3 Bg7 d3 Nf6 Bf4 O-O g3 d6 h3 a6 Qd2 b5 Bd5 Nxd5 exd5 Nd4 Qe3 Nxc2+ Kd2 Nxe3 fxe3 Bb7 e4 Qd7 Raf1 b4 Nb1 Bxb2 Kc2 Bg7 Ng5 Qa4+ Kd2 Qxa2+ Ke3 Bd4+ Kf3 h6 h4 Qb3 Rd1 c4 Ke2 c3 Rc1 Qa2+ Kd1 c2+ Kd2 cxb1=Q+ Kd1 Qxd3+
+55 evil games, 0 double byte games, Maliakina, Ekaterina-Yurchenko, Yulia, doesn't need double bytes
+e4 e5 Nf3 Nf6 d4 exd4 Bc4 Bb4+ c3 dxc3 Qb3 cxb2+ Nc3 bxa1=Q Bxf7+ Kf8 O-O Qxc3 Qd1 Kxf7 e5 Re8 exf6 Qdxf6 Ng5+ Kg6 h4 h5 g4 Qfd4 gxh5+ Kf6 Qa4 Qg3+
+1700000 games
+1700000 games processed so far
+56 evil games, 0 double byte games, Radjapaksa, Constantin-Bunjor, Markus, doesn't need double bytes
+e4 e6 e5 d5 d4 c5 Nf3 Qb6 Bd3 cxd4 O-O Nc6 c4 dxc3 Be3 cxb2 Nc3 bxa1=Q Qxa1 d4 Nb5 dxe3 Ng5 a6 Nc3 exf2+ Rxf2 Bc5 Nh3 Bxf2+ Nxf2 Nge7 Qc1 Nxe5 Qg5 Nxd3 Nd1 Nxf2 Nxf2 Qb1+ Nd1 Qxd1+ Kf2 Qc2+ Kg1 Qg6 Qd2 Bd7 Qb2 Bc6 Qf2 Qxg2+ Qxg2 Bxg2
+57 evil games, 0 double byte games, List, Sandra-Hefti, Stephanie, doesn't need double bytes
+e4 e5 Nf3 Nc6 Nc3 Nf6 Bc4 Bb4 d3 d6 O-O Bg4 Bg5 h6 Bh4 g5 Bg3 Qd7 Nd5 Qe6 c3 Bc5 Qd2 O-O-O d4 Nxe4 Qd3 Nxg3 fxg3 Bb6 Rad1 Rdg8 b3 h5 Qe4 h4 Kf2 f5 Qc2 e4 Nd2 Re8 Nb4 e3+ Kg1 Qe7 Nb1 e2 Rde1 exf1=Q+ Rxf1 Nxd4 Qf2 Nxb3 Qxb6 axb6 Bxb3 Qe3+ Rf2 hxg3 hxg3 Qxg3 Rf1 Re2 Bd5 Qh2#
+58 evil games, 0 double byte games, Mahammadi, Sonia-San Ma, Pui, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O d5 exd5 Bg4 dxc6 e4 cxb7+ Nd7 bxa8=Q Qxa8 Bxd7+ Kd8 Bxg4
+59 evil games, 0 double byte games, Nemcova, Karolina-Betakova, Vendula, doesn't need double bytes
+e4 e5 Nf3 Nc6 Nc3 Nf6 Bc4 Bc5 d3 d6 Bg5 Bg4 Qe2 h6 Bh4 g5 Bg3 Qd7 O-O-O O-O-O h3 Bh5 Rhe1 Rhe8 Bb5 Bb4 d4 exd4 Na4 Qe6 Rf1 Qxa2 c3 Rxe4 Qd2 dxc3 Qd3 cxb2+ Kc2 b1=Q#
+1800000 games
+1800000 games processed so far
+60 evil games, 0 double byte games, Nisipeanu, Liviu Dieter-Poetsch, Klaus, doesn't need double bytes
+e4 c6 d4 d5 e5 Bf5 Nf3 e6 Be2 c5 Be3 Nd7 O-O Ne7 c4 dxc4 Na3 c3 Bg5 cxb2 Nb5 Nxe5 dxe5 bxa1=Q Qxa1 Qb6 Nd6+ Kd7 Nh4 Nc6 Nhxf5 exf5 Rb1 Nb4 a3 Bxd6 axb4 Bc7 bxc5 Qxc5 e6+ Kc8 Bf3 Rb8 Rc1 Qd6 g3 Qxe6 Bf4 Qb6 Qe5 Kd8 Rxc7 Qe6 Bg5+
+61 evil games, 0 double byte games, Van Heerden, Daniel-Truong, Lance, doesn't need double bytes
+d4 Nf6 Nc3 e6 e4 d5 f3 c5 e5 Nfd7 Bb5 a6 Bxd7+ Bxd7 Nge2 Be7 Be3 c4 a3 O-O Qd2 Nc6 O-O-O b5 Qe1 Qb6 Qg3 Rfb8 Bh6 g6 Bg5 Bf8 Na2 a5 Nac3 b4 Nb1 bxa3 Kd2 Qxb2 Nbc3 Nb4 Rc1 a2 Ke3 Nxc2+ Kf2 a1=Q Rxa1 Nxa1 Bc1 Qc2 Be3 Nb3
+62 evil games, 0 double byte games, Delorme, Axel-Mangeot, Adrien, doesn't need double bytes
+e4 e6 d4 d5 Nc3 Bb4 e5 c5 a3 Bxc3+ bxc3 Qb6 Qg4 Nc6 Qxg7 Nge7 Qxh8+ Kd7 Qxh7 Ke8 Qd3 c4 Qd1 Qa5 Bd2 b5 h4 Kd7 h5 Bb7 h6 Ng6 Qf3 Ke7 Qf6+ Ke8 h7 Qc7 h8=Q+ Nf8 Bh6 Qe7 Qxf8+ Qxf8 Bxf8 Kxf8 Rh8#
+63 evil games, 0 double byte games, Neldner, Uta-Lang, Henry, doesn't need double bytes
+f4 d5 Nf3 c5 e3 Nc6 d4 e6 c3 Nf6 Bd3 Bd6 Nbd2 O-O O-O a6 Qe1 b5 h3 Bd7 g4 b4 g5 Ne8 Qh4 f5 Qg3 a5 h4 c4 Bc2 a4 h5 b3 Bd1 Qb8 a3 Be7 Nh4 Qd8 Ndf3 Nd6 Ne5 Ne4 Qg2 Nxe5 dxe5 Qb6 Nf3 Bc5 Re1 Rab8 Qh3 Nxc3 bxc3 b2 Rb1 bxc1=Q Rxc1 Bxe3+ Rxe3
+64 evil games, 0 double byte games, Tran Duc Tu-Le Nguyen Dan, doesn't need double bytes
+e4 b6 d4 Bb7 Nc3 d6 Bc4 Nf6 Qe2 g6 Nf3 Bg7 O-O O-O Rd1 Re8 e5 Nh5 g4 Nf6 Ng5 d5 Bd3 Nfd7 e6 Nf8 exf7+ Kh8 fxe8=Q Qxe8 Ne6 Nxe6 Qxe6 Nc6 Bb5 Nd8 Qd7 Qxd7 Bxd7 Nf7 Bf4 c6 Re1 Bf6 Rad1 Ng5 Bxg5 Bxg5 Be6 Rf8 Kg2 Bh4 Re2 Ba6 Rf1 Bxe2 Nxe2 Rf6 Bc8 c5 f4 Re6 Bxe6 cxd4 g5
+65 evil games, 0 double byte games, Gas, K.-Wronka, A., doesn't need double bytes
+d4 d5 Nf3 Nf6 Bf4 e6 Qd2 c5 e3 Nc6 Nc3 a6 Na4 Ne4 Qd1 Qa5+ c3 c4 b4 Nxb4 a3 Nc6 Qc2 b5 Nb2 Nxc3 Qd2 b4 a4 Ne4 Qd1 b3+ Nd2 Nxd2 Qc1 Ne4+ Ke2 Bb4 Nd1 Bd2 Qa3 Nxd4+ exd4 Bxf4 Qb2 Rb8 g3 c3 Qb1 c2 Qb2 Qd2+ Kf3 cxd1=Q+ Rxd1 Qxb2 Be2 Bd6 Rb1 Nd2+ Kg2 Nxb1 Bf3 Qxd4 Bd1 b2 Bc2 Bc5 Kh3 e5+ g4 Qxg4#
+66 evil games, 0 double byte games, Vishniakov, Pavel-Chirkov, Evgeny, doesn't need double bytes
+e4 c5 Nf3 Nc6 d3 d5 Be2 d4 O-O e5 Nbd2 b5 b3 Nf6 c4 dxc3 Nb1 b4 d4 Nxd4 Bc4 Bg4 Bg5 c2 Qc1 cxb1=Q Rxb1 Bxf3 gxf3 Nxf3+ Kh1 Nxg5 f3 h6 Qd1 Qb6 Qd2 Rd8 Qe2 Bd6 Bb5+ Nd7 h4 Nh3 a4 O-O Qh2 Nf4 Rg1 Nf6 Ra1 a6 a5 Qxb5 Rae1 Qxa5 Qg3 N6h5 Ra1 Nxg3+
+67 evil games, 0 double byte games, Matousek, Lu-Matousek, Li, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bc4 Bb4 c3 Bc5 d4 Bd6 Bg5 f6 Be3 g5 O-O Bf8 Na3 Bh6 dxe5 g4 exf6 gxf3 f7+ Ke7 fxg8=Q Rxg8 Bxg8 Qxg8 Qxf3 Ne5 Qf5 d6 Bxh6 Bxf5 exf5 Nf7 Rae1+ Kd7 Bf4 Qg7 Nc4 Rg8 g3 b5 f6 Qg6 Re7+ Kc6 Na5+ Kd5 Rd1+ Kc5 b4+ Kb6 Be3+ c5 Bxc5+ dxc5 Re6+ Kc7 Rc6+ Kb8 Rxc5 Qc2 Nc6+ Kb7 Rd7+ Kb6 c4 Qc1+ Kg2 Rg5 Ne5 Rxe5 Rcc7 bxc4 Rb7+ Kc6 Rbc7+ Kb6 a4 Qa1 a5+ Rxa5 bxa5+ Kxa5 Rxa7+ Kb4 Rxa1 Ng5 f7 Ne6 Re1 Nf8 Rc7 h6 Rb1+ Kc3 Rb8 Ne6 Rbc8 Kc2 Rxc4+ Kd2 f8=Q Nxf8 Rxf8 Kd3 Rfc8 Kd2 Re4 Kd3 Rce8 Kc3 Rd8 Kc2 Rc4+ Kb3 Rc7 Kb4 Rb8+ Ka5 Ra7#
+68 evil games, 0 double byte games, Giria, Ivan-Kozlov, Konstantin, doesn't need double bytes
+e4 e5 Nf3 Nc6 d4 exd4 Bc4 Be7 c3 dxc3 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qe2 cxb1=Q Rxb1 Nc6 O-O d6 Be3 Bg4 h3 Bh5 Bd5 Qc8 Bxc6 bxc6 Bd4 Qe6 Qd3 Bf6 Bxf6 Qxf6 Nd4 c5 Nf5 Bg6 Ng3 h5 f4 h4 Ne2 Bh5 Nc3 Qd4+ Qxd4 cxd4 Nb5 Be2 Nxc7 Bxf1 Nxa8 Bd3 Rd1 Bc2 Rd2 Bxe4 Nc7 Rc8 Nb5 Rc2 Rxc2 Bxc2 Nxd4 Bd3 Kf2 d5 b4 Kf8 a4 Ke8 g3 hxg3+ Kxg3 Kd7 Kf3 g6 Kg4 a6 Kg5 Ke7 f5 gxf5 Nxf5+ Ke6 Nd4+ Ke5 Nb3 Bc4 Nd2 Bd3 h4 f6+
+69 evil games, 0 double byte games, Schanzenbach, Heiko-Leers Fischer, Hans, doesn't need double bytes
+e4 e6 d3 c5 Nd2 d5 Ngf3 Nf6 g3 Be7 Bg2 O-O O-O Nc6 e5 Nd7 Re1 Qc7 Qe2 b5 Nf1 Re8 h4 a5 Bf4 a4 a3 b4 Ne3 Nd4 Nxd4 cxd4 Nxd5 exd5 e6 Qc5 exf7+ Kf8 fxe8=Q+ Kxe8 Qh5+ Kf8 Bxd5 g6 Qh6+
+1900000 games
+1900000 games processed so far
+70 evil games, 0 double byte games, Kulcsar, Miklos-Berczes, David, doesn't need double bytes
+d4 d5 c4 Nf6 Nc3 e6 Bg5 Nbd7 e3 c6 Nf3 Be7 Bd3 a6 c5 b5 h3 Bb7 Bf4 a5 O-O O-O a3 Re8 b4 a4 Ne5 Nxe5 Bxe5 Nd7 Bg3 g6 Rc1 Bf8 Nxb5 cxb5 c6 Ba6 cxd7 Ra7 dxe8=Q Qxe8 Qc2 Qd7 Qc6 Qxc6 Rxc6 f5 Rxe6 Bb7 Rc1 Kf7 Rb6
+71 evil games, 0 double byte games, Jost, Cedric-Benzen, Marthe, doesn't need double bytes
+e4 e5 Nf3 Nc6 d4 exd4 Bg5 Nf6 Bb5 Bb4+ c3 dxc3 O-O cxb2 Bd2 bxa1=Q Bc3 Bxc3 Qe2 O-O Nxc3 Qxc3 e5 Ng4 Bc4 Ngxe5 Ng5 Qxg5 Bxf7+ Nxf7 Re1 Qh5 Qd1 Qc4 Re2 Qxh2+ Kf1 Qh1#
+72 evil games, 0 double byte games, Jittler, Jonas-Rempe, Torge, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bb5 Nd4 Nxd4 exd4 c3 Bc5 b3 c6 Bc4 Nf6 Qf3 Qe7 b4 Bb6 Bd3 d5 Bc2 dxe4 Qd1 Bg4 f3 exf3+ Kf2 fxg2 Qe1 gxh1=Q Qxh1 d3+ Kg3 dxc2 Na3 h5 Nxc2 h4+ Kf4 Bc7+ Kg5 Qe5#
+73 evil games, 0 double byte games, Spronk, Hans-Vellekoop, Kees, doesn't need double bytes
+c4 f5 e3 Nf6 Nc3 e6 a3 a5 a4 Be7 d3 O-O Be2 d6 Bd2 Qe8 h3 c6 d4 Nbd7 g3 Ne4 f3 Nxg3 Rh2 Bh4 Bd3 e5 b3 exd4 Na2 dxe3 Qc1 exd2+ Kd1 dxc1=Q+ Nxc1 Nc5 Nce2 Nxd3 Kc2 Nb4+ Kb2 Qe5+ Ka3 Qxa1#
+74 evil games, 0 double byte games, Spronk, Hans-Van Aurich, Rob, doesn't need double bytes
+e4 e5 Nc3 Bc5 Nf3 d6 h3 Be6 Be2 Nc6 a3 f5 Bb5 Nf6 d3 f4 Bd2 Qd7 Ba4 O-O-O Qe2 h6 h4 g5 Ng1 g4 h5 g3 Nb5 gxf2+ Kd1 fxg1=Q+ Qe1 Qxe1+ Bxe1 Ng4 Kc1 Ne3 c4 Nd4 Nc3 Qxa4 Nxa4 Bd7 b4 Bxa4 Kb2 Rdg8 bxc5 Rxg2+ Kc3 a5 Rb1 Rc2#
+75 evil games, 0 double byte games, Konik, Michael-Chandler, Patrick, doesn't need double bytes
+d4 Nf6 Nf3 g6 g3 Bg7 Bg2 b5 O-O Bb7 Nbd2 d5 b3 Nbd7 c4 c6 Bb2 O-O Re1 Nb6 Qc2 Ba6 Ne5 Rc8 Rad1 Nfd7 c5 Nxe5 cxb6 Nd7 bxa7 Qb6 e4 e6 a8=Q Rxa8 exd5 cxd5 b4 Bxd4 Ne4 Bxb2 Qxb2 Bc8 Nc3 Bb7 Ne4 Bc6 Ng5 Qa7 Bh3 Qxa2 Qc3 Qc4 Qe3 Qxb4 Nxe6 Rae8 Rd4 Qd6 Rh4 Nf6
+2000000 games
+2000000 games processed so far
+76 evil games, 0 double byte games, Chang, Andrea-Wong, Benjamin, doesn't need double bytes
+e4 e5 Nf3 d6 d4 Nc6 d5 Nd4 Nxd4 exd4 Qxd4 f6 Bb5+ c6 dxc6 b6 c7+ Bd7 cxd8=Q+ Rxd8 Bxd7+ Rxd7 Nc3 Rc7 Bf4 g5 Bxd6 Bxd6 Qxd6 Rd7 Qe6+ Kd8 O-O Ne7 Qxf6 Rg8 Rad1 Ke8 Rxd7 Kxd7 Rd1+ Kc7 Qxe7+ Kc6 Rd6+ Kc5 Qe5+ Kc4 Rd4#
+77 evil games, 0 double byte games, Vega, Jorge-Centeno, Vanesa, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bc4 Bc5 c3 d6 d4 Bb6 Ng5 Be6 d5 Qf6 O-O h6 dxe6 hxg5 exf7+ Ke7 fxg8=Q Raxg8 Bxg8 Rxg8 Qg4
+78 evil games, 0 double byte games, Kawas Garcia, Nebil-Sartore Cardoso, Sergio, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bc4 Be7 d4 exd4 c3 dxc3 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qd2 cxb1=Q Rxb1 Nc6 O-O d6 b3 Bg4 Nd4 Ne5 Be2 Bd7 f4 Ng6 Bb2 Bf6 Rbc1 c5 Nb5 Bxb2 Qxb2 a6 Nxd6 Qc7 Rfd1 Rad8 e5 f6 Bc4+ Kh8 Nf7+ Rxf7 Bxf7 Bg4 Rxd8+ Qxd8 Bxg6 hxg6 Re1 Qb6 Kh1 c4 Qc3 Qf2 Rg1 Qe2 exf6 gxf6 Qxf6+ Kh7 Qf7+ Kh6 Qxc4 Qe3 Qg8 Qxf4 Qh8+ Kg5 h4+ Kf5 Qf8+ Ke5 Qxf4+ Kxf4 g3+ Ke3 Kh2 Kd3 Rf1 Kc3 Rf7 b5 Ra7 Bc8 Rc7+ Kb2 Rxc8 Kxa2 Ra8 Kxb3 Rxa6 b4 Rxg6 Ka2 h5 b3 h6 b2 Rb6 b1=Q Rxb1 Kxb1 h7 Kc1 h8=Q Kd2 Qe5 Kd3 g4 Kc4 g5 Kd3 g6 Kc4 g7 Kd3 g8=Q Kd2 Qgd5+ Kc2 Qc7+ Kb2 Qdb7+ Ka3 Qa5#
+79 evil games, 0 double byte games, Hyravy, J.-Peska, Juraj, doesn't need double bytes
+e4 e5 Nf3 Nc6 Nc3 Nf6 Bc4 Bc5 d3 h6 d4 exd4 Ne2 Nxe4 Rf1 Qe7 Bb5 Nb4 Rb1 Nxa2 Bd2 Nb4 Ra1 c6 Bc4 d5 Bb3 d3 Nf4 Nc3+ Ne2 Nxd1 Kxd1 dxe2+ Kc1 exf1=Q+ Ne1 Qfxe1+ Bxe1 Qxe1#
+80 evil games, 0 double byte games, Ford, Felicity-Lee, Melissa, doesn't need double bytes
+e4 e5 Bc4 Nf6 g4 h6 Bb3 Nc6 Qe2 Nd4 Qc4 Nxb3 Qxb3 Nxg4 Nf3 d6 d4 exd4 e5 dxe5 h3 e4 Nfd2 e3 Nf3 exf2+ Kf1 Nf6 Ne5 Qe7 Qa4+ Nd7 Nxd7 Bxd7 Qb3 Qe1+ Kg2 Bc6+ Kh2 Qxh1+ Kg3 f1=Q Qf3 Qfxf3+ Kh4 Qhxh3#
+81 evil games, 0 double byte games, Smeltzer, Robert W-Gracey, Mark, doesn't need double bytes
+e4 c5 c3 Nf6 Qc2 Nc6 Nf3 d6 d3 g6 Be2 Bg7 Nbd2 O-O Nf1 Bd7 h3 Qa5 g4 Rfc8 Ng3 b5 g5 Ne8 h4 b4 O-O bxc3 b3 Nb4 Qd1 c2 Bd2 cxd1=Q Raxd1 Qxa2 Kg2 Qxb3 h5 a5 hxg6 hxg6 Rh1 a4 Rb1 Qxb1 Rxb1 a3 d4 a2 Ra1 Nc2 Rc1 a1=Q Rxc2 cxd4 Rxc8 Rxc8 Bd3 Nc7 Ne2 Bb5 Bxb5 Nxb5 Be1 d3 Nf4 Qxe1 Nxe1 d2 Nd5 dxe1=Q Nxe7+ Kf8 Nxc8 Bd4
+2100000 games
+2100000 games processed so far
+82 evil games, 0 double byte games, Barbosa, Catarina-Castro, Ana Luisa, doesn't need double bytes
+h4 e5 Rh2 Nf6 f4 exf4 g3 fxg3 Nf3 gxh2 Bh3 h1=Q+ Kf2 Ne4+ Ke3 Qxh3 Nc3 Qf5
+83 evil games, 0 double byte games, Allen, Tom-Kastor, Mark, doesn't need double bytes
+e4 e5 Nf3 Nc6 d4 exd4 c3 dxc3 Bc4 Be7 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qe2 cxb1=Q Rxb1 d6 Nd4 Bd7 Bd2 Nc6 Nc2 Ne5 Bb3 a6 O-O Bb5 Qh5 Bxf1 Rxf1 c5 Ne3 g6 Qe2 b5 Bd5 Ra7 f4 Nd7 Ng4 Bf6 Nh6+ Kg7 f5 Bd4+ Kh1 Nb6 Nxf7 Raxf7 Bxf7 Rxf7 Ba5 Qb8 g4 Nc4 Be1 Qe8 g5 Rxf5
+84 evil games, 0 double byte games, Kakadelis, Efstratios-Vasiliadis, N., doesn't need double bytes
+d4 g6 e4 Bg7 Bc4 d6 Nc3 Nd7 Nf3 Nb6 Bb3 Bd7 Bg5 h6 Be3 Bc8 Qd2 e6 a4 Nf6 a5 Nbd7 h3 a6 O-O Nb8 Rfd1 Ng8 Ne2 Nc6 d5 Ne5 Nfd4 Qe7 f4 Nd7 dxe6 Nc5 exf7+ Kf8 fxg8=Q+ Rxg8 Bxg8 Kxg8 e5 dxe5 fxe5 Qxe5 Nf3 Qe7 Qd8+
+85 evil games, 0 double byte games, Jussupow, Ekaterina-Stock, Lara, doesn't need double bytes
+e4 e5 Nf3 Nc6 d4 exd4 c3 dxc3 Bc4 Be7 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qh5 Nc2+ Kd1 Nxa1 Ne5 c2+ Kd2 cxb1=Q Bxf7+ Rxf7 Qxf7+ Kh8 Qc4 Qe8 Nf7+ Qxf7 Qxf7 Qc2+ Ke1 Bb4+ Kf1 Qd1#
+86 evil games, 0 double byte games, Kuijpers, Peter-Sparenberg, Jeroen, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 exd4 O-O dxc3 Qb3 Qe7 Bg5 f6 Bxg8 c2 Bh4 cxb1=Q Raxb1 Bb6 e5 Kf8 exf6 gxf6 Rfe1 Qg7 Bd5 Na5 Qc3 Rg8 Bxg8 Kxg8 Re8+ Kf7 Bxf6 Qxf6 Rf8+
+87 evil games, 0 double byte games, Daehne, Martina-Schmid, Thomas, doesn't need double bytes
+d4 d5 Nf3 e6 Bf4 Be7 e3 Nf6 Bd3 O-O Nbd2 Re8 Ne5 Nbd7 O-O Nxe5 dxe5 Nd7 Qg4 Nf8 Bh6 Ng6 Bf4 Nxf4 exf4 c5 Qh3 g6 c3 Bf8 Rfe1 Bg7 Nf3 f6 g4 f5 g5 Bf8 Qg3 Kf7 Qh3 Kg7 Kh1 Be7 Rg1 Rh8 Qg3 b6 Rad1 Bb7 Bc2 b5 Bd3 b4 c4 d4 Be2 Qa5 Ra1 Rad8 h4 d3 Bd1 Qa6 b3 Qa3 Kh2 Qb2 Be2 Qxe2 Ne1 d2 Nc2 d1=Q Raxd1 Rxd1 Rxd1 Qxd1 Ne3 Qh1#
+2200000 games
+2200000 games processed so far
+88 evil games, 0 double byte games, Bricard, Emmanuel-Pira, Davoud, doesn't need double bytes
+g3 c5 Bg2 Nc6 e4 g6 d3 Bg7 Nc3 Rb8 Be3 d6 Qd2 b5 Nf3 Nd4 Nh4 Nf6 h3 Bd7 O-O Qc8 Kh2 b4 Nd1 Qa6 f4 b3 Bxd4 bxc2 Bc3 cxd1=Q Raxd1 O-O b3 Bc6 Rfe1 Qb7 Rc1 Rfe8 Rc2 Bh6 g4 Nd7 g5 Bf8 f5 e5 Qe2 Nb6 f6 Na8 Bd2 Nc7 Be3 a5 Nf3 Ne6 Nd2 Nd4 Bxd4 exd4 Qf2 a4 Rb2 Qc7 Kg1 h6 h4 hxg5 hxg5 axb3 axb3 Qa5 Nc4 Qc3 Bf1 Bxe4 Rxe4 d5 Rxe8 Rxe8 Qh4 Re1 Rh2 Rxf1+ Kxf1 Qxd3+ Ke1 Qb1+ Ke2 d3+ Kf2
+89 evil games, 0 double byte games, Milosevic, Adele-Spezzano, Franco, doesn't need double bytes
+e3 c6 Nc3 d5 Nge2 Nf6 d4 Bg4 e4 e6 Bf4 dxe4 f3 exf3 Ng3 fxg2 Qd3 gxh1=Q Nxh1 Bb4 h3 Bh5 Nf2 O-O a3 Bxc3+ bxc3 b6 c4 c5 Kd2 cxd4 c3 Bg6 Qf3 dxc3+ Kxc3 Nbd7 Rd1 Be4 Nxe4 Nxe4+ Qxe4 b5 Bd6 Nf6 Qb7 Ne4+ Kb4 Nxd6
+90 evil games, 0 double byte games, Ludwig, Gerhard-Seker, Cemil, doesn't need double bytes
+d4 d5 Bf4 Nc6 Nf3 Bf5 e3 Nb4 Bb5+ c6 O-O Nxc2 Nbd2 Nxa1 Qxa1 cxb5 Nb3 Nf6 Nc5 b6 Nb7 Qd7 Nc5 bxc5 Ne5 Qc8 Rc1 c4 b3 Qa6 Nf3 e6 Nh4 Ba3 Rd1 O-O f3 h6 Re1 g5 Be5 cxb3 Qc3 b2 Bxf6 b1=Q Rxb1 Bxb1 Be7 Bxe7 Qc1 Qxa2 f4 gxh4 Qd1 Rfc8 Qg4+ Kf8 h3 Rc1+ Kh2 f5 Qg6 Rac8 Qxh6+ Ke8 Qg6+ Kd7 e4 dxe4 d5 Qxd5 Qg7 Qd1 Qe5 Qh1#
+2300000 games
+2300000 games processed so far
+91 evil games, 0 double byte games, Alvarez Vega, Jose Manuel-Madera Fernandez, Francisco Javier, doesn't need double bytes
+e4 e5 Nf3 d5 exd5 e4 Qe2 Nf6 Nc3 Qe7 Ng5 Bf5 Qb5+ Nbd7 d6 Qe5 Qxb7 Rd8 dxc7 Nc5 cxd8=Q+ Kxd8 Nxf7+
+92 evil games, 0 double byte games, Hennig, Manfred-Block, Herbert, doesn't need double bytes
+c4 c5 Nc3 g6 d3 Bg7 Bd2 b6 e4 Nc6 Nf3 Qc7 Be2 Nd4 Nxd4 Bxd4 Nb5 Qc6 Nxd4 cxd4 f4 d6 Bf3 e5 f5 Bd7 a4 a5 g4 f6 h4 Ne7 g5 Ng8 h5 O-O-O hxg6 h6 gxh6 Ne7 h7 Ng8 b3 Qc7 hxg8=Q Rdxg8 Rxh8 Rxh8 Qe2 Be8 O-O-O Qc5 Kb2 Rg8 Rh1 Bxg6 fxg6 Rxg6 Bg4+ Kb7 Rh7+ Ka6 Bf5 Rg8 Be6 Rb8 Rf7 Rh8 Rxf6 Rh1 Rf1 Rh7 Qg2 Rc7 Rf7 Rxf7 Bxf7
+93 evil games, 0 double byte games, Eberth, Zoltan-Hajnal, Zoltan, doesn't need double bytes
+e4 e5 f4 exf4 Bc4 Nc6 d4 Nf6 e5 d5 Bd3 Ne4 Nf3 g5 O-O g4 Nfd2 Ng5 Nb3 f3 Nc3 fxg2 Bxg5 gxf1=Q+ Qxf1 Qxg5 Nxd5 Kd8 Qxf7 Qg7 Qf2 Be7 Nxe7 Nxe7 Nc5 Rf8 Qg2 c6 c4 Nf5 Qe4 g3 h4 Qh6 Rf1 Ke8 Rf4 Nxh4 Rf6 Qc1+ Bf1 g2 Rxf8+ Kxf8 Qf4+ Qxf4
+94 evil games, 0 double byte games, Demarchi, Gustavo-Giaccone, Pablo, doesn't need double bytes
+e4 c5 c4 Nc6 f4 d6 Nf3 Bg4 Be2 Nf6 Nc3 e6 O-O Be7 h3 Bxf3 Bxf3 O-O Ne2 Qb6 b3 Rfd8 a3 Rac8 d3 Nd7 g4 e5 f5 f6 Nc3 Re8 Be3 Nd4 Rb1 Qd8 Qd2 Bf8 Bd1 Qe7 Rb2 Nb8 Qc1 Ndc6 Rg2 Nd8 h4 Nf7 g5 Rc7 Nd5 Qd7 Nxf6+ gxf6 g6 Nh8 h5 Re7 h6 b6 Kf2 Rb7 Rfg1 Nc6 g7 Nf7 gxf8=Q+ Kxf8 Rg8#
+95 evil games, 0 double byte games, Masak, J.-Hava, Radim, doesn't need double bytes
+Nf3 d5 b3 Nc6 e3 Bf5 Bb2 Nf6 d4 Nb4 Na3 e6 c3 Nc6 Be2 Bd6 O-O Qd7 c4 O-O-O c5 Be7 Bb5 h5 Ne5 Qe8 Nxc6 bxc6 Ba6+ Kd7 b4 Qg8 Qa4 Rb8 b5 g5 bxc6+ Kd8 Nb5 h4 Qa5 Ne8 Bb7 Nf6 Qxc7+ Ke8 Qxb8+ Bd8 c7 Kf8 cxd8=Q+ Kg7 Qxg8+ Rxg8 Qxg8+ Nxg8 c6 h3 c7 hxg2 Kxg2 g4 c8=Q g3 Qd7 Nf6 Qe7 gxh2 Kxh2 Ng4+ Kg3 Nf6 Rg1 Nh5+ Kh4+ Kh6 Qg5+ Kh7 Qxh5#
+96 evil games, 0 double byte games, Marusenko, Petr-Gooding, Ian R, doesn't need double bytes
+e4 e6 d3 d5 Nd2 c5 Ngf3 Nc6 g3 Nf6 Bg2 Be7 O-O O-O e5 Nd7 Re1 b5 h4 a5 Nf1 b4 Bf4 Ba6 Bh3 a4 a3 b3 c3 Qb6 Qd2 Bb5 N1h2 Qa6 Rad1 Rfc8 Ng5 Nf8 Qe2 Nd8 Ng4 Ng6 Bc1 Rc7 h5 Nf8 h6 f5 hxg7 fxg4 gxf8=Q+ Bxf8 Bxg4 Rg7 Nh3 Kh8 Bg5 Be7 Bf6 Bxf6 exf6 Rg6 Nf4 Rh6 Qe3 Nf7 Bxe6 d4 cxd4 cxd4 Qxd4 Rd8 Nd5 Rxd5 Bxd5 Qd6 Rc1 Rxf6 Re6
+97 evil games, 0 double byte games, Clopes Llahi, Judit-Haddar Amondaray, Nadia, doesn't need double bytes
+e4 e5 Nf3 Nc6 Nc3 d6 Bb5 d5 exd5 Bg4 dxc6 Bc5 cxb7+ Kf8 bxa8=Q Qxa8 d3 Bb6 Be3 Bxf3 Qxf3 Qc8 O-O c6 Qxc6 Qg4 Qe8#
+98 evil games, 0 double byte games, Carrasco Fernandez, Manuel-Fernandez Romero, Ernesto, doesn't need double bytes
+e4 c5 Qe2 Nc6 Nf3 g6 c4 Bg7 Na3 d6 h3 Nf6 Nc2 Nd7 g3 Nf8 Rb1 Ne6 d3 Qa5+ b4 cxb4 Nd2 Bc3 Bg2 Qxa2 Qd1 Qxb1 O-O Qa2 f4 b3 Na3 b2 Ndb1 bxc1=Q Qxc1 Bb2 Qc2 Bd4+ Kh2 Qxc2 Nxc2 Nc5 e5 dxe5 Nba3 Ne6 f5 gxf5 Rxf5 Bd7 Bd5 f6 Rf1 O-O-O Rb1 Nc5 Nb4 Nxb4 Rxb4 Bc6 Bf7 Nxd3 Rb3 Ne1 Be6+ Kb8 h4 Bc5 Kh3 Bg2+ Kh2 Rd2 Nb1 Rc2 Nc3 Nf3#
+99 evil games, 0 double byte games, Lauder, Natasha-Carey, Liam, doesn't need double bytes
+e4 e5 d4 exd4 c3 dxc3 Bc4 Nf6 Bg5 cxb2 Qd4 bxa1=Q Qxa1 Nc6 e5 Nxe5 Qxe5+ Qe7 Bxf6 Qxe5+ Bxe5 Bb4+ Nc3 O-O a3 Bxc3+ Bxc3 b6 Nf3 Bb7 O-O Bxf3 gxf3 Rac8 Bb4 a5 Bxf8 Rxf8 Rd1 Rd8 Bb5 Re8 Rxd7 h6 Bd3 c6 Bc4 b5 Bxf7+ Kh7 Bxe8 b4 axb4 axb4 f4 b3 f5 b2 Rb7 b1=Q+ Rxb1 c5 Rb7 c4 Rc7 c3 f6 c2 f7 c1=Q+ Rxc1 Kg6 f8=Q+ Kh7 Rc7 h5 Qxg7#
+2400000 games
+2400000 games processed so far
+100 evil games, 0 double byte games, Conquest, Stuart-Benbara, Thierry, doesn't need double bytes
+e4 e5 f4 Nf6 Nc3 Bb4 fxe5 Ng8 Bc4 Bxc3 dxc3 Qh4+ Kf1 d6 Nf3 Qh5 exd6 Nf6 dxc7 O-O cxb8=Q Rxb8 Bf4 Ra8 Qd6 Bd7 Ne5 Nxe4 Nxd7 Nxd6 Bxd6
+101 evil games, 0 double byte games, Schlaetker, Christine-Kohl, Annette, doesn't need double bytes
+e4 e5 Nf3 Nf6 Nc3 Nc6 Bb5 Bc5 d3 h6 O-O a6 Ba4 b5 Bb3 d6 h3 Na5 Kh1 Nxb3 axb3 O-O Nh2 Bb7 f4 Bd4 f5 d5 Qf3 b4 Ne2 Bb6 Qg3 Kh7 Qh4 dxe4 Bg5 exd3 Rad1 Qd5 Nf3 dxe2 Rde1 exf1=Q+ Rxf1 Qb5 Re1 Bxf3 gxf3 Qc6 Kg2 Qxc2+ Kh1 Bf2 Qg4 Nxg4
+102 evil games, 0 double byte games, Jankova, Kristina-Laffersova, Diana, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bb5 d6 d4 Be7 Nc3 Bg4 d5 a6 dxc6 Kf8 cxb7 Rb8 Bxa6 Nf6 Be3 c6 Ba7 Ra8 bxa8=Q Qxa8 h3 Bxf3 Qxf3 Qxa7 Be2 d5 exd5 cxd5 Nxd5 Nxd5 Qxd5 Qb6 Bc4 Ke8 Qa8+ Bd8 O-O-O Ke7 Qa6 Qxa6 Bxa6 f6 Rhe1 h6 f4 Kf7 fxe5 fxe5 Rxe5 Re8 Rde1 Rxe5 Rxe5 Bg5+ Kb1 Bf6 Rd5 g5 a4 Ke7 Bb5 Ke6 c4 h5 a5 g4 a6 gxh3 gxh3 Ke7 a7 h4 a8=Q
+2500000 games
+2500000 games processed so far
+103 evil games, 0 double byte games, Tokarev, Ilya-Ovsiannikov, Maxim, doesn't need double bytes
+d4 Nf6 c4 c5 d5 d6 Nc3 g6 g3 Bg7 Bg2 O-O e4 Na6 f4 Nc7 Nf3 b5 cxb5 a6 b6 Nb5 Nd2 Ng4 b7 Ne3 bxa8=Q Bd4 Nxb5 Nxg2+ Ke2 axb5 Nf3
+104 evil games, 0 double byte games, Sipp, Mylene-Belloc, Clemence, doesn't need double bytes
+e4 e5 Nf3 Nc6 Nc3 Bc5 Bc4 Nf6 Ng5 O-O h4 h6 h5 hxg5 d3 g4 h6 g3 fxg3 g6 Bg5 d6 Bd5 Bg4 Qd2 Bb4 Rf1 Bxc3 bxc3 Qd7 Bxf6 Rfe8 Rh1 Ne7 h7+ Kf8 h8=Q+ Ng8 Qdh6#
+105 evil games, 0 double byte games, Boitsov, Genadiy-Gausel, Einar, doesn't need double bytes
+c4 e6 Nf3 Nf6 b3 b6 Bb2 Bb7 e3 Be7 Qc2 c5 Be2 Nc6 a3 O-O Ng5 g6 h4 d5 h5 Qd6 Nxh7 Nxh7 hxg6 d4 g7 f5 gxf8=Q+ Rxf8 Bf3 Bf6 exd4 Nxd4 Bxd4 Qxd4 Nc3 Bxf3 gxf3 Qe5+ Kf1 Qf4 Re1 Qxf3 Rg1+ Kf7 Re3 Qh5 Qd1 Qxd1+ Nxd1 Rd8 Ke2 Rd4 d3 Rh4 Reg3 Nf8 Rg8 Rh8 R8g2 Rh6 Rg8 Rh7 R8g3 Rh6 Kd2 Ng6 Nc3 Bd4 Nd1 Bf6 R3g2 Ne5 Ke2 Ng6 Kd2 Ne5 Ke2 Ng6 Rg3 Be5 Re3 Bd4 Rf3 a5 Ne3 Bb2 Nc2 f4 Rxg6 Kxg6 Rxf4 Rh1 Rf8 Rc1 Kd2 Rf1 Ne3 Ra1 a4 Ra3 Kc2 Bd4 Rb8 Ra2+ Kc1 Rxf2 Nd1 Rf3 Kc2 Rh3 Rxb6 Kf5 Ra6 e5 Rxa5 e4 dxe4+ Kxe4 Ra8 Rh2+ Kc1 Ra2 Rg8 Kf3 Re8 Kf4 Kb1 Ra3 Kc2 Ra2+ Kd3 Ra3 Rb8 Ke5 Nc3 Ra1 Re8+ Kf5 Re2 Rh1 Kc2 Kf4 a5 Ra1 Na4 Kf3 Re8 Rh1 a6 Rh7 Nc3 Rh2+ Kd3 Kf4 Nb5
+106 evil games, 0 double byte games, Miclea, Andrei-Egold, Nico, doesn't need double bytes
+e4 e5 Nf3 Nc6 d4 d5 Nxe5 Nxe5 dxe5 Qh4 Qxd5 Ne7 Qd4 g6 e6 f6 Bc4 Bg7 O-O O-O Bd2 Nc6 e7+ Rf7 e8=Q+ Bf8 Qxf7+ Kh8 Qxf8#
+107 evil games, 0 double byte games, Aydogdu, Ataman-Somali, Burak, doesn't need double bytes
+d4 d5 c4 c6 Nf3 Nf6 g3 Bg4 Bg2 e6 O-O Bd6 Qb3 O-O Qxb7 Nbd7 Qxc6 Be7 c5 Rc8 Qb5 Bxf3 Bxf3 e5 c6 Nb6 dxe5 Ne8 Bg4 Rb8 Qd3 g6 b3 Ng7 Bb2 Bc5 Rc1 Be7 c7 Qe8 cxb8=Q Qxb8 Qc3 f5 Bf3 Ne6 Qd2 Bg5 e3 Rd8 h4 Bh6 Qe2 d4 Rd1 Qxe5 exd4 Qxe2 Bxe2 Rc8 Na3 Nd5 Bc4
+2600000 games
+2600000 games processed so far
+108 evil games, 0 double byte games, Walker, Sean-Franzmann, Trevor, doesn't need double bytes
+e4 e5 Nf3 d6 h3 Nf6 Nc3 Nc6 Bc4 d5 exd5 Nb4 Nxe5 Bf5 d3 Bd6 Qe2 Qe7 Bb5+ c6 dxc6 Bxe5 cxb7+ Nd7 bxa8=Q+ Bb8 Qxb8#
+109 evil games, 0 double byte games, Giana-Do, Daniel, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bc4 Bc5 O-O Nf6 c3 Nxe4 d3 Nd6 a4 Nxc4 dxc4 e4 Ng5 Qe7 Kh1 d6 f3 Bf5 g3 e3 b4 e2 Qe1 exf1=Q+ Qxf1 Be3 Bxe3 Qxe3 b5 Qxg5 bxc6 bxc6 Na3 O-O g4 Be6 Re1 Rfe8 f4 Qxg4 Qf2 Rab8 Rg1 Qf5 Qh4 Qe4+ Rg2 d5 cxd5 Bxd5 Kg1 Qxg2#
+110 evil games, 0 double byte games, Laurens, Julia-Esposito, Julie, doesn't need double bytes
+d4 Nf6 c4 g6 Nc3 Bg7 e4 O-O e5 Ne8 f4 d6 Nf3 b6 Bd3 Bb7 O-O c5 d5 Nc7 Ne4 b5 b3 a5 Rb1 Nba6 a3 b4 a4 h6 Qe1 Nb8 Qh4 f5 Neg5 e6 Nxe6 Nxe6 dxe6 Bxf3 e7 g5 exd8=Q
+111 evil games, 0 double byte games, Doll, Michael-Kabisch, Thilo, doesn't need double bytes
+d4 Nf6 c4 d6 Nc3 g6 Nf3 Bg7 e3 O-O Be2 Nbd7 O-O e5 b4 Re8 a4 e4 Nd2 Nf8 b5 h5 a5 N8h7 a6 b6 Na2 Ng4 h3 Nh6 Nb4 Nf5 Ra3 Bh6 Qe1 Bd7 Nb1 Ng5 Kh2 Nh4 Rh1 Bxh3 f4 exf3 Qxh4 fxg2 Qe1 gxh1=Q+ Kxh1 Ne4 Bf3 Qf6 Nd2 Nxd2 Bxa8 Nxc4 Rc3 Rxa8 e4 Ne3
+2700000 games
+2700000 games processed so far
+112 evil games, 0 double byte games, Kaya, Isa-Islek, Ali Ihsan, doesn't need double bytes
+d4 g6 e4 d6 Nf3 Bg7 Bc4 Nf6 Nc3 O-O O-O a6 Re1 Nbd7 Bg5 c5 e5 Ng4 exd6 Re8 Nd5 h6 Nxe7+ Kh7 Bxf7 Rxe7 dxe7 Qc7 e8=Q Nf8 Be7 Bd7 Qxa8 Qc6 d5
+113 evil games, 0 double byte games, Smith, Andrew I-Rothwell, Jonathan, doesn't need double bytes
+d4 d5 c4 e6 Nf3 Nf6 e3 Bd7 Qb3 Qc8 Nc3 Bc6 Ne5 Ne4 Nxc6 Nxc6 cxd5 Nxc3 dxc6 Nd5 cxb7 Qd8 Bb5+ Ke7 bxa8=Q Qxa8 O-O Kd8 e4 Nb4 d5 Qb7 Bc6 Qa6 Rd1 Bc5 dxe6+ Ke7 exf7 Rf8 Bg5#
+114 evil games, 0 double byte games, Galonaki, K.-Mastrogiannopoulou, Despina, doesn't need double bytes
+d4 Nc6 e4 e5 d5 Bb4+ Nc3 Be7 Nf3 Bh4 Bb5 d6 h3 Bf6 dxc6 Rb8 cxb7+ Bd7 Ba6 c6 Be3 c5 Qd5 Qa5 Qxd6 Rd8 b8=Q Rxb8 Qxb8+ Bd8 Qxa7 Nf6 Bxc5 Rf8 Bxf8 Kxf8 O-O-O Ba4 Nxa4 Qxa4 Rxd8+ Ne8 Qc5+ Kg8 Bb5 Qxa2 Rxe8#
+115 evil games, 0 double byte games, Sippenauer, Werner-Kaeck, Ralf, doesn't need double bytes
+Nf3 g6 e4 Bg7 d4 d6 Be2 Nc6 Bg5 h6 Be3 e5 d5 Nce7 Nfd2 f5 f3 Nf6 c4 f4 Bf2 g5 Nc3 Ng6 Qb3 Nd7 O-O-O b6 Rdg1 Nc5 Qc2 Bd7 g3 Qe7 Nf1 O-O-O h4 Bf6 h5 fxg3 Bxc5 Nf4 Be3 g2 Rh2 gxf1=Q+ Bxf1 Rdg8 Bxf4 gxf4 Rhg2 Qf7 Rg6 Rxg6 hxg6 Qg7 b4 Be7 c5 dxc5 bxc5 Bxc5 Rg2 Kb7 Qd3 Kb8 Qa6 Bc8 Qa4 Qd7 Bb5 Qh3 Rc2 Qh1+ Kb2 Bd4 Bd7 Bxc3+ Rxc3 Qg2+ Kb3 Qxg6 Qc4 Qd6 Be6 Bxe6 dxe6 Re8 Qa6 Qxe6+ Kc2 Rg8 Ra3 Qc6+ Rc3 Rg2+ Kb3 Qe6+ Rc4 Rf2 Kb4 Qd6+ Kb3 Qd3+
+116 evil games, 0 double byte games, Bok, Tomas-Aron, Oto, doesn't need double bytes
+e4 e5 c4 Nf6 Nc3 Nc6 d3 Bc5 Be2 d6 Bg5 Nd4 h3 h6 Bh4 g5 Bg3 Bd7 Nf3 Nxf3+ Bxf3 Bd4 a3 Qe7 Rb1 O-O-O Nd5 Nxd5 exd5 f5 b4 Rdg8 Qb3 h5 c5 Be8 c6 b6 Qc4 Kd8 Qa6 b5 Qb7 Qf6 Qb8+ Ke7 Qxc7+ Kf8 Qb8 Ke7 Qb7+ Kf8 c7 Rh7 c8=Q Rxb7 Qxb7 e4 dxe4 fxe4 Bxe4 h4 Bxd6+
+2800000 games
+2800000 games processed so far
+117 evil games, 0 double byte games, Obels, Jiri-Munnik, Talitha, doesn't need double bytes
+e4 e5 Nf3 Nc6 d4 exd4 c3 dxc3 Bc4 Be7 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qd2 cxb1=Q Rxb1 Nc6 a3 d6 O-O Be6 Bd3 Qd7 Qf4 Ne5 Nxe5 dxe5 Qg3 Kh8 Rd1 f6 Be3 Qe8 Bc2 Qf7 Rd3 Bd6 Bd2 f5 Rf3 f4 Qg5 h6 Qh4 Be7 Rxf4 Bxh4 Rxf7 Rxf7 Be3 Rd8 Rf1 Bg5 Bxg5 hxg5 Ba4 Rd4 Be8 Rf8 Bg6 Bf7 Bf5 g6 Bg4 Rxe4 Bf3 Rd4 Re1 Rfd8 h3 Re8 Bxb7 Bd5 Ba6 Rd2 b4 Re6 Bc8 Re7 Ba6 Ra2 Re3 Kg7 Bf1 Kf6 Rd3 Ke6 Rg3 Ra1 Rc3 Rd7 f3 Bb7 Kf2 Kf6 Bb5 Re7 Kg3 e4 fxe4 Bxe4 a4 Rg1 h4 Rxg2+ Kh3 g4#
+118 evil games, 0 double byte games, Vanhouwe, Jiri-Van Lanen, Giel, doesn't need double bytes
+e4 e5 c4 d6 Nc3 Nf6 d3 Bg4 Nf3 Bxf3 Qxf3 Nc6 Nd5 Nxd5 exd5 Nd4 Qd1 Qf6 Qa4+ Nc6 dxc6 Be7 cxb7+ c6 bxa8=Q+ Bd8 Q4xc6+ Ke7 Qxa7+ Kf8 Qad7 g6 Qe8+ Kg7 Qxh8+ Kxh8 Bh6 Qe7 Be2 Qe6 h3 f6 Bg4 Qe7 a4 Ba5+ Bd2 Bd8 a5 h5 Bd7
+119 evil games, 0 double byte games, Heiny, Johannes-Strubreiter, Markus, doesn't need double bytes
+d4 Nf6 c4 e5 dxe5 Ne4 Qc2 d5 exd6 Bf5 Nc3 Ng3 Qa4+ Bd7 dxc7 Qc8 cxb8=Q Qxb8 Qc2 Nxh1 Qe4+ Be6 g3 Bb4 Bg2 O-O Bf4 Qd8 Bxh1 Bxc3+ bxc3 Qa5 Qc2 Rac8 Bd6 Rfd8 Bb4 Qh5 h4 Rxc4 Rd1 Rb8 Qd3 h6 Be4 Re8 Bxb7 Rc7 Bf3 Qe5 Qd6 Qxd6 Rxd6 a5 Bxa5 Ra7 Bb4 Rxa2 Rd2 Ra1+ Rd1 Ra6 e3 Bb3 Rb1 Bc2 Rc1 Bd3 Ne2 g5 hxg5 hxg5 Nd4 Ra2 Bd5 Rb2 Ra1 Re5 Bb3 g4 Ba3 Rb1+ Rxb1 Bxb1 Bd6 Rh5 Ke2 Rh1 c4 Be4 c5 Rb1 Bc2 Rb2 Kd2 f6 Kc3
+120 evil games, 0 double byte games, Olier, Anthony-Laviec, Alain, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bc4 Nf6 d3 Bb4+ Bd2 Bc5 Be3 d6 Nc3 Bg4 h3 Bh5 g4 Bg6 Qe2 h6 O-O-O O-O Rhg1 h5 g5 Nd7 Nh4 Bh7 Qxh5 Qe8 g6 Nf6 Qg5 Kh8 gxh7 Rg8 hxg8=Q+ Qxg8 Nd5 Nd7 Qh5+ Qh7 Qxh7+ Kxh7 Bxc5 Nxc5 Nxc7 Rf8 Nb5 Rd8 Bxf7 Rd7 Be8 Re7 Bxc6 bxc6 Nxd6 Re6 Nhf5 g6 b4 Nd7 Nc8 gxf5 Nxa7 c5 bxc5 Nxc5 exf5 Re7 Nc6 Rf7 Nxe5 Rxf5 Rde1 Rxf2 d4 Na4 d5 Rf8 Re4 Nc5 Rh4#
+2900000 games
+2900000 games processed so far
+121 evil games, 0 double byte games, Taha, Najla-Fernandes, Julya, doesn't need double bytes
+e4 c6 d4 d5 e5 Bf5 c4 e6 Nc3 Ne7 Be3 Bg6 Bg5 Nd7 c5 Qc7 Nf3 O-O-O Be2 f6 Bf4 Re8 b4 Kd8 g3 Be4 exf6 Qc8 f7 Ng6 fxe8=Q+ Kxe8 Nxe4 dxe4 Ng5 Nxf4 gxf4 Nf6 Qb3 Nd5 Bg4 Nf6 Bxe6 Qd8 Nf7
+122 evil games, 0 double byte games, Navarro, Pau-Raro, Javier, doesn't need double bytes
+e4 e5 d4 exd4 c3 dxc3 Bc4 Bb4 Qb3 cxb2+ Kd1 bxc1=Q+ Kxc1 Qg5+ Qe3 Qxe3+ fxe3 d6 Nf3 Be6 Bd3 Nc6 Kc2 O-O-O Nc3 Bxc3 Kxc3 d5 a3 Nf6 Ng5 Nxe4+ Nxe4 dxe4 Bxe4 Rhe8 Rhe1
+123 evil games, 0 double byte games, Paramasivam, M.-Tariq, Ahmed, doesn't need double bytes
+d4 Nc6 d5 Na5 e4 e5 Nf3 b6 Nc3 Nf6 Nxe5 d6 Bb5+ Bd7 Nxd7 Nxd7 O-O c6 dxc6 Nc5 c7+ Nd7 cxd8=Q+ Kxd8 Qd5 Rb8 Qxf7 Rc8 Qxd7#
+124 evil games, 0 double byte games, Nardi, Hector Fernando-Lobo Gomez, Maria Luisa, doesn't need double bytes
+d4 d5 c4 c6 e3 Nf6 Nf3 e6 Bd3 Bb4+ Nc3 O-O O-O Nbd7 h3 Re8 c5 Ba5 Bb1 Bc7 Qc2 g6 a3 Bb8 b4 Qc7 b5 e5 bxc6 e4 cxd7 exf3 dxe8=Q+ Nxe8 g3 Qd7 g4 Qc7 Nxd5 Qh2#
+125 evil games, 0 double byte games, Heimsoth, Holger-Bustillo, Joaquin, doesn't need double bytes
+d4 d6 e4 Bd7 Nc3 Nc6 f4 f6 d5 Nb8 f5 c6 Qh5+ g6 fxg6 Bg7 gxh7+ Kf8 hxg8=Q+ Kxg8 Qd1 Qa5 Nf3 f5 Bd2 fxe4 Nxe4 Qxd5 Bd3 b5 Bc3 Na6 Qe2 Bg4 a4 b4 Bc4 Bxf3 gxf3 bxc3 bxc3 Kh7 Bxd5 cxd5 Ng5+ Kh6 Nf7+ Kh7 Ng5+ Kg6 Qd3+ Kxg5 Rg1+ Kh4 Rg4+ Kh3 Qf1+ Kxh2 Qg2#
+126 evil games, 0 double byte games, Scholz, Gerd-Ernst, Klaus, doesn't need double bytes
+d4 Nf6 c4 c5 d5 b5 Qc2 b4 e4 d6 Nf3 Nbd7 Be2 g6 Nbd2 Bg7 Rb1 O-O O-O Ng4 Ng5 Nh6 Ndf3 Kh8 Nh4 Ng8 f4 h6 Nxf7+ Rxf7 Nxg6+ Kh7 e5 Ndf6 e6 Bd7 exf7 e6 Nf8+ Kh8 fxg8=Q+ Kxg8 Nxe6 Bxe6 dxe6 Qe7 f5 Rf8 Qd3 Nh7 Qg3 Kh8 b3 Rg8 Qh3 Ng5 Qh5 Bd4+ Kh1 Qf6 Bxg5 Rxg5 Qe8+ Kh7 Qf7+ Qxf7 exf7 Kg7 Bf3 Kxf7 Bd5+ Kf6 Rbe1 Be5 Rf3 Rh5 Rh3 Rxh3 gxh3 Kxf5 Kg2 h5
+127 evil games, 0 double byte games, Baehr, Madeleine-Fritsche, Miriam, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bc4 Nf6 Nc3 Bc5 O-O d6 d3 Bg4 h3 Bh5 Nd5 h6 Nxf6+ Qxf6 g4 Bg6 Be3 Nd4 Nxd4 exd4 Rc1 dxe3 Re1 exf2+ Kh1 fxe1=Q+ Qxe1 Qf3+ Kh2 Bf2 Qh1 Qg3#
+128 evil games, 0 double byte games, Mack, Carmen-Dieringer, Laura, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bc4 Nd4 Nxe5 Qg5 Ng4 Bc5 c3 Ne6 Qf3 f6 h4 Qg6 d4 Be7 d5 Nc5 Nd2 d6 Ne3 Bd7 b4 Na4 Nc2 O-O-O g3 a6 Bb3 Re8 Qe3 Nh6 c4 Ng4 Qa7 Bb5 cxb5 f5 Bxa4 Ne5 bxa6 c6 Qxb7+ Kd8 a7 Nd7 a8=Q+ Nb8 Qaxb8#
+129 evil games, 0 double byte games, Pook, Rainer-Maas, Karl Heinz, doesn't need double bytes
+d4 Nf6 Nc3 e6 e4 d5 e5 Nfd7 f4 Bb4 Nf3 O-O Bd3 f6 O-O c5 Ng5 Qe7 Nb5 Nb6 c3 Ba5 Nd6 c4 Bc2 h6 Qh5 hxg5 fxg5 g6 Qxg6+ Qg7 Qh5 N6d7 g6 Bc7 Bh6 Qh8 g7 Qh7 gxf8=Q+ Nxf8 Rf3 Bxd6 exd6 Nfd7 Rg3+ Kh8 Qe8+
+130 evil games, 0 double byte games, Straeter, Timo-Jeppel Klose, Ruediger, doesn't need double bytes
+d4 e6 Nf3 c5 e3 Nf6 Bd3 b6 O-O g6 c4 Bg7 Nc3 O-O d5 Bb7 e4 d6 Bg5 h6 Be3 Ng4 Bd2 f5 Qe2 Ne5 Nxe5 dxe5 dxe6 Nc6 Nd5 Nd4 e7 Nc2 exd8=Q Raxd8 Bxc2
+3000000 games
+3000000 games processed so far
+131 evil games, 0 double byte games, Stross, Frantisek-Simon, Holger, doesn't need double bytes
+e4 e6 d4 d5 Nc3 Nf6 Bg5 Bb4 e5 h6 Bc1 Bxc3+ bxc3 Ne4 Qg4 g6 Bd3 c5 Bxe4 dxe4 Qxe4 Nc6 Nf3 Qa5 Bd2 Qa3 O-O O-O Bxh6 Nxd4 cxd4 Qxf3 Qxf3 f5 Bxf8 Bd7 Qxb7 Bc6 Qxc6 Re8 Qxe8 c4 Qe7 g5 Qxe6+ Kh8 Qxf5 g4 Qxg4 c3 Bb4 a5 Bxa5 Kh7 Bxc3 Kh8 Qg5 Kh7 Bb4 Kh8 Bf8 Kh7 e6 Kh8 d5 Kh7 d6 Kh8 e7 Kh7 d7 Kh8 c4 Kh7 c5 Kh8 c6 Kh7 a3 Kh8 a4 Kh7 a5 Kh8 f3 Kh7 g3 Kh8 h3 Kh7 f4 Kh8 g4 Kh7 h4 Kh8 a6 Kh7 c7 Kh8 a7 Kh7 a8=Q Kh8 c8=Q Kh7 d8=Q Kh8 e8=Q Kh7 f5 Kh8 f6 Kh7 h5 Kh8 Rab1 Kh7 Rb8 Kh8 Kg2 Kh7 Kg3 Kh8 Kf4 Kh7 Ke5 Kh8 Ke6 Kh7 Kf7 Kh8 Qf4 Kh7 g5 Kh8 h6 Kh7 Qde7 Kh8 Qce6 Kh7 Qa5 Kh8 Qae5 Kh7 Rb2 Kh8 Re2 Kh7 Rh2 Kh8 Rh5 Kh7 Rfh1 Kh8 Qg3 Kh7 Rf1 Kh8 Rf5 Kh7 Qg4 Kh8 Qgg3 Kh7 g6+ Kh8 g7+ Kh7 Qg6#
+132 evil games, 0 double byte games, Laforette, Remi-Bordes Guasch, Juan Ramon, doesn't need double bytes
+e4 c5 Nf3 Nc6 Nc3 d6 d3 Nf6 Bg5 g6 Be2 Bg7 O-O O-O Nh4 a6 a3 b5 a4 b4 Nd5 Nxd5 exd5 Nd4 Bf3 Nxf3+ Qxf3 Bxb2 Rab1 Bc3 Qe4 Re8 Nf3 Bd7 Bh6 Bxa4 Ne1 Bd7 Qc4 a5 Rd1 a4 Nf3 a3 d4 a2 h3 a1=Q Rxa1 Rxa1 Rxa1 Bxa1 Qa6 Bxd4 Nxd4 cxd4 Bd2 Qa8 Qc4 e6 Qxb4 Qxd5 c3 Bc6 c4 Qxg2#
+133 evil games, 0 double byte games, Cekan, Petr-Tancer, M., doesn't need double bytes
+e4 e5 Nf3 Nc6 d4 exd4 c3 dxc3 Bc4 Be7 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qd2 cxb1=Q Rxb1 Nc6 a3 d6 h3 Ne5 Nxe5 dxe5 Qe2 Bf6 O-O Qe7 Rd1 Be6 Bd2 Rfd8 Bb4 c5 Bxe6 fxe6 Bc3 Rxd1+ Rxd1 Rd8 Rxd8+ Qxd8 Qc4 Qe7 b4 cxb4 Qc8+ Qd8 Qxe6+ Kf8 Bxb4+ Be7 Qf5+ Kg8 Qxe5 Bxb4 axb4 h6 Qe6+
+134 evil games, 0 double byte games, Harrison, Richard-Han, Tianchen, doesn't need double bytes
+e4 e5 f4 Nc6 Nc3 exf4 Nf3 Be7 Bc4 Bh4+ g3 fxg3 O-O Nf6 d4 Ng4 Ng5 gxh2+ Kg2 h1=Q+ Rxh1 Bxg5 Qxg4 Bxc1 Qxg7 Rf8 Rxh7 Qe7 e5 d6 Nd5 Qg5+ Qxg5 Bxg5 Nxc7+ Kd8 Nxa8 Rg8 Bxf7 Rf8 exd6 Bf5 Re1 Bxh7 Be6 Nxd4 Nc7 Rg8
+135 evil games, 0 double byte games, Danieli, Enrico-Zanellato, Lorenzo, doesn't need double bytes
+d4 d5 Nf3 Nf6 e3 c5 Bd3 e6 O-O Nc6 b3 Qb6 Bb2 c4 Be2 Bd7 Ne5 Nxe5 dxe5 Ne4 Bd4 Qc7 f3 cxb3 fxe4 bxc2 Qc1 cxb1=Q Qxc7 Qxe4 Rxf7 Be7 Rxg7 Qh4 Bc5 Rc8 Rxe7+ Qxe7 Bh5+
+136 evil games, 0 double byte games, Frie, Michael-Steens, Rudolf, doesn't need double bytes
+e4 e6 d4 d5 e5 c5 c3 Nc6 Nf3 Qb6 a3 c4 Nbd2 Na5 g3 Bd7 Bg2 Be7 O-O h5 h3 g5 a4 O-O-O b3 cxb3 c4 b2 Rb1 bxc1=Q Qxc1 Qc7 c5 g4 hxg4 hxg4 Ne1 Bg5 Qc3 Bxd2 Qxd2 Ne7 Nd3 Bxa4 Qb4 Bc2
+3100000 games
+3100000 games processed so far
+137 evil games, 0 double byte games, Mandadijev, Marlon-Heidelberger, Colin, doesn't need double bytes
+d4 d5 e4 dxe4 Bd3 exd3 Nf3 dxc2 Be3 cxd1=Q+ Kxd1 Nc6 Bg5 g6 Bf6 exf6 b4 Bxb4 Nc3 Nxd4 Rb1 Bxc3 Rc1 Nxf3+ Ke2 Bd2 Kd1 Bxc1+ Kxc1 Qd2+ Kb1 Bf5+ Ka1 Rd8 Rd1 Qxd1+ Kb2 Rd2+ Kc3 Ne7 gxf3 Rd3+ Kc4 Be6+ Kc5 b6+ Kb5 Qb1+ Ka4 Qxa2+ Kb4 Rb3#
+138 evil games, 0 double byte games, Tischer, Marcel-Priese, Annika, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Bg4 f3 Bh5 dxc6 Bc5 cxb7 O-O bxa8=Q Qxa8 Nc3 Qd8 d3 Qd4 Qe2 Qh4+ Kd1 h6 Nge4 Nxe4 Nxe4 Bd4 c3 Bb6 Bd2 Qe7 g4 Bg6 h4 Bxe4 dxe4 Qc5 b4 Qd6 Rf1 Rd8 a4 a5 bxa5 Bxa5 h5 Bxc3 Ra2 Qb4 Kc1 Bb2+ Rxb2 Qxa4 Bb3 Qa1+ Kc2 Qa7 Be3 Qa5 Qc4 Rd6 Qxf7+ Kh7 Qc4 Qa8 Kc3 Rc6 Bc5 Qa5+ Kd3 Rxc5 Qg8#
+139 evil games, 0 double byte games, Wessendorf, Klaus-Winkelsett, Carsten, doesn't need double bytes
+e4 g6 d4 Bg7 Be3 d6 c3 Nd7 Bc4 Ngf6 Qb3 O-O f3 Rb8 a4 b6 Na3 c5 Ne2 a6 Kf2 Bb7 d5 Ne5 Nf4 g5 Nd3 g4 Nxe5 dxe5 Be2 Bc8 Bxc5 Nd7 Be3 f5 d6+ Kh8 Bg5 Nc5 dxe7 Qe8 exf8=Q+ Qxf8 Qd1 Bb7 Ke1 fxe4 fxg4 Nd3+ Bxd3 exd3 Rf1 Qd6 Nc4 Qg6 Qd2 Qe4+ Ne3 Bf8 Rd1 Qxa4 Qxd3 e4
+140 evil games, 0 double byte games, David, Vidya-Wheeler, John Francis, doesn't need double bytes
+e4 e5 d3 Nc6 Nf3 Nf6 Nc3 d5 h4 Bb4 Bg5 d4 Be2 dxc3 Rb1 cxb2+ Kf1 Bc3 Kg1 Be6 a4 Qd6 Bxf6 gxf6 h5 O-O-O g3 Nd4 Kg2 Qb4 Ra1 bxa1=Q Qxa1 Bxa1 Rxa1 Nxe2 Rc1 Nxc1 c4 Rxd3 Nh4 Qe1 c5 Rd1 Nf3 Qh1#
+141 evil games, 0 double byte games, McCann, Desia-Peters, Epiphany, doesn't need double bytes
+d4 d5 Nf3 Nc6 e3 Nf6 Bd3 e6 Nh4 e5 b3 exd4 e4 dxe4 Bc4 Bd6 a3 O-O Bb2 Re8 c3 Bg4 f3 exf3+ Kf1 fxg2+ Kg1 gxh1=Q+ Kxh1 Bxd1 Nd2 Re1+ Kg2 Qd7 Bd3 Qg4+ Kf2 Qxh4+ Kg2 Qxh2#
+142 evil games, 0 double byte games, Volz, Alexander-Kluss, Michelle, doesn't need double bytes
+e4 d5 exd5 e5 Nc3 Nf6 Bc4 Bd6 h3 Bf5 d3 O-O Nf3 Qd7 O-O c6 dxc6 Qe7 cxb7 Nc6 bxa8=Q Rxa8 Nd5 Qe6 Nc7 Qc8 Nxa8 Qxa8 Ng5 Qb8 Nxf7 Bg6 Nxd6+ Kf8 Nb5 Bf5 Bg5 Nd7 Qh5 e4 Qf7#
+143 evil games, 0 double byte games, Johannes, Jan Hinnerk-Falke, Cynthia, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bc4 Bc5 Nc3 Nf6 d3 d6 Bg5 h6 Bh4 g5 Bg3 Ng4 O-O h5 h3 h4 hxg4 hxg3 Re1 gxf2+ Kf1 fxe1=Q+ Qxe1 Rh1+ Ke2 Rxe1+ Rxe1 Nd4+ Nxd4 exd4 Nb5 Bxg4+ Kd2 c6 Nxd4 Bxd4 Rf1 Qa5+ c3 Bxc3+ bxc3 O-O-O Rxf7 Qa4 Bb3 Qa3 Ke3 Qc5+ d4 Qxc3+ Kf2 Qxd4+ Kg3 Qxe4 Rg7 Qf4#
+3200000 games
+3200000 games processed so far
+144 evil games, 0 double byte games, Nauth, Manuel-Mueller, Frank2, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bb5 Nf6 Nc3 Bb4 O-O O-O d3 Nd4 Nxd4 exd4 Nd5 Nxd5 exd5 a6 Bc4 d6 a3 Bc5 Re1 Qf6 Re4 Qg6 Qf3 f5 Re7 c6 dxc6+ Kh8 cxb7 Ra7 bxc8=Q Rxc8 Rxa7 Bxa7 Qb7 Re8 Bf4 Bc5 Bf7 Qxf7 Qxf7 Rg8 Re1 h6 Re8 Rxe8 Qxe8+ Kh7 Qf8 Kg6 Qe8+ Kf6 b4 Bb6 Bxd6 Kg5 Qc6 Bd8 g3 Bf6 h3 Kg6 Be5 a5 bxa5 h5 Bxf6 gxf6 Qe8+ Kh6 Qf7 h4 Qxf6+ Kh5 Qxh4+ Kg6 Kg2
+145 evil games, 0 double byte games, Tochtermann, Georg-Polifka, Wilfried, doesn't need double bytes
+e4 b6 g3 Bb7 Bg2 e5 Nc3 Nf6 d3 Bc5 Nge2 Ng4 d4 Qf6 f3 exd4 fxg4 dxc3 Rf1 cxb2 Rb1 bxc1=Q Nxc1 Qe7 Qd3 Ba6 c4 Nc6
+146 evil games, 0 double byte games, Battistella, Stefano-Schaefer, Michael, doesn't need double bytes
+c4 g6 Nc3 Bg7 g3 f5 d4 Nf6 Bg2 O-O Nh3 d6 d5 Na6 O-O Qe8 Rb1 Nc5 Nb5 Qd8 Nd4 e5 dxe6 c6 Ng5 Qe7 Bf4 Nh5 Nxc6 bxc6 Bxd6 Qxg5 e7 Ne4 exf8=Q+ Bxf8 Bxf8 Kxf8 Qd4 Qf6 Rfd1 Be6 Qxf6+ Nhxf6
+147 evil games, 0 double byte games, Pradzinski, Alex-Tuason, Alfred, doesn't need double bytes
+e4 e6 d4 d5 e5 c5 c3 a6 Nf3 Nc6 Be2 Be7 O-O Qc7 h3 f6 Bf4 Bd7 Qd2 c4 exf6 Qd8 fxg7 Bf6 gxh8=Q Bxh8 Be5 Nxe5 dxe5 Qe7 Rd1 O-O-O Qg5 Rf8 Qxe7 Nxe7 Nd4 Bxe5 Bg4 Bxd4 cxd4 Nf5 Nc3 Kc7 Rac1 b5 Ne2 Nd6 b3 Kb6 bxc4 Nxc4 h4 Rg8 Bf3 Nb2 Rd2 Nc4 Rdc2 b4 g3 Be8 Nf4 Rf8 Nh5 Rxf3 Ng7 Bd7 Kg2 Rf7 Nh5 a5 Rb1 Na3 Rbc1 Nxc2 Rxc2 a4 Rb2 Kb5 a3 b3 f4 Kc4 g4 Kc3 Rb1 b2 Rf1 Kb3 g5 Ka2 Kg3 b1=Q Rxb1 Kxb1 Kg4 Kb2 Nf6 Kxa3 Nxd7 Rxd7 f5 exf5+ Kxf5 Kb3 Ke6 Ra7 Kxd5 a3 Ke6 a2 d5 a1=Q d6 Qe1+ Kf6 Qxh4 Ke6 Qe4+ Kf6 Qg6+ Ke5 Rd7 Kd5 Qxd6+ Ke4 Re7+ Kf3 Qd5+ Kg3 Rf7 Kh4 Qe4+ Kh5 Rf4 Kh6 Qg6#
+148 evil games, 0 double byte games, Traerup, Jorgen-Mathiesen, Erik, doesn't need double bytes
+e4 e5 Nc3 Nf6 Bc4 Nc6 Nge2 Bc5 Ng3 d6 O-O Ng4 Be2 h5 h3 Qh4 Qe1 Qxg3 Bxg4 hxg4 Ne2 Qh4 d4 Nxd4 Be3 Nxc2 Qc3 Nxe3 fxe3 gxh3 g3 h2+ Kg2 Qxe4+ Kf2 Bg4 Ke1 Bb4 Rc1 h1=Q Rxh1 Rxh1+ Kd2 Rxc1 Nxc1 Kd7 Nd3 Bxc3+ Kxc3 Rh8 Nf2 Qxe3+ Nd3 Bf5
+149 evil games, 0 double byte games, Galic, Ivan-Valkovic, Kristijan, doesn't need double bytes
+c4 d6 Nc3 Nf6 Nf3 g6 g3 Bg7 Bg2 O-O O-O e5 d3 Nbd7 b4 h6 a4 Ne8 Bd2 f5 a5 g5 a6 f4 Nxg5 hxg5 axb7 Rb8 Rxa7 Nb6 bxc8=Q Qxc8 Nd5 Kf7 b5 Nxd5 Bxd5+ Ke7 Ba5 Rh8 Bg2 Kf8 Bc3 Qe6 e3 Qh6 h3 Rc8 Qg4 Rd8 exf4 gxf4 Rfa1 Nf6 Qf3 Rd7 gxf4 Qxf4 Qxf4 exf4 Ra8+ Kf7 Rxh8 Bxh8 Ra7 Bg7 Bxf6 Bxf6 b6 Bd4 bxc7
+3300000 games
+3300000 games processed so far
+150 evil games, 0 double byte games, Herbold, Nora-Farzamfar, Bahram, doesn't need double bytes
+e4 e5 Nf3 Nc6 d4 exd4 c3 dxc3 Bc4 Be7 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qd2 cxb1=Q Rxb1 Nc6 O-O a6 a3 d6 Qf4 Bf6 Ng5 Ne5 Ba2 h6 Nf3 Be6 Bxe6 fxe6 Nd4 Qe7 Qd2 c5 Ne2 Rad8 f4 Nc4 Qc2 b5 Ng3 Bd4+ Kh1 Ne3 Bxe3 Bxe3 f5 e5 Rbd1 Qh4 Ne2 Rf6 Rf3 Bd4 Rh3 Qg4 Rg3 Qh5 Rh3 Qf7 Rdd3 d5 Rd2 dxe4 Qxe4 Rxf5 Rf3 Rxf3 Qxf3 e4 Qxf7+ Kxf7 Nxd4 cxd4 Kg1 e3 Rd3 Ke6 Kf1 Ke5 Ke2 Ke4 b3 Rf8 Rd1 Rf2+ Ke1 Rxg2 h4 d3
+151 evil games, 0 double byte games, Luft, Helga-Shah, Anila, doesn't need double bytes
+d4 d5 Bf4 Nc6 e3 Bf5 Nf3 e6 c3 Nf6 h3 a6 Nbd2 h6 Be2 Nh5 Bh2 Nf6 O-O Qe7 Ne5 Nxe5 Bxe5 O-O-O Nb3 g5 Nc5 a5 b4 Rg8 bxa5 Ne4 Nxe4 Bxe4 f3 Bh7 a4 f6 Bh2 f5 Qb3 c5 Qb6 c4 a6 f4 a7 Qd6 a8=Q+ Kd7 Qaxd8#
+152 evil games, 0 double byte games, Wycisk, David-Schmale, Lina, doesn't need double bytes
+d4 d5 Nf3 c5 c3 Bg4 Ne5 Nf6 Bg5 Nbd7 Qa4 Bf5 dxc5 Ne4 c6 Nxe5 cxb7+ Bd7 bxa8=Q Qxa8 Qc2 e6 Bh4 Bc5 Nd2 O-O Nxe4 dxe4 Bg3 Ng6 e3 f5 Bc4 Kh8 Rd1 Rd8 Bc7 Ba4 Rxd8+ Qxd8 Bxd8 Bxc2 Bxe6 Be7 Bxe7 Nxe7 b3 g6 Kd2 Bd3 c4 Kg7 Kc3 Kf6 Bd7 g5 b4 Ke5 h4 g4 g3 h6 a4 a6 a5 Kd6 Ba4 Ng6 Bc2 Bxc2 Kxc2 Ne5 Kc3 Nd3 Rd1 Kc6 Rxd3 exd3 Kxd3
+153 evil games, 0 double byte games, Demarche, Vladislav-Velasquez, Rene, doesn't need double bytes
+e4 e5 Nf3 Nc6 Be2 d5 O-O dxe4 b3 exf3 Bb2 fxg2 Nc3 gxf1=Q+ Kxf1 Nf6 d4 Bd6 dxe5 Nxe5 Nb5 O-O Nxd6 cxd6 Bxe5 Bh3+ Kg1 dxe5 Qxd8 Rfxd8 Kh1 Rd2
+3400000 games
+3400000 games processed so far
+154 evil games, 0 double byte games, Schlimpert, Vanessa-Schmaeschke, Teresa, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bc4 Bc5 Nc3 Nf6 d3 O-O Bg5 d6 O-O Bg4 Bxf6 Qxf6 Nd5 Qg6 Qe1 Bxf3 g3 Qh6 Ne3 Qh3 d4 Bxd4 Be2 Bxe4 f3 Bxe3+ Kh1 Bd5 Rg1 e4 Bf1 Qf5 g4 Qf4 Rg3 exf3 Rd1 f2+ Bg2 fxe1=Q+ Rxe1 Qf2 Rf1 Qxf1#
+155 evil games, 0 double byte games, Boehme, Matthis-Pueschel, Torben, doesn't need double bytes
+e4 e5 f4 exf4 Nf3 Nf6 d3 Nh5 Be2 d6 Nd4 Qh4+ g3 fxg3 Bf3 g2+ Kd2 gxh1=Q Qxh1 Qf2+ Be2 Qxd4 Bxh5 g6 Bf3 Qf2+ Be2 Bh6+ Kc3 Bxc1 Qxc1 Qxe2 Qg5 Qxh2 Qf6 Qe5+ Qxe5+ dxe5 Nd2 Nc6 Rf1 h5 Nf3 h4 Ng5 Be6 Nxe6 fxe6 Rf6 O-O-O Rxe6 h3 Rxg6 h2 d4 exd4+ Kb3 h1=Q c3 d3 Rg2 Qxg2 e5 Qd5+ Ka3 Rh2 e6 d2 e7 Nxe7 c4 Qd3+ Kb4 d1=Q
+156 evil games, 0 double byte games, Gibbons, Lorne-Anderson, George, doesn't need double bytes
+d4 f5 c4 g6 Nf3 Nf6 Nc3 Bg7 Bf4 a6 e3 O-O h3 Ne4 Nxe4 fxe4 Nd2 d5 cxd5 b5 Qb3 Bb7 d6+ Kh8 dxc7 Qd7 cxb8=Q Raxb8 Bxb8 Rxb8 Be2 Rf8 Bg4 Qd8 Be6 Rf6 d5 Qf8 Nxe4 Rxe6 dxe6 Bxe4 f3 Bb7 O-O Qf5 Rf2 Bd5 Qd1 Bxe6 Qd8+ Bg8 Qxe7 Qd3 Qe4 Qd8 Rc2 Qa5 a3 Qd8 Rac1 Qd7 b4 Bf6 Rc7 Qd2 R7c2 Qd7 Kf1 Bc4+ Rxc4 bxc4 Qxc4 Bb2 Qc8+ Qxc8 Rxc8+ Kg7 a4 Ba3 Rc6 Bxb4 Rxa6 h6 Rb6 Ba5 Rb5 Bd2 Ke2 Bc3 e4 g5 g4 Bd4 Kd3 Bg1 a5 Kg6 a6 h5 Rf5 hxg4 hxg4 Bf2 e5 Kh6 e6 Bc5 Rxc5
+157 evil games, 0 double byte games, Fink, Leander-Minju, Kim, doesn't need double bytes
+e4 e5 Nf3 Nf6 Nc3 Nc6 a3 d5 Bb5 a6 exd5 e4 Qe2 Bg4 Nxe4 Be7 Nxf6+ gxf6 dxc6 Rg8 cxb7+ Kf8 bxa8=Q Qxa8 Bc4 Qc6 d3 f5 Bd2 h5 Bb4 Rg6 Qxe7+ Kg7 Qxf7+ Kh6 Bf8+ Rg7 Qxg7#
+3500000 games
+158 evil games, 0 double byte games, Mikavica, Dragoljub-Vuckovic, Nebojsa, doesn't need double bytes
+e4 d6 d4 Nf6 Nc3 g6 Bg5 Bg7 Qd2 O-O O-O-O Nbd7 h4 c5 Nf3 a6 Kb1 b5 e5 b4 exf6 bxc3 fxe7 Qb6 exf8=Q+ Nxf8 Qxc3 cxd4 Qa3 Ne6 Bc1 Rb8 Bc4 Nc5 Nxd4 Bd7 Nb3 Na4 Qxd6
+3500000 games processed so far
+159 evil games, 0 double byte games, Neelotpal,D-Poobesh Anand,S, doesn't need double bytes
+e4 c5 Nf3 Nc6 Nc3 Nf6 Bb5 Qc7 O-O Nd4 Nxd4 cxd4 Nd5 Nxd5 exd5 Qc5 c4 a6 b4 Qxb4 Ba4 b5 Bc2 bxc4 Rb1 Qa5 d3 c3 d6 Qc5 Bf4 e6 Qf3 Qc6 Qg3 f6 Bd1 c2 Bf3 cxb1=Q Rxb1 Qc5
+160 evil games, 0 double byte games, Carlsen,M-Morozevich,A, doesn't need double bytes
+d4 Nf6 c4 g6 g3 Bg7 Bg2 O-O Nc3 d6 Nf3 c5 O-O Nc6 d5 Na5 Nd2 e5 b3 Ng4 h3 Nh6 Nde4 f6 Nxd6 Qxd6 Ne4 Qd8 Nxc5 f5 d6 e4 d7 Nf7 Rb1 Qe7 dxc8=Q Raxc8 Na4 Rfd8 Qe1 Nc6 Nc3 Nd4 Bb2 b5 Nd5 Qd6 Bxd4 Bxd4 Rd1 Be5 Qa5 bxc4 Ne3 Qc7 Qxc7 Bxc7 Nxc4 Ne5 Rxd8+ Rxd8 Rc1 Nxc4 Rxc4 Rd1+ Bf1 Bd6 e3 a5 Kg2 Kf7 Rc2 Ke7 Be2 Rd5 Bc4 Rd1 g4 f4 exf4 Bxf4 Re2 Rd4 Bd3 Kf6 Bxe4 Rd2 Rxd2 Bxd2 Kg3 Be1 Kf3 Bb4 h4 h6 Ke2 Bd6 Kd3 Bc5 f4 h5 g5+ Kg7 Kc4 Bd6 Kb5 Bxf4 Kxa5 Bg3 Kb5 Bxh4 a4 Bxg5 a5 Kf6 a6 Be3 Kc6 g5 b4 Ke5 b5 Kxe4 b6 g4 a7 g3 a8=Q Kf3 b7 Bf4 Qf8 Ke4 Qe8+
+3600000 games
+3600000 games processed so far
+161 evil games, 0 double byte games, Sharma,RP-Shashikant,K, doesn't need double bytes
+Nf3 Nf6 c4 g6 Nc3 Bg7 d4 O-O g3 d6 Bg2 Nc6 O-O a6 Qd3 Nb4 Qb1 Bg4 h3 Bd7 Rd1 Qc8 Kh2 Re8 a3 Nc6 b4 e5 d5 Nd4 Nd2 h5 e3 Nf5 c5 Qd8 Nb3 Nh6 Na5 Bc8 Qc2 h4 g4 Nfxg4+ hxg4 Nxg4+ Kg1 h3 f3 hxg2 fxg4 Bxg4 e4 Qh4 Be3 Qh1+ Kf2 g1=Q+ Rxg1 Qf3+ Ke1 Qxe3+
+3700000 games
+3700000 games processed so far
+162 evil games, 0 double byte games, Matoussi,Amina-Solomons,A, doesn't need double bytes
+e4 e5 Nf3 Nc6 d4 exd4 Bc4 Be7 c3 dxc3 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qd2 cxb1=Q Rxb1 Nc6 a3 d6 Qf4 Bf6 h4 Qe7 Ng5 Ne5 Be2 Re8 f3 d5 Kf1 Ng6 Qh2 dxe4 Nxe4 Bf5 Bd3 Rad8 Bc2 Bxe4 Bxe4 Rd1+ Ke2 Rxh1 Qxh1 Bxh4 Be3 f5 Bxf5 Qxe3+ Kd1 Qe2+
+163 evil games, 0 double byte games, Mateo,Ra-Caruana,F, doesn't need double bytes
+d4 Nf6 Nf3 e6 g3 b5 Bg2 Bb7 O-O c5 Nc3 a6 Bg5 h6 Bxf6 Qxf6 d5 b4 Ne4 Qxb2 c4 bxc3 Rb1 c2 Qd3 cxb1=Q Rxb1 Qxb1+ Qxb1 Bxd5 Nc3 Bc6 Ne5 Bd6 Nxc6 Nxc6 Bxc6 dxc6 Ne4 Rd8 Qb7 O-O Qxc6 Be7 Qxa6 Rd4 Qb7 Rb4 Qc6 Rbb8 Qa6 Rfd8 a4 Rbc8 Nd2 Ra8 Qc6 Rac8 Qa6 Ra8 Qc6 Rdc8 Qb7 Bf8 Nc4 Rcb8 Qc7 Rc8 Qb7 Rab8 Qd7 Rd8 Qc7 Rdc8 Qd7 Re8 a5 Re7 Qc6 Ra7 Kg2 Be7 Nb6 Rxa5 Qc7 Re8 Qc6 Rf8 e4 Ra2 e5 Rd8 Nc8 Bf8 g4 Rdd2 Qe8 Rxf2+ Kg3 g5 Nd6 Rf4 h3 Raf2
+164 evil games, 0 double byte games, Ozanne,M2-Bongo,Akanga Ndjila Barthelemy, doesn't need double bytes
+e4 c6 d4 d5 f3 Nf6 e5 Ng8 f4 Bf5 Nf3 e6 Be2 c5 c3 Nc6 O-O h6 Be3 Qb6 Qd2 c4 Nh4 Be4 f5 Be7 fxe6 Bxh4 exf7+ Kf8 fxg8=Q+ Kxg8 Na3 Ne7 Bf3 Bd3 Rfd1 Qg6 g3 Rf8 Bg2 Nf5 Bf4 Nxg3 hxg3 Rxf4 gxf4 Bg3 Qe3 Be4 Bxe4 dxe4 Kf1 Kh7 Ke2 Qg4+ Kf1 Rf8 Qxe4+ Kh8 Kg1 Bf2+ Kxf2 Rxf4+ Qxf4 Qxf4+ Kg1 Qg3+ Kh1 Qf4
+165 evil games, 0 double byte games, Vandervorst,JP-Tonneau,Bastien, doesn't need double bytes
+d4 d5 Nc3 Nf6 Bd2 g6 e3 Bg7 Bb5+ c6 Bd3 O-O Nge2 Bf5 e4 dxe4 Bc4 b5 Bb3 Bg4 f3 exf3 Ng3 fxg2 Nge2 Ne4 Nxe4 gxh1=Q+ Kf2 Qxh2+ Ke1 Bxd4 c3 Qh1+ Ng1 Qxg1#
+166 evil games, 0 double byte games, Rasmussen,A-Karlsson,J, doesn't need double bytes
+e4 g6 d4 Bg7 Nc3 a6 a4 b6 Nf3 Bb7 Bc4 e6 O-O Ne7 d5 O-O Bg5 h6 Bh4 g5 Bg3 Ng6 Qd2 Kh7 Rfe1 e5 d6 g4 Nd4 exd4 dxc7 dxc3 cxd8=Q cxd2 Qxb6 dxe1=Q+ Rxe1 Bc6 Bd6 Rc8 Qa5 Bb5 Bxb5 Nc6 Bxc6 Rxc6 Qd5 Re8 e5 Re6 c4 Rcxd6 Qxd6 Rxd6 exd6 a5 Re7 Ne5 c5 Bf6 Kf1 Kg7 Re8 Nc6 Rc8 Bxb2 Rc7 Kf6 Rxd7 Ke6 Rc7 Kd5 Rxf7 Kxc5 d7 Be5 Rh7 Bf4 Ke2 Bg5 Kd3 Kd5 h4 gxh3 gxh3 Ne5+ Ke2 Ke4 Rg7 Bf6 h4 Kf5 h5 Ke6 Rh7 Nxd7 Rxh6 Nf8 Kd3 Kf7 Kc4 Kg7 Rxf6 Kxf6 Kb5 Kg5 Kxa5 Ne6 Kb6 Nf4 Kc6 Nd3 Kb5 Nf4 a5 Nd5 Kc5 Nc7 Kd6 Na6 f4+ Kxh5 f5 Kg5 Ke5 Nb8 f6 Kg6 Ke6 Nc6 a6 Nd4+ Kd7 Nb5 Ke7 Nc7 f7
+3800000 games
+3800000 games processed so far
+167 evil games, 0 double byte games, Do Santos Julio,J-Farmer Negrini,L, doesn't need double bytes
+e4 e5 Nf3 Nc6 d4 d5 Nxe5 Nxe5 dxe5 d4 Bc4 Bc5 e6 Qh4 exf7+ Kf8 fxg8=Q+ Rxg8 Qf3+ Ke7 Bxg8 Bd7 Qf7+ Kd6 O-O Qxe4 Nd2 Qf5 Nc4+ Kc6 Qxg7 Kb5 a4+ Ka6 Bxh7 Qd5 Bd3 b5 Qg6+ Bb6 axb5+ Kb7 Be4
+168 evil games, 0 double byte games, Maldonado,Hector-Cano Acosta,Luis, doesn't need double bytes
+d4 d5 c4 Nc6 Nc3 Nf6 cxd5 Na5 Qa4+ c6 b4 Nc4 dxc6 Nb6 cxb7+ Bd7 bxa8=Q Qxa8 Qc2 e6 Rb1 Ba4 Nxa4 Bxb4+ Rxb4 O-O Nxb6 axb6 e3 Rc8 Rc4 Re8 Nf3 Ne4 Bd3 Nd6 Rc6 Nc8 Bxh7+ Kf8 a4 f6 Ba3+ Kf7 Rxc8 Rxc8 Qg6#
+169 evil games, 0 double byte games, Khaziev,A-Ryskanov,Ildar, doesn't need double bytes
+e4 e5 Nc3 Bc5 Bc4 Nf6 d3 d6 f4 Ng4 f5 Nf2 Qh5 g6 Qh6 Nd7 Bg5 f6 fxg6 c6 g7 Ke7 gxh8=Q Qxh8 Be3 Nxh1 Ke2 b5 Bb3 Bxe3 Kxe3 Nc5 Nf3 Nxb3 axb3 Qg8 g3 Nxg3 hxg3 d5 Kf2 Bg4 Rh1 Kd6 Qxf6+ Kc5 Rh6 Rc8 Qe7+ Kb6 Nxd5+ Ka6 Nb4+ Kb6 Nd5+ Ka6 Nc7+ Kb6 Nxb5 Kxb5 Qb7+ Ka5 Qxa7+ Kb5 c4+ Kb4 Qb6#
+3900000 games
+3900000 games processed so far
+170 evil games, 0 double byte games, Wakabayashi,Hisako-Vazquez Maccarini,Danitza, doesn't need double bytes
+e4 c5 f4 Nc6 Nf3 e6 g3 g6 Bg2 Bg7 c3 Nge7 O-O d6 d3 O-O Be3 Rb8 Nbd2 b5 a3 a5 Qe2 b4 Rac1 Ba6 c4 Bxb2 Rb1 bxa3 Ne1 a2 Rd1 a1=Q Rxa1 Bxa1 Nef3 Bb2 Ng5 a4 Qg4 h5 Qh4 Bf6 g4 Bxg5 fxg5 hxg4 Qxg4 a3 Qd1 a2 Nb3 Qb6 Rf2 Qxb3 Qxb3 Rxb3 Rxa2 Nb4 Bf4 Nxa2 Bxd6 Re8 Bxc5 Rxd3
+171 evil games, 0 double byte games, Kacakovski,D-Imeri,Nazmedin, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bc4 Be7 d4 exd4 c3 dxc3 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qe2 cxb1=Q Rxb1 c5 O-O d6 h3 a6 a3 Nc6 Rd1 Be6 Bf4 Qc7 Rbc1 Bxc4 Rxc4 Ne5 Bxe5 dxe5 Rd5 f6 Rc3 b5 Nh4 Rfd8 Qg4 Rxd5 exd5 Bf8 Rg3 g6 Nf5 Kh8 Ne3 f5 Qd1 f4
+172 evil games, 0 double byte games, Rigonati,Eduardo Santana-Santana,A, doesn't need double bytes
+e4 e5 Nf3 Nc6 d4 exd4 Bc4 Be7 c3 dxc3 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qd2 cxb1=Q Rxb1 Nc6 O-O d6 a3 Be6 Bd5 Qd7 b3 Bxd5 exd5 Ne5 Nxe5 dxe5 Bb2 Bd6 Rfe1 f6 Rbc1 Rad8 Red1 Rfe8 Qa5 a6 Qc3 Re7 Rc2 Qg4 Qc4 Qxc4 bxc4 Bc5 Rcd2 Red7 Bc3 b6 a4 a5 Kf1 Kf7 Ke2 Ke7 f3 Kd6 g4 Bb4 Kd3 Kc5 Kc2 Kxc4
+173 evil games, 0 double byte games, Lubbe,N-Gustafsson,J, doesn't need double bytes
+d4 Nf6 Nc3 d5 Bf4 e6 e3 Be7 Bd3 O-O Nf3 c5 dxc5 Nbd7 b4 b6 Nd4 Bb7 c6 Qc8 cxb7 Qxc3+ Kf1 Rae8 Nb5 Qc6 b8=Q Nxb8 a3 a6 Nc7 Rc8 Nxa6 Nbd7 b5 Qc3 g4 Nxg4 Rb1 Nge5 Rb3 Qa5 Rg1 Ng6 Bg3 f5 f4 Qa4 Be1 Nc5 Bb4 Nxd3 Qxd3 Rf7 Rg2 Bf6 Be1 Rc4 Rb4 Rxb4 Bxb4 d4 Qc4 dxe3 Re2 h6 Rxe3 Nxf4 Kg1 g5 Qc6 Bd4 Kf2 Nd5 Kf3 g4+ Kg3 Nxe3 Nc7 Be5+ Kh4 Bxc7 Kh5 Qxc2 Qxe6 f4 Qe8+ Kg7
+4000000 games
+4000000 games processed so far
+174 evil games, 0 double byte games, Lisiecki,Robert-Bienkowski,Tadeusz, doesn't need double bytes
+e4 e5 Nf3 Nc6 d4 exd4 Bc4 Be7 c3 dxc3 Qd5 Nh6 Bxh6 O-O Bc1 Nb4 Qd1 c2 Qd2 cxb1=Q Rxb1 Nc6 O-O d6 b3 a6 Qe2 Na5 Bd3 b5 Bd2 Nc6 Rbd1 Be6 Bf4 Re8 e5 dxe5 Bxh7+ Kxh7 Rxd8 Rexd8 Qe4+ Bf5 Qxf5+ Kg8 Bg5 Bxg5 Qxg5 Nd4 Nxd4 Rxd4 Qxe5 Rad8 Qxc7 Rd1
+175 evil games, 0 double byte games, Nadjezhdin,D-Tantsiura,M, doesn't need double bytes
+d4 g6 e4 d6 Nc3 Bg7 f4 a6 Nf3 b5 a3 Bb7 Bd3 Nd7 O-O c5 d5 c4 Be2 Qb6+ Kh1 Ngf6 Ng5 h6 Nh3 O-O Bf3 a5 Qe1 b4 Be3 Qd8 Nd1 Nc5 Bd4 b3 Bxc5 bxc2 Bd4 cxd1=Q Rxd1 Re8 Qc3 a4 Nf2 Qa5 Rc1 Qxc3 Bxc3 h5 Rfe1 Bh6 g3 Bg7 Kg2 Rab8 h3 Bh6 Rc2 Kf8 Nd1 h4 Ne3 hxg3 Kxg3 Rbc8 Ng4 Nh5+ Kf2 Bxf4 Rg1 e6 Re2 exd5 exd5 Rxe2+ Kxe2 Re8+ Kd1 f5 Nf2 Ng3 Nh1 Nxh1 Bxh1 Kf7 h4 Be5 h5 gxh5 Bf3 Rh8 Rg5 Bxc3 bxc3 Kf6 Rxh5 Rxh5 Bxh5 Bxd5
+176 evil games, 0 double byte games, Priwitzer,Viliam-Karaivanova,Petya F, doesn't need double bytes
+e4 e5 Nf3 Nc6 Bc4 d5 exd5 Bf5 dxc6 Bc5 O-O Nf6 Nxe5 O-O cxb7 Qb8 bxa8=Q Qxa8 Nc3 c6 d4 g6 dxc5 Kh8 Nxf7+ Kg7 Bh6+ Kg8 Nd6+ Kh8 Nxf5 Qb8 Bg7#
+177 evil games, 0 double byte games, Elbasuny,F-Abdel Ghany,S, doesn't need double bytes
+d4 d5 Nf3 Nf6 g3 c6 Bg2 Bf5 O-O h6 c4 e6 Nc3 Nbd7 c5 b6 b4 a5 b5 Be7 bxc6 Nb8 Qa4 O-O Bf4 Qc8 c7 Na6 cxb6 Qb7 Qb5 g5 Be5 Ne8 Nd2 Bb4 Rac1 Bxc3 Rxc3 f6 c8=Q Rxc8 Rxc8 Qxc8 b7 Qd8 b8=Q Nxb8 Bxb8 Nc7 Bxc7 Qxc7 e4 dxe4 Nxe4 Qc2 Re1 Qxa2 d5 Bxe4 Bxe4 Qd2 Re3 f5 Bg2 Qd1+ Qf1 Qxf1+ Kxf1 exd5 Bxd5+ Kg7 Re7+ Kf6 Ra7 Re8 Rxa5 Re5 Ra6+ Kg7 Bc4 Rc5 Bd3 Rc1+ Ke2 Rh1 Bxf5 Rxh2 Be4 Kf7 Ke3 Kg7 g4 Rh3+ f3 Kf8 Bg6 Rh1 Kd4 Kg7 Ke5 Re1+ Be4
+4100000 games
+4100000 games processed so far
+178 evil games, 0 double byte games, Xiu Deshun-Wen Yang, doesn't need double bytes
+d4 Nf6 c4 g6 Nc3 Bg7 e4 d6 f3 O-O Be3 e5 Nge2 c6 Qd2 Nbd7 O-O-O a6 Kb1 b5 c5 Qa5 Qc2 d5 exd5 b4 dxc6 bxc3 cxd7 Nd5 dxc8=Q Rfxc8 Qe4 Rab8 Bc1 Rxb2+ Bxb2 Rb8 Ka1 Rxb2 Nxc3 Qxc3 Qd3 exd4 Qxc3 dxc3 Rxd5 Rb8 Rd8+ Rxd8 Kb1 Rd2 g3 Bd4
+179 evil games, 0 double byte games, Kreisl,R-Brunello,S, doesn't need double bytes
+Nf3 c5 c4 g6 e4 Bg7 d4 Qa5+ Nc3 Nc6 d5 Nd4 Bd2 d6 Nxd4 cxd4 Nb5 Qd8 Bb4 a5 Ba3 Nf6 e5 Ne4 Qe2 Bf5 exd6 O-O dxe7 Qb6 g4 d3 c5 Qf6 exf8=Q+ Rxf8 Qxd3 Nxf2 Qf3 Nxh1 gxf5 Re8+ Kd1 Qh4 Kc2 Qxh2+ Bg2 Ng3 Rd1 Nxf5 Kb1 Re3 Qf2 Rg3 c6 Be5 c7 Bxc7 Nxc7 Rxg2 Qc5 Kg7 Qf8+ Kf6 Qd8+ Ke5 Re1+ Kf4 Bd6+ Nxd6 Qxd6+ Kg4 Qxh2 Rxh2 Rd1
+4200000 games
+4200000 games processed so far
+4300000 games
+4300000 games processed so far
+180 evil games, 0 double byte games, Sukhareva,E-Zasypkina,E, doesn't need double bytes
+d4 d5 Nf3 Nf6 c4 e6 Bg5 c6 Qc2 Qa5+ Nbd2 Ne4 Bf4 Nd7 a3 Ndf6 c5 Be7 h3 h6 e3 Nxd2 Nxd2 O-O Be2 Qd8 b4 Nd7 a4 Re8 Qc3 Bf6 Nf3 Qe7 Bd6 Qd8 O-O Be7 Bh2 Nf6 Rfb1 Bd7 b5 Qc8 Ne5 Bd8 b6 a6 Qc2 Be7 Nd3 Ne4 f3 Nf6 a5 Qd8 Bc7 Qc8 Nb4 Rf8 Be5 Nh7 Nxa6 bxa6 b7 Qd8 b8=Q Rxb8 Rxb8 Bc8 Bxa6 Qd7 Bxc8 Rxc8 a6
+181 evil games, 0 double byte games, Azhar,Puteri Rifqah Fahada-Nithyalakshmi,Sivanesan, doesn't need double bytes
+Nf3 Nf6 c4 g6 g3 Bg7 Bg2 O-O Nc3 d6 Qc2 e5 d3 Nc6 a3 a5 O-O Nh5 Bg5 f6 Bd2 f5 Ng5 Ne7 Qb3 c6 c5+ d5 e4 h6 exd5 hxg5 dxc6+ Kh7 cxb7 Rb8 bxc8=Q Qxc8 Qc2 Qxc5 Bxg5 Nc6 Bxc6 Qxc6 Rab1 Qd7 h3 f4 Kh2 Qf5 Ne4 Qe6 g4 Nf6 Bxf6 Bxf6 Qc4 Qd7 Rfc1 Bg7 Ng5+ Kh6 Ne6 Rfc8 Qa2 Qxd3 Nxg7 Kxg7 Qe6 Qd4 Qe7+ Kh8 Qf6+ Kh7 Qf7+ Kh6 g5+ Kxg5 Rg1+
+182 evil games, 0 double byte games, Kocur,M-Tremblay,Mario, doesn't need double bytes
+Nf3 d6 g3 Nc6 Bg2 e5 d3 h6 c4 Nge7 Nc3 g6 Rb1 Bg7 b4 Nf5 e3 O-O b5 Nb8 a4 Nd7 O-O Ne7 Qc2 f5 a5 Rb8 Nd5 Nxd5 cxd5 Nf6 Qc4 g5 Bb2 Bd7 Nxe5 dxe5 d6+ Kh7 dxc7 Qe7 cxb8=Q Rxb8 Qc7 b6
+4400000 games
+4400000 games processed so far
+183 evil games, 0 double byte games, Eroglu,Celik-Alagoz,Ramazan, doesn't need double bytes
+d4 c6 Nf3 d6 e4 Bg4 h3 Bxf3 Qxf3 g6 Nc3 Bg7 Bc4 a6 d5 e5 dxc6 Qe7 Nd5 Qd8 c7 Qd7 c8=Q+ Qxc8 Nb6 Qc7 Nxa8 Qxc4 b3 Qc3+ Qxc3 Nc6
+184 evil games, 0 double byte games, Hedlerfog,Robert-Hinrichs,Kurt, doesn't need double bytes
+b3 d5 Bb2 e6 e3 Ne7 g3 f6 Be2 Bd7 c4 Nf5 Qc2 Bc6 Nf3 Nd7 d4 Bd6 c5 Be7 b4 b6 cxb6 Nb8 b5 Bd7 bxc7 Qc8 cxb8=Q Rxb8 Qxc8+ Rxc8 Bd3 Nd6 a4 Bd8 O-O O-O Ba3 Bc7 Nbd2 Rfe8 Rac1 Red8 Rc2 Ne8 Be7
+185 evil games, 0 double byte games, Tapp,Jacob-Metaxasz,V, doesn't need double bytes
+d4 d5 Bf4 Nf6 Nf3 c6 e3 Bg4 Be2 e6 c3 Be7 Nbd2 Nbd7 Qc2 O-O O-O c5 Nb3 Bf5 Qd1 h6 Bb5 a6 Bxd7 Nxd7 Ne5 Nxe5 Bxe5 c4 Nc5 b6 Na4 b5 Nc5 Qc8 b4 cxb3 Nd3 Qxc3 Nf4 b2 Ne2 bxa1=Q Qxa1 Qxa1 Rxa1 Rac8 Ng3 Rc2 Nh5 Rfc8 Rf1 Bd3 Rd1 Rc1 h3 Rxd1+ Kh2 f6 Bf4 g5 Bxg5 hxg5 Kg3 Bg6 Nxf6+ Bxf6 f4 Rc3 Kf3 Be4+ Kg4 gxf4 Kh5 Rxe3 g4 Rxh3#
+4500000 games
+4500000 games processed so far
+186 evil games, 0 double byte games, Mosallam,Mohammad-Al Naimi,Sultan Mohamed, doesn't need double bytes
+e4 e5 Nc3 Nc6 g3 d6 Bg2 Bd7 Nge2 Qc8 Nd5 Nce7 Nec3 Nxd5 Nxd5 Ne7 Nxe7 Bxe7 O-O O-O d3 Re8 f4 Bf6 f5 g6 fxg6 Be7 gxf7+ Kh8 fxe8=Q+ Qxe8 Qf3 Qc8 Qf7 Bd8 Qf8#
+187 evil games, 0 double byte games, Tveten,Per-Bullock,Lee, doesn't need double bytes
+e4 c5 c4 d6 Nc3 Nf6 h3 g6 d3 Bg7 Nf3 O-O g3 a6 Bd2 Nc6 Qc1 Re8 Bg2 Nb4 Bf1 Rb8 a3 Nc6 Rb1 b5 b3 b4 Nd5 Nxd5 cxd5 Nd4 Bg2 bxa3 Nxd4 a2 Nc6 axb1=Q Qxb1 Qb6 Nxb8 Qxb8 O-O e6 Qc2 exd5 exd5 Bf5 Re1 Rxe1+ Bxe1 Qb5 Be4 Bxh3 Qc4 Qb6 Kh2 Bg4 Bxg6 Bd1 Be4 Bxb3 Qc1 Qd8 Qf4 Bd1 f3 Qf6 Qg4 Qh6+ Kg2 Qe3 Bc3 Qh6 Qc8+ Bf8 Qg4+ Bg7 Qc8+ Bf8
+188 evil games, 0 double byte games, Bulcourf,C-Laurnagaray,Santiago, doesn't need double bytes
+b4 d5 Nf3 Bf5 e3 e6 Bb2 Nf6 c4 c6 b5 Be7 a4 O-O Nc3 Nbd7 Nd4 Bg6 bxc6 e5 cxb7 exd4 bxa8=Q Qxa8 Nxd5 Nxd5 cxd5 d3 h4 h5 Ba3 Bxa3 Rxa3 Qxd5 Qb3 Rb8 Qd1 Ne5 f3 Ng4 fxg4 Qd6 Kf2 Qxa3 gxh5 Bf5 g4 Be4 Bg2 Bxg2 Kxg2 Rb4 Rf1 Qxa4 Qxa4 Rxa4 Kf3 a5 e4 Kf8 Ke3 Ra3 g5 Ke7 g6 f6 e5 Ra4 h6 Rg4 exf6+ gxf6 h7
+189 evil games, 0 double byte games, Ekdyshman,M-Raznikov,D, doesn't need double bytes
+d4 Nf6 Nf3 d5 c4 c6 e3 Bf5 Nc3 e6 Bd3 Bg6 O-O Nbd7 b3 Bd6 Bb2 Qe7 Re1 Ne4 Bxe4 dxe4 Nd2 f5 b4 Qh4 Nf1 Nf6 c5 Bc7 Ne2 Nd5 Qb3 Bh5 Neg3 Bg4 b5 h5 Bc1 Qf6 Nd2 h4 Ngf1 Qg5 f4 exf3 e4 fxg2 exd5 gxf1=Q+ Nxf1 f4 Kf2 Qxd5 Qxd5 cxd5 Nd2 Kf7 Rg1 Bf5 Nf3 Kf6 Ne5 g5 a4 h3 a5 Be4 a6 bxa6 Rxa6 Bxe5 dxe5+ Kf5 Rd1 g4 Kg1 g3 Rf1 f3
+Finished 4591729 total games
+
+total_moves=350995326
+nbr_compress_fast = 350990009
+nbr_compress_slow =      5317
+nbr_uncompress_fast = 350990009
+nbr_uncompress_slow =    5317
+                    ---------
+                    350995326
+
+New algorithm
+=============
+
+
+x=0,0 z=432,432, height=432, width=432, row_stride=1728
+a,r,g,b = 255,255,0,0
+2015-08-19 12:51:05.399 t3[90146:303] CoreText performance note: Client called CTFontCreateWithName() using name "Times" and got font with PostScript name "Times-Roman". For best performance, only use PostScript names when calling this API.
+2015-08-19 12:51:05.400 t3[90146:303] CoreText performance note: Set a breakpoint on CTFontLogSuboptimalRequest to debug.
+2015-08-19 12:51:05.406 t3[90146:303] CoreText performance note: Client called CTFontCreateWithName() using name "Times" and got font with PostScript name "Times-Roman". For best performance, only use PostScript names when calling this API.
+SetGameDocument() pos = 0
+clear() stack_size()=0
+push_back() stack_size()=1
+New tab idx=0, pos=0
+2015-08-19 12:51:05.518 t3[90146:303] CoreText performance note: Client called CTFontCreateWithName() using name ".Lucida Grande UI" and got font with PostScript name ".LucidaGrandeUI". For best performance, only use PostScript names when calling this API.
+100000 games
+100000 games processed so far
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+200000 games
+200000 games processed so far
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many light bishops!
+300000 games
+300000 games processed so far
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many rooks!
+Too many rooks!
+400000 games
+400000 games processed so far
+500000 games
+500000 games processed so far
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+600000 games
+600000 games processed so far
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+700000 games
+700000 games processed so far
+800000 games
+800000 games processed so far
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many dark bishops!
+Too many dark bishops!
+900000 games
+900000 games processed so far
+1000000 games
+1000000 games processed so far
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+1100000 games
+1100000 games processed so far
+1200000 games
+1200000 games processed so far
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+1300000 games
+1300000 games processed so far
+Too many dark bishops!
+Too many dark bishops!
+1400000 games
+1400000 games processed so far
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+1500000 games
+1500000 games processed so far
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+1600000 games
+1600000 games processed so far
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+1700000 games
+1700000 games processed so far
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+1800000 games
+1800000 games processed so far
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+1900000 games
+1900000 games processed so far
+2000000 games
+2000000 games processed so far
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+2100000 games
+2100000 games processed so far
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+2200000 games
+2200000 games processed so far
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+2300000 games
+2300000 games processed so far
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+2400000 games
+2400000 games processed so far
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+2500000 games
+2500000 games processed so far
+Too many rooks!
+Too many rooks!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+2600000 games
+2600000 games processed so far
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+2700000 games
+2700000 games processed so far
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+2800000 games
+2800000 games processed so far
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+2900000 games
+2900000 games processed so far
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many light bishops!
+Too many light bishops!
+3000000 games
+3000000 games processed so far
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+3100000 games
+3100000 games processed so far
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+3200000 games
+3200000 games processed so far
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+Too many dark bishops!
+3300000 games
+3300000 games processed so far
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+Too many rooks!
+3400000 games
+3400000 games processed so far
+Too many rooks!
+Too many rooks!
+Too many knights!
+Too many knights!
+3500000 games
+3500000 games processed so far
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+3600000 games
+3600000 games processed so far
+3700000 games
+3700000 games processed so far
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+3800000 games
+3800000 games processed so far
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+3900000 games
+3900000 games processed so far
+4000000 games
+4000000 games processed so far
+Too many knights!
+Too many knights!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many light bishops!
+Too many knights!
+Too many knights!
+Too many rooks!
+Too many rooks!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+4100000 games
+4100000 games processed so far
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+4200000 games
+4200000 games processed so far
+Too many rooks!
+Too many rooks!
+Too many dark bishops!
+Too many dark bishops!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+4300000 games
+4300000 games processed so far
+4400000 games
+4400000 games processed so far
+4500000 games
+4500000 games processed so far
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Too many knights!
+Finished 4591729 total games
+
+New
+nbr_compress_fast = 350937972
+nbr_compress_slow = 57354
+nbr_uncompress_fast = 350937972
+nbr_uncompress_slow =     57354  0.016%
+                      ---------
+                      350995326
+total = 350995326
+
+Old:
+total_moves=350995326
+nbr_compress_fast = 350990009
+nbr_compress_slow =      5317  0.0015%
+                    ---------
+                    350995326  
+

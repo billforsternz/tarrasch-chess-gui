@@ -5,6 +5,8 @@
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
 #define _CRT_SECURE_NO_DEPRECATE
+#include <time.h> // time_t
+#include <stdio.h>
 #include "wx/wx.h"
 #include "wx/valtext.h"
 #include "wx/valgen.h"
@@ -19,8 +21,9 @@
 #include "Repository.h"
 #include "PgnFiles.h"
 #include "Lang.h"
+#include "PgnDocument.h"
+#include "PgnRead.h"
 #include "GamesCache.h"
-#include <stdio.h>
 using namespace std;
 
 bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen );
@@ -214,6 +217,8 @@ bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen )
 
 bool GamesCache::Load( FILE *pgn_file )
 {
+    cprintf( "GamesCache::Load() begin\n" );
+    int game_count=0;
     gc_fixme = this;
     file_irrevocably_modified = false;
     int typ;
@@ -231,14 +236,69 @@ bool GamesCache::Load( FILE *pgn_file )
             gds.push_back( std::move(new_doc) );
             if( !done )
                 fposn = ftell(pgn_file);
+            game_count++;
         }
     }
+    cprintf( "GamesCache::Load() end count = %d\n", game_count );
     return true;
+}
+
+static CompactGame *phook;
+void pgn_read_hook( const char *white, const char *black, const char *event, const char *site, const char *result,
+                                    const char *date, const char *white_elo, const char *black_elo,
+                                    int nbr_moves, thc::Move *moves, uint64_t *hashes  )
+{
+    phook->r.white     = std::string(white);
+    phook->r.black     = std::string(black);
+    phook->r.event     = std::string(event);
+    phook->r.site      = std::string(site);
+    //phook->r.round   = std::string(round);
+    phook->r.result    = std::string(result);
+    phook->r.date      = std::string(date);
+    //phook->r.eco     = std::string(eco);
+    phook->r.white_elo = std::string(white_elo);
+    phook->r.black_elo = std::string(black_elo);
+    phook->moves       = std::vector<thc::Move>(moves,moves+nbr_moves);
+}
+
+void *ReadGameFromPgnInLoop( int pgn_handle, long fposn, CompactGame &pact, void *context, bool end )
+{
+    static FILE *pgn_file;
+    static int save_pgn_handle;
+    PgnRead *pgn;
+    if( context )
+        pgn = static_cast<PgnRead*>( context );
+    else
+        pgn = new PgnRead('R'); 
+    if( pgn_file && pgn_handle!=save_pgn_handle )
+    {
+        objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
+        pgn_file = NULL;
+        save_pgn_handle = 0;
+    }
+    if( !pgn_file )
+    {
+        pgn_file  = objs.gl->pf.ReopenRead( pgn_handle );
+        save_pgn_handle = pgn_handle;
+    }
+    fseek( pgn_file, fposn, SEEK_SET );
+    phook = &pact;
+    pgn->Process(pgn_file);
+    if( end )
+    {
+        objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
+        pgn_file = NULL;
+        save_pgn_handle = 0;
+        delete pgn;
+        pgn = 0;
+    }
+    //cprintf( "ReadGameFromPgnInLoop(%d,%s) %ld (%s-%s)\n", pgn_handle, end?"true":"false", fposn, pact.r.white.c_str(), pact.r.black.c_str() );
+    return( pgn );
 }
 
 void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &new_doc )
 {
-    cprintf( "ReadGameFromPgn(%d) %ld\n", pgn_handle, fposn );
+    //cprintf( "ReadGameFromPgn(%d) %ld\n", pgn_handle, fposn );
     GameDocument gd;
     FILE *pgn_file = objs.gl->pf.ReopenRead( pgn_handle );
     std::string moves;
@@ -364,7 +424,10 @@ bool GamesCache::Tagline( GameDocument &gd,  const char *s )
             if( tag == "BlackElo" )
                 gd.r.black_elo = val;
             if( tag == "FEN" )
+            {
+                gd.r.fen = val;
                 gd.start_position.Forsyth(val.c_str());
+            }
         }
     }
     return is_header;
@@ -380,7 +443,7 @@ bool GamesCache::FileCreate( std::string &filename, GameDocument &gd )
     gds.clear();
     gd.in_memory = true;
     gd.pgn_handle = 0;
-    make_smart_ptr( HoldDocument, new_doc, gd );
+    make_smart_ptr( GameDocument, new_doc, gd );
     gds.push_back( std::move(new_doc) );
     FILE *pgn_out = objs.gl->pf.OpenCreate( pgn_filename, pgn_handle );
     if( pgn_out )
@@ -403,46 +466,6 @@ void GamesCache::FileSave( GamesCache *gc_clipboard )
     {
         FileSaveInner( gc_clipboard, pgn_in, pgn_out );
         objs.gl->pf.Close( gc_clipboard );    // close all handles
-    }
-    FILE *debug = NULL; //fopen( "Bill.txt", "at" );
-    if( debug )
-    {
-        fprintf( debug, "After FileSave(): pgn_handle=%d\n", pgn_handle );
-        int gds_nbr = gds.size();
-        for( int i=0; i<gds_nbr; i++ )    
-        {   
-            GameDocument *ptr = gds[i]->GetGameDocumentPtr();
-            if( ptr )
-            {
-                int handle      = ptr->pgn_handle;
-                bool modified   = ptr->modified;
-                bool in_memory  = ptr->in_memory;
-                long fposn0     = ptr->fposn0;
-                long fposn1     = ptr->fposn1;
-                long fposn2     = ptr->fposn2;
-                long fposn3     = ptr->fposn3;
-                fprintf( debug, "handle=%d, modified=%d, in_memory=%d\n"
-                                " fposn0=%ld,\n"
-                                " fposn1=%ld,\n"
-                                " fposn2=%ld,\n"
-                                " fposn3=%ld,\n",
-                                handle, modified, in_memory, fposn0,
-                                               fposn1, fposn2, fposn3 );
-            }
-        }
-        FILE *in = fopen( "/Users/Bill/Documents/Tarrasch/bug5b.pgn", "rt" );
-        if( in )
-        {
-            fprintf( debug, "/Users/Bill/Documents/Tarrasch/bug5b.pgn = " );
-            int ch = fgetc(in);
-            while( ch != EOF )
-            {
-                fputc(ch,debug);
-                ch = fgetc(in);
-            }
-            fclose(in);
-        }
-        fclose(debug);
     }
 }
 
@@ -653,7 +676,7 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
                         p = objs.tabs->Next();
                     }
                 }
-        }
+            }
         }
     }
     
@@ -676,274 +699,8 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
 }
 
 
-
-// Save common
-#if 0
-void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pgn_out )
-{
-    char *buf;
-    int buflen=100;
-    file_irrevocably_modified = false;
-    buf = new char [buflen];
-    int gds_nbr = gds.size();
-    FILE *debug = NULL;//fopen( "Bill.txt", "at" );
-    if( debug )
-    {
-        fprintf( debug, "Before: pgn_handle=%d\n", pgn_handle );
-        for( int i=0; i<gds_nbr; i++ )    
-        {   
-            GameDocument *ptr = gds[i]->GetGameDocumentPtr();
-            if( ptr )
-            {
-                int handle      = ptr->pgn_handle;
-                bool modified   = ptr->modified;
-                bool in_memory  = ptr->in_memory;
-                long fposn0     = ptr->fposn0;
-                long fposn1     = ptr->fposn1;
-                long fposn2     = ptr->fposn2;
-                long fposn3     = ptr->fposn3;
-                fprintf( debug, "handle=%d, modified=%d, in_memory=%d\n"
-                                " fposn0=%ld,\n"
-                                " fposn1=%ld,\n"
-                                " fposn2=%ld,\n"
-                                " fposn3=%ld,\n",
-                                handle, modified, in_memory, fposn0,
-                                               fposn1, fposn2, fposn3 );
-            }
-        }
-        fclose(debug);
-    }
-    // Sort by game_nbr, save current order in .game_nbr for restore later
-    if( !renumber )
-    {
-        for( int i=0; i<gds_nbr; i++ )    
-        {   
-            GameDocument *ptr = gds[i]->GetGameDocumentPtr();
-            if( ptr )
-            {
-                ptr->sort_idx = ptr->game_nbr;
-                ptr->game_nbr = i;
-            }
-        }
-        sort( gds.begin(), gds.end() );
-    }
-    long posn=0;
-    for( int i=0; i<gds_nbr; i++ )    
-    {   
-        GameDocument *ptr = gds[i]->GetGameDocumentPtr();
-        if( ptr )
-        {
-            bool replace_game_prefix = true;
-            bool replace_game_details = true;
-            bool replace_moves = true;
-            ptr->modified = false;
-            replace_game_prefix = ptr->game_prefix_edited || ptr->pgn_handle==0;
-            ptr->game_prefix_edited = false;
-            replace_game_details = ptr->game_details_edited || ptr->pgn_handle==0;
-            ptr->game_details_edited = false;
-            replace_moves = ptr->in_memory || ptr->pgn_handle==0;
-            bool no_replacements = (!replace_moves && !replace_game_details && !replace_game_prefix);
-            bool replace_all     = (replace_moves && replace_game_details && replace_game_prefix);
-
-            //   fposn0
-            //     prefix text
-            //   fposn1
-            //     [game details]
-            //   fposn2
-            //     [game moves]
-            //   fposn3
-            //
-            long fposn0 = ptr->fposn0;
-            long fposn1 = ptr->fposn1;
-            long fposn2 = ptr->fposn2;
-            long fposn3 = ptr->fposn3;
-            long len;
-            bool same_file = (ptr->pgn_handle==pgn_handle);
-            FILE *pgn = pgn_in;
-            if( !same_file && !replace_all )
-            {
-                pgn = objs.gl->pf.ReopenRead( ptr->pgn_handle );
-                if( !pgn )
-                    continue; // whoops, can't read the game
-            }
-            ptr->pgn_handle = pgn_handle;  // irrespective of where it came from, now this
-                                             //  game is in this file
-            ptr->fposn0 = posn;            
-                                            
-            if( no_replacements )
-            {
-                len = fposn3-fposn0;
-                fseek(pgn,fposn0,SEEK_SET);
-                while( len >= buflen )
-                {
-                    delete[] buf;
-                    buflen *= 2;
-                    buf = new char [buflen];
-                }
-                fread(buf,1,len,pgn);
-                fwrite(buf,1,len,pgn_out);
-                ptr->fposn1 = posn + (fposn1-fposn0);
-                ptr->fposn2 = posn + (fposn2-fposn0);
-                posn += len;
-                ptr->fposn3 = posn;
-            }
-            else
-            {
-                ptr->fposn0 = posn;
-                std::string s = ptr->prefix_txt;
-                int len = s.length();
-                if( len > 0 )
-                {
-                    if( i != 0 )    // blank line needed before all but first prefix
-                    {
-                        fwrite( "\r\n", 1, 2 ,pgn_out);
-                        posn += 2;
-                    }
-                    fwrite( s.c_str(),1,len,pgn_out);
-                    fwrite( "\r\n", 1, 2 ,pgn_out);
-                    posn += (len+2);
-                }
-                ptr->fposn1 = posn;
-                if( replace_game_details )
-                {
-                    std::string str;
-                    GameDocument temp = *ptr;
-                    temp.ToFileTxtGameDetails( str );
-                    fwrite(str.c_str(),1,str.length(),pgn_out);
-                    posn += str.length();
-                }
-                else
-                {
-                    len = fposn2-fposn1;
-                    fseek(pgn,fposn1,SEEK_SET);
-                    while( len >= buflen )
-                    {
-                        delete[] buf;
-                        buflen *= 2;
-                        buf = new char [buflen];
-                    }
-                    fread(buf,1,len,pgn);
-                    fwrite(buf,1,len,pgn_out);
-                    posn += len;
-                }
-                ptr->fposn2 = posn;
-                if( replace_moves )
-                {
-                    std::string str;
-                    GameDocument temp = *ptr;
-                    temp.ToFileTxtGameBody( str );
-                    fwrite(str.c_str(),1,str.length(),pgn_out);
-                    posn += str.length();
-                }
-                else
-                {
-                    len = fposn3-fposn2;
-                    fseek(pgn,fposn2,SEEK_SET);
-                    while( len >= buflen )
-                    {
-                        delete[] buf;
-                        buflen *= 2;
-                        buf = new char [buflen];
-                    }
-                    fread(buf,1,len,pgn);
-                    fwrite(buf,1,len,pgn_out);
-                    posn += len;
-                }
-                ptr->fposn3 = posn;
-
-                // Fix a nasty bug in T2 up to and including V2.01. A later PutBackDocument()
-                //  was overwriting the correctly calculated values of fposn0 etc. with stale
-                //  values. Fix is to update those stale values here.
-                GameDocument *p = objs.tabs->Begin();
-                while( p )
-                {
-                    if( ptr->game_being_edited == p->game_being_edited )
-                    {
-                        p->fposn0 = ptr->fposn0;
-                        p->fposn1 = ptr->fposn1;
-                        p->fposn2 = ptr->fposn2;
-                        p->fposn3 = ptr->fposn3;
-                        p->pgn_handle = ptr->pgn_handle;
-                    }
-                    p = objs.tabs->Next();
-                }
-            }
-        }
-    }
-
-    // Restore sort order .game_nbr field is restored to its original value
-    if( !renumber )
-    {
-        for( int i=0; i<gds_nbr; i++ )    
-        {   
-            GameDocument *ptr = gds[i]->GetGameDocumentPtr();
-            if( ptr )
-            {
-                int temp = ptr->sort_idx;
-                ptr->sort_idx = ptr->game_nbr;
-                ptr->game_nbr = temp;
-            }
-        }
-        sort( gds.begin(), gds.end() );
-    }
-    delete[] buf;
-    debug = NULL;//fopen( "Bill.txt", "at" );
-    if( debug )
-    {
-        fprintf( debug, "After: pgn_handle=%d\n", pgn_handle );
-        for( int i=0; i<gds_nbr; i++ )    
-        {   
-            GameDocument *ptr = gds[i]->GetGameDocumentPtr();
-            if( ptr )
-            {
-                int handle      = ptr->pgn_handle;
-                bool modified   = ptr->modified;
-                bool in_memory  = ptr->in_memory;
-                long fposn0     = ptr->fposn0;
-                long fposn1     = ptr->fposn1;
-                long fposn2     = ptr->fposn2;
-                long fposn3     = ptr->fposn3;
-                fprintf( debug, "handle=%d, modified=%d, in_memory=%d\n"
-                                " fposn0=%ld,\n"
-                                " fposn1=%ld,\n"
-                                " fposn2=%ld,\n"
-                                " fposn3=%ld,\n",
-                                handle, modified, in_memory, fposn0,
-                                               fposn1, fposn2, fposn3 );
-            }
-        }
-        fclose(debug);
-    }
-}
-#endif
-
-
 void GamesCache::Debug( const char *intro_message )
 {
-/*  dbg_printf( "Cache dump>%s\n", intro_message );
-    int gds_nbr = gds.size();
-    for( int i=0; i<gds_nbr; i++ )    
-    {   
-        GameDocument doc = gds[i]->GetGameDocument();
-        cprintf( "game_nbr=%d, white=%s, moves_txt=%s, pgn_handle=%d\n",
-                        doc.game_nbr,
-                        doc.white.c_str(),
-                        doc.moves_txt.c_str(),
-                        doc.pgn_handle
-                   );
-
-        cprintf( " modified=%s, in_memory=%s, game_details_edited=%s\n",
-                        doc.modified ? "true":"false",
-                        doc.in_memory ? "true":"false",
-                        doc.game_details_edited ? "true":"false"
-                   );
-
-        cprintf( " game_being_edited=%d, selected=%s, focus=%s\n",
-                        (int)doc.game_being_edited,
-                        doc.selected ? "true":"false",
-                        doc.focus ? "true":"false"
-                   );
-    } */
 }
 
 //#define NOMARKDOWN x

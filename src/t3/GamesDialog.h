@@ -16,9 +16,7 @@
 #include "GameDocument.h"
 #include "Repository.h"
 #include "MiniBoard.h"
-#include "CompressMoves.h"
 #include "Database.h"
-#include "PgnDialog.h"
 
 // Control identifiers
 enum
@@ -57,14 +55,39 @@ struct MiniBoardGame
 {
     thc::ChessPosition  updated_position;
     CompactGame         info;
-    //std::vector< thc::Move > focus_moves;  //temp temp
     int                 focus_idx;
     int                 focus_offset;
 };
 
 
-class DbDialog;
-class wxVirtualListCtrl;
+// A GamesListCtrl is a list control within the GamesDialog, it displays a list of games to navigate through and pick from
+class GamesDialog;
+class GamesListCtrl: public wxListCtrl
+{
+    DECLARE_EVENT_TABLE()
+public:
+    GamesListCtrl( GamesDialog *parent, wxWindowID id, const wxPoint &pos, const wxSize &size, long style );
+    void OnChar( wxKeyEvent &event );
+    
+public:
+    GamesDialog   *parent;
+    int initial_focus_offset;
+    MiniBoard *mini_board;
+    MiniBoardGame *track;
+    
+    // Focus changes to new item;
+    void ReceiveFocus( int focus_idx );
+    
+    // Recipes to calculate move text
+    std::string CalculateMoveTxt() const;
+    std::string CalculateMoveTxt( std::string &previous_move ) const;
+    std::string CalculateMoveTxt( CompactGame &info, int offset ) const;
+    std::string CalculateMoveTxt( std::string &previous_move, CompactGame &info, int focus_offset, thc::ChessPosition &updated_position ) const;
+    
+protected:
+    virtual wxString OnGetItemText( long item, long column) const;
+};
+
 
 // GamesDialog class declaration
 class GamesDialog: public wxDialog
@@ -74,6 +97,7 @@ class GamesDialog: public wxDialog
 
 protected:
     thc::ChessRules cr;
+    thc::ChessRules cr_base;
     wxStaticText *title_ctrl;
  
 public:
@@ -163,26 +187,26 @@ public:
     void Goto( int idx );
     void ReadItemWithSingleLineCache( int item, CompactGame &info );
 
-    // Overrides
-    virtual void OnActivate();
-    virtual void AddExtraControls() {}
-    virtual void GetButtonGridDimensions( int &row1, int &col1, int &row2, int &col2 ) { row1=8; col1=2; row2=0; col2=0; }
+    // Overrides - Gdv = Games Dialog Override
+    virtual void GdvOnActivate();
+    virtual wxSizer *GdvAddExtraControls() { return NULL; }
+    virtual void GdvGetButtonGridDimensions( int &row1, int &col1, int &row2, int &col2 ) { row1=8; col1=2; row2=0; col2=0; }
     bool dirty;
-    virtual bool TestAndClearIsCacheDirty() { bool was=dirty; dirty=false; return was; }
-    virtual void ReadItem( int item, CompactGame &info ) = 0;
-    virtual void OnCancel();
-    virtual void OnListColClick( int compare_col );
-    virtual void OnSaveAllToAFile();
-    virtual void OnHelpClick();
-    virtual void OnCheckBox( bool checked );
-    virtual void OnCheckBox2( bool checked );
-    virtual void OnSearch();
-    virtual void OnUtility();
-    virtual void OnButton1();
-    virtual void OnButton2();
-    virtual void OnButton3();
-    virtual void OnButton4();
-    virtual void OnNextMove( int idx );
+    virtual bool GdvTestAndClearIsCacheDirty() { bool was=dirty; dirty=false; return was; }
+    virtual void GdvReadItem( int item, CompactGame &info ) = 0;
+    virtual void GdvOnCancel();
+    virtual void GdvListColClick( int compare_col );
+    virtual void GdvSaveAllToAFile();
+    virtual void GdvHelpClick();
+    virtual void GdvCheckBox( bool checked );
+    virtual void GdvCheckBox2( bool checked );
+    virtual void GdvSearch();
+    virtual void GdvUtility();
+    virtual void GdvButton1();
+    virtual void GdvButton2();
+    virtual void GdvButton3();
+    virtual void GdvButton4();
+    virtual void GdvNextMove( int idx );
 
     // Todo later
     void OnEditGameDetails( wxCommandEvent );
@@ -200,7 +224,7 @@ public:
     
 //  void OnClose( wxCloseEvent& event );
 //  void SaveColumns();
-    bool ShowModalOk();
+    bool ShowModalOk( std::string title );
     
     // Return true if a game has been selected
     bool LoadGame(  GameDocument &gd );
@@ -211,6 +235,7 @@ public:
     GameDocument *GetFocusGame( int &idx );
     void DeselectOthers();
     void OnOk();
+    void SmartCompare( std::vector< smart_ptr<MagicBase> > &gds );
     
     // GamesDialog member variables
 public:
@@ -225,8 +250,9 @@ protected:
     wxPoint pos;
     wxSize size;
     long style;
+    DB_REQ db_req;
 
-    wxVirtualListCtrl  *list_ctrl;
+    GamesListCtrl  *list_ctrl;
     wxBoxSizer*  hsiz_panel;
     wxBoxSizer *button_panel;
     wxFlexGridSizer* vsiz_panel_button1;
@@ -249,15 +275,13 @@ protected:
     wxListBox *list_ctrl_transpo;
     wxButton *utility;
     MiniBoard *mini_board;
-    DbDialog    *data_src;
     bool activated_at_least_once;
 
 private:    //TODO - move more vars to private
-    bool init_position_specified;
+    bool db_search;
 public:
     bool transpo_activated;
     int nbr_games_in_list_ctrl;
-    int orig_nbr_games_in_list_ctrl;
     
 protected:
     int file_game_idx;
@@ -268,30 +292,5 @@ protected:
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
 };
 
-class wxVirtualListCtrl: public wxListCtrl
-{
-    DECLARE_EVENT_TABLE()
-public:
-    wxVirtualListCtrl( GamesDialog *parent, wxWindowID id, const wxPoint &pos, const wxSize &size, long style );
-    void OnChar( wxKeyEvent &event );
-    
-public:
-    GamesDialog   *parent;
-    int initial_focus_offset;
-    MiniBoard *mini_board;
-    MiniBoardGame *track;
-    
-    // Focus changes to new item;
-    void ReceiveFocus( int focus_idx );
-    
-    // Recipes to calculate move text
-    std::string CalculateMoveTxt() const;
-    std::string CalculateMoveTxt( std::string &previous_move ) const;
-    std::string CalculateMoveTxt( CompactGame &info, int offset ) const;
-    std::string CalculateMoveTxt( std::string &previous_move, CompactGame &info, int focus_offset, thc::ChessPosition &updated_position ) const;
-    
-protected:
-    virtual wxString OnGetItemText( long item, long column) const;
-};
 
 #endif    // GAMES_DIALOG_H

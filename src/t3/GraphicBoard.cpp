@@ -98,7 +98,6 @@ GraphicBoard::GraphicBoard
 						(unsigned long)info.bmWidthBytes,
 						(unsigned long)info.bmWidth,
 						(unsigned long)info.bmHeight );
-	OutputDebugStringA("hello world\n");
 #endif
 	xborder	     = (width_bytes%8) / 2;
 	yborder	     = (height%8) / 2;

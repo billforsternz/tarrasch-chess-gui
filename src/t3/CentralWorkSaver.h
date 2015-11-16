@@ -28,6 +28,7 @@ public:
     bool FileSaveGameAs();
     bool GameNew();
     bool PositionNew();
+    void AddTabToFile();
     bool Exit();
 
 private:

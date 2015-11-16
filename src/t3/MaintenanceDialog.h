@@ -22,7 +22,7 @@ enum
     ID_MAINTENANCE_CMD_3    = 10003,
     ID_MAINTENANCE_CMD_4    = 10004,
     ID_MAINTENANCE_CMD_5    = 10005,
-    ID_MAINTENANCE_CMD_6    = 10006,
+    ID_CREATE_DB_APPEND    = 10006,
     ID_MAINTENANCE_CMD_7    = 10007,
     ID_TEMP_ENGINE_PICKER   = 10008,
     ID_TEMP_PONDER          = 10009,
@@ -100,7 +100,7 @@ public:
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_5
     void OnMaintenanceCreate( wxCommandEvent& event );
     
-    // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_6
+    // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_CREATE_DB_APPEND
     void OnMaintenanceIndexes( wxCommandEvent& event );
     
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_HELP

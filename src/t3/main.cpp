@@ -255,8 +255,20 @@ public:
         void OnUpdateLog(wxUpdateUIEvent &);
     void OnEngine     (wxCommandEvent &);
         void OnUpdateEngine(wxUpdateUIEvent &);
-    void OnMaintenance(wxCommandEvent &);
-        void OnUpdateMaintenance(wxUpdateUIEvent &);
+    void OnDatabaseMaintenance(wxCommandEvent &);
+        void OnUpdateDatabaseMaintenance(wxUpdateUIEvent &);
+    void OnDatabaseSearch(wxCommandEvent &);
+        void OnUpdateDatabaseSearch(wxUpdateUIEvent &);
+    void OnDatabaseShowAll(wxCommandEvent &);
+        void OnUpdateDatabaseShowAll(wxUpdateUIEvent &);
+    void OnDatabasePlayers(wxCommandEvent &);
+        void OnUpdateDatabasePlayers(wxUpdateUIEvent &);
+    void OnDatabaseSelect(wxCommandEvent &);
+        void OnUpdateDatabaseSelect(wxUpdateUIEvent &);
+    void OnDatabaseCreate(wxCommandEvent &);
+        void OnUpdateDatabaseCreate(wxUpdateUIEvent &);
+    void OnDatabaseAppend(wxCommandEvent &);
+        void OnUpdateDatabaseAppend(wxUpdateUIEvent &);
     void OnTraining   (wxCommandEvent &);
         void OnUpdateTraining(wxUpdateUIEvent &);
     void OnGeneral    (wxCommandEvent &);
@@ -276,14 +288,14 @@ public:
         void OnUpdateFileSaveAs( wxUpdateUIEvent &);
     void OnFileSaveGameAs (wxCommandEvent &);
         void OnUpdateFileSaveGameAs( wxUpdateUIEvent &);
-    void OnFileCurrent (wxCommandEvent &);
-        void OnUpdateFileCurrent( wxUpdateUIEvent &);
-    void OnFileDatabase (wxCommandEvent &);
-        void OnUpdateFileDatabase( wxUpdateUIEvent &);
-    void OnFileSession (wxCommandEvent &);
-        void OnUpdateFileSession( wxUpdateUIEvent &);
-    void OnFileClipboard (wxCommandEvent &);
-        void OnUpdateFileClipboard( wxUpdateUIEvent &);
+    void OnGamesCurrent (wxCommandEvent &);
+        void OnUpdateGamesCurrent( wxUpdateUIEvent &);
+    void OnGamesDatabase (wxCommandEvent &);
+        void OnUpdateGamesDatabase( wxUpdateUIEvent &);
+    void OnGamesSession (wxCommandEvent &);
+        void OnUpdateGamesSession( wxUpdateUIEvent &);
+    void OnGamesClipboard (wxCommandEvent &);
+        void OnUpdateGamesClipboard( wxUpdateUIEvent &);
     void OnNextGame (wxCommandEvent &);
         void OnUpdateNextGame( wxUpdateUIEvent &);
     void OnPreviousGame (wxCommandEvent &);
@@ -476,30 +488,30 @@ BEGIN_EVENT_TABLE(ChessFrame, wxFrame)
     EVT_MENU (ID_FILE_TAB_INCLUDE,   ChessFrame::OnTabInclude)
         EVT_UPDATE_UI (ID_FILE_TAB_INCLUDE,   ChessFrame::OnUpdateTabInclude)
 
-    EVT_MENU (wxID_NEW,         ChessFrame::OnFileNew)
-        EVT_UPDATE_UI (wxID_NEW,    ChessFrame::OnUpdateFileNew)
-    EVT_MENU (wxID_OPEN,        ChessFrame::OnFileOpen)
-        EVT_UPDATE_UI (wxID_OPEN,   ChessFrame::OnUpdateFileOpen)
-    EVT_MENU (ID_FILE_OPEN_LOG, ChessFrame::OnFileOpenLog)
-        EVT_UPDATE_UI (ID_FILE_OPEN_LOG,   ChessFrame::OnUpdateFileOpenLog)
-    EVT_MENU (wxID_SAVE,        ChessFrame::OnFileSave)
-        EVT_UPDATE_UI (wxID_SAVE,   ChessFrame::OnUpdateFileSave)
-    EVT_MENU (wxID_SAVEAS,      ChessFrame::OnFileSaveAs)
-        EVT_UPDATE_UI (wxID_SAVEAS, ChessFrame::OnUpdateFileSaveAs)
-    EVT_MENU (ID_FILE_SAVE_GAME_AS,      ChessFrame::OnFileSaveGameAs)
-        EVT_UPDATE_UI (ID_FILE_SAVE_GAME_AS, ChessFrame::OnUpdateFileSaveGameAs)
-    EVT_MENU (ID_FILE_CURRENT,      ChessFrame::OnFileCurrent)
-        EVT_UPDATE_UI (ID_FILE_CURRENT, ChessFrame::OnUpdateFileCurrent)
-    EVT_MENU (ID_FILE_DATABASE,      ChessFrame::OnFileDatabase)
-        EVT_UPDATE_UI (ID_FILE_DATABASE, ChessFrame::OnUpdateFileDatabase)
-    EVT_MENU (ID_FILE_SESSION,      ChessFrame::OnFileSession)
-        EVT_UPDATE_UI (ID_FILE_SESSION, ChessFrame::OnUpdateFileSession)
-    EVT_MENU (ID_FILE_CLIPBOARD,ChessFrame::OnFileClipboard)
-        EVT_UPDATE_UI (ID_FILE_CLIPBOARD,    ChessFrame::OnUpdateFileClipboard)
-    EVT_MENU (ID_CMD_NEXT_GAME,     ChessFrame::OnNextGame)
-        EVT_UPDATE_UI (ID_CMD_NEXT_GAME,     ChessFrame::OnUpdateNextGame)
-    EVT_MENU (ID_CMD_PREVIOUS_GAME,     ChessFrame::OnPreviousGame)
-        EVT_UPDATE_UI (ID_CMD_PREVIOUS_GAME,  ChessFrame::OnUpdatePreviousGame)
+    EVT_MENU (wxID_NEW,                     ChessFrame::OnFileNew)
+        EVT_UPDATE_UI (wxID_NEW,                ChessFrame::OnUpdateFileNew)
+    EVT_MENU (wxID_OPEN,                    ChessFrame::OnFileOpen)
+        EVT_UPDATE_UI (wxID_OPEN,               ChessFrame::OnUpdateFileOpen)
+    EVT_MENU (ID_FILE_OPEN_LOG,             ChessFrame::OnFileOpenLog)
+        EVT_UPDATE_UI (ID_FILE_OPEN_LOG,        ChessFrame::OnUpdateFileOpenLog)
+    EVT_MENU (wxID_SAVE,                    ChessFrame::OnFileSave)
+        EVT_UPDATE_UI (wxID_SAVE,               ChessFrame::OnUpdateFileSave)
+    EVT_MENU (wxID_SAVEAS,                  ChessFrame::OnFileSaveAs)
+        EVT_UPDATE_UI (wxID_SAVEAS,             ChessFrame::OnUpdateFileSaveAs)
+    EVT_MENU (ID_FILE_SAVE_GAME_AS,         ChessFrame::OnFileSaveGameAs)
+        EVT_UPDATE_UI (ID_FILE_SAVE_GAME_AS,    ChessFrame::OnUpdateFileSaveGameAs)
+    EVT_MENU (ID_GAMES_CURRENT,             ChessFrame::OnGamesCurrent)
+        EVT_UPDATE_UI (ID_GAMES_CURRENT,        ChessFrame::OnUpdateGamesCurrent)
+    EVT_MENU (ID_GAMES_DATABASE,            ChessFrame::OnGamesDatabase)
+        EVT_UPDATE_UI (ID_GAMES_DATABASE,       ChessFrame::OnUpdateGamesDatabase)
+    EVT_MENU (ID_GAMES_SESSION,             ChessFrame::OnGamesSession)
+        EVT_UPDATE_UI (ID_GAMES_SESSION,        ChessFrame::OnUpdateGamesSession)
+    EVT_MENU (ID_GAMES_CLIPBOARD,           ChessFrame::OnGamesClipboard)
+        EVT_UPDATE_UI (ID_GAMES_CLIPBOARD,      ChessFrame::OnUpdateGamesClipboard)
+    EVT_MENU (ID_CMD_NEXT_GAME,             ChessFrame::OnNextGame)
+        EVT_UPDATE_UI (ID_CMD_NEXT_GAME,        ChessFrame::OnUpdateNextGame)
+    EVT_MENU (ID_CMD_PREVIOUS_GAME,         ChessFrame::OnPreviousGame)
+        EVT_UPDATE_UI (ID_CMD_PREVIOUS_GAME,    ChessFrame::OnUpdatePreviousGame)
 
     EVT_MENU (wxID_COPY,                    ChessFrame::OnEditCopy)    
         EVT_UPDATE_UI (wxID_COPY,                       ChessFrame::OnUpdateEditCopy)
@@ -538,10 +550,24 @@ BEGIN_EVENT_TABLE(ChessFrame, wxFrame)
         EVT_UPDATE_UI (ID_OPTIONS_TRAINING, ChessFrame::OnUpdateTraining)
     EVT_MENU (ID_OPTIONS_GENERAL,  ChessFrame::OnGeneral) 
         EVT_UPDATE_UI (ID_OPTIONS_GENERAL,  ChessFrame::OnUpdateGeneral)
-    EVT_MENU (ID_OPTIONS_MAINTENANCE,   ChessFrame::OnMaintenance)
-        EVT_UPDATE_UI (ID_OPTIONS_MAINTENANCE,   ChessFrame::OnUpdateMaintenance)
     EVT_MENU (ID_OPTIONS_RESET,    ChessFrame::OnOptionsReset)
         EVT_UPDATE_UI (ID_OPTIONS_RESET,    ChessFrame::OnUpdateOptionsReset)
+
+    EVT_MENU (ID_DATABASE_SEARCH,                   ChessFrame::OnDatabaseSearch)          
+        EVT_UPDATE_UI (ID_DATABASE_SEARCH,               ChessFrame::OnUpdateDatabaseSearch)          
+    EVT_MENU (ID_DATABASE_SHOW_ALL,                 ChessFrame::OnDatabaseShowAll)        
+        EVT_UPDATE_UI (ID_DATABASE_SHOW_ALL,             ChessFrame::OnUpdateDatabaseShowAll)        
+    EVT_MENU (ID_DATABASE_PLAYERS,                  ChessFrame::OnDatabasePlayers)
+        EVT_UPDATE_UI (ID_DATABASE_PLAYERS,              ChessFrame::OnUpdateDatabasePlayers)
+    EVT_MENU (ID_DATABASE_SELECT,                   ChessFrame::OnDatabaseSelect)
+        EVT_UPDATE_UI (ID_DATABASE_SELECT,              ChessFrame::OnUpdateDatabaseSelect)
+    EVT_MENU (ID_DATABASE_CREATE,                   ChessFrame::OnDatabaseCreate)
+        EVT_UPDATE_UI (ID_DATABASE_APPEND,              ChessFrame::OnUpdateDatabaseCreate)
+    EVT_MENU (ID_DATABASE_APPEND,                   ChessFrame::OnDatabaseAppend)
+        EVT_UPDATE_UI (ID_DATABASE_APPEND,              ChessFrame::OnUpdateDatabaseAppend)
+    EVT_MENU (ID_DATABASE_MAINTENANCE,              ChessFrame::OnDatabaseMaintenance)     
+        EVT_UPDATE_UI (ID_DATABASE_MAINTENANCE,          ChessFrame::OnUpdateDatabaseMaintenance)     
+
     EVT_TOOL (ID_CMD_FLIP,         ChessFrame::OnFlip)
     EVT_TOOL (ID_CMD_NEXT_GAME,    ChessFrame::OnNextGame)
     EVT_TOOL (ID_CMD_PREVIOUS_GAME,ChessFrame::OnPreviousGame)
@@ -604,10 +630,10 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 
     // Menu - Games
     wxMenu *menu_games   = new wxMenu;
-    menu_games->Append (ID_FILE_CURRENT,        _T("Current file"));
-    menu_games->Append (ID_FILE_DATABASE,       _T("Database"));
-    menu_games->Append (ID_FILE_SESSION,        _T("Session"));
-    menu_games->Append (ID_FILE_CLIPBOARD,      _T("Clipboard"));
+    menu_games->Append (ID_GAMES_CURRENT,        _T("Current file"));
+    menu_games->Append (ID_GAMES_DATABASE,     _T("Database"));
+    menu_games->Append (ID_GAMES_SESSION,        _T("Session"));
+    menu_games->Append (ID_GAMES_CLIPBOARD,      _T("Clipboard"));
     menu_games->AppendSeparator();
     menu_games->Append (ID_CMD_NEXT_GAME,       _T("Next game from file"));
     menu_games->Append (ID_CMD_PREVIOUS_GAME,   _T("Previous game from file"));
@@ -625,13 +651,13 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     menu_commands->Append (ID_CMD_CLEAR_KIBITZ, _T("Clear kibitz text"));
     #endif
 
-    menu_commands->Append (ID_CMD_DRAW,         _T("Draw"));
-    menu_commands->Append (ID_CMD_WHITE_RESIGNS,_T("White resigns"));
-    menu_commands->Append (ID_CMD_BLACK_RESIGNS,_T("Black resigns"));
-    menu_commands->Append (ID_CMD_PLAY_WHITE,   _T("Play white"));
-    menu_commands->Append (ID_CMD_PLAY_BLACK,   _T("Play black"));
-    menu_commands->Append (ID_CMD_SWAP_SIDES,   _T("Swap sides"));
-    menu_commands->Append (ID_CMD_MOVENOW,      _T("Move now"));
+    menu_commands->Append (ID_CMD_DRAW,             _T("Draw"));
+    menu_commands->Append (ID_CMD_WHITE_RESIGNS,    _T("White resigns"));
+    menu_commands->Append (ID_CMD_BLACK_RESIGNS,    _T("Black resigns"));
+    menu_commands->Append (ID_CMD_PLAY_WHITE,       _T("Play white"));
+    menu_commands->Append (ID_CMD_PLAY_BLACK,       _T("Play black"));
+    menu_commands->Append (ID_CMD_SWAP_SIDES,       _T("Swap sides"));
+    menu_commands->Append (ID_CMD_MOVENOW,          _T("Move now"));
 
     // Options
     wxMenu *menu_options = new wxMenu;
@@ -642,8 +668,17 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     menu_options->Append (ID_OPTIONS_LOG,          _T("Log file"));
     menu_options->Append (ID_OPTIONS_BOOK,         _T("Opening book"));
     menu_options->Append (ID_OPTIONS_TRAINING,     _T("Training"));
-    menu_options->Append (ID_OPTIONS_MAINTENANCE,      _T("Maintain database"));
     menu_options->Append (ID_OPTIONS_RESET,        _T("Reset to factory defaults"));
+
+    // Database
+    wxMenu *menu_database = new wxMenu;
+    menu_database->Append (ID_DATABASE_SEARCH,              _T("Position search"));
+    menu_database->Append (ID_DATABASE_SHOW_ALL,            _T("Show all games"));
+    menu_database->Append (ID_DATABASE_PLAYERS,             _T("Show all ordered by player"));
+    menu_database->Append (ID_DATABASE_SELECT,              _T("Select current database"));
+    menu_database->Append (ID_DATABASE_CREATE,              _T("Create new database"));
+    menu_database->Append (ID_DATABASE_APPEND,              _T("Append to database"));
+    menu_database->Append (ID_DATABASE_MAINTENANCE,         _T("Maintain database"));
 
     // Help
     wxMenu *menu_help     = new wxMenu;
@@ -658,6 +693,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     menu->Append (menu_games,    _T("&Games"));    
     menu->Append (menu_commands, _T("&Commands"));
     menu->Append (menu_options,  _T("&Options"));
+    menu->Append (menu_database, _T("&Database"));
     menu->Append (menu_help,     _T("&Help"));    
     SetMenuBar( menu );
 
@@ -734,7 +770,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     toolbar->AddSeparator();
     nbr_separators++;
     ADD_TOOL( ID_CMD_FLIP,      bmp_flip, "Flip board");
-    ADD_TOOL( ID_FILE_DATABASE, bmp_database, "Database");
+    ADD_TOOL( ID_GAMES_DATABASE, bmp_database, "Database");
     ADD_TOOL( ID_CMD_KIBITZ,    bmp_kibitzer,  "Kibitzer start/stop");
     ADD_TOOL( ID_BUTTON_DOWN,   bmp_down,  "Forward (main line)");
     ADD_TOOL( ID_BUTTON_UP,     bmp_up,    "Backward (main line)");
@@ -746,8 +782,8 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 #endif
     toolbar->AddSeparator();
     nbr_separators++;
-    ADD_TOOL( ID_CMD_NEXT_GAME,     bmp_next,      "Next game from file or database"     );
-    ADD_TOOL( ID_CMD_PREVIOUS_GAME, bmp_previous,  "Previous game from file or database" );
+    ADD_TOOL( ID_CMD_NEXT_GAME,     bmp_next,      "Next game from file"     );
+    ADD_TOOL( ID_CMD_PREVIOUS_GAME, bmp_previous,  "Previous game from file" );
 #ifdef THC_WINDOWS
     toolbar->AddSeparator();
     nbr_separators++;
@@ -1123,24 +1159,19 @@ void ChessFrame::OnFileSaveGameAs (wxCommandEvent &)
     objs.gl->CmdFileSaveGameAs();
 }
 
-void ChessFrame::OnFileCurrent (wxCommandEvent &)
+void ChessFrame::OnGamesCurrent (wxCommandEvent &)
 {
-    objs.gl->CmdFileCurrent();
+    objs.gl->CmdGamesCurrent();
 }
 
-void ChessFrame::OnFileSession (wxCommandEvent &)
+void ChessFrame::OnGamesSession (wxCommandEvent &)
 {
-    objs.gl->CmdFileSession();
+    objs.gl->CmdGamesSession();
 }
 
-void ChessFrame::OnFileDatabase (wxCommandEvent &)
+void ChessFrame::OnGamesClipboard (wxCommandEvent &)
 {
-    objs.gl->CmdFileDatabase();
-}
-
-void ChessFrame::OnFileClipboard (wxCommandEvent &)
-{
-    objs.gl->CmdFileClipboard();
+    objs.gl->CmdGamesClipboard();
 }
 
 void ChessFrame::OnNextGame (wxCommandEvent &)
@@ -1238,9 +1269,9 @@ void ChessFrame::OnUpdateFileOpenLog( wxUpdateUIEvent &event )
     event.Enable(enabled);
 }
 
-void ChessFrame::OnUpdateFileCurrent( wxUpdateUIEvent &event )
+void ChessFrame::OnUpdateGamesCurrent( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdateFileCurrent();
+    bool enabled = objs.gl->CmdUpdateGamesCurrent();
     event.Enable(enabled);
 }
 
@@ -1262,21 +1293,21 @@ void ChessFrame::OnUpdateFileSaveGameAs( wxUpdateUIEvent &event )
     event.Enable(enabled);
 }
 
-void ChessFrame::OnUpdateFileDatabase( wxUpdateUIEvent &event )
+void ChessFrame::OnUpdateGamesDatabase( wxUpdateUIEvent &event )
 {
     bool enabled = true;
     event.Enable(enabled);
 }
 
-void ChessFrame::OnUpdateFileSession( wxUpdateUIEvent &event )
+void ChessFrame::OnUpdateGamesSession( wxUpdateUIEvent &event )
 {
     bool enabled = true;
     event.Enable(enabled);
 }
 
-void ChessFrame::OnUpdateFileClipboard( wxUpdateUIEvent &event )
+void ChessFrame::OnUpdateGamesClipboard( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdateFileClipboard();
+    bool enabled = objs.gl->CmdUpdateGamesClipboard();
     event.Enable(enabled);
 }
 
@@ -1636,7 +1667,66 @@ void ChessFrame::OnEngine(wxCommandEvent &)
     SetFocusOnList();
 }
 
-void ChessFrame::OnMaintenance(wxCommandEvent &)
+void ChessFrame::OnGamesDatabase (wxCommandEvent &)
+{
+    objs.gl->CmdGamesDatabase();
+}
+
+void ChessFrame::OnDatabaseSearch(wxCommandEvent &)
+{
+    objs.gl->CmdDatabaseSearch();
+}
+
+void ChessFrame::OnDatabaseShowAll(wxCommandEvent &)
+{
+    objs.gl->CmdDatabaseShowAll();
+}
+
+void ChessFrame::OnDatabasePlayers(wxCommandEvent &)
+{
+    objs.gl->CmdDatabasePlayers();
+}
+
+void ChessFrame::OnDatabaseSelect(wxCommandEvent &)
+{
+    objs.gl->CmdDatabaseSelect();
+}
+
+void ChessFrame::OnDatabaseCreate(wxCommandEvent &)
+{
+    objs.gl->CmdDatabaseCreate();
+}
+
+void ChessFrame::OnDatabaseAppend(wxCommandEvent &)
+{
+    objs.gl->CmdDatabaseAppend();
+}
+
+void ChessFrame::OnUpdateDatabaseSearch(wxUpdateUIEvent &)
+{
+}
+
+void ChessFrame::OnUpdateDatabaseShowAll(wxUpdateUIEvent &)
+{
+}
+
+void ChessFrame::OnUpdateDatabasePlayers(wxUpdateUIEvent &)
+{
+}
+
+void ChessFrame::OnUpdateDatabaseSelect(wxUpdateUIEvent &)
+{
+}
+
+void ChessFrame::OnUpdateDatabaseCreate(wxUpdateUIEvent &)
+{
+}
+
+void ChessFrame::OnUpdateDatabaseAppend(wxUpdateUIEvent &)
+{
+}
+
+void ChessFrame::OnDatabaseMaintenance(wxCommandEvent &)
 {
     wxString old_file    = objs.repository->engine.m_file;
     MaintenanceDialog dialog( objs.repository->engine, this );
@@ -1651,13 +1741,14 @@ void ChessFrame::OnMaintenance(wxCommandEvent &)
     SetFocusOnList();
 }
 
-void ChessFrame::OnUpdateEngine(wxUpdateUIEvent &event )
+void ChessFrame::OnUpdateDatabaseMaintenance( wxUpdateUIEvent &event )
 {
     bool enabled = objs.gl->UpdateOptions();
     event.Enable(enabled);
 }
 
-void ChessFrame::OnUpdateMaintenance( wxUpdateUIEvent &event )
+
+void ChessFrame::OnUpdateEngine(wxUpdateUIEvent &event )
 {
     bool enabled = objs.gl->UpdateOptions();
     event.Enable(enabled);
@@ -1702,24 +1793,6 @@ void ChessFrame::RefreshLanguageFont( const char *from, bool before_large_font, 
         objs.gl->gd.Rebuild();
         objs.gl->gd.Redisplay(pos);
         redisplayed = true;
-
-        // Change move_txt for all games in the caches
-        for( int j=0; j<3; j++ )
-        {
-            GamesCache *gc=NULL;
-            switch( j )
-            {
-                case 0: gc = &objs.gl->gc;           break;
-                case 1: gc = &objs.gl->gc_clipboard; break;
-                case 2: gc = &objs.gl->gc_session;   break;
-            }
-            for( int i=0; gc && i<gc->gds.size(); i++ )
-            {
-                GameDocument *ptr = gc->gds[i]->GetGameDocumentPtr();
-                if( ptr )
-                    LangLine( ptr->moves_txt, from, to );
-            }
-        }
     }
 
     // If the italics setting has changed, redisplay

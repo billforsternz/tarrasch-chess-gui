@@ -16,33 +16,52 @@
 #include "NavigationKey.h"
 #include "GameView.h"
 #include "GameLifecycle.h"
-
-
-#define smart_ptr std::unique_ptr
-#define make_smart_ptr(T,to,from) smart_ptr<T> to; to.reset(new T(from))
-
-class Roster
-{
-public:
-    std::string white;
-    std::string black;
-    std::string event;
-    std::string site;
-    std::string result;
-    std::string round;
-    std::string date;
-    std::string eco;
-    std::string white_elo;
-    std::string black_elo;
-};
+#include "CompressMoves.h"
+#include "CompactGame.h"
+#include "GameBase.h"
 
 class GameLogic;
-class GameDocument
+class GameDocument : public MagicBase
 {
     
 public:
     GameDocument( GameLogic *gl );
     GameDocument();
+	virtual GameDocument        *GetGameDocumentPtr()           { return this; }
+    virtual bool IsInMemory()        { return true; }
+    virtual long GetFposn() { return fposn0; }
+    virtual Roster &RefRoster() { return r; }
+    virtual std::vector<thc::Move> &RefMoves()
+    {
+        static std::vector<thc::Move> moves;
+        moves.clear();
+        std::vector<MoveTree> &variation = tree.variations[0];
+        for( int i=0; i<variation.size(); i++ )
+        {
+            thc::Move mv = variation[i].game_move.move;
+            moves.push_back(mv);
+        }
+        return moves;
+    }
+    virtual std::string &RefCompressedMoves()
+    {
+        static std::string blob;
+        blob.clear();
+        CompressMoves press;
+        if( press.cr == start_position )
+        {
+            std::vector<thc::Move> moves;
+            std::vector<MoveTree> &variation = tree.variations[0];
+            for( int i=0; i<variation.size(); i++ )
+            {
+                thc::Move mv = variation[i].game_move.move;
+                moves.push_back(mv);
+            }
+            blob = press.Compress( moves );
+        }
+        return blob;
+    }
+    virtual thc::ChessPosition &RefStartPosition() { return start_position; }
     
     // Copy constructor
     GameDocument( const GameDocument& src )
@@ -94,8 +113,8 @@ public:
     }
 
     // Overrides
-    bool IsModified() { return (game_prefix_edited || game_details_edited || modified); }
-    uint32_t GetGameBeingEdited() { return game_being_edited; }
+    virtual bool IsModified() { return (game_prefix_edited || game_details_edited || modified); }
+    virtual uint32_t GetGameBeingEdited() { return game_being_edited; }
     
     void FleshOutDate();
     virtual void Init( const thc::ChessPosition &start_position );

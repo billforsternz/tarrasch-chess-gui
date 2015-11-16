@@ -31,6 +31,8 @@
 #include "ClockDialog.h"
 #include "PlayerDialog.h"
 #include "PgnDialog.h"
+#include "ClipboardDialog.h"
+#include "CreateDatabaseDialog.h"
 #include "DbDialog.h"
 #include "Objects.h"
 #include "CompressMoves.h"
@@ -62,6 +64,7 @@ GameLogic::GameLogic( Canvas *canvas, CtrlChessTxt *lb )
     : atom(this), gd(this), undo(this)
 {
     state    = RESET;
+    db_clipboard = false;
     game_being_edited_tag = 0;
     engine_name[0] = '\0';
     under_our_program_control = false;
@@ -395,6 +398,9 @@ void GameLogic::CmdTabClose()
 
 void GameLogic::CmdTabInclude()
 {
+    Atomic begin;
+    objs.cws->AddTabToFile();
+    atom.StatusUpdate();
 }
 
 void GameLogic::CmdSwapSides()
@@ -571,8 +577,6 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
         wxMessageBox( "Cannot read file", "Error", wxOK|wxICON_ERROR );
     else
     {
-        /* GameDocument doc = * std::dynamic_pointer_cast<GameDocument> (gds[i]); */
-
         bool have_game = false;
         if( gc.gds.size()==1 && objs.repository->general.m_straight_to_game )
         {
@@ -595,7 +599,7 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
                         int nbr_converted;
                         gd = *gd_file;
                         gd.PgnParse(true,nbr_converted,s,cr,NULL);
-                        make_smart_ptr( HoldDocument,new_smart_ptr,gd);
+                        make_smart_ptr( GameDocument,new_smart_ptr,gd);
                         gc.gds[0] = std::move(new_smart_ptr);
                         have_game = true;
                     }
@@ -624,16 +628,17 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
             wxSize sz = objs.frame->GetSize();
             sz.x = (sz.x*9)/10;
             sz.y = (sz.y*9)/10;
-            PgnDialog dialog( objs.frame, &gc, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );
-            if( dialog.ShowModalOk() )
+            PgnDialog dialog( objs.frame, &gc, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );   // GamesDialog instance
+            std::string title = "File: " + filename;
+            if( dialog.ShowModalOk(title) )
             {
                 objs.log->SaveGame(&gd,editing_log);
                 objs.session->SaveGame(&gd);
                 if( dialog.LoadGame(this,gd,this->file_game_idx) )
                 {
-                    tabs->SetInfile(true);
                     if( !is_empty )
                         tabs->TabNew(gd);
+                    tabs->SetInfile(true);
                     ShowNewDocument();
                 }
             }
@@ -645,7 +650,7 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
 
 bool GameLogic::CmdUpdateNextGame()
 {
-    if( true )
+    if( false )
     {
         return objs.db->TestNextRow();
     }
@@ -658,7 +663,7 @@ bool GameLogic::CmdUpdateNextGame()
 
 bool GameLogic::CmdUpdatePreviousGame()
 {
-    if( true )
+    if( false )
     {
         return objs.db->TestPrevRow();
     }
@@ -695,7 +700,7 @@ void GameLogic::NextGamePreviousGame( int idx )
                     thc::ChessRules cr;
                     int nbr_converted;
                     gd_file.PgnParse(true,nbr_converted,s,cr,NULL);
-                    make_smart_ptr( HoldDocument,new_smart_ptr,gd_file);
+                    make_smart_ptr( GameDocument,new_smart_ptr,gd_file);
                     gc.gds[idx] = std::move(new_smart_ptr);
                     have_game = true;
                 }
@@ -711,9 +716,8 @@ void GameLogic::NextGamePreviousGame( int idx )
             IndicateNoCurrentDocument();
             gd_file.game_being_edited = ++game_being_edited_tag;
             gd = gd_file;
-            GameDocument *ptr = gc.gds[idx]->GetGameDocumentPtr();
-            if( ptr )
-                ptr->selected = true;
+            smart_ptr<MagicBase> smp = gc.gds[idx];
+            smp->SetSelected(true);
             this->file_game_idx = idx;
             tabs->SetInfile(true);
             ShowNewDocument();
@@ -726,33 +730,17 @@ void GameLogic::CmdNextGame()
 {
     if( CmdUpdateNextGame() )
     {
-        if( true )
+        if( false )
         {
             Atomic begin;
             bool editing_log = objs.gl->EditingLog();
-            static DB_GAME_INFO info;
+            static CompactGame pact;
             int idx = objs.db->GetCurrent();
-            objs.db->GetRow(&info, idx+1 );
+            objs.db->GetRow(idx+1,&pact);
             GameDocument gd_temp;
             std::vector<thc::Move> moves;
-            gd_temp.r.white = info.r.white;
-            gd_temp.r.black = info.r.black;
-            gd_temp.r.result = info.r.result;
-            int len = info.str_blob.length();
-            const char *blob = info.str_blob.c_str();
-            CompressMoves press;
-            for( int nbr=0; nbr<len;  )
-            {
-                thc::ChessRules cr = press.cr;
-                thc::Move mv;
-                int nbr_used = press.decompress_move( blob, mv );
-                if( nbr_used == 0 )
-                    break;
-                moves.push_back(mv);
-                blob += nbr_used;
-                nbr += nbr_used;
-            }
-            gd_temp.LoadFromMoveList(moves);
+            gd_temp.r = pact.r;
+            gd_temp.LoadFromMoveList(pact.moves);
             PutBackDocument();
             objs.log->SaveGame(&gd,editing_log);
             objs.session->SaveGame(&gd);
@@ -775,33 +763,17 @@ void GameLogic::CmdPreviousGame()
 {
     if( CmdUpdatePreviousGame() )
     {
-        if( true )
+        if( false )
         {
             Atomic begin;
             bool editing_log = objs.gl->EditingLog();
-            static DB_GAME_INFO info;
+            static CompactGame pact;
             int idx = objs.db->GetCurrent();
-            objs.db->GetRow( &info, idx-1 );
+            objs.db->GetRow( idx-1, &pact );
             GameDocument gd_temp;
             std::vector<thc::Move> moves;
-            gd_temp.r.white = info.r.white;
-            gd_temp.r.black = info.r.black;
-            gd_temp.r.result = info.r.result;
-            size_t len = info.str_blob.length();
-            const char *blob = info.str_blob.c_str();
-            CompressMoves press;
-            for( int nbr=0; nbr<len;  )
-            {
-                thc::ChessRules cr = press.cr;
-                thc::Move mv;
-                int nbr_used = press.decompress_move( blob, mv );
-                if( nbr_used == 0 )
-                    break;
-                moves.push_back(mv);
-                blob += nbr_used;
-                nbr += nbr_used;
-            }
-            gd_temp.LoadFromMoveList(moves);
+            gd_temp.r = pact.r;
+            gd_temp.LoadFromMoveList(pact.moves);
             PutBackDocument();
             objs.log->SaveGame(&gd,editing_log);
             objs.session->SaveGame(&gd);
@@ -854,28 +826,28 @@ void GameLogic::PutBackDocument()
 {
     for( int i=0; i<gc.gds.size(); i++ )
     {
-        GameDocument *ptr = gc.gds[i]->GetGameDocumentPtr();
-        if( ptr && ptr->game_being_edited == gd.game_being_edited )
+        smart_ptr<MagicBase> smp = gc.gds[i];
+        if( smp->GetGameBeingEdited() == gd.game_being_edited )
         {
             gd.FleshOutDate();
             gd.FleshOutMoves();
             GameDocument new_doc = gd;
             new_doc.modified = gd.modified || undo.IsModified();
-            make_smart_ptr( HoldDocument, new_smart_ptr, new_doc);
+            make_smart_ptr( GameDocument, new_smart_ptr, new_doc);
             gc.gds[i] = std::move(new_smart_ptr);
             return;
         }
     }
     for( int i=0; i<gc_clipboard.gds.size(); i++ )
     {
-        GameDocument *ptr = gc_clipboard.gds[i]->GetGameDocumentPtr();
-        if( ptr && ptr->game_being_edited == gd.game_being_edited  )
+        smart_ptr<MagicBase> smp = gc_clipboard.gds[i];
+        if( smp->GetGameBeingEdited() == gd.game_being_edited )
         {
             gd.FleshOutDate();
             gd.FleshOutMoves();
             GameDocument new_doc = gd;
             new_doc.modified = gd.modified || undo.IsModified();
-            make_smart_ptr( HoldDocument, new_smart_ptr, new_doc );
+            make_smart_ptr( GameDocument, new_smart_ptr, new_doc );
             gc_clipboard.gds[i] = std::move(new_smart_ptr);
             return;
         }
@@ -886,27 +858,25 @@ void GameLogic::IndicateNoCurrentDocument()
 {
     for( int i=0; i<gc.gds.size(); i++ )
     {
-        GameDocument *ptr = gc.gds[i]->GetGameDocumentPtr();
-        if( ptr && ptr->game_being_edited == gd.game_being_edited )
-             ptr->game_being_edited = 0;
-        if( ptr )
-            ptr->selected = false;
+        smart_ptr<MagicBase> smp = gc.gds[i];
+        if( smp->GetGameBeingEdited() == gd.game_being_edited )
+             smp->SetGameBeingEdited(0);
+        smp->SetSelected(false);
     }
     for( int i=0; i<gc_clipboard.gds.size(); i++ )
     {
-        GameDocument *ptr = gc_clipboard.gds[i]->GetGameDocumentPtr();
-        if( ptr && ptr->game_being_edited == gd.game_being_edited )
-             ptr->game_being_edited = 0;
-        if( ptr )
-            ptr->selected = false;
+        smart_ptr<MagicBase> smp = gc_clipboard.gds[i];
+        if( smp->GetGameBeingEdited() == gd.game_being_edited )
+             smp->SetGameBeingEdited(0);
+        smp->SetSelected(false);
     }
 }
 
-void GameLogic::CmdFileCurrent()
+void GameLogic::CmdGamesCurrent()
 {
     Atomic begin;
     bool editing_log = objs.gl->EditingLog();
-    bool ok=CmdUpdateFileCurrent();
+    bool ok=CmdUpdateGamesCurrent();
     if( ok )
     {
         if( !gc.IsSynced() )
@@ -925,8 +895,8 @@ void GameLogic::CmdFileCurrent()
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
         gc.Debug( "Before loading current file games dialog" );
-        PgnDialog dialog( objs.frame, &gc, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );
-        if( dialog.ShowModalOk() )
+        PgnDialog dialog( objs.frame, &gc, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );   // GamesDialog instance
+        if( dialog.ShowModalOk("Current file") )
         {
             objs.log->SaveGame(&gd,editing_log);
             objs.session->SaveGame(&gd);
@@ -941,51 +911,117 @@ void GameLogic::CmdFileCurrent()
     atom.StatusUpdate();
 }
 
-void GameLogic::CmdFileDatabase()
+void GameLogic::CmdGamesDatabase()
+{
+    thc::ChessRules cr;
+    thc::ChessRules start_position;
+    std::string title_txt;
+    gd.GetSummary( cr, title_txt );
+    DB_REQ db_req;
+    if( cr == start_position )
+        db_req = REQ_SHOW_ALL;
+    else
+        db_req = REQ_POSITION;
+    CmdDatabase( cr, db_req );
+}
+
+void GameLogic::CmdDatabaseSearch()
+{
+    thc::ChessRules cr;
+    thc::ChessRules start_position;
+    std::string title_txt;
+    gd.GetSummary( cr, title_txt );
+    CmdDatabase( cr, REQ_POSITION );
+}
+
+void GameLogic::CmdDatabaseShowAll()
+{
+    thc::ChessRules cr;
+    thc::ChessRules start_position;
+    std::string title_txt;
+    gd.GetSummary( cr, title_txt );
+    CmdDatabase( cr, REQ_SHOW_ALL );
+}
+
+void GameLogic::CmdDatabasePlayers()
+{
+    thc::ChessRules cr;
+    thc::ChessRules start_position;
+    std::string title_txt;
+    gd.GetSummary( cr, title_txt );
+    CmdDatabase( cr, REQ_PLAYERS );
+}
+
+void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req )
 {
     Atomic begin;
     bool editing_log = objs.gl->EditingLog();
-    //bool ok=CmdUpdateFileDatabase();
-    //if( ok )
-    //{
-        thc::ChessRules cr;
-        std::string title_txt;
-        gd.GetSummary( cr, title_txt );
-        std::vector<GameDocument> games;
-        //db_find_matching_games(cr,games);
-        //gc_database.gds.clear();
-        //for( int i=0; i<games.size(); i++ )
-        //    gc_database.gds.push_back(games[i]);
-        wxPoint pt(0,0);
-        wxSize sz = objs.frame->GetSize();
-        sz.x = (sz.x*9)/10;
-        sz.y = (sz.y*9)/10;
-        DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard , ID_PGN_DIALOG_DATABASE, pt, sz );
-        if( dialog.ShowModalOk() )
+    std::vector<GameDocument> games;
+    wxPoint pt(0,0);
+    wxSize sz = objs.frame->GetSize();
+    sz.x = (sz.x*9)/10;
+    sz.y = (sz.y*9)/10;
+    DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard, db_req, ID_PGN_DIALOG_DATABASE, pt, sz );   // GamesDialog instance
+    if( dialog.ShowModalOk("Database games") )
+    {
+        objs.log->SaveGame(&gd,editing_log);
+        //objs.session->SaveGame(&gd);        //careful...
+        GameDocument temp = gd;
+        GameDocument new_gd;
+        PutBackDocument();
+        if( dialog.LoadGame(new_gd) )
         {
-            objs.log->SaveGame(&gd,editing_log);
-          //objs.session->SaveGame(&gd);        //careful...
-            GameDocument temp = gd;
-            GameDocument new_gd;
-            PutBackDocument();
-            if( dialog.LoadGame(new_gd) )
-            {
-                tabs->TabNew(new_gd);
-                tabs->SetInfile(false);
-                ShowNewDocument();
-            }
-            objs.session->SaveGame(&temp);      // ...modify session only after loading old game
+            tabs->TabNew(new_gd);
+            tabs->SetInfile(false);
+            ShowNewDocument();
         }
-    //}
+        objs.session->SaveGame(&temp);      // ...modify session only after loading old game
+    }
     atom.StatusUpdate();
 }
 
+void GameLogic::CmdDatabaseSelect()
+{
+    wxFileDialog fd( objs.frame, "Select current database", "", "", "*.tarrasch_db", wxFD_FILE_MUST_EXIST );//|wxFD_CHANGE_DIR );
+    wxString path( "/Users/billforster/Documents/ChessDatabases/small.tarrasch_db" ); //objs.repository->engine.m_file;
+    fd.SetPath(path);
+    if( wxID_OK == fd.ShowModal() )
+    {
+        wxString s = fd.GetPath();
+        const char *filename = s.c_str();
+        cprintf( "File is %s\n", filename );
+        objs.db->Reopen(filename);
+        /* wxString dir;
+        wxFileName::SplitPath( fd.GetPath(), &dir, NULL, NULL );
+        objs.repository->nv.m_doc_dir = dir;
+        wxString wx_filename = fd.GetPath();
+        std::string filename( wx_filename.c_str() );
+        CmdFileOpenInner( filename ); */
+    }
 
-void GameLogic::CmdFileSession()
+}
+
+void GameLogic::CmdDatabaseCreate()
+{
+    Atomic begin;
+    wxPoint pt(0,0);
+    wxSize sz = objs.frame->GetSize();
+    sz.x = (sz.x*9)/10;
+    sz.y = (sz.y*9)/10;
+    CreateDatabaseDialog dialog( objs.frame );
+    dialog.ShowModal();
+    atom.StatusUpdate();
+}
+
+void GameLogic::CmdDatabaseAppend()
+{
+}
+
+void GameLogic::CmdGamesSession()
 {
     Atomic begin;
     bool editing_log = objs.gl->EditingLog();
-    bool ok=CmdUpdateFileSession();
+    bool ok=CmdUpdateGamesSession();
     if( ok )
     {
         wxPoint pt(0,0);
@@ -993,8 +1029,8 @@ void GameLogic::CmdFileSession()
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
         gc_session.Debug( "Before loading session games dialog" );
-        PgnDialog dialog( objs.frame, &gc_session, &gc_clipboard, ID_PGN_DIALOG_SESSION, pt, sz );
-        if( dialog.ShowModalOk() )
+        PgnDialog dialog( objs.frame, &gc_session, &gc_clipboard, ID_PGN_DIALOG_SESSION, pt, sz );   // GamesDialog instance
+        if( dialog.ShowModalOk("Games in this session") )
         {
             objs.log->SaveGame(&gd,editing_log);
             //objs.session->SaveGame(&gd);        //careful...
@@ -1013,19 +1049,19 @@ void GameLogic::CmdFileSession()
 
 
 
-void GameLogic::CmdFileClipboard()
+void GameLogic::CmdGamesClipboard()
 {
     Atomic begin;
     bool editing_log = objs.gl->EditingLog();
-    bool ok=CmdUpdateFileClipboard();
+    bool ok=CmdUpdateGamesClipboard();
     if( ok )
     {
         wxPoint pt(0,0);
         wxSize sz = objs.frame->GetSize();
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
-        PgnDialog dialog( objs.frame, &gc_clipboard, &gc_clipboard, ID_PGN_DIALOG_CLIPBOARD, pt, sz );
-        if( dialog.ShowModalOk() )
+        ClipboardDialog dialog( objs.frame, &gc_clipboard, &gc_clipboard, ID_PGN_DIALOG_CLIPBOARD, pt, sz );   // GamesDialog instance
+        if( dialog.ShowModalOk("Clipboard") )
         {
             objs.log->SaveGame(&gd,editing_log);
             objs.session->SaveGame(&gd);
@@ -1570,7 +1606,7 @@ bool GameLogic::CmdUpdateFileOpenLog()
     return enabled;
 }
 
-bool GameLogic::CmdUpdateFileCurrent()
+bool GameLogic::CmdUpdateGamesCurrent()
 {
     bool enabled = (state==MANUAL || state==RESET || state==HUMAN || state==PONDERING || state==GAMEOVER);
     if( enabled )
@@ -1578,7 +1614,7 @@ bool GameLogic::CmdUpdateFileCurrent()
     return enabled;
 }
 
-bool GameLogic::CmdUpdateFileClipboard()
+bool GameLogic::CmdUpdateGamesClipboard()
 {
     bool enabled = (state==MANUAL || state==RESET || state==HUMAN || state==PONDERING || state==GAMEOVER);
     //if( enabled )
@@ -1586,7 +1622,7 @@ bool GameLogic::CmdUpdateFileClipboard()
     return enabled;
 }
 
-bool GameLogic::CmdUpdateFileSession()
+bool GameLogic::CmdUpdateGamesSession()
 {
     bool enabled = (state==MANUAL || state==RESET || state==HUMAN || state==PONDERING || state==GAMEOVER);
     return enabled;

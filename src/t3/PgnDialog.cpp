@@ -31,7 +31,7 @@ using namespace std;
 BEGIN_EVENT_TABLE( PgnDialog, wxDialog )
 //  EVT_CLOSE( PgnDialog::OnClose )
     EVT_BUTTON( wxID_OK,                PgnDialog::OnOkClick )
-    EVT_BUTTON( wxID_CANCEL,            PgnDialog::OnCancel )
+    EVT_BUTTON( wxID_CANCEL,            PgnDialog::GdvOnCancel )
     EVT_BUTTON( ID_BOARD2GAME,          PgnDialog::OnBoard2Game )
     EVT_CHECKBOX( ID_REORDER,           PgnDialog::OnRenumber )
     EVT_BUTTON( ID_ADD_TO_CLIPBOARD,    PgnDialog::OnAddToClipboard )
@@ -54,7 +54,7 @@ BEGIN_EVENT_TABLE( PgnDialog, wxDialog )
 END_EVENT_TABLE()
 #endif
 
-void PgnDialog::AddExtraControls()
+wxSizer *PgnDialog::GdvAddExtraControls()
 {
     // Edit game details
     wxButton* edit_game_details = new wxButton ( this, ID_PGN_DIALOG_GAME_DETAILS, wxT("Edit Game Details"),
@@ -110,17 +110,26 @@ void PgnDialog::AddExtraControls()
     wxButton* publish = new wxButton ( this, ID_PGN_DIALOG_PUBLISH, wxT("Publish"),
         wxDefaultPosition, wxDefaultSize, 0 );
     vsiz_panel_button1->Add(publish, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    return vsiz_panel_button1;
 }
 
 
 void PgnDialog::GetCachedDocumentRaw( int idx, GameDocument &gd )
 {
-    std::unique_ptr<MagicBase> &mb = gc->gds[idx];
+    smart_ptr<MagicBase> &mb = gc->gds[idx];
     gd = *mb->GetGameDocumentPtr();
 }
 
 GameDocument * PgnDialog::GetCachedDocument( int idx )
 {
+#if 1
+    static GameDocument gd;
+    CompactGame pact;
+    smart_ptr<MagicBase> &mb = gc->gds[idx];
+    mb->GetCompactGame(pact);
+    pact.Upscale( gd );
+    return &gd;
+#else
     if( 0 != local_cache.count(idx) )
     {
         cprintf( "PgnDialog cache hit, idx %d\n", idx );
@@ -161,21 +170,21 @@ GameDocument * PgnDialog::GetCachedDocument( int idx )
         }
     }
     return &local_cache.at(idx);
+#endif
 }
 
-void PgnDialog::ReadItem( int item, CompactGame &info )
+void PgnDialog::GdvReadItem( int item, CompactGame &info )
 {
-    GameDocument *ptr = GetCachedDocument(item);
-    info.Downscale( *ptr );
+    smart_ptr<MagicBase> &mb = gc->gds[item];
+    mb->GetCompactGame( info );
 }
 
-
-void PgnDialog::OnSaveAllToAFile() {}
-void PgnDialog::OnHelpClick() {}
-void PgnDialog::OnSearch() {}
-void PgnDialog::OnUtility() {}
-void PgnDialog::OnCancel() {}
-void PgnDialog::OnNextMove( int idx ) {}
+void PgnDialog::GdvSaveAllToAFile() {}
+void PgnDialog::GdvHelpClick() {}
+void PgnDialog::GdvSearch() {}
+void PgnDialog::GdvUtility() {}
+void PgnDialog::GdvOnCancel() {}
+void PgnDialog::GdvNextMove( int idx ) {}
 
 
 
@@ -483,11 +492,50 @@ int wxCALLBACK sort_callback( long item1, long item2, long col )
     } */
     
 
-void PgnDialog::OnListColClick( int compare_col )
+void PgnDialog::GdvListColClick( int compare_col )
 {
     local_cache.clear();
     stack.clear();
-    GamesDialog::OnListColClick( compare_col );
+
+    // Load all games into memory
+    int nbr = gc->gds.size();
+    int old_percent = -1;
+    void *context=0;
+    bool end=false;
+    for( int i=0; !end && i<nbr; i++ )
+    {
+        
+        // If all the games are already in memory, the whole loop will operate here
+        if( !context )
+            context = gc->gds[i]->LoadIntoMemory( context, i+1 >= nbr );
+
+        // If we need to load games, put up a progress dialog box
+        else
+        {
+            wxProgressDialog progress( "Loading games", "Loading games", 100, NULL,
+                                      wxPD_APP_MODAL+
+                                      wxPD_AUTO_HIDE+
+                                      wxPD_ELAPSED_TIME+
+                                      wxPD_CAN_ABORT+
+                                      wxPD_ESTIMATED_TIME );
+            for( ; !end && i<nbr; i++ )
+            {
+                end = (i+1 >= nbr);
+                int percent = (i*100) / (nbr?nbr:1);
+                if( percent < 1 )
+                    percent = 1;
+                if( percent != old_percent )
+                {
+                    old_percent = percent;
+                    if( !progress.Update( percent>100 ? 100 : percent ) )
+                        end = true;
+                }
+                context = gc->gds[i]->LoadIntoMemory( context, end );   // never exit without an end=true call
+                                                                        //  prevents resource leaks
+            }
+        }
+    }
+    GamesDialog::GdvListColClick( compare_col );
 }
 
 /*
@@ -539,8 +587,8 @@ bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx )
         gd.game_being_edited = temp;
         gd.selected = false;
         ptr->selected = true;
-        if( &gl->gc == gc )
-            file_game_idx = this->file_game_idx;    // update this only if loading game from current file
+        //if( &gl->gc == gc )
+        file_game_idx = selected_game; //this->file_game_idx;    // update this only if loading game from current file
     }
     return selected_game != -1;
 }
@@ -651,7 +699,7 @@ void PgnDialog::OnOk()
             GameDocument doc = *GetCachedDocument(selected_game);
             doc.in_memory = true;
             doc.selected = true;
-            make_smart_ptr( HoldDocument,sptr,doc );
+            make_smart_ptr( GameDocument,sptr,doc );
             gc->gds[selected_game] = std::move(sptr);
         }
     }
@@ -680,7 +728,7 @@ void PgnDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
             gd.game_nbr = 0;
             gd.modified = true;
             gc->file_irrevocably_modified = true;
-            make_smart_ptr( HoldDocument, new_doc, gd );
+            make_smart_ptr( GameDocument, new_doc, gd );
             gc->gds.insert( iter, std::move(new_doc) );
             wxListItem item;              
             list_ctrl->InsertItem( idx_focus, item );
@@ -770,7 +818,7 @@ void PgnDialog::OnEditGamePrefix( wxCommandEvent& WXUNUSED(event) )
     }
 }
 
-void PgnDialog::OnSaveAllToAFile()
+void PgnDialog::GdvSaveAllToAFile()
 {
     wxFileDialog fd( objs.frame, "Save all listed games to a new .pgn file", "", "", "*.pgn", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
     wxString dir = objs.repository->nv.m_doc_dir;
@@ -815,7 +863,7 @@ void PgnDialog::CopyOrAdd( bool clear_clipboard )
                     gc_clipboard->gds.clear();
                 }
                 GameDocument gd = gc->gds[i]->GetGameDocument();
-                make_smart_ptr( HoldDocument, new_doc, gd );
+                make_smart_ptr( GameDocument, new_doc, gd );
                 gc_clipboard->gds.push_back(std::move(new_doc));
                 nbr_copied++;
             }
@@ -828,7 +876,7 @@ void PgnDialog::CopyOrAdd( bool clear_clipboard )
                 gc_clipboard->gds.clear();
             }
             GameDocument gd = gc->gds[idx_focus]->GetGameDocument();
-            make_smart_ptr( HoldDocument, new_doc, gd );
+            make_smart_ptr( GameDocument, new_doc, gd );
             gc_clipboard->gds.push_back(std::move(new_doc));
             nbr_copied++;
         }
@@ -861,7 +909,7 @@ void PgnDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
                 }
                 MagicBase &mb = **iter;
                 GameDocument gd = mb.GetGameDocument();
-                make_smart_ptr( HoldDocument, new_doc, gd );
+                make_smart_ptr( GameDocument, new_doc, gd );
                 gc_clipboard->gds.push_back(std::move(new_doc));
                 list_ctrl->DeleteItem(i);
                 iter = gc->gds.erase(iter);
@@ -882,7 +930,7 @@ void PgnDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
             GameDocument gd = mb.GetGameDocument();
             // This is required because for some reason it doesn't work if you don't use the intermediate reference, i.e.:
             //   GameDocument gd = **iter_focus.GetGameDocument();   // doesn't work
-            make_smart_ptr( HoldDocument,new_doc,gd);
+            make_smart_ptr( GameDocument,new_doc,gd);
             gc_clipboard->gds.push_back(std::move(new_doc));
             list_ctrl->DeleteItem(idx_focus);
             iter = gc->gds.erase(iter_focus);
@@ -952,7 +1000,7 @@ void PgnDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
             gc_clipboard->gds[i]->GetGameDocument(gd);
             gd.game_nbr = 0;
             gd.modified = true;
-            make_smart_ptr( HoldDocument,new_doc,gd);
+            make_smart_ptr( GameDocument,new_doc,gd);
             gc->gds.insert( iter, std::move(new_doc) );
             gc->file_irrevocably_modified = true;
             wxListItem item;              

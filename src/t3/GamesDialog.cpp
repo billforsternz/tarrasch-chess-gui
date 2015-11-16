@@ -79,7 +79,7 @@ BEGIN_EVENT_TABLE( GamesDialog, wxDialog )
 END_EVENT_TABLE()
 
 
-wxVirtualListCtrl::wxVirtualListCtrl( GamesDialog *parent, wxWindowID id, const wxPoint &pos, const wxSize &size, long style )
+GamesListCtrl::GamesListCtrl( GamesDialog *parent, wxWindowID id, const wxPoint &pos, const wxSize &size, long style )
     : wxListCtrl( (wxWindow *)parent, id, pos, size, wxLC_REPORT|wxLC_VIRTUAL )
 {
     this->parent = parent;
@@ -87,14 +87,11 @@ wxVirtualListCtrl::wxVirtualListCtrl( GamesDialog *parent, wxWindowID id, const 
 }
 
 // Focus changes to new item;
-void wxVirtualListCtrl::ReceiveFocus( int focus_idx )
+void GamesListCtrl::ReceiveFocus( int focus_idx )
 {
-    //cprintf( "ListCtrl::ReceiveFocus(%d)\n", focus_idx );
     if( focus_idx >= 0 )
     {
         track->focus_idx = focus_idx;
-        //if( focus_idx==0 ) 
-        //    cprintf( "** ReceiveFocus(0) calling ReadItemWithSingleLineCache\n" );
         parent->ReadItemWithSingleLineCache( focus_idx, track->info );
 
         int offset=0;
@@ -116,25 +113,25 @@ void wxVirtualListCtrl::ReceiveFocus( int focus_idx )
     }
 }
 
-std::string wxVirtualListCtrl::CalculateMoveTxt() const
+std::string GamesListCtrl::CalculateMoveTxt() const
 {
     std::string previous_move_not_needed;
     return CalculateMoveTxt(previous_move_not_needed,track->info,track->focus_offset,track->updated_position);
 }
 
-std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move ) const
+std::string GamesListCtrl::CalculateMoveTxt( std::string &previous_move ) const
 {
     return CalculateMoveTxt(previous_move,track->info,track->focus_offset,track->updated_position);
 }
 
-std::string wxVirtualListCtrl::CalculateMoveTxt( CompactGame &info, int offset ) const
+std::string GamesListCtrl::CalculateMoveTxt( CompactGame &info, int offset ) const
 {
     std::string previous_move_not_needed;
     thc::ChessPosition updated_position_not_needed;
     return CalculateMoveTxt(previous_move_not_needed,info,offset,updated_position_not_needed);
 }
 
-std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move, CompactGame &info, int focus_offset, thc::ChessPosition &updated_position ) const
+std::string GamesListCtrl::CalculateMoveTxt( std::string &previous_move, CompactGame &info, int focus_offset, thc::ChessPosition &updated_position ) const
 {
     bool position_updated = false;
     std::string move_txt;
@@ -189,13 +186,11 @@ std::string wxVirtualListCtrl::CalculateMoveTxt( std::string &previous_move, Com
     return move_txt;
 }
     
-wxString wxVirtualListCtrl::OnGetItemText( long item, long column) const
+wxString GamesListCtrl::OnGetItemText( long item, long column) const
 {
     CompactGame info;
     std::string move_txt;
     const char *txt;
-    //if( item==0 && column==10 ) 
-    //    cprintf( "** OnGetItemText(0) calling ReadItemWithSingleLineCache\n" );
     parent->ReadItemWithSingleLineCache( item, info );
     switch( column )
     {
@@ -229,8 +224,6 @@ wxString wxVirtualListCtrl::OnGetItemText( long item, long column) const
                 move_txt = buf + move_txt;
             }
             txt = move_txt.c_str();
-            //if( item == 0 )
-            //    cprintf( "item 0, column 10: %s\n", txt );
             break;
         }
     }
@@ -240,11 +233,11 @@ wxString wxVirtualListCtrl::OnGetItemText( long item, long column) const
 
 
 // GamesDialog event table definition
-BEGIN_EVENT_TABLE( wxVirtualListCtrl, wxListCtrl )
-    EVT_CHAR(wxVirtualListCtrl::OnChar)
+BEGIN_EVENT_TABLE( GamesListCtrl, wxListCtrl )
+    EVT_CHAR(GamesListCtrl::OnChar)
 END_EVENT_TABLE()
 
-void wxVirtualListCtrl::OnChar( wxKeyEvent &event )
+void GamesListCtrl::OnChar( wxKeyEvent &event )
 {
     bool update = false;
     switch ( event.GetKeyCode() )
@@ -304,9 +297,12 @@ GamesDialog::GamesDialog
     this->style = style;
     this->gc = gc;
     this->gc_clipboard = gc_clipboard;
-    init_position_specified = (cr!=NULL);
-    if( init_position_specified )
+    db_search = (cr!=NULL);
+    if( cr )
+    {
         this->cr = *cr;
+        this->cr_base = *cr;
+    }
     single_line_cache_idx = -1;
     file_game_idx = -1;
     nbr_games_in_list_ctrl = 0;
@@ -379,22 +375,21 @@ void GamesDialog::CreateControls()
 
     // A friendly message
     char buf[200];
-    if( !init_position_specified )
+    if( !db_search )
     {
-        // FIXME FIXME FIXME
-        CompressMoves press;
-        uint64_t hash = press.cr.Hash64Calculate();
-        objs.db->gbl_hash = hash;
-        
         nbr_games_in_list_ctrl = gc->gds.size();
-        sprintf(buf,"%d games in file",nbr_games_in_list_ctrl);
+        sprintf(buf,"%d games",nbr_games_in_list_ctrl);
+    }
+    else if( objs.gl->db_clipboard )
+    {
+        nbr_games_in_list_ctrl = gc_clipboard->gds.size();
+        sprintf(buf,"Using clipboard as database" );
     }
     else
     {
-        nbr_games_in_list_ctrl = objs.db->SetPosition( cr ); //gc->gds.size();
+        nbr_games_in_list_ctrl = objs.db->SetDbPosition( db_req, cr );
         sprintf(buf,"List of %d matching games from the database",nbr_games_in_list_ctrl);
     }
-    orig_nbr_games_in_list_ctrl = nbr_games_in_list_ctrl;
 
     title_ctrl = new wxStaticText( this, wxID_STATIC,
         buf, wxDefaultPosition, wxDefaultSize, 0 );
@@ -412,7 +407,7 @@ void GamesDialog::CreateControls()
         disp_height = 768;
     sz.x = (disp_width*90)/100;
     sz.y = (disp_height*36)/100;
-    list_ctrl  = new wxVirtualListCtrl( this, ID_PGN_LISTBOX, wxDefaultPosition, sz/*wxDefaultSize*/,wxLC_REPORT|wxLC_VIRTUAL );
+    list_ctrl  = new GamesListCtrl( this, ID_PGN_LISTBOX, wxDefaultPosition, sz/*wxDefaultSize*/,wxLC_REPORT|wxLC_VIRTUAL );
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
     if( nbr_games_in_list_ctrl > 0 )
     {
@@ -514,7 +509,7 @@ void GamesDialog::CreateControls()
     list_ctrl->SetColumnWidth(10, cols[10] );   // "Moves"
     gc->col_flags.push_back(col_flag);
     //int top_item;
-    //bool resuming = data_src->gc->IsResumingPreviousWindow(top_item);
+    //bool resuming = gc->IsResumingPreviousWindow(top_item);
     box_sizer->Add(list_ctrl, 0, wxGROW|wxALL, 5);
 
     // A dividing line before the details
@@ -541,7 +536,7 @@ void GamesDialog::CreateControls()
     hsiz_panel->Add(button_panel, 0, wxALIGN_TOP|wxALL, 10);
 
     int row1, col1, row2, col2;
-    GetButtonGridDimensions( row1, col1, row2, col2 );
+    GdvGetButtonGridDimensions( row1, col1, row2, col2 );
     if( row1>0 && col1>0 )
         vsiz_panel_button1 = new wxFlexGridSizer(row1,col1,0,0);
     else
@@ -580,7 +575,7 @@ void GamesDialog::CreateControls()
     box_sizer->Add(player_names, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxBOTTOM, 10);
     
     // Overridden by specialised classes
-    AddExtraControls();
+    GdvAddExtraControls();
 }
 
 
@@ -625,261 +620,10 @@ void GamesDialog::SetDialogHelp()
 void GamesDialog::OnListColClick( wxListEvent &event )
 {
     int compare_col = event.GetColumn();
-    OnListColClick( compare_col );
+    GdvListColClick( compare_col );
 }
 
 
-// TODO - Fix the mass copy paste from DbDialog.cpp !
-
-static GamesDialog *backdoor;
-static bool compare( const smart_ptr<MagicBase> &g1, const smart_ptr<MagicBase> &g2 )
-{
-    bool lt=false;
-    Roster r1 = g1->RefRoster();
-    Roster r2 = g2->RefRoster();
-    switch( backdoor->compare_col )
-    {
-        case 1: lt = r1.white < r2.white;
-                break;
-        case 2:
-        {       
-                int elo_1 = atoi( r1.white_elo.c_str() );
-                int elo_2 = atoi( r2.white_elo.c_str() );
-                lt = elo_1 < elo_2;
-                break;
-        }
-        case 3: lt = r1.black < r2.black;
-                break;
-        case 4:
-        {
-                int elo_1 = atoi( r1.black_elo.c_str() );
-                int elo_2 = atoi( r2.black_elo.c_str() );
-                lt = elo_1 < elo_2;
-                break;
-        }
-        case 5: lt = r1.date < r2.date;
-                break;
-        case 6: lt = r1.site < r2.site;
-                break;
-        case 8: lt = r1.result < r2.result;
-                break;
-    }
-    return lt;
-}
-        
-static bool rev_compare( const smart_ptr<MagicBase> &g1, const smart_ptr<MagicBase> &g2 )
-{
-    bool lt=true;
-    Roster r1 = g1->RefRoster();
-    Roster r2 = g2->RefRoster();
-    switch( backdoor->compare_col )
-    {
-        case 1: lt = r1.white > r2.white;           break;
-        case 2:
-        {       int elo_1 = atoi( r1.white_elo.c_str() );
-                int elo_2 = atoi( r2.white_elo.c_str() );
-                lt = elo_1 > elo_2;
-                break;
-        }
-        case 3: lt = r1.black > r2.black;           break;
-        case 4:
-        {       int elo_1 = atoi( r1.black_elo.c_str() );
-                int elo_2 = atoi( r2.black_elo.c_str() );
-                lt = elo_1 > elo_2;
-                break;
-        }
-        case 5: lt = r1.date > r2.date;             break;
-        case 6: lt = r1.site > r2.site;             break;
-        case 8: lt = r1.result > r2.result;         break;
-    }
-    return lt;
-}
-
-struct TempElement
-{
-    int idx;
-    int transpo;
-    std::string blob;
-    std::vector<int> counts;
-};
-
-static bool compare_blob( const TempElement &e1, const TempElement &e2 )
-{
-    bool lt = false;
-    if( e1.transpo == e2.transpo )
-        lt = (e1.blob < e2.blob);
-    else
-        lt = (e1.transpo > e2.transpo);     // smaller transpo nbr should come first
-    return lt;
-}
-
-static bool compare_counts( const TempElement &e1, const TempElement &e2 )
-{
-    bool lt = false;
-    if( e1.transpo != e2.transpo )
-        lt = (e1.transpo > e2.transpo);     // smaller transpo nbr should come first
-    else
-    {
-        unsigned int len = e1.blob.length();
-        if( e2.blob.length() < len )
-            len = e2.blob.length();
-        for( unsigned int i=0; i<len; i++ )
-        {
-            if( e1.counts[i] != e2.counts[i] )
-            {
-                lt = (e1.counts[i] < e2.counts[i]);
-                return lt;
-            }
-        }
-        lt = (e1.blob.length() < e2.blob.length());
-    }
-    return lt;
-}
-
-#if 0
-void GamesDialog::SmartCompare()
-{
-    std::vector<TempElement> inter;     // intermediate representation
-    
-    // Step 1, do a conventional string sort, beginning at our offset into the blob
-    unsigned int sz = gc->gds.size();
-    for( unsigned int i=0; i<sz; i++ )
-    {
-        DB_GAME_INFO &g = gc->gds[i];
-        TempElement e;
-        unsigned int sz2 = transpositions.size();
-        for( unsigned int j=0; j<sz2; j++ )
-        {
-            PATH_TO_POSITION *ptp = &transpositions[j];
-            unsigned int offset = ptp->blob.length();
-            if( 0 == memcmp( ptp->blob.c_str(), g.str_blob.c_str(), offset ) )
-            {
-                e.idx = i;
-                e.blob = g.str_blob.substr(offset);
-                e.counts.resize( e.blob.length() );
-                e.transpo = transpo_activated ? j+1 : 0;
-                inter.push_back(e);
-                break;
-            }
-        }
-    }
-    std::sort( inter.begin(), inter.end(), compare_blob );
-    
-    // Step 2, work out the nbr of moves in clumps of moves
-    sz = inter.size();
-    bool at_least_one = true;
-    for( unsigned int j=0; at_least_one; j++ )
-    {
-        at_least_one = false;  // stop when we've passed end of all strings
-        char current='\0';
-        unsigned int start=0;
-        bool run_in_progress=false;
-        for( unsigned int i=0; i<sz; i++ )
-        {
-            TempElement &e = inter[i];
-            
-            // A short game stops runs
-            if( j >= e.blob.length() )
-            {
-                if( run_in_progress )
-                {
-                    run_in_progress = false;
-                    int count = i-start;
-                    for( int k=start; k<i; k++ )
-                    {
-                        TempElement &f = inter[k];
-                        f.counts[j] = count;
-                    }
-                }
-                continue;
-            }
-            at_least_one = true;
-            char c = e.blob[j];
-            
-            // First time, get something to start a run
-            if( !run_in_progress )
-            {
-                run_in_progress = true;
-                current = c;
-                start = i;
-            }
-            else
-            {
-                
-                // Run can be over because of character change
-                if( c != current )
-                {
-                    int count = i-start;
-                    for( int k=start; k<i; k++ )
-                    {
-                        TempElement &f = inter[k];
-                        f.counts[j] = count;
-                    }
-                    current = c;
-                    start = i;
-                }
-                
-                // And/Or because we reach bottom
-                if( i+1 == sz )
-                {
-                    int count = sz - start;
-                    for( int k=start; k<sz; k++ )
-                    {
-                        TempElement &f = inter[k];
-                        f.counts[j] = count;
-                    }
-                }
-            }
-        }
-    }
-
-    // Step 3 sort again using the counts
-    std::sort( inter.begin(), inter.end(), compare_counts );
-    
-    // Step 4 build sorted version of games list
-    std::vector<DB_GAME_INFO> temp;
-    sz = inter.size();
-    for( unsigned int i=0; i<sz; i++ )
-    {
-        TempElement &e = inter[i];
-        temp.push_back( gc->gds[e.idx] );
-    }
-
-    // Step 5 replace original games list
-    gc->gds = temp;
-}
-#endif
-
-// override
-void GamesDialog::OnListColClick( int compare_col )
-{
-    if( gc->gds.size() > 0 )
-    {
-        static int last_time;
-        static int consecutive;
-        if( compare_col == last_time )
-            consecutive++;
-        else
-            consecutive=0;
-        this->compare_col = compare_col;
-        backdoor = this;
-        if( compare_col == 10 )
-            ;//SmartCompare();
-        else
-            std::sort( gc->gds.begin(), gc->gds.end(), (consecutive%2==0)?rev_compare:compare );
-        nbr_games_in_list_ctrl = gc->gds.size();
-        list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
-        list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
-        int top = list_ctrl->GetTopItem();
-        int count = 1 + list_ctrl->GetCountPerPage();
-        if( count > nbr_games_in_list_ctrl )
-            count = nbr_games_in_list_ctrl;
-        for( int i=0; i<count; i++ )
-            list_ctrl->RefreshItem(top++);
-        Goto(0);
-        last_time = compare_col;
-    }
-}
 
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_OK
@@ -890,11 +634,11 @@ void GamesDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
 
 void GamesDialog::OnActivate(wxActivateEvent& event)
 {
-    OnActivate();
+    GdvOnActivate();
 }
 
 // override
-void GamesDialog::OnActivate()
+void GamesDialog::GdvOnActivate()
 {
     if( !activated_at_least_once )
     {
@@ -925,24 +669,15 @@ void GamesDialog::Goto( int idx )
 
 void GamesDialog::ReadItemWithSingleLineCache( int item, CompactGame &info )
 {
-    //if( item==0 )
-    //    cprintf( "** In ReadItemWithSingleLineCache(0)\n" );        
-    if( !TestAndClearIsCacheDirty() && (item==single_line_cache_idx) )
-    {
-        //if( item==0 )
-        //    cprintf( " single line cache\n" );        
+    if( !GdvTestAndClearIsCacheDirty() && (item==single_line_cache_idx) )
         info = single_line_cache;
-    }
     else
     {
-        //if( item==0 )
-        //    cprintf( " not single line cache\n" );        
-        ReadItem( item, info );
+        GdvReadItem( item, info );
+        cprintf( "GdvReadItem(%d) = %s-%s\n", item, info.r.white.c_str(), info.r.black.c_str() );
         single_line_cache_idx = item;
         single_line_cache = info;
     }
-    //if( item==0 )
-    //    cprintf( " nbr moves=%d\n", info.str_blob.size() );        
 }
 
 void GamesDialog::LoadGame( int idx, int focus_offset )
@@ -997,55 +732,55 @@ void GamesDialog::OnOk()
 
 void GamesDialog::OnSaveAllToAFile( wxCommandEvent& WXUNUSED(event) )
 {
-    OnSaveAllToAFile();
+    GdvSaveAllToAFile();
 }
 
 // override
-void GamesDialog::OnSaveAllToAFile()
+void GamesDialog::GdvSaveAllToAFile()
 {
 }
 
 void GamesDialog::OnCancel( wxCommandEvent& WXUNUSED(event) )
 {
-    OnCancel();
+    GdvOnCancel();
     EndDialog( wxID_CANCEL );
 }
 
 // override
-void GamesDialog::OnCancel()
+void GamesDialog::GdvOnCancel()
 {
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_HELP
 void GamesDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
 {
-    OnHelpClick();
+    GdvHelpClick();
 }
 
 // overide
-void GamesDialog::OnHelpClick()
+void GamesDialog::GdvHelpClick()
 {
 }
 
 void GamesDialog::OnCheckBox( wxCommandEvent& event )
 {
     bool checked = event.IsChecked();
-    OnCheckBox( checked );
+    GdvCheckBox( checked );
 }
 
 // overide
-void GamesDialog::OnCheckBox( bool checked )
+void GamesDialog::GdvCheckBox( bool checked )
 {
 }
 
 void GamesDialog::OnCheckBox2( wxCommandEvent& event )
 {
     bool checked = event.IsChecked();
-    OnCheckBox2( checked );
+    GdvCheckBox2( checked );
 }
 
 // overide
-void GamesDialog::OnCheckBox2( bool checked )
+void GamesDialog::GdvCheckBox2( bool checked )
 {
 }
 
@@ -1064,61 +799,62 @@ void GamesDialog::OnComboBox( wxCommandEvent& event )
 
 void GamesDialog::OnUtility( wxCommandEvent& WXUNUSED(event) )
 {
-    OnUtility();
+    GdvUtility();
 }
 
 // overide
-void GamesDialog::OnUtility()
+void GamesDialog::GdvUtility()
 {
 }
 
 void GamesDialog::OnSearch( wxCommandEvent& WXUNUSED(event) )
 {
-    OnSearch();
+    GdvSearch();
 }
 
 // overide
-void GamesDialog::OnSearch()
+void GamesDialog::GdvSearch()
 {
 }
 
 void GamesDialog::OnButton1( wxCommandEvent& WXUNUSED(event) )
 {
-    OnButton1();
+    GdvButton1();
 }
 
 // overide
-void GamesDialog::OnButton1()
+void GamesDialog::GdvButton1()
 {
 }
 
 void GamesDialog::OnButton2( wxCommandEvent& WXUNUSED(event) )
 {
-    OnButton2();
+    GdvButton2();
 }
 
 // overide
-void GamesDialog::OnButton2()
+void GamesDialog::GdvButton2()
 {
+    GdvButton2();
 }
 
 void GamesDialog::OnButton3( wxCommandEvent& WXUNUSED(event) )
 {
-    OnButton3();
+    GdvButton3();
 }
 
 // overide
-void GamesDialog::OnButton3()
+void GamesDialog::GdvButton3()
 {
 }
 
 void GamesDialog::OnButton4( wxCommandEvent& WXUNUSED(event) )
 {
-    OnButton4();
+    GdvButton4();
 }
 
 // overide
-void GamesDialog::OnButton4()
+void GamesDialog::GdvButton4()
 {
 }
 
@@ -1139,20 +875,20 @@ void GamesDialog::OnTabSelected( wxBookCtrlEvent& event )
 void GamesDialog::OnNextMove( wxCommandEvent &event )
 {
     int idx = event.GetSelection();
-    OnNextMove(idx);
+    GdvNextMove(idx);
 }
 
 
 // overide
-void GamesDialog::OnNextMove( int idx )
+void GamesDialog::GdvNextMove( int idx )
 {
 }
    
     
-bool GamesDialog::ShowModalOk()
+bool GamesDialog::ShowModalOk( std::string title )
 {
     Init();
-    Create( parent2, id, "Title FIXME", pos, size, style );
+    Create( parent2, id, wxString(title.c_str()), pos, size, style );
     bool ok = (wxID_OK == ShowModal());
     objs.repository->nv.m_col0  = list_ctrl->GetColumnWidth( 0 );    // "Game #"
     objs.repository->nv.m_col1  = list_ctrl->GetColumnWidth( 1 );    // "White"
@@ -1240,7 +976,8 @@ void GamesDialog::OnCopy( wxCommandEvent& WXUNUSED(event) )
 
 void GamesDialog::CopyOrAdd( bool clear_clipboard )
 {
-/*    int nbr_copied=0, idx_focus=-1;
+    int idx_focus = -1;
+    int nbr_copied = 0;
     if( list_ctrl )
     {
         int sz=gc->gds.size();
@@ -1255,9 +992,7 @@ void GamesDialog::CopyOrAdd( bool clear_clipboard )
                     clear_clipboard = false;
                     gc_clipboard->gds.clear();
                 }
-                GameDocument gd = gc->gds[i]->GetGameDocument();
-                make_smart_ptr( HoldDocument, new_doc, gd );
-                gc_clipboard->gds.push_back(std::move(new_doc));
+                gc_clipboard->gds.push_back( gc->gds[i] ); // assumes smart_ptr is std::shared_ptr
                 nbr_copied++;
             }
         }
@@ -1268,13 +1003,11 @@ void GamesDialog::CopyOrAdd( bool clear_clipboard )
                 clear_clipboard = false;
                 gc_clipboard->gds.clear();
             }
-            GameDocument gd = gc->gds[idx_focus]->GetGameDocument();
-            make_smart_ptr( HoldDocument, new_doc, gd );
-            gc_clipboard->gds.push_back(std::move(new_doc));
+            gc_clipboard->gds.push_back( gc->gds[idx_focus] ); // assumes smart_ptr is std::shared_ptr
             nbr_copied++;
         }
     }
-    dbg_printf( "%d games copied\n", nbr_copied ); */
+    dbg_printf( "%d games copied\n", nbr_copied );
 }
 
 void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
@@ -1298,7 +1031,7 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
             gd.game_nbr = 0;
             gd.modified = true;
             gc->file_irrevocably_modified = true;
-            make_smart_ptr( HoldDocument, new_doc, gd );
+            make_smart_ptr( GameDocument, new_doc, gd );
             gc->gds.insert( iter, std::move(new_doc) );
             wxListItem item;              
             list_ctrl->InsertItem( idx_focus, item );
@@ -1319,7 +1052,7 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
 
 
 #if 0
-void GamesDialog::OnSaveAllToAFile()
+void GamesDialog::GdvSaveAllToAFile()
 {
 /*    wxFileDialog fd( objs.frame, "Save all listed games to a new .pgn file", "", "", "*.pgn", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
     wxString dir = objs.repository->nv.m_doc_dir;
@@ -1363,7 +1096,7 @@ void GamesDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
                 }
                 MagicBase &mb = **iter;
                 GameDocument gd = mb.GetGameDocument();
-                make_smart_ptr( HoldDocument, new_doc, gd );
+                make_smart_ptr( GameDocument, new_doc, gd );
                 gc_clipboard->gds.push_back(std::move(new_doc));
                 list_ctrl->DeleteItem(i);
                 iter = gc->gds.erase(iter);
@@ -1384,7 +1117,7 @@ void GamesDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
             GameDocument gd = mb.GetGameDocument();
             // This is required because for some reason it doesn't work if you don't use the intermediate reference, i.e.:
             //   GameDocument gd = **iter_focus.GetGameDocument();   // doesn't work
-            make_smart_ptr( HoldDocument,new_doc,gd);
+            make_smart_ptr( GameDocument,new_doc,gd);
             gc_clipboard->gds.push_back(std::move(new_doc));
             list_ctrl->DeleteItem(idx_focus);
             iter = gc->gds.erase(iter_focus);
@@ -1454,7 +1187,7 @@ void GamesDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
             gc_clipboard->gds[i]->GetGameDocument(gd);
             gd.game_nbr = 0;
             gd.modified = true;
-            make_smart_ptr( HoldDocument,new_doc,gd);
+            make_smart_ptr( GameDocument,new_doc,gd);
             gc->gds.insert( iter, std::move(new_doc) );
             gc->file_irrevocably_modified = true;
             wxListItem item;              
@@ -1487,3 +1220,344 @@ void GamesDialog::OnPublish( wxCommandEvent& WXUNUSED(event) )
 {
     gc->Publish( gc_clipboard );
 }
+
+
+static GamesDialog *backdoor;
+
+static bool compare( const smart_ptr<MagicBase> g1, const smart_ptr<MagicBase> g2 )
+{
+    bool lt=false;
+    if( backdoor->compare_col == 1 )
+    {
+        const char *white1 = g1->White();
+        const char *white2 = g2->White();
+        int negative_if_lt0 = strcmp( white1, white2 );
+        lt = (negative_if_lt0 < 0);
+    }
+    else if( backdoor->compare_col == 3 )
+    {
+        const char *black1 = g1->Black();
+        const char *black2 = g2->Black();
+        int negative_if_lt0 = strcmp( black1, black2 );
+        lt = (negative_if_lt0 < 0);
+    }
+    else
+    {
+        Roster r1 = g1->RefRoster();
+        Roster r2 = g2->RefRoster();
+        switch( backdoor->compare_col )
+        {
+            case 1: lt = r1.white < r2.white;
+                break;
+            case 2:
+            {
+                int elo_1 = atoi( r1.white_elo.c_str() );
+                int elo_2 = atoi( r2.white_elo.c_str() );
+                lt = elo_1 < elo_2;
+                break;
+            }
+            case 3: lt = r1.black < r2.black;
+                break;
+            case 4:
+            {
+                int elo_1 = atoi( r1.black_elo.c_str() );
+                int elo_2 = atoi( r2.black_elo.c_str() );
+                lt = elo_1 < elo_2;
+                break;
+            }
+            case 5: lt = r1.date < r2.date;
+                break;
+            case 6: lt = r1.site < r2.site;
+                break;
+            case 8: lt = r1.result < r2.result;
+                break;
+        }
+    }
+    return lt;
+}
+
+
+
+
+static bool rev_compare( const smart_ptr<MagicBase> g1, const smart_ptr<MagicBase> g2 )
+{
+    bool lt=true;
+    if( backdoor->compare_col == 1 )
+    {
+        const char *white1 = g2->White();
+        const char *white2 = g1->White();
+        int negative_if_lt0 = strcmp( white1, white2 );
+        lt = (negative_if_lt0 < 0);
+    }
+    else if( backdoor->compare_col == 3 )
+    {
+        const char *black1 = g2->Black();
+        const char *black2 = g1->Black();
+        int negative_if_lt0 = strcmp( black1, black2 );
+        lt = (negative_if_lt0 < 0);
+    }
+    else
+    {
+        Roster r1 = g1->RefRoster();
+        Roster r2 = g2->RefRoster();
+        switch( backdoor->compare_col )
+        {
+            case 1: lt = r1.white > r2.white;           break;
+            case 2:
+            {       int elo_1 = atoi( r1.white_elo.c_str() );
+                int elo_2 = atoi( r2.white_elo.c_str() );
+                lt = elo_1 > elo_2;
+                break;
+            }
+            case 3: lt = r1.black > r2.black;           break;
+            case 4:
+            {       int elo_1 = atoi( r1.black_elo.c_str() );
+                int elo_2 = atoi( r2.black_elo.c_str() );
+                lt = elo_1 > elo_2;
+                break;
+            }
+            case 5: lt = r1.date > r2.date;             break;
+            case 6: lt = r1.site > r2.site;             break;
+            case 8: lt = r1.result > r2.result;         break;
+        }
+    }
+    return lt;
+}
+
+struct TempElement
+{
+    int idx;
+    int transpo;
+    std::string blob;
+    std::vector<int> counts;
+};
+
+static bool compare_blob( const TempElement &e1, const TempElement &e2 )
+{
+    bool lt = false;
+    //if( e1.transpo == e2.transpo )
+        lt = (e1.blob < e2.blob);
+    //else
+    //    lt = (e1.transpo > e2.transpo);     // smaller transpo nbr should come first
+    return lt;
+}
+
+static bool compare_counts( const TempElement &e1, const TempElement &e2 )
+{
+    bool lt = false;
+    //if( e1.transpo != e2.transpo )
+    //    lt = (e1.transpo > e2.transpo);     // smaller transpo nbr should come first
+    //else
+    {
+        unsigned int len = e1.blob.length();
+        if( e2.blob.length() < len )
+            len = e2.blob.length();
+        for( unsigned int i=0; i<len; i++ )
+        {
+            if( e1.counts[i] != e2.counts[i] )
+            {
+                lt = (e1.counts[i] < e2.counts[i]);
+                return lt;
+            }
+        }
+        lt = (e1.blob.length() < e2.blob.length());
+    }
+    return lt;
+}
+
+void GamesDialog::SmartCompare( std::vector< smart_ptr<MagicBase> > &gds )
+{
+    std::vector<TempElement> inter;     // intermediate representation
+    
+    // Step 1, do a conventional string sort
+    unsigned int sz = gds.size();
+    for( unsigned int i=0; i<sz; i++ )
+    {
+        TempElement e;
+        e.idx = i;
+        e.transpo = 0;
+        e.blob = gds[i]->RefCompressedMoves();
+        e.counts.resize( e.blob.length() );
+        inter.push_back(e);
+    }
+    std::sort( inter.begin(), inter.end(), compare_blob );
+    
+    
+    // Step 2, work out the nbr of moves in clumps of moves
+    /*
+     // Imagine that the compressed one byte codes sort in the same order as multi-char ascii move
+     //  representations (they don't but the key thing is that they are deterministic - the actual order
+     //  doesn't matter)
+     A)  1.d4 Nf6 2.c4 e6 3.Nc3
+     B)  1.d4 Nf6 2.c4 e6 3.Nf3
+     C)  1.d4 Nf6 2.c4 e6 3.Nf3
+     D)  1.d4 d5 2.c4 e6 3.Nc3
+     E)  1.d4 d5 2.c4 e6 3.Nf3
+     F)  1.d4 d5 2.c4 e6 3.Nf3
+     G)  1.d4 d5 2.c4 c5 3.d5
+     
+     // Calculate the counts like this
+     j=0 j=1 j=2 j=3 j=4
+     i=0  A)  7
+     i=1  B)  7
+     i=2  C)  7
+     i=3  D)  7      j=0 count 7 '1.d4's at offset 0 into each game
+     i=4  E)  7
+     i=5  F)  7
+     i=6  G)  7
+     
+     j=0 j=1 j=2 j=3 j=4
+     i=0  A)  7   3
+     i=1  B)  7   3
+     i=2  C)  7   3
+     i=3  D)  7   4    j=1 count 3 '1...Nf6's and 4 '1...d5's
+     i=4  E)  7   4
+     i=5  F)  7   4
+     i=6  G)  7   4
+     
+     j=0 j=1 j=2 j=3 j=4
+     i=0  A)  7   3   7   6   1
+     i=1  B)  7   3   7   6   2
+     i=2  C)  7   3   7   6   2     etc.
+     i=3  D)  7   4   7   6   1
+     i=4  E)  7   4   7   6   2
+     i=5  F)  7   4   7   6   2
+     i=6  G)  7   4   7   1   1
+     
+     //  Now re-sort based on these counts, bigger counts come first
+     E)  7   4   7   6   2
+     F)  7   4   7   6   2
+     D)  7   4   7   6   1
+     G)  7   4   7   1   1
+     B)  7   3   7   6   2
+     C)  7   3   7   6   2
+     A)  7   3   7   6   1
+     
+     // So final ordering is according to line popularity
+     E)  1.d4 d5 2.c4 e6 3.Nf3
+     F)  1.d4 d5 2.c4 e6 3.Nf3
+     D)  1.d4 d5 2.c4 e6 3.Nc3
+     G)  1.d4 d5 2.c4 c5 3.d5
+     B)  1.d4 Nf6 2.c4 e6 3.Nf3
+     C)  1.d4 Nf6 2.c4 e6 3.Nf3
+     A)  1.d4 Nf6 2.c4 e6 3.Nc3
+     */
+    
+    
+    sz = inter.size();
+    bool at_least_one = true;
+    for( unsigned int j=0; at_least_one; j++ )
+    {
+        at_least_one = false;  // stop when we've passed end of all strings
+        char current='\0';
+        unsigned int start=0;
+        bool run_in_progress=false;
+        for( unsigned int i=0; i<sz; i++ )
+        {
+            TempElement &e = inter[i];
+            
+            // A short game stops runs
+            if( j >= e.blob.length() )
+            {
+                if( run_in_progress )
+                {
+                    run_in_progress = false;
+                    int count = i-start;
+                    for( int k=start; k<i; k++ )
+                    {
+                        TempElement &f = inter[k];
+                        f.counts[j] = count;
+                    }
+                }
+                continue;
+            }
+            at_least_one = true;
+            char c = e.blob[j];
+            
+            // First time, get something to start a run
+            if( !run_in_progress )
+            {
+                run_in_progress = true;
+                current = c;
+                start = i;
+            }
+            else
+            {
+                
+                // Run can be over because of character change
+                if( c != current )
+                {
+                    int count = i-start;
+                    for( int k=start; k<i; k++ )
+                    {
+                        TempElement &f = inter[k];
+                        f.counts[j] = count;
+                    }
+                    current = c;
+                    start = i;
+                }
+                
+                // And/Or because we reach bottom
+                if( i+1 == sz )
+                {
+                    int count = sz - start;
+                    for( int k=start; k<sz; k++ )
+                    {
+                        TempElement &f = inter[k];
+                        f.counts[j] = count;
+                    }
+                }
+            }
+        }
+    }
+    
+    // Step 3 sort again using the counts
+    std::sort( inter.begin(), inter.end(), compare_counts );
+    
+    // Step 4 build sorted version of games list
+    std::vector< smart_ptr<MagicBase> > temp;
+    sz = inter.size();
+    for( unsigned int i=0; i<sz; i++ )
+    {
+        TempElement &e = inter[i];
+        temp.push_back( gds[e.idx] );
+    }
+    
+    // Step 5 replace original games list
+    gds = temp;
+}
+
+
+void GamesDialog::GdvListColClick( int compare_col )
+{
+    if( gc->gds.size() > 0 )
+    {
+        static int last_time;
+        static int consecutive;
+        if( compare_col == last_time )
+            consecutive++;
+        else
+            consecutive=0;
+        this->compare_col = compare_col;
+        backdoor = this;
+        if( compare_col == 10 )
+            SmartCompare(gc->gds);
+        else
+            std::sort( gc->gds.begin(), gc->gds.end(), (consecutive%2==0)?compare:rev_compare );
+        nbr_games_in_list_ctrl = gc->gds.size();
+        list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
+        list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
+        int top = list_ctrl->GetTopItem();
+        int count = 1 + list_ctrl->GetCountPerPage();
+        if( count > nbr_games_in_list_ctrl )
+            count = nbr_games_in_list_ctrl;
+        for( int i=0; i<count; i++ )
+            list_ctrl->RefreshItem(top++);
+        Goto(0);
+        last_time = compare_col;
+    }
+}
+
+
+
+
