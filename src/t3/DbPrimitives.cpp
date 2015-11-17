@@ -13,6 +13,7 @@
 #include "thc.h"
 #include "sqlite3.h"
 #include "CompressMoves.h"
+#include "ProgressBar.h"
 #include "DbPrimitives.h"
 #include "DebugPrintf.h"
 static void purge_bucket(int bucket_idx);
@@ -27,13 +28,17 @@ static int game_id;
 
 
 // Returns bool ok
-bool db_primitive_open( const char *db_file )
+bool db_primitive_open( const char *db_file, ProgressBar *prog )
 {
     cprintf( "db_primitive_open()\n" );
     
     // Try to create the database. If it doesnt exist, it would be created
     //  pass a pointer to the pointer to sqlite3, in short sqlite3**
+    if( prog )
+        prog->Partial(0);
     int retval = sqlite3_open(db_file,&handle);
+    if( prog )
+        prog->Partial(100);
     
     // If connection failed, handle returns NULL
     if(retval)
@@ -46,32 +51,42 @@ bool db_primitive_open( const char *db_file )
 }
 
 // Returns bool ok
-bool db_primitive_create_tables()
+bool db_primitive_create_tables( ProgressBar *prog )
 {
     DebugPrintfTime turn_on_time_reporting;
     cprintf( "db_primitive_create_tables()\n" );
+    if( prog )
+        prog->Partial(0);
     
     // Create tables if not existing
     cprintf( "Create games table");
     int retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS description (description TEXT, version INTEGER)",0,0,0);
+    if( prog )
+        prog->Partial(2);
     if( retval )
     {
         cprintf("sqlite3_exec(CREATE description) FAILED\n");
         return false;
     }
     retval = sqlite3_exec(handle,"INSERT INTO description VALUES('Description of database goes here', 1 )",0,0,0);
+    if( prog )
+        prog->Partial(4);
     if( retval )
     {
         cprintf("sqlite3_exec(INSERT description) FAILED\n");
         return false;
     }
     retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS games (game_id INTEGER, game_hash INT8 UNIQUE, white TEXT, black TEXT, event TEXT, site TEXT, result TEXT, date TEXT, white_elo TEXT, black_elo TEXT, moves BLOB)",0,0,0);
+    if( prog )
+        prog->Partial(6);
     if( retval )
     {
         cprintf("sqlite3_exec(CREATE games) FAILED\n");
         return false;
     }
     retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS games_duplicates (game_id INTEGER, game_hash INT8, white TEXT, black TEXT, event TEXT, site TEXT, result TEXT, date TEXT, white_elo TEXT, black_elo TEXT, moves BLOB)",0,0,0);
+    if( prog )
+        prog->Partial(8);
     if( retval )
     {
         cprintf("sqlite3_exec(CREATE games_duplicates) FAILED\n");
@@ -80,6 +95,8 @@ bool db_primitive_create_tables()
     cprintf( "Create positions tables");
     for( int i=0; i<NBR_BUCKETS; i++ )
     {
+        if( prog )
+            prog->Partial(10 + (i*90) / NBR_BUCKETS);
 		if( i<20 || i%10 == 0)
 			cprintf( "Creating bucket %d\n", i);
         char buf[200];

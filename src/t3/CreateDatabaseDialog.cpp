@@ -189,7 +189,6 @@ void CreateDatabaseDialog::SetDialogHelp()
 {
 }
 
-
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_CREATE_DB_CREATE
 void CreateDatabaseDialog::OnMaintenanceCreate( wxCommandEvent& WXUNUSED(event) )
 {
@@ -234,7 +233,8 @@ void CreateDatabaseDialog::OnMaintenanceCreate( wxCommandEvent& WXUNUSED(event) 
     {
         for( int i=0; i<cnt; i++ )
         {
-            db_maintenance_create_or_append_to_database(  db_name.c_str(), files[i].c_str() );
+            ProgressBar cddp;
+            db_maintenance_create_or_append_to_database(  db_name.c_str(), files[i].c_str(), &cddp );
         }
         db_maintenance_create_indexes( db_name.c_str() );
     }
