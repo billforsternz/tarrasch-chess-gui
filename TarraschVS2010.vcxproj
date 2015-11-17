@@ -1069,6 +1069,7 @@
     <ClInclude Include="src\t3\PopupControl.h" />
     <ClInclude Include="src\t3\Portability.h" />
     <ClInclude Include="src\t3\PositionDialog.h" />
+    <ClInclude Include="src\t3\ProgressBar.h" />
     <ClInclude Include="src\t3\Repository.h" />
     <ClInclude Include="src\t3\Rybka.h" />
     <ClInclude Include="src\t3\Session.h" />
