@@ -8,41 +8,39 @@
 #define PROGRESS_BAR_H
 
 #include <stdio.h>
+#include <string>
 #include "wx/progdlg.h"
 
 class ProgressBar
 {
 public:
-    ProgressBar() :
-        progress( "Creating1", "Creating2", 100, NULL,
+    ProgressBar( std::string title, std::string desc, FILE *ifile=0 ) :
+        progress( title, desc, 100, NULL,
                                     wxPD_APP_MODAL+
                                     wxPD_AUTO_HIDE+
                                     wxPD_ELAPSED_TIME+
                                     wxPD_CAN_ABORT+
                                     wxPD_ESTIMATED_TIME )
     {
-        ifile = 0;
+        modulo_256=0;
         old_percent=0;
-        percent=0;
-    }
-
-    void SetFile( FILE *ifile )
-    {
         this->ifile = ifile;
-        fseek(ifile,0,SEEK_END);
-        file_len = ftell(ifile);
-        fseek(ifile,0,SEEK_SET);
+        if( ifile )
+        {
+            fseek(ifile,0,SEEK_END);
+            file_len = ftell(ifile);
+            fseek(ifile,0,SEEK_SET);
+        }
     }
 
-    bool ProgressFile()
+    bool ProgressFile() // return true if abort
     {
         if( ifile )
         {
-            static unsigned char modulo_256;
             if( modulo_256 == 0 )
             {
                 unsigned long file_offset=ftell(ifile);
-                int percent;
+                int percent=0;
                 if( file_len == 0 )
                     percent = 100;
                 else if( file_len < 10000000 )
@@ -51,7 +49,8 @@ public:
                     percent = (int)( file_offset / (file_len/100L) );
                 if( percent != old_percent )
                 {
-                    if( !progress.Update( percent>100 ? 100 : percent ) )
+                    bool abort = !progress.Update( percent>100 ? 100 : percent );
+                    if( abort )
                         return true;
                 }
                 old_percent = percent;
@@ -62,13 +61,16 @@ public:
         return false;
     }
 
-    bool Progress( int percent ) { return false; }
-    bool Partial( int percent ) { return false; }
-    void SetPartial( int begin, int end ) {}
+    bool Progress( int percent ) // return true if abort
+    {
+        bool abort = !progress.Update( percent>100 ? 100 : percent );
+        old_percent = percent;
+        return abort;
+    }
 
 private:
+    unsigned char modulo_256;
     int old_percent;
-    int percent;
     wxProgressDialog progress;
     FILE *ifile;
     unsigned long file_len;

@@ -34,7 +34,7 @@ class CreateDatabaseDialog: public wxDialog
 public:
     
     // Constructors
-    CreateDatabaseDialog( );
+    CreateDatabaseDialog();
     CreateDatabaseDialog(
                  wxWindow* parent,
                  wxWindowID id = ID_CREATE_DB_DIALOG,
@@ -55,7 +55,7 @@ public:
                 long style = wxCAPTION|wxRESIZE_BORDER|wxSYSTEM_MENU|wxCLOSE_BOX );
     
     // Creates the controls and sizers
-    void CreateControls();
+    void CreateControls( bool create );
     
     // Sets the validators for the dialog controls
     void SetDialogValidators();
@@ -66,8 +66,7 @@ public:
     // CreateDatabaseDialog event handler declarations
     
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_CREATE_DB_CREATE
-    void OnMaintenanceCreate( wxCommandEvent& event );
-    void OnMaintenanceAppend( wxCommandEvent& event );
+    void OnOk( wxCommandEvent& event );
     void OnHelpClick( wxCommandEvent& event ) ;
     
     // File pickers

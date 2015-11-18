@@ -21,9 +21,10 @@ using namespace thc;
 #define nbrof(array) ( sizeof(array) / sizeof((array)[0]) )
 
 // Constructor
-PgnRead::PgnRead( char callback_code )
+PgnRead::PgnRead( char callback_code, ProgressBar *pb )
 {
     this->callback_code = callback_code;
+    this->pb = pb;
     round   [0] = '\0';
     white_elo[0] = '\0';
     black_elo[0] = '\0';
@@ -137,6 +138,7 @@ void PgnRead::debug_dump()
     #endif
 }
 
+// Returns true if aborted
 bool PgnRead::Process( FILE *infile )
 {
     bool aborted = false;
@@ -714,18 +716,25 @@ void PgnRead::GameBegin()
 bool PgnRead::GameOver()
 {
     bool aborted = false;
-    STACK_ELEMENT *s;
-    s = &stack_array[0];
-    if( !fen_flag )
+    if( pb )
     {
-        aborted = hook_gameover( callback_code, event, site, date, round, white, black, result, white_elo, black_elo, eco, s->nbr_moves, s->big_move_array, s->big_hash_array  );
+        aborted = pb->ProgressFile();
     }
-    //cprintf( "GameOver()\n" );
-    stack_idx = 0;
-    ChessRules temp;
-    chess_rules = temp;    // init
-    stack_array[0].nbr_moves = 0;
-    stack_array[0].position = chess_rules;
+    if( !aborted )
+    {
+        STACK_ELEMENT *s;
+        s = &stack_array[0];
+        if( !fen_flag )
+        {
+            aborted = hook_gameover( callback_code, event, site, date, round, white, black, result, white_elo, black_elo, eco, s->nbr_moves, s->big_move_array, s->big_hash_array  );
+        }
+        //cprintf( "GameOver()\n" );
+        stack_idx = 0;
+        ChessRules temp;
+        chess_rules = temp;    // init
+        stack_array[0].nbr_moves = 0;
+        stack_array[0].position = chess_rules;
+    }
     return aborted;
 }
 

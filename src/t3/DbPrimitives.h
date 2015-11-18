@@ -8,7 +8,6 @@
 #define DB_PRIMITIVES_H
 #include <stdint.h>
 #include "thc.h"
-#include "ProgressBar.h"
 
 #ifdef THC_MAC
 #define DB_FILE                         "/Users/billforster/Documents/ChessDatabases/giant123.tarrasch_db" //improved_compression1.sqlite3" //next_generation_8.sqlite3"   // 5 has zombie issues
@@ -20,9 +19,11 @@
 #define DB_MAINTENANCE_PGN_FILE         "/Users/Bill/Documents/T3Database/giant123.pgn"
 #endif
 
-bool db_primitive_open( const char *db_filename, ProgressBar *prog=0 );
-bool db_primitive_create_tables( ProgressBar *prog=0 );
+std::string db_primitive_error_msg();
+bool db_primitive_open( const char *db_filename );
+bool db_primitive_create_tables();
 bool db_primitive_delete_previous_data();
+bool db_primitive_flush();
 bool db_primitive_transaction_begin();
 bool db_primitive_transaction_end();
 bool db_primitive_create_indexes();

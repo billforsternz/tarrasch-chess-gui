@@ -1008,13 +1008,21 @@ void GameLogic::CmdDatabaseCreate()
     wxSize sz = objs.frame->GetSize();
     sz.x = (sz.x*9)/10;
     sz.y = (sz.y*9)/10;
-    CreateDatabaseDialog dialog( objs.frame );
+    CreateDatabaseDialog dialog( objs.frame, ID_CREATE_DB_CREATE );
     dialog.ShowModal();
     atom.StatusUpdate();
 }
 
 void GameLogic::CmdDatabaseAppend()
 {
+    Atomic begin;
+    wxPoint pt(0,0);
+    wxSize sz = objs.frame->GetSize();
+    sz.x = (sz.x*9)/10;
+    sz.y = (sz.y*9)/10;
+    CreateDatabaseDialog dialog( objs.frame, ID_CREATE_DB_APPEND );
+    dialog.ShowModal();
+    atom.StatusUpdate();
 }
 
 void GameLogic::CmdGamesSession()
