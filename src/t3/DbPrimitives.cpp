@@ -26,6 +26,7 @@ static bool purge_buckets( bool force=false );
 static sqlite3 *handle;
 static int game_id;
 static std::string error_msg;
+static bool create_mode;
 
 // Error reporting mechanism
 std::string db_primitive_error_msg()
@@ -37,9 +38,10 @@ std::string db_primitive_error_msg()
 
 
 // Returns bool ok
-bool db_primitive_open( const char *db_file )
+bool db_primitive_open( const char *db_file, bool create_mode_parm )
 {
     cprintf( "db_primitive_open()\n" );
+    create_mode = create_mode_parm;
     
     // Try to create the database. If it doesnt exist, it would be created
     //  pass a pointer to the pointer to sqlite3, in short sqlite3**
@@ -214,7 +216,6 @@ bool db_primitive_create_indexes()
 bool db_primitive_create_extra_indexes()
 {
     ProgressBar prog( "Creating database, step 4 of 4", "Indexing positions" );
-    bool ok = false;
     DebugPrintfTime turn_on_time_reporting;
     cprintf( "Create games(white) index\n");
     int retval = sqlite3_exec(handle,"CREATE INDEX IF NOT EXISTS idx_white ON games(white)",0,0,0);
@@ -234,12 +235,18 @@ bool db_primitive_create_extra_indexes()
     cprintf( "Create games(white) index end\n");
     for( int i=0; i<NBR_BUCKETS; i++ )
     {
-        prog.Progress( (i*100) / NBR_BUCKETS );
+        if( prog.Progress( (i*100) / NBR_BUCKETS ) )
+        {
+            error_msg = "cancel";
+            return false;
+        }
         char buf[200];
-        cprintf( "Create idx%d begin\n", i );
+        if( i%100 == 0 )
+            cprintf( "Create idx%d begin\n", i );
         sprintf( buf, "CREATE INDEX IF NOT EXISTS idx%d ON positions_%d(position_hash,game_id)",i,i);
         retval = sqlite3_exec(handle,buf,0,0,0);
-        cprintf( "Create idx%d end\n", i );
+        if( i%100 == 0 )
+            cprintf( "Create idx%d end\n", i );
         if( retval )
         {
             error_msg = "Database error: sqlite3_exec() FAILED 3";
@@ -393,7 +400,7 @@ static bool purge_buckets( bool force )
     }
     if( required )
     {
-        ProgressBar prog( "Creating database, step 3 of 4", "Flushing buffers" );
+        ProgressBar prog( create_mode ? "Creating database, step 3 of 4" : "Appending to database, step 2 of 2", "Flushing buffers"  );
         for( int i=0; ok && i<NBR_BUCKETS; i++ )
         {
             ok = purge_bucket(i);
@@ -404,12 +411,12 @@ static bool purge_buckets( bool force )
                 if( prog.Progress( (i*100) / NBR_BUCKETS ) )
                 {
                     error_msg = "cancel";
-                    ok=false;
+                    ok = false;
                 }
             }
         }
     }
-    return true;
+    return ok;
 }
 
 static bool purge_bucket( int bucket_idx )
@@ -421,7 +428,6 @@ static bool purge_bucket( int bucket_idx )
     if( count > 0 )
     {
         std::sort( bucket->begin(), bucket->end() );
-        char buf[100];
         for( int j=0; j<count; j++ )
         {
             std::pair<int,int> duo = (*bucket)[j];

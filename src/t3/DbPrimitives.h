@@ -20,7 +20,7 @@
 #endif
 
 std::string db_primitive_error_msg();
-bool db_primitive_open( const char *db_filename );
+bool db_primitive_open( const char *db_filename, bool create_mode_parm=true );
 bool db_primitive_create_tables();
 bool db_primitive_delete_previous_data();
 bool db_primitive_flush();

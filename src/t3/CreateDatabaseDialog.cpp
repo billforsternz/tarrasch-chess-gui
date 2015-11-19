@@ -26,7 +26,7 @@ IMPLEMENT_CLASS( CreateDatabaseDialog, wxDialog )
 // CreateDatabaseDialog event table definition
 BEGIN_EVENT_TABLE( CreateDatabaseDialog, wxDialog )
 
-EVT_BUTTON( wxID_OK, /*ID_CREATE_DB_CREATE*/ CreateDatabaseDialog::OnOk )
+EVT_BUTTON( wxID_OK, CreateDatabaseDialog::OnOk )
 
 EVT_BUTTON( wxID_HELP, CreateDatabaseDialog::OnHelpClick )
 EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER_DB, CreateDatabaseDialog::OnDbFilePicked )
@@ -35,24 +35,13 @@ EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER2,   CreateDatabaseDialog::OnPgnFile2
 EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER3,   CreateDatabaseDialog::OnPgnFile3Picked )
 END_EVENT_TABLE()
 
-// CreateDatabaseDialog constructors
-CreateDatabaseDialog::CreateDatabaseDialog()
-{
-    Init();
-}
-
 CreateDatabaseDialog::CreateDatabaseDialog(
                            wxWindow* parent,
-                           wxWindowID id, const wxString& caption,
+                           wxWindowID id, bool create_mode,
                            const wxPoint& pos, const wxSize& size, long style )
 {
-    Init();
-    Create(parent, id, caption, pos, size, style);
-}
-
-// Initialisation
-void CreateDatabaseDialog::Init()
-{
+    this->create_mode = create_mode;
+    Create(parent, id, create_mode?"Create Database":"Append to Database", pos, size, style);
 }
 
 // Dialog create
@@ -69,7 +58,7 @@ bool CreateDatabaseDialog::Create( wxWindow* parent,
     else
     {
         
-        CreateControls(id==ID_CREATE_DB_CREATE);
+        CreateControls();
         SetDialogHelp();
         SetDialogValidators();
         
@@ -86,7 +75,7 @@ bool CreateDatabaseDialog::Create( wxWindow* parent,
 }
 
 // Control creation for CreateDatabaseDialog
-void CreateDatabaseDialog::CreateControls( bool create )
+void CreateDatabaseDialog::CreateControls()
 {
     
     // A top-level sizer
@@ -99,12 +88,18 @@ void CreateDatabaseDialog::CreateControls( bool create )
     
     // A friendly message
     wxStaticText* descr = new wxStaticText( this, wxID_STATIC,
-           create?
+           create_mode?
            "To create a new database from scratch, name the new database and select\n"
            "one or more .pgn files with the games to go into the database.\n"
            :
            "To append to an existing database, select the database and \n"
            "one or more .pgn files with the games to go into the database.\n"
+           "\n"
+           "Note that processing each .pgn file is slower during append than\n"
+           "during create. Unless you are adding comparitively small files to\n"
+           "a comparitively large database, consider recreating the database\n"
+           "from scratch, it may be faster (this is why database creation\n"
+           "allows more .pgn files to be selected).\n"
            , wxDefaultPosition, wxDefaultSize, 0 );
     box_sizer->Add(descr, 0, wxALIGN_LEFT|wxALL, 5);
     
@@ -113,21 +108,20 @@ void CreateDatabaseDialog::CreateControls( bool create )
     
     // Label for file
     wxStaticText* db_file_label = new wxStaticText ( this, wxID_STATIC,
-                                                 create ?
-                                                    wxT("&Choose a new database file") :
-                                                    wxT("&Choose an existing database file"),
-                                                    wxDefaultPosition, wxDefaultSize, 0 );
+                                                        create_mode ?
+                                                            wxT("&Choose a new database file") :
+                                                            wxT("&Choose an existing database file"),
+                                                        wxDefaultPosition, wxDefaultSize, 0 );
     box_sizer->Add(db_file_label, 0, wxALIGN_LEFT|wxALL, 5);
     
     // File picker controls
-    
     wxFilePickerCtrl *picker_db = new wxFilePickerCtrl( this, ID_CREATE_DB_PICKER_DB, db_filename,
-                                                       create?
-                                                       wxT("Select database to create") :
-                                                       wxT("Select database to append to"),
-                                                    "*.tarrasch_db", wxDefaultPosition, wxDefaultSize,
-                                                       create?
-                                                       wxFLP_USE_TEXTCTRL|wxFLP_SAVE :
+                                                        create_mode ?
+                                                            wxT("Select database to create") :
+                                                            wxT("Select database to append to"),
+                                                        "*.tarrasch_db", wxDefaultPosition, wxDefaultSize,
+                                                        create_mode ?
+                                                            wxFLP_USE_TEXTCTRL|wxFLP_SAVE :
                                                             wxFLP_USE_TEXTCTRL|wxFLP_FILE_MUST_EXIST
                                                        );
     box_sizer->Add(picker_db, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
@@ -146,18 +140,37 @@ void CreateDatabaseDialog::CreateControls( bool create )
                                                     wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST ); //|wxFLP_CHANGE_DIR );
     box_sizer->Add(picker2, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
 
-    wxFilePickerCtrl *picker3 = new wxFilePickerCtrl( this, ID_CREATE_DB_PICKER3, pgn_filename3, wxT("Select next .pgn"),
-                                                    "*.pgn", wxDefaultPosition, wxDefaultSize,
-                                                    wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST ); //|wxFLP_CHANGE_DIR );
-    box_sizer->Add(picker3, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
-    
+    if( create_mode )
+    {
+        wxFilePickerCtrl *picker3 = new wxFilePickerCtrl( this, ID_CREATE_DB_PICKER3, pgn_filename3, wxT("Select next .pgn"),
+                                                        "*.pgn", wxDefaultPosition, wxDefaultSize,
+                                                        wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST ); //|wxFLP_CHANGE_DIR );
+        box_sizer->Add(picker3, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
+
+        wxFilePickerCtrl *picker4 = new wxFilePickerCtrl( this, ID_CREATE_DB_PICKER4, pgn_filename4, wxT("Select next .pgn"),
+                                                        "*.pgn", wxDefaultPosition, wxDefaultSize,
+                                                        wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST ); //|wxFLP_CHANGE_DIR );
+        box_sizer->Add(picker4, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
+
+        wxFilePickerCtrl *picker5 = new wxFilePickerCtrl( this, ID_CREATE_DB_PICKER5, pgn_filename5, wxT("Select next .pgn"),
+                                                        "*.pgn", wxDefaultPosition, wxDefaultSize,
+                                                        wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST ); //|wxFLP_CHANGE_DIR );
+        box_sizer->Add(picker5, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
+
+        wxFilePickerCtrl *picker6 = new wxFilePickerCtrl( this, ID_CREATE_DB_PICKER6, pgn_filename6, wxT("Select next .pgn"),
+                                                        "*.pgn", wxDefaultPosition, wxDefaultSize,
+                                                        wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST ); //|wxFLP_CHANGE_DIR );
+        box_sizer->Add(picker6, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
+    }
+
+/*    
     // A dividing line before the database buttons
     wxStaticLine* line = new wxStaticLine ( this, wxID_STATIC,
                                            wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
     box_sizer->Add(line, 0, wxGROW|wxALL, 5);
     
     // Temporary primitive database management functions
-/*    wxBoxSizer* db_vert  = new wxBoxSizer(wxVERTICAL);
+    wxBoxSizer* db_vert  = new wxBoxSizer(wxVERTICAL);
     box_sizer->Add( db_vert, 0, wxALIGN_CENTER_VERTICAL|wxTOP|wxBOTTOM|wxRIGHT, 5);
     wxButton* button_cmd_5 = new wxButton( this, ID_CREATE_DB_CREATE, wxT("&Create the database"),
                                           wxDefaultPosition, wxDefaultSize, 0 );
@@ -204,8 +217,17 @@ void CreateDatabaseDialog::SetDialogHelp()
 {
 }
 
-// wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_CREATE_DB_CREATE
+// wxID_OK handler
 void CreateDatabaseDialog::OnOk( wxCommandEvent& WXUNUSED(event) )
+{
+    if( create_mode )
+        OnCreateDatabase();
+    else
+        OnAppendDatabase();
+}
+
+// Create
+void CreateDatabaseDialog::OnCreateDatabase()
 {
     bool ok=true;
     std::string files[6];
@@ -256,7 +278,7 @@ void CreateDatabaseDialog::OnOk( wxCommandEvent& WXUNUSED(event) )
         ok = false;
     }
     if( ok )
-        ok = db_primitive_open( db_name.c_str() );
+        ok = db_primitive_open( db_name.c_str(), true );
     if( ok )
         ok = db_primitive_transaction_begin();
     if( ok )
@@ -276,7 +298,7 @@ void CreateDatabaseDialog::OnOk( wxCommandEvent& WXUNUSED(event) )
             std::string title( "Creating database, step 2 of 4");
             std::string desc("Reading file #");
             char buf[80];
-            sprintf( buf, "%d", i+1 );
+            sprintf( buf, "%d of %d", i+1, cnt );
             desc += buf;
             ProgressBar progress_bar( title, desc, ifile );
             PgnRead *pgn = new PgnRead('A',&progress_bar);
@@ -306,11 +328,110 @@ void CreateDatabaseDialog::OnOk( wxCommandEvent& WXUNUSED(event) )
     {
         if( error_msg == "" )
             error_msg = db_primitive_error_msg();
-        else if( error_msg == "cancel" )
+        if( error_msg == "cancel" )
             error_msg = "Database creation cancelled";
         wxMessageBox(error_msg.c_str());
         db_primitive_close();
-        unlink(db_filename.c_str());
+        _unlink(db_filename.c_str());
+    }
+}
+
+// Append       TODO - make sure we don't append to the running database!
+void CreateDatabaseDialog::OnAppendDatabase()
+{
+    bool ok=true;
+    std::string files[6];
+    int cnt=0;
+    std::string error_msg;
+    db_primitive_error_msg();   // clear error reporting mechanism
+    
+    // Collect files
+    for( int i=1; i<=6; i++ )
+    {
+        bool exists = false;
+        std::string filename;
+        switch(i)
+        {
+            case 1: exists = wxFile::Exists(pgn_filename1);
+                    filename = std::string(pgn_filename1.c_str());  break;
+            case 2: exists = wxFile::Exists(pgn_filename2);
+                    filename = std::string(pgn_filename2.c_str());  break;
+            case 3: exists = wxFile::Exists(pgn_filename3);
+                    filename = std::string(pgn_filename3.c_str());  break;
+            case 4: exists = wxFile::Exists(pgn_filename4);
+                    filename = std::string(pgn_filename4.c_str());  break;
+            case 5: exists = wxFile::Exists(pgn_filename5);
+                    filename = std::string(pgn_filename5.c_str());  break;
+            case 6: exists = wxFile::Exists(pgn_filename6);
+                    filename = std::string(pgn_filename6.c_str());  break;
+        }
+        if( exists )
+        {
+            files[cnt++] = filename;
+        }
+    }
+    bool exists = wxFile::Exists(db_filename);
+    std::string db_name = std::string( db_filename.c_str() );
+    if( !exists )
+    {
+        error_msg = "Tarrasch database file " + db_name + " doesn't exist";
+        ok = false;
+    }
+    else if( cnt == 0 )
+    {
+        error_msg = "No usable pgn files specified";
+        ok = false;
+    }
+    if( ok )
+        ok = db_primitive_open( db_name.c_str(), false );
+    if( ok )
+        ok = db_primitive_transaction_begin();
+    db_primitive_count_games(); // to set game_id to first game after existing games
+    for( int i=0; ok && i<cnt; i++ )
+    {
+        FILE *ifile = fopen( files[i].c_str(), "rt" );
+        if( !ifile )
+        {
+            error_msg = "Cannot open ";
+            error_msg += files[i];
+            ok = false;
+        }
+        else
+        {
+            std::string title( "Appending to database, step 1 of 2");
+            std::string desc("Reading file #");
+            char buf[80];
+            sprintf( buf, "%d of %d", i+1, cnt );
+            desc += buf;
+            ProgressBar progress_bar( title, desc, ifile );
+            PgnRead *pgn = new PgnRead('A',&progress_bar);
+            bool aborted = pgn->Process(ifile);
+            if( aborted )
+            {
+                error_msg = "cancel";
+                ok = false;
+            }
+            delete pgn;
+            fclose(ifile);
+        }
+    }
+    if( ok )
+        ok = db_primitive_flush();
+    if( ok )
+        ok = db_primitive_transaction_end();
+    if( ok )
+        db_primitive_close();
+    if( ok )
+        AcceptAndClose();
+    else
+    {
+        if( error_msg == "" )
+            error_msg = db_primitive_error_msg();
+        if( error_msg == "cancel" )
+            error_msg = "Appending to database cancelled";
+        wxMessageBox(error_msg.c_str());
+        db_primitive_close();
+        // NO! _unlink(db_filename.c_str());
     }
 }
 

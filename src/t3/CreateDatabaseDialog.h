@@ -22,7 +22,10 @@ enum
     ID_CREATE_DB_PICKER_DB       = 10003,
     ID_CREATE_DB_PICKER1         = 10004,
     ID_CREATE_DB_PICKER2         = 10005,
-    ID_CREATE_DB_PICKER3         = 10006
+    ID_CREATE_DB_PICKER3         = 10006,
+    ID_CREATE_DB_PICKER4         = 10007,
+    ID_CREATE_DB_PICKER5         = 10008,
+    ID_CREATE_DB_PICKER6         = 10009
 };
 
 // CreateDatabaseDialog class declaration
@@ -33,18 +36,14 @@ class CreateDatabaseDialog: public wxDialog
     
 public:
     
-    // Constructors
-    CreateDatabaseDialog();
+    // Constructor
     CreateDatabaseDialog(
                  wxWindow* parent,
                  wxWindowID id = ID_CREATE_DB_DIALOG,
-                 const wxString& caption = wxT("Create Database"),
+                 bool create_mode = true,
                  const wxPoint& pos = wxDefaultPosition,
                  const wxSize& size = wxDefaultSize,
                  long style = wxCAPTION|wxRESIZE_BORDER|wxSYSTEM_MENU|wxCLOSE_BOX  );
-    
-    // Member initialisation
-    void Init();
     
     // Creation
     bool Create( wxWindow* parent,
@@ -55,7 +54,7 @@ public:
                 long style = wxCAPTION|wxRESIZE_BORDER|wxSYSTEM_MENU|wxCLOSE_BOX );
     
     // Creates the controls and sizers
-    void CreateControls( bool create );
+    void CreateControls();
     
     // Sets the validators for the dialog controls
     void SetDialogValidators();
@@ -65,8 +64,12 @@ public:
     
     // CreateDatabaseDialog event handler declarations
     
-    // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_CREATE_DB_CREATE
-    void OnOk( wxCommandEvent& event );
+    // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_OK
+    void OnOk( wxCommandEvent& event );  // selects one of the following
+    void OnCreateDatabase();
+    void OnAppendDatabase();
+
+    // Help button
     void OnHelpClick( wxCommandEvent& event ) ;
     
     // File pickers
@@ -86,6 +89,7 @@ public:
     wxString pgn_filename4;
     wxString pgn_filename5;
     wxString pgn_filename6;
+    bool create_mode;   // or append
 };
 
 #endif    // CREATE_DATABASE_DIALOG_H
