@@ -10,6 +10,7 @@
 		E6043C3618B5709300EAB5BD /* thc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6043C3318B5709300EAB5BD /* thc.cpp */; };
 		E6043C3718B5709300EAB5BD /* WinRybka.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6043C3518B5709300EAB5BD /* WinRybka.cpp */; };
 		E60554CE1BC4C94E002FC3DB /* PackedGame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E60554CC1BC4C94E002FC3DB /* PackedGame.cpp */; };
+		E61F9E891BF2AB13007FC625 /* CreateDatabaseDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E61F9E871BF2AB13007FC625 /* CreateDatabaseDialog.cpp */; };
 		E6407D1D1A216AD8004E5634 /* GamesDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6407D1B1A216AD8004E5634 /* GamesDialog.cpp */; };
 		E65C86F9183D9620008E1266 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E65C86F8183D9620008E1266 /* Cocoa.framework */; };
 		E65C8703183D9620008E1266 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = E65C8701183D9620008E1266 /* InfoPlist.strings */; };
@@ -109,6 +110,8 @@
 		E60554CC1BC4C94E002FC3DB /* PackedGame.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PackedGame.cpp; path = ../src/t3/PackedGame.cpp; sourceTree = "<group>"; };
 		E60554CD1BC4C94E002FC3DB /* PackedGame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PackedGame.h; path = ../src/t3/PackedGame.h; sourceTree = "<group>"; };
 		E60554CF1BC4D2DA002FC3DB /* CompactGame.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CompactGame.h; path = ../src/t3/CompactGame.h; sourceTree = "<group>"; };
+		E61F9E871BF2AB13007FC625 /* CreateDatabaseDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CreateDatabaseDialog.cpp; path = ../src/t3/CreateDatabaseDialog.cpp; sourceTree = "<group>"; };
+		E61F9E881BF2AB13007FC625 /* CreateDatabaseDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CreateDatabaseDialog.h; path = ../src/t3/CreateDatabaseDialog.h; sourceTree = "<group>"; };
 		E6407D1B1A216AD8004E5634 /* GamesDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = GamesDialog.cpp; path = ../src/t3/GamesDialog.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		E6407D1C1A216AD8004E5634 /* GamesDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GamesDialog.h; path = ../src/t3/GamesDialog.h; sourceTree = "<group>"; };
 		E6440FCE1BC75CF20055C6F0 /* GameBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GameBase.h; path = ../src/t3/GameBase.h; sourceTree = "<group>"; };
@@ -251,6 +254,7 @@
 		E673327F1895F371006B75A5 /* DbMaintenance.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DbMaintenance.h; path = ../src/t3/DbMaintenance.h; sourceTree = "<group>"; };
 		E6AF48FE18A4881C00463137 /* MaintenanceDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MaintenanceDialog.cpp; path = ../src/t3/MaintenanceDialog.cpp; sourceTree = "<group>"; };
 		E6AF48FF18A4881C00463137 /* MaintenanceDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MaintenanceDialog.h; path = ../src/t3/MaintenanceDialog.h; sourceTree = "<group>"; };
+		E6C6F7261BFBCC5C00BDABFE /* ProgressBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ProgressBar.h; path = ../src/t3/ProgressBar.h; sourceTree = "<group>"; };
 		E6C97A7F1BABB07100F87894 /* ClipboardDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ClipboardDialog.h; path = ../src/t3/ClipboardDialog.h; sourceTree = "<group>"; };
 		E6C97A801BABB07100F87894 /* ClipboardDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ClipboardDialog.cpp; path = ../src/t3/ClipboardDialog.cpp; sourceTree = "<group>"; };
 		E6F862F01888D7D20088F2F6 /* DbMaintenance.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DbMaintenance.cpp; path = ../src/t3/DbMaintenance.cpp; sourceTree = "<group>"; };
@@ -362,6 +366,9 @@
 		E65C872C183D97AD008E1266 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				E6C6F7261BFBCC5C00BDABFE /* ProgressBar.h */,
+				E61F9E871BF2AB13007FC625 /* CreateDatabaseDialog.cpp */,
+				E61F9E881BF2AB13007FC625 /* CreateDatabaseDialog.h */,
 				E6440FCF1BD068AD0055C6F0 /* PgnDocument.h */,
 				E6440FD01BD068AD0055C6F0 /* DbDocument.h */,
 				E6440FCE1BC75CF20055C6F0 /* GameBase.h */,
@@ -671,6 +678,7 @@
 				E6407D1D1A216AD8004E5634 /* GamesDialog.cpp in Sources */,
 				E65C87D1183D97F9008E1266 /* CtrlBoxBookMoves.cpp in Sources */,
 				E65C87DB183D97F9008E1266 /* GameLogic.cpp in Sources */,
+				E61F9E891BF2AB13007FC625 /* CreateDatabaseDialog.cpp in Sources */,
 				E65C87CB183D97F9008E1266 /* CentralWorkSaver.cpp in Sources */,
 				E65C87DD183D97F9008E1266 /* GamesCache.cpp in Sources */,
 				E65C87CA183D97F9008E1266 /* Canvas.cpp in Sources */,

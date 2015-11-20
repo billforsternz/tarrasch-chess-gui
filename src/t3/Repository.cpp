@@ -16,9 +16,10 @@ Repository::Repository( bool use_defaults )
 {
     SetDirectories();
     nv.m_doc_dir  = doc_dir;
-    book.m_file   = doc_dir + "/" + book.m_file;
-    log.m_file    = doc_dir + "/" + log.m_file;
-    engine.m_file = exe_dir + "/Engines/" + engine.m_file;
+    database.m_file = doc_dir + "/" + database.m_file;
+    book.m_file     = doc_dir + "/" + book.m_file;
+    log.m_file      = doc_dir + "/" + log.m_file;
+    engine.m_file   = exe_dir + "/Engines/" + engine.m_file;
 
     // Using wxConfig instead of writing wxFileConfig or wxRegConfig enhances
     // portability of the code
@@ -86,6 +87,9 @@ Repository::Repository( bool use_defaults )
         ReadBool    ("TrainingBlindfoldHideBlackPawns",   training.m_blindfold_hide_black_pawns  );
         ReadBool    ("TrainingBlindfoldHideBlackPieces",  training.m_blindfold_hide_black_pieces );
 
+        // Database
+        config->Read("DatabaseFile",          &database.m_file          );
+        
         // General
         config->Read("GeneralNotationLanguage",          &general.m_notation_language );
         LangSet(general.m_notation_language);
@@ -190,6 +194,9 @@ Repository::~Repository()
     config->Write("NonVolatileCol10",                 nv.m_col10 );
     config->Write("NonVolatileDocDir",                nv.m_doc_dir );
 
+    // Database
+    config->Write("DatabaseFile",       database.m_file          );
+    
     // Engine
     config->Write("EngineExeFile",      engine.m_file   );
     config->Write("EnginePonder",       (int)engine.m_ponder     );

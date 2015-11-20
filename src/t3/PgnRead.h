@@ -6,9 +6,10 @@
  ****************************************************************************/
 #ifndef PGN_READ_H
 #define PGN_READ_H
-#include "thc.h"
 #include <vector>
 #include <algorithm>
+#include "thc.h"
+#include "ProgressBar.h"
 
 #define FIELD_BUFLEN 200
 
@@ -23,12 +24,13 @@ class PgnRead
 public:
 
     // Constructor
-    PgnRead( char callback_code );
+    PgnRead( char callback_code, ProgressBar *pb=0 );
 
     bool Process( FILE *infile );
 
 private:
     char callback_code;
+    ProgressBar *pb;
 
     // PGN parsing stuff, still old school
     char fen    [ FIELD_BUFLEN + 10];

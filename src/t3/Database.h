@@ -26,9 +26,11 @@ enum DB_REQ
 class Database
 {
 public:
-    Database();
+    Database( const char *db_file );
     ~Database();
     void Reopen( const char *db_file );
+    bool IsOperational( std::string &error_msg );
+    bool GetDatabaseVersion( int &version );
     int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr );
     int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &player_name );
     // int GetNbrGames( thc::ChessRules &cr );
@@ -47,6 +49,7 @@ public:
   
 private:
     DB_REQ db_req;
+    bool is_open;
 
     // Create a handle for database connection, create a pointer to sqlite3
     sqlite3 *gbl_handle;

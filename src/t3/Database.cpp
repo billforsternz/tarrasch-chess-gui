@@ -16,13 +16,19 @@
 #include "DbDocument.h"
 #include "DbPrimitives.h"
 #include "Database.h"
+#include "Repository.h"
 #include "wx/msgout.h"
 #include "wx/progdlg.h"
+
+//
+//  This class has evolved into a DatabaseRead facility and should be
+//  renamed as such
+//
 
 
 #define NBR_BUCKETS 4096
 
-Database::Database()
+Database::Database( const char *db_file )
 {
     gbl_handle = 0;
     gbl_stmt = 0;
@@ -32,7 +38,8 @@ Database::Database()
     gbl_count = 0;
     
     // Access the database.
-    int retval = sqlite3_open(DB_FILE,&gbl_handle);
+    int retval = sqlite3_open( db_file, &gbl_handle );
+    is_open = (retval==0);
     
     // If connection failed, handle returns NULL
     dbg_printf( "DATABASE CONSTRUCTOR %s\n", retval ? "FAILED" : "SUCCESSFUL" );
@@ -74,10 +81,81 @@ void Database::Reopen( const char *db_file )
     
     // Access the database.
     int retval = sqlite3_open(db_file,&gbl_handle);
+    is_open = (retval==0);
     
     // If connection failed, handle returns NULL
     dbg_printf( "DATABASE REOPEN %s\n", retval ? "FAILED" : "SUCCESSFUL" );
 }
+
+// Return bool operational
+bool Database::IsOperational( std::string &error_msg )
+{
+    bool operational = false;
+    error_msg = "";
+    if( !is_open )
+        error_msg = "Could not open database";
+    else
+    {
+        int version;
+        bool ok = GetDatabaseVersion( version );
+        if( !ok )
+            error_msg = "Could not read version number from database";
+        else
+        {
+            if( version != DATABASE_VERSION_NUMBER_SUPPORTED )
+                error_msg = "Could not read version number from database";
+            else
+                operational = true;
+        }
+    }
+    return operational;
+}
+
+// Return bool okay
+bool Database::GetDatabaseVersion( int &version )
+{
+    bool ok=false;
+    version = 0;
+    sqlite3_stmt *stmt;
+    int retval;
+    retval = sqlite3_prepare_v2( gbl_handle, "SELECT description,version from description", -1, &stmt, 0 );
+    if( retval )
+    {
+        cprintf("SELECT description,version FROM DB FAILED\n");
+        return false;
+    }
+    
+    // Read the number of rows fetched
+    int cols = sqlite3_column_count(stmt);
+    retval = sqlite3_step(stmt);
+    if( retval == SQLITE_ROW )
+    {
+        for( int col=0; col<cols; col++ )
+        {
+            switch(col)
+            {
+                case 0:
+                {
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
+                    cprintf( "Description = %s\n", val );
+                    break;
+                }
+                case 1:
+                {
+                    int val = (int)sqlite3_column_int(stmt,col);
+                    cprintf( "Version integer = %d\n", val );
+                    version = val;
+                    ok = true;
+                    break;
+                }
+            }
+        }
+    }
+    sqlite3_finalize(stmt);
+    stmt = NULL;
+    return ok;
+}
+
 
 int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr )
 {

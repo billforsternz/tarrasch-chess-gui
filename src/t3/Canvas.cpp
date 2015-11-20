@@ -573,7 +573,7 @@ Canvas::Canvas
     objs.log        = new Log;
     objs.book       = new Book;
     objs.cws        = new CentralWorkSaver;
-    objs.db         = new Database;
+    objs.db         = new Database( objs.repository->database.m_file.c_str() );
     objs.tabs       = new Tabs;
     objs.gl         = NULL;
     GameLogic *gl   = new GameLogic( this, lb );

@@ -6,8 +6,8 @@
  ****************************************************************************/
 #ifndef DB_PRIMITIVES_H
 #define DB_PRIMITIVES_H
-#include "thc.h"
 #include <stdint.h>
+#include "thc.h"
 
 #ifdef THC_MAC
 #define DB_FILE                         "/Users/billforster/Documents/ChessDatabases/giant123.tarrasch_db" //improved_compression1.sqlite3" //next_generation_8.sqlite3"   // 5 has zombie issues
@@ -19,16 +19,18 @@
 #define DB_MAINTENANCE_PGN_FILE         "/Users/Bill/Documents/T3Database/giant123.pgn"
 #endif
 
-bool db_primitive_open( const char *db_filename );
+std::string db_primitive_error_msg();
+bool db_primitive_open( const char *db_filename, bool create_mode_parm=true );
 bool db_primitive_create_tables();
 bool db_primitive_delete_previous_data();
+bool db_primitive_flush();
 bool db_primitive_transaction_begin();
 bool db_primitive_transaction_end();
 bool db_primitive_create_indexes();
 bool db_primitive_create_extra_indexes();
 void db_primitive_close();
 int  db_primitive_count_games();
-bool db_primitive_insert_game( const char *white, const char *black, const char *event, const char *site, const char *result,
+bool db_primitive_insert_game( bool &signal_error, const char *white, const char *black, const char *event, const char *site, const char *result,
                                     const char *date, const char *white_elo, const char *black_elo,
                                     int nbr_moves, thc::Move *moves, uint64_t *hashes  );
 

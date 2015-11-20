@@ -954,51 +954,68 @@ void GameLogic::CmdDatabasePlayers()
 
 void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req )
 {
-    Atomic begin;
-    bool editing_log = objs.gl->EditingLog();
-    std::vector<GameDocument> games;
-    wxPoint pt(0,0);
-    wxSize sz = objs.frame->GetSize();
-    sz.x = (sz.x*9)/10;
-    sz.y = (sz.y*9)/10;
-    DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard, db_req, ID_PGN_DIALOG_DATABASE, pt, sz );   // GamesDialog instance
-    if( dialog.ShowModalOk("Database games") )
+    std::string error_msg;
+    bool operational = objs.db->IsOperational(error_msg);
+    if( !operational )
     {
-        objs.log->SaveGame(&gd,editing_log);
-        //objs.session->SaveGame(&gd);        //careful...
-        GameDocument temp = gd;
-        GameDocument new_gd;
-        PutBackDocument();
-        if( dialog.LoadGame(new_gd) )
-        {
-            tabs->TabNew(new_gd);
-            tabs->SetInfile(false);
-            ShowNewDocument();
-        }
-        objs.session->SaveGame(&temp);      // ...modify session only after loading old game
+        wxMessageBox(
+            "The database is not currently running. To correct this select a database "
+            "using the database menu. If you don't have a database, the database menu "
+            "also offers a command to create a database.", "Database problem", wxOK|wxICON_ERROR
+        );
     }
-    atom.StatusUpdate();
+    else
+    {
+        Atomic begin;
+        bool editing_log = objs.gl->EditingLog();
+        std::vector<GameDocument> games;
+        wxPoint pt(0,0);
+        wxSize sz = objs.frame->GetSize();
+        sz.x = (sz.x*9)/10;
+        sz.y = (sz.y*9)/10;
+        DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard, db_req, ID_PGN_DIALOG_DATABASE, pt, sz );   // GamesDialog instance
+        if( dialog.ShowModalOk("Database games") )
+        {
+            objs.log->SaveGame(&gd,editing_log);
+            //objs.session->SaveGame(&gd);        //careful...
+            GameDocument temp = gd;
+            GameDocument new_gd;
+            PutBackDocument();
+            if( dialog.LoadGame(new_gd) )
+            {
+                tabs->TabNew(new_gd);
+                tabs->SetInfile(false);
+                ShowNewDocument();
+            }
+            objs.session->SaveGame(&temp);      // ...modify session only after loading old game
+        }
+        atom.StatusUpdate();
+    }
 }
 
 void GameLogic::CmdDatabaseSelect()
 {
-    wxFileDialog fd( objs.frame, "Select current database", "", "", "*.tarrasch_db", wxFD_FILE_MUST_EXIST );//|wxFD_CHANGE_DIR );
-    wxString path( "/Users/billforster/Documents/ChessDatabases/small.tarrasch_db" ); //objs.repository->engine.m_file;
+    wxFileDialog fd( objs.frame, "Select current database", "", "", "*.tarrasch_db", wxFD_FILE_MUST_EXIST );
+    wxString path( objs.repository->database.m_file );
     fd.SetPath(path);
     if( wxID_OK == fd.ShowModal() )
     {
         wxString s = fd.GetPath();
+        wxString previous = objs.repository->database.m_file;
+        objs.repository->database.m_file = s;
         const char *filename = s.c_str();
         cprintf( "File is %s\n", filename );
         objs.db->Reopen(filename);
-        /* wxString dir;
-        wxFileName::SplitPath( fd.GetPath(), &dir, NULL, NULL );
-        objs.repository->nv.m_doc_dir = dir;
-        wxString wx_filename = fd.GetPath();
-        std::string filename( wx_filename.c_str() );
-        CmdFileOpenInner( filename ); */
+        std::string error_msg;
+        bool operational = objs.db->IsOperational(error_msg);
+        if( operational )
+            objs.repository->database.m_file = s;
+        else
+        {
+            objs.db->Reopen(previous);
+            wxMessageBox( error_msg.c_str(), "Database selection failed", wxOK|wxICON_ERROR );
+        }
     }
-
 }
 
 void GameLogic::CmdDatabaseCreate()
@@ -1008,13 +1025,21 @@ void GameLogic::CmdDatabaseCreate()
     wxSize sz = objs.frame->GetSize();
     sz.x = (sz.x*9)/10;
     sz.y = (sz.y*9)/10;
-    CreateDatabaseDialog dialog( objs.frame );
+    CreateDatabaseDialog dialog( objs.frame, ID_CREATE_DB_DIALOG, true ); // create_mode = true
     dialog.ShowModal();
     atom.StatusUpdate();
 }
 
 void GameLogic::CmdDatabaseAppend()
 {
+    Atomic begin;
+    wxPoint pt(0,0);
+    wxSize sz = objs.frame->GetSize();
+    sz.x = (sz.x*9)/10;
+    sz.y = (sz.y*9)/10;
+    CreateDatabaseDialog dialog( objs.frame, ID_CREATE_DB_DIALOG, false ); // create_mode = false
+    dialog.ShowModal();
+    atom.StatusUpdate();
 }
 
 void GameLogic::CmdGamesSession()
