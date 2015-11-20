@@ -170,6 +170,15 @@ struct TrainingConfig
     }
 };
 
+struct DatabaseConfig
+{
+    wxString    m_file;
+    DatabaseConfig()
+    {
+        m_file           = "default.tarrasch_db";
+    }
+};
+
 struct GeneralConfig
 {
     wxString    m_notation_language;
@@ -241,6 +250,7 @@ public:
     TrainingConfig  training;
     GeneralConfig   general;
     EngineConfig    engine;
+    DatabaseConfig  database;
     NonVolatile     nv;
 
 private:

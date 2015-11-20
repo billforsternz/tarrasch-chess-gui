@@ -30,7 +30,7 @@ bool db_primitive_create_indexes();
 bool db_primitive_create_extra_indexes();
 void db_primitive_close();
 int  db_primitive_count_games();
-bool db_primitive_insert_game( const char *white, const char *black, const char *event, const char *site, const char *result,
+bool db_primitive_insert_game( bool &signal_error, const char *white, const char *black, const char *event, const char *site, const char *result,
                                     const char *date, const char *white_elo, const char *black_elo,
                                     int nbr_moves, thc::Move *moves, uint64_t *hashes  );
 

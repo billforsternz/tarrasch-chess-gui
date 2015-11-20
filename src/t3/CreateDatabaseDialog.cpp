@@ -41,7 +41,7 @@ CreateDatabaseDialog::CreateDatabaseDialog(
                            const wxPoint& pos, const wxSize& size, long style )
 {
     this->create_mode = create_mode;
-    Create(parent, id, create_mode?"Create Database":"Append to Database", pos, size, style);
+    Create(parent, id, create_mode?"Create Database":"Add Games to Database", pos, size, style);
 }
 
 // Dialog create
@@ -92,14 +92,14 @@ void CreateDatabaseDialog::CreateControls()
            "To create a new database from scratch, name the new database and select\n"
            "one or more .pgn files with the games to go into the database.\n"
            :
-           "To append to an existing database, select the database and \n"
-           "one or more .pgn files with the games to go into the database.\n"
+           "To add games to an existing database, select the database and one or\n"
+           "more .pgn files with the additional games to go into the database.\n"
            "\n"
-           "Note that processing each .pgn file is slower during append than\n"
-           "during create. Unless you are adding comparitively small files to\n"
-           "a comparitively large database, consider recreating the database\n"
-           "from scratch, it may be faster (this is why database creation\n"
-           "allows more .pgn files to be selected).\n"
+           "Note that processing each .pgn file is slower here than during database\n"
+           "creation. Unless you are adding comparatively small files to a\n"
+           "comparatively large database, consider recreating the database from\n"
+           "scratch, it may be faster (this is why database creation allows more\n"
+           ".pgn files to be selected).\n"
            , wxDefaultPosition, wxDefaultSize, 0 );
     box_sizer->Add(descr, 0, wxALIGN_LEFT|wxALL, 5);
     
@@ -118,7 +118,7 @@ void CreateDatabaseDialog::CreateControls()
     wxFilePickerCtrl *picker_db = new wxFilePickerCtrl( this, ID_CREATE_DB_PICKER_DB, db_filename,
                                                         create_mode ?
                                                             wxT("Select database to create") :
-                                                            wxT("Select database to append to"),
+                                                            wxT("Select database to add games to"),
                                                         "*.tarrasch_db", wxDefaultPosition, wxDefaultSize,
                                                         create_mode ?
                                                             wxFLP_USE_TEXTCTRL|wxFLP_SAVE :
@@ -163,22 +163,6 @@ void CreateDatabaseDialog::CreateControls()
         box_sizer->Add(picker6, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
     }
 
-/*    
-    // A dividing line before the database buttons
-    wxStaticLine* line = new wxStaticLine ( this, wxID_STATIC,
-                                           wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
-    box_sizer->Add(line, 0, wxGROW|wxALL, 5);
-    
-    // Temporary primitive database management functions
-    wxBoxSizer* db_vert  = new wxBoxSizer(wxVERTICAL);
-    box_sizer->Add( db_vert, 0, wxALIGN_CENTER_VERTICAL|wxTOP|wxBOTTOM|wxRIGHT, 5);
-    wxButton* button_cmd_5 = new wxButton( this, ID_CREATE_DB_CREATE, wxT("&Create the database"),
-                                          wxDefaultPosition, wxDefaultSize, 0 );
-    db_vert->Add( button_cmd_5, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    wxButton* button_cmd_6 = new wxButton( this, ID_CREATE_DB_APPEND, wxT("&Append to the database"),
-                                          wxDefaultPosition, wxDefaultSize, 0 );
-    db_vert->Add( button_cmd_6, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-  */
     
     // A dividing line before the OK and Cancel buttons
     wxStaticLine* line2 = new wxStaticLine ( this, wxID_STATIC,
@@ -283,7 +267,8 @@ void CreateDatabaseDialog::OnCreateDatabase()
         ok = db_primitive_transaction_begin();
     if( ok )
         ok = db_primitive_create_tables();
-    db_primitive_count_games(); // to set game_id to zero
+    if( ok )
+        ok = (db_primitive_count_games()>=0); // to set game_id to zero
     for( int i=0; ok && i<cnt; i++ )
     {
         FILE *ifile = fopen( files[i].c_str(), "rt" );
@@ -305,7 +290,9 @@ void CreateDatabaseDialog::OnCreateDatabase()
             bool aborted = pgn->Process(ifile);
             if( aborted )
             {
-                error_msg = "cancel";
+                error_msg = db_primitive_error_msg();
+                if( error_msg == "" )
+                    error_msg = "cancel";
                 ok = false;
             }
             delete pgn;
@@ -330,9 +317,9 @@ void CreateDatabaseDialog::OnCreateDatabase()
             error_msg = db_primitive_error_msg();
         if( error_msg == "cancel" )
             error_msg = "Database creation cancelled";
-        wxMessageBox(error_msg.c_str());
+        wxMessageBox( error_msg.c_str(), "Database creation afiled", wxOK|wxICON_ERROR );
         db_primitive_close();
-        _unlink(db_filename.c_str());
+        unlink(db_filename.c_str());
     }
 }
 
@@ -386,7 +373,8 @@ void CreateDatabaseDialog::OnAppendDatabase()
         ok = db_primitive_open( db_name.c_str(), false );
     if( ok )
         ok = db_primitive_transaction_begin();
-    db_primitive_count_games(); // to set game_id to first game after existing games
+    if( ok )
+        ok = (db_primitive_count_games()>=0); // to set game_id to zero
     for( int i=0; ok && i<cnt; i++ )
     {
         FILE *ifile = fopen( files[i].c_str(), "rt" );
@@ -398,7 +386,7 @@ void CreateDatabaseDialog::OnAppendDatabase()
         }
         else
         {
-            std::string title( "Appending to database, step 1 of 2");
+            std::string title( "Adding games to database, step 1 of 2");
             std::string desc("Reading file #");
             char buf[80];
             sprintf( buf, "%d of %d", i+1, cnt );
@@ -428,10 +416,10 @@ void CreateDatabaseDialog::OnAppendDatabase()
         if( error_msg == "" )
             error_msg = db_primitive_error_msg();
         if( error_msg == "cancel" )
-            error_msg = "Appending to database cancelled";
-        wxMessageBox(error_msg.c_str());
+            error_msg = "Adding games to database cancelled";
+        wxMessageBox( error_msg.c_str(), "Appending to database failed", wxOK|wxICON_ERROR );
         db_primitive_close();
-        // NO! _unlink(db_filename.c_str());
+        // NO! unlink(db_filename.c_str());
     }
 }
 

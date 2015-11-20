@@ -11,10 +11,7 @@
 
 #define MASTER_VERSION "V3 minus"
 #define DEFAULT_ENGINE "Rybka v2.3.2a.mp.w32.exe"
-// #define MASTER_VERSION "V2.01ar"
-// #define DEFAULT_ENGINE "Rybka v2.3.2a.mp.w32.exe"
-// #define MASTER_VERSION "V2.01ak"         // for Komodo version
-// #define DEFAULT_ENGINE "komodo3-32.exe"  // for Komodo version
+#define DATABASE_VERSION_NUMBER_SUPPORTED 1
 
 // Misc
 #define NBR_KIBITZ_LINES 4

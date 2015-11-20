@@ -1,5 +1,5 @@
 /****************************************************************************
- *  Various database maintenance commands
+ *  Database maintenance miscellany - mainly development test only
  *  Author:  Bill Forster
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
@@ -12,6 +12,11 @@
 #include "CompressMoves.h"
 #include "DbPrimitives.h"
 #include "DbMaintenance.h"
+
+//
+//  This file has evolved into an InternalDatabaseTest facility (mainly) and should be
+//  renamed and reorganised (slightly) to reflect this
+//
 
 //-- Temp - hardwire .pgn file and database name
 #ifdef THC_WINDOWS
@@ -181,7 +186,14 @@ bool hook_gameover( char callback_code, const char *event, const char *site, con
         case 'P': game_to_qgn_file( event, site, date, round, white, black, result, white_elo, black_elo, eco, nbr_moves, moves, hashes );  break;
             
         // Append
-        case 'A':  db_primitive_insert_game( white, black, event, site, result, date, white_elo, black_elo, nbr_moves, moves, hashes );   break;
+        case 'A':
+        {
+            bool signal_error;
+            db_primitive_insert_game( signal_error, white, black, event, site, result, date, white_elo, black_elo, nbr_moves, moves, hashes );
+            if( signal_error )
+                return true;
+            break;
+        }
             
         // Read one game
         case 'R': pgn_read_hook( white, black, event, site, result, date, white_elo, black_elo, nbr_moves, moves, hashes ); return true;
