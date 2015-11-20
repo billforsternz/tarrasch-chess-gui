@@ -959,9 +959,9 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req )
     if( !operational )
     {
         wxMessageBox(
-            "The database is not currently running. To correct this select a database\n"
-            "using the database menu. If you don't have a database, the database menu\n"
-            "also offers a command to create a database\n", "Database problem", wxOK|wxICON_ERROR
+            "The database is not currently running. To correct this select a database "
+            "using the database menu. If you don't have a database, the database menu "
+            "also offers a command to create a database.", "Database problem", wxOK|wxICON_ERROR
         );
     }
     else

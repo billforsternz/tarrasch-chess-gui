@@ -317,7 +317,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
             error_msg = db_primitive_error_msg();
         if( error_msg == "cancel" )
             error_msg = "Database creation cancelled";
-        wxMessageBox( error_msg.c_str(), "Database creation afiled", wxOK|wxICON_ERROR );
+        wxMessageBox( error_msg.c_str(), "Database creation failed", wxOK|wxICON_ERROR );
         db_primitive_close();
         unlink(db_filename.c_str());
     }
