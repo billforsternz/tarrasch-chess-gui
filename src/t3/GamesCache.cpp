@@ -21,7 +21,7 @@
 #include "Repository.h"
 #include "PgnFiles.h"
 #include "Lang.h"
-#include "PgnDocument.h"
+#include "ListableGamePgn.h"
 #include "PgnRead.h"
 #include "GamesCache.h"
 using namespace std;
@@ -231,8 +231,8 @@ bool GamesCache::Load( FILE *pgn_file )
         done = PgnStateMachine( pgn_file, typ, buf, sizeof(buf) );
         if( typ == 'G' )
         {
-            PgnDocument pgn_document(pgn_handle,fposn);
-            make_smart_ptr( PgnDocument, new_doc, pgn_document );
+            ListableGamePgn pgn_document(pgn_handle,fposn);
+            make_smart_ptr( ListableGamePgn, new_doc, pgn_document );
             gds.push_back( std::move(new_doc) );
             if( !done )
                 fposn = ftell(pgn_file);
@@ -513,7 +513,7 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
     long posn=0;
     for( int i=0; i<gds_nbr; i++ )
     {
-        MagicBase *mptr = gds[i].get();
+        ListableGame *mptr = gds[i].get();
         if( !mptr->IsInMemory() )
         {
             long fposn = mptr->GetFposn();

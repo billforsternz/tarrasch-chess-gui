@@ -18,10 +18,10 @@
 #include "GameLifecycle.h"
 #include "CompressMoves.h"
 #include "CompactGame.h"
-#include "GameBase.h"
+#include "ListableGame.h"
 
 class GameLogic;
-class GameDocument : public MagicBase
+class GameDocument : public ListableGame
 {
     
 public:

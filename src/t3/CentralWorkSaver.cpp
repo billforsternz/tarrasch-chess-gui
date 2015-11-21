@@ -57,7 +57,7 @@ bool CentralWorkSaver::TestFileModified()
         modified = gc->file_irrevocably_modified;
         for( unsigned int i=0; !modified && i<gc->gds.size(); i++ )
         {
-            MagicBase *ptr = gc->gds[i].get();
+            ListableGame *ptr = gc->gds[i].get();
             if( ptr && ptr->IsModified() )
             {
                 modified = true;
@@ -78,7 +78,7 @@ bool CentralWorkSaver::TestGameInFile()
     bool in_file=false;
     for( unsigned int i=0; i<gc->gds.size(); i++ )
     {
-        MagicBase *ptr = gc->gds[i].get();
+        ListableGame *ptr = gc->gds[i].get();
         if( ptr && ptr->GetGameBeingEdited()==gd->game_being_edited )
         {
             in_file = true;

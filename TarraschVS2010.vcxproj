@@ -1023,6 +1023,7 @@
     <ClInclude Include="src\t3\CentralWorkSaver.h" />
     <ClInclude Include="src\t3\ClipboardDialog.h" />
     <ClInclude Include="src\t3\ClockDialog.h" />
+    <ClInclude Include="src\t3\CompactGame.h" />
     <ClInclude Include="src\t3\CompressMoves.h" />
     <ClInclude Include="src\t3\CreateDatabaseDialog.h" />
     <ClInclude Include="src\t3\CtrlBox.h" />
@@ -1031,12 +1032,10 @@
     <ClInclude Include="src\t3\CtrlChessTxt.h" />
     <ClInclude Include="src\t3\Database.h" />
     <ClInclude Include="src\t3\DbDialog.h" />
-    <ClInclude Include="src\t3\DbDocument.h" />
     <ClInclude Include="src\t3\DbMaintenance.h" />
     <ClInclude Include="src\t3\DbPrimitives.h" />
     <ClInclude Include="src\t3\DebugPrintf.h" />
     <ClInclude Include="src\t3\EngineDialog.h" />
-    <ClInclude Include="src\t3\GameBase.h" />
     <ClInclude Include="src\t3\GameClock.h" />
     <ClInclude Include="src\t3\GameClockHalf.h" />
     <ClInclude Include="src\t3\GameDetails.h" />
@@ -1053,6 +1052,9 @@
     <ClInclude Include="src\t3\GraphicBoard.h" />
     <ClInclude Include="src\t3\kibitzq.h" />
     <ClInclude Include="src\t3\Lang.h" />
+    <ClInclude Include="src\t3\ListableGame.h" />
+    <ClInclude Include="src\t3\ListableGameDb.h" />
+    <ClInclude Include="src\t3\ListableGamePgn.h" />
     <ClInclude Include="src\t3\Log.h" />
     <ClInclude Include="src\t3\LogDialog.h" />
     <ClInclude Include="src\t3\MaintenanceDialog.h" />
@@ -1062,7 +1064,6 @@
     <ClInclude Include="src\t3\Objects.h" />
     <ClInclude Include="src\t3\PackedGame.h" />
     <ClInclude Include="src\t3\PgnDialog.h" />
-    <ClInclude Include="src\t3\PgnDocument.h" />
     <ClInclude Include="src\t3\PgnFiles.h" />
     <ClInclude Include="src\t3\PgnRead.h" />
     <ClInclude Include="src\t3\PlayerDialog.h" />
@@ -1092,6 +1093,7 @@
     <ClCompile Include="src\t3\CentralWorkSaver.cpp" />
     <ClCompile Include="src\t3\ClipboardDialog.cpp" />
     <ClCompile Include="src\t3\ClockDialog.cpp" />
+    <ClCompile Include="src\t3\CompactGame.cpp" />
     <ClCompile Include="src\t3\CompressMoves.cpp" />
     <ClCompile Include="src\t3\CreateDatabaseDialog.cpp" />
     <ClCompile Include="src\t3\CtrlBox.cpp" />

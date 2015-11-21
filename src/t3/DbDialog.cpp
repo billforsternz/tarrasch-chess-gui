@@ -240,7 +240,7 @@ DbDialog::DbDialog
 
 
 static DbDialog *backdoor;
-static bool compare( const smart_ptr<DbDocument> g1, const smart_ptr<DbDocument> g2 )
+static bool compare( const smart_ptr<ListableGameDb> g1, const smart_ptr<ListableGameDb> g2 )
 {
     bool lt=false;
     Roster r1 = g1->RefRoster();
@@ -276,7 +276,7 @@ static bool compare( const smart_ptr<DbDocument> g1, const smart_ptr<DbDocument>
 }
         
 
-static bool rev_compare( const smart_ptr<DbDocument> g1, const smart_ptr<DbDocument> g2 )
+static bool rev_compare( const smart_ptr<ListableGameDb> g1, const smart_ptr<ListableGameDb> g2 )
 {
     bool lt=true;
     Roster r1 = g1->RefRoster();
@@ -506,7 +506,7 @@ void DbDialog::SmartCompare()
     std::sort( inter.begin(), inter.end(), compare_counts );
     
     // Step 4 build sorted version of games list
-    std::vector< smart_ptr<DbDocument> > temp;
+    std::vector< smart_ptr<ListableGameDb> > temp;
     sz = inter.size();
     for( unsigned int i=0; i<sz; i++ )
     {
@@ -614,7 +614,7 @@ void DbDialog::GdvOnCancel()
     int sz=gc->gds.size();
  /* for( int i=0; i<sz; i++ )
     {
-        smart_ptr<MagicBase> smp = gc->gds[i];
+        smart_ptr<ListableGame> smp = gc->gds[i];
         bool selected = (wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED)) ? true : false;
         smp->SetSelected(selected);
         bool focused  =  (wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED)  ) ? true : false;
@@ -908,7 +908,7 @@ void DbDialog::StatsCalculate()
     }
     
     // For each cached game
-    std::vector< smart_ptr<MagicBase> > &source = (objs.gl->db_clipboard ? objs.gl->gc_clipboard.gds : gc->gds );
+    std::vector< smart_ptr<ListableGame> > &source = (objs.gl->db_clipboard ? objs.gl->gc_clipboard.gds : gc->gds );
     for( unsigned int i=0; i<source.size(); i++ )
     {
         Roster r         = source[i]->RefRoster();
@@ -971,8 +971,8 @@ void DbDialog::StatsCalculate()
                 bool draw       = (r.result=="1/2-1/2");
                 if( draw )
                     total_draws++;
-                DbDocument temp(0,r,blob);
-                make_smart_ptr( DbDocument, smptr, temp );
+                ListableGameDb temp(0,r,blob);
+                make_smart_ptr( ListableGameDb, smptr, temp );
                 displayed_games.push_back(smptr);
                 PATH_TO_POSITION *p = &transpositions[found_idx];
                 p->frequency++;

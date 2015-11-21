@@ -116,7 +116,7 @@ wxSizer *PgnDialog::GdvAddExtraControls()
 
 void PgnDialog::GetCachedDocumentRaw( int idx, GameDocument &gd )
 {
-    smart_ptr<MagicBase> &mb = gc->gds[idx];
+    smart_ptr<ListableGame> &mb = gc->gds[idx];
     gd = *mb->GetGameDocumentPtr();
 }
 
@@ -125,7 +125,7 @@ GameDocument * PgnDialog::GetCachedDocument( int idx )
 #if 1
     static GameDocument gd;
     CompactGame pact;
-    smart_ptr<MagicBase> &mb = gc->gds[idx];
+    smart_ptr<ListableGame> &mb = gc->gds[idx];
     mb->GetCompactGame(pact);
     pact.Upscale( gd );
     return &gd;
@@ -175,7 +175,7 @@ GameDocument * PgnDialog::GetCachedDocument( int idx )
 
 void PgnDialog::GdvReadItem( int item, CompactGame &info )
 {
-    smart_ptr<MagicBase> &mb = gc->gds[item];
+    smart_ptr<ListableGame> &mb = gc->gds[item];
     mb->GetCompactGame( info );
 }
 
@@ -203,7 +203,7 @@ PgnDialog::PgnDialog
 }
 
 
-static smart_ptr<MagicBase> *ptr_gds;
+static smart_ptr<ListableGame> *ptr_gds;
 static int          *ptr_col_flags;
 int wxCALLBACK sort_callback( long item1, long item2, long col )
 {
@@ -718,7 +718,7 @@ void PgnDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
             if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
                 idx_focus = i;
         }
-        std::vector< smart_ptr<MagicBase> >::iterator iter = gc->gds.begin() + idx_focus;
+        std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin() + idx_focus;
         GameDocument gd = objs.gl->gd;
         gd.modified = true;
         GameDetailsDialog dialog( this );
@@ -891,8 +891,8 @@ void PgnDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
     int sz=gc->gds.size();
     if( list_ctrl && list_ctrl->GetItemCount()==sz )
     {
-        std::vector< smart_ptr<MagicBase> >::iterator iter = gc->gds.begin();
-        std::vector< smart_ptr<MagicBase> >::iterator iter_focus;
+        std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin();
+        std::vector< smart_ptr<ListableGame> >::iterator iter_focus;
         for( int i=0; iter!=gc->gds.end(); )
         {
             if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
@@ -907,7 +907,7 @@ void PgnDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
                     clear_clipboard = false;
                     gc_clipboard->gds.clear();
                 }
-                MagicBase &mb = **iter;
+                ListableGame &mb = **iter;
                 GameDocument gd = mb.GetGameDocument();
                 make_smart_ptr( GameDocument, new_doc, gd );
                 gc_clipboard->gds.push_back(std::move(new_doc));
@@ -926,7 +926,7 @@ void PgnDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
         if( nbr_cut==0 && idx_focus>=0 )
         {
             gc_clipboard->gds.clear();
-            MagicBase &mb = **iter_focus;
+            ListableGame &mb = **iter_focus;
             GameDocument gd = mb.GetGameDocument();
             // This is required because for some reason it doesn't work if you don't use the intermediate reference, i.e.:
             //   GameDocument gd = **iter_focus.GetGameDocument();   // doesn't work
@@ -947,8 +947,8 @@ void PgnDialog::OnDelete( wxCommandEvent& WXUNUSED(event) )
     int sz=gc->gds.size();
     if( list_ctrl && list_ctrl->GetItemCount()==sz )
     {
-        std::vector< smart_ptr<MagicBase> >::iterator iter = gc->gds.begin();
-        std::vector< smart_ptr<MagicBase> >::iterator iter_focus;
+        std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin();
+        std::vector< smart_ptr<ListableGame> >::iterator iter_focus;
         for( int i=0; iter!=gc->gds.end(); )
         {
             if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
@@ -995,7 +995,7 @@ void PgnDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
         sz = gc_clipboard->gds.size();
         for( int i=sz-1; i>=0; i-- )    
         {                                 
-            std::vector< smart_ptr<MagicBase> >::iterator iter = gc->gds.begin() + idx_focus;
+            std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin() + idx_focus;
             GameDocument gd;
             gc_clipboard->gds[i]->GetGameDocument(gd);
             gd.game_nbr = 0;

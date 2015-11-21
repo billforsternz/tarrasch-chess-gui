@@ -1,11 +1,11 @@
 /****************************************************************************
- * A Game in a GameCache - From a .pgn file
+ * A ListableGame that was originally created for the list in the PgnDialog
  *  Author:  Bill Forster
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2015, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#ifndef PGN_DOCUMENT_H
-#define PGN_DOCUMENT_H
+#ifndef LISTABLE_GAME_PGN_H
+#define LISTABLE_GAME_PGN_H
 #include "GameDocument.h"
 #include "CompactGame.h"
 #include "PackedGame.h"
@@ -15,14 +15,14 @@
 void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &gd );
 void *ReadGameFromPgnInLoop( int pgn_handle, long fposn, CompactGame &pact, void *context, bool end=true );
 
-class PgnDocument : public MagicBase
+class ListableGamePgn : public ListableGame
 {
 private:
     int  pgn_handle;
     long fposn;
     PackedGame pack;
 public:
-    PgnDocument( int pgn_handle, long fposn ) { this->pgn_handle=pgn_handle, this->fposn = fposn;  }
+    ListableGamePgn( int pgn_handle, long fposn ) { this->pgn_handle=pgn_handle, this->fposn = fposn;  }
 
     virtual void *LoadIntoMemory( void *context, bool end )
     {
@@ -88,4 +88,4 @@ public:
 };
 
 
-#endif    // PGN_DOCUMENT_H
+#endif    // LISTABLE_GAME_PGN_H

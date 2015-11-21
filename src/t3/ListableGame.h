@@ -1,12 +1,11 @@
 /****************************************************************************
- * Game representation base class
+ * Base class defines interface to a game that can be listed in a GamesDialog
  *  Author:  Bill Forster
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-
-#ifndef GAME_BASE_H
-#define GAME_BASE_H
+#ifndef LISTABLE_GAME_H
+#define LISTABLE_GAME_H
 #include <string>
 #include <vector>
 #include <memory>
@@ -17,11 +16,11 @@
 #define smart_ptr std::shared_ptr //std::unique_ptr
 #define make_smart_ptr(T,to,from) smart_ptr<T> to; to.reset(new T(from))
 
-class MagicBase
+class ListableGame
 {
 public:
-    MagicBase() { transpo_nbr=0; }
-    virtual ~MagicBase() {}
+    ListableGame() { transpo_nbr=0; }
+    virtual ~ListableGame() {}
     virtual int GetGameId() { return 0; }
     virtual GameDocument *GetGameDocumentPtr()  {
         cprintf("FIXME DANGER WILL ROBINSON 3\n");  return NULL; }
@@ -60,4 +59,4 @@ public:
 };
 
         
-#endif //GAME_BASE_H
+#endif //LISTABLE_GAME_H

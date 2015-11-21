@@ -1021,7 +1021,7 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
             if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
                 idx_focus = i;
         }
-        std::vector< smart_ptr<MagicBase> >::iterator iter = gc->gds.begin() + idx_focus;
+        std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin() + idx_focus;
         GameDocument gd = objs.gl->gd;
         gd.modified = true;
         GameDetailsDialog dialog( this );
@@ -1078,8 +1078,8 @@ void GamesDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
     int sz=gc->gds.size();
     if( list_ctrl && list_ctrl->GetItemCount()==sz )
     {
-        std::vector< smart_ptr<MagicBase> >::iterator iter = gc->gds.begin();
-        std::vector< smart_ptr<MagicBase> >::iterator iter_focus;
+        std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin();
+        std::vector< smart_ptr<ListableGame> >::iterator iter_focus;
         for( int i=0; iter!=gc->gds.end(); )
         {
             if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
@@ -1094,7 +1094,7 @@ void GamesDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
                     clear_clipboard = false;
                     gc_clipboard->gds.clear();
                 }
-                MagicBase &mb = **iter;
+                ListableGame &mb = **iter;
                 GameDocument gd = mb.GetGameDocument();
                 make_smart_ptr( GameDocument, new_doc, gd );
                 gc_clipboard->gds.push_back(std::move(new_doc));
@@ -1113,7 +1113,7 @@ void GamesDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
         if( nbr_cut==0 && idx_focus>=0 )
         {
             gc_clipboard->gds.clear();
-            MagicBase &mb = **iter_focus;
+            ListableGame &mb = **iter_focus;
             GameDocument gd = mb.GetGameDocument();
             // This is required because for some reason it doesn't work if you don't use the intermediate reference, i.e.:
             //   GameDocument gd = **iter_focus.GetGameDocument();   // doesn't work
@@ -1134,8 +1134,8 @@ void GamesDialog::OnDelete( wxCommandEvent& WXUNUSED(event) )
     int sz=gc->gds.size();
     if( list_ctrl && list_ctrl->GetItemCount()==sz )
     {
-        std::vector< smart_ptr<MagicBase> >::iterator iter = gc->gds.begin();
-        std::vector< smart_ptr<MagicBase> >::iterator iter_focus;
+        std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin();
+        std::vector< smart_ptr<ListableGame> >::iterator iter_focus;
         for( int i=0; iter!=gc->gds.end(); )
         {
             if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
@@ -1182,7 +1182,7 @@ void GamesDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
         sz = gc_clipboard->gds.size();
         for( int i=sz-1; i>=0; i-- )    
         {                                 
-            std::vector< smart_ptr<MagicBase> >::iterator iter = gc->gds.begin() + idx_focus;
+            std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin() + idx_focus;
             GameDocument gd;
             gc_clipboard->gds[i]->GetGameDocument(gd);
             gd.game_nbr = 0;
@@ -1224,7 +1224,7 @@ void GamesDialog::OnPublish( wxCommandEvent& WXUNUSED(event) )
 
 static GamesDialog *backdoor;
 
-static bool compare( const smart_ptr<MagicBase> g1, const smart_ptr<MagicBase> g2 )
+static bool compare( const smart_ptr<ListableGame> g1, const smart_ptr<ListableGame> g2 )
 {
     bool lt=false;
     if( backdoor->compare_col == 1 )
@@ -1279,7 +1279,7 @@ static bool compare( const smart_ptr<MagicBase> g1, const smart_ptr<MagicBase> g
 
 
 
-static bool rev_compare( const smart_ptr<MagicBase> g1, const smart_ptr<MagicBase> g2 )
+static bool rev_compare( const smart_ptr<ListableGame> g1, const smart_ptr<ListableGame> g2 )
 {
     bool lt=true;
     if( backdoor->compare_col == 1 )
@@ -1365,7 +1365,7 @@ static bool compare_counts( const TempElement &e1, const TempElement &e2 )
     return lt;
 }
 
-void GamesDialog::SmartCompare( std::vector< smart_ptr<MagicBase> > &gds )
+void GamesDialog::SmartCompare( std::vector< smart_ptr<ListableGame> > &gds )
 {
     std::vector<TempElement> inter;     // intermediate representation
     
@@ -1515,7 +1515,7 @@ void GamesDialog::SmartCompare( std::vector< smart_ptr<MagicBase> > &gds )
     std::sort( inter.begin(), inter.end(), compare_counts );
     
     // Step 4 build sorted version of games list
-    std::vector< smart_ptr<MagicBase> > temp;
+    std::vector< smart_ptr<ListableGame> > temp;
     sz = inter.size();
     for( unsigned int i=0; i<sz; i++ )
     {

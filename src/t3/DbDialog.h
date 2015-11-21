@@ -16,7 +16,7 @@
 #include "Repository.h"
 #include "MiniBoard.h"
 #include "CompressMoves.h"
-#include "DbDocument.h"
+#include "ListableGameDb.h"
 #include "Database.h"
 #include "PgnDialog.h"
 #include "GamesDialog.h"
@@ -109,7 +109,7 @@ private:
     std::unordered_set<uint64_t> drill_down_set;  // positions already encountered drilling down
     std::vector<thc::Move> moves_in_this_position;
     std::vector<thc::Move> moves_from_base_position;
-    std::vector< smart_ptr<DbDocument> > displayed_games;
+    std::vector< smart_ptr<ListableGameDb> > displayed_games;
 };
 
 #endif    // DB_DIALOG_H

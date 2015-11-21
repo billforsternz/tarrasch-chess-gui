@@ -1,24 +1,24 @@
 /****************************************************************************
- * A Game in a GameCache - From the database
+ * A ListableGame that was originally created for the list in the DbDialog
  *  Author:  Bill Forster
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2015, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#ifndef DB_DOCUMENT_H
-#define DB_DOCUMENT_H
+#ifndef LISTABLE_GAME_DB_H
+#define LISTABLE_GAME_DB_H
 #include "GameDocument.h"
 #include "CompactGame.h"
 #include "PackedGame.h"
 #include "CompressMoves.h"
 
-class DbDocument : public MagicBase
+class ListableGameDb : public ListableGame
 {
 private:
     int game_id;
     PackedGame pack;
 
 public:
-    DbDocument( int game_id, Roster &r, std::string str_blob )
+    ListableGameDb( int game_id, Roster &r, std::string str_blob )
     {
         this->game_id = game_id;
         pack.Pack( r, str_blob );
@@ -72,4 +72,4 @@ public:
 };
 
 
-#endif    // DB_DOCUMENT_H
+#endif  // LISTABLE_GAME_DB_H

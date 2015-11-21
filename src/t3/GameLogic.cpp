@@ -716,7 +716,7 @@ void GameLogic::NextGamePreviousGame( int idx )
             IndicateNoCurrentDocument();
             gd_file.game_being_edited = ++game_being_edited_tag;
             gd = gd_file;
-            smart_ptr<MagicBase> smp = gc.gds[idx];
+            smart_ptr<ListableGame> smp = gc.gds[idx];
             smp->SetSelected(true);
             this->file_game_idx = idx;
             tabs->SetInfile(true);
@@ -826,7 +826,7 @@ void GameLogic::PutBackDocument()
 {
     for( int i=0; i<gc.gds.size(); i++ )
     {
-        smart_ptr<MagicBase> smp = gc.gds[i];
+        smart_ptr<ListableGame> smp = gc.gds[i];
         if( smp->GetGameBeingEdited() == gd.game_being_edited )
         {
             gd.FleshOutDate();
@@ -840,7 +840,7 @@ void GameLogic::PutBackDocument()
     }
     for( int i=0; i<gc_clipboard.gds.size(); i++ )
     {
-        smart_ptr<MagicBase> smp = gc_clipboard.gds[i];
+        smart_ptr<ListableGame> smp = gc_clipboard.gds[i];
         if( smp->GetGameBeingEdited() == gd.game_being_edited )
         {
             gd.FleshOutDate();
@@ -858,14 +858,14 @@ void GameLogic::IndicateNoCurrentDocument()
 {
     for( int i=0; i<gc.gds.size(); i++ )
     {
-        smart_ptr<MagicBase> smp = gc.gds[i];
+        smart_ptr<ListableGame> smp = gc.gds[i];
         if( smp->GetGameBeingEdited() == gd.game_being_edited )
              smp->SetGameBeingEdited(0);
         smp->SetSelected(false);
     }
     for( int i=0; i<gc_clipboard.gds.size(); i++ )
     {
-        smart_ptr<MagicBase> smp = gc_clipboard.gds[i];
+        smart_ptr<ListableGame> smp = gc_clipboard.gds[i];
         if( smp->GetGameBeingEdited() == gd.game_being_edited )
              smp->SetGameBeingEdited(0);
         smp->SetSelected(false);
@@ -2657,7 +2657,7 @@ void GameLogic::StatusUpdate( int idx )
         {
             for( int i=0; i<gc.gds.size(); i++ )
             {
-                MagicBase *ptr = gc.gds[i].get();
+                ListableGame *ptr = gc.gds[i].get();
                 uint32_t game_being_edited = ptr->GetGameBeingEdited();
                 if( ptr && ptr->IsModified() )
                 {

@@ -13,7 +13,7 @@
 #include "Portability.h"
 #include "DebugPrintf.h"
 #include "CompressMoves.h"
-#include "DbDocument.h"
+#include "ListableGameDb.h"
 #include "DbPrimitives.h"
 #include "Database.h"
 #include "Repository.h"
@@ -437,7 +437,7 @@ int Database::LoadGameWithQuery( CompactGame *pact, int game_id )
 static bool gbl_protect_recursion;   // FIXME
 
 
-int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::vector< smart_ptr<MagicBase> > &games )
+int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::vector< smart_ptr<ListableGame> > &games )
 {
     int nbr_before = games.size();
     int retval=-1;
@@ -529,8 +529,8 @@ int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::ve
                         std::string temp(blob,len);
                         str_blob = temp;
                     }
-                    DbDocument info( game_id, r, str_blob );
-                    make_smart_ptr( DbDocument, new_info, info );
+                    ListableGameDb info( game_id, r, str_blob );
+                    make_smart_ptr( ListableGameDb, new_info, info );
                     games.push_back( std::move(new_info) );
                 }
             }
@@ -555,7 +555,7 @@ int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::ve
 }
 
 
-int Database::LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<MagicBase> > &games, std::unordered_set<int> &games_set )
+int Database::LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<ListableGame> > &games, std::unordered_set<int> &games_set )
 {
     int retval=-1;
     int nbr_before = games.size();
@@ -663,8 +663,8 @@ int Database::LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<MagicBas
                         std::string temp(blob,len);
                         str_blob = temp;
                     }
-                    DbDocument info( game_id, r, str_blob );
-                    make_smart_ptr( DbDocument, new_info, info );
+                    ListableGameDb info( game_id, r, str_blob );
+                    make_smart_ptr( ListableGameDb, new_info, info );
                     games.push_back( std::move(new_info) );
                     games_set.insert( info.GetGameId() );
                     if( nbr_new > 5 )
@@ -703,101 +703,6 @@ int Database::LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<MagicBas
     return retval;
 }
 
-
-std::string CompactGame::Description()
-{
-    std::string white = this->r.white;
-    std::string black = this->r.black;
-    size_t comma = white.find(',');
-    if( comma != std::string::npos )
-        white = white.substr( 0, comma );
-    comma = black.find(',');
-    if( comma != std::string::npos )
-        black = black.substr( 0, comma );
-    int move_cnt = moves.size();
-    std::string label = white;
-    if( r.white_elo != "" )
-    {
-        label += " (";
-        label += r.white_elo;
-        label += ")";
-    }
-    label += " - ";
-    label += black;
-    if( r.black_elo != "" )
-    {
-        label += " (";
-        label += r.black_elo;
-        label += ")";
-    }
-    if( r.site != ""  && r.site != "?" )
-    {
-        label += ", ";
-        label += r.site;
-    }
-    else if( r.event != "" && r.event != "?"  )
-    {
-        label += ", ";
-        label += r.event;
-    }
-    if( r.date.length() >= 4 )
-    {
-        label += " ";
-        label += r.date.substr(0,4);
-    }
-    bool result_or_moves = false;
-    if( r.result != "*" )
-    {
-        result_or_moves = true;
-        label += ", ";
-        label += r.result;
-        if( move_cnt > 0 )
-            label += " in";
-    }
-    if( move_cnt > 0 )
-    {
-        if( !result_or_moves )
-            label += ", ";
-        char buf[100];
-        sprintf( buf, " %d moves", (move_cnt+1)/2 );
-        label += std::string(buf);
-    }
-    return label;
-}
-
-
-void CompactGame::Upscale( GameDocument &gd )
-{
-    gd.r = r;
-    bool have_start_position = HaveStartPosition();
-    if( have_start_position )
-        gd.start_position =  GetStartPosition();
-    else
-        gd.start_position.Init();
-    std::vector<MoveTree> &variation = gd.tree.variations[0];
-    variation.clear();
-    MoveTree m;
-    for( int i=0; i<moves.size(); i++ )
-    {
-        m.game_move.move = moves[i];
-        variation.push_back(m);
-    }
-    gd.Rebuild();
-}
-
-void CompactGame::Downscale( GameDocument &gd )
-{
-    r = gd.r;
-    transpo_nbr = 0;
-	start_position = gd.start_position;
-    std::vector<MoveTree> &variation = gd.tree.variations[0];
-    moves.clear();
-    for( int i=0; i<variation.size(); i++ )
-    {
-        thc::Move mv = variation[i].game_move.move;
-        moves.push_back(mv);
-    }
-}
 
 int Database::GetRow( int row, CompactGame *info )
 {
@@ -944,7 +849,7 @@ int Database::GetRowRaw( CompactGame *pact, int row )
 }
 
 
-int Database::LoadAllGames( std::vector< smart_ptr<MagicBase> > &cache, int nbr_games )
+int Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int nbr_games )
 {
     gbl_protect_recursion = true;
 
@@ -1071,8 +976,8 @@ int Database::LoadAllGames( std::vector< smart_ptr<MagicBase> > &cache, int nbr_
                     }
                 }
             }
-            DbDocument info( game_id, r, str_blob );
-            make_smart_ptr( DbDocument, new_info, info );
+            ListableGameDb info( game_id, r, str_blob );
+            make_smart_ptr( ListableGameDb, new_info, info );
             cache.push_back( std::move(new_info) );
 
             int percent = (cache.size()*100) / (nbr_games?nbr_games:1);

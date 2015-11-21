@@ -36,7 +36,7 @@ public:
     // int GetNbrGames( thc::ChessRules &cr );
     int GetRow( int row, CompactGame *info );
     int GetRowRaw( CompactGame *info, int row );
-    int LoadAllGames( std::vector< smart_ptr<MagicBase> > &cache, int nbr_games );
+    int LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int nbr_games );
     bool TestNextRow();
     bool TestPrevRow();
     int GetCurrent();
@@ -44,8 +44,8 @@ public:
     void FindPlayerEnd();
 
     int LoadGameWithQuery( CompactGame *info, int game_id );
-    int LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<MagicBase> > &games, std::unordered_set<int> &games_set );
-    int LoadGamesWithQuery( std::string &player_name, bool white, std::vector< smart_ptr<MagicBase> > &games );
+    int LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<ListableGame> > &games, std::unordered_set<int> &games_set );
+    int LoadGamesWithQuery( std::string &player_name, bool white, std::vector< smart_ptr<ListableGame> > &games );
   
 private:
     DB_REQ db_req;
