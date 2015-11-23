@@ -68,6 +68,19 @@ public:
         return pact.start_position;
     }
     
+    // For now at least, the following are used for fast sorting on column headings
+    virtual const char *White()     { return pack.White();    }
+    virtual const char *Black()     { return pack.Black();    }
+    virtual const char *Event()     { return pack.Event();    }
+    virtual const char *Site()      { return pack.Site();     }
+    virtual const char *Result()    { return pack.Result();   }
+    virtual const char *Round()     { return pack.Round() ;   }
+    virtual const char *Date()      { return pack.Date();     }
+    virtual const char *Eco()       { return pack.Eco();      }
+    virtual const char *WhiteElo()  { return pack.WhiteElo(); }
+    virtual const char *BlackElo()  { return pack.BlackElo(); }
+    virtual const char *Fen()       { return pack.Fen();      }
+    virtual const char *CompressedMoves() {return pack.Blob();  }
     
 };
 

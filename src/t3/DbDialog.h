@@ -71,7 +71,7 @@ public:
     // We calculate a vector of all blobs in the games that leading to the search position
     std::vector< PATH_TO_POSITION > transpositions;
     bool ReadItemFromMemory( int item, CompactGame &info );
-    void SmartCompare();
+    void MoveColCompare();
 
     // Overrides - Gdv = Games Dialog Override
     virtual void GdvOnActivate();
@@ -90,6 +90,8 @@ public:
     virtual void GdvButton4();
     virtual void GdvOnCancel();
     virtual void GdvNextMove( int idx );
+    virtual bool MoveColCompareReadGame( MoveColCompareElement &e, int idx, const char *blob );
+    virtual int  GetBasePositionIdx( CompactGame &pact ) { int idx; pact.FindPositionInGame( objs.db->GetPositionHash(), idx ); return idx; }
 
     // Helpers
     void LoadGamesIntoMemory();
@@ -109,7 +111,7 @@ private:
     std::unordered_set<uint64_t> drill_down_set;  // positions already encountered drilling down
     std::vector<thc::Move> moves_in_this_position;
     std::vector<thc::Move> moves_from_base_position;
-    std::vector< smart_ptr<ListableGameDb> > displayed_games;
+    std::vector< smart_ptr<ListableGame> > displayed_games;
 };
 
 #endif    // DB_DIALOG_H

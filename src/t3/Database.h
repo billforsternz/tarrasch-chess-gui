@@ -82,8 +82,11 @@ private:
     
     // The position we are looking for
 public:
+    uint64_t GetPositionHash()                  { return position_hash; }
+    void     SetPositionHash( uint64_t hash )   { position_hash=hash; }
     thc::ChessPosition gbl_position;
-    uint64_t gbl_hash;
+private:
+    uint64_t position_hash;
     
 };
 

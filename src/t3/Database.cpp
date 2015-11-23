@@ -103,7 +103,7 @@ bool Database::IsOperational( std::string &error_msg )
         else
         {
             if( version != DATABASE_VERSION_NUMBER_SUPPORTED )
-                error_msg = "Could not read version number from database";
+                error_msg = "The database file is not in the correct format for this version of Tarrasch";
             else
                 operational = true;
         }
@@ -174,7 +174,7 @@ int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &pl
     this->player_name = player_name;
     
     //cr.Forsyth("r1bqk2r/ppp1bppp/2n1pn2/3p4/Q1PP4/P3PN2/1P1N1PPP/R1B1KB1R b KQkq - 0 7");
-    gbl_hash = cr.Hash64Calculate();
+    position_hash = cr.Hash64Calculate();
     gbl_position = cr;
     cache.clear();
     stack.clear();
@@ -183,7 +183,7 @@ int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &pl
     char buf[1000];
     int table_nbr;
     int hash;
-    uint64_t temp=gbl_hash;
+    uint64_t temp=position_hash;
     table_nbr = ((int)(temp>>32))&(NBR_BUCKETS-1);
     hash = (int)(temp);
     if( player_name.length() == 0 )
@@ -802,7 +802,7 @@ int Database::GetRowRaw( CompactGame *pact, int row )
             // sprintf( buf, "SELECT game_id from positions WHERE position_hash=%d LIMIT %d,100", gbl_hash, row );
 //            sprintf( buf, "SELECT positions.game_id from positions JOIN games ON games.game_id = positions.game_id AND positions.position_hash=%d ORDER BY games.white LIMIT %d,100", gbl_hash, row );
             //sprintf( buf, "SELECT positions.game_id from positions JOIN games ON games.game_id = positions.game_id AND positions.position_hash=%d LIMIT %d,100", gbl_hash, row );
-            uint64_t temp = gbl_hash;
+            uint64_t temp = position_hash;
             int hash = (int)(temp);
             int table_nbr = (int)((temp>>32)&(NBR_BUCKETS-1));
             // sprintf( buf, "SELECT positions_%d.game_id from positions_%d JOIN games ON games.game_id = positions_%d.game_id AND positions_%d.position_hash=%d LIMIT %d,100",
@@ -866,7 +866,7 @@ int Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int n
     // select matching rows from the table
     char buf[1000];
     gbl_expected = -1;
-    uint64_t temp = gbl_hash;
+    uint64_t temp = position_hash;
     int hash = (int)(temp);
     int table_nbr = (int)((temp>>32)&(NBR_BUCKETS-1));
     if( db_req == REQ_PLAYERS )
@@ -994,6 +994,8 @@ int Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int n
             // All rows finished
             sqlite3_finalize(gbl_stmt);
             gbl_stmt = NULL;
+            cprintf( "Reversing order to get newest games first\n" );
+            std::reverse( cache.begin(), cache.end() );
             cprintf("LoadAllGames(): %u game_ids loaded\n", cache.size() );
             break;
         }

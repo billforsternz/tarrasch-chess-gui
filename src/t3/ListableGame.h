@@ -38,7 +38,16 @@ public:
     virtual void *LoadIntoMemory( void *context, bool end )  {return 0;}
     virtual const char *White() {return "";}
     virtual const char *Black() {return "";}
-
+    virtual const char *Event() {return "";}
+    virtual const char *Site() {return "";}
+    virtual const char *Result() {return "";}
+    virtual const char *Round() {return "";}
+    virtual const char *Date() {return "";}
+    virtual const char *Eco() {return "";}
+    virtual const char *WhiteElo() {return "";}
+    virtual const char *BlackElo() {return "";}
+    virtual const char *Fen() {return "";}
+    virtual const char *CompressedMoves() {return "";}
     
     // High performance
     virtual Roster                  &RefRoster()          { static Roster r; return r; }
@@ -55,7 +64,8 @@ public:
         pact.transpo_nbr = transpo_nbr;
     }
     
-    int transpo_nbr;
+private:
+    int transpo_nbr;    // it would be nice to move this into ListableGameDb.h
 };
 
         

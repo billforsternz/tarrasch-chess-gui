@@ -94,8 +94,7 @@ void GamesListCtrl::ReceiveFocus( int focus_idx )
         track->focus_idx = focus_idx;
         parent->ReadItemWithSingleLineCache( focus_idx, track->info );
 
-        int offset=0;
-        track->info.FindPositionInGame( objs.db->gbl_hash, offset );
+        int offset = parent->GetBasePositionIdx( track->info );
         initial_focus_offset = track->focus_offset = offset;
         if( mini_board )
         {
@@ -218,8 +217,7 @@ wxString GamesListCtrl::OnGetItemText( long item, long column) const
             }
             else
             {
-                int idx;
-                info.FindPositionInGame(objs.db->gbl_hash, idx );
+                int idx = parent->GetBasePositionIdx( info );
                 move_txt = CalculateMoveTxt( info, idx );
                 move_txt = buf + move_txt;
             }
@@ -298,6 +296,9 @@ GamesDialog::GamesDialog
     this->gc = gc;
     this->gc_clipboard = gc_clipboard;
     db_search = (cr!=NULL);
+    col_last_time = 0;
+    col_consecutive = 0;
+
     if( cr )
     {
         this->cr = *cr;
@@ -1227,127 +1228,155 @@ static GamesDialog *backdoor;
 static bool compare( const smart_ptr<ListableGame> g1, const smart_ptr<ListableGame> g2 )
 {
     bool lt=false;
-    if( backdoor->compare_col == 1 )
+    bool use_atoi=false;
+    const char *parm1;
+    const char *parm2;
+    switch( backdoor->compare_col )
     {
-        const char *white1 = g1->White();
-        const char *white2 = g2->White();
-        int negative_if_lt0 = strcmp( white1, white2 );
-        lt = (negative_if_lt0 < 0);
+        case 1:
+        {
+            parm1 = g1->White();
+            parm2 = g2->White();
+            break;
+        }
+        case 2:
+        {
+            parm1 = g1->WhiteElo();
+            parm2 = g2->WhiteElo();
+            use_atoi = true;
+            break;
+        }
+        case 3:
+        {
+            parm1 = g1->Black();
+            parm2 = g2->Black();
+            break;
+        }
+        case 4:
+        {
+            parm1 = g1->BlackElo();
+            parm2 = g2->BlackElo();
+            use_atoi = true;
+            break;
+        }
+        case 5:
+        {
+            parm1 = g1->Date();
+            parm2 = g2->Date();
+            break;
+        }
+        case 6:
+        {
+            parm1 = g1->Site();
+            parm2 = g2->Site();
+            break;
+        }
+        case 8:
+        {
+            parm1 = g1->Result();
+            parm2 = g2->Result();
+            break;
+        }
     }
-    else if( backdoor->compare_col == 3 )
+    if( use_atoi )
     {
-        const char *black1 = g1->Black();
-        const char *black2 = g2->Black();
-        int negative_if_lt0 = strcmp( black1, black2 );
-        lt = (negative_if_lt0 < 0);
+        int int1 = atoi(parm1);
+        int int2 = atoi(parm2);
+        lt = int1 < int2;
     }
     else
     {
-        Roster r1 = g1->RefRoster();
-        Roster r2 = g2->RefRoster();
-        switch( backdoor->compare_col )
-        {
-            case 1: lt = r1.white < r2.white;
-                break;
-            case 2:
-            {
-                int elo_1 = atoi( r1.white_elo.c_str() );
-                int elo_2 = atoi( r2.white_elo.c_str() );
-                lt = elo_1 < elo_2;
-                break;
-            }
-            case 3: lt = r1.black < r2.black;
-                break;
-            case 4:
-            {
-                int elo_1 = atoi( r1.black_elo.c_str() );
-                int elo_2 = atoi( r2.black_elo.c_str() );
-                lt = elo_1 < elo_2;
-                break;
-            }
-            case 5: lt = r1.date < r2.date;
-                break;
-            case 6: lt = r1.site < r2.site;
-                break;
-            case 8: lt = r1.result < r2.result;
-                break;
-        }
+        int negative_if_lt0 = strcmp(parm1,parm2);
+        lt = (negative_if_lt0 < 0);
     }
     return lt;
 }
-
-
-
 
 static bool rev_compare( const smart_ptr<ListableGame> g1, const smart_ptr<ListableGame> g2 )
 {
-    bool lt=true;
-    if( backdoor->compare_col == 1 )
+    bool lt=false;
+    bool use_atoi=false;
+    const char *parm1;
+    const char *parm2;
+    switch( backdoor->compare_col )
     {
-        const char *white1 = g2->White();
-        const char *white2 = g1->White();
-        int negative_if_lt0 = strcmp( white1, white2 );
-        lt = (negative_if_lt0 < 0);
+        case 1:
+        {
+            parm1 = g1->White();
+            parm2 = g2->White();
+            break;
+        }
+        case 2:
+        {
+            parm1 = g1->WhiteElo();
+            parm2 = g2->WhiteElo();
+            use_atoi = true;
+            break;
+        }
+        case 3:
+        {
+            parm1 = g1->Black();
+            parm2 = g2->Black();
+            break;
+        }
+        case 4:
+        {
+            parm1 = g1->BlackElo();
+            parm2 = g2->BlackElo();
+            use_atoi = true;
+            break;
+        }
+        case 5:
+        {
+            parm1 = g1->Date();
+            parm2 = g2->Date();
+            break;
+        }
+        case 6:
+        {
+            parm1 = g1->Site();
+            parm2 = g2->Site();
+            break;
+        }
+        case 8:
+        {
+            parm1 = g1->Result();
+            parm2 = g2->Result();
+            break;
+        }
     }
-    else if( backdoor->compare_col == 3 )
+    if( use_atoi )
     {
-        const char *black1 = g2->Black();
-        const char *black2 = g1->Black();
-        int negative_if_lt0 = strcmp( black1, black2 );
-        lt = (negative_if_lt0 < 0);
+        int int1 = atoi(parm1);
+        int int2 = atoi(parm2);
+        lt = int2 < int1;
     }
     else
     {
-        Roster r1 = g1->RefRoster();
-        Roster r2 = g2->RefRoster();
-        switch( backdoor->compare_col )
-        {
-            case 1: lt = r1.white > r2.white;           break;
-            case 2:
-            {       int elo_1 = atoi( r1.white_elo.c_str() );
-                int elo_2 = atoi( r2.white_elo.c_str() );
-                lt = elo_1 > elo_2;
-                break;
-            }
-            case 3: lt = r1.black > r2.black;           break;
-            case 4:
-            {       int elo_1 = atoi( r1.black_elo.c_str() );
-                int elo_2 = atoi( r2.black_elo.c_str() );
-                lt = elo_1 > elo_2;
-                break;
-            }
-            case 5: lt = r1.date > r2.date;             break;
-            case 6: lt = r1.site > r2.site;             break;
-            case 8: lt = r1.result > r2.result;         break;
-        }
+        int negative_if_lt0 = strcmp(parm2,parm1);
+        lt = (negative_if_lt0 < 0);
     }
     return lt;
 }
 
-struct TempElement
+static bool compare_blob( const MoveColCompareElement &e1, const MoveColCompareElement &e2 )
 {
-    int idx;
-    int transpo;
-    std::string blob;
-    std::vector<int> counts;
-};
-
-static bool compare_blob( const TempElement &e1, const TempElement &e2 )
-{
-    bool lt = false;
-    //if( e1.transpo == e2.transpo )
+    bool lt = false;    // lt = less than conventionally, and since the default sort order is smaller first,
+                        //   it can be read as "true if e1 comes first"
+    if( e1.transpo == e2.transpo )
         lt = (e1.blob < e2.blob);
-    //else
-    //    lt = (e1.transpo > e2.transpo);     // smaller transpo nbr should come first
+    else
+        lt = (e1.transpo < e2.transpo);     // smaller transpo nbr should come first
     return lt;
 }
 
-static bool compare_counts( const TempElement &e1, const TempElement &e2 )
+static bool compare_counts( const MoveColCompareElement &e1, const MoveColCompareElement &e2 )
 {
-    bool lt = false;
-    //if( e1.transpo != e2.transpo )
-    //    lt = (e1.transpo > e2.transpo);     // smaller transpo nbr should come first
-    //else
+    bool lt = false;    // lt = less than conventionally, and since the default sort order is smaller first,
+                        //   it can be read as "true if e1 comes first"
+    if( e1.transpo != e2.transpo )
+        lt = (e1.transpo < e2.transpo);     // smaller transpo nbr should come first
+    else
     {
         unsigned int len = e1.blob.length();
         if( e2.blob.length() < len )
@@ -1356,33 +1385,136 @@ static bool compare_counts( const TempElement &e1, const TempElement &e2 )
         {
             if( e1.counts[i] != e2.counts[i] )
             {
-                lt = (e1.counts[i] < e2.counts[i]);
+                lt = (e1.counts[i] > e2.counts[i]);     // larger count comes first
                 return lt;
             }
         }
-        lt = (e1.blob.length() < e2.blob.length());
+        lt = (e1.blob.length() < e2.blob.length());     // shorter length comes first
     }
     return lt;
 }
 
-void GamesDialog::SmartCompare( std::vector< smart_ptr<ListableGame> > &gds )
+
+/*
+   Tracking down the issue of "false friends" in move column sorting was tricky. I first
+   noticed the problem in the position after 1.e4 c5 2.b3 d6 with the giant123 database.
+   The three 7...g6 games below were incorrectly appearing before the four 7...e6 games.
+   The solution to the problem was the false_friend_detector bool array, removing the
+   few lines of code where that is created, initialised, set and tested will bring the
+   problem back.
+
+    1.e4 c5 2.b3 bug hunt> Found (idx=14, e6), Sobeck,G-Vlasak,Lu
+    1.e4 c5 2.b3 bug hunt> Found (idx=283, g6), Shanava,K-Magalashvili,Da
+    1.e4 c5 2.b3 bug hunt> Found (idx=384, g6), Boskovic, Malina-Rakic, Marija
+    1.e4 c5 2.b3 bug hunt> Found (idx=390, e6), Stuchly, Radim-Kubos, Rostislav
+    1.e4 c5 2.b3 bug hunt> Found (idx=658, e6), Galko, Agnes-Palinkas, Balazs
+    1.e4 c5 2.b3 bug hunt> Found (idx=708, g6), Miljanic, Boro-Florean, Andrei
+    1.e4 c5 2.b3 bug hunt> Found (idx=1139, e6), Hagenbeck Huebert, Hartmut-Kaeser,Udo
+*/
+
+//#define FALSE_FRIEND_BUG_HUNT
+#ifdef FALSE_FRIEND_BUG_HUNT
+static void make_test_game( std::string &blob, int argc, const char *argv[] )
 {
-    std::vector<TempElement> inter;     // intermediate representation
+    thc::ChessRules cr;
+    thc::Move mv;
+    vector<thc::Move> mvs;
+    for( int i=0; i<argc; i++ )
+    {
+        mv.NaturalInFast( &cr, argv[i] );
+        mvs.push_back(mv);
+        cr.PlayMove(mv);
+    }
+    CompressMoves press;
+    blob = press.Compress(mvs);
+}
+#endif
+
+#ifdef FALSE_FRIEND_BUG_HUNT
+static void diagnose_bug( std::string msg, std::vector<MoveColCompareElement> &inter )
+{
+    cprintf( "%s\n", msg.c_str() );
+    unsigned int sz = inter.size();
+    int nbr=0;
+    for( int i=0; i<sz; i++ )
+    {
+        MoveColCompareElement &e = inter[i];
+        bool g6 = (e.idx==283 || e.idx==384 || e.idx==708); 
+        bool e6 = (e.idx==14  || e.idx==390 || e.idx==658 || e.idx==1139);
+        if( e6 || g6 )
+        {
+            if( nbr==0 && i-1>=0 )
+            {
+                MoveColCompareElement &f = inter[i-1];
+                cprintf( "At %d,   : ", i-1 ); 
+                for( int j=0; j<10; j++ )
+                    cprintf( "%s%02x %d%s", j==0?"{":"", (j<f.counts.size() ? 0xff&f.blob[j] : 0), (j<f.counts.size() ? f.counts[j] : -1), j+1<10?",":"}\n" );
+            }
+
+            cprintf( "At %d, %s: ", i, e6?"e6":"g6" ); 
+            for( int j=0; j<10; j++ )
+                cprintf( "%s%02x %d%s", j==0?"{":"", (j<e.counts.size() ? 0xff&e.blob[j] : 0), (j<e.counts.size() ? e.counts[j] : -1), j+1<10?",":"}\n" );
+
+            if( nbr==6 && i+1<inter.size() )
+            {
+                MoveColCompareElement &f = inter[i+1];
+                cprintf( "At %d,   : ", i+1  ); 
+                for( int j=0; j<10; j++ )
+                    cprintf( "%s%02x %d%s", j==0?"{":"", (j<f.counts.size() ? 0xff&f.blob[j] : 0), (j<f.counts.size() ? f.counts[j] : -1), j+1<10?",":"}\n" );
+            }
+            nbr++;
+        }
+    }
+}
+#endif
+
+// Overridable - base classes may calculate transpo etc
+bool GamesDialog::MoveColCompareReadGame( MoveColCompareElement &e, int idx, const char *blob )
+{        
+    e.idx = idx;
+    e.blob = std::string( blob );
+    e.transpo = 0;
+    e.counts.resize( e.blob.length() );
+    return true;
+}
+
+void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &gds )
+{
+    // Temp testing
+    #ifdef FALSE_FRIEND_BUG_HUNT
+    std::string blob1, blob2;
+    const char *moves1[] = { "e4", "c5", "b3", "d6", "Bb2", "Nf6", "Bb5+", "Bd7", "Bxd7+", "Qxd7", "d3", "Nc6", "Ne2", "g6" };
+    make_test_game( blob1, 14, moves1 );
+    const char *moves2[] = { "e4", "c5", "b3", "d6", "Bb2", "Nf6", "Bb5+", "Bd7", "Bxd7+", "Qxd7", "d3", "Nc6", "Ne2", "e6" };
+    make_test_game( blob2, 14, moves2 );
+    #endif
+
+    std::vector<MoveColCompareElement> inter;     // intermediate representation
     
     // Step 1, do a conventional string sort
     unsigned int sz = gds.size();
     for( unsigned int i=0; i<sz; i++ )
     {
-        TempElement e;
-        e.idx = i;
-        e.transpo = 0;
-        e.blob = gds[i]->RefCompressedMoves();
-        e.counts.resize( e.blob.length() );
-        inter.push_back(e);
+        #ifdef FALSE_FRIEND_BUG_HUNT
+        std::string blob = blob1;
+        for( int j=0; j<2; j++ )
+        {
+            if( strlen(gds[i]->CompressedMoves())>=14 && 0==memcmp( blob.c_str(), gds[i]->CompressedMoves(), 14 )  )
+            {
+                cprintf( "1.e4 c5 2.b3 bug hunt> Found (idx=%d, %s), %s-%s\n", i, j==0?"g6":"e6", gds[i]->White(), gds[i]->Black() );
+            }
+            blob = blob2;
+        }
+        #endif
+        MoveColCompareElement e;
+        if( MoveColCompareReadGame(e,i,gds[i]->CompressedMoves())  )
+            inter.push_back(e);
     }
     std::sort( inter.begin(), inter.end(), compare_blob );
-    
-    
+    #ifdef FALSE_FRIEND_BUG_HUNT
+    diagnose_bug( "After step 1", inter );
+    #endif
+
     // Step 2, work out the nbr of moves in clumps of moves
     /*
      // Imagine that the compressed one byte codes sort in the same order as multi-char ascii move
@@ -1441,31 +1573,66 @@ void GamesDialog::SmartCompare( std::vector< smart_ptr<ListableGame> > &gds )
      B)  1.d4 Nf6 2.c4 e6 3.Nf3
      C)  1.d4 Nf6 2.c4 e6 3.Nf3
      A)  1.d4 Nf6 2.c4 e6 3.Nc3
-     */
-    
+
+     Actually, experience shows we need a refinement. Look at the refined
+     initial count calculation below. The asterisked moves are "false friends",
+     they should break the vertical run from above even though they are the
+     same move as the move above them.
+
+          j=0     j=1    j=2      j=3    j=4
+     A)   1.d4,7  Nf6,3  2.c4,3   e6,3   3.Nc3,1
+     B)   1.d4,7  Nf6,3  2.c4,3   e6,3   3.Nf3,2
+     C)   1.d4,7  Nf6,3  2.c4,3   e6,3   3.Nf3,2
+     D)   1.d4,7  d5,4   2.c4*,4  e6*,3  3.Nc3,1
+     E)   1.d4,7  d5,4   2.c4*,4  e6*,3  3.Nf3,2
+     F)   1.d4,7  d5,4   2.c4*,4  e6*,3  3.Nf3,2
+     G)   1.d4,7  d5,4   2.c4*,4  c5,1   3.d5,1
+
+     Our false friend detector is very simple. Our count calculation
+     algorithm does complete columns, so j=0 then j=1, then j=2, etc. Keep an
+     array of flags, initially clear, one flag per row.
+
+     For each column, 1) set the flag for any row where a vertical run is broken
+     Also, 2) if we find the row flag was previously set, break the vertical run 
+     there even if the move is unchanged
+
+     At stage j=0, no flags previously set, no vertical runs broken.
+     At stage j=1, 1) set the flag for row D.
+     At stage j=2, 2) break the vertical run since the flag is set for row D.
+     At stage j=3, 2) break the vertical run since the flag is set for row D.
+               and 1) set the flag for row G
+     At stage j=4, 1) set the flag for row B and E, 2) vertical runs would be
+              broken at rows D) and G) although the move changes so this is moot
+
+*/    
     
     sz = inter.size();
+    std::vector<bool> false_friend_detector(inter.size());
+    for( unsigned int i=0; i<sz; i++ )
+        false_friend_detector[i] = false;
     bool at_least_one = true;
     for( unsigned int j=0; at_least_one; j++ )
     {
         at_least_one = false;  // stop when we've passed end of all strings
         char current='\0';
+        char current_prev_move='\0';
         unsigned int start=0;
         bool run_in_progress=false;
         for( unsigned int i=0; i<sz; i++ )
         {
-            TempElement &e = inter[i];
+            MoveColCompareElement &e = inter[i];
             
             // A short game stops runs
             if( j >= e.blob.length() )
             {
                 if( run_in_progress )
                 {
+                    false_friend_detector[i] = true;
                     run_in_progress = false;
                     int count = i-start;
                     for( int k=start; k<i; k++ )
                     {
-                        TempElement &f = inter[k];
+                        MoveColCompareElement &f = inter[k];
                         f.counts[j] = count;
                     }
                 }
@@ -1485,15 +1652,17 @@ void GamesDialog::SmartCompare( std::vector< smart_ptr<ListableGame> > &gds )
             {
                 
                 // Run can be over because of character change
-                if( c != current )
+                //  or if false friend detector fires
+                if( c!=current || false_friend_detector[i] )
                 {
                     int count = i-start;
                     for( int k=start; k<i; k++ )
                     {
-                        TempElement &f = inter[k];
+                        MoveColCompareElement &f = inter[k];
                         f.counts[j] = count;
                     }
-                    current = c;
+                    false_friend_detector[i] = true;
+                    current = c;  // start a new run
                     start = i;
                 }
                 
@@ -1503,23 +1672,29 @@ void GamesDialog::SmartCompare( std::vector< smart_ptr<ListableGame> > &gds )
                     int count = sz - start;
                     for( int k=start; k<sz; k++ )
                     {
-                        TempElement &f = inter[k];
+                        MoveColCompareElement &f = inter[k];
                         f.counts[j] = count;
                     }
                 }
             }
         }
     }
+    #ifdef FALSE_FRIEND_BUG_HUNT
+    diagnose_bug( "After step 2", inter );
+    #endif
     
     // Step 3 sort again using the counts
     std::sort( inter.begin(), inter.end(), compare_counts );
+    #ifdef FALSE_FRIEND_BUG_HUNT
+    diagnose_bug( "After step 3", inter );
+    #endif
     
     // Step 4 build sorted version of games list
     std::vector< smart_ptr<ListableGame> > temp;
     sz = inter.size();
     for( unsigned int i=0; i<sz; i++ )
     {
-        TempElement &e = inter[i];
+        MoveColCompareElement &e = inter[i];
         temp.push_back( gds[e.idx] );
     }
     
@@ -1527,24 +1702,26 @@ void GamesDialog::SmartCompare( std::vector< smart_ptr<ListableGame> > &gds )
     gds = temp;
 }
 
-
-void GamesDialog::GdvListColClick( int compare_col )
+void GamesDialog::ColumnSort( int compare_col, std::vector< smart_ptr<ListableGame> > &displayed_games )
 {
-    if( gc->gds.size() > 0 )
+    if( displayed_games.size() > 0 )
     {
-        static int last_time;
-        static int consecutive;
-        if( compare_col == last_time )
-            consecutive++;
+        if( compare_col == col_last_time )
+            col_consecutive++;
         else
-            consecutive=0;
+            col_consecutive=0;
         this->compare_col = compare_col;
         backdoor = this;
         if( compare_col == 10 )
-            SmartCompare(gc->gds);
+        {
+            if( col_consecutive%2 == 0 )
+                MoveColCompare(displayed_games);
+            else
+                std::reverse( displayed_games.begin(), displayed_games.end() );
+        }
         else
-            std::sort( gc->gds.begin(), gc->gds.end(), (consecutive%2==0)?compare:rev_compare );
-        nbr_games_in_list_ctrl = gc->gds.size();
+            std::sort( displayed_games.begin(), displayed_games.end(), (col_consecutive%2==0)?compare:rev_compare );
+        nbr_games_in_list_ctrl = displayed_games.size();
         list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
         list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
         int top = list_ctrl->GetTopItem();
@@ -1554,10 +1731,12 @@ void GamesDialog::GdvListColClick( int compare_col )
         for( int i=0; i<count; i++ )
             list_ctrl->RefreshItem(top++);
         Goto(0);
-        last_time = compare_col;
+        col_last_time = compare_col;
     }
 }
 
-
-
+void GamesDialog::GdvListColClick( int compare_col )
+{
+    ColumnSort( compare_col, gc->gds );
+}
 

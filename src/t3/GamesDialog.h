@@ -59,6 +59,14 @@ struct MiniBoardGame
     int                 focus_offset;
 };
 
+// Used in moves column sort
+struct MoveColCompareElement
+{
+    int idx;
+    int transpo;
+    std::string blob;
+    std::vector<int> counts;
+};
 
 // A GamesListCtrl is a list control within the GamesDialog, it displays a list of games to navigate through and pick from
 class GamesDialog;
@@ -186,6 +194,7 @@ public:
 
     void Goto( int idx );
     void ReadItemWithSingleLineCache( int item, CompactGame &info );
+    void ColumnSort( int compare_col, std::vector< smart_ptr<ListableGame> > &displayed_games );
 
     // Overrides - Gdv = Games Dialog Override
     virtual void GdvOnActivate();
@@ -207,6 +216,8 @@ public:
     virtual void GdvButton3();
     virtual void GdvButton4();
     virtual void GdvNextMove( int idx );
+    virtual bool MoveColCompareReadGame( MoveColCompareElement &e, int idx, const char *blob );
+    virtual int  GetBasePositionIdx( CompactGame &pact ) { return 0; }
 
     // Todo later
     void OnEditGameDetails( wxCommandEvent );
@@ -235,7 +246,7 @@ public:
     GameDocument *GetFocusGame( int &idx );
     void DeselectOthers();
     void OnOk();
-    void SmartCompare( std::vector< smart_ptr<ListableGame> > &gds );
+    void MoveColCompare( std::vector< smart_ptr<ListableGame> > &gds );
     
     // GamesDialog member variables
 public:
@@ -279,6 +290,9 @@ protected:
 
 private:    //TODO - move more vars to private
     bool db_search;
+    int col_last_time;
+    int col_consecutive;
+
 public:
     bool transpo_activated;
     int nbr_games_in_list_ctrl;
