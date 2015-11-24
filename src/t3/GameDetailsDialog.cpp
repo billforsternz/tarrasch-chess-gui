@@ -621,7 +621,6 @@ bool GameDetailsDialog::Run( GameDocument &gd )
         black_elo.Trim(false);
         if( result!="1-0" && result!="0-1" && result!="1/2-1/2" )
             result = "*";
-        gd.game_details_edited = true;
         remember_event = event;
         remember_site = site;
         gd.r.white      = white;        // "White"

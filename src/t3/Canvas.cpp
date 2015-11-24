@@ -586,7 +586,7 @@ Canvas::Canvas
     objs.tabs->gl   = gl;
     GameDocument    blank;
     objs.tabs->TabNew( blank );
-    objs.cws->Init( &objs.gl->undo, &objs.gl->gd, &objs.gl->gc, &objs.gl->gc_clipboard ); 
+    objs.cws->Init( &objs.gl->undo, &objs.gl->gd, &objs.gl->gc_pgn, &objs.gl->gc_clipboard ); 
     SetPlayers( "", "" );
     PositionButtons();
 

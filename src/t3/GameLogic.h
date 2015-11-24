@@ -220,7 +220,7 @@ public:
     thc::Move ponder_move;
     GameLifecycle glc;
     GameDocument gd;
-    GamesCache gc;
+    GamesCache gc_pgn;
     GamesCache gc_clipboard;
     GamesCache gc_session;
     GamesCache gc_database;

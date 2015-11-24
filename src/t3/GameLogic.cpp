@@ -100,7 +100,7 @@ bool GameLogic::OnExit()
 bool GameLogic::EditingLog()
 {
     std::string log_filename(objs.repository->log.m_file.c_str());
-    std::string pgn_filename(gc.pgn_filename.c_str());
+    std::string pgn_filename(gc_pgn.pgn_filename.c_str());
     bool editing_log = (log_filename == pgn_filename);
     return editing_log;
 }
@@ -119,8 +119,8 @@ void GameLogic::CmdFileNew()
     bool editing_log = objs.gl->EditingLog();
     if( objs.cws->FileNew() )
     {
-        gc.gds.clear();
-        gc.pgn_filename = "";
+        gc_pgn.gds.clear();
+        gc_pgn.pgn_filename = "";
         objs.log->SaveGame( &gd, editing_log );
         objs.session->SaveGame( &gd );
         IndicateNoCurrentDocument();
@@ -573,14 +573,14 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
     Atomic begin;
     bool is_empty = gd.IsEmpty();
     bool editing_log = objs.gl->EditingLog();
-    if( !gc.Load(filename) )
+    if( !gc_pgn.Load(filename) )
         wxMessageBox( "Cannot read file", "Error", wxOK|wxICON_ERROR );
     else
     {
         bool have_game = false;
-        if( gc.gds.size()==1 && objs.repository->general.m_straight_to_game )
+        if( gc_pgn.gds.size()==1 && objs.repository->general.m_straight_to_game )
         {
-            GameDocument *gd_file = gc.gds[0]->GetGameDocumentPtr();
+            GameDocument *gd_file = gc_pgn.gds[0]->GetGameDocumentPtr();
             bool have_game = gd_file && gd_file->in_memory;
             if( !have_game && gd_file )
             {
@@ -600,7 +600,7 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
                         gd = *gd_file;
                         gd.PgnParse(true,nbr_converted,s,cr,NULL);
                         make_smart_ptr( GameDocument,new_smart_ptr,gd);
-                        gc.gds[0] = std::move(new_smart_ptr);
+                        gc_pgn.gds[0] = std::move(new_smart_ptr);
                         have_game = true;
                     }
                     pf.Close( &gc_clipboard );
@@ -628,7 +628,7 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
             wxSize sz = objs.frame->GetSize();
             sz.x = (sz.x*9)/10;
             sz.y = (sz.y*9)/10;
-            PgnDialog dialog( objs.frame, &gc, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );   // GamesDialog instance
+            PgnDialog dialog( objs.frame, &gc_pgn, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );   // GamesDialog instance
             std::string title = "File: " + filename;
             if( dialog.ShowModalOk(title) )
             {
@@ -656,8 +656,8 @@ bool GameLogic::CmdUpdateNextGame()
     }
     else
     {
-        size_t nbr = gc.gds.size();
-        return( gc.gds.size()>1 && file_game_idx!=-1 && 0<=file_game_idx+1 && file_game_idx+1<nbr );
+        size_t nbr = gc_pgn.gds.size();
+        return( gc_pgn.gds.size()>1 && file_game_idx!=-1 && 0<=file_game_idx+1 && file_game_idx+1<nbr );
     }
 }
 
@@ -669,8 +669,8 @@ bool GameLogic::CmdUpdatePreviousGame()
     }
     else
     {
-        size_t nbr = gc.gds.size();
-        return( gc.gds.size()>1 && file_game_idx!=-1 && 0<=file_game_idx-1 && file_game_idx-1<nbr );
+        size_t nbr = gc_pgn.gds.size();
+        return( gc_pgn.gds.size()>1 && file_game_idx!=-1 && 0<=file_game_idx-1 && file_game_idx-1<nbr );
     }
 }
 
@@ -679,7 +679,7 @@ void GameLogic::NextGamePreviousGame( int idx )
     Atomic begin;
     bool editing_log = objs.gl->EditingLog();
     bool have_game = false;
-    GameDocument *ptr = gc.gds[idx]->GetGameDocumentPtr();
+    GameDocument *ptr = gc_pgn.gds[idx]->GetGameDocumentPtr();
     if( ptr )
     {
         GameDocument gd_file = *ptr;
@@ -701,7 +701,7 @@ void GameLogic::NextGamePreviousGame( int idx )
                     int nbr_converted;
                     gd_file.PgnParse(true,nbr_converted,s,cr,NULL);
                     make_smart_ptr( GameDocument,new_smart_ptr,gd_file);
-                    gc.gds[idx] = std::move(new_smart_ptr);
+                    gc_pgn.gds[idx] = std::move(new_smart_ptr);
                     have_game = true;
                 }
                 pf.Close( &gc_clipboard );
@@ -716,7 +716,7 @@ void GameLogic::NextGamePreviousGame( int idx )
             IndicateNoCurrentDocument();
             gd_file.game_being_edited = ++game_being_edited_tag;
             gd = gd_file;
-            smart_ptr<ListableGame> smp = gc.gds[idx];
+            smart_ptr<ListableGame> smp = gc_pgn.gds[idx];
             smp->SetSelected(true);
             this->file_game_idx = idx;
             tabs->SetInfile(true);
@@ -824,9 +824,9 @@ void trim( std::string &s )
 //  edited document is added to end of session instead)
 void GameLogic::PutBackDocument()
 {
-    for( int i=0; i<gc.gds.size(); i++ )
+    for( int i=0; i<gc_pgn.gds.size(); i++ )
     {
-        smart_ptr<ListableGame> smp = gc.gds[i];
+        smart_ptr<ListableGame> smp = gc_pgn.gds[i];
         if( smp->GetGameBeingEdited() == gd.game_being_edited )
         {
             gd.FleshOutDate();
@@ -834,7 +834,7 @@ void GameLogic::PutBackDocument()
             GameDocument new_doc = gd;
             new_doc.modified = gd.modified || undo.IsModified();
             make_smart_ptr( GameDocument, new_smart_ptr, new_doc);
-            gc.gds[i] = std::move(new_smart_ptr);
+            gc_pgn.gds[i] = std::move(new_smart_ptr);
             return;
         }
     }
@@ -856,9 +856,9 @@ void GameLogic::PutBackDocument()
 
 void GameLogic::IndicateNoCurrentDocument()
 {
-    for( int i=0; i<gc.gds.size(); i++ )
+    for( int i=0; i<gc_pgn.gds.size(); i++ )
     {
-        smart_ptr<ListableGame> smp = gc.gds[i];
+        smart_ptr<ListableGame> smp = gc_pgn.gds[i];
         if( smp->GetGameBeingEdited() == gd.game_being_edited )
              smp->SetGameBeingEdited(0);
         smp->SetSelected(false);
@@ -879,9 +879,9 @@ void GameLogic::CmdGamesCurrent()
     bool ok=CmdUpdateGamesCurrent();
     if( ok )
     {
-        if( !gc.IsSynced() )
+        if( !gc_pgn.IsSynced() )
         {
-            if( !gc.Reload() )
+            if( !gc_pgn.Reload() )
             {
                 ok = false;
                 wxMessageBox( "Cannot read any games", "Error reloading file", wxOK|wxICON_ERROR );
@@ -894,8 +894,8 @@ void GameLogic::CmdGamesCurrent()
         wxSize sz = objs.frame->GetSize();
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
-        gc.Debug( "Before loading current file games dialog" );
-        PgnDialog dialog( objs.frame, &gc, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );   // GamesDialog instance
+        gc_pgn.Debug( "Before loading current file games dialog" );
+        PgnDialog dialog( objs.frame, &gc_pgn, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );   // GamesDialog instance
         if( dialog.ShowModalOk("Current file") )
         {
             objs.log->SaveGame(&gd,editing_log);
@@ -1635,7 +1635,7 @@ bool GameLogic::CmdUpdateGamesCurrent()
 {
     bool enabled = (state==MANUAL || state==RESET || state==HUMAN || state==PONDERING || state==GAMEOVER);
     if( enabled )
-        enabled = gc.IsLoaded();
+        enabled = gc_pgn.IsLoaded();
     return enabled;
 }
 
@@ -2637,14 +2637,14 @@ void GameLogic::StatusUpdate( int idx )
 {
     if( objs.frame )
     {
-        bool file_loaded =  gc.pgn_filename != "";
+        bool file_loaded =  gc_pgn.pgn_filename != "";
         bool refresh=false;
         std::string str;
         str = "File: ";
         if( !file_loaded )
             str += "(none)";
         else
-            str += gc.pgn_filename;
+            str += gc_pgn.pgn_filename;
         if( str != status_field1 )
         {
             status_field1 = str;
@@ -2655,9 +2655,9 @@ void GameLogic::StatusUpdate( int idx )
         str = "";
         if( file_loaded )
         {
-            for( int i=0; i<gc.gds.size(); i++ )
+            for( int i=0; i<gc_pgn.gds.size(); i++ )
             {
-                ListableGame *ptr = gc.gds[i].get();
+                ListableGame *ptr = gc_pgn.gds[i].get();
                 uint32_t game_being_edited = ptr->GetGameBeingEdited();
                 if( ptr && ptr->IsModified() )
                 {
@@ -2686,16 +2686,16 @@ void GameLogic::StatusUpdate( int idx )
                 str = "*";
             char buf[80];
             if( idx >= 0 )
-                sprintf( buf, doc_modified?"* Game %d of %ld":"Game %d of %ld", idx+1, gc.gds.size() );
+                sprintf( buf, doc_modified?"* Game %d of %ld":"Game %d of %ld", idx+1, gc_pgn.gds.size() );
             else if( nbr_modified )
             {
                 sprintf( buf, doc_modified?"* File games: %ld (%d modified)":"File games: %ld (%d modified)",
-                     gc.gds.size(), nbr_modified );
+                     gc_pgn.gds.size(), nbr_modified );
             }
             else
             {
                 sprintf( buf, doc_modified?"* File games: %ld":"File games: %ld",
-                     gc.gds.size() );
+                     gc_pgn.gds.size() );
             }
             if( !tabs->GetInfile() )
                 sprintf( buf, " ( this tab not in file ) " );

@@ -194,11 +194,11 @@ bool DbDialog::ReadItemFromMemory( int item, CompactGame &pact )
 {
     bool in_memory = false;
     pact.transpo_nbr = 0;
-    int nbr_games = displayed_games.size();
+    int nbr_games = gc_db_displayed_games.gds.size();
     if( 0<=item && item<nbr_games )
     {
         in_memory = true;
-        displayed_games[item]->GetCompactGame(pact);
+        gc_db_displayed_games.gds[item]->GetCompactGame(pact);
         if( transpo_activated && transpositions.size() > 1 )
         {
             for( unsigned int j=0; j<transpositions.size(); j++ )
@@ -206,7 +206,7 @@ bool DbDialog::ReadItemFromMemory( int item, CompactGame &pact )
                 std::string &this_one = transpositions[j].blob;
                 const char *p = this_one.c_str();
                 size_t len = this_one.length();
-                std::string str_blob = displayed_games[item]->RefCompressedMoves();
+                std::string str_blob = gc_db_displayed_games.gds[item]->RefCompressedMoves();
                 if( str_blob.length()>=len && 0 == memcmp(p,str_blob.c_str(),len) )
                 {
                     pact.transpo_nbr = j+1;
@@ -263,7 +263,7 @@ bool DbDialog::MoveColCompareReadGame( MoveColCompareElement &e, int idx, const 
 
 void DbDialog::GdvListColClick( int compare_col )
 {
-    bool in_memory = (displayed_games.size() > 0);
+    bool in_memory = (gc_db_displayed_games.gds.size() > 0);
     if( !in_memory )
     {
         if( nbr_games_in_list_ctrl >= QUERY_LOAD_INTO_MEMORY_THRESHOLD )
@@ -277,7 +277,7 @@ void DbDialog::GdvListColClick( int compare_col )
         LoadGamesIntoMemory();
         StatsCalculate();
     }
-    ColumnSort( compare_col, displayed_games );  
+    ColumnSort( compare_col, gc_db_displayed_games.gds );  
 }
 
 void DbDialog::GdvSearch()
@@ -503,7 +503,7 @@ void DbDialog::GdvCheckBox( bool checked )
     // Clear back to the base position
     this->cr = cr_base;
     moves_from_base_position.clear();
-    displayed_games.clear();
+    gc_db_displayed_games.gds.clear();
     drill_down_set.clear();
     if( objs.gl->db_clipboard )
     {
@@ -550,7 +550,7 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
     int nbr_copied = 0;
     if( list_ctrl )
     {
-        int sz=displayed_games.size();
+        int sz=gc_db_displayed_games.gds.size();
         for( int i=0; i<sz; i++ )
         {
             if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
@@ -562,7 +562,7 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
                     clear_clipboard = false;
                     gc_clipboard->gds.clear();
                 }
-                gc_clipboard->gds.push_back( displayed_games[i] ); // assumes smart_ptr is std::shared_ptr
+                gc_clipboard->gds.push_back( gc_db_displayed_games.gds[i] ); // assumes smart_ptr is std::shared_ptr
                 nbr_copied++;
             }
         }
@@ -573,7 +573,7 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
                 clear_clipboard = false;
                 gc_clipboard->gds.clear();
             }
-            gc_clipboard->gds.push_back( displayed_games[idx_focus] ); // assumes smart_ptr is std::shared_ptr
+            gc_clipboard->gds.push_back( gc_db_displayed_games.gds[idx_focus] ); // assumes smart_ptr is std::shared_ptr
             nbr_copied++;
         }
     }
@@ -589,7 +589,7 @@ void DbDialog::StatsCalculate()
     transpositions.clear();
     stats.clear();
     dirty = true;
-    displayed_games.clear();
+    gc_db_displayed_games.gds.clear();
     cprintf( "Remove focus %d\n", track->focus_idx );
     list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_FOCUSED );
     list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_SELECTED );
@@ -694,7 +694,7 @@ void DbDialog::StatsCalculate()
                     total_draws++;
                 ListableGameDb temp(0,r,blob);
                 make_smart_ptr( ListableGameDb, smptr, temp );
-                displayed_games.push_back(smptr);
+                gc_db_displayed_games.gds.push_back(smptr);
                 PATH_TO_POSITION *p = &transpositions[found_idx];
                 p->frequency++;
                 size_t len = p->blob.length();
@@ -806,7 +806,7 @@ void DbDialog::StatsCalculate()
         strings_transpos.Add(wstr);
     }
 
-    nbr_games_in_list_ctrl = displayed_games.size();
+    nbr_games_in_list_ctrl = gc_db_displayed_games.gds.size();
     dirty = true;
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
     list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );

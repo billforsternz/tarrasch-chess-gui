@@ -54,6 +54,9 @@ public:
     virtual std::vector<thc::Move>  &RefMoves()           { static std::vector<thc::Move> moves; return moves; }
     virtual std::string             &RefCompressedMoves() { static std::string moves; return moves; }
     virtual thc::ChessPosition      &RefStartPosition()   { static thc::ChessPosition cp; return cp; }
+
+    // For editing the roster
+    //virtual void SetRoster( Roster &r ) {}
     
     // Easy to use
     virtual void GetCompactGame( CompactGame &pact )

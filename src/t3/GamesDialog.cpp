@@ -928,6 +928,8 @@ void GamesDialog::OnEditGameDetails( wxCommandEvent& WXUNUSED(event) )
 {
  /*   int idx;
     int focus_idx = GetFocusGame(idx);
+     GdvReadItem( item, info );
+
     if( focus_idx != -1  )
     {
         GameDetailsDialog dialog( this );
@@ -1389,7 +1391,7 @@ static bool compare_counts( const MoveColCompareElement &e1, const MoveColCompar
                 return lt;
             }
         }
-        lt = (e1.blob.length() < e2.blob.length());     // shorter length comes first
+        lt = (e1.blob.length() > e2.blob.length());     // longer length comes first
     }
     return lt;
 }
@@ -1529,7 +1531,7 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &gds )
      G)  1.d4 d5 2.c4 c5 3.d5
      
      // Calculate the counts like this
-     j=0 j=1 j=2 j=3 j=4
+              j=0 j=1 j=2 j=3 j=4
      i=0  A)  7
      i=1  B)  7
      i=2  C)  7
@@ -1538,7 +1540,7 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &gds )
      i=5  F)  7
      i=6  G)  7
      
-     j=0 j=1 j=2 j=3 j=4
+              j=0 j=1 j=2 j=3 j=4
      i=0  A)  7   3
      i=1  B)  7   3
      i=2  C)  7   3
@@ -1547,7 +1549,7 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &gds )
      i=5  F)  7   4
      i=6  G)  7   4
      
-     j=0 j=1 j=2 j=3 j=4
+              j=0 j=1 j=2 j=3 j=4
      i=0  A)  7   3   7   6   1
      i=1  B)  7   3   7   6   2
      i=2  C)  7   3   7   6   2     etc.
@@ -1608,8 +1610,7 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &gds )
     
     sz = inter.size();
     std::vector<bool> false_friend_detector(inter.size());
-    for( unsigned int i=0; i<sz; i++ )
-        false_friend_detector[i] = false;
+    std::fill( false_friend_detector.begin(), false_friend_detector.end(), false );
     bool at_least_one = true;
     for( unsigned int j=0; at_least_one; j++ )
     {

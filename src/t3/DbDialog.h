@@ -111,7 +111,7 @@ private:
     std::unordered_set<uint64_t> drill_down_set;  // positions already encountered drilling down
     std::vector<thc::Move> moves_in_this_position;
     std::vector<thc::Move> moves_from_base_position;
-    std::vector< smart_ptr<ListableGame> > displayed_games;
+    GamesCache gc_db_displayed_games;
 };
 
 #endif    // DB_DIALOG_H

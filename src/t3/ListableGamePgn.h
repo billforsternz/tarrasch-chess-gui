@@ -37,14 +37,21 @@ public:
 
     virtual void GetCompactGame( CompactGame &pact )
     {
-        if( !pack.Empty() )
-            pack.Unpack(pact);
-        else
-        {
-            ReadGameFromPgnInLoop( pgn_handle, fposn, pact, NULL, true );
-            pack.Pack(pact);
-        }
+        if( pack.Empty() )
+            LoadIntoMemory( NULL, true );
+        pack.Unpack(pact);
     }
+
+    // For editing the roster
+    /* virtual void SetRoster( Roster &r )
+    {
+        CompactGame pact;
+        if( pack.Empty() )
+            LoadIntoMemory( NULL, true );
+        pack.Unpack(pact);
+        pact.r = r;
+        pack.pack(pact);
+    }  */
     
 	virtual GameDocument  *GetGameDocumentPtr()
     {
