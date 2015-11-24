@@ -1072,6 +1072,7 @@
     <ClInclude Include="src\t3\PositionDialog.h" />
     <ClInclude Include="src\t3\ProgressBar.h" />
     <ClInclude Include="src\t3\Repository.h" />
+    <ClInclude Include="src\t3\Roster.h" />
     <ClInclude Include="src\t3\Rybka.h" />
     <ClInclude Include="src\t3\Session.h" />
     <ClInclude Include="src\t3\sqlite3.h" />
