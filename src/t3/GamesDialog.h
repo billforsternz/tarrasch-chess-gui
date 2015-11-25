@@ -220,7 +220,7 @@ public:
     virtual int  GetBasePositionIdx( CompactGame &pact ) { return 0; }
 
     // Todo later
-    void OnEditGameDetails( wxCommandEvent );
+    //void OnEditGameDetails( wxCommandEvent );
     void OnEditGamePrefix( wxCommandEvent );
     //void OnSaveAllToAFile();
     void OnAddToClipboard( wxCommandEvent );
@@ -238,8 +238,8 @@ public:
     bool ShowModalOk( std::string title );
     
     // Return true if a game has been selected
-    bool LoadGame(  GameDocument &gd );
-    void LoadGame( int idx, int focus_offset=0 );
+    bool LoadGameTwo(  GameDocument &gd );
+    void LoadGameOne( int idx, int focus_offset=0 );
     
  
     // Helpers

@@ -26,17 +26,17 @@
 #include <algorithm>
 using namespace std;
 
-#if 0
 // PgnDialog event table definition
-BEGIN_EVENT_TABLE( PgnDialog, wxDialog )
-//  EVT_CLOSE( PgnDialog::OnClose )
+/*
+BEGIN_EVENT_TABLE( PgnDialog, GamesDialog )
+    EVT_BUTTON( ID_PGN_DIALOG_GAME_DETAILS,   PgnDialog::OnEditGameDetails )
+    EVT_CLOSE( PgnDialog::OnClose )
     EVT_BUTTON( wxID_OK,                PgnDialog::OnOkClick )
     EVT_BUTTON( wxID_CANCEL,            PgnDialog::GdvOnCancel )
     EVT_BUTTON( ID_BOARD2GAME,          PgnDialog::OnBoard2Game )
     EVT_CHECKBOX( ID_REORDER,           PgnDialog::OnRenumber )
     EVT_BUTTON( ID_ADD_TO_CLIPBOARD,    PgnDialog::OnAddToClipboard )
     EVT_BUTTON( ID_SAVE_ALL_TO_A_FILE,  PgnDialog::OnSaveAllToAFile )
-    EVT_BUTTON( ID_PGN_DIALOG_GAME_DETAILS,   PgnDialog::OnEditGameDetails )
     EVT_BUTTON( ID_PGN_DIALOG_GAME_PREFIX,    PgnDialog::OnEditGamePrefix )
     EVT_BUTTON( ID_PGN_DIALOG_PUBLISH,  PgnDialog::OnPublish )
     EVT_BUTTON( ID_PGN_DIALOG_UTILITY1,  PgnDialog::OnUtility1 )
@@ -52,7 +52,7 @@ BEGIN_EVENT_TABLE( PgnDialog, wxDialog )
     EVT_LIST_ITEM_ACTIVATED(ID_PGN_LISTBOX, PgnDialog::OnListSelected)
     EVT_LIST_COL_CLICK(ID_PGN_LISTBOX, PgnDialog::OnListColClick)
 END_EVENT_TABLE()
-#endif
+*/
 
 wxSizer *PgnDialog::GdvAddExtraControls()
 {
@@ -355,19 +355,17 @@ bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx )
     int selected_game = track->focus_idx;
     if( selected_game != -1 )
     {
-        // gl->IndicateNoCurrentDocument();
         uint32_t temp = ++gl->game_being_edited_tag;
-        GameDocument *ptr2 = gc->gds[selected_game]->GetGameDocumentPtr();
-        if( ptr2 )
-            ptr2->game_being_edited = temp;
-        GameDocument *ptr = GetCachedDocument(selected_game);
-        gd = *ptr;
-        gd.SetNonZeroStartPosition(track->focus_offset);
-        gd.game_being_edited = temp;
-        gd.selected = false;
-        ptr->selected = true;
-        //if( &gl->gc == gc )
-        file_game_idx = selected_game; //this->file_game_idx;    // update this only if loading game from current file
+        GameDocument *ptr = gc->gds[selected_game]->GetGameDocumentPtr();
+        if( ptr )
+        {
+            gc->gds[selected_game]->SetGameBeingEdited( temp );
+            gd = *ptr;
+            gd.SetGameBeingEdited( temp );
+            gd.SetNonZeroStartPosition(track->focus_offset);
+            gd.selected = false;
+            file_game_idx = selected_game; //this->file_game_idx;    // update this only if loading game from current file
+        }
     }
     return selected_game != -1;
 }
@@ -397,7 +395,6 @@ void PgnDialog::SyncCacheOrderAfter()
     for( int i=0; i<gds_nbr; i++ )    
         list_ctrl->SetItemData( i, i ); */
 }
-
 
 
 // TODO WAKE ALL THIS STUFF UP LATER
@@ -554,31 +551,6 @@ void PgnDialog::OnSelectAll( wxCommandEvent& WXUNUSED(event) )
     int gds_nbr = gc->gds.size();
     for( int i=0; i<gds_nbr; i++ )    
         list_ctrl->SetItemState( i, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
-}
-
-void PgnDialog::OnEditGameDetails( wxCommandEvent& WXUNUSED(event) )
-{
-    int idx;
-    int focus_idx = GetFocusGame(idx);
-    if( focus_idx != -1  )
-    {
-        GameDetailsDialog dialog( this );
-        GameDocument temp = *GetCachedDocument(focus_idx);
-        if( dialog.Run( temp ) )
-        {
-            GameDocument temp = *GetCachedDocument(focus_idx);
-            objs.gl->GameRedisplayPlayersResult();
-            list_ctrl->SetItem( idx, 1, temp.white );
-            list_ctrl->SetItem( idx, 2, temp.white_elo );
-            list_ctrl->SetItem( idx, 3, temp.black );
-            list_ctrl->SetItem( idx, 4, temp.black_elo );
-            list_ctrl->SetItem( idx, 5, temp.date );
-            list_ctrl->SetItem( idx, 6, temp.site );
-            list_ctrl->SetItem( idx, 7, temp.round );
-            list_ctrl->SetItem( idx, 8, temp.result );
-            list_ctrl->SetItem( idx, 9, temp.eco );
-        }
-    }
 }
 
 void PgnDialog::OnEditGamePrefix( wxCommandEvent& WXUNUSED(event) )

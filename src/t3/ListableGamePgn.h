@@ -105,7 +105,11 @@ public:
     virtual const char *BlackElo()  { return pack.BlackElo(); }
     virtual const char *Fen()       { return pack.Fen();      }
     virtual const char *CompressedMoves() {return pack.Blob();  }
-    
+
+    virtual void SetGameBeingEdited( uint32_t game_being_edited ) { this->game_being_edited = game_being_edited; }
+    virtual uint32_t GetGameBeingEdited() { return game_being_edited; }
+private:
+    uint32_t game_being_edited;
 };
 
 

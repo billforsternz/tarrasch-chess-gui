@@ -981,7 +981,7 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req )
             GameDocument temp = gd;
             GameDocument new_gd;
             PutBackDocument();
-            if( dialog.LoadGame(new_gd) )
+            if( dialog.LoadGameTwo(new_gd) )
             {
                 tabs->TabNew(new_gd);
                 tabs->SetInfile(false);

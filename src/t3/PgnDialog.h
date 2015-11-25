@@ -23,6 +23,7 @@ class wxVirtualPgnListCtrl;
 // PgnDialog class declaration
 class PgnDialog: public GamesDialog
 {    
+
 public:
     GameDocument *GetCachedDocument( int idx );
     void GetCachedDocumentRaw( int idx, GameDocument &gd );
@@ -52,7 +53,6 @@ public:
     virtual void GdvUtility();
     virtual void GdvOnCancel();
     virtual void GdvNextMove( int idx );
-
 
     // Return true if a game has been selected
     bool LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx );

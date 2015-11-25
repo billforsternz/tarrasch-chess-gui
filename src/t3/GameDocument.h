@@ -129,8 +129,10 @@ public:
 
     // Overrides
     virtual bool IsModified() { return (game_prefix_edited || game_details_edited || modified); }
+    virtual void SetGameBeingEdited( uint32_t game_being_edited ) { this->game_being_edited = game_being_edited; }
     virtual uint32_t GetGameBeingEdited() { return game_being_edited; }
     
+ 
     void FleshOutDate();
     virtual void Init( const thc::ChessPosition &start_position );
     void GetGameDocumentFromFile( GameDocument &gd );

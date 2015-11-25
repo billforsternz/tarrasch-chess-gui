@@ -59,8 +59,6 @@ public:
     bool OnIdleNeeded();
     int MillisecsToNextSecond();
 
-    void LoadGame( GameLogic *gl, GameDocument& gd );
-
     // Command handlers
     void OnTabSelected( int idx );
     bool OnExit();
