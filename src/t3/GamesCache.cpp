@@ -532,7 +532,19 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
         else
         {
             GameDocument *ptr = mptr->GetGameDocumentPtr();
-            if( ptr )
+
+            // A horrible kludge
+            if( mptr->IsDbGameOnly() )
+            {
+                std::string str;
+                ptr->ToFileTxtGameDetails( str );
+                fwrite(str.c_str(),1,str.length(),pgn_out);
+                posn += str.length();
+                ptr->ToFileTxtGameBody( str );
+                fwrite(str.c_str(),1,str.length(),pgn_out);
+                posn += str.length();
+            }
+            else
             {
                 bool replace_game_prefix = true;
                 bool replace_game_details = true;

@@ -67,9 +67,9 @@ wxSizer *DbDialog::GdvAddExtraControls()
         //text_ctrl->SetSize((sz.x*7)/2,sz2.y);      // temp temp
         text_ctrl->SetValue("White Player");
 
-        wxButton* reload = new wxButton ( this, ID_DB_RELOAD, wxT("Search"),
+        wxButton* search = new wxButton ( this, ID_DB_SEARCH, wxT("Search"),
                                          wxDefaultPosition, wxDefaultSize, 0 );
-        vsiz_panel_button1->Add(reload, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_button1->Add(search, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
         //wxSize sz3=reload->GetSize();
         //text_ctrl->SetSize( sz3.x*2, sz3.y );      // temp temp
     }
@@ -170,8 +170,9 @@ void DbDialog::GdvOnActivate()
         }
         else if( nbr_games_in_list_ctrl <= LOAD_INTO_MEMORY_THRESHOLD )
         {
-            LoadGamesIntoMemory();
-            StatsCalculate();
+            bool ok = LoadGamesIntoMemory();
+            if( ok )
+                StatsCalculate();
         }
         Goto(0); // list_ctrl->SetFocus();
     }
@@ -261,23 +262,35 @@ bool DbDialog::MoveColCompareReadGame( MoveColCompareElement &e, int idx, const 
 }
 
 
-void DbDialog::GdvListColClick( int compare_col )
+bool DbDialog::LoadGamesPrompted( std::string prompt )
 {
+    bool ok=true;
     bool in_memory = (gc_db_displayed_games.gds.size() > 0);
     if( !in_memory )
     {
         if( nbr_games_in_list_ctrl >= QUERY_LOAD_INTO_MEMORY_THRESHOLD )
         {
-            wxString msg( "This column sort requires loading a large number of games into memory, is that okay?" );
+            wxString msg( prompt.c_str() );
             int answer = wxMessageBox( msg, "Press Yes to load games",  wxYES_NO|wxCANCEL, this );
-            bool ok = (answer == wxYES);
-            if( !ok )
-                return;
+            bool load_games = (answer == wxYES);
+            if( !load_games )
+                return false;
         }
-        LoadGamesIntoMemory();
-        StatsCalculate();
+        ok = LoadGamesIntoMemory();
+        if( ok )
+            StatsCalculate();
     }
-    ColumnSort( compare_col, gc_db_displayed_games.gds );  
+    return ok;
+}
+
+void DbDialog::GdvListColClick( int compare_col )
+{
+    if( LoadGamesPrompted
+        ("This column sort requires loading a large number of games into memory, is that okay?")
+      )
+    {
+        ColumnSort( compare_col, gc_db_displayed_games.gds );  
+    }
 }
 
 void DbDialog::GdvSearch()
@@ -290,6 +303,7 @@ void DbDialog::GdvSearch()
     {
         std::string current = white_player_search ? track->info.r.white : track->info.r.black;
         int row = objs.db->FindPlayer( sname, current, track->focus_idx, white_player_search );
+        cprintf( "row=%d\n", row );
         Goto(row);
     }
 
@@ -313,18 +327,23 @@ void DbDialog::GdvSearch()
 
 void DbDialog::GdvSaveAllToAFile()
 {
-    wxFileDialog fd( objs.frame, "Save all listed games to a new .pgn file", "", "", "*.pgn", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
-    wxString dir = objs.repository->nv.m_doc_dir;
-    fd.SetDirectory(dir);
-    int answer = fd.ShowModal();
-    if( answer == wxID_OK )
+    if( LoadGamesPrompted
+          ("Saving these games to a file requires loading a large number of games into memory, is that okay?")
+      )
     {
-        wxString dir;
-        wxFileName::SplitPath( fd.GetPath(), &dir, NULL, NULL );
-        objs.repository->nv.m_doc_dir = dir;
-        wxString wx_filename = fd.GetPath();
-        std::string filename( wx_filename.c_str() );
-        gc->FileSaveAllAsAFile( filename );
+        wxFileDialog fd( objs.frame, "Save all listed games to a new .pgn file", "", "", "*.pgn", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
+        wxString dir = objs.repository->nv.m_doc_dir;
+        fd.SetDirectory(dir);
+        int answer = fd.ShowModal();
+        if( answer == wxID_OK )
+        {
+            wxString dir;
+            wxFileName::SplitPath( fd.GetPath(), &dir, NULL, NULL );
+            objs.repository->nv.m_doc_dir = dir;
+            wxString wx_filename = fd.GetPath();
+            std::string filename( wx_filename.c_str() );
+            gc_db_displayed_games.FileSaveAllAsAFile( filename );
+        }
     }
 }
 
@@ -440,8 +459,9 @@ double AutoTimer::End()
 
 void DbDialog::GdvUtility()
 {
-    LoadGamesIntoMemory();
-    StatsCalculate();
+    bool ok = LoadGamesIntoMemory();
+    if( ok )
+        StatsCalculate();
 }
 
 void DbDialog::GdvButton1()
@@ -523,25 +543,29 @@ void DbDialog::GdvCheckBox( bool checked )
 }
 
 
-void DbDialog::LoadGamesIntoMemory()
+bool DbDialog::LoadGamesIntoMemory()
 {
     AutoTimer at("Load games into memory");
     
     // Load all the matching games from the database
-    objs.db->LoadAllGames( gc->gds, nbr_games_in_list_ctrl );
-    moves_from_base_position.clear();
-    
-    // No need to look for more games in database in base position
-    drill_down_set.clear();
-    uint64_t base_hash = this->cr.Hash64Calculate();
-    drill_down_set.insert(base_hash);
-    games_set.clear();
-    for( unsigned int i=0; i<gc->gds.size(); i++ )
+    bool ok = objs.db->LoadAllGames( gc->gds, nbr_games_in_list_ctrl );
+    if( ok )
     {
-        int game_id = gc->gds[i]->GetGameId();
-        if( game_id )
-            games_set.insert( game_id );
+        moves_from_base_position.clear();
+    
+        // No need to look for more games in database in base position
+        drill_down_set.clear();
+        uint64_t base_hash = this->cr.Hash64Calculate();
+        drill_down_set.insert(base_hash);
+        games_set.clear();
+        for( unsigned int i=0; i<gc->gds.size(); i++ )
+        {
+            int game_id = gc->gds[i]->GetGameId();
+            if( game_id )
+                games_set.insert( game_id );
+        }
     }
+    return ok;
 }
 
 void DbDialog::CopyOrAdd( bool clear_clipboard )

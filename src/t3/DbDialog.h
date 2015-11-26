@@ -94,7 +94,8 @@ public:
     virtual int  GetBasePositionIdx( CompactGame &pact ) { int idx; pact.FindPositionInGame( objs.db->GetPositionHash(), idx ); return idx; }
 
     // Helpers
-    void LoadGamesIntoMemory();
+    bool LoadGamesIntoMemory();
+    bool LoadGamesPrompted( std::string prompt );
     void CopyOrAdd( bool clear_clipboard );
     void StatsCalculate();
     GameDocument *GetFocusGame( int &idx );

@@ -25,7 +25,7 @@ enum
     ID_DB_CHECKBOX2,
     ID_DB_RADIO ,
     ID_DB_COMBO ,
-    ID_DB_RELOAD,
+    ID_DB_SEARCH,
     ID_DB_UTILITY,
     ID_DB_TEXT   ,
     ID_DB_LISTBOX_GAMES,
@@ -292,6 +292,7 @@ private:    //TODO - move more vars to private
     bool db_search;
     int col_last_time;
     int col_consecutive;
+    int focus_idx;
 
 public:
     bool transpo_activated;

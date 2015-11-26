@@ -36,7 +36,7 @@ public:
     // int GetNbrGames( thc::ChessRules &cr );
     int GetRow( int row, CompactGame *info );
     int GetRowRaw( CompactGame *info, int row );
-    int LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int nbr_games );
+    bool LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int nbr_games );
     bool TestNextRow();
     bool TestPrevRow();
     int GetCurrent();

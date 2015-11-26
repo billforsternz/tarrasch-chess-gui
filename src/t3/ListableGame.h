@@ -22,6 +22,7 @@ public:
     ListableGame() { transpo_nbr=0; }
     virtual ~ListableGame() {}
     virtual int GetGameId() { return 0; }
+    virtual bool IsDbGameOnly() { return false; }   // a horrible kludge
     virtual GameDocument *GetGameDocumentPtr()  {
         cprintf("FIXME DANGER WILL ROBINSON 3\n");  return NULL; }
     virtual bool GetPgnHandle( int &pgn_handle ) { return false; }

@@ -95,6 +95,8 @@ public:
     virtual const char *Fen()       { return pack.Fen();      }
     virtual const char *CompressedMoves() {return pack.Blob();  }
     
+    virtual bool IsDbGameOnly() { return true; }   // a horrible kludge
+    virtual bool IsInMemory()   { return true; }
 };
 
 

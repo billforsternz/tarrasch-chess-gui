@@ -96,6 +96,7 @@ wxSizer *PgnDialog::GdvAddExtraControls()
         wxDefaultPosition, wxDefaultSize, 0 );
     vsiz_panel_button1->Add(paste, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
+    #if 0
     // Save all games to a file
     wxButton* save_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save all to a file"),
         wxDefaultPosition, wxDefaultSize, 0 );
@@ -105,6 +106,7 @@ wxSizer *PgnDialog::GdvAddExtraControls()
     wxButton* write_to_file = new wxButton ( this, wxID_SAVE, wxT("Save file"),
         wxDefaultPosition, wxDefaultSize, 0 );
     vsiz_panel_button1->Add(write_to_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    #endif
 
     // Publish
     wxButton* publish = new wxButton ( this, ID_PGN_DIALOG_PUBLISH, wxT("Publish"),

@@ -44,7 +44,7 @@ BEGIN_EVENT_TABLE( GamesDialog, wxDialog )
     EVT_ACTIVATE(GamesDialog::OnActivate)
     EVT_BUTTON( wxID_OK,                GamesDialog::OnOkClick )
     EVT_BUTTON( ID_DB_UTILITY,          GamesDialog::OnUtility )
-    EVT_BUTTON( ID_DB_RELOAD,           GamesDialog::OnSearch )
+    EVT_BUTTON( ID_DB_SEARCH,           GamesDialog::OnSearch )
     EVT_BUTTON( wxID_CANCEL,            GamesDialog::OnCancel )
     EVT_BUTTON( ID_SAVE_ALL_TO_A_FILE,  GamesDialog::OnSaveAllToAFile )
     EVT_BUTTON( ID_BUTTON_1,            GamesDialog::OnButton1 )
@@ -298,6 +298,7 @@ GamesDialog::GamesDialog
     db_search = (cr!=NULL);
     col_last_time = 0;
     col_consecutive = 0;
+    focus_idx = 0;
 
     if( cr )
     {
@@ -650,22 +651,28 @@ void GamesDialog::GdvOnActivate()
 
 void GamesDialog::Goto( int idx )
 {
-    int old = track->focus_idx;
-  /*  if( old != idx && old>=0 )
+    if( list_ctrl )
     {
-        list_ctrl->SetItemState( old, 0, wxLIST_STATE_SELECTED );
-        list_ctrl->SetItemState( old, 0, wxLIST_STATE_FOCUSED );
-    } */
-    list_ctrl->SetItemState( idx, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
-    list_ctrl->SetItemState( idx, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
-    
-    dirty = true;
-    list_ctrl->RefreshItem( idx );
-    list_ctrl->ReceiveFocus( idx );
-    list_ctrl->SetItemState( idx, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
-    list_ctrl->SetItemState( idx, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
-    list_ctrl->SetFocus();
-    list_ctrl->EnsureVisible(idx);
+        int sz = list_ctrl->GetItemCount();
+        if(  0<=idx && idx<sz )
+        {
+
+            // Move focus to a new location
+            dirty = true;
+            int old = focus_idx;
+            list_ctrl->RefreshItem( idx );
+            list_ctrl->ReceiveFocus( idx );
+            list_ctrl->SetItemState( idx, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
+            list_ctrl->SetItemState( idx, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
+            if( 0<=old && old<sz )
+            {
+                list_ctrl->SetItemState( old, 0, wxLIST_STATE_FOCUSED );
+                list_ctrl->SetItemState( old, 0, wxLIST_STATE_SELECTED );
+            }
+            list_ctrl->SetFocus();
+            list_ctrl->EnsureVisible(idx);
+        }
+    }
 }
 
 void GamesDialog::ReadItemWithSingleLineCache( int item, CompactGame &info )
@@ -712,7 +719,8 @@ void GamesDialog::OnListFocused( wxListEvent &event )
     {
         int prev = track->focus_idx;
         int idx = event.m_itemIndex;
-        cprintf( "GamesDialog::OnListFocused() Prev idx=%d, New idx=%d\n", prev, idx );
+        focus_idx = idx;
+        cprintf( "****  GamesDialog::OnListFocused() Prev idx=%d, New idx=%d\n", prev, idx );
         list_ctrl->ReceiveFocus( idx );
         list_ctrl->RefreshItem(prev);
     }
@@ -859,7 +867,7 @@ void GamesDialog::GdvButton4()
 {
 }
 
-// Move Stats or Transpostitions selected
+// Move Stats or Transpositions selected
 void GamesDialog::OnTabSelected( wxBookCtrlEvent& event )
 {
     transpo_activated = (1==event.GetSelection());
@@ -946,6 +954,7 @@ void GamesDialog::OnEditGameDetails( wxCommandEvent& WXUNUSED(event) )
                 make_smart_ptr( GameDocument, new_smart_ptr, temp);
                 gc->gds[idx] = std::move(new_smart_ptr);
                 objs.gl->GameRedisplayPlayersResult();
+                Goto(idx);
             }
         }
     }
@@ -1016,21 +1025,21 @@ void GamesDialog::CopyOrAdd( bool clear_clipboard )
 
 void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
 {
-    /*int idx_focus=0;
+    int idx_focus=0;
     int sz=gc->gds.size();
-    if( list_ctrl && list_ctrl->GetItemCount()==sz )
+    if( list_ctrl && list_ctrl->GetItemCount()==sz && 0<=focus_idx && focus_idx<sz )
     {
-        for( int i=0; i<sz; i++ )
-        {
-            if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
-                idx_focus = i;
-        }
-        std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin() + idx_focus;
+        int insert_idx = focus_idx;
+        cprintf( "insert_idex=%d\n", insert_idx );
+        std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin() + insert_idx;
         GameDocument gd = objs.gl->gd;
         gd.modified = true;
         GameDetailsDialog dialog( this );
         if( dialog.Run(gd) )
         {
+            uint32_t temp = ++objs.gl->game_being_edited_tag;
+            gd.SetGameBeingEdited( temp );
+            objs.gl->gd = gd;
             objs.gl->GameRedisplayPlayersResult();
             gd.game_nbr = 0;
             gd.modified = true;
@@ -1038,22 +1047,22 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
             make_smart_ptr( GameDocument, new_doc, gd );
             gc->gds.insert( iter, std::move(new_doc) );
             wxListItem item;              
-            list_ctrl->InsertItem( idx_focus, item );
-            list_ctrl->SetItem( idx_focus, 0, "" );                     // game_nbr
-            list_ctrl->SetItem( idx_focus, 1, gd.white );
-            list_ctrl->SetItem( idx_focus, 2, gd.white_elo );
-            list_ctrl->SetItem( idx_focus, 3, gd.black );
-            list_ctrl->SetItem( idx_focus, 4, gd.black_elo );
-            list_ctrl->SetItem( idx_focus, 5, gd.date );
-            list_ctrl->SetItem( idx_focus, 6, gd.site );
-            list_ctrl->SetItem( idx_focus, 7, gd.round );
-            list_ctrl->SetItem( idx_focus, 8, gd.result );
-            list_ctrl->SetItem( idx_focus, 9, gd.eco );
-            list_ctrl->SetItem( idx_focus, 10, gd.moves_txt );
+            int ret = list_ctrl->InsertItem( insert_idx, item );
+            cprintf( "ret=%d\n", ret );
+            Goto( insert_idx );
+   /*       list_ctrl->SetItem( idx_focus, 0, "" );                     // game_nbr
+            list_ctrl->SetItem( idx_focus, 1, gd.r.white );
+            list_ctrl->SetItem( idx_focus, 2, gd.r.white_elo );
+            list_ctrl->SetItem( idx_focus, 3, gd.r.black );
+            list_ctrl->SetItem( idx_focus, 4, gd.r.black_elo );
+            list_ctrl->SetItem( idx_focus, 5, gd.r.date );
+            list_ctrl->SetItem( idx_focus, 6, gd.r.site );
+            list_ctrl->SetItem( idx_focus, 7, gd.r.round );
+            list_ctrl->SetItem( idx_focus, 8, gd.r.result );
+            list_ctrl->SetItem( idx_focus, 9, gd.r.eco ); */
         }
-    } */
+    } 
 }
-
 
 #if 0
 void GamesDialog::GdvSaveAllToAFile()
