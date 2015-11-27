@@ -664,7 +664,7 @@ void GamesDialog::Goto( int idx )
             list_ctrl->ReceiveFocus( idx );
             list_ctrl->SetItemState( idx, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
             list_ctrl->SetItemState( idx, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
-            if( 0<=old && old<sz )
+            if( 0<=old && old<sz && old!=idx )
             {
                 list_ctrl->SetItemState( old, 0, wxLIST_STATE_FOCUSED );
                 list_ctrl->SetItemState( old, 0, wxLIST_STATE_SELECTED );
@@ -742,11 +742,6 @@ void GamesDialog::OnOk()
 void GamesDialog::OnSaveAllToAFile( wxCommandEvent& WXUNUSED(event) )
 {
     GdvSaveAllToAFile();
-}
-
-// override
-void GamesDialog::GdvSaveAllToAFile()
-{
 }
 
 void GamesDialog::OnCancel( wxCommandEvent& WXUNUSED(event) )
@@ -1046,9 +1041,12 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
             gc->file_irrevocably_modified = true;
             make_smart_ptr( GameDocument, new_doc, gd );
             gc->gds.insert( iter, std::move(new_doc) );
-            wxListItem item;              
-            int ret = list_ctrl->InsertItem( insert_idx, item );
-            cprintf( "ret=%d\n", ret );
+            wxListItem item;
+            list_ctrl->SetItemCount( sz+1 );
+            //int ret = list_ctrl->InsertItem( insert_idx, item );
+            //cprintf( "ret=%d\n", ret );
+            list_ctrl->SetItemState( insert_idx, 0, wxLIST_STATE_FOCUSED );
+            list_ctrl->SetItemState( insert_idx, 0, wxLIST_STATE_SELECTED );
             Goto( insert_idx );
    /*       list_ctrl->SetItem( idx_focus, 0, "" );                     // game_nbr
             list_ctrl->SetItem( idx_focus, 1, gd.r.white );
@@ -1064,10 +1062,10 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
     } 
 }
 
-#if 0
+// override
 void GamesDialog::GdvSaveAllToAFile()
 {
-/*    wxFileDialog fd( objs.frame, "Save all listed games to a new .pgn file", "", "", "*.pgn", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
+    wxFileDialog fd( objs.frame, "Save all listed games to a new .pgn file", "", "", "*.pgn", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
     wxString dir = objs.repository->nv.m_doc_dir;
     fd.SetDirectory(dir);
     int answer = fd.ShowModal();
@@ -1079,149 +1077,86 @@ void GamesDialog::GdvSaveAllToAFile()
         wxString wx_filename = fd.GetPath();
         std::string filename( wx_filename.c_str() );
         gc->FileSaveAllAsAFile( filename );
-    } */
+    }
 }
 
-#endif
+void GamesDialog::OnCutOrDelete( bool cut )
+{
+    int nbr_cut=0, idx_focus=focus_idx;
+    int sz=gc->gds.size();
+    std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin();
+    if( list_ctrl && list_ctrl->GetItemCount()==sz )
+    {
+        std::vector<int> games_to_cut;
+        for( int i=0; i<sz; i++ )
+        {
+            if( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED) )
+            {
+                list_ctrl->SetItemState( i, 0, wxLIST_STATE_SELECTED );
+                if( cut )
+                {
+                    if( nbr_cut == 0 )
+                        gc_clipboard->gds.clear();
+                    gc_clipboard->gds.push_back(std::move(gc->gds[i]));
+                }
+                games_to_cut.push_back(i);
+                nbr_cut++;
+            }
+        }
+        
+        if( nbr_cut==0 && 0<=idx_focus && idx_focus<sz )
+        {
+            if( cut )
+            {
+                gc_clipboard->gds.clear();
+                gc_clipboard->gds.push_back(std::move(gc->gds[idx_focus]));
+            }
+            games_to_cut.push_back(idx_focus);
+            nbr_cut++;
+        }
+        if( nbr_cut > 0 )
+        {
+            gc->file_irrevocably_modified = true;
+            for( int j=0; j<games_to_cut.size(); j++ )
+            {
+                int idx = games_to_cut[j];
+                idx -= j;
+                gc->gds.erase(iter+idx);
+            }
+            sz-=nbr_cut;
+            list_ctrl->SetItemCount(sz);
+            Goto( 0<=idx_focus && idx_focus<sz ? idx_focus : 0 );
+        }
+    }
+    dbg_printf( "%d games %s\n", nbr_cut, cut?"cut":"deleted" );
+}
 
 void GamesDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
 {
-/*    bool clear_clipboard = true;
-    int nbr_cut=0, idx_focus=-1;
-    int sz=gc->gds.size();
-    if( list_ctrl && list_ctrl->GetItemCount()==sz )
-    {
-        std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin();
-        std::vector< smart_ptr<ListableGame> >::iterator iter_focus;
-        for( int i=0; iter!=gc->gds.end(); )
-        {
-            if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
-            {
-                idx_focus = i;
-                iter_focus = iter;
-            }
-            if( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED) )
-            {
-                if( clear_clipboard )
-                {
-                    clear_clipboard = false;
-                    gc_clipboard->gds.clear();
-                }
-                ListableGame &mb = **iter;
-                GameDocument gd = mb.GetGameDocument();
-                make_smart_ptr( GameDocument, new_doc, gd );
-                gc_clipboard->gds.push_back(std::move(new_doc));
-                list_ctrl->DeleteItem(i);
-                iter = gc->gds.erase(iter);
-                gc->file_irrevocably_modified = true;
-                nbr_cut++;
-            }
-            else
-            {
-                ++iter;
-                ++i;
-            }
-        }
-
-        if( nbr_cut==0 && idx_focus>=0 )
-        {
-            gc_clipboard->gds.clear();
-            ListableGame &mb = **iter_focus;
-            GameDocument gd = mb.GetGameDocument();
-            // This is required because for some reason it doesn't work if you don't use the intermediate reference, i.e.:
-            //   GameDocument gd = **iter_focus.GetGameDocument();   // doesn't work
-            make_smart_ptr( GameDocument,new_doc,gd);
-            gc_clipboard->gds.push_back(std::move(new_doc));
-            list_ctrl->DeleteItem(idx_focus);
-            iter = gc->gds.erase(iter_focus);
-            gc->file_irrevocably_modified = true;
-            nbr_cut++;
-        }
-    }
-    dbg_printf( "%d games cut\n", nbr_cut ); */
+    OnCutOrDelete( true );
 }
 
 void GamesDialog::OnDelete( wxCommandEvent& WXUNUSED(event) )
 {
-/*    int nbr_deleted=0, idx_focus=-1;
-    int sz=gc->gds.size();
-    if( list_ctrl && list_ctrl->GetItemCount()==sz )
-    {
-        std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin();
-        std::vector< smart_ptr<ListableGame> >::iterator iter_focus;
-        for( int i=0; iter!=gc->gds.end(); )
-        {
-            if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
-            {
-                idx_focus = i;
-                iter_focus = iter;
-            }
-            if( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED) )
-            {
-                list_ctrl->DeleteItem(i);
-                iter = gc->gds.erase(iter);
-                gc->file_irrevocably_modified = true;
-                nbr_deleted++;
-            }
-            else
-            {
-                ++iter;
-                ++i;
-            }
-        }
-
-        if( nbr_deleted==0 && idx_focus>=0 )
-        {
-            list_ctrl->DeleteItem(idx_focus);
-            iter = gc->gds.erase(iter_focus);
-            gc->file_irrevocably_modified = true;
-            nbr_deleted++;
-        }
-    }
-    dbg_printf( "%d games deleted\n", nbr_deleted ); */
+    OnCutOrDelete( false );
 }
 
 void GamesDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
 {
-    /*int idx_focus=0;
+    int idx_focus=focus_idx;
     int sz=gc->gds.size();
-    if( list_ctrl && list_ctrl->GetItemCount()==sz )
+    if( list_ctrl && list_ctrl->GetItemCount()==sz && 0<=idx_focus && idx_focus<sz )
     {
-        for( int i=0; i<sz; i++ )
-        {
-            if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
-                idx_focus = i;
-        }
-        sz = gc_clipboard->gds.size();
-        for( int i=sz-1; i>=0; i-- )    
+        int sz2 = gc_clipboard->gds.size();
+        std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin() + idx_focus;
+        for( int i=sz2-1; i>=0; i-- )
         {                                 
-            std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin() + idx_focus;
-            GameDocument gd;
-            gc_clipboard->gds[i]->GetGameDocument(gd);
-            gd.game_nbr = 0;
-            gd.modified = true;
-            make_smart_ptr( GameDocument,new_doc,gd);
-            gc->gds.insert( iter, std::move(new_doc) );
+            gc->gds.insert( iter, gc_clipboard->gds[i] );
             gc->file_irrevocably_modified = true;
-            wxListItem item;              
-            list_ctrl->InsertItem( idx_focus, item );
-            list_ctrl->SetItem( idx_focus, 0, "" );                     // game_nbr
-            GameDocument *ptr = gc_clipboard->gds[i]->GetGameDocumentPtr();
-            if( ptr )
-            {
-                list_ctrl->SetItem( idx_focus, 1, ptr->white );
-                list_ctrl->SetItem( idx_focus, 2, ptr->white_elo );
-                list_ctrl->SetItem( idx_focus, 3, ptr->black );
-                list_ctrl->SetItem( idx_focus, 4, ptr->black_elo );
-                list_ctrl->SetItem( idx_focus, 5, ptr->date );
-                list_ctrl->SetItem( idx_focus, 6, ptr->site );
-                list_ctrl->SetItem( idx_focus, 7, ptr->round );
-                list_ctrl->SetItem( idx_focus, 8, ptr->result );
-                list_ctrl->SetItem( idx_focus, 9, ptr->eco );
-                list_ctrl->SetItem( idx_focus,10, ptr->moves_txt );
-            }
         }
-    } */
+        list_ctrl->SetItemCount(sz+sz2);
+        Goto(idx_focus);
+    }
 }
 
 void GamesDialog::OnSave( wxCommandEvent& WXUNUSED(event) )

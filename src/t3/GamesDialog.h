@@ -172,6 +172,7 @@ public:
     void OnCopy( wxCommandEvent& event );
     void OnAddToClipboard( wxCommandEvent& event );
     void OnSaveAllToAFile( wxCommandEvent& event );
+    void OnCutOrDelete( bool cut );
     void OnCut( wxCommandEvent& event );
     void OnDelete( wxCommandEvent& event );
     void OnPaste( wxCommandEvent& event );

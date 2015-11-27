@@ -56,9 +56,6 @@ public:
 
     // Return true if a game has been selected
     bool LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx );
-    void SyncCacheOrderBefore();
-    void SyncCacheOrderAfter();
-
 
     // PgnDialog member variables
 public:
