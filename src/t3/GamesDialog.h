@@ -220,20 +220,6 @@ public:
     virtual bool MoveColCompareReadGame( MoveColCompareElement &e, int idx, const char *blob );
     virtual int  GetBasePositionIdx( CompactGame &pact ) { return 0; }
 
-    // Todo later
-    //void OnEditGameDetails( wxCommandEvent );
-    void OnEditGamePrefix( wxCommandEvent );
-    //void OnSaveAllToAFile();
-    void OnAddToClipboard( wxCommandEvent );
-    void OnCopy( wxCommandEvent );
-    //void CopyOrAdd( bool clear_clipboard );
-    void OnCut( wxCommandEvent );
-    void OnDelete( wxCommandEvent );
-    void OnPaste( wxCommandEvent );
-    void OnSave( wxCommandEvent );
-    void OnPublish( wxCommandEvent );
-
-    
 //  void OnClose( wxCloseEvent& event );
 //  void SaveColumns();
     bool ShowModalOk( std::string title );

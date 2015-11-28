@@ -23,7 +23,8 @@ private:
     PackedGame pack;
 public:
     ListableGamePgn( int pgn_handle, long fposn ) { this->pgn_handle=pgn_handle, this->fposn = fposn;  }
-
+    virtual long GetFposn() { return fposn; }
+    virtual bool GetPgnHandle( int &pgn_handle ) { pgn_handle=this->pgn_handle; return true; }
     virtual void *LoadIntoMemory( void *context, bool end )
     {
         if( pack.Empty() )
@@ -60,7 +61,6 @@ public:
         ReadGameFromPgn( pgn_handle, fposn, the_game );
         return &the_game;
     }
-    virtual long GetFposn() { return fposn; }
     virtual Roster &RefRoster()
     {
         static CompactGame pact;

@@ -823,7 +823,7 @@ void DbDialog::StatsCalculate()
             txt += " ";
             cr.PlayMove(mv);
         }
-        char buf[200];
+        char buf[2000];
         sprintf( buf, "T%d: %s: %d occurences", j+1, txt.c_str(), p->frequency );
         cprintf( "%s\n", buf );
         wxString wstr(buf);

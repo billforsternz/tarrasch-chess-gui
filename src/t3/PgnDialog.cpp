@@ -133,7 +133,6 @@ void PgnDialog::GdvReadItem( int item, CompactGame &info )
     mb->GetCompactGame( info );
 }
 
-void PgnDialog::GdvSaveAllToAFile() {}
 void PgnDialog::GdvHelpClick() {}
 void PgnDialog::GdvSearch() {}
 void PgnDialog::GdvUtility() {}

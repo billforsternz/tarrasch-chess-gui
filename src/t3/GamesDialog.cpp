@@ -558,9 +558,18 @@ void GamesDialog::CreateControls()
     vsiz_panel_button1->Add(ok_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     
     // Save all games to a file
-    wxButton* save_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save all"),
-        wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_button1->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    if( id == ID_PGN_DIALOG_FILE )
+    {
+        wxButton* save_all_to_a_file = new wxButton ( this, wxID_SAVE, wxT("Save"),
+            wxDefaultPosition, wxDefaultSize, 0 );
+        vsiz_panel_button1->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    }
+    else
+    {
+        wxButton* save_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save all"),
+            wxDefaultPosition, wxDefaultSize, 0 );
+        vsiz_panel_button1->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    }
 
     // The Cancel button
     wxButton* cancel = new wxButton ( this, wxID_CANCEL,
@@ -682,7 +691,7 @@ void GamesDialog::ReadItemWithSingleLineCache( int item, CompactGame &info )
     else
     {
         GdvReadItem( item, info );
-        cprintf( "GdvReadItem(%d) = %s-%s\n", item, info.r.white.c_str(), info.r.black.c_str() );
+        // cprintf( "GdvReadItem(%d) = %s-%s\n", item, info.r.white.c_str(), info.r.black.c_str() );
         single_line_cache_idx = item;
         single_line_cache = info;
     }
@@ -1018,70 +1027,9 @@ void GamesDialog::CopyOrAdd( bool clear_clipboard )
     dbg_printf( "%d games copied\n", nbr_copied );
 }
 
-void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
-{
-    int idx_focus=0;
-    int sz=gc->gds.size();
-    if( list_ctrl && list_ctrl->GetItemCount()==sz && 0<=focus_idx && focus_idx<sz )
-    {
-        int insert_idx = focus_idx;
-        cprintf( "insert_idex=%d\n", insert_idx );
-        std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin() + insert_idx;
-        GameDocument gd = objs.gl->gd;
-        gd.modified = true;
-        GameDetailsDialog dialog( this );
-        if( dialog.Run(gd) )
-        {
-            uint32_t temp = ++objs.gl->game_being_edited_tag;
-            gd.SetGameBeingEdited( temp );
-            objs.gl->gd = gd;
-            objs.gl->GameRedisplayPlayersResult();
-            gd.game_nbr = 0;
-            gd.modified = true;
-            gc->file_irrevocably_modified = true;
-            make_smart_ptr( GameDocument, new_doc, gd );
-            gc->gds.insert( iter, std::move(new_doc) );
-            wxListItem item;
-            list_ctrl->SetItemCount( sz+1 );
-            //int ret = list_ctrl->InsertItem( insert_idx, item );
-            //cprintf( "ret=%d\n", ret );
-            list_ctrl->SetItemState( insert_idx, 0, wxLIST_STATE_FOCUSED );
-            list_ctrl->SetItemState( insert_idx, 0, wxLIST_STATE_SELECTED );
-            Goto( insert_idx );
-   /*       list_ctrl->SetItem( idx_focus, 0, "" );                     // game_nbr
-            list_ctrl->SetItem( idx_focus, 1, gd.r.white );
-            list_ctrl->SetItem( idx_focus, 2, gd.r.white_elo );
-            list_ctrl->SetItem( idx_focus, 3, gd.r.black );
-            list_ctrl->SetItem( idx_focus, 4, gd.r.black_elo );
-            list_ctrl->SetItem( idx_focus, 5, gd.r.date );
-            list_ctrl->SetItem( idx_focus, 6, gd.r.site );
-            list_ctrl->SetItem( idx_focus, 7, gd.r.round );
-            list_ctrl->SetItem( idx_focus, 8, gd.r.result );
-            list_ctrl->SetItem( idx_focus, 9, gd.r.eco ); */
-        }
-    } 
-}
-
-// override
-void GamesDialog::GdvSaveAllToAFile()
-{
-    wxFileDialog fd( objs.frame, "Save all listed games to a new .pgn file", "", "", "*.pgn", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
-    wxString dir = objs.repository->nv.m_doc_dir;
-    fd.SetDirectory(dir);
-    int answer = fd.ShowModal();
-    if( answer == wxID_OK )
-    {
-        wxString dir;
-        wxFileName::SplitPath( fd.GetPath(), &dir, NULL, NULL );
-        objs.repository->nv.m_doc_dir = dir;
-        wxString wx_filename = fd.GetPath();
-        std::string filename( wx_filename.c_str() );
-        gc->FileSaveAllAsAFile( filename );
-    }
-}
-
 void GamesDialog::OnCutOrDelete( bool cut )
 {
+    dirty = true;
     int nbr_cut=0, idx_focus=focus_idx;
     int sz=gc->gds.size();
     std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin();
@@ -1126,9 +1074,74 @@ void GamesDialog::OnCutOrDelete( bool cut )
             sz-=nbr_cut;
             list_ctrl->SetItemCount(sz);
             Goto( 0<=idx_focus && idx_focus<sz ? idx_focus : 0 );
+            list_ctrl->RefreshItems(0,sz-1);
         }
     }
     dbg_printf( "%d games %s\n", nbr_cut, cut?"cut":"deleted" );
+}
+
+void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
+{
+    dirty = true;
+    int idx_focus=0;
+    int sz=gc->gds.size();
+    if( list_ctrl && list_ctrl->GetItemCount()==sz && 0<=focus_idx && focus_idx<sz )
+    {
+        int insert_idx = focus_idx;
+        cprintf( "insert_idex=%d\n", insert_idx );
+        std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin() + insert_idx;
+        GameDocument gd = objs.gl->gd;
+        gd.modified = true;
+        GameDetailsDialog dialog( this );
+        if( dialog.Run(gd) )
+        {
+            uint32_t temp = ++objs.gl->game_being_edited_tag;
+            gd.SetGameBeingEdited( temp );
+            objs.gl->gd = gd;
+            objs.gl->GameRedisplayPlayersResult();
+            gd.game_nbr = 0;
+            gd.modified = true;
+            gc->file_irrevocably_modified = true;
+            make_smart_ptr( GameDocument, new_doc, gd );
+            gc->gds.insert( iter, std::move(new_doc) );
+            sz++;
+            list_ctrl->SetItemCount( sz );
+            //int ret = list_ctrl->InsertItem( insert_idx, item );
+            //cprintf( "ret=%d\n", ret );
+            list_ctrl->SetItemState( insert_idx, 0, wxLIST_STATE_FOCUSED );
+            list_ctrl->SetItemState( insert_idx, 0, wxLIST_STATE_SELECTED );
+            Goto( insert_idx );
+            list_ctrl->RefreshItems(0,sz-1);
+   /*       list_ctrl->SetItem( idx_focus, 0, "" );                     // game_nbr
+            list_ctrl->SetItem( idx_focus, 1, gd.r.white );
+            list_ctrl->SetItem( idx_focus, 2, gd.r.white_elo );
+            list_ctrl->SetItem( idx_focus, 3, gd.r.black );
+            list_ctrl->SetItem( idx_focus, 4, gd.r.black_elo );
+            list_ctrl->SetItem( idx_focus, 5, gd.r.date );
+            list_ctrl->SetItem( idx_focus, 6, gd.r.site );
+            list_ctrl->SetItem( idx_focus, 7, gd.r.round );
+            list_ctrl->SetItem( idx_focus, 8, gd.r.result );
+            list_ctrl->SetItem( idx_focus, 9, gd.r.eco ); */
+        }
+    } 
+}
+
+// override
+void GamesDialog::GdvSaveAllToAFile()
+{
+    wxFileDialog fd( objs.frame, "Save all listed games to a new .pgn file", "", "", "*.pgn", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
+    wxString dir = objs.repository->nv.m_doc_dir;
+    fd.SetDirectory(dir);
+    int answer = fd.ShowModal();
+    if( answer == wxID_OK )
+    {
+        wxString dir;
+        wxFileName::SplitPath( fd.GetPath(), &dir, NULL, NULL );
+        objs.repository->nv.m_doc_dir = dir;
+        wxString wx_filename = fd.GetPath();
+        std::string filename( wx_filename.c_str() );
+        gc->FileSaveAllAsAFile( filename );
+    }
 }
 
 void GamesDialog::OnCut( wxCommandEvent& WXUNUSED(event) )
@@ -1154,14 +1167,16 @@ void GamesDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
             gc->gds.insert( iter, gc_clipboard->gds[i] );
             gc->file_irrevocably_modified = true;
         }
-        list_ctrl->SetItemCount(sz+sz2);
+        sz += sz2;
+        list_ctrl->SetItemCount(sz);
         Goto(idx_focus);
+        list_ctrl->RefreshItems(0,sz-1);
     }
 }
 
 void GamesDialog::OnSave( wxCommandEvent& WXUNUSED(event) )
 {
-   // gc->FileSave( gc_clipboard );
+    gc->FileSave( gc_clipboard );
 }
 
 void GamesDialog::OnPublish( wxCommandEvent& WXUNUSED(event) )

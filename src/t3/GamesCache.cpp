@@ -345,6 +345,7 @@ void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &new_doc )
     int nbr_converted;
     gd.PgnParse(true,nbr_converted,moves,cr,NULL);
     gd.fposn0 = fposn;
+    gd.SetPgnHandle(pgn_handle);
     new_doc = gd;
     objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
 }
@@ -517,16 +518,25 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
         if( !mptr->IsInMemory() )
         {
             long fposn = mptr->GetFposn();
-            fseek( pgn_in, fposn, SEEK_SET );
-            char buf[2048];
-            int typ;
-            bool done = PgnStateMachine( NULL, typ,  buf, sizeof(buf) );
-            while( !done )
+            int pgn_handle;
+            bool is_pgn = mptr->GetPgnHandle( pgn_handle );
+            if( is_pgn )
             {
-                done = PgnStateMachine( pgn_in, typ,  buf, sizeof(buf) );
-                fputs( buf, pgn_out );
-                if( typ == 'G' )
-                    break;
+                FILE *pgn_in = objs.gl->pf.ReopenRead ( pgn_handle );
+                if( pgn_in )
+                {
+                    fseek( pgn_in, fposn, SEEK_SET );
+                    char buf[2048];
+                    int typ;
+                    bool done = PgnStateMachine( NULL, typ,  buf, sizeof(buf) );
+                    while( !done )
+                    {
+                        done = PgnStateMachine( pgn_in, typ,  buf, sizeof(buf) );
+                        fputs( buf, pgn_out );
+                        if( typ == 'G' )
+                            break;
+                    }
+                }
             }
         }
         else

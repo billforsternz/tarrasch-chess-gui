@@ -25,6 +25,7 @@ public:
     virtual bool IsDbGameOnly() { return false; }   // a horrible kludge
     virtual GameDocument *GetGameDocumentPtr()  {
         cprintf("FIXME DANGER WILL ROBINSON 3\n");  return NULL; }
+    virtual long GetFposn() { return 0; }
     virtual bool GetPgnHandle( int &pgn_handle ) { return false; }
     virtual void SetPgnHandle( int pgn_handle )  {}
     virtual bool IsInMemory()        { return false; }
@@ -35,7 +36,6 @@ public:
     virtual bool GetFocused() { return false; }
     virtual void SetGameBeingEdited( uint32_t game_being_edited ) {}
     virtual uint32_t GetGameBeingEdited() { return 0; }
-    virtual long GetFposn() { return 0; }
     virtual void *LoadIntoMemory( void *context, bool end )  {return 0;}
     virtual const char *White() {return "";}
     virtual const char *Black() {return "";}
