@@ -91,7 +91,7 @@ void CompressMovesDiagEnd()
     cprintf( "nbr_rook_swaps_alt   = %lu\n",         nbr_rook_swaps_alt );
     cprintf( "nbr_games_with_promotions = %lu\n",     nbr_games_with_promotions );
     cprintf( "nbr_games_with_slow_mode  = %lu\n",     nbr_games_with_slow_mode  );
-    cprintf( "nbr_games_with_two_queens = %lu\n",     nbr_games_with_two_queens );
+    cprintf( "nbr_games_with_two_queens (and 7 pawns) = %lu\n",     nbr_games_with_two_queens );
 }
 
 
@@ -271,9 +271,8 @@ bool CompressMoves::TryFastMode( Side *side )
         }
         else if( cr.squares[i] == (side->white?'Q':'q') )
         {
-            side->queen = i;
-            if( side->nbr_queens < 1 )
-                side->nbr_queens++;
+            if( side->nbr_queens < 2 )
+                side->queens[side->nbr_queens++] = i;
             else
             {
                 DIAG_ONLY( is_interesting |= 16 );
@@ -284,6 +283,11 @@ bool CompressMoves::TryFastMode( Side *side )
         {
             side->king = i;
         }
+    }
+    if( side->nbr_queens==2 && side->nbr_pawns>6 )
+    {
+        DIAG_ONLY( is_interesting |= 16 );
+        okay = false;
     }
     side->fast_mode = okay;
     return okay;
@@ -410,7 +414,7 @@ thc::Move CompressMoves::UncompressMove( char c )
 
 // A slow method of compressing a move into one byte
 //  Scheme is;
-//  1) Make a list of all legal moves in standard SAN text format, sorted alphabetically
+//  1) Make a list of all legal moves in UCI text format, sorted alphabetically
 //  2) Find the move to be compressed in the list
 //  3) Encode the move as one byte, value is 255 - list index (to avoid code 0, '\n' etc)
 //
@@ -447,13 +451,13 @@ char CompressMoves::CompressSlowMode( thc::Move mv )
     size_t len = moves.size();
     for( size_t i=0; i<len; i++ )
     {
-        std::string s = moves[i].NaturalOut(&cr);
+        std::string s = moves[i].TerseOut();
         moves_alpha.push_back(s);
     }
     std::sort( moves_alpha.begin(), moves_alpha.end() );
         
     // Find this move in the list
-    std::string the_move = mv.NaturalOut(&cr);
+    std::string the_move = mv.TerseOut();
     size_t idx=256;  // so that error if not found
     for( size_t i=0; i<len; i++ )
     {
@@ -572,23 +576,33 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
             
         case 'q':
         {
-            side->queen = dst;
+            int queen_offset = (side->queens[0]==src ? 0 : 1);
+            int base = (queen_offset==0 ? CODE_QUEEN_ROOK : CODE_PAWN_6 );
+            side->queens[queen_offset] = dst;
 			if( (src&7) == (dst&7) )                        // if same file
 			{
-                code = CODE_QUEEN_ROOK + R_RANK + ((dst>>3)&7); // encode rank
+                code = base + R_RANK + ((dst>>3)&7); // encode rank
 			}
 			else if( (src&0x38) == (dst&0x38) )             // if same rank
 			{
-				code = CODE_QUEEN_ROOK + R_FILE + (dst&7);      // encode file
+				code = base + R_FILE + (dst&7);      // encode file
 			}
 			else
 			{
 				int abs = (src>dst ? src-dst : dst-src);
 				if( abs%9 == 0 )  // do 9 first, as LCD of 9 and 7 is 63, i.e. diff between a8 and h1, a FALL\ diagonal
-					code = CODE_QUEEN_BISHOP + B_FALL + (dst&7); // fall( = \) + dst file
+					code = base + (CODE_QUEEN_BISHOP-CODE_QUEEN_ROOK) + B_FALL + (dst&7); // fall( = \) + dst file
 				else
-					code = CODE_QUEEN_BISHOP + B_RISE + (dst&7); // rise( = /) + dst file
+					code = base + (CODE_QUEEN_BISHOP-CODE_QUEEN_ROOK) + B_RISE + (dst&7); // rise( = /) + dst file
 			}
+
+            // swap ?
+            if( side->nbr_queens==2 && side->queens[0]>side->queens[1] )
+            {
+                int temp = side->queens[0];
+                side->queens[0] = side->queens[1];
+                side->queens[1] = temp;
+            }
             break;
         }
             
@@ -657,7 +671,7 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
                     break;
                 case thc::SPECIAL_PROMOTION_QUEEN:  code = (code<<2) + P_QUEEN;
                     promoting = true;
-                    DIAG_ONLY( if(side->nbr_queens>0) is_interesting |= 4096; )
+                    DIAG_ONLY( if(side->nbr_queens>0 && side->nbr_pawns==8) is_interesting |= 4096; )
                     break;
                 case thc::SPECIAL_PROMOTION_ROOK:   code = (code<<2) + P_ROOK;
                     promoting = true;
@@ -753,6 +767,8 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
             }
             case 'q':
             {
+                if( other->nbr_queens==2 && other->queens[0]==capture_location )
+                    other->queens[0] = other->queens[1];
                 other->nbr_queens--;
                 break;
             }
@@ -798,7 +814,7 @@ thc::Move CompressMoves::UncompressSlowMode( char code )
     size_t len = moves.size();
     for( size_t i=0; i<len; i++ )
     {
-        std::string s = moves[i].NaturalOut(&cr);
+        std::string s = moves[i].TerseOut();
         moves_alpha.push_back(s);
     }
     std::sort( moves_alpha.begin(), moves_alpha.end() );
@@ -811,7 +827,7 @@ thc::Move CompressMoves::UncompressSlowMode( char code )
         idx = 0;    // all errors resolve to this - take first move from list
     std::string the_move = moves_alpha[idx];
     thc::Move mv;
-    mv.NaturalInFast( &cr, the_move.c_str() );
+    mv.TerseIn( &cr, the_move.c_str() );
     return mv;
 }
 
@@ -914,24 +930,40 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other 
             
         case CODE_QUEEN_ROOK:
         {
-            src = side->queen;
+            src = side->queens[0];
 			if( code & R_RANK )                // code encodes rank ?
                 dst = ((code<<3)&0x38) | (src&7);   // same file as src, rank from code
 			else
                 dst = (src&0x38) | (code&7);        // same rank as src, file from code
-            side->queen = dst;
+            side->queens[0] = dst;
+
+            // swap ?
+            if( side->nbr_queens==2 && side->queens[0]>side->queens[1] )
+            {
+                int temp = side->queens[0];
+                side->queens[0] = side->queens[1];
+                side->queens[1] = temp;
+            }
             break;
         }
 
         case CODE_QUEEN_BISHOP:
         {
-            src = side->queen;
+            src = side->queens[0];
             int file_delta = (code&7) - (src&7);
             if( code & B_FALL )  // FALL\ + file
                 dst = src + 9*file_delta;   // eg src=a8(0), dst=h1(63), file_delta=7  -> 9*7 =63
             else                  // RISE/ + file
                 dst = src - 7*file_delta;   // eg src=h8(7), dst=a1(56), file_delta=7  -> 7*7 =49
-            side->queen = dst;
+            side->queens[0] = dst;
+
+            // swap ?
+            if( side->nbr_queens==2 && side->queens[0]>side->queens[1] )
+            {
+                int temp = side->queens[0];
+                side->queens[0] = side->queens[1];
+                side->queens[1] = temp;
+            }
             break;
         }
             
@@ -964,6 +996,55 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other 
                 side->knights[1] = temp;
             }
             break;
+        }
+            
+        case CODE_PAWN_6:   // if nbr_queens==2 this is the hi QUEEN_ROOK
+        {
+            if( side->nbr_queens < 2 )
+                ;   // fall through
+            else
+            {
+                src = side->queens[1];
+			    if( code & R_RANK )                // code encodes rank ?
+                    dst = ((code<<3)&0x38) | (src&7);   // same file as src, rank from code
+			    else
+                    dst = (src&0x38) | (code&7);        // same rank as src, file from code
+                side->queens[1] = dst;
+
+                // swap ?
+                if( side->queens[0]>side->queens[1] )
+                {
+                    int temp = side->queens[0];
+                    side->queens[0] = side->queens[1];
+                    side->queens[1] = temp;
+                }
+                break;
+            }
+        }
+
+        case CODE_PAWN_7:   // if nbr_queens==2 this is the hi QUEEN_BISHOP:
+        {
+            if( side->nbr_queens < 2 )
+                ;   // fall through
+            else
+            {
+                src = side->queens[1];
+                int file_delta = (code&7) - (src&7);
+                if( code & B_FALL )  // FALL\ + file
+                    dst = src + 9*file_delta;   // eg src=a8(0), dst=h1(63), file_delta=7  -> 9*7 =63
+                else                  // RISE/ + file
+                    dst = src - 7*file_delta;   // eg src=h8(7), dst=a1(56), file_delta=7  -> 7*7 =49
+                side->queens[1] = dst;
+
+                // swap ?
+                if( side->queens[0]>side->queens[1] )
+                {
+                    int temp = side->queens[0];
+                    side->queens[0] = side->queens[1];
+                    side->queens[1] = temp;
+                }
+                break;
+            }
         }
             
         // PAWN
@@ -1086,6 +1167,8 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other 
             }
             case 'q':
             {
+                if( other->nbr_queens==2 && other->queens[0]==capture_location )
+                    other->queens[0] = other->queens[1];
                 other->nbr_queens--;
                 break;
             }

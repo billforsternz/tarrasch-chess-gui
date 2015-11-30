@@ -211,29 +211,34 @@ bool db_primitive_transaction_end()
 // Returns bool ok
 bool db_primitive_create_indexes()
 {
-    bool ok = purge_buckets();
-    if( ok )
-    {
-        cprintf( "Create games index\n");
-        int retval = sqlite3_exec(handle,"CREATE INDEX IF NOT EXISTS idx_games ON games(game_id)",0,0,0);
-        bool ok = (retval==0);
-        cprintf( "Create games index end\n");
-        if( !ok )
-            error_msg = "Database error: sqlite3_exec(CREATE INDEX games) FAILED";
-    }
-    return ok;
-}
-
-// Returns bool ok
-bool db_primitive_create_extra_indexes()
-{
     ProgressBar prog( "Creating database, step 4 of 4", "Indexing positions" );
     DebugPrintfTime turn_on_time_reporting;
+    bool ok = purge_buckets();
+    if( !ok )
+        return false;
+    cprintf( "Create games index\n");
+    int retval = sqlite3_exec(handle,"CREATE INDEX IF NOT EXISTS idx_games ON games(game_id)",0,0,0);
+    cprintf( "Create games index end\n");
+    if( retval )
+    {
+        error_msg = "Database error: sqlite3_exec(CREATE INDEX games) FAILED";
+        return false;
+    }
+    if( prog.Progress(1) )
+    {
+        error_msg = "cancel";
+        return false;
+    }
     cprintf( "Create games(white) index\n");
-    int retval = sqlite3_exec(handle,"CREATE INDEX IF NOT EXISTS idx_white ON games(white)",0,0,0);
+    retval = sqlite3_exec(handle,"CREATE INDEX IF NOT EXISTS idx_white ON games(white)",0,0,0);
     if( retval )
     {
         error_msg = "Database error: sqlite3_exec() FAILED 1";
+        return false;
+    }
+    if( prog.Progress(2) )
+    {
+        error_msg = "cancel";
         return false;
     }
     cprintf( "Create games(black) index\n");
@@ -243,11 +248,14 @@ bool db_primitive_create_extra_indexes()
         error_msg = "Database error: sqlite3_exec() FAILED 2";
         return false;
     }
-    //int retval = sqlite3_exec(handle,"DROP INDEX idx_white",0,0,0);
-    cprintf( "Create games(white) index end\n");
+    if( prog.Progress(3) )
+    {
+        error_msg = "cancel";
+        return false;
+    }
     for( int i=0; i<NBR_BUCKETS; i++ )
     {
-        if( prog.Progress( (i*100) / NBR_BUCKETS ) )
+        if( prog.Progress( 3 + (i*97) / NBR_BUCKETS ) )
         {
             error_msg = "cancel";
             return false;
@@ -655,7 +663,7 @@ bool db_primitive_insert_game( bool &signal_error, const char *white, const char
         // A duplicate game is simply discarded
         if( is_duplicate )
         {
-            cprintf( "***  DUPLICATE GAME DISCARDED\n" );
+            //cprintf( "***  DUPLICATE GAME DISCARDED\n" );
             // ZOMBIE bug fix - return here, don't add bogus moves and increment game count
             return false;   // not inserted, not error
         }
@@ -664,7 +672,7 @@ bool db_primitive_insert_game( bool &signal_error, const char *white, const char
         //  be unique fortunately
         else
         {
-            cprintf( "***  DUPLICATE GAME: %s-%s %s %s %s\n", white_buf, black_buf, event_buf, site_buf, result, date );
+            //cprintf( "***  DUPLICATE GAME: %s-%s %s %s %s\n", white_buf, black_buf, event_buf, site_buf, result, date );
             sprintf( insert_buf, "INSERT INTO games VALUES(%d,NULL,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s',X'%s')",
                     game_id, white_buf, black_buf, event_buf, site_buf, round_buf, result,
                     date, white_elo, black_elo, eco_buf, blob_txt_buf );

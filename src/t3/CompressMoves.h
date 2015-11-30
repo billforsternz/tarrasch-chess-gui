@@ -19,17 +19,17 @@ struct Side
     bool fast_mode;
     int rooks[2];       // locations of each dynamic piece
     int knights[2];     //
+    int queens[2];      //
     int pawns[8];
     int bishop_dark;
     int bishop_light;
-    int queen;
     int king;
     int nbr_pawns;      // 0-8
     int nbr_rooks;      // 0,1 or 2
     int nbr_knights;    // 0,1 or 2
-    int nbr_light_bishops;
-    int nbr_dark_bishops;
-    int nbr_queens;
+    int nbr_queens;     // 0,1 or 2
+    int nbr_light_bishops;  // 0 or 1
+    int nbr_dark_bishops;   // 0 or 1
 };
 
 class CompressMoves

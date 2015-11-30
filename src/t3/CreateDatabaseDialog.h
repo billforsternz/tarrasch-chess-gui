@@ -90,6 +90,8 @@ public:
     wxString pgn_filename5;
     wxString pgn_filename6;
     bool create_mode;   // or append
+    bool db_created_ok;
+    std::string db_name;
 };
 
 #endif    // CREATE_DATABASE_DIALOG_H

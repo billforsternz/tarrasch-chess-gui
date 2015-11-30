@@ -27,7 +27,6 @@ bool db_primitive_flush();
 bool db_primitive_transaction_begin();
 bool db_primitive_transaction_end();
 bool db_primitive_create_indexes();
-bool db_primitive_create_extra_indexes();
 void db_primitive_close();
 int  db_primitive_count_games();
 bool db_primitive_insert_game( bool &signal_error, const char *white, const char *black, const char *event, const char *site, const char *round, const char *result,

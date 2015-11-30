@@ -425,7 +425,7 @@ void GamesDialog::CreateControls()
     list_ctrl->InsertColumn( 5, "Date"     );
     list_ctrl->InsertColumn( 6, "Site"     );
     list_ctrl->InsertColumn( 7, "Rnd"      );
-    list_ctrl->InsertColumn( 8, "Rslt"     );
+    list_ctrl->InsertColumn( 8, "Result"   );
     list_ctrl->InsertColumn( 9, "ECO"      );
     list_ctrl->InsertColumn(10, "Moves"    );
     int col_flag=0;

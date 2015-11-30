@@ -1026,6 +1026,29 @@ void GameLogic::CmdDatabaseCreate()
     sz.y = (sz.y*9)/10;
     CreateDatabaseDialog dialog( objs.frame, ID_CREATE_DB_DIALOG, true ); // create_mode = true
     dialog.ShowModal();
+    if( dialog.db_created_ok )
+    {
+        int answer = wxMessageBox( "Would you like to use the new database now?", "Press Yes to set the new database as the current database",  wxYES_NO|wxCANCEL );
+        bool set_current = (answer == wxYES);
+        if( set_current )
+        {
+            wxString previous = objs.repository->database.m_file;
+            wxString s(dialog.db_name.c_str());
+            objs.repository->database.m_file = s;
+            const char *filename = s.c_str();
+            cprintf( "File is %s\n", filename );
+            objs.db->Reopen(filename);
+            std::string error_msg;
+            bool operational = objs.db->IsOperational(error_msg);
+            if( operational )
+                objs.repository->database.m_file = s;
+            else
+            {
+                objs.db->Reopen(previous);
+                wxMessageBox( error_msg.c_str(), "Database selection failed", wxOK|wxICON_ERROR );
+            }
+        }
+    }
     atom.StatusUpdate();
 }
 

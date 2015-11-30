@@ -209,7 +209,6 @@ void db_maintenance_create_indexes(const char *db_filename )
     db_primitive_open(db_filename);
     db_primitive_transaction_begin();
     db_primitive_create_indexes();
-    db_primitive_create_extra_indexes();
     db_primitive_transaction_end();
     db_primitive_close();
 }
@@ -585,8 +584,9 @@ static int verify_compression_algorithm( int nbr_moves, thc::Move *moves )
     extern int max_nbr_slow_moves_other;
     extern int max_nbr_slow_moves_queen;
     std::vector<thc::Move> moves_in(moves,moves+nbr_moves);
+    CompressMoves press2;
+    std::string compressed = press2.Compress(moves_in);
     CompressMoves press;
-    std::string compressed = press.Compress(moves_in);
     std::vector<thc::Move> unpacked = press.Uncompress(compressed);
     is_interesting = press.is_interesting;
     if( is_interesting & 0x0f )
@@ -613,7 +613,9 @@ static int verify_compression_algorithm( int nbr_moves, thc::Move *moves )
             is_interesting |= 1024;
         }
     }
-    bool match = (0 == memcmp( &moves_in[0], &unpacked[0], nbr_moves*sizeof(thc::Move)));
+    bool match = true;
+    if( nbr_moves )
+        match = (0 == memcmp( &moves_in[0], &unpacked[0], nbr_moves*sizeof(thc::Move)));
     if( !match )
     {
         is_interesting |= 256;

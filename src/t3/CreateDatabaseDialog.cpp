@@ -40,6 +40,7 @@ CreateDatabaseDialog::CreateDatabaseDialog(
                            wxWindowID id, bool create_mode,
                            const wxPoint& pos, const wxSize& size, long style )
 {
+    db_created_ok = false;
     this->create_mode = create_mode;
     Create(parent, id, create_mode?"Create Database":"Add Games to Database", pos, size, style);
 }
@@ -245,7 +246,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
         }
     }
     bool exists = wxFile::Exists(db_filename);
-    std::string db_name = std::string( db_filename.c_str() );
+    db_name = std::string( db_filename.c_str() );
     if( exists )
     {
         error_msg = "Tarrasch database file " + db_name + " already exists";
@@ -306,11 +307,12 @@ void CreateDatabaseDialog::OnCreateDatabase()
     if( ok )
         ok = db_primitive_create_indexes();
     if( ok )
-        ok = db_primitive_create_extra_indexes();
-    if( ok )
         db_primitive_close();
     if( ok )
+    {
         AcceptAndClose();
+        db_created_ok = true;
+    }
     else
     {
         if( error_msg == "" )
@@ -358,7 +360,7 @@ void CreateDatabaseDialog::OnAppendDatabase()
         }
     }
     bool exists = wxFile::Exists(db_filename);
-    std::string db_name = std::string( db_filename.c_str() );
+    db_name = std::string( db_filename.c_str() );
     if( !exists )
     {
         error_msg = "Tarrasch database file " + db_name + " doesn't exist";
