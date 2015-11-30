@@ -29,7 +29,7 @@ public:
     
     // Overrides
     virtual wxSizer *GdvAddExtraControls();
-    virtual void OnCheckBox( bool checked );
+    virtual void GdvCheckBox( bool checked );
 
 };
 

@@ -728,7 +728,6 @@ bool PgnRead::GameOver()
         {
             aborted = hook_gameover( callback_code, event, site, date, round, white, black, result, white_elo, black_elo, eco, s->nbr_moves, s->big_move_array, s->big_hash_array  );
         }
-        //cprintf( "GameOver()\n" );
         stack_idx = 0;
         ChessRules temp;
         chess_rules = temp;    // init

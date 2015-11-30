@@ -99,7 +99,7 @@ bool db_primitive_create_tables()
         error_msg = "cancel";
         return false;
     }
-    retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS games (game_id INTEGER, game_hash INT8 UNIQUE, white TEXT, black TEXT, event TEXT, site TEXT, result TEXT, date TEXT, white_elo TEXT, black_elo TEXT, moves BLOB)",0,0,0);
+    retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS games (game_id INTEGER, game_hash INT8 UNIQUE, white TEXT, black TEXT, event TEXT, site TEXT, round TEXT, result TEXT, date TEXT, white_elo TEXT, black_elo TEXT, eco TEXT, moves BLOB)",0,0,0);
     if( retval )
     {
         error_msg = "Database error: sqlite3_exec(CREATE games) FAILED";
@@ -110,7 +110,7 @@ bool db_primitive_create_tables()
         error_msg = "cancel";
         return false;
     }
-    retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS games_duplicates (game_id INTEGER, game_hash INT8, white TEXT, black TEXT, event TEXT, site TEXT, result TEXT, date TEXT, white_elo TEXT, black_elo TEXT, moves BLOB)",0,0,0);
+    retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS games_duplicates (game_id INTEGER, game_hash INT8, white TEXT, black TEXT, event TEXT, site TEXT, round TEXT, result TEXT, date TEXT, white_elo TEXT, black_elo TEXT, eco TEXT, moves BLOB)",0,0,0);
     if( retval )
     {
         error_msg = "Database error: sqlite3_exec(CREATE games_duplicates) FAILED";
@@ -412,7 +412,7 @@ static bool purge_buckets( bool force )
     }
     if( required )
     {
-        ProgressBar prog( create_mode ? "Creating database, step 3 of 4" : "Adding games to database, step 2 of 2", "Flushing buffers"  );
+        ProgressBar prog( create_mode ? "Creating database, step 3 of 4" : "Adding games to database, step 2 of 2", "Writing to database"  );
         for( int i=0; ok && i<NBR_BUCKETS; i++ )
         {
             ok = purge_bucket(i);
@@ -561,8 +561,8 @@ bool db_primitive_check_for_duplicate( bool &signal_error, uint64_t game_hash, c
 }
 
 // returns bool inserted
-bool db_primitive_insert_game( bool &signal_error, const char *white, const char *black, const char *event, const char *site, const char *result,
-                                    const char *date, const char *white_elo, const char *black_elo,
+bool db_primitive_insert_game( bool &signal_error, const char *white, const char *black, const char *event, const char *site, const char *round, const char *result,
+                                    const char *date, const char *white_elo, const char *black_elo, const char *eco,
                                     int nbr_moves, thc::Move *moves, uint64_t *hashes  )
 {
     signal_error = false;       // use this mechanism because returning false doesn't necessarily mean error
@@ -574,6 +574,8 @@ bool db_primitive_insert_game( bool &signal_error, const char *white, const char
     char black_buf[200];
     char event_buf[200];
     char site_buf[200];
+    char round_buf[200];
+    char eco_buf[200];
     if( nbr_moves < 3 )    // skip 'games' with zero, one or two moves
         return false;           // not inserted, not error
     if( white_elo && black_elo )
@@ -590,6 +592,8 @@ bool db_primitive_insert_game( bool &signal_error, const char *white, const char
         return false;   // not inserted, not error
     sanitise( event,  event_buf, sizeof(event_buf) );
     sanitise( site, site_buf,  sizeof(site_buf) );
+    sanitise( round, round_buf,  sizeof(round_buf) );
+    sanitise( eco,  eco_buf,  sizeof(eco_buf) );
     CompressMoves press;
     uint64_t hash = press.cr.Hash64Calculate();
     uint64_t counter=0, game_hash=hash;
@@ -612,9 +616,9 @@ bool db_primitive_insert_game( bool &signal_error, const char *white, const char
     *put = '\0';
 
     // Try to insert the game
-    sprintf( insert_buf, "INSERT INTO games VALUES(%d,%lld,'%s','%s','%s','%s','%s','%s','%s','%s',X'%s')",
-                        game_id, game_hash, white_buf, black_buf, event_buf, site_buf, result,
-                        date, white_elo, black_elo, blob_txt_buf );
+    sprintf( insert_buf, "INSERT INTO games VALUES(%d,%lld,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s',X'%s')",
+                        game_id, game_hash, white_buf, black_buf, event_buf, site_buf, round_buf, result,
+                        date, white_elo, black_elo, eco_buf, blob_txt_buf );
     int retval = sqlite3_exec( handle, insert_buf,0,0,&errmsg);
     
     // This is one spot where a database failure is (kind of) expected - the game_hash has "unique" property
@@ -651,6 +655,7 @@ bool db_primitive_insert_game( bool &signal_error, const char *white, const char
         // A duplicate game is simply discarded
         if( is_duplicate )
         {
+            cprintf( "***  DUPLICATE GAME DISCARDED\n" );
             // ZOMBIE bug fix - return here, don't add bogus moves and increment game count
             return false;   // not inserted, not error
         }
@@ -659,9 +664,10 @@ bool db_primitive_insert_game( bool &signal_error, const char *white, const char
         //  be unique fortunately
         else
         {
-            sprintf( insert_buf, "INSERT INTO games VALUES(%d,NULL,'%s','%s','%s','%s','%s','%s','%s','%s',X'%s')",
-                    game_id, white_buf, black_buf, event_buf, site_buf, result,
-                    date, white_elo, black_elo, blob_txt_buf );
+            cprintf( "***  DUPLICATE GAME: %s-%s %s %s %s\n", white_buf, black_buf, event_buf, site_buf, result, date );
+            sprintf( insert_buf, "INSERT INTO games VALUES(%d,NULL,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s',X'%s')",
+                    game_id, white_buf, black_buf, event_buf, site_buf, round_buf, result,
+                    date, white_elo, black_elo, eco_buf, blob_txt_buf );
             int retval = sqlite3_exec( handle, insert_buf,0,0,&errmsg);
             if( retval && errmsg )
             {
@@ -677,9 +683,9 @@ bool db_primitive_insert_game( bool &signal_error, const char *white, const char
                 signal_error = true;
                 return false;   // not inserted, error
             }
-            sprintf( insert_buf, "INSERT INTO games_duplicates VALUES(%d,%lld,'%s','%s','%s','%s','%s','%s','%s','%s',X'%s')",
-                    game_id, game_hash, white_buf, black_buf, event_buf, site_buf, result,
-                    date, white_elo, black_elo, blob_txt_buf );
+            sprintf( insert_buf, "INSERT INTO games_duplicates VALUES(%d,%lld,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s',X'%s')",
+                    game_id, game_hash, white_buf, black_buf, event_buf, site_buf, round_buf, result,
+                    date, white_elo, black_elo, eco_buf, blob_txt_buf );
             retval = sqlite3_exec( handle, insert_buf,0,0,&errmsg);
             if( retval && errmsg )
             {

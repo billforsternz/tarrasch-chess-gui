@@ -51,6 +51,7 @@ BEGIN_EVENT_TABLE( GamesDialog, wxDialog )
     EVT_BUTTON( ID_BUTTON_2,            GamesDialog::OnButton2 )
     EVT_BUTTON( ID_BUTTON_3,            GamesDialog::OnButton3 )
     EVT_BUTTON( ID_BUTTON_4,            GamesDialog::OnButton4 )
+    EVT_BUTTON( ID_BUTTON_5,            GamesDialog::OnButton5 )
 
     EVT_BUTTON( ID_BOARD2GAME,          GamesDialog::OnBoard2Game )
 //    EVT_CHECKBOX( ID_REORDER,           GamesDialog::OnRenumber )
@@ -193,16 +194,16 @@ wxString GamesListCtrl::OnGetItemText( long item, long column) const
     parent->ReadItemWithSingleLineCache( item, info );
     switch( column )
     {
-        default: txt =  "";                         break;
+        default: txt =  "";                           break;
         case 1: txt =   info.r.white.c_str();         break;
         case 2: txt =   info.r.white_elo.c_str();     break;
         case 3: txt =   info.r.black.c_str();         break;
         case 4: txt =   info.r.black_elo.c_str();     break;
         case 5: txt =   info.r.date.c_str();          break;
         case 6: txt =   info.r.site.c_str();          break;
-        //case 7: txt = info.r.round.c_str();         break;
+        case 7: txt =   info.r.round.c_str();         break;
         case 8: txt =   info.r.result.c_str();        break;
-        //case 9: txt = info.r.eco.c_str();           break;
+        case 9: txt =   info.r.eco.c_str();           break;
         case 10:
         {
             char buf[1000];
@@ -382,7 +383,7 @@ void GamesDialog::CreateControls()
         nbr_games_in_list_ctrl = gc->gds.size();
         sprintf(buf,"%d games",nbr_games_in_list_ctrl);
     }
-    else if( objs.gl->db_clipboard )
+    else if( objs.gl->db_clipboard && db_req==REQ_POSITION )
     {
         nbr_games_in_list_ctrl = gc_clipboard->gds.size();
         sprintf(buf,"Using clipboard as database" );
@@ -418,13 +419,13 @@ void GamesDialog::CreateControls()
 
     list_ctrl->InsertColumn( 0, id==ID_PGN_DIALOG_FILE?"#":" "  );
     list_ctrl->InsertColumn( 1, "White"    );
-    list_ctrl->InsertColumn( 2, "Elo W"    );
+    list_ctrl->InsertColumn( 2, "Elo"      );
     list_ctrl->InsertColumn( 3, "Black"    );
-    list_ctrl->InsertColumn( 4, "Elo B"    );
+    list_ctrl->InsertColumn( 4, "Elo"      );
     list_ctrl->InsertColumn( 5, "Date"     );
     list_ctrl->InsertColumn( 6, "Site"     );
-    list_ctrl->InsertColumn( 7, "Round"    );
-    list_ctrl->InsertColumn( 8, "Result"   );
+    list_ctrl->InsertColumn( 7, "Rnd"      );
+    list_ctrl->InsertColumn( 8, "Rslt"     );
     list_ctrl->InsertColumn( 9, "ECO"      );
     list_ctrl->InsertColumn(10, "Moves"    );
     int col_flag=0;
@@ -463,14 +464,14 @@ void GamesDialog::CreateControls()
         int x   = (sz.x*98)/100;
         objs.repository->nv.m_col0 = cols[0] =   4*x/142;    // "Game #"
         objs.repository->nv.m_col1 = cols[1] =  16*x/142;    // "White" 
-        objs.repository->nv.m_col2 = cols[2] =   6*x/142;    // "Elo W"
+        objs.repository->nv.m_col2 = cols[2] =   5*x/142;    // "Elo W"
         objs.repository->nv.m_col3 = cols[3] =  16*x/142;    // "Black" 
-        objs.repository->nv.m_col4 = cols[4] =   6*x/142;    // "Elo B" 
+        objs.repository->nv.m_col4 = cols[4] =   5*x/142;    // "Elo B" 
         objs.repository->nv.m_col5 = cols[5] =  10*x/142;    // "Date"  
         objs.repository->nv.m_col6 = cols[6] =  14*x/142;    // "Site"  
-        objs.repository->nv.m_col7 = cols[7] =   3*x/142;    // "Round" 
+        objs.repository->nv.m_col7 = cols[7] =   5*x/142;    // "Round" 
         objs.repository->nv.m_col8 = cols[8] =   8*x/142;    // "Result"
-        objs.repository->nv.m_col9 = cols[9] =   3*x/142;    // "ECO"   
+        objs.repository->nv.m_col9 = cols[9] =   5*x/142;    // "ECO"   
         objs.repository->nv.m_col10= cols[10]=  56*x/142;    // "Moves"
     }
  /*   if(true) //temp temp temp white, black, result, moves only
@@ -563,6 +564,12 @@ void GamesDialog::CreateControls()
         wxButton* save_all_to_a_file = new wxButton ( this, wxID_SAVE, wxT("Save"),
             wxDefaultPosition, wxDefaultSize, 0 );
         vsiz_panel_button1->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    }
+    else if( id == ID_GAMES_DIALOG_DATABASE )
+    {
+        wxButton* btn5 = new wxButton ( this, ID_BUTTON_5, wxT("Use Game"),
+                                       wxDefaultPosition, wxDefaultSize, 0 );
+        vsiz_panel_button1->Add(btn5, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
     else
     {
@@ -868,6 +875,16 @@ void GamesDialog::OnButton4( wxCommandEvent& WXUNUSED(event) )
 
 // overide
 void GamesDialog::GdvButton4()
+{
+}
+
+void GamesDialog::OnButton5( wxCommandEvent& WXUNUSED(event) )
+{
+    GdvButton5();
+}
+
+// overide
+void GamesDialog::GdvButton5()
 {
 }
 
@@ -1233,10 +1250,22 @@ static bool compare( const smart_ptr<ListableGame> g1, const smart_ptr<ListableG
             parm2 = g2->Site();
             break;
         }
+        case 7:
+        {
+            parm1 = g1->Round();
+            parm2 = g2->Round();
+            break;
+        }
         case 8:
         {
             parm1 = g1->Result();
             parm2 = g2->Result();
+            break;
+        }
+        case 9:
+        {
+            parm1 = g1->Eco();
+            parm2 = g2->Eco();
             break;
         }
     }

@@ -23,6 +23,7 @@
 #include "Lang.h"
 #include "ListableGamePgn.h"
 #include "PgnRead.h"
+#include "ProgressBar.h"
 #include "GamesCache.h"
 using namespace std;
 
@@ -512,8 +513,10 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
     buf = new char [buflen];
     int gds_nbr = gds.size();
     long posn=0;
+    ProgressBar pb( "Saving file", "Saving file" );
     for( int i=0; i<gds_nbr; i++ )
     {
+        pb.Progress( (i*100) / (gds_nbr?gds_nbr:1) );
         ListableGame *mptr = gds[i].get();
         if( !mptr->IsInMemory() )
         {
@@ -687,7 +690,7 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
                     GameDocument *p = objs.tabs->Begin();
                     while( p )
                     {
-                        if( ptr->game_being_edited == p->game_being_edited )
+                        if( ptr->game_being_edited!=0 && (ptr->game_being_edited == p->game_being_edited)  )
                         {
                             p->fposn0 = ptr->fposn0;
                             p->fposn1 = ptr->fposn1;

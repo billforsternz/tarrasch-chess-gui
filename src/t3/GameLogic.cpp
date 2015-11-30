@@ -931,24 +931,23 @@ void GameLogic::CmdDatabaseSearch()
     thc::ChessRules start_position;
     std::string title_txt;
     gd.GetSummary( cr, title_txt );
-    CmdDatabase( cr, REQ_POSITION );
+    if( cr == start_position )
+        CmdDatabase( cr, REQ_SHOW_ALL );
+    else
+        CmdDatabase( cr, REQ_POSITION );
 }
 
 void GameLogic::CmdDatabaseShowAll()
 {
     thc::ChessRules cr;
-    thc::ChessRules start_position;
     std::string title_txt;
-    gd.GetSummary( cr, title_txt );
     CmdDatabase( cr, REQ_SHOW_ALL );
 }
 
 void GameLogic::CmdDatabasePlayers()
 {
     thc::ChessRules cr;
-    thc::ChessRules start_position;
     std::string title_txt;
-    gd.GetSummary( cr, title_txt );
     CmdDatabase( cr, REQ_PLAYERS );
 }
 
@@ -973,7 +972,7 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req )
         wxSize sz = objs.frame->GetSize();
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
-        DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard, db_req, ID_PGN_DIALOG_DATABASE, pt, sz );   // GamesDialog instance
+        DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard, db_req, ID_GAMES_DIALOG_DATABASE, pt, sz );   // GamesDialog instance
         if( dialog.ShowModalOk("Database games") )
         {
             objs.log->SaveGame(&gd,editing_log);

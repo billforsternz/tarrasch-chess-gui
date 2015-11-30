@@ -32,7 +32,7 @@ wxSizer *ClipboardDialog::GdvAddExtraControls()
     return vsiz_panel_button1;
 }
 
-void ClipboardDialog::OnCheckBox( bool checked )
+void ClipboardDialog::GdvCheckBox( bool checked )
 {
     objs.gl->db_clipboard = checked;
 }

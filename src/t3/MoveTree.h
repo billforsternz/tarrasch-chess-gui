@@ -24,7 +24,7 @@ struct GAME_MOVE
     std::string comment;
     char nag_value1;
     char nag_value2;
-    GAME_MOVE() { nag_value1=0; nag_value1=0; flag_ingame=0; white_clock_visible=false; black_clock_visible=false;
+    GAME_MOVE() { nag_value1=0; nag_value2=0; flag_ingame=0; white_clock_visible=false; black_clock_visible=false;
                   human_is_white=false; human_millisecs_time=0; engine_millisecs_time=0; }
 };
 

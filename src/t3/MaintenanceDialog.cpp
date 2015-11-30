@@ -276,7 +276,7 @@ void MaintenanceDialog::CreateControls()
     wxButton* button_cmd_1 = new wxButton( this, ID_MAINTENANCE_CMD_1, wxT("&Database speed test"),
                                           wxDefaultPosition, wxDefaultSize, 0 );
     db_vert->Add( button_cmd_1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    wxButton* button_cmd_2 = new wxButton( this, ID_MAINTENANCE_CMD_2, wxT("&Test compress file .pgn -> .qgn"),
+    wxButton* button_cmd_2 = new wxButton( this, ID_MAINTENANCE_CMD_2, wxT("&Build great players database"),
                                           wxDefaultPosition, wxDefaultSize, 0 );
     db_vert->Add( button_cmd_2, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     wxButton* button_cmd_3 = new wxButton( this, ID_MAINTENANCE_CMD_3, wxT("&Test decompress file .qgn -> .pgn"),

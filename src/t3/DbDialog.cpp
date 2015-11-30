@@ -57,7 +57,8 @@ wxSizer *DbDialog::GdvAddExtraControls()
     sz5.x = (sz4.x*55)/100;
     //sz5.y = (sz4.y*2)/10;
 
-    //if( db_req == REQ_PLAYERS )
+    text_ctrl = 0;
+    if( db_req == REQ_PLAYERS )
     {
         //text_ctrl->SetSize( sz3.x*2, sz3.y );      // temp temp
         text_ctrl = new wxTextCtrl ( this, ID_DB_TEXT, wxT(""), wxDefaultPosition, sz5, 0 );
@@ -75,14 +76,14 @@ wxSizer *DbDialog::GdvAddExtraControls()
     }
  
     
-    wxStaticText* spacer1 = new wxStaticText( this, wxID_ANY, wxT(""),
-                                     wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_button1->Add(spacer1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+//    wxStaticText* spacer1 = new wxStaticText( this, wxID_ANY, wxT(""),
+//                                     wxDefaultPosition, wxDefaultSize, 0 );
+//    vsiz_panel_button1->Add(spacer1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-    white_player_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX2,
-                                 wxT("&White player"), wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_button1->Add(white_player_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    white_player_ctrl->SetValue( true );
+//    white_player_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX2,
+//                                 wxT("&White player"), wxDefaultPosition, wxDefaultSize, 0 );
+//    vsiz_panel_button1->Add(white_player_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+//    white_player_ctrl->SetValue( true );
 
     wxButton* btn1 = new wxButton ( this, ID_BUTTON_1, wxT("Clear Clipboard"),
                                      wxDefaultPosition, wxDefaultSize, 0 );
@@ -94,16 +95,19 @@ wxSizer *DbDialog::GdvAddExtraControls()
     wxButton* btn3 = new wxButton ( this, ID_BUTTON_3, wxT("Add All Player's White Games"),
                                      wxDefaultPosition, wxDefaultSize, 0 );
     vsiz_panel_button1->Add(btn3, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    wxStaticText* spacer2 = new wxStaticText( this, wxID_ANY, wxT(""),
-                                     wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_button1->Add(spacer2, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    
+
+    white_player_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX2,
+                                   wxT("&White player"), wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(white_player_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    white_player_ctrl->SetValue( true );
+
     wxButton* btn4 = new wxButton ( this, ID_BUTTON_4, wxT("Add All Player's Black Games"),
                                    wxDefaultPosition, wxDefaultSize, 0 );
     vsiz_panel_button1->Add(btn4, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    wxStaticText* spacer3 = new wxStaticText( this, wxID_ANY, wxT(""),
-                                     wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_button1->Add(spacer3, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+    wxButton* save_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save all"),
+        wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     
     filter_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX,
                                  wxT("&Clipboard as temp database"), wxDefaultPosition, wxDefaultSize, 0 );
@@ -295,33 +299,20 @@ void DbDialog::GdvListColClick( int compare_col )
 
 void DbDialog::GdvSearch()
 {
-    wxString name = text_ctrl->GetValue();
-    std::string sname(name.c_str());
+    if( text_ctrl )
+    {
+        wxString name = text_ctrl->GetValue();
+        std::string sname(name.c_str());
     
-    // Do a "find on page type feature"
-    if( sname.length()>0 && db_req == REQ_PLAYERS )
-    {
-        std::string current = white_player_search ? track->info.r.white : track->info.r.black;
-        int row = objs.db->FindPlayer( sname, current, track->focus_idx, white_player_search );
-        cprintf( "row=%d\n", row );
-        Goto(row);
+        // Do a "find on page type feature"
+        if( sname.length()>0 && db_req == REQ_PLAYERS )
+        {
+            std::string current = white_player_search ? track->info.r.white : track->info.r.black;
+            int row = objs.db->FindPlayer( sname, current, track->focus_idx, white_player_search );
+            cprintf( "row=%d\n", row );
+            Goto(row);
+        }
     }
-
-    #if 0 // not useful, maybe replace with something else
-    // Else limit search to particular player
-    else
-    {
-        nbr_games_in_list_ctrl = objs.db->SetDbPosition( db_req, cr, sname );
-        char buf[200];
-        sprintf(buf,"List of %d matching games from the database",nbr_games_in_list_ctrl);
-        title_ctrl->SetLabel( buf );
-        cprintf( "Reloading, %d games\n", nbr_games_in_list_ctrl);
-        list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
-        list_ctrl->RefreshItems(0,nbr_games_in_list_ctrl-1);
-        if( nbr_games_in_list_ctrl > 0 )
-            Goto(0);
-    }
-    #endif
 }
 
 
@@ -501,19 +492,58 @@ void DbDialog::GdvButton4()
     Goto( track->focus_idx );
 }
 
+void DbDialog::GdvButton5()
+{
+    std::string s;
+    int sz = track->info.moves.size();
+    thc::ChessRules cr;
+    int move_count=1;
+    bool triggered=false;
+    s += "{";
+    s += track->info.Description();
+    s += "}";
+    for( int i=0; i<track->info.moves.size(); i++ )
+    {
+        std::string s2;
+        thc::Move mv = track->info.moves[i];
+        char buf[100];
+        buf[0] = '\0';
+        if( cr.white )
+            sprintf( buf, "%d.", move_count );
+        s2 += std::string(buf);
+        s2 += mv.NaturalOut(&cr);
+        if( i+1 < sz )
+            s2 += " ";
+        cr.PlayMove(mv);
+        if( cr.white )
+            move_count++;
+        if( !triggered && cr==cr_base )
+            triggered = true;
+        if( triggered )
+            s += s2;
+    }    
+    objs.gl->gd.CommentEdit(objs.gl->lb,s);
+    objs.gl->CmdEditPromoteToVariation();
+    TransferDataToWindow();
+    AcceptAndClose();
+}
+
 void DbDialog::GdvCheckBox2( bool checked )
 {
     white_player_search = checked;
-    std::string s(text_ctrl->GetValue());
-    if( !white_player_search && s=="White Player" )
+    if( text_ctrl )
     {
-        text_ctrl->SetValue("Black Player");
+        std::string s(text_ctrl->GetValue());
+        if( !white_player_search && s=="White Player" )
+        {
+            text_ctrl->SetValue("Black Player");
+        }
+        else if( white_player_search && s=="Black Player" )
+        {
+            text_ctrl->SetValue("White Player");
+        }
+        Goto( track->focus_idx );
     }
-    else if( white_player_search && s=="Black Player" )
-    {
-        text_ctrl->SetValue("White Player");
-    }
-    Goto( track->focus_idx );
 }
 
 void DbDialog::GdvCheckBox( bool checked )
@@ -653,7 +683,7 @@ void DbDialog::StatsCalculate()
     }
     
     // For each cached game
-    std::vector< smart_ptr<ListableGame> > &source = (objs.gl->db_clipboard ? objs.gl->gc_clipboard.gds : gc->gds );
+    std::vector< smart_ptr<ListableGame> > &source = ((objs.gl->db_clipboard&&db_req==REQ_POSITION) ? objs.gl->gc_clipboard.gds : gc->gds );
     for( unsigned int i=0; i<source.size(); i++ )
     {
         Roster r         = source[i]->RefRoster();

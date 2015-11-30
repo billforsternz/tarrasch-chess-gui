@@ -88,6 +88,7 @@ public:
     virtual void GdvButton2();
     virtual void GdvButton3();
     virtual void GdvButton4();
+    virtual void GdvButton5();
     virtual void GdvOnCancel();
     virtual void GdvNextMove( int idx );
     virtual bool MoveColCompareReadGame( MoveColCompareElement &e, int idx, const char *blob );

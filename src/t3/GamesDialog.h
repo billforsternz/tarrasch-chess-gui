@@ -35,9 +35,11 @@ enum
     ID_BUTTON_2,
     ID_BUTTON_3,
     ID_BUTTON_4,
+    ID_BUTTON_5,
     ID_PGN_DIALOG_FILE     ,
     ID_PGN_DIALOG_CLIPBOARD,
     ID_PGN_DIALOG_SESSION  ,
+    ID_GAMES_DIALOG_DATABASE   ,
     ID_BOARD2GAME          ,
     ID_PGN_DIALOG_GAME_DETAILS,
     ID_REORDER           ,
@@ -45,7 +47,6 @@ enum
     ID_SAVE_ALL_TO_A_FILE,
     ID_PGN_DIALOG_GAME_PREFIX,
     ID_PGN_DIALOG_PUBLISH    ,
-    ID_PGN_DIALOG_DATABASE   ,
     ID_PGN_DIALOG_UTILITY1   ,
     ID_PGN_DIALOG_UTILITY2   
 };
@@ -186,6 +187,7 @@ public:
     void OnButton2( wxCommandEvent& event );
     void OnButton3( wxCommandEvent& event );
     void OnButton4( wxCommandEvent& event );
+    void OnButton5( wxCommandEvent& event );
     void OnRadio( wxCommandEvent& event );
     void OnSpin( wxCommandEvent& event );
     void OnComboBox( wxCommandEvent& event );
@@ -216,6 +218,7 @@ public:
     virtual void GdvButton2();
     virtual void GdvButton3();
     virtual void GdvButton4();
+    virtual void GdvButton5();
     virtual void GdvNextMove( int idx );
     virtual bool MoveColCompareReadGame( MoveColCompareElement &e, int idx, const char *blob );
     virtual int  GetBasePositionIdx( CompactGame &pact ) { return 0; }
