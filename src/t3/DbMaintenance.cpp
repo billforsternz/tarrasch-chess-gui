@@ -105,9 +105,12 @@ void db_maintenance_verify_compression()
         // Verify compression
         void CompressMovesDiagBegin();
         void CompressMovesDiagEnd();
+        DebugPrintfTime turn_on_time_reporting;
         CompressMovesDiagBegin();
         PgnRead *pgn = new PgnRead('V');
+        cprintf( "Begin\n" );
         pgn->Process(ifile);
+        cprintf( "End\n" );
         CompressMovesDiagEnd();
     }
     if( ifile )
@@ -224,7 +227,6 @@ bool hook_gameover( char callback_code, const char *event, const char *site, con
 {
     bool aborted = false;
     static int counter;
-    int is_interesting = 0;
     if( (++counter % 100000) == 0 )
         cprintf( "%d games processed so far\n", counter );
     switch( callback_code )
@@ -249,83 +251,90 @@ bool hook_gameover( char callback_code, const char *event, const char *site, con
         case 'R': pgn_read_hook( white, black, event, site, result, date, white_elo, black_elo, nbr_moves, moves, hashes ); return true;
 
         // Verify
-        case 'V': is_interesting = verify_compression_algorithm( nbr_moves, moves ); break;
-    }
-    extern int nbr_games_with_two_queens;
-    extern int nbr_games_with_promotions;
-    extern int nbr_games_with_slow_mode;
-    if( is_interesting&4096 )
-    {
-        nbr_games_with_two_queens++;
-        is_interesting &= (~4096);
-    }
-    if( is_interesting&512 )
-    {
-        nbr_games_with_promotions++;
-        is_interesting &= (~512);
-    }
-    if( is_interesting )
-    {
-        char buf[200];
-        buf[0] = '\0';
-        if( is_interesting&0x1f)
-            nbr_games_with_slow_mode++;
-        if(is_interesting&1)
-            strcat(buf,"Dark Bishop ");
-        if(is_interesting&2)
-            strcat(buf,"Light Bishop ");
-        if(is_interesting&4)
-            strcat(buf,"Knight ");
-        if(is_interesting&8)
-            strcat(buf,"Rook ");
-        if(is_interesting&16)
-            strcat(buf,"Queen ");
-        if(is_interesting&32)
-            strcat(buf,"New record pawn swap ");
-        if(is_interesting&64)
-            strcat(buf,"New record nbr slow moves - queen ");
-        if(is_interesting&128)
-            strcat(buf,"New record nbr slow moves - not queen ");
-        if(is_interesting&256)
-            strcat(buf,"Verification error ");
-        if(is_interesting&1024)
-            strcat(buf,"Ten or more slow moves - queen ");
-        if(is_interesting&2048)
-            strcat(buf,"Ten or more slow moves - not queen ");
-        if(is_interesting!=16)
-            cprintf( "Adding game with issues; %s\n", buf );
-        FILE *f = fopen( (is_interesting&0x0f) ? "TooManyKnightsEtc.pgn" : "TwoOrMoreQueens.pgn", "at" );
-        if( f )
+        case 'V':
         {
-            fprintf( f, "[Event \"%s\"]\n", event );
-            fprintf( f, "[Site \"%s - %s\"]\n", buf, site );
-            fprintf( f, "[Date \"%s\"]\n", date );
-            fprintf( f, "[Round \"%s\"]\n", round );
-            fprintf( f, "[White \"%s\"]\n", white );
-            fprintf( f, "[Black \"%s\"]\n", black );
-            fprintf( f, "[Result \"%s\"]\n", result );
-            fprintf( f, "\n" );
-            thc::ChessRules cr;
-            bool end=true;
-            for( int i=0; i<nbr_moves; i++ )
+            int is_interesting = verify_compression_algorithm( nbr_moves, moves );
+            extern int nbr_games_with_two_queens;
+            extern int nbr_games_with_promotions;
+            extern int nbr_games_with_slow_mode;
+            if( is_interesting & 4096 )
             {
-                bool start = ((i%10) == 0);
-                if( !start )
-                    fprintf( f, " " );
-                if( cr.white )
-                    fprintf( f, "%d. ", cr.full_move_count );
-                thc::Move mv = moves[i];
-                std::string s = mv.NaturalOut(&cr);
-                fprintf( f, "%s", s.c_str() );
-                end = (((i+1)%10) == 0);
-                if( end )
-                    fprintf( f, "\n" );
-                cr.PlayMove(mv);
+                nbr_games_with_two_queens++;
+                is_interesting &= (~4096);
             }
-            if( !end )
-                fprintf( f, " " );
-            fprintf( f, "%s\n\n", result );
-            fclose(f);
+            if( is_interesting&512 )
+            {
+                nbr_games_with_promotions++;
+                is_interesting &= (~512);
+            }
+            if( is_interesting )
+            {
+                char buf[200];
+                buf[0] = '\0';
+                if( is_interesting&0x1f)
+                    nbr_games_with_slow_mode++;
+                if(is_interesting&1)
+                    strcat(buf,"Dark Bishop ");
+                if(is_interesting&2)
+                    strcat(buf,"Light Bishop ");
+                if(is_interesting&4)
+                    strcat(buf,"Knight ");
+                if(is_interesting&8)
+                    strcat(buf,"Rook ");
+                if(is_interesting&16)
+                    strcat(buf,"Queen ");
+                if(is_interesting&32)
+                    strcat(buf,"Unusual instance of 3 pawn swaps ");
+                if(is_interesting&64)
+                    strcat(buf,"New record nbr slow moves - queen ");
+                if(is_interesting&128)
+                    strcat(buf,"New record nbr slow moves - not queen ");
+                if(is_interesting&256)
+                    strcat(buf,"Verification error ");
+                if(is_interesting&1024)
+                    strcat(buf,"Ten or more slow moves - queen ");
+                if(is_interesting&2048)
+                    strcat(buf,"Ten or more slow moves - not queen ");
+                if(is_interesting)
+                    cprintf( "Adding game with issues; %s\n", buf );
+                if( false )
+                {
+                    FILE *f = fopen( (is_interesting&16) ? "TwoOrMoreQueens.pgn" : "TooManyKnightsEtc.pgn" , "at" );
+                    if( f )
+                    {
+                        fprintf( f, "[Event \"%s\"]\n", event );
+                        fprintf( f, "[Site \"%s - %s\"]\n", buf, site );
+                        fprintf( f, "[Date \"%s\"]\n", date );
+                        fprintf( f, "[Round \"%s\"]\n", round );
+                        fprintf( f, "[White \"%s\"]\n", white );
+                        fprintf( f, "[Black \"%s\"]\n", black );
+                        fprintf( f, "[Result \"%s\"]\n", result );
+                        fprintf( f, "\n" );
+                        thc::ChessRules cr;
+                        bool end=true;
+                        for( int i=0; i<nbr_moves; i++ )
+                        {
+                            bool start = ((i%10) == 0);
+                            if( !start )
+                                fprintf( f, " " );
+                            if( cr.white )
+                                fprintf( f, "%d. ", cr.full_move_count );
+                            thc::Move mv = moves[i];
+                            std::string s = mv.NaturalOut(&cr);
+                            fprintf( f, "%s", s.c_str() );
+                            end = (((i+1)%10) == 0);
+                            if( end )
+                                fprintf( f, "\n" );
+                            cr.PlayMove(mv);
+                        }
+                        if( !end )
+                            fprintf( f, " " );
+                        fprintf( f, "%s\n\n", result );
+                        fclose(f);
+                    }
+                }
+            }
+            break;
         }
     }
     return aborted;
@@ -580,7 +589,7 @@ static void decompress_game( const char *compressed_header, const char *compress
 
 static int verify_compression_algorithm( int nbr_moves, thc::Move *moves )
 {
-    int is_interesting = false;
+    int is_interesting = 0;
     extern int max_nbr_slow_moves_other;
     extern int max_nbr_slow_moves_queen;
     std::vector<thc::Move> moves_in(moves,moves+nbr_moves);
@@ -588,7 +597,7 @@ static int verify_compression_algorithm( int nbr_moves, thc::Move *moves )
     std::string compressed = press2.Compress(moves_in);
     CompressMoves press;
     std::vector<thc::Move> unpacked = press.Uncompress(compressed);
-    is_interesting = press.is_interesting;
+    is_interesting = press.is_interesting | press2.is_interesting;
     if( is_interesting & 0x0f )
     {
         if( press.nbr_slow_moves>0 && press.nbr_slow_moves>=max_nbr_slow_moves_other )

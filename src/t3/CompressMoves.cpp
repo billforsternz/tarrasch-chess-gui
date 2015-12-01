@@ -29,7 +29,7 @@ static unsigned long nbr_knight_swaps_alt;
 static unsigned long nbr_rook_moves;
 static unsigned long nbr_rook_swaps;
 static unsigned long nbr_rook_swaps_alt;
-static int nbr_swaps_max_so_far;
+static unsigned long nbr_queen_swaps;
 int max_nbr_slow_moves_other;
 int max_nbr_slow_moves_queen;
 int nbr_games_with_promotions;
@@ -52,16 +52,15 @@ void CompressMovesDiagBegin()
         nbr_pawn_swaps_histo_bl[i] = 0;
     for(int i=0; i<8; i++)
         nbr_pawn_swaps_histo_br[i] = 0;
-    nbr_swaps_max_so_far = 0;
     nbr_knight_moves = 0;
     nbr_knight_swaps = 0;
     nbr_knight_swaps_alt = 0;
     nbr_rook_moves = 0;
     nbr_rook_swaps = 0;
     nbr_rook_swaps_alt = 0;
+    nbr_queen_swaps = 0;
     max_nbr_slow_moves_other = 0;
     max_nbr_slow_moves_queen = 0;
-    nbr_swaps_max_so_far = 0;
     nbr_games_with_promotions = 0;
     nbr_games_with_slow_mode = 0;
     nbr_games_with_two_queens = 0;
@@ -89,9 +88,10 @@ void CompressMovesDiagEnd()
     cprintf( "nbr_rook_moves       = %lu\n",         nbr_rook_moves );
     cprintf( "nbr_rook_swaps       = %lu\n",         nbr_rook_swaps );
     cprintf( "nbr_rook_swaps_alt   = %lu\n",         nbr_rook_swaps_alt );
+    cprintf( "nbr_queen_swaps      = %lu\n",         nbr_queen_swaps );
     cprintf( "nbr_games_with_promotions = %lu\n",     nbr_games_with_promotions );
     cprintf( "nbr_games_with_slow_mode  = %lu\n",     nbr_games_with_slow_mode  );
-    cprintf( "nbr_games_with_two_queens (and 7 pawns) = %lu\n",     nbr_games_with_two_queens );
+    cprintf( "nbr games_with_two_queens = %lu\n",     nbr_games_with_two_queens );
 }
 
 
@@ -275,7 +275,7 @@ bool CompressMoves::TryFastMode( Side *side )
                 side->queens[side->nbr_queens++] = i;
             else
             {
-                DIAG_ONLY( is_interesting |= 16 );
+                DIAG_ONLY( is_interesting |= 16 );  // 3 or more queens!, or more likely see below ....
                 okay = false;
             }
         }
@@ -286,7 +286,7 @@ bool CompressMoves::TryFastMode( Side *side )
     }
     if( side->nbr_queens==2 && side->nbr_pawns>6 )
     {
-        DIAG_ONLY( is_interesting |= 16 );
+        DIAG_ONLY( is_interesting |= 16 );  // .... 2 queens and 7 pawns
         okay = false;
     }
     side->fast_mode = okay;
@@ -602,6 +602,7 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
                 int temp = side->queens[0];
                 side->queens[0] = side->queens[1];
                 side->queens[1] = temp;
+                DIAG_ONLY( nbr_queen_swaps++; )
             }
             break;
         }
@@ -671,7 +672,7 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
                     break;
                 case thc::SPECIAL_PROMOTION_QUEEN:  code = (code<<2) + P_QUEEN;
                     promoting = true;
-                    DIAG_ONLY( if(side->nbr_queens>0 && side->nbr_pawns==8) is_interesting |= 4096; )
+                    DIAG_ONLY( if(side->nbr_queens>0) is_interesting|=4096; )
                     break;
                 case thc::SPECIAL_PROMOTION_ROOK:   code = (code<<2) + P_ROOK;
                     promoting = true;
@@ -697,7 +698,7 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
             }
             else
             {
-                DIAG_ONLY( int nbr_swaps=0; )
+                DIAG_ONLY( bool br_or_wl=false; int nbr_swaps=0; )
                 bool reordering_possible = (code==P_LEFT || code==P_RIGHT);
                 if( reordering_possible )
                 {
@@ -713,7 +714,7 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
                         if( cr.white )
                             { DIAG_ONLY( nbr_pawn_swaps_histo_wr[nbr_swaps]++; ) }
                         else
-                            { DIAG_ONLY( nbr_pawn_swaps_histo_br[nbr_swaps]++; ) }
+                            { DIAG_ONLY( br_or_wl=true; nbr_pawn_swaps_histo_br[nbr_swaps]++; ) }
                     }
                     else // else decreasing capture
                     {
@@ -725,12 +726,12 @@ char CompressMoves::CompressFastMode( thc::Move mv, Side *side, Side *other )
                             side->pawns[i] = temp;
                         }
                         if( cr.white )
-                            { DIAG_ONLY( nbr_pawn_swaps_histo_wl[nbr_swaps]++; ) }
+                            { DIAG_ONLY( br_or_wl=true; nbr_pawn_swaps_histo_wl[nbr_swaps]++; ) }
                         else
                             { DIAG_ONLY( nbr_pawn_swaps_histo_bl[nbr_swaps]++; ) }
                     }
                 }
-                DIAG_ONLY( if(nbr_swaps>1 && nbr_swaps>=3) is_interesting|=32; )
+                DIAG_ONLY( if( nbr_swaps>=3 && br_or_wl ) is_interesting|=32; )
                 DIAG_ONLY( nbr_pawn_swaps_histo[nbr_swaps]++; )
             }
             code = CODE_PAWN + (pawn_offset<<4) + code;
