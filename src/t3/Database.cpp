@@ -31,7 +31,7 @@
 Database::Database( const char *db_file )
 {
     gbl_handle = 0;
-    gbl_stmt = 0;
+    positions_stmt = 0;
     player_search_stmt = 0;
     gbl_expected = 0;
     gbl_current = 0;
@@ -48,24 +48,47 @@ Database::Database( const char *db_file )
 Database::~Database()
 {
     cprintf( "DATABASE DESTRUCTOR\n" );
-    if( gbl_stmt )
+    if( positions_stmt )
     {
-        sqlite3_finalize(gbl_stmt);
-        gbl_stmt = NULL;
+        sqlite3_finalize(positions_stmt);
+        positions_stmt = NULL;
     }
-    if( gbl_handle )
+    while( gbl_handle )
     {
-        sqlite3_close(gbl_handle);
-        gbl_handle = NULL;
+        int retval = sqlite3_close(gbl_handle);
+        if( retval != SQLITE_BUSY )
+        {
+            gbl_handle = NULL;
+        }
+        else
+        {
+            sqlite3_stmt *p = NULL;
+            for(;;)
+            {
+                sqlite3_stmt *temp = sqlite3_next_stmt(gbl_handle, p );
+                if( p )
+                    sqlite3_finalize(p);
+                p = temp;
+                if( p == NULL )
+                {
+                    break;
+                }
+                else
+                {
+                    cprintf( "**** LEAK\n" );
+                }
+            }
+        }
     }
+    sqlite3_shutdown();
 }
 
 void Database::Reopen( const char *db_file )
 {
-    if( gbl_stmt )
+    if( positions_stmt )
     {
-        sqlite3_finalize(gbl_stmt);
-        gbl_stmt = NULL;
+        sqlite3_finalize(positions_stmt);
+        positions_stmt = NULL;
     }
     if( gbl_handle )
     {
@@ -73,7 +96,7 @@ void Database::Reopen( const char *db_file )
         gbl_handle = NULL;
     }
     gbl_handle = 0;
-    gbl_stmt = 0;
+    positions_stmt = 0;
     player_search_stmt = 0;
     gbl_expected = 0;
     gbl_current = 0;
@@ -171,6 +194,7 @@ int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &pl
         return 0;
     gbl_expected = -1;
     int game_count = 0;
+    sqlite3_stmt *stmt;
     this->player_name = player_name;
     
     //cr.Forsyth("r1bqk2r/ppp1bppp/2n1pn2/3p4/Q1PP4/P3PN2/1P1N1PPP/R1B1KB1R b KQkq - 0 7");
@@ -220,7 +244,7 @@ int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &pl
     //    sprintf( buf, "SELECT COUNT(*) from positions_%d WHERE position_hash=%d", table_nbr, hash );
     //    sprintf( buf, "SELECT COUNT(*) from games WHERE games.white = 'Carlsen, Magnus' AND games.game_id = positions_%d.game_id AND positions_%d.position_hash=%d", table_nbr, table_nbr, hash );
     cprintf("QUERY IN: %s\n",buf);
-    int retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &gbl_stmt, 0 );
+    int retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &stmt, 0 );
     cprintf("QUERY OUT: %s\n",buf);
     if( retval )
     {
@@ -229,13 +253,13 @@ int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &pl
     }
     
     // Read the number of rows fetched
-    int cols = sqlite3_column_count(gbl_stmt);
+    int cols = sqlite3_column_count(stmt);
     
     cprintf( "Get games count begin\n");
     while(1)
     {
         // fetch a row's status
-        retval = sqlite3_step(gbl_stmt);
+        retval = sqlite3_step(stmt);
         if(retval == SQLITE_ROW)
         {
             // SQLITE_ROW means fetched a row
@@ -243,7 +267,7 @@ int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &pl
             // sqlite3_column_text returns a const void* , typecast it to const char*
             for( int col=0; col<cols; col++ )
             {
-                const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                const char *val = (const char*)sqlite3_column_text(stmt,col);
                 if( col == 0 )
                 {
                     game_count = atoi(val);
@@ -254,8 +278,8 @@ int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &pl
         else if( retval == SQLITE_DONE )
         {
             // All rows finished
-            sqlite3_finalize(gbl_stmt);
-            gbl_stmt = NULL;
+            sqlite3_finalize(stmt);
+            stmt = NULL;
             break;
         }
         else
@@ -456,6 +480,7 @@ int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::ve
     if( !gbl_handle )
         return -1;
     gbl_expected = -1;
+    sqlite3_stmt *stmt;    // A prepared statement for fetching from games table
     
     // select matching rows from the table
     char buf[1000];
@@ -463,7 +488,7 @@ int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::ve
             "SELECT games.game_id, games.white, games.black, games.event, games.site, games.round, games.result, games.date, games.white_elo, games.black_elo, games.eco, games.moves from games "
             "WHERE games.%s='%s'",  white?"white":"black",  player_name.c_str() );
     cprintf( "LoadGamesWithQuery(), player; QUERY IN: %s\n",buf);
-    retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &gbl_stmt, 0 );
+    retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &stmt, 0 );
     cprintf( "LoadGamesWithQuery(), player; QUERY OUT: %s\n",buf);
     if( retval )
     {
@@ -472,10 +497,10 @@ int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::ve
     }
     
     // Read the game info
-    int cols = sqlite3_column_count(gbl_stmt);
+    int cols = sqlite3_column_count(stmt);
     for(;;)
     {
-        retval = sqlite3_step(gbl_stmt);
+        retval = sqlite3_step(stmt);
         if( retval == SQLITE_ROW )
         {
             int game_id=0;
@@ -489,63 +514,63 @@ int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::ve
             {
                 if( col == 0 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     game_id = atoi(val);
                 }
                 else if( col == 1 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     r.white = val ? std::string(val) : "Whoops";
                 }
                 else if( col == 2 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     r.black = val ? std::string(val) : "Whoops";
                 }
                 else if( col == 3 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     r.event = val ? std::string(val) : "Whoops";
                 }
                 else if( col == 4 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     r.site = val ? std::string(val) : "Whoops";
                 }
                 else if( col == 5 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     r.round = val ? std::string(val) : "Whoops";
                 }
                 else if( col == 6 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     r.result = val ? std::string(val) : "*";
                 }
                 else if( col == 7 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     r.date = val ? std::string(val) : "Whoops";
                 }
                 else if( col == 8 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     r.white_elo = val ? std::string(val) : "Whoops";
                 }
                 else if( col == 9 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     r.black_elo = val ? std::string(val) : "Whoops";
                 }
                 else if( col == 10 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     r.eco = val ? std::string(val) : "Whoops";
                 }
                 else if( col == 11 )
                 {
-                    int len = sqlite3_column_bytes(gbl_stmt,col);
-                    const char *blob = (const char*)sqlite3_column_blob(gbl_stmt,col);
+                    int len = sqlite3_column_bytes(stmt,col);
+                    const char *blob = (const char*)sqlite3_column_blob(stmt,col);
                     if( len && blob )
                     {
                         std::string temp(blob,len);
@@ -560,8 +585,8 @@ int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::ve
         else if( retval == SQLITE_DONE )
         {
             // All rows finished
-            sqlite3_finalize(gbl_stmt);
-            gbl_stmt = NULL;
+            sqlite3_finalize(stmt);
+            stmt = NULL;
             int nbr_after = games.size();
             cprintf("LoadGamesWithQuery(): %d games loaded\n", nbr_after-nbr_before );
             return nbr_after-nbr_before;
@@ -581,6 +606,7 @@ int Database::LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<Listable
 {
     int retval=-1;
     int nbr_before = games.size();
+    sqlite3_stmt *stmt;    // A prepared statement for fetching from games table
     wxProgressDialog progress( "Searching for extra games", "Searching for extra games", 100, NULL,
                               wxPD_APP_MODAL+
                               wxPD_AUTO_HIDE+
@@ -598,7 +624,7 @@ int Database::LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<Listable
             "SELECT games.game_id, games.white, games.black, games.event, games.site, games.round, games.result, games.date, games.white_elo, games.black_elo, games.eco, games.moves from games JOIN positions_%d ON games.game_id = positions_%d.game_id WHERE %spositions_%d.position_hash=%d",
             table_nbr, table_nbr, white_and.c_str(), table_nbr, hash32);
     cprintf( "LoadGamesWithQuery(), position; QUERY IN: %s\n",buf);
-    retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &gbl_stmt, 0 );
+    retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &stmt, 0 );
     cprintf( "LoadGamesWithQuery(), position; QUERY OUT: %s\n",buf);
     if( retval )
     {
@@ -607,10 +633,10 @@ int Database::LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<Listable
     }
     
     // Read the game info
-    int cols = sqlite3_column_count(gbl_stmt);
+    int cols = sqlite3_column_count(stmt);
     for(;;)
     {
-        retval = sqlite3_step(gbl_stmt);
+        retval = sqlite3_step(stmt);
         if( retval == SQLITE_ROW )
         {
             int game_id=0;
@@ -624,7 +650,7 @@ int Database::LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<Listable
             {
                 if( col == 0 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     game_id = atoi(val);
                     int count = games_set.count(game_id);
                     bool already = (count > 0);
@@ -637,59 +663,59 @@ int Database::LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<Listable
                 }
                 else if( col == 1 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     r.white = val ? std::string(val) : "Whoops";
                 }
                 else if( col == 2 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     r.black = val ? std::string(val) : "Whoops";
                 }
                 else if( col == 3 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     r.event = val ? std::string(val) : "Whoops";
                 }
                 else if( col == 4 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     r.site = val ? std::string(val) : "Whoops";
                 }
                 else if( col == 5 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     r.round = val ? std::string(val) : "Whoops";
                 }
                 else if( col == 6 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     r.result = val ? std::string(val) : "*";
                 }
                 else if( col == 7 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     r.date = val ? std::string(val) : "Whoops";
                 }
                 else if( col == 8 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     r.white_elo = val ? std::string(val) : "Whoops";
                 }
                 else if( col == 9 )
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     r.black_elo = val ? std::string(val) : "Whoops";
                 }
                 else if( col == 10)
                 {
-                    const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
                     r.eco = val ? std::string(val) : "Whoops";
                 }
                 else if( col == 11 )
                 {
-                    int len = sqlite3_column_bytes(gbl_stmt,col);
+                    int len = sqlite3_column_bytes(stmt,col);
                     //fprintf(f,"Move len = %d\n",len);
-                    const char *blob = (const char*)sqlite3_column_blob(gbl_stmt,col);
+                    const char *blob = (const char*)sqlite3_column_blob(stmt,col);
                     if( len && blob )
                     {
                         std::string temp(blob,len);
@@ -719,8 +745,8 @@ int Database::LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<Listable
         else if( retval == SQLITE_DONE )
         {
             // All rows finished
-            sqlite3_finalize(gbl_stmt);
-            gbl_stmt = NULL;
+            sqlite3_finalize(stmt);
+            stmt = NULL;
             int nbr_after = games.size();
             cprintf("LoadGamesWithQuery(): %d extra games loaded\n", nbr_after-nbr_before );
             break;
@@ -790,7 +816,7 @@ int Database::GetRowRaw( CompactGame *pact, int row )
             for(;;)
             {
                 // fetch a row's status
-                retval = sqlite3_step(gbl_stmt);
+                retval = sqlite3_step(positions_stmt);
                 if( retval == SQLITE_ROW )
                 {
                     // SQLITE_ROW means fetched a row
@@ -798,8 +824,8 @@ int Database::GetRowRaw( CompactGame *pact, int row )
                     // sqlite3_column_text returns a const void* , typecast it to const char*
                     for( int col=0; col<cols; col++ )
                     {
-                        const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
-                        //cprintf("%s:%s\t",sqlite3_column_name(gbl_stmt,col),val);
+                        const char *val = (const char*)sqlite3_column_text(positions_stmt,col);
+                        //cprintf("%s:%s\t",sqlite3_column_name(positions_stmt,col),val);
                         if( col == 0 )
                         {
                             int game_id = atoi(val);
@@ -812,8 +838,8 @@ int Database::GetRowRaw( CompactGame *pact, int row )
                 else if( retval == SQLITE_DONE )
                 {
                     // All rows finished
-                    sqlite3_finalize(gbl_stmt);
-                    gbl_stmt = NULL;
+                    sqlite3_finalize(positions_stmt);
+                    positions_stmt = NULL;
                     gbl_expected = -1;
                     cprintf( "Limit reached\n");
                     break;
@@ -866,7 +892,10 @@ int Database::GetRowRaw( CompactGame *pact, int row )
 #endif
                         table_nbr, table_nbr, white_and.c_str(), table_nbr, hash, row );
             }
-            retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &gbl_stmt, 0 );
+            if( positions_stmt )
+                sqlite3_finalize(positions_stmt);
+            positions_stmt = NULL;
+            retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &positions_stmt, 0 );
             cprintf( "Database::GetRow() START query: %s\n",buf);
             if( retval )
             {
@@ -875,7 +904,7 @@ int Database::GetRowRaw( CompactGame *pact, int row )
             }
 
             // Read the number of rows fetched
-            cols = sqlite3_column_count(gbl_stmt);
+            cols = sqlite3_column_count(positions_stmt);
         }
     }
 }
@@ -885,6 +914,7 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
 {
     gbl_protect_recursion = true;
     bool ok=true;
+    sqlite3_stmt *stmt;
 
     wxProgressDialog progress( "Loading games into memory", "Loading games", 100, NULL,
                               wxPD_APP_MODAL+
@@ -927,7 +957,7 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
                 table_nbr, table_nbr, white_and.c_str(), table_nbr, hash);
     }
     cprintf( "LoadAllGames() QUERY IN: %s\n",buf);
-    retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &gbl_stmt, 0 );
+    retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &stmt, 0 );
     cprintf( "LoadAllGames() QUERY OUT: %s\n",buf);
     if( retval )
     {
@@ -938,10 +968,10 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
     // Read the game info
     if( ok )
     {
-        int cols = sqlite3_column_count(gbl_stmt);
+        int cols = sqlite3_column_count(stmt);
         while(ok)
         {
-            retval = sqlite3_step(gbl_stmt);
+            retval = sqlite3_step(stmt);
             if( retval == SQLITE_ROW )
             {
                 int game_id=0;
@@ -955,64 +985,64 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
                 {
                     if( col == 0 )
                     {
-                        const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                        const char *val = (const char*)sqlite3_column_text(stmt,col);
                         game_id = atoi(val);
                     }
                     else if( col == 1 )
                     {
-                        const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                        const char *val = (const char*)sqlite3_column_text(stmt,col);
                         r.white = val ? std::string(val) : "Whoops";
                     }
                     else if( col == 2 )
                     {
-                        const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                        const char *val = (const char*)sqlite3_column_text(stmt,col);
                         r.black = val ? std::string(val) : "Whoops";
                     }
                     else if( col == 3 )
                     {
-                        const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                        const char *val = (const char*)sqlite3_column_text(stmt,col);
                         r.event = val ? std::string(val) : "Whoops";
                     }
                     else if( col == 4 )
                     {
-                        const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                        const char *val = (const char*)sqlite3_column_text(stmt,col);
                         r.site = val ? std::string(val) : "Whoops";
                     }
                     else if( col == 5 )
                     {
-                        const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                        const char *val = (const char*)sqlite3_column_text(stmt,col);
                         r.round = val ? std::string(val) : "Whoops";
                     }
                     else if( col == 6 )
                     {
-                        const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                        const char *val = (const char*)sqlite3_column_text(stmt,col);
                         r.result = val ? std::string(val) : "*";
                     }
                     else if( col == 7 )
                     {
-                        const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                        const char *val = (const char*)sqlite3_column_text(stmt,col);
                         r.date = val ? std::string(val) : "Whoops";
                     }
                     else if( col == 8 )
                     {
-                        const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                        const char *val = (const char*)sqlite3_column_text(stmt,col);
                         r.white_elo = val ? std::string(val) : "Whoops";
                     }
                     else if( col == 9 )
                     {
-                        const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                        const char *val = (const char*)sqlite3_column_text(stmt,col);
                         r.black_elo = val ? std::string(val) : "Whoops";
                     }
                     else if( col == 10)
                     {
-                        const char *val = (const char*)sqlite3_column_text(gbl_stmt,col);
+                        const char *val = (const char*)sqlite3_column_text(stmt,col);
                         r.eco = val ? std::string(val) : "Whoops";
                     }
                     else if( col == 11 )
                     {
-                        int len = sqlite3_column_bytes(gbl_stmt,col);
+                        int len = sqlite3_column_bytes(stmt,col);
                         //fprintf(f,"Move len = %d\n",len);
-                        const char *blob = (const char*)sqlite3_column_blob(gbl_stmt,col);
+                        const char *blob = (const char*)sqlite3_column_blob(stmt,col);
                         if( len && blob )
                         {
                             std::string temp(blob,len);
@@ -1032,8 +1062,8 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
             else if( retval == SQLITE_DONE )
             {
                 // All rows finished
-                sqlite3_finalize(gbl_stmt);
-                gbl_stmt = NULL;
+                sqlite3_finalize(stmt);
+                stmt = NULL;
                 cprintf( "Reversing order to get newest games first\n" );
                 std::reverse( cache.begin(), cache.end() );
                 cprintf("LoadAllGames(): %u game_ids loaded\n", cache.size() );

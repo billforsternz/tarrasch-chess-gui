@@ -55,7 +55,7 @@ private:
     sqlite3 *gbl_handle;
     
     // A prepared statement for fetching from positions table
-    sqlite3_stmt *gbl_stmt;
+    sqlite3_stmt *positions_stmt;
     
     // A prepared statement for player search
     sqlite3_stmt *player_search_stmt;

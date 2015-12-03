@@ -295,43 +295,39 @@ bool hook_gameover( char callback_code, const char *event, const char *site, con
                     strcat(buf,"Ten or more slow moves - queen ");
                 if(is_interesting&2048)
                     strcat(buf,"Ten or more slow moves - not queen ");
-                if(is_interesting)
-                    cprintf( "Adding game with issues; %s\n", buf );
-                if( false )
+                cprintf( "Adding game with issues; %s\n", buf );
+                FILE *f = fopen( (is_interesting&16) ? "TwoOrMoreQueens.pgn" : "TooManyKnightsEtc.pgn" , "at" );
+                if( f )
                 {
-                    FILE *f = fopen( (is_interesting&16) ? "TwoOrMoreQueens.pgn" : "TooManyKnightsEtc.pgn" , "at" );
-                    if( f )
+                    fprintf( f, "[Event \"%s\"]\n", event );
+                    fprintf( f, "[Site \"%s - %s\"]\n", buf, site );
+                    fprintf( f, "[Date \"%s\"]\n", date );
+                    fprintf( f, "[Round \"%s\"]\n", round );
+                    fprintf( f, "[White \"%s\"]\n", white );
+                    fprintf( f, "[Black \"%s\"]\n", black );
+                    fprintf( f, "[Result \"%s\"]\n", result );
+                    fprintf( f, "\n" );
+                    thc::ChessRules cr;
+                    bool end=true;
+                    for( int i=0; i<nbr_moves; i++ )
                     {
-                        fprintf( f, "[Event \"%s\"]\n", event );
-                        fprintf( f, "[Site \"%s - %s\"]\n", buf, site );
-                        fprintf( f, "[Date \"%s\"]\n", date );
-                        fprintf( f, "[Round \"%s\"]\n", round );
-                        fprintf( f, "[White \"%s\"]\n", white );
-                        fprintf( f, "[Black \"%s\"]\n", black );
-                        fprintf( f, "[Result \"%s\"]\n", result );
-                        fprintf( f, "\n" );
-                        thc::ChessRules cr;
-                        bool end=true;
-                        for( int i=0; i<nbr_moves; i++ )
-                        {
-                            bool start = ((i%10) == 0);
-                            if( !start )
-                                fprintf( f, " " );
-                            if( cr.white )
-                                fprintf( f, "%d. ", cr.full_move_count );
-                            thc::Move mv = moves[i];
-                            std::string s = mv.NaturalOut(&cr);
-                            fprintf( f, "%s", s.c_str() );
-                            end = (((i+1)%10) == 0);
-                            if( end )
-                                fprintf( f, "\n" );
-                            cr.PlayMove(mv);
-                        }
-                        if( !end )
+                        bool start = ((i%10) == 0);
+                        if( !start )
                             fprintf( f, " " );
-                        fprintf( f, "%s\n\n", result );
-                        fclose(f);
+                        if( cr.white )
+                            fprintf( f, "%d. ", cr.full_move_count );
+                        thc::Move mv = moves[i];
+                        std::string s = mv.NaturalOut(&cr);
+                        fprintf( f, "%s", s.c_str() );
+                        end = (((i+1)%10) == 0);
+                        if( end )
+                            fprintf( f, "\n" );
+                        cr.PlayMove(mv);
                     }
+                    if( !end )
+                        fprintf( f, " " );
+                    fprintf( f, "%s\n\n", result );
+                    fclose(f);
                 }
             }
             break;
@@ -589,6 +585,9 @@ static void decompress_game( const char *compressed_header, const char *compress
 
 static int verify_compression_algorithm( int nbr_moves, thc::Move *moves )
 {
+    #if 0
+    return 0;
+    #else
     int is_interesting = 0;
     extern int max_nbr_slow_moves_other;
     extern int max_nbr_slow_moves_queen;
@@ -650,6 +649,7 @@ static int verify_compression_algorithm( int nbr_moves, thc::Move *moves )
         }
     }
     return is_interesting;
+    #endif
 }
 
 
