@@ -451,6 +451,7 @@ char CompressMoves::CompressSlowMode( thc::Move mv )
     size_t len = moves.size();
     for( size_t i=0; i<len; i++ )
     {
+        #define TERSE
         #ifdef TERSE
         std::string s = moves[i].TerseOut();
         #else
