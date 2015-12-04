@@ -121,28 +121,8 @@ void db_maintenance_verify_compression()
         fclose(logfile);
 }
 
-void db_maintenance_compress_pgn()
+void db_maintenance_create_player_database()
 {
-    #if 0
-    ifile = fopen( PGN_FILE, "rt" );
-    if( !ifile )
-        cprintf( "Cannot open %s\n", PGN_FILE );
-    else
-    {
-        ofile = fopen( QGN_FILE, "wb" );
-        if( !ofile )
-            cprintf( "Cannot open %s\n", QGN_FILE );
-        else
-        {
-            PgnRead *pgn = new PgnRead('P');
-            pgn->Process(ifile);
-        }
-    }
-    if( ifile )
-        fclose(ifile);
-    if( ofile )
-        fclose(ofile);
-    #else
     //std::string input("C:\\Users\\Bill\\Downloads\\millionbase\\millionbase-2.22");
     std::string input("C:\\Users\\Bill\\Downloads\\millionbase\\twic-2006-2015");
     players_database_begin();
@@ -176,7 +156,28 @@ void db_maintenance_compress_pgn()
         fclose(ofile);
     if( logfile )
         fclose(logfile);
-    #endif
+}
+
+void db_maintenance_compress_pgn()
+{
+    ifile = fopen( PGN_FILE, "rt" );
+    if( !ifile )
+        cprintf( "Cannot open %s\n", PGN_FILE );
+    else
+    {
+        ofile = fopen( QGN_FILE, "wb" );
+        if( !ofile )
+            cprintf( "Cannot open %s\n", QGN_FILE );
+        else
+        {
+            PgnRead *pgn = new PgnRead('P');
+            pgn->Process(ifile);
+        }
+    }
+    if( ifile )
+        fclose(ifile);
+    if( ofile )
+        fclose(ofile);
 }
 
 void db_maintenance_create_or_append_to_database(  const char *db_filename, const char *pgn_filename )
@@ -189,7 +190,7 @@ void db_maintenance_create_or_append_to_database(  const char *db_filename, cons
         DebugPrintfTime turn_on_time_display;
         PgnRead *pgn = new PgnRead('A');
         db_primitive_open( db_filename );
-        db_primitive_transaction_begin();
+        db_primitive_transaction_begin(NULL);
         db_primitive_create_tables();
         db_primitive_count_games();
         pgn->Process(ifile);
@@ -210,7 +211,7 @@ void db_maintenance_create_indexes(const char *db_filename )
 {
     //db_utility_test();
     db_primitive_open(db_filename);
-    db_primitive_transaction_begin();
+    db_primitive_transaction_begin(NULL);
     db_primitive_create_indexes();
     db_primitive_transaction_end();
     db_primitive_close();

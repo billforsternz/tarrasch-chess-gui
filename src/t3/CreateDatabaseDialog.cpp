@@ -265,7 +265,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
     if( ok )
         ok = db_primitive_open( db_name.c_str(), true );
     if( ok )
-        ok = db_primitive_transaction_begin();
+        ok = db_primitive_transaction_begin(this);
     if( ok )
         ok = db_primitive_create_tables();
     if( ok )
@@ -286,7 +286,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
             char buf[80];
             sprintf( buf, "%d of %d", i+1, cnt );
             desc += buf;
-            ProgressBar progress_bar( title, desc, ifile );
+            ProgressBar progress_bar( title, desc, this, ifile );
             PgnRead *pgn = new PgnRead('A',&progress_bar);
             bool aborted = pgn->Process(ifile);
             if( aborted )
@@ -374,7 +374,7 @@ void CreateDatabaseDialog::OnAppendDatabase()
     if( ok )
         ok = db_primitive_open( db_name.c_str(), false );
     if( ok )
-        ok = db_primitive_transaction_begin();
+        ok = db_primitive_transaction_begin(this);
     if( ok )
         ok = (db_primitive_count_games()>=0); // to set game_id to zero
     for( int i=0; ok && i<cnt; i++ )
@@ -393,7 +393,7 @@ void CreateDatabaseDialog::OnAppendDatabase()
             char buf[80];
             sprintf( buf, "%d of %d", i+1, cnt );
             desc += buf;
-            ProgressBar progress_bar( title, desc, ifile );
+            ProgressBar progress_bar( title, desc, this, ifile );
             PgnRead *pgn = new PgnRead('A',&progress_bar);
             bool aborted = pgn->Process(ifile);
             if( aborted )

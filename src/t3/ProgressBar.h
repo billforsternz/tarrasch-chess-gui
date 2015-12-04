@@ -14,8 +14,8 @@
 class ProgressBar
 {
 public:
-    ProgressBar( std::string title, std::string desc, FILE *ifile=0 ) :
-        progress( title, desc, 100, NULL,
+    ProgressBar( std::string title, std::string desc, wxWindow *parent=NULL, FILE *ifile=0 ) :
+        progress( title, desc, 1000, parent,
                                     wxPD_APP_MODAL+
                                     wxPD_AUTO_HIDE+
                                     wxPD_ELAPSED_TIME+
@@ -23,7 +23,7 @@ public:
                                     wxPD_ESTIMATED_TIME )
     {
         modulo_256=0;
-        old_percent=0;
+        old_permill=0;
         this->ifile = ifile;
         if( ifile )
         {
@@ -40,37 +40,41 @@ public:
             if( modulo_256 == 0 )
             {
                 unsigned long file_offset=ftell(ifile);
-                int percent=0;
+                int permill=0;
                 if( file_len == 0 )
-                    percent = 100;
-                else if( file_len < 10000000 )
-                    percent = (int)( (file_offset*100L) / file_len );
-                else // if( file_len > 10000000 )
-                    percent = (int)( file_offset / (file_len/100L) );
-                if( percent != old_percent )
+                    permill = 1000;
+                else if( file_len < 1000000 )
+                    permill = (int)( (file_offset*1000L) / file_len );
+                else // if( file_len > 1000000 )
+                    permill = (int)( file_offset / (file_len/1000L) );
+                if( permill != old_permill )
                 {
-                    bool abort = !progress.Update( percent>100 ? 100 : percent );
+                    bool abort = !progress.Update( permill>1000 ? 1000 : permill );
                     if( abort )
                         return true;
                 }
-                old_percent = percent;
+                old_permill = permill;
             }
             modulo_256++;
             modulo_256 &= 0xff;
         }
         return false;
     }
-
-    bool Progress( int percent ) // return true if abort
+    bool Percent( int percent, const std::string &s="" )  // return true if abort
     {
-        bool abort = !progress.Update( percent>100 ? 100 : percent );
-        old_percent = percent;
+        return Permill( percent*10, s );
+    }
+    bool Permill( int permill, const std::string &s="" )  // return true if abort
+    {
+        wxString wxmsg( s.c_str() );
+        bool abort = !progress.Update( permill>1000 ? 1000 : permill, wxmsg );
+        old_permill = permill;
         return abort;
     }
 
 private:
     unsigned char modulo_256;
-    int old_percent;
+    int old_permill;
     wxProgressDialog progress;
     FILE *ifile;
     unsigned long file_len;

@@ -516,7 +516,7 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
     ProgressBar pb( "Saving file", "Saving file" );
     for( int i=0; i<gds_nbr; i++ )
     {
-        pb.Progress( (i*100) / (gds_nbr?gds_nbr:1) );
+        pb.Permill( (i*1000L) / (gds_nbr?gds_nbr:1) );
         ListableGame *mptr = gds[i].get();
         if( !mptr->IsInMemory() )
         {

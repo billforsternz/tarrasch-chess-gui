@@ -66,108 +66,12 @@ bool db_primitive_open( const char *db_file, bool create_mode_parm )
     return true;
 }
 
-// Returns bool ok
-bool db_primitive_create_tables()
-{
-    ProgressBar prog( "Creating database, step 1 of 4", "Creating database tables" );
-    
-    cprintf( "db_primitive_create_tables()\n" );
-    
-    // Create tables if not existing
-    cprintf( "Create games table");
-    int retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS description (description TEXT, version INTEGER)",0,0,0);
-    if( retval )
-    {
-        error_msg = "Database error: sqlite3_exec(CREATE description) FAILED";
-        return false;
-    }
-    if( prog.Progress(2) )
-    {
-        error_msg = "cancel";
-        return false;
-    }
-    char buf[200];
-    sprintf( buf,"INSERT INTO description VALUES('Description of database, not currently used for anything, goes here', %d )", DATABASE_VERSION_NUMBER_SUPPORTED );
-    retval = sqlite3_exec(handle,buf,0,0,0);
-    if( retval )
-    {
-        error_msg = "Database error: sqlite3_exec(INSERT description) FAILED";
-        return false;
-    }
-    if( prog.Progress(4) )
-    {
-        error_msg = "cancel";
-        return false;
-    }
-    retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS games (game_id INTEGER, game_hash INT8 UNIQUE, white TEXT, black TEXT, event TEXT, site TEXT, round TEXT, result TEXT, date TEXT, white_elo TEXT, black_elo TEXT, eco TEXT, moves BLOB)",0,0,0);
-    if( retval )
-    {
-        error_msg = "Database error: sqlite3_exec(CREATE games) FAILED";
-        return false;
-    }
-    if( prog.Progress(6) )
-    {
-        error_msg = "cancel";
-        return false;
-    }
-    retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS games_duplicates (game_id INTEGER, game_hash INT8, white TEXT, black TEXT, event TEXT, site TEXT, round TEXT, result TEXT, date TEXT, white_elo TEXT, black_elo TEXT, eco TEXT, moves BLOB)",0,0,0);
-    if( retval )
-    {
-        error_msg = "Database error: sqlite3_exec(CREATE games_duplicates) FAILED";
-        return false;
-    }
-    if( prog.Progress(8) )
-    {
-        error_msg = "cancel";
-        return false;
-    }
-    cprintf( "Create positions tables");
-    for( int i=0; i<NBR_BUCKETS; i++ )
-    {
-        if( prog.Progress( 10 + (i*90) / NBR_BUCKETS ) )
-        {
-            error_msg = "cancel";
-            return false;
-        }
-		if( i%10 == 0 )
-			cprintf( "Creating bucket %d\n", i);
-        char buf[200];
-        sprintf( buf, "CREATE TABLE IF NOT EXISTS positions_%d (game_id INTEGER, position_hash INTEGER)", i );
-        retval = sqlite3_exec(handle,buf,0,0,0);
-        if( retval )
-        {
-            char buf[100];
-            sprintf( buf, "Database error: sqlite3_exec(CREATE positions_%d) FAILED\n",i);
-            error_msg = buf;
-            return false;
-        }
-    }
-    cprintf( "Create positions tables end");
-    return true;
-}
+static wxWindow *window_parent;
 
 // Returns bool ok
-bool db_primitive_delete_previous_data()
+bool db_primitive_transaction_begin( wxWindow *parent )
 {
-    int retval = sqlite3_exec( handle, "DELETE FROM games",0,0,0);
-    if( retval )
-    {
-        error_msg = "Database error: sqlite3_exec(DELETE games) Failed";
-        return false;
-    }
-    retval = sqlite3_exec( handle, "DELETE FROM positions",0,0,0);
-    if( retval )
-    {
-        error_msg = "Database error: sqlite3_exec(DELETE positions) Failed";
-        return false;
-    }
-    return true;
-}
-
-
-// Returns bool ok
-bool db_primitive_transaction_begin()
-{
+    window_parent = parent;
     char *errmsg=NULL;
     int retval = sqlite3_exec( handle, "BEGIN TRANSACTION",0,0,&errmsg);
     bool ok = (retval==0);
@@ -209,9 +113,107 @@ bool db_primitive_transaction_end()
 }
 
 // Returns bool ok
+bool db_primitive_create_tables()
+{
+    ProgressBar prog( "Creating database, step 1 of 4", "Creating database tables", window_parent );
+    
+    cprintf( "db_primitive_create_tables()\n" );
+    
+    // Create tables if not existing
+    cprintf( "Create games table");
+    int retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS description (description TEXT, version INTEGER)",0,0,0);
+    if( retval )
+    {
+        error_msg = "Database error: sqlite3_exec(CREATE description) FAILED";
+        return false;
+    }
+    if( prog.Percent(2) )
+    {
+        error_msg = "cancel";
+        return false;
+    }
+    char buf[200];
+    sprintf( buf,"INSERT INTO description VALUES('Description of database, not currently used for anything, goes here', %d )", DATABASE_VERSION_NUMBER_SUPPORTED );
+    retval = sqlite3_exec(handle,buf,0,0,0);
+    if( retval )
+    {
+        error_msg = "Database error: sqlite3_exec(INSERT description) FAILED";
+        return false;
+    }
+    if( prog.Percent(4) )
+    {
+        error_msg = "cancel";
+        return false;
+    }
+    retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS games (game_id INTEGER, game_hash INT8 UNIQUE, white TEXT, black TEXT, event TEXT, site TEXT, round TEXT, result TEXT, date TEXT, white_elo TEXT, black_elo TEXT, eco TEXT, moves BLOB)",0,0,0);
+    if( retval )
+    {
+        error_msg = "Database error: sqlite3_exec(CREATE games) FAILED";
+        return false;
+    }
+    if( prog.Percent(6) )
+    {
+        error_msg = "cancel";
+        return false;
+    }
+    retval = sqlite3_exec(handle,"CREATE TABLE IF NOT EXISTS games_duplicates (game_id INTEGER, game_hash INT8, white TEXT, black TEXT, event TEXT, site TEXT, round TEXT, result TEXT, date TEXT, white_elo TEXT, black_elo TEXT, eco TEXT, moves BLOB)",0,0,0);
+    if( retval )
+    {
+        error_msg = "Database error: sqlite3_exec(CREATE games_duplicates) FAILED";
+        return false;
+    }
+    if( prog.Percent(8) )
+    {
+        error_msg = "cancel";
+        return false;
+    }
+    cprintf( "Create positions tables");
+    for( int i=0; i<NBR_BUCKETS; i++ )
+    {
+        if( prog.Permill( 100 + (i*900) / NBR_BUCKETS ) )
+        {
+            error_msg = "cancel";
+            return false;
+        }
+		if( i%10 == 0 )
+			cprintf( "Creating bucket %d\n", i);
+        char buf[200];
+        sprintf( buf, "CREATE TABLE IF NOT EXISTS positions_%d (game_id INTEGER, position_hash INTEGER)", i );
+        retval = sqlite3_exec(handle,buf,0,0,0);
+        if( retval )
+        {
+            char buf[100];
+            sprintf( buf, "Database error: sqlite3_exec(CREATE positions_%d) FAILED\n",i);
+            error_msg = buf;
+            return false;
+        }
+    }
+    cprintf( "Create positions tables end");
+    return true;
+}
+
+// Returns bool ok
+bool db_primitive_delete_previous_data()
+{
+    int retval = sqlite3_exec( handle, "DELETE FROM games",0,0,0);
+    if( retval )
+    {
+        error_msg = "Database error: sqlite3_exec(DELETE games) Failed";
+        return false;
+    }
+    retval = sqlite3_exec( handle, "DELETE FROM positions",0,0,0);
+    if( retval )
+    {
+        error_msg = "Database error: sqlite3_exec(DELETE positions) Failed";
+        return false;
+    }
+    return true;
+}
+
+// Returns bool ok
 bool db_primitive_create_indexes()
 {
-    ProgressBar prog( "Creating database, step 4 of 4", "Indexing positions" );
+    ProgressBar prog( "Creating database, step 4 of 4", "Indexing positions", window_parent );
     DebugPrintfTime turn_on_time_reporting;
     bool ok = purge_buckets();
     if( !ok )
@@ -224,7 +226,7 @@ bool db_primitive_create_indexes()
         error_msg = "Database error: sqlite3_exec(CREATE INDEX games) FAILED";
         return false;
     }
-    if( prog.Progress(1) )
+    if( prog.Percent(1) )
     {
         error_msg = "cancel";
         return false;
@@ -236,7 +238,7 @@ bool db_primitive_create_indexes()
         error_msg = "Database error: sqlite3_exec() FAILED 1";
         return false;
     }
-    if( prog.Progress(2) )
+    if( prog.Percent(2) )
     {
         error_msg = "cancel";
         return false;
@@ -248,14 +250,14 @@ bool db_primitive_create_indexes()
         error_msg = "Database error: sqlite3_exec() FAILED 2";
         return false;
     }
-    if( prog.Progress(3) )
+    if( prog.Percent(3) )
     {
         error_msg = "cancel";
         return false;
     }
     for( int i=0; i<NBR_BUCKETS; i++ )
     {
-        if( prog.Progress( 3 + (i*97) / NBR_BUCKETS ) )
+        if( prog.Permill( 30 + (i*970) / NBR_BUCKETS ) )
         {
             error_msg = "cancel";
             return false;
@@ -420,7 +422,7 @@ static bool purge_buckets( bool force )
     }
     if( required )
     {
-        ProgressBar prog( create_mode ? "Creating database, step 3 of 4" : "Adding games to database, step 2 of 2", "Writing to database"  );
+        ProgressBar pb( create_mode ? "Creating database, step 3 of 4" : "Adding games to database, step 2 of 2", "Writing to database" , window_parent );
         for( int i=0; ok && i<NBR_BUCKETS; i++ )
         {
             ok = purge_bucket(i);
@@ -428,7 +430,7 @@ static bool purge_buckets( bool force )
             {
                 if( i%10 == 0 )
                     cprintf( "Purging bucket %d\n", i );
-                if( prog.Progress( (i*100) / NBR_BUCKETS ) )
+                if( pb.Permill( (i*1000) / NBR_BUCKETS ) )
                 {
                     error_msg = "cancel";
                     ok = false;

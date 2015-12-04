@@ -8,6 +8,7 @@
 #define DB_PRIMITIVES_H
 #include <stdint.h>
 #include "thc.h"
+#include <wx/window.h>
 
 #ifdef THC_MAC
 #define DB_FILE                         "/Users/billforster/Documents/ChessDatabases/giant123.tarrasch_db" //improved_compression1.sqlite3" //next_generation_8.sqlite3"   // 5 has zombie issues
@@ -24,7 +25,7 @@ bool db_primitive_open( const char *db_filename, bool create_mode_parm=true );
 bool db_primitive_create_tables();
 bool db_primitive_delete_previous_data();
 bool db_primitive_flush();
-bool db_primitive_transaction_begin();
+bool db_primitive_transaction_begin( wxWindow *parent );
 bool db_primitive_transaction_end();
 bool db_primitive_create_indexes();
 void db_primitive_close();

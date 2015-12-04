@@ -398,7 +398,8 @@ void MaintenanceDialog::OnMaintenanceSpeed( wxCommandEvent& WXUNUSED(event) )
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_2
 void MaintenanceDialog::OnMaintenanceCompress( wxCommandEvent& WXUNUSED(event) )
 {
-    db_maintenance_compress_pgn();
+    //db_maintenance_compress_pgn();
+    db_maintenance_create_player_database();
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_3
