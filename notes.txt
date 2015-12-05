@@ -1959,3 +1959,270 @@ nbr_compress_slow =      5317  0.0015%
                     ---------
                     350995326  
 
+---------------------------------------------------
+After adding pawns 6 and 7 can be a second queen;
+
+SetGameDocument() pos = 0
+clear() stack_size()=0
+push_back() stack_size()=1
+New tab idx=0, pos=0
+100000 games
+100000 games processed so far
+Adding game with issues; Knight
+Adding game with issues; Knight
+200000 games
+200000 games processed so far
+Adding game with issues; Knight
+Adding game with issues; Knight
+Adding game with issues; Knight
+Adding game with issues; Knight
+Adding game with issues; Dark Bishop Light Bishop
+300000 games
+300000 games processed so far
+Adding game with issues; Knight
+Adding game with issues; Rook
+400000 games
+400000 games processed so far
+500000 games
+500000 games processed so far
+Adding game with issues; Light Bishop
+Adding game with issues; Knight
+600000 games
+600000 games processed so far
+Adding game with issues; Knight
+700000 games
+700000 games processed so far
+800000 games
+800000 games processed so far
+Adding game with issues; Knight
+Adding game with issues; Knight
+Adding game with issues; Dark Bishop
+900000 games
+900000 games processed so far
+1000000 games
+1000000 games processed so far
+Adding game with issues; Knight
+1100000 games
+1100000 games processed so far
+1200000 games
+1200000 games processed so far
+Adding game with issues; Dark Bishop Light Bishop
+Adding game with issues; Knight
+Adding game with issues; Knight
+1300000 games
+1300000 games processed so far
+Adding game with issues; Dark Bishop
+1400000 games
+1400000 games processed so far
+Adding game with issues; Knight
+1500000 games
+1500000 games processed so far
+Adding game with issues; Knight
+Adding game with issues; Rook
+Adding game with issues; Rook
+1600000 games
+1600000 games processed so far
+Adding game with issues; Knight
+1700000 games
+1700000 games processed so far
+Adding game with issues; Knight
+1800000 games
+1800000 games processed so far
+Adding game with issues; Rook
+Adding game with issues; Knight
+Adding game with issues; Dark Bishop
+Adding game with issues; Dark Bishop Light Bishop
+Adding game with issues; Knight
+1900000 games
+1900000 games processed so far
+2000000 games
+2000000 games processed so far
+Adding game with issues; Rook
+Adding game with issues; Rook
+Adding game with issues; Dark Bishop
+Adding game with issues; Rook
+2100000 games
+2100000 games processed so far
+Adding game with issues; Rook
+Adding game with issues; Rook
+Adding game with issues; Rook
+2200000 games
+2200000 games processed so far
+Adding game with issues; Rook
+Adding game with issues; Knight
+2300000 games
+2300000 games processed so far
+Adding game with issues; Rook
+2400000 games
+2400000 games processed so far
+Adding game with issues; Dark Bishop
+Adding game with issues; Dark Bishop
+Adding game with issues; Knight
+Adding game with issues; Rook
+Adding game with issues; Light Bishop
+2500000 games
+2500000 games processed so far
+Adding game with issues; Rook
+Adding game with issues; Knight
+2600000 games
+2600000 games processed so far
+Adding game with issues; Rook
+Adding game with issues; Knight
+Adding game with issues; Knight
+2700000 games
+2700000 games processed so far
+Adding game with issues; Light Bishop
+Adding game with issues; Rook
+Adding game with issues; Dark Bishop Light Bishop
+Adding game with issues; Dark Bishop
+Adding game with issues; Rook
+2800000 games
+2800000 games processed so far
+Adding game with issues; Knight
+Adding game with issues; Rook
+2900000 games
+2900000 games processed so far
+Adding game with issues; Light Bishop
+Adding game with issues; Rook
+Adding game with issues; Knight
+Adding game with issues; Knight
+Adding game with issues; Knight
+Adding game with issues; Rook
+Adding game with issues; Rook
+Adding game with issues; Rook
+Adding game with issues; Knight
+Adding game with issues; Light Bishop
+Adding game with issues; Rook
+Adding game with issues; Knight
+Adding game with issues; Light Bishop
+3000000 games
+3000000 games processed so far
+Adding game with issues; Light Bishop
+3100000 games
+3100000 games processed so far
+Adding game with issues; Knight
+Adding game with issues; Dark Bishop
+3200000 games
+3200000 games processed so far
+Adding game with issues; Rook
+Adding game with issues; Rook
+Adding game with issues; Rook
+Adding game with issues; Dark Bishop
+Adding game with issues; Dark Bishop
+3300000 games
+3300000 games processed so far
+Adding game with issues; Rook
+3400000 games
+3400000 games processed so far
+Adding game with issues; Rook
+Adding game with issues; Knight
+3500000 games
+3500000 games processed so far
+Adding game with issues; Knight
+Adding game with issues; Knight
+3600000 games
+3600000 games processed so far
+3700000 games
+3700000 games processed so far
+Adding game with issues; Knight
+3800000 games
+3800000 games processed so far
+Adding game with issues; Knight
+Adding game with issues; Light Bishop
+Adding game with issues; Knight
+3900000 games
+3900000 games processed so far
+4000000 games
+4000000 games processed so far
+Adding game with issues; Knight
+Adding game with issues; Light Bishop
+Adding game with issues; Knight
+Adding game with issues; Rook
+Adding game with issues; Knight
+4100000 games
+4100000 games processed so far
+Adding game with issues; Rook
+Adding game with issues; Knight
+4200000 games
+4200000 games processed so far
+Adding game with issues; Rook
+Adding game with issues; Dark Bishop
+Adding game with issues; Knight
+4300000 games
+4300000 games processed so far
+4400000 games
+4400000 games processed so far
+4500000 games
+4500000 games processed so far
+Adding game with issues; Knight
+Adding game with issues; Knight
+Finished 4591729 total games
+nbr_compress_fast   = 350994014
+nbr_compress_slow   = 1312
+nbr_uncompress_fast = 350994014
+nbr_uncompress_slow = 1312
+nbr_pawn_swaps_histo[0] = 88576889
+nbr_pawn_swaps_histo[1] = 5620484
+nbr_pawn_swaps_histo[2] = 58119
+nbr_pawn_swaps_histo[3] = 186
+nbr_pawn_swaps_histo[4] = 0
+nbr_pawn_swaps_histo[5] = 0
+nbr_pawn_swaps_histo[6] = 0
+nbr_pawn_swaps_histo[7] = 0
+nbr_pawn_swaps_histo_wl[0] = 4484537
+nbr_pawn_swaps_histo_wl[1] = 255985
+nbr_pawn_swaps_histo_wl[2] = 2092
+nbr_pawn_swaps_histo_wl[3] = 1
+nbr_pawn_swaps_histo_wl[4] = 0
+nbr_pawn_swaps_histo_wl[5] = 0
+nbr_pawn_swaps_histo_wl[6] = 0
+nbr_pawn_swaps_histo_wl[7] = 0
+nbr_pawn_swaps_histo_wr[0] = 2829683
+nbr_pawn_swaps_histo_wr[1] = 2681285
+nbr_pawn_swaps_histo_wr[2] = 25961
+nbr_pawn_swaps_histo_wr[3] = 113
+nbr_pawn_swaps_histo_wr[4] = 0
+nbr_pawn_swaps_histo_wr[5] = 0
+nbr_pawn_swaps_histo_wr[6] = 0
+nbr_pawn_swaps_histo_wr[7] = 0
+nbr_pawn_swaps_histo_bl[0] = 2524452
+nbr_pawn_swaps_histo_bl[1] = 2429978
+nbr_pawn_swaps_histo_bl[2] = 28407
+nbr_pawn_swaps_histo_bl[3] = 71
+nbr_pawn_swaps_histo_bl[4] = 0
+nbr_pawn_swaps_histo_bl[5] = 0
+nbr_pawn_swaps_histo_bl[6] = 0
+nbr_pawn_swaps_histo_bl[7] = 0
+nbr_pawn_swaps_histo_br[0] = 5914512
+nbr_pawn_swaps_histo_br[1] = 253236
+nbr_pawn_swaps_histo_br[2] = 1659
+nbr_pawn_swaps_histo_br[3] = 1
+nbr_pawn_swaps_histo_br[4] = 0
+nbr_pawn_swaps_histo_br[5] = 0
+nbr_pawn_swaps_histo_br[6] = 0
+nbr_pawn_swaps_histo_br[7] = 0
+nbr_knight_moves     = 63305535
+nbr_knight_swaps     = 14216914
+nbr_knight_swaps_alt = 17328146
+nbr_rook_moves       = 64656243
+nbr_rook_swaps       = 4942864
+nbr_rook_swaps_alt   = 13008452
+nbr_games_with_promotions = 0
+nbr_games_with_slow_mode  = 310
+nbr_games_with_two_queens (and 7 pawns) = 0
+
+nbr_compress_fast   = 350994014
+nbr_compress_slow   = 1312
+0.00037%    (42 times improvement over 1 queen only = 0.016%)
+
+Problems with great players database
+save the edited version of great_players_out.pgn before overwriting it!
+warn on elo difference > x or one elo
+Vachier_Lagrave
+Edward Lasker
+Steinitz v Short
+Fischer v Owen
+londen
+berlijn
+
+
