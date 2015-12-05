@@ -188,6 +188,7 @@ std::string GamesListCtrl::CalculateMoveTxt( std::string &previous_move, Compact
     
 wxString GamesListCtrl::OnGetItemText( long item, long column) const
 {
+    char buf[1000];
     CompactGame info;
     std::string move_txt;
     const char *txt;
@@ -204,9 +205,10 @@ wxString GamesListCtrl::OnGetItemText( long item, long column) const
         case 7: txt =   info.r.round.c_str();         break;
         case 8: txt =   info.r.result.c_str();        break;
         case 9: txt =   info.r.eco.c_str();           break;
-        case 10:
+        case 10: sprintf( buf,"%d", info.moves.size() );
+                 txt =  buf;                          break;
+        case 11:
         {
-            char buf[1000];
             buf[0] = '\0';
             if( info.transpo_nbr > 0 )
                 sprintf(buf,"(T%d) ", info.transpo_nbr );
@@ -417,22 +419,23 @@ void GamesDialog::CreateControls()
         list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
     }
 
-    list_ctrl->InsertColumn( 0, id==ID_PGN_DIALOG_FILE?"#":" "  );
+    list_ctrl->InsertColumn( 0, " "  ); // id==ID_PGN_DIALOG_FILE?"#":" "  );
     list_ctrl->InsertColumn( 1, "White"    );
     list_ctrl->InsertColumn( 2, "Elo"      );
     list_ctrl->InsertColumn( 3, "Black"    );
     list_ctrl->InsertColumn( 4, "Elo"      );
     list_ctrl->InsertColumn( 5, "Date"     );
     list_ctrl->InsertColumn( 6, "Site"     );
-    list_ctrl->InsertColumn( 7, "Rnd"      );
+    list_ctrl->InsertColumn( 7, "Round"    );
     list_ctrl->InsertColumn( 8, "Result"   );
     list_ctrl->InsertColumn( 9, "ECO"      );
-    list_ctrl->InsertColumn(10, "Moves"    );
+    list_ctrl->InsertColumn(10, "Ply"      );
+    list_ctrl->InsertColumn(11, "Moves"    );
     int col_flag=0;
-    int cols[11];
+    int cols[20];
 
-    // Only use the non volatile column widths if they validate okay
-    #if 0 //temp todo
+    // Only use the non volatile column widths if they validate okay (factory
+    //  default is -1 (for all columns), which forces a recalc)
     if( objs.repository->nv.m_col0 > 0 &&
         objs.repository->nv.m_col1 > 0 &&
         objs.repository->nv.m_col2 > 0 &&
@@ -443,7 +446,8 @@ void GamesDialog::CreateControls()
         objs.repository->nv.m_col7 > 0 &&
         objs.repository->nv.m_col8 > 0 &&
         objs.repository->nv.m_col9 > 0 &&
-        objs.repository->nv.m_col10 > 0
+        objs.repository->nv.m_col10 > 0 &&
+        objs.repository->nv.m_col11 > 0
       )
     {
         cols[0] = objs.repository->nv.m_col0;
@@ -457,38 +461,36 @@ void GamesDialog::CreateControls()
         cols[8] = objs.repository->nv.m_col8;
         cols[9] = objs.repository->nv.m_col9;
         cols[10]= objs.repository->nv.m_col10;
+        cols[11]= objs.repository->nv.m_col11;
     }
     else // else set some sensible defaults
-    #endif
     {
         int x   = (sz.x*98)/100;
-        objs.repository->nv.m_col0 = cols[0] =   4*x/142;    // "Game #"
+        objs.repository->nv.m_col0 = cols[0] =   1*x/142;    // "Game #"
         objs.repository->nv.m_col1 = cols[1] =  16*x/142;    // "White" 
         objs.repository->nv.m_col2 = cols[2] =   5*x/142;    // "Elo W"
         objs.repository->nv.m_col3 = cols[3] =  16*x/142;    // "Black" 
         objs.repository->nv.m_col4 = cols[4] =   5*x/142;    // "Elo B" 
-        objs.repository->nv.m_col5 = cols[5] =  10*x/142;    // "Date"  
-        objs.repository->nv.m_col6 = cols[6] =  14*x/142;    // "Site"  
-        objs.repository->nv.m_col7 = cols[7] =   5*x/142;    // "Round" 
-        objs.repository->nv.m_col8 = cols[8] =   8*x/142;    // "Result"
+        objs.repository->nv.m_col5 = cols[5] =   9*x/142;    // "Date"  
+        objs.repository->nv.m_col6 = cols[6] =  13*x/142;    // "Site"  
+        objs.repository->nv.m_col7 = cols[7] =   6*x/142;    // "Round" 
+        objs.repository->nv.m_col8 = cols[8] =   7*x/142;    // "Result"
         objs.repository->nv.m_col9 = cols[9] =   5*x/142;    // "ECO"   
-        objs.repository->nv.m_col10= cols[10]=  56*x/142;    // "Moves"
+        objs.repository->nv.m_col10 = cols[10] = 5*x/142;    // "Ply"   
+        objs.repository->nv.m_col11= cols[11]=  54*x/142;    // "Moves"
     }
- /*   if(true) //temp temp temp white, black, result, moves only
-    {
-        int x   = (sz.x*98)/100;
-        objs.repository->nv.m_col0 = cols[0] =   2*x/97;    // "Game #"
-        objs.repository->nv.m_col1 = cols[1] =  14*x/97;    // "White"
-        objs.repository->nv.m_col2 = cols[2] =   2*x/97;    // "Elo W"
-        objs.repository->nv.m_col3 = cols[3] =  14*x/97;    // "Black"
-        objs.repository->nv.m_col4 = cols[4] =   2*x/97;    // "Elo B"
-        objs.repository->nv.m_col5 = cols[5] =   2*x/97;    // "Date"
-        objs.repository->nv.m_col6 = cols[6] =   2*x/97;    // "Site"
-        objs.repository->nv.m_col7 = cols[7] =   2*x/97;    // "Round"
-        objs.repository->nv.m_col8 = cols[8] =   8*x/97;    // "Result"
-        objs.repository->nv.m_col9 = cols[9] =   2*x/97;    // "ECO"
-        objs.repository->nv.m_col10= cols[10]=  45*x/97;    // "Moves"
-    }  */
+    cprintf( "cols[0] = %d\n", cols[0] );
+    cprintf( "cols[1] = %d\n", cols[1] );
+    cprintf( "cols[2] = %d\n", cols[2] );
+    cprintf( "cols[3] = %d\n", cols[3] );
+    cprintf( "cols[4] = %d\n", cols[4] );
+    cprintf( "cols[5] = %d\n", cols[5] );
+    cprintf( "Site cols[6] = %d\n", cols[6] );
+    cprintf( "cols[7] = %d\n", cols[7] );
+    cprintf( "cols[8] = %d\n", cols[8] );
+    cprintf( "cols[9] = %d\n", cols[9] );
+    cprintf( "cols[10] = %d\n", cols[10] );
+    cprintf( "cols[11] = %d\n", cols[11] );
     list_ctrl->SetColumnWidth( 0, cols[0] );    // "Game #"
     gc->col_flags.push_back(col_flag);
     list_ctrl->SetColumnWidth( 1, cols[1] );    // "White" 
@@ -509,7 +511,9 @@ void GamesDialog::CreateControls()
     gc->col_flags.push_back(col_flag);
     list_ctrl->SetColumnWidth( 9, cols[9] );    // "ECO"   
     gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth(10, cols[10] );   // "Moves"
+    list_ctrl->SetColumnWidth(10, cols[10] );   // "Ply"
+    gc->col_flags.push_back(col_flag);
+    list_ctrl->SetColumnWidth(11, cols[11] );   // "Moves"
     gc->col_flags.push_back(col_flag);
     //int top_item;
     //bool resuming = gc->IsResumingPreviousWindow(top_item);
@@ -686,6 +690,8 @@ void GamesDialog::Goto( int idx )
                 list_ctrl->SetItemState( old, 0, wxLIST_STATE_SELECTED );
             }
             list_ctrl->SetFocus();
+            int span = list_ctrl->GetCountPerPage() - 4;    // so that on average maybe 2 lines before idx are also visible
+            list_ctrl->EnsureVisible(idx+10<sz?idx+span:sz-1);
             list_ctrl->EnsureVisible(idx);
         }
     }
@@ -926,11 +932,13 @@ bool GamesDialog::ShowModalOk( std::string title )
     objs.repository->nv.m_col3  = list_ctrl->GetColumnWidth( 3 );    // "Black"
     objs.repository->nv.m_col4  = list_ctrl->GetColumnWidth( 4 );    // "Elo B" 
     objs.repository->nv.m_col5  = list_ctrl->GetColumnWidth( 5 );    // "Date"  
-    objs.repository->nv.m_col6  = list_ctrl->GetColumnWidth( 6 );    // "Site"  
+    objs.repository->nv.m_col6  = list_ctrl->GetColumnWidth( 6 );    // "Site"
+    cprintf( "Site width = %d\n",   objs.repository->nv.m_col6 );
     objs.repository->nv.m_col7  = list_ctrl->GetColumnWidth( 7 );    // "Round" 
     objs.repository->nv.m_col8  = list_ctrl->GetColumnWidth( 8 );    // "Result"
     objs.repository->nv.m_col9  = list_ctrl->GetColumnWidth( 9 );    // "ECO"   
-    objs.repository->nv.m_col10 = list_ctrl->GetColumnWidth(10 );    // "Moves"
+    objs.repository->nv.m_col10 = list_ctrl->GetColumnWidth(10 );    // "Ply"
+    objs.repository->nv.m_col11 = list_ctrl->GetColumnWidth(11 );    // "Moves"
     return ok;
 }
 
@@ -984,18 +992,6 @@ void GamesDialog::OnEditGameDetails( wxCommandEvent& WXUNUSED(event) )
 
 void GamesDialog::OnEditGamePrefix( wxCommandEvent& WXUNUSED(event) )
 {
-/*    int idx;
-    int focus_idx = GetFocusGame(idx);
-    if( focus_idx != -1  )
-    {
-        GamePrefixDialog dialog( this );
-        GameDocument temp = gc->gds[focus_idx]->GetGameDocument();
-        if( dialog.Run( temp ) )
-        {
-            std::string s = CalculateMovesColumn(temp);
-            list_ctrl->SetItem( idx,10,s);
-        }
-    } */
 }
 
 void GamesDialog::OnAddToClipboard( wxCommandEvent& WXUNUSED(event) )
@@ -1129,16 +1125,6 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
             list_ctrl->SetItemState( insert_idx, 0, wxLIST_STATE_SELECTED );
             Goto( insert_idx );
             list_ctrl->RefreshItems(0,sz-1);
-   /*       list_ctrl->SetItem( idx_focus, 0, "" );                     // game_nbr
-            list_ctrl->SetItem( idx_focus, 1, gd.r.white );
-            list_ctrl->SetItem( idx_focus, 2, gd.r.white_elo );
-            list_ctrl->SetItem( idx_focus, 3, gd.r.black );
-            list_ctrl->SetItem( idx_focus, 4, gd.r.black_elo );
-            list_ctrl->SetItem( idx_focus, 5, gd.r.date );
-            list_ctrl->SetItem( idx_focus, 6, gd.r.site );
-            list_ctrl->SetItem( idx_focus, 7, gd.r.round );
-            list_ctrl->SetItem( idx_focus, 8, gd.r.result );
-            list_ctrl->SetItem( idx_focus, 9, gd.r.eco ); */
         }
     } 
 }
@@ -1268,6 +1254,13 @@ static bool compare( const smart_ptr<ListableGame> g1, const smart_ptr<ListableG
             parm2 = g2->Eco();
             break;
         }
+        case 10: // Ply
+        {
+            int int1 = g1->RefCompressedMoves().length();
+            int int2 = g2->RefCompressedMoves().length();
+            lt = int1 < int2;
+            return lt;
+        }
     }
     if( use_atoi )
     {
@@ -1334,6 +1327,19 @@ static bool rev_compare( const smart_ptr<ListableGame> g1, const smart_ptr<Lista
             parm1 = g1->Result();
             parm2 = g2->Result();
             break;
+        }
+        case 9:
+        {
+            parm1 = g1->Eco();
+            parm2 = g2->Eco();
+            break;
+        }
+        case 10:     //Ply
+        {
+            int int1 = g1->RefCompressedMoves().length();
+            int int2 = g2->RefCompressedMoves().length();
+            lt = int2 < int1;
+            return lt;
         }
     }
     if( use_atoi )
@@ -1702,7 +1708,7 @@ void GamesDialog::ColumnSort( int compare_col, std::vector< smart_ptr<ListableGa
             col_consecutive=0;
         this->compare_col = compare_col;
         backdoor = this;
-        if( compare_col == 10 )
+        if( compare_col == 11 )
         {
             if( col_consecutive%2 == 0 )
                 MoveColCompare(displayed_games);

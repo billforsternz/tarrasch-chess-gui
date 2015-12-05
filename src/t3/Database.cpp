@@ -1135,7 +1135,15 @@ int Database::FindPlayer( std::string &name, std::string &current, int start_row
             std::string player(val);
             std::transform(player.begin(), player.end(), player.begin(), ::tolower);
             int player_len = player.length();
-            if( player!=current && input_len<=player_len && player.substr(0,input_len)==input )
+
+            // If white we want to skip further games played by the same player, (since the list is sorted by white
+            //  player the user can already see those games - so go look for another player of the same name)
+            bool criteria_if_white = (player!=current && input_len<=player_len && player.substr(0,input_len)==input);
+
+            // If black we want to find more black games played by the same player, (since the list is sorted
+            //  by white player, black games by a single player are sparsely distributed)
+            bool criteria_if_black = (input_len<=player_len && player.substr(0,input_len)==input);
+            if( (criteria_if_white&&white) || (criteria_if_black&&!white) )
             {
                 prev_name = name;
                 prev_current = player;

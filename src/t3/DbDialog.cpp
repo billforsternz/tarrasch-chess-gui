@@ -152,31 +152,38 @@ void DbDialog::GdvOnActivate()
         ok_button->Update();
         ok_button->Refresh();
 
-        wxPoint pos2 = notebook->GetPosition();
-        wxSize  sz2  = notebook->GetSize();
-        wxSize  sz3  = ok_button->GetSize();
-        pos2.x += (sz2.x/2);        
-        pos2.y += (sz2.y/2);        
-        pos2.x -= (sz3.x/2);        
-        pos2.y -= (sz3.y/2);        
-        //pos_button.x += (sz_panel.x/2 - sz_button.x/2);
-        //pos_button.y += (sz_panel.y/2 - sz_button.y/2);
-        utility = new wxButton ( this, ID_DB_UTILITY, wxT("Calculate Stats"),
-                                pos2, wxDefaultSize, 0 );
-        utility->Raise();
-        wxSize sz_panel  = notebook->GetSize();
-        wxSize sz_button = utility->GetSize();
-        wxPoint pos_button = utility->GetPosition();
-        //utility->SetPosition( pos_button );
-        if( objs.gl->db_clipboard )
+        if( db_req == REQ_PLAYERS )
         {
-            StatsCalculate();
+            notebook->Hide();
         }
-        else if( nbr_games_in_list_ctrl <= LOAD_INTO_MEMORY_THRESHOLD )
+        else
         {
-            bool ok = LoadGamesIntoMemory();
-            if( ok )
+            wxPoint pos2 = notebook->GetPosition();
+            wxSize  sz2  = notebook->GetSize();
+            wxSize  sz3  = ok_button->GetSize();
+            pos2.x += (sz2.x/2);        
+            pos2.y += (sz2.y/2);        
+            pos2.x -= (sz3.x/2);        
+            pos2.y -= (sz3.y/2);        
+            //pos_button.x += (sz_panel.x/2 - sz_button.x/2);
+            //pos_button.y += (sz_panel.y/2 - sz_button.y/2);
+            utility = new wxButton ( this, ID_DB_UTILITY, wxT("Calculate Stats"),
+                                    pos2, wxDefaultSize, 0 );
+            utility->Raise();
+            wxSize sz_panel  = notebook->GetSize();
+            wxSize sz_button = utility->GetSize();
+            wxPoint pos_button = utility->GetPosition();
+            //utility->SetPosition( pos_button );
+            if( objs.gl->db_clipboard )
+            {
                 StatsCalculate();
+            }
+            else if( nbr_games_in_list_ctrl <= LOAD_INTO_MEMORY_THRESHOLD )
+            {
+                bool ok = LoadGamesIntoMemory();
+                if( ok )
+                    StatsCalculate();
+            }
         }
         Goto(0); // list_ctrl->SetFocus();
     }
@@ -683,103 +690,100 @@ void DbDialog::StatsCalculate()
     }
     
     // For each cached game
-    std::vector< smart_ptr<ListableGame> > &source = ((objs.gl->db_clipboard&&db_req==REQ_POSITION) ? objs.gl->gc_clipboard.gds : gc->gds );
+    std::vector< smart_ptr<ListableGame> > &source = (objs.gl->db_clipboard ? objs.gl->gc_clipboard.gds : gc->gds );
     for( unsigned int i=0; i<source.size(); i++ )
     {
         Roster r         = source[i]->RefRoster();
         std::string blob = source[i]->RefCompressedMoves();
-        if( blob.size() > 0 )
-        {
     
-            // Search for a match to this game
-            bool new_transposition_found=false;
-            bool found=false;
-            int found_idx=0;
-            for( unsigned int j=0; !found && j<transpositions.size(); j++ )
+        // Search for a match to this game
+        bool new_transposition_found=false;
+        bool found=false;
+        int found_idx=0;
+        for( unsigned int j=0; !found && j<transpositions.size(); j++ )
+        {
+            size_t len = transpositions[j].blob.size();
+            std::string s1 = blob.substr(0,len);
+            std::string s2 = transpositions[j].blob;
+            if( s1 == s2 )
             {
-                size_t len = transpositions[j].blob.size();
-                std::string s1 = blob.substr(0,len);
-                std::string s2 = transpositions[j].blob;
-                if( s1 == s2 )
-                {
-                    found = true;
-                    found_idx = j;
-                }
+                found = true;
+                found_idx = j;
             }
+        }
         
-            // If none so far add the one from this game
-            if( !found )
+        // If none so far add the one from this game
+        if( !found )
+        {
+            PATH_TO_POSITION ptp;
+            CompressMoves press;
+            size_t len = blob.length();
+            const char *b = (const char*)blob.c_str();
+            uint64_t hash = press.cr.Hash64Calculate();
+            found = (hash==gbl_hash && press.cr==cr_to_match );
+            int offset=0;
+            while( !found && offset<len && offset<maxlen )
             {
-                PATH_TO_POSITION ptp;
-                CompressMoves press;
-                size_t len = blob.length();
-                const char *b = (const char*)blob.c_str();
-                uint64_t hash = press.cr.Hash64Calculate();
-                found = (hash==gbl_hash && press.cr==cr_to_match );
-                int offset=0;
-                while( !found && offset<len && offset<maxlen )
-                {
-                    thc::ChessRules cr_hash = press.cr;
-                    thc::Move mv = press.UncompressMove( *b++ );
-                    hash = cr_hash.Hash64Update( hash, mv );
-                    offset++;
-                    if( hash == gbl_hash && press.cr==cr_to_match )
-                        found = true;
-                }
-                if( found )
-                {
-                    new_transposition_found = true;
-                    ptp.blob = blob.substr(0,offset);
-                    transpositions.push_back(ptp);
-                    found_idx = transpositions.size()-1;
-                    maxlen = offset+16; // stops unbounded searching through unrelated game
-                }
+                thc::ChessRules cr_hash = press.cr;
+                thc::Move mv = press.UncompressMove( *b++ );
+                hash = cr_hash.Hash64Update( hash, mv );
+                offset++;
+                if( hash == gbl_hash && press.cr==cr_to_match )
+                    found = true;
             }
             if( found )
             {
-                bool white_wins = (r.result=="1-0");
-                if( white_wins )
-                    total_white_wins++;
-                bool black_wins = (r.result=="0-1");
-                if( black_wins )
-                    total_black_wins++;
-                bool draw       = (r.result=="1/2-1/2");
-                if( draw )
-                    total_draws++;
-                ListableGameDb temp(0,r,blob);
-                make_smart_ptr( ListableGameDb, smptr, temp );
-                gc_db_displayed_games.gds.push_back(smptr);
-                PATH_TO_POSITION *p = &transpositions[found_idx];
-                p->frequency++;
-                size_t len = p->blob.length();
-                if( len < blob.length() ) // must be more moves
+                new_transposition_found = true;
+                ptp.blob = blob.substr(0,offset);
+                transpositions.push_back(ptp);
+                found_idx = transpositions.size()-1;
+                maxlen = offset+16; // stops unbounded searching through unrelated game
+            }
+        }
+        if( found )
+        {
+            bool white_wins = (r.result=="1-0");
+            if( white_wins )
+                total_white_wins++;
+            bool black_wins = (r.result=="0-1");
+            if( black_wins )
+                total_black_wins++;
+            bool draw       = (r.result=="1/2-1/2");
+            if( draw )
+                total_draws++;
+            ListableGameDb temp(0,r,blob);
+            make_smart_ptr( ListableGameDb, smptr, temp );
+            gc_db_displayed_games.gds.push_back(smptr);
+            PATH_TO_POSITION *p = &transpositions[found_idx];
+            p->frequency++;
+            size_t len = p->blob.length();
+            if( len < blob.length() ) // must be more moves
+            {
+                const char *next_compressed_move = blob.c_str()+len;
+                CompressMoves press = press_to_match;
+                thc::Move mv = press.UncompressMove( *next_compressed_move );
+                uint32_t imv = 0;
+                assert( sizeof(imv) == sizeof(mv) );
+                memcpy( &imv, &mv, sizeof(mv) ); // FIXME
+                std::map< uint32_t, MOVE_STATS >::iterator it;
+                it = stats.find(imv);
+                if( it == stats.end() )
                 {
-                    const char *next_compressed_move = blob.c_str()+len;
-                    CompressMoves press = press_to_match;
-                    thc::Move mv = press.UncompressMove( *next_compressed_move );
-                    uint32_t imv = 0;
-                    assert( sizeof(imv) == sizeof(mv) );
-                    memcpy( &imv, &mv, sizeof(mv) ); // FIXME
-                    std::map< uint32_t, MOVE_STATS >::iterator it;
+                    MOVE_STATS empty;
+                    empty.nbr_games = 0;
+                    empty.nbr_white_wins = 0;
+                    empty.nbr_black_wins = 0;
+                    empty.nbr_draws = 0;
+                    stats[imv] = empty;
                     it = stats.find(imv);
-                    if( it == stats.end() )
-                    {
-                        MOVE_STATS empty;
-                        empty.nbr_games = 0;
-                        empty.nbr_white_wins = 0;
-                        empty.nbr_black_wins = 0;
-                        empty.nbr_draws = 0;
-                        stats[imv] = empty;
-                        it = stats.find(imv);
-                    }
-                    it->second.nbr_games++;
-                    if( white_wins )
-                        it->second.nbr_white_wins++;
-                    else if( black_wins )
-                        it->second.nbr_black_wins++;
-                    else if( draw )
-                        it->second.nbr_draws++;
                 }
+                it->second.nbr_games++;
+                if( white_wins )
+                    it->second.nbr_white_wins++;
+                else if( black_wins )
+                    it->second.nbr_black_wins++;
+                else if( draw )
+                    it->second.nbr_draws++;
             }
 
             // For speed, have the most frequent transpositions first        

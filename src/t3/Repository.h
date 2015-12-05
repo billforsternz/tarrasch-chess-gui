@@ -216,6 +216,7 @@ struct NonVolatile
     int         m_col8;
     int         m_col9;
     int         m_col10;
+    int         m_col11;
     wxString    m_doc_dir;
     NonVolatile()
     {
@@ -234,6 +235,7 @@ struct NonVolatile
         m_col8 = -1;
         m_col9 = -1;
         m_col10 = -1;
+        m_col11 = -1;
         m_doc_dir = "";
     }
 };

@@ -115,6 +115,7 @@ Repository::Repository( bool use_defaults )
         config->Read("NonVolatileCol8",                   &nv.m_col8 );
         config->Read("NonVolatileCol9",                   &nv.m_col9 );
         config->Read("NonVolatileCol10",                  &nv.m_col10 );
+        config->Read("NonVolatileCol11",                  &nv.m_col11 );
         config->Read("NonVolatileDocDir",                 &nv.m_doc_dir );
     }
 #ifdef MAC_FIX_LATER
@@ -192,6 +193,7 @@ Repository::~Repository()
     config->Write("NonVolatileCol8",                  nv.m_col8 );
     config->Write("NonVolatileCol9",                  nv.m_col9 );
     config->Write("NonVolatileCol10",                 nv.m_col10 );
+    config->Write("NonVolatileCol11",                 nv.m_col11 );
     config->Write("NonVolatileDocDir",                nv.m_doc_dir );
 
     // Database
