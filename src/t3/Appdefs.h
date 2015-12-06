@@ -9,8 +9,9 @@
 
 #include "wx/wx.h"
 
-#define MASTER_VERSION "V3 minus"
-#define DEFAULT_ENGINE "Rybka v2.3.2a.mp.w32.exe"
+#define MASTER_VERSION "V3 minus 2015-12-05"
+#define DEFAULT_ENGINE "stockfish-6-32.exe"
+#define DEFAULT_ENGINE_64 "stockfish-6-64.exe"
 #define DATABASE_VERSION_NUMBER_SUPPORTED 1
 
 // Misc
@@ -91,6 +92,7 @@ enum
     ID_ANNOT18,
     ID_ANNOT19,
     ID_ANNOT20,
+    ID_COPY_GAME_PGN_TO_CLIPBOARD,
     ID_CMD_ABOUT = wxID_ABOUT   // important for possible Mac port that we use this apparently
 };
 

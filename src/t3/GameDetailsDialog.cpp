@@ -297,13 +297,13 @@ void GameDetailsDialog::CreateControls()
 void GameDetailsDialog::SetDialogValidators()
 {
     FindWindow(ID_WHITE_PLAYER_NAME)->SetValidator(
-        wxTextValidator(wxFILTER_ASCII, &white));
+        wxTextValidator(wxFILTER_NONE, &white));
     FindWindow(ID_BLACK_PLAYER_NAME)->SetValidator(
-        wxTextValidator(wxFILTER_ASCII, &black)); 
+        wxTextValidator(wxFILTER_NONE, &black)); 
     FindWindow(ID_EVENT)->SetValidator(
-        wxTextValidator(wxFILTER_ASCII, &event));
+        wxTextValidator(wxFILTER_NONE, &event));
     FindWindow(ID_SITE)->SetValidator(
-        wxTextValidator(wxFILTER_ASCII, &site));
+        wxTextValidator(wxFILTER_NONE, &site));
     FindWindow(ID_DATE)->SetValidator(
         wxTextValidator(wxFILTER_ASCII, &date));
     FindWindow(ID_ROUND)->SetValidator(

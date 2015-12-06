@@ -120,6 +120,7 @@ struct LogConfig
     }
 };
 
+bool Is64BitWindows();
 struct EngineConfig
 {
     wxString    m_file;
@@ -136,7 +137,7 @@ struct EngineConfig
     wxString    m_custom4b;
     EngineConfig()
     {
-        m_file           = DEFAULT_ENGINE;
+        m_file           = Is64BitWindows() ? DEFAULT_ENGINE_64 : DEFAULT_ENGINE;
         m_ponder         = false;
         m_hash           = 64;
         m_max_cpu_cores  = 1;

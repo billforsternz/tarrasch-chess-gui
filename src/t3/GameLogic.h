@@ -107,6 +107,7 @@ public:
     void CmdPlayers();
     void CmdClocks();
     void CmdEditGameDetails();
+    void CmdEditCopyGamePGNToClipboard();
     void CmdEditGamePrefix();
     void CmdEditPromote();
     void CmdEditDemote();

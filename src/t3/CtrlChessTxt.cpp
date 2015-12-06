@@ -592,7 +592,8 @@ void CtrlChessTxt::OnChar(wxKeyEvent& event)
             }
             default:
             {
-                if ( wxIsprint((int)keycode) )
+                bool iso8859_extended_charset = (0xa0<=keycode && keycode<=0xff);
+                if( iso8859_extended_charset || wxIsprint((int)keycode) )
                 {
                     if( is_selection_in_comment )
                         gd->DeleteSelection(this);

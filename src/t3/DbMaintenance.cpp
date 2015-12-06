@@ -123,8 +123,8 @@ void db_maintenance_verify_compression()
 
 void db_maintenance_create_player_database()
 {
-    //std::string input("C:\\Users\\Bill\\Downloads\\millionbase\\millionbase-2.22");
-    std::string input("C:\\Users\\Bill\\Downloads\\millionbase\\twic-2006-2015");
+    std::string input("C:\\Users\\Bill\\Downloads\\millionbase\\millionbase-2.22");
+    //std::string input("C:\\Users\\Bill\\Downloads\\millionbase\\twic-2006-2015");
     players_database_begin();
     std::string input_file = input+".pgn";
     std::string output_file = input+"-output.pgn";
@@ -659,6 +659,7 @@ typedef struct
     const char *full;
     int year;
     bool long_career;
+    bool draws_false_positives;
     const char *name;
     const char *extra;
     int count;
@@ -667,354 +668,354 @@ typedef struct
 
 PLAYER players[] =
     {
-{ "Adams, Michael",           1995, false,  "adams", "michael" },
-{ "Agdestein, Simen",         1990, false,  "agdestein", "simen" },
-{ "Ahues, Carl",              1930, false,  "ahues", "carl" },
-{ "Akopian, Vladimir",        2000, false,  "akopian", "vladimir" },
-{ "Alapin, Semyon",           1900, false,  "alapin", "semyon" },
-{ "Alatortsev, Vladimir",     1940, false,  "alatortsev", "vladimir" },
-{ "Alekhine, Alexander",      1930, false,  "alekhine", "alexander" },
-{ "Aleksandrov, Aleksej",     2005, false,  "aleksandrov", "aleksej" },
-{ "Almasi, Zoltan",           2005, false,  "almasi", "zoltan" },
-{ "Amin, Bassem",             2015, false,  "amin", "bassem" },
-{ "Anand, Viswanathan",       2000, false,  "anand", "viswanathan" },
-{ "Anderssen, Adolf",         1870, false,  "anderssen", "adolf" },
-{ "Andersson, Ulf",           1980, false,  "andersson", "ulf" },
-{ "Andreikin, Dmitry",        2015, false,  "andreikin", "dmitry" },
-{ "Areshchenko, Alexander",   2015, false,  "areshchenko", "alexander" },
-{ "Aronian, Levon",           2005, false,  "aronian", "levon" },
-{ "Artemiev, Vladislav",      2015, false,  "artemiev", "vladislav" },
-{ "Aseev, Konstantin",        1990, false,  "aseev", "konstantin" },
-{ "Asztalos, Lajos",          1920, false,  "asztalos", "lajos" },
-{ "Averbakh, Yury",           1950, true,   "averbakh", "yury" },
-{ "Averbakh, Yury",           1950, true,   "averbach", "yury" },
-{ "Avrukh, Boris",            2005, false,  "avrukh", "boris" },
-{ "Azmaiparashvili, Zurab",   1990, false,  "azmaiparashvili", "zurab" },
-{ "Bacrot, Etienne",          2005, false,  "bacrot", "etienne" },
-{ "Balashov, Yury",           1970, false,  "balashov", "yury" },
-{ "Bareev, Evgeny",           1990, false,  "bareev", "evgeny" },
-{ "Bauer, Christian",         2005, false,  "bauer", "christian" },
-{ "Becker, Albert",           1930, false,  "becker", "albert" },
-{ "Belavenets, Sergey",       1940, false,  "belavenets", "sergey" },
-{ "Beliavsky, Alexander",     1990, false,  "beliavsky", "alexander" },
-{ "Bernstein, Ossip",         1910, true,   "bernstein", "ossip" },
-{ "Bird, Henry",              1880, false,  "bird", "henry" },
-{ "Blackburne, Joseph",       1890, true,   "blackburne", "joseph" },
-{ "Bogoljubow, Efim",         1935, false,  "bogoljubow", "efim" },
-{ "Boleslavsky, Isaak",       1950, false,  "boleslavsky", "isaak" },
-{ "Bondarevsky, Igor",        1950, false,  "bondarevsky", "igor" },
-{ "Bologan, Viktor",          2000, false,  "bologan", "viktor" },
-{ "Botvinnik, Mikhail",       1950, true,   "botvinnik", "mikhail" },
-{ "Botvinnik, Mikhail",       1950, true,   "botwinnik", "mikhail" },
-{ "Breyer, Gyula",            1920, false,  "breyer", "gyula" },
-{ "Bronstein, David",         1950, true,   "bronstein", "david" },
-{ "Bruzon, Lazaro",           2005, false,  "bruzon", "lazaro" },
-{ "Bu Xiangzhi",              2015, false,  "bu xiangzhi", "" },
-{ "Bukavshin, Ivan",          2015, false,  "bukavshin", "ivan" },
-{ "Burn, Amos",               1890, false,  "burn", "amos" },
-{ "Canal, Esteban",           1930, false,  "canal", "esteban" },
-{ "Capablanca, Jose",         1920, false,  "capablanca", "jose" },
-{ "Carlsen, Magnus",          2015, false,  "carlsen", "magnus" },
-{ "Caruana, Fabiano",         2015, false,  "caruana", "fabiano" },
-{ "Chandler, Murray",         1990, false,  "chandler", "murray" },
-{ "Charousek, Rezso",         1900, false,  "charousek", "rezso" },
-{ "Chekhover, Vitaly",        1940, false,  "chekhover", "vitaly" },
-{ "Cheparinov, Ivan",         2015, false,  "cheparinov", "ivan" },
-{ "Chigorin, Mikhail",        1890, false,  "chigorin", "mikhail" },
-{ "Cohn, Wilhelm",            1900, false,  "cohn", "wilhelm" },
-{ "Colle, Edgar",             1930, false,  "colle", "edgar" },
-{ "Dautov, Rustem",           1990, false,  "dautov", "rustem" },
-{ "Denker, Arnold",           1935, true,   "denker", "arnold" },
-{ "Ding Liren",               2015, false,  "ding liren", "" },
-{ "Dolmatov, Sergey",         1980, false,  "dolmatov", "sergey" },
-{ "Dominguez, Lenier",        2005, false,  "dominguez", "lenier" },
-{ "Dreev, Alexey",            2000, false,  "dreev", "alexey" },
-{ "Dubov, Daniil",            2015, false,  "dubov", "daniil" },
-{ "Duda, Jan-Krzysztof",      2015, false,  "duda", "jan-krzysztof" },
-{ "Duras, Oldrich",           1910, false,  "duras", "oldrich" },
-{ "Dus-Chotimirsky, Fedor",   1910, true,   "dus-chotimirsky", "fedor" },
-{ "Dus-Chotimirsky, Fedor",   1910, true,   "dus chotimirsky", "fedor" },
-{ "Dvoiris, Semen",           1990, false,  "dvoiris", "semen" },
-{ "Ehlvest, Jaan",            1990, false,  "ehlvest", "jaan" },
-{ "Eliskases, Erich",         1940, false,  "eliskases", "erich" },
-{ "Eljanov, Pavel",           2005, false,  "eljanov", "pavel" },
-{ "Engels, Ludwig",           1940, false,  "engels", "ludwig" },
-{ "Englisch, Berthold",       1880, false,  "englisch", "berthold" },
-{ "Epishin, Vladimir",        2005, false,  "epishin", "vladimir" },
-{ "Euwe, Max",                1935, false,  "euwe", "max" },
-{ "Fedorov, Alexei",          2000, false,  "fedorov", "alexei" },
-{ "Fedoseev, Vladimir",       2015, false,  "fedoseev", "vladimir" },
-{ "Filippov, Valerij",        2005, false,  "filippov", "valerij" },
-{ "Fine, Reuben",             1940, false,  "fine", "reuben" },
-{ "Fischer, Robert J",        1960, false,  "fischer", "bobby" },
-{ "Fischer, Robert J",        1960, false,  "fischer", "robert" },
-{ "Flohr, Salo",              1935, false,  "flohr", "salo" },
-{ "Forgacs, Leo",             1910, false,  "forgacs", "leo" },
-{ "Fressinet, Laurent",       2005, false,  "fressinet", "laurent" },
-{ "Frydman, Paulin",          1935, false,  "frydman", "paulin" },
-{ "Fuderer, Andrija",         1960, false,  "fuderer", "andrija" },
-{ "Furman, Semen",            1950, false,  "furman", "semen" },
-{ "Gelfand, Boris",           2000, false,  "gelfand", "boris" },
-{ "Geller, Efim",             1960, true,   "geller", "efim" },
-{ "Georgadze, Tamaz",         1980, false,  "georgadze", "tamaz" },
-{ "Georgiev, Kiril",          2000, false,  "georgiev", "kiril" },
-{ "Ghaem Maghami, Ehsan",     2005, false,  "ghaem maghami", "ehsan" },
-{ "Gharamian, Tigran",        2015, false,  "gharamian", "tigran" },
-{ "Gheorghiu, Florin",        1980, false,  "gheorghiu", "florin" },
-{ "Gilg, Karl",               1930, false,  "gilg", "karl" },
-{ "Gipslis, Aivars",          1970, false,  "gipslis", "aivars" },
-{ "Giri, Anish",              2015, false,  "giri", "anish" },
-{ "Gligoric, Svetozar",       1960, true,   "gligoric", "svetozar" },
-{ "Goldin, Alexander",        2005, false,  "goldin", "alexander" },
-{ "Graf, Alexander",          2005, false,  "graf", "alexander" },
-{ "Granda Zuniga, Julio",     1990, false,  "granda zuniga", "julio" },
-{ "Grischuk, Alexander",      2005, false,  "grischuk", "alexander" },
-{ "Grunfeld, Ernst",          1930, false,  "grunfeld", "ernst" },
-{ "Gulko, Boris",             1980, false,  "gulko", "boris" },
-{ "Gunsberg, Isidor",         1890, false,  "gunsberg", "isidor" },
-{ "Gurevich, Mikhail",        2000, false,  "gurevich", "mikhail" },
-{ "Gustafsson, Jan",          2005, false,  "gustafsson", "jan" },
-{ "Hammer, Jon Ludvig",       2015, false,  "hammer", "jon ludvig" },
-{ "Hansen, Curt",             2000, false,  "hansen", "curt" },
-{ "Harikrishna, Pentala",     2005, false,  "harikrishna", "pentala" },
-{ "Hjartarson, Johann",       2005, false,  "hjartarson", "johann" },
-{ "Horowitz, Al",             1940, false,  "horowitz", "al" },
-{ "Hort, Vlastimil",          1970, true,   "hort", "vlastimil" },
-{ "Hou Yifan",                2015, false,  "hou yifan", "" },
-{ "Howell, David",            2015, false,  "howell", "david" },
-{ "Hubner, Robert",           1980, true,   "hubner", "robert" },
-{ "Hubner, Robert",           1980, true,   "huebner", "robert" },
-{ "Illescas, Miguel",         2005, false,  "illescas", "miguel" },
-{ "Inarkiev, Ernesto",        2015, false,  "inarkiev", "ernesto" },
-{ "Iordachescu, Viorel",      2005, false,  "iordachescu", "viorel" },
-{ "Istratescu, Andrei",       2005, false,  "istratescu", "andrei" },
-{ "Ivanchuk, Vassily",        2000, false,  "ivanchuk", "vassily" },
-{ "Ivanisevic, Ivan",         2015, false,  "ivanisevic", "ivan" },
-{ "Ivkov, Borislav",          1960, true,   "ivkov", "borislav" },
-{ "Jakovenko, Dmitry",        2015, false,  "jakovenko", "dmitry" },
-{ "Janowsky, Dawid",          1910, false,  "janowsky", "dawid" },
-{ "Jobava, Baadur",           2005, false,  "jobava", "baadur" },
-{ "Johner, Paul",             1920, false,  "johner", "paul" },
-{ "Jones, Gawain",            2010, false,  "jones", "gawain" },
-{ "Jussupow, Artur",          1990, false,  "jussupow", "artur" },
-{ "Kaidanov, Gregory",        2005, false,  "kaidanov", "gregory" },
-{ "Kamsky, Gata",             1995, false,  "kamsky", "gata" },
-{ "Karjakin, Sergey",         2015, false,  "karjakin", "sergey" },
-{ "Karpov, Anatoly",          1980, true,   "karpov", "anatoly" },
-{ "Kashdan, Isaac",           1930, false,  "kashdan", "isaac" },
-{ "Kasimdzhanov, Rustam",     2005, false,  "kasimdzhanov", "rustam" },
-{ "Kasparov, Garry",          1990, false,  "kasparov", "garry" },
-{ "Kazhgaleyev, Murtas",      2005, false,  "kazhgaleyev", "murtas" },
-{ "Kempinski, Robert",        2005, false,  "kempinski", "robert" },
-{ "Keres, Paul",              1950, false,  "keres", "paul" },
-{ "Khalifman, Alexander",     2000, false,  "khalifman", "alexander" },
-{ "Kharlov, Andrei",          2005, false,  "kharlov", "andrei" },
-{ "Khenkin, Igor",            2000, false,  "khenkin", "igor" },
-{ "Khismatullin, Denis",      2015, false,  "khismatullin", "denis" },
-{ "Kholmov, Ratmir",          1960, true,   "kholmov", "ratmir" },
-{ "Kmoch, Hans",              1930, false,  "kmoch", "hans" },
-{ "Kobalia, Mikhail",         2005, false,  "kobalia", "mikhail" },
-{ "Kolisch, Ignatz",          1880, false,  "kolisch", "ignatz" },
-{ "Korchnoi, Viktor",         1980, false,  "korchnoi", "viktor" },
-{ "Korobov, Anton",           2015, false,  "korobov", "anton" },
-{ "Kostic, Boris",            1930, false,  "kostic", "boris" },
-{ "Kotov, Alexander",         1950, false,  "kotov", "alexander" },
-{ "Kovalenko, Igor",          2015, false,  "kovalenko", "igor" },
-{ "Kramnik, Vladimir",        2005, false,  "kramnik", "vladimir" },
-{ "Krasenkow, Michal",        2000, false,  "krasenkow", "michal" },
-{ "Krogius, Nikolay",         1970, false,  "krogius", "nikolay" },
-{ "Kryvoruchko, Yuriy",       2015, false,  "kryvoruchko", "yuriy" },
-{ "Larsen, Bent",             1970, false,  "larsen", "bent" },
-{ "Lasker, Emanuel",          1910, true,   "lasker", "emanuel" },
-{ "Lautier, Joel",            2000, false,  "lautier", "joel" },
-{ "Laznicka, Viktor",         2015, false,  "laznicka", "viktor" },
-{ "Le, Quang Liem",           2015, false,  "le", "quang liem" },
-{ "Leko, Peter",              2000, false,  "leko", "peter" },
-{ "Leonhardt, Paul",          1910, false,  "leonhardt", "paul" },
-{ "Levenfish, Grigory",       1920, false,  "levenfish", "grigory" },
-{ "Li Chao",                  2015, false,  "li chao", "" },
-{ "Li Chao",                  2015, false,  "li chao2", "" },
-{ "Li Chao",                  2015, false,  "li chao b", "" },
-{ "Liberzon, Vladimir",       1970, false,  "liberzon", "vladimir" },
-{ "Lichtenstein, Bernhard",   1930, false,  "lichtenstein", "bernhard" },
-{ "Lilienthal, Andor",        1935, false,  "lilienthal", "andor" },
-{ "Lipke, Paul",              1900, false,  "lipke", "paul" },
-{ "Lipschutz, Samuel",        1890, false,  "lipschutz", "samuel" },
-{ "Ljubojevic, Ljubomir",     1980, false,  "ljubojevic", "ljubomir" },
-{ "Lokvenc, Josef",           1940, false,  "lokvenc", "josef" },
-{ "Lputian, Smbat",           1990, false,  "lputian", "smbat" },
-{ "Lutz, Christopher",        2005, false,  "lutz", "christopher" },
-{ "Lysyj, Igor",              2015, false,  "lysyj", "igor" },
-{ "Macieja, Bartlomiej",      2005, false,  "macieja", "bartlomiej" },
-{ "Mackenzie, George",        1880, false,  "mackenzie", "george" },
-{ "Makarichev, Sergey",       1980, false,  "makarichev", "sergey" },
-{ "Makogonov, Vladimir",      1940, false,  "makogonov", "vladimir" },
-{ "Malakhov, Vladimir",       2005, false,  "malakhov", "vladimir" },
-{ "Mamedov, Rauf",            2015, false,  "mamedov", "rauf" },
-{ "Mamedyarov, Shakhriyar",   2005, false,  "mamedyarov", "shakhriyar" },
-{ "Marco, Georg",             1900, false,  "marco", "georg" },
-{ "Maroczy, Geza",            1910, false,  "maroczy", "geza" },
-{ "Marshall, Frank",          1920, false,  "marshall", "frank" },
-{ "Mason, James",             1880, false,  "mason", "james" },
-{ "Matanovic, Aleksandar",    1960, false,  "matanovic", "aleksandar" },
-{ "Matisons, Hermanis",       1930, false,  "matisons", "hermanis" },
-{ "Matlakov, Maxim",          2015, false,  "matlakov", "maxim" },
-{ "Matulovic, Milan",         1970, false,  "matulovic", "milan" },
-{ "McShane, Luke",            2005, false,  "mcshane", "luke" },
-{ "Meier, Georg",             2015, false,  "meier", "georg" },
-{ "Mieses, Jacques",          1910, true,   "mieses", "jacques" },
-{ "Mikenas, Vladas",          1935, false,  "mikenas", "vladas" },
-{ "Milov, Vadim",             2000, false,  "milov", "vadim" },
-{ "Miroshnichenko, Evgenij",  2005, false,  "miroshnichenko", "evgenij" },
-{ "Moiseenko, Alexander",     2005, false,  "moiseenko", "alexander" },
-{ "Morozevich, Alexander",    2000, false,  "morozevich", "alexander" },
-{ "Motylev, Alexander",       2005, false,  "motylev", "alexander" },
-{ "Movsesian, Sergei",        2000, false,  "movsesian", "sergei" },
-{ "Naiditsch, Arkadij",       2005, false,  "naiditsch", "arkadij" },
-{ "Najdorf, Miguel",          1950, true,   "najdorf", "miguel" },
-{ "Najer, Evgeniy",           2005, false,  "najer", "evgeniy" },
-{ "Nakamura, Hikaru",         2005, false,  "nakamura", "hikaru" },
-{ "Navara, David",            2005, false,  "navara", "david" },
-{ "Negi, Parimarjan",         2015, false,  "negi", "parimarjan" },
-{ "Nepomniachtchi, Ian",      2015, false,  "nepomniachtchi", "ian" },
-{ "Ni Hua",                   2005, false,  "ni hua", "" },
-{ "Nielsen, Peter Heine",     2005, false,  "nielsen", "peter heine" },
-{ "Nikolic, Predrag",         1990, false,  "nikolic", "predrag" },
-{ "Nimzowitsch, Aron",        1920, false,  "nimzowitsch", "aron" },
-{ "Nisipeanu, Liviu-Dieter",  2005, false,  "nisipeanu", "liviu-dieter" },
-{ "Nunn, John",               1990, false,  "nunn", "john" },
-{ "Olafsson, Fridrik",        1960, false,  "olafsson", "fridrik" },
-{ "Onischuk, Alexander",      2000, false,  "onischuk", "alexander" },
-{ "Osnos, Viacheslav",        1970, false,  "osnos", "viacheslav" },
-{ "Owen, John",               1880, false,  "owen", "john" },
-{ "Pachman, Ludek",           1960, false,  "pachman", "ludek" },
-{ "Panno, Oscar",             1960, true,   "panno", "oscar" },
-{ "Paulsen, Louis",           1880, false,  "paulsen", "louis" },
-{ "Perlis, Julius",           1910, false,  "perlis", "julius" },
-{ "Petrosian, Tigran",        1960, false,  "petrosian", "tigran" },
-{ "Petrovs, Vladimirs",       1940, false,  "petrovs", "vladimirs" },
-{ "Piket, Jeroen",            2000, false,  "piket", "jeroen" },
-{ "Pillsbury, Harry",         1900, false,  "pillsbury", "harry" },
-{ "Pirc, Vasja",              1935, false,  "pirc", "vasja" },
-{ "Polgar, Judit",            2000, false,  "polgar", "judit" },
-{ "Polugaevsky, Lev",         1970, false,  "polugaevsky", "lev" },
-{ "Ponomariov, Ruslan",       2000, false,  "ponomariov", "ruslan" },
-{ "Porat, Yosef",             1940, false,  "porat", "yosef" },
-{ "Porat, Yosef",             1940, false,  "porath", "yosef" },
-{ "Portisch, Lajos",          1970, true,   "portisch", "lajos" },
-{ "Postny, Evgeny",           2015, false,  "postny", "evgeny" },
-{ "Przepiorka, Dawid",        1920, false,  "przepiorka", "dawid" },
-{ "Psakhis, Lev",             1990, false,  "psakhis", "lev" },
-{ "Rabinovich, Ilya",         1940, false,  "rabinovich", "ilya" },
-{ "Radjabov, Teimour",        2005, false,  "radjabov", "teimour" },
-{ "Ragger, Markus",           2015, false,  "ragger", "markus" },
-{ "Ragozin, Viacheslav",      1940, false,  "ragozin", "viacheslav" },
-{ "Rapport, Richard",         2015, false,  "rapport", "richard" },
-{ "Reshevsky, Samuel",        1945, true,   "reshevsky", "samuel" },
-{ "Reti, Richard",            1920, false,  "reti", "richard" },
-{ "Ribli, Zoltan",            1980, false,  "ribli", "zoltan" },
-{ "Richter, Kurt",            1935, false,  "richter", "kurt" },
-{ "Robson, Ray",              2015, false,  "robson", "ray" },
-{ "Rodshtein, Maxim",         2015, false,  "rodshtein", "maxim" },
-{ "Romanishin, Oleg",         1980, false,  "romanishin", "oleg" },
-{ "Rosenthal, Samuel",        1880, false,  "rosenthal", "samuel" },
-{ "Rubinstein, Akiba",        1910, false,  "rubinstein", "akiba" },
-{ "Rublevsky, Sergei",        2000, false,  "rublevsky", "sergei" },
-{ "Sadler, Matthew",          2000, false,  "sadler", "matthew" },
-{ "Sadvakasov, Darmen",       2005, false,  "sadvakasov", "darmen" },
-{ "Safarli, Eltaj",           2015, false,  "safarli", "eltaj" },
-{ "Sakaev, Konstantin",       2000, false,  "sakaev", "konstantin" },
-{ "Salov, Valery",            1990, false,  "salov", "valery" },
-{ "Salwe, Georg",             1910, false,  "salwe", "georg" },
-{ "Saemisch, Friedrich",      1930, false,  "samisch", "friedrich" },
-{ "Saemisch, Friedrich",      1930, false,  "saemisch", "friedrich" },
-{ "Sargissian, Gabriel",      2015, false,  "sargissian", "gabriel" },
-{ "Sasikiran, Krishnan",      2005, false,  "sasikiran", "krishnan" },
-{ "Savon, Vladimir",          1970, false,  "savon", "vladimir" },
-{ "Sax, Gyula",               1980, false,  "sax", "gyula" },
-{ "Schallopp, Emil",          1880, false,  "schallopp", "emil" },
-{ "Schiffers, Emanuel",       1900, false,  "schiffers", "emanuel" },
-{ "Schlechter, Carl",         1900, false,  "schlechter", "carl" },
-{ "Schmid, Lothar",           1970, false,  "schmid", "lothar" },
-{ "Schottlander, Arnold",     1880, false,  "schottlander", "arnold" },
-{ "Schwarz, Adolf",           1880, false,  "schwarz", "adolf" },
-{ "Seirawan, Yasser",         1990, false,  "seirawan", "yasser" },
-{ "Shipov, Sergei",           2000, false,  "shipov", "sergei" },
-{ "Shirov, Alexei",           2000, false,  "shirov", "alexei" },
-{ "Short, Nigel",             1990, false,  "short", "nigel" },
-{ "Showalter, Jackson",       1900, false,  "showalter", "jackson" },
-{ "Smejkal, Jan",             1980, false,  "smejkal", "jan" },
-{ "Smirin, Ilia",             2000, false,  "smirin", "ilia" },
-{ "Smirnov, Pavel",           2005, false,  "smirnov", "pavel" },
-{ "Smyslov, Vassily",         1950, true,   "smyslov", "vassily" },
-{ "So, Wesley",               2015, false,  "so", "wesley" },
-{ "Sokolov, Ivan",            2000, false,  "sokolov", "ivan" },
-{ "Spassky, Boris",           1970, true,   "spassky", "boris" },
-{ "Speelman, Jonathan",       1990, false,  "speelman", "jonathan" },
-{ "Spielmann, Rudolf",        1920, false,  "spielmann", "rudolf" },
-{ "Stahlberg, Gideon",        1940, false,  "stahlberg", "gideon" },
-{ "Stein, Leonid",            1970, false,  "stein", "leonid" },
-{ "Steiner, Endre",           1930, false,  "steiner", "endre" },
-{ "Steiner, Lajos",           1935, false,  "steiner", "lajos" },
-{ "Steinitz, Wilhelm",        1890, false,  "steinitz", "wilhelm" },
-{ "Stoltz, Gosta",            1935, false,  "stoltz", "gosta" },
-{ "Sturua, Zurab",            1990, false,  "sturua", "zurab" },
-{ "Suetin, Alexey",           1970, false,  "suetin", "alexey" },
-{ "Sultan Khan, Mir",         1935, false,  "sultan khan", "mir" },
-{ "Sutovsky, Emil",           2005, false,  "sutovsky", "emil" },
-{ "Sveshnikov, Evgeny",       1980, false,  "sveshnikov", "evgeny" },
-{ "Svidler, Peter",           2000, false,  "svidler", "peter" },
-{ "Szabo, Laszlo",            1950, true,   "szabo", "laszlo" },
-{ "Taimanov, Mark",           1960, true,   "taimanov", "mark" },
-{ "Tal, Mikhail",             1970, false,  "tal", "mikhail" },
-{ "Tarrasch, Siegbert",       1900, false,  "tarrasch", "siegbert" },
-{ "Tartakower, Saviely",      1920, true,   "tartakower", "saviely" },
-{ "Teichmann, Richard",       1910, false,  "teichmann", "richard" },
-{ "Timman, Jan",              1980, true,   "timman", "jan" },
-{ "Timofeev, Artyom",         2005, false,  "timofeev", "artyom" },
-{ "Tiviakov, Sergei",         2005, false,  "tiviakov", "sergei" },
-{ "Tkachiev, Vladislav",      2000, false,  "tkachiev", "vladislav" },
-{ "Tolush, Alexander",        1945, false,  "tolush", "alexander" },
-{ "Tomashevsky, Evgeny",      2015, false,  "tomashevsky", "evgeny" },
-{ "Topalov, Veselin",         2000, false,  "topalov", "veselin" },
-{ "Tregubov, Pavel",          2005, false,  "tregubov", "pavel" },
-{ "Treybal, Karel",           1930, false,  "treybal", "karel" },
-{ "Trifunovic, Petar",        1950, false,  "trifunovic", "petar" },
-{ "Tseshkovsky, Vitaly",      1980, false,  "tseshkovsky", "vitaly" },
-{ "Tukmakov, Vladimir",       1980, false,  "tukmakov", "vladimir" },
-{ "Turover, Isador",          1930, false,  "turover", "isador" },
-{ "Uhlmann, Wolfgang",        1960, true,   "uhlmann", "wolfgang" },
-{ "Unzicker, Wolfgang",       1960, true,   "unzicker", "wolfgang" },
-{ "Vachier-Lagrave, Maxime",  2015, false,  "vachier-lagrave", "maxime" },
-{ "Vachier-Lagrave, Maxime",  2015, false,  "vachier lagrave", "maxime" },
-{ "Vaganian, Rafael",         1980, true,   "vaganian", "rafael" },
-{ "Vajda, Arpad",             1930, false,  "vajda", "arpad" },
-{ "Vallejo Pons, Francisco",  2005, false,  "vallejo pons", "francisco" },
-{ "van Wely, Loek",           2000, false,  "van wely", "loek" },
-{ "Vescovi, Giovanni",        2005, false,  "vescovi", "giovanni" },
-{ "Vidmar, Milan",            1920, false,  "vidmar", "milan" },
-{ "Vitiugov, Nikita",         2015, false,  "vitiugov", "nikita" },
-{ "Vladimirov, Evgeny",       1990, false,  "vladimirov", "evgeny" },
-{ "Voigt, Hermann",           1900, false,  "voigt", "hermann" },
-{ "Volokitin, Andrei",        2005, false,  "volokitin", "andrei" },
-{ "von Bardeleben, Curt",     1890, false,  "von bardeleben", "curt" },
-{ "Vyzmanavin, Alexey",       1990, false,  "vyzmanavin", "alexey" },
-{ "Walbrodt, Carl",           1900, false,  "walbrodt", "carl" },
-{ "Wang Hao",                 2015, false,  "wang hao", "" },
-{ "Wang Yue",                 2015, false,  "wang yue", "" },
-{ "Wei Yi",                   2015, false,  "wei yi", "" },
-{ "Weiss, Miksa",             1890, false,  "weiss", "miksa" },
-{ "Winawer, Szymon",          1880, false,  "winawer", "szymon" },
-{ "Wojtaszek, Radoslaw",      2015, false,  "wojtaszek", "radoslaw" },
-{ "Yates, Frederick",         1930, false,  "yates", "frederick" },
-{ "Ye Jiangchuan",            2005, false,  "ye jiangchuan", "" },
-{ "Yu Yangyi",                2015, false,  "yu yangyi", "" },
-{ "Yudasin, Leonid",          1990, false,  "yudasin", "leonid" },
-{ "Zhigalko, Sergei",         2015, false,  "zhigalko", "sergei" },
-{ "Znosko-Borovsky, Eugene",  1920, false,  "znosko-borovsky", "eugene" },
-{ "Znosko-Borovsky, Eugene",  1920, false,  "znosko borovsky", "eugene" },
-{ "Zukertort, Johannes",      1880, false,  "zukertort", "johannes" },
-{ "Zvjaginsev, Vadim",        2000, false,  "zvjaginsev", "vadim" }
+{ "Adams, Michael",           1995, false,  false,  "adams", "michael" },
+{ "Agdestein, Simen",         1990, false,  false,  "agdestein", "simen" },
+{ "Ahues, Carl",              1930, false,  false,  "ahues", "carl" },
+{ "Akopian, Vladimir",        2000, false,  false,  "akopian", "vladimir" },
+{ "Alapin, Semyon",           1900, false,  false,  "alapin", "semyon" },
+{ "Alatortsev, Vladimir",     1940, false,  false,  "alatortsev", "vladimir" },
+{ "Alekhine, Alexander",      1930, false,  false,  "alekhine", "alexander" },
+{ "Aleksandrov, Aleksej",     2005, false,  true,   "aleksandrov", "aleksej" },
+{ "Almasi, Zoltan",           2005, false,  false,  "almasi", "zoltan" },
+{ "Amin, Bassem",             2015, false,  false,  "amin", "bassem" },
+{ "Anand, Viswanathan",       2000, false,  false,  "anand", "viswanathan" },
+{ "Anderssen, Adolf",         1870, false,  false,  "anderssen", "adolf" },
+{ "Andersson, Ulf",           1980, false,  false,  "andersson", "ulf" },
+{ "Andreikin, Dmitry",        2015, false,  false,  "andreikin", "dmitry" },
+{ "Areshchenko, Alexander",   2015, false,  false,  "areshchenko", "alexander" },
+{ "Aronian, Levon",           2005, false,  false,  "aronian", "levon" },
+{ "Artemiev, Vladislav",      2015, false,  false,  "artemiev", "vladislav" },
+{ "Aseev, Konstantin",        1990, false,  false,  "aseev", "konstantin" },
+{ "Asztalos, Lajos",          1920, false,  false,  "asztalos", "lajos" },
+{ "Averbakh, Yury",           1950, true,   false,  "averbakh", "yury" },
+{ "Averbakh, Yury",           1950, true,   false,  "averbach", "yury" },
+{ "Avrukh, Boris",            2005, false,  false,  "avrukh", "boris" },
+{ "Azmaiparashvili, Zurab",   1990, false,  false,  "azmaiparashvili", "zurab" },
+{ "Bacrot, Etienne",          2005, false,  false,  "bacrot", "etienne" },
+{ "Balashov, Yury",           1970, false,  false,  "balashov", "yury" },
+{ "Bareev, Evgeny",           1990, false,  false,  "bareev", "evgeny" },
+{ "Bauer, Christian",         2005, false,  false,  "bauer", "christian" },
+{ "Becker, Albert",           1930, false,  false,  "becker", "albert" },
+{ "Belavenets, Sergey",       1940, false,  false,  "belavenets", "sergey" },
+{ "Beliavsky, Alexander",     1990, false,  false,  "beliavsky", "alexander" },
+{ "Bernstein, Ossip",         1910, true,   false,  "bernstein", "ossip" },
+{ "Bird, Henry",              1880, false,  false,  "bird", "henry" },
+{ "Blackburne, Joseph",       1890, true,   false,  "blackburne", "joseph" },
+{ "Bogoljubow, Efim",         1935, false,  false,  "bogoljubow", "efim" },
+{ "Boleslavsky, Isaak",       1950, false,  false,  "boleslavsky", "isaak" },
+{ "Bondarevsky, Igor",        1950, false,  false,  "bondarevsky", "igor" },
+{ "Bologan, Viktor",          2000, false,  false,  "bologan", "viktor" },
+{ "Botvinnik, Mikhail",       1950, true,   false,  "botvinnik", "mikhail" },
+{ "Botvinnik, Mikhail",       1950, true,   false,  "botwinnik", "mikhail" },
+{ "Breyer, Gyula",            1920, false,  false,  "breyer", "gyula" },
+{ "Bronstein, David",         1950, true,   false,  "bronstein", "david" },
+{ "Bruzon, Lazaro",           2005, false,  false,  "bruzon", "lazaro" },
+{ "Bu Xiangzhi",              2015, false,  false,  "bu xiangzhi", "" },
+{ "Bukavshin, Ivan",          2015, false,  false,  "bukavshin", "ivan" },
+{ "Burn, Amos",               1890, false,  false,  "burn", "amos" },
+{ "Canal, Esteban",           1930, false,  false,  "canal", "esteban" },
+{ "Capablanca, Jose",         1920, false,  false,  "capablanca", "jose" },
+{ "Carlsen, Magnus",          2015, false,  false,  "carlsen", "magnus" },
+{ "Caruana, Fabiano",         2015, false,  false,  "caruana", "fabiano" },
+{ "Chandler, Murray",         1990, false,  false,  "chandler", "murray" },
+{ "Charousek, Rezso",         1900, false,  false,  "charousek", "rezso" },
+{ "Chekhover, Vitaly",        1940, false,  false,  "chekhover", "vitaly" },
+{ "Cheparinov, Ivan",         2015, false,  false,  "cheparinov", "ivan" },
+{ "Chigorin, Mikhail",        1890, false,  false,  "chigorin", "mikhail" },
+{ "Cohn, Wilhelm",            1900, false,  false,  "cohn", "wilhelm" },
+{ "Colle, Edgar",             1930, false,  false,  "colle", "edgar" },
+{ "Dautov, Rustem",           1990, false,  false,  "dautov", "rustem" },
+{ "Denker, Arnold",           1935, true,   false,  "denker", "arnold" },
+{ "Ding Liren",               2015, false,  false,  "ding liren", "" },
+{ "Dolmatov, Sergey",         1980, false,  false,  "dolmatov", "sergey" },
+{ "Dominguez, Lenier",        2005, false,  false,  "dominguez", "lenier" },
+{ "Dreev, Alexey",            2000, false,  false,  "dreev", "alexey" },
+{ "Dubov, Daniil",            2015, false,  false,  "dubov", "daniil" },
+{ "Duda, Jan-Krzysztof",      2015, false,  false,  "duda", "jan-krzysztof" },
+{ "Duras, Oldrich",           1910, false,  false,  "duras", "oldrich" },
+{ "Dus-Chotimirsky, Fedor",   1910, true,   false,  "dus-chotimirsky", "fedor" },
+{ "Dus-Chotimirsky, Fedor",   1910, true,   false,  "dus chotimirsky", "fedor" },
+{ "Dvoiris, Semen",           1990, false,  false,  "dvoiris", "semen" },
+{ "Ehlvest, Jaan",            1990, false,  false,  "ehlvest", "jaan" },
+{ "Eliskases, Erich",         1940, false,  false,  "eliskases", "erich" },
+{ "Eljanov, Pavel",           2005, false,  false,  "eljanov", "pavel" },
+{ "Engels, Ludwig",           1940, false,  false,  "engels", "ludwig" },
+{ "Englisch, Berthold",       1880, false,  true,   "englisch", "berthold" },
+{ "Epishin, Vladimir",        2005, false,  false,  "epishin", "vladimir" },
+{ "Euwe, Max",                1935, false,  false,  "euwe", "max" },
+{ "Fedorov, Alexei",          2000, false,  false,  "fedorov", "alexei" },
+{ "Fedoseev, Vladimir",       2015, false,  false,  "fedoseev", "vladimir" },
+{ "Filippov, Valerij",        2005, false,  false,  "filippov", "valerij" },
+{ "Fine, Reuben",             1940, false,  false,  "fine", "reuben" },
+{ "Fischer, Robert J",        1960, false,  false,  "fischer", "bobby" },
+{ "Fischer, Robert J",        1960, false,  false,  "fischer", "robert" },
+{ "Flohr, Salo",              1935, false,  false,  "flohr", "salo" },
+{ "Forgacs, Leo",             1910, false,  false,  "forgacs", "leo" },
+{ "Fressinet, Laurent",       2005, false,  false,  "fressinet", "laurent" },
+{ "Frydman, Paulin",          1935, false,  false,  "frydman", "paulin" },
+{ "Fuderer, Andrija",         1960, false,  false,  "fuderer", "andrija" },
+{ "Furman, Semen",            1950, false,  false,  "furman", "semen" },
+{ "Gelfand, Boris",           2000, false,  false,  "gelfand", "boris" },
+{ "Geller, Efim",             1960, true,   false,  "geller", "efim" },
+{ "Georgadze, Tamaz",         1980, false,  false,  "georgadze", "tamaz" },
+{ "Georgiev, Kiril",          2000, false,  false,  "georgiev", "kiril" },
+{ "Ghaem Maghami, Ehsan",     2005, false,  false,  "ghaem maghami", "ehsan" },
+{ "Gharamian, Tigran",        2015, false,  false,  "gharamian", "tigran" },
+{ "Gheorghiu, Florin",        1980, false,  false,  "gheorghiu", "florin" },
+{ "Gilg, Karl",               1930, false,  false,  "gilg", "karl" },
+{ "Gipslis, Aivars",          1970, false,  false,  "gipslis", "aivars" },
+{ "Giri, Anish",              2015, false,  false,  "giri", "anish" },
+{ "Gligoric, Svetozar",       1960, true,   false,  "gligoric", "svetozar" },
+{ "Goldin, Alexander",        2005, false,  false,  "goldin", "alexander" },
+{ "Graf, Alexander",          2005, false,  false,  "graf", "alexander" },
+{ "Granda Zuniga, Julio",     1990, false,  false,  "granda zuniga", "julio" },
+{ "Grischuk, Alexander",      2005, false,  false,  "grischuk", "alexander" },
+{ "Grunfeld, Ernst",          1930, false,  false,  "grunfeld", "ernst" },
+{ "Gulko, Boris",             1980, false,  false,  "gulko", "boris" },
+{ "Gunsberg, Isidor",         1890, false,  false,  "gunsberg", "isidor" },
+{ "Gurevich, Mikhail",        2000, false,  false,  "gurevich", "mikhail" },
+{ "Gustafsson, Jan",          2005, false,  false,  "gustafsson", "jan" },
+{ "Hammer, Jon Ludvig",       2015, false,  false,  "hammer", "jon ludvig" },
+{ "Hansen, Curt",             2000, false,  false,  "hansen", "curt" },
+{ "Harikrishna, Pentala",     2005, false,  false,  "harikrishna", "pentala" },
+{ "Hjartarson, Johann",       2005, false,  false,  "hjartarson", "johann" },
+{ "Horowitz, Al",             1940, false,  false,  "horowitz", "al" },
+{ "Hort, Vlastimil",          1970, true,   false,  "hort", "vlastimil" },
+{ "Hou Yifan",                2015, false,  false,  "hou yifan", "" },
+{ "Howell, David",            2015, false,  false,  "howell", "david" },
+{ "Hubner, Robert",           1980, true,   false,  "hubner", "robert" },
+{ "Hubner, Robert",           1980, true,   false,  "huebner", "robert" },
+{ "Illescas, Miguel",         2005, false,  false,  "illescas", "miguel" },
+{ "Inarkiev, Ernesto",        2015, false,  false,  "inarkiev", "ernesto" },
+{ "Iordachescu, Viorel",      2005, false,  false,  "iordachescu", "viorel" },
+{ "Istratescu, Andrei",       2005, false,  false,  "istratescu", "andrei" },
+{ "Ivanchuk, Vassily",        2000, false,  false,  "ivanchuk", "vassily" },
+{ "Ivanisevic, Ivan",         2015, false,  false,  "ivanisevic", "ivan" },
+{ "Ivkov, Borislav",          1960, true,   false,  "ivkov", "borislav" },
+{ "Jakovenko, Dmitry",        2015, false,  false,  "jakovenko", "dmitry" },
+{ "Janowsky, Dawid",          1910, false,  false,  "janowsky", "dawid" },
+{ "Jobava, Baadur",           2005, false,  false,  "jobava", "baadur" },
+{ "Johner, Paul",             1920, false,  false,  "johner", "paul" },
+{ "Jones, Gawain",            2010, false,  false,  "jones", "gawain" },
+{ "Jussupow, Artur",          1990, false,  false,  "jussupow", "artur" },
+{ "Kaidanov, Gregory",        2005, false,  false,  "kaidanov", "gregory" },
+{ "Kamsky, Gata",             1995, false,  false,  "kamsky", "gata" },
+{ "Karjakin, Sergey",         2015, false,  false,  "karjakin", "sergey" },
+{ "Karpov, Anatoly",          1980, true,   false,  "karpov", "anatoly" },
+{ "Kashdan, Isaac",           1930, false,  false,  "kashdan", "isaac" },
+{ "Kasimdzhanov, Rustam",     2005, false,  false,  "kasimdzhanov", "rustam" },
+{ "Kasparov, Garry",          1990, false,  false,  "kasparov", "garry" },
+{ "Kazhgaleyev, Murtas",      2005, false,  false,  "kazhgaleyev", "murtas" },
+{ "Kempinski, Robert",        2005, false,  false,  "kempinski", "robert" },
+{ "Keres, Paul",              1950, false,  false,  "keres", "paul" },
+{ "Khalifman, Alexander",     2000, false,  false,  "khalifman", "alexander" },
+{ "Kharlov, Andrei",          2005, false,  false,  "kharlov", "andrei" },
+{ "Khenkin, Igor",            2000, false,  false,  "khenkin", "igor" },
+{ "Khismatullin, Denis",      2015, false,  false,  "khismatullin", "denis" },
+{ "Kholmov, Ratmir",          1960, true,   false,  "kholmov", "ratmir" },
+{ "Kmoch, Hans",              1930, false,  false,  "kmoch", "hans" },
+{ "Kobalia, Mikhail",         2005, false,  false,  "kobalia", "mikhail" },
+{ "Kolisch, Ignatz",          1880, false,  false,  "kolisch", "ignatz" },
+{ "Korchnoi, Viktor",         1980, false,  false,  "korchnoi", "viktor" },
+{ "Korobov, Anton",           2015, false,  false,  "korobov", "anton" },
+{ "Kostic, Boris",            1930, false,  false,  "kostic", "boris" },
+{ "Kotov, Alexander",         1950, false,  false,  "kotov", "alexander" },
+{ "Kovalenko, Igor",          2015, false,  false,  "kovalenko", "igor" },
+{ "Kramnik, Vladimir",        2005, false,  false,  "kramnik", "vladimir" },
+{ "Krasenkow, Michal",        2000, false,  false,  "krasenkow", "michal" },
+{ "Krogius, Nikolay",         1970, false,  false,  "krogius", "nikolay" },
+{ "Kryvoruchko, Yuriy",       2015, false,  false,  "kryvoruchko", "yuriy" },
+{ "Larsen, Bent",             1970, false,  false,  "larsen", "bent" },
+{ "Lasker, Emanuel",          1910, true,   false,  "lasker", "emanuel" },
+{ "Lautier, Joel",            2000, false,  false,  "lautier", "joel" },
+{ "Laznicka, Viktor",         2015, false,  false,  "laznicka", "viktor" },
+{ "Le, Quang Liem",           2015, false,  false,  "le", "quang liem" },
+{ "Leko, Peter",              2000, false,  false,  "leko", "peter" },
+{ "Leonhardt, Paul",          1910, false,  false,  "leonhardt", "paul" },
+{ "Levenfish, Grigory",       1920, false,  false,  "levenfish", "grigory" },
+{ "Li Chao",                  2015, false,  false,  "li chao", "" },
+{ "Li Chao",                  2015, false,  false,  "li chao2", "" },
+{ "Li Chao",                  2015, false,  false,  "li chao b", "" },
+{ "Liberzon, Vladimir",       1970, false,  false,  "liberzon", "vladimir" },
+{ "Lichtenstein, Bernhard",   1930, false,  false,  "lichtenstein", "bernhard" },
+{ "Lilienthal, Andor",        1935, false,  false,  "lilienthal", "andor" },
+{ "Lipke, Paul",              1900, false,  false,  "lipke", "paul" },
+{ "Lipschutz, Samuel",        1890, false,  false,  "lipschutz", "samuel" },
+{ "Ljubojevic, Ljubomir",     1980, false,  false,  "ljubojevic", "ljubomir" },
+{ "Lokvenc, Josef",           1940, false,  false,  "lokvenc", "josef" },
+{ "Lputian, Smbat",           1990, false,  false,  "lputian", "smbat" },
+{ "Lutz, Christopher",        2005, false,  false,  "lutz", "christopher" },
+{ "Lysyj, Igor",              2015, false,  false,  "lysyj", "igor" },
+{ "Macieja, Bartlomiej",      2005, false,  false,  "macieja", "bartlomiej" },
+{ "Mackenzie, George",        1880, false,  false,  "mackenzie", "george" },
+{ "Makarichev, Sergey",       1980, false,  false,  "makarichev", "sergey" },
+{ "Makogonov, Vladimir",      1940, false,  false,  "makogonov", "vladimir" },
+{ "Malakhov, Vladimir",       2005, false,  false,  "malakhov", "vladimir" },
+{ "Mamedov, Rauf",            2015, false,  false,  "mamedov", "rauf" },
+{ "Mamedyarov, Shakhriyar",   2005, false,  false,  "mamedyarov", "shakhriyar" },
+{ "Marco, Georg",             1900, false,  false,  "marco", "georg" },
+{ "Maroczy, Geza",            1910, false,  false,  "maroczy", "geza" },
+{ "Marshall, Frank",          1920, false,  false,  "marshall", "frank" },
+{ "Mason, James",             1880, false,  false,  "mason", "james" },
+{ "Matanovic, Aleksandar",    1960, false,  false,  "matanovic", "aleksandar" },
+{ "Matisons, Hermanis",       1930, false,  false,  "matisons", "hermanis" },
+{ "Matlakov, Maxim",          2015, false,  false,  "matlakov", "maxim" },
+{ "Matulovic, Milan",         1970, false,  false,  "matulovic", "milan" },
+{ "McShane, Luke",            2005, false,  false,  "mcshane", "luke" },
+{ "Meier, Georg",             2015, false,  false,  "meier", "georg" },
+{ "Mieses, Jacques",          1910, true,   false,  "mieses", "jacques" },
+{ "Mikenas, Vladas",          1935, false,  false,  "mikenas", "vladas" },
+{ "Milov, Vadim",             2000, false,  false,  "milov", "vadim" },
+{ "Miroshnichenko, Evgenij",  2005, false,  false,  "miroshnichenko", "evgenij" },
+{ "Moiseenko, Alexander",     2005, false,  false,  "moiseenko", "alexander" },
+{ "Morozevich, Alexander",    2000, false,  false,  "morozevich", "alexander" },
+{ "Motylev, Alexander",       2005, false,  false,  "motylev", "alexander" },
+{ "Movsesian, Sergei",        2000, false,  false,  "movsesian", "sergei" },
+{ "Naiditsch, Arkadij",       2005, false,  false,  "naiditsch", "arkadij" },
+{ "Najdorf, Miguel",          1950, true,   false,  "najdorf", "miguel" },
+{ "Najer, Evgeniy",           2005, false,  false,  "najer", "evgeniy" },
+{ "Nakamura, Hikaru",         2005, false,  false,  "nakamura", "hikaru" },
+{ "Navara, David",            2005, false,  false,  "navara", "david" },
+{ "Negi, Parimarjan",         2015, false,  false,  "negi", "parimarjan" },
+{ "Nepomniachtchi, Ian",      2015, false,  false,  "nepomniachtchi", "ian" },
+{ "Ni Hua",                   2005, false,  false,  "ni hua", "" },
+{ "Nielsen, Peter Heine",     2000, false,  true,   "nielsen", "peter heine" },
+{ "Nikolic, Predrag",         1990, false,  false,  "nikolic", "predrag" },
+{ "Nimzowitsch, Aron",        1920, false,  false,  "nimzowitsch", "aron" },
+{ "Nisipeanu, Liviu-Dieter",  2005, false,  false,  "nisipeanu", "liviu-dieter" },
+{ "Nunn, John",               1990, false,  false,  "nunn", "john" },
+{ "Olafsson, Fridrik",        1960, false,  false,  "olafsson", "fridrik" },
+{ "Onischuk, Alexander",      2000, false,  false,  "onischuk", "alexander" },
+{ "Osnos, Viacheslav",        1970, false,  false,  "osnos", "viacheslav" },
+{ "Owen, John",               1880, false,  false,  "owen", "john" },
+{ "Pachman, Ludek",           1960, false,  false,  "pachman", "ludek" },
+{ "Panno, Oscar",             1960, true,   false,  "panno", "oscar" },
+{ "Paulsen, Louis",           1880, false,  false,  "paulsen", "louis" },
+{ "Perlis, Julius",           1910, false,  false,  "perlis", "julius" },
+{ "Petrosian, Tigran",        1960, false,  false,  "petrosian", "tigran" },
+{ "Petrovs, Vladimirs",       1940, false,  false,  "petrovs", "vladimirs" },
+{ "Piket, Jeroen",            1995, false,  true,   "piket", "jeroen" },
+{ "Pillsbury, Harry",         1900, false,  false,  "pillsbury", "harry" },
+{ "Pirc, Vasja",              1935, false,  false,  "pirc", "vasja" },
+{ "Polgar, Judit",            2000, false,  false,  "polgar", "judit" },
+{ "Polugaevsky, Lev",         1970, false,  false,  "polugaevsky", "lev" },
+{ "Ponomariov, Ruslan",       2000, false,  false,  "ponomariov", "ruslan" },
+{ "Porat, Yosef",             1940, false,  false,  "porat", "yosef" },
+{ "Porat, Yosef",             1940, false,  false,  "porath", "yosef" },
+{ "Portisch, Lajos",          1970, true,   false,  "portisch", "lajos" },
+{ "Postny, Evgeny",           2015, false,  false,  "postny", "evgeny" },
+{ "Przepiorka, Dawid",        1920, false,  false,  "przepiorka", "dawid" },
+{ "Psakhis, Lev",             1990, false,  false,  "psakhis", "lev" },
+{ "Rabinovich, Ilya",         1940, false,  false,  "rabinovich", "ilya" },
+{ "Radjabov, Teimour",        2005, false,  false,  "radjabov", "teimour" },
+{ "Ragger, Markus",           2015, false,  false,  "ragger", "markus" },
+{ "Ragozin, Viacheslav",      1940, false,  false,  "ragozin", "viacheslav" },
+{ "Rapport, Richard",         2015, false,  false,  "rapport", "richard" },
+{ "Reshevsky, Samuel",        1945, true,   false,  "reshevsky", "samuel" },
+{ "Reti, Richard",            1920, false,  false,  "reti", "richard" },
+{ "Ribli, Zoltan",            1980, false,  false,  "ribli", "zoltan" },
+{ "Richter, Kurt",            1935, false,  false,  "richter", "kurt" },
+{ "Robson, Ray",              2015, false,  false,  "robson", "ray" },
+{ "Rodshtein, Maxim",         2015, false,  false,  "rodshtein", "maxim" },
+{ "Romanishin, Oleg",         1980, false,  false,  "romanishin", "oleg" },
+{ "Rosenthal, Samuel",        1880, false,  false,  "rosenthal", "samuel" },
+{ "Rubinstein, Akiba",        1910, false,  false,  "rubinstein", "akiba" },
+{ "Rublevsky, Sergei",        2000, false,  false,  "rublevsky", "sergei" },
+{ "Sadler, Matthew",          2000, false,  false,  "sadler", "matthew" },
+{ "Sadvakasov, Darmen",       2005, false,  false,  "sadvakasov", "darmen" },
+{ "Safarli, Eltaj",           2015, false,  false,  "safarli", "eltaj" },
+{ "Sakaev, Konstantin",       2000, false,  false,  "sakaev", "konstantin" },
+{ "Salov, Valery",            1990, false,  false,  "salov", "valery" },
+{ "Salwe, Georg",             1910, false,  false,  "salwe", "georg" },
+{ "Saemisch, Friedrich",      1930, false,  false,  "samisch", "friedrich" },
+{ "Saemisch, Friedrich",      1930, false,  false,  "saemisch", "friedrich" },
+{ "Sargissian, Gabriel",      2015, false,  false,  "sargissian", "gabriel" },
+{ "Sasikiran, Krishnan",      2005, false,  false,  "sasikiran", "krishnan" },
+{ "Savon, Vladimir",          1970, false,  false,  "savon", "vladimir" },
+{ "Sax, Gyula",               1980, false,  false,  "sax", "gyula" },
+{ "Schallopp, Emil",          1880, false,  false,  "schallopp", "emil" },
+{ "Schiffers, Emanuel",       1900, false,  false,  "schiffers", "emanuel" },
+{ "Schlechter, Carl",         1900, false,  false,  "schlechter", "carl" },
+{ "Schmid, Lothar",           1970, false,  false,  "schmid", "lothar" },
+{ "Schottlander, Arnold",     1880, false,  false,  "schottlander", "arnold" },
+{ "Schwarz, Adolf",           1880, false,  false,  "schwarz", "adolf" },
+{ "Seirawan, Yasser",         1990, false,  false,  "seirawan", "yasser" },
+{ "Shipov, Sergei",           2000, false,  false,  "shipov", "sergei" },
+{ "Shirov, Alexei",           2000, false,  false,  "shirov", "alexei" },
+{ "Short, Nigel",             1990, false,  false,  "short", "nigel" },
+{ "Showalter, Jackson",       1900, false,  false,  "showalter", "jackson" },
+{ "Smejkal, Jan",             1980, false,  false,  "smejkal", "jan" },
+{ "Smirin, Ilia",             2000, false,  false,  "smirin", "ilia" },
+{ "Smirnov, Pavel",           2005, false,  false,  "smirnov", "pavel" },
+{ "Smyslov, Vassily",         1950, true,   false,  "smyslov", "vassily" },
+{ "So, Wesley",               2015, false,  false,  "so", "wesley" },
+{ "Sokolov, Ivan",            2000, false,  false,  "sokolov", "ivan" },
+{ "Spassky, Boris",           1970, true,   false,  "spassky", "boris" },
+{ "Speelman, Jonathan",       1990, false,  false,  "speelman", "jonathan" },
+{ "Spielmann, Rudolf",        1920, false,  false,  "spielmann", "rudolf" },
+{ "Stahlberg, Gideon",        1940, false,  false,  "stahlberg", "gideon" },
+{ "Stein, Leonid",            1970, false,  false,  "stein", "leonid" },
+{ "Steiner, Endre",           1930, false,  false,  "steiner", "endre" },
+{ "Steiner, Lajos",           1935, false,  false,  "steiner", "lajos" },
+{ "Steinitz, Wilhelm",        1890, false,  false,  "steinitz", "wilhelm" },
+{ "Stoltz, Gosta",            1935, false,  false,  "stoltz", "gosta" },
+{ "Sturua, Zurab",            1990, false,  false,  "sturua", "zurab" },
+{ "Suetin, Alexey",           1970, false,  false,  "suetin", "alexey" },
+{ "Sultan Khan, Mir",         1935, false,  false,  "sultan khan", "mir" },
+{ "Sutovsky, Emil",           2005, false,  false,  "sutovsky", "emil" },
+{ "Sveshnikov, Evgeny",       1980, false,  false,  "sveshnikov", "evgeny" },
+{ "Svidler, Peter",           2000, false,  false,  "svidler", "peter" },
+{ "Szabo, Laszlo",            1950, true,   false,  "szabo", "laszlo" },
+{ "Taimanov, Mark",           1960, true,   false,  "taimanov", "mark" },
+{ "Tal, Mikhail",             1970, false,  false,  "tal", "mikhail" },
+{ "Tarrasch, Siegbert",       1900, false,  false,  "tarrasch", "siegbert" },
+{ "Tartakower, Saviely",      1920, true,   false,  "tartakower", "saviely" },
+{ "Teichmann, Richard",       1910, false,  false,  "teichmann", "richard" },
+{ "Timman, Jan",              1980, true,   false,  "timman", "jan" },
+{ "Timofeev, Artyom",         2005, false,  false,  "timofeev", "artyom" },
+{ "Tiviakov, Sergei",         2005, false,  false,  "tiviakov", "sergei" },
+{ "Tkachiev, Vladislav",      2000, false,  false,  "tkachiev", "vladislav" },
+{ "Tolush, Alexander",        1945, false,  false,  "tolush", "alexander" },
+{ "Tomashevsky, Evgeny",      2015, false,  false,  "tomashevsky", "evgeny" },
+{ "Topalov, Veselin",         2000, false,  false,  "topalov", "veselin" },
+{ "Tregubov, Pavel",          2005, false,  false,  "tregubov", "pavel" },
+{ "Treybal, Karel",           1930, false,  false,  "treybal", "karel" },
+{ "Trifunovic, Petar",        1950, false,  false,  "trifunovic", "petar" },
+{ "Tseshkovsky, Vitaly",      1980, false,  false,  "tseshkovsky", "vitaly" },
+{ "Tukmakov, Vladimir",       1980, false,  false,  "tukmakov", "vladimir" },
+{ "Turover, Isador",          1930, false,  false,  "turover", "isador" },
+{ "Uhlmann, Wolfgang",        1960, true,   false,  "uhlmann", "wolfgang" },
+{ "Unzicker, Wolfgang",       1960, true,   false,  "unzicker", "wolfgang" },
+{ "Vachier-Lagrave, Maxime",  2015, false,  false,  "vachier-lagrave", "maxime" },
+{ "Vachier-Lagrave, Maxime",  2015, false,  false,  "vachier lagrave", "maxime" },
+{ "Vaganian, Rafael",         1980, true,   false,  "vaganian", "rafael" },
+{ "Vajda, Arpad",             1930, false,  false,  "vajda", "arpad" },
+{ "Vallejo Pons, Francisco",  2005, false,  false,  "vallejo pons", "francisco" },
+{ "van Wely, Loek",           2000, false,  false,  "van wely", "loek" },
+{ "Vescovi, Giovanni",        2005, false,  false,  "vescovi", "giovanni" },
+{ "Vidmar, Milan",            1920, false,  false,  "vidmar", "milan" },
+{ "Vitiugov, Nikita",         2015, false,  false,  "vitiugov", "nikita" },
+{ "Vladimirov, Evgeny",       1990, false,  false,  "vladimirov", "evgeny" },
+{ "Voigt, Hermann",           1900, false,  false,  "voigt", "hermann" },
+{ "Volokitin, Andrei",        2005, false,  false,  "volokitin", "andrei" },
+{ "von Bardeleben, Curt",     1890, false,  false,  "von bardeleben", "curt" },
+{ "Vyzmanavin, Alexey",       1990, false,  false,  "vyzmanavin", "alexey" },
+{ "Walbrodt, Carl",           1900, false,  false,  "walbrodt", "carl" },
+{ "Wang Hao",                 2015, false,  false,  "wang hao", "" },
+{ "Wang Yue",                 2015, false,  false,  "wang yue", "" },
+{ "Wei Yi",                   2015, false,  false,  "wei yi", "" },
+{ "Weiss, Miksa",             1890, false,  true,   "weiss", "miksa" },
+{ "Winawer, Szymon",          1880, false,  true,   "winawer", "szymon" },
+{ "Wojtaszek, Radoslaw",      2015, false,  false,  "wojtaszek", "radoslaw" },
+{ "Yates, Frederick",         1930, false,  false,  "yates", "frederick" },
+{ "Ye Jiangchuan",            2005, false,  false,  "ye jiangchuan", "" },
+{ "Yu Yangyi",                2015, false,  false,  "yu yangyi", "" },
+{ "Yudasin, Leonid",          1990, false,  false,  "yudasin", "leonid" },
+{ "Zhigalko, Sergei",         2015, false,  false,  "zhigalko", "sergei" },
+{ "Znosko-Borovsky, Eugene",  1920, false,  false,  "znosko-borovsky", "eugene" },
+{ "Znosko-Borovsky, Eugene",  1920, false,  false,  "znosko borovsky", "eugene" },
+{ "Zukertort, Johannes",      1880, false,  false,  "zukertort", "johannes" },
+{ "Zvjaginsev, Vadim",        2000, false,  false,  "zvjaginsev", "vadim" }
     };
 
 static std::map<std::string,int> lookup;
@@ -1046,8 +1047,9 @@ static void players_database_end()
     fprintf( logfile, "%s", buf );
 }
 
-static int candidate( const char *name )
+static int candidate( bool &warning, const char *name )
 {
+    warning = false;
     //if( strstr(name,"Ding Liren") )
     //    cprintf( "Ding Liren\n" );
     char surname[1000];
@@ -1066,6 +1068,9 @@ static int candidate( const char *name )
     }
     surname[i] = '\0';
     char initial = '\0';
+    char second_character = '\0';
+
+    // No initial ?
     if( c != ',' )  
     {
         q--;
@@ -1075,8 +1080,9 @@ static int candidate( const char *name )
             surname[i--] = '\0';
             q--;
         }
-        // no initial        
     }
+
+    // Else look for name after comma
     else
     {
         while( *q )
@@ -1084,16 +1090,27 @@ static int candidate( const char *name )
             char c = *q++;
             if( isascii(c) && isalpha(c) )
             {
-                if( c=='T' && *q=='L' && 0==strcmp(surname,"petrosian") )
-                    return -1; // special special special case -> filter out Tigran Petrosian Junior!
                 initial = tolower(c);
+                c = *q++;
+                if( isascii(c) && isalpha(c) )
+                {
+                    second_character = tolower(c);
+                }
                 break;
             }
         }
     }
     std::map<std::string,int>::iterator it = lookup.find(surname);
     if( it != lookup.end() && players[it->second].extra[0]==initial )
+    {
+        if( second_character && players[it->second].extra[1] != second_character )
+        {
+            if( 0==strcmp(surname,"petrosian") || 0==strcmp(surname,"lasker")  || 0==strcmp(surname,"georgiev") )
+                warning = true;
+                // to filter out Tigran Petrosian Junior, Edward Lasker and Krum Georgiev
+        }
         return it->second;
+    }
     else
         return -1;
 }
@@ -1102,8 +1119,10 @@ static void players_database( const char *event, const char *site, const char *d
                        const char *white, const char *black, const char *result, const char *white_elo, const char *black_elo, const char *eco,
                        int nbr_moves, thc::Move *moves, uint64_t *hashes )
 {
-    int candw = candidate(white);
-    int candb = candidate(black);
+    bool warningw;
+    bool warningb;
+    int candw = candidate( warningw, white );
+    int candb = candidate( warningb, black );
     if( candw>=0 && candb>=0 )
     {
         char buf[1000];
@@ -1165,15 +1184,61 @@ static void players_database( const char *event, const char *site, const char *d
             if( keep )
             {
                 char buf[1000];
-                players[candw].count++;
-                players[candb].count++;
-                if( elow && elow<2400 )
+                for( int known=0; keep && known<3; known++ )  // known issues
+                {
+                    switch(known)
+                    {
+                        case 0: keep   = (0!=strcmp( "Fischer, Robert J", players[candw].full)) ||
+                                         (0!=strcmp( "Owen, John", players[candb].full));
+                                break;
+                        case 1: keep   = (0!=strcmp( "Steinitz, Wilhelm", players[candw].full)) ||
+                                         (0!=strcmp( "Short, Nigel", players[candb].full));
+                                break;
+                        case 2: keep   = (0!=strcmp( "Vajda, Arpad", players[candw].full)) ||
+                                         (0!=strcmp( "Carlsen, Magnus", players[candb].full));
+                                break;
+                    }
+                }
+                if( !keep )
+                {
+                    sprintf( buf, "reject %s-%s %s %d not %s-%s\n", white, black, site, year, players[candw].full, players[candb].full );
+                    cprintf( "%s", buf );
+                    fprintf( logfile, "%s", buf );
+                }
+            }
+            if( keep )
+            {
+                if( candw == candb )
+                {
+                    sprintf( buf, "reject %s-%s %s %d not both %s?\n", white, black, site, year, players[candw].full );
+                    cprintf( "%s", buf );
+                    fprintf( logfile, "%s", buf );
+                    keep = false;
+                }
+                if( warningw )
+                {
+                    sprintf( buf, "reject %s-%s %s %d is this really %s?\n", white, black, site, year, players[candw].full );
+                    cprintf( "%s", buf );
+                    fprintf( logfile, "%s", buf );
+                    keep = false;
+                }
+                if( warningb )
+                {
+                    sprintf( buf, "reject %s-%s %s %d is this really %s?\n", white, black, site, year, players[candb].full );
+                    cprintf( "%s", buf );
+                    fprintf( logfile, "%s", buf );
+                    keep = false;
+                }
+            }
+            if( keep )
+            {
+                if( elow && elow<2300 )
                 {
                     sprintf( buf, "check %s-%s %s %d white_elo=%d?\n", white, black, site, year, elow );
                     cprintf( "%s", buf );
                     fprintf( logfile, "%s", buf );
                 }
-                if( elob && elob<2400 )
+                if( elob && elob<2300 )
                 {
                     sprintf( buf, "check %s-%s %s %d black_elo=%d?\n", white, black, site, year, elob );
                     cprintf( "%s", buf );
@@ -1182,29 +1247,45 @@ static void players_database( const char *event, const char *site, const char *d
                 int peakw = players[candw].year;
                 if( year-peakw > (players[candw].long_career?50:30) ) 
                 {
-                    sprintf( buf, "%s %d too old? > %s-%s\n", players[candw].full, year, white, black );
+                    if( players[candw].draws_false_positives )
+                        keep = false;
+                    sprintf( buf, "%s(%d) in %d %s > %s-%s\n", players[candw].full, players[candw].year, year, keep? "too old?":"definitely too old rejected", white, black );
                     cprintf( "%s", buf );
                     fprintf( logfile, "%s", buf );
                 }
                 if( peakw-year > (players[candw].long_career?30:20) ) 
                 {
-                    sprintf( buf, "%s %d too young? > %s-%s\n", players[candw].full, year, white, black );
+                    if( players[candw].draws_false_positives )
+                        keep = false;
+                    sprintf( buf, "%s(%d) in %d %s > %s-%s\n", players[candw].full, players[candw].year, year, keep? "too young?":"definitely too young rejected", white, black );
                     cprintf( "%s", buf );
                     fprintf( logfile, "%s", buf );
                 }
+            }
+            if( keep )
+            {
                 int peakb = players[candb].year;
                 if( year-peakb > (players[candb].long_career?50:30) ) 
                 {
-                    sprintf( buf, "%s %d too old? > %s-%s\n", players[candb].full, year, white, black );
+                    if( players[candb].draws_false_positives )
+                        keep = false;
+                    sprintf( buf, "%s(%d) in %d %s > %s-%s\n", players[candb].full, players[candb].year, year, keep? "too old?":"definitely too old rejected", white, black );
                     cprintf( "%s", buf );
                     fprintf( logfile, "%s", buf );
                 }
                 if( peakb-year > (players[candb].long_career?30:20) )
                 { 
-                    sprintf( buf, "%s %d too young? > %s-%s\n", players[candb].full, year, white, black );
+                    if( players[candb].draws_false_positives )
+                        keep = false;
+                    sprintf( buf, "%s(%d) in %d %s > %s-%s\n", players[candb].full, players[candb].year, year, keep? "too young?":"definitely too young rejected", white, black );
                     cprintf( "%s", buf );
                     fprintf( logfile, "%s", buf );
                 }
+            }
+            if( keep )
+            {
+                players[candw].count++;
+                players[candb].count++;
                 fprintf( ofile, "[Event \"%s\"]\n",     event );
                 fprintf( ofile, "[Site \"%s\"]\n",      site );
                 fprintf( ofile, "[Date \"%s\"]\n",      date );

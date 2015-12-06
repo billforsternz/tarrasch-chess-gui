@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "wx/wx.h"
+#include "wx/clipbrd.h"
 #include "wx/listctrl.h"
 #include "wx/filename.h"
 #include "Appdefs.h"
@@ -1552,6 +1553,23 @@ void GameLogic::CmdEditGamePrefix()
     GamePrefixDialog dialog( objs.frame );
     dialog.Run(gd);
     StatusUpdate();
+}
+
+void GameLogic::CmdEditCopyGamePGNToClipboard()
+{
+    if( gd.IsEmpty() )
+        return;
+    gd.FleshOutDate();
+    gd.FleshOutMoves();
+    std::string head;
+    gd.ToFileTxtGameDetails(head);
+    std::string body;
+    gd.ToFileTxtGameBody(body);
+    if( wxTheClipboard->Open() )
+    {
+        wxTheClipboard->SetData( new wxTextDataObject(head + body) );
+        wxTheClipboard->Close();
+    }
 }
 
 // If players or result (possibly) changed, redisplay it

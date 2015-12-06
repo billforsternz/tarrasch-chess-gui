@@ -387,7 +387,7 @@ static bool sanitise( const char *in, char *out, int out_siz )
         char c = *in++;
         if( !isascii(c) )
             *out = '_';
-        else if( c!=' ' && c!='.' && c!=',' && !isalnum(c) )
+        else if( c!=' ' &&  c!='-' &&  c!='.' && c!=',' && !isalnum(c) )
             *out = '_';
         else
         {
@@ -570,6 +570,73 @@ bool db_primitive_check_for_duplicate( bool &signal_error, uint64_t game_hash, c
     return false;   // return false unless we explicitly DID find a duplicate
 }
 
+
+
+
+void db_temporary_hack( const char *white, const char *black, const char *event, const char *site, const char *round, const char *result,
+                                    const char *date, const char *white_elo, const char *black_elo, const char *eco,
+                                    int nbr_moves, thc::Move *moves )
+{
+    FILE *ofile = fopen( "C:/Users/Bill/Downloads/millionbase/EdwardLaskerFalsePositives.pgn", "at" );
+    if( ofile )
+    {
+        fprintf( ofile, "[Event \"%s\"]\n",     event );
+        fprintf( ofile, "[Site \"%s\"]\n",      site );
+        fprintf( ofile, "[Date \"%s\"]\n",      date );
+        fprintf( ofile, "[Round \"%s\"]\n",     round );
+        fprintf( ofile, "[White \"%s\"]\n",     white );
+        fprintf( ofile, "[Black \"%s\"]\n",     black );
+        fprintf( ofile, "[Result \"%s\"]\n",    result );
+        fprintf( ofile, "[ECO \"%s\"]\n\n",     eco );
+
+        std::string moves_txt;
+        thc::ChessRules cr;
+        for( int i=0; i<nbr_moves; i++ )
+        {
+            if( i != 0 )
+                moves_txt += " ";
+            if( cr.white )
+            {
+                char buf[100];
+                sprintf( buf, "%d. ", cr.full_move_count );
+                moves_txt += buf;
+            }
+            thc::Move mv = moves[i];
+            std::string s = mv.NaturalOut(&cr);
+            moves_txt += s;
+            cr.PlayMove(mv);
+        }
+        moves_txt += " ";
+        moves_txt += result;
+        std::string justified;
+        const char *s = moves_txt.c_str();
+        int col=0;
+        while( *s )
+        {
+            char c = *s++;
+            col++;
+            if( c == ' ' )
+            {
+                const char *t = s;
+                int col_end_of_next_word = col+1;
+                while( *t!=' ' && *t!='\0' )
+                {
+                    col_end_of_next_word++;    
+                    t++;
+                }
+                if( col_end_of_next_word > 81 )
+                {
+                    c = '\n';
+                    col = 0;
+                }
+            }
+            justified += c;
+        }
+        fprintf( ofile, "%s\n\n",  justified.c_str() );
+        fclose(ofile);
+    }
+}
+
 // returns bool inserted
 bool db_primitive_insert_game( bool &signal_error, const char *white, const char *black, const char *event, const char *site, const char *round, const char *result,
                                     const char *date, const char *white_elo, const char *black_elo, const char *eco,
@@ -667,6 +734,9 @@ bool db_primitive_insert_game( bool &signal_error, const char *white, const char
         {
             //cprintf( "***  DUPLICATE GAME DISCARDED\n" );
             // ZOMBIE bug fix - return here, don't add bogus moves and increment game count
+            db_temporary_hack( white, black, event, site, round, result,
+                                    date, white_elo, black_elo, eco,
+                                    nbr_moves, moves  );
             return false;   // not inserted, not error
         }
         

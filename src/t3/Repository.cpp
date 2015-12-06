@@ -8,9 +8,60 @@
 #include "wx/file.h"
 #include "wx/filename.h"
 #include "wx/stdpaths.h"
+#include "DebugPrintf.h"
 #include "Portability.h"
 #include "Lang.h"
 #include "Repository.h"
+
+#ifndef THC_WINDOWS
+    bool Is64BitWindows() { return false; }
+#else
+    // MSDN method of determining whether we are running on 64 bit Windows
+    #if 1 // This is safer and better than the version below
+    typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
+    LPFN_ISWOW64PROCESS fnIsWow64Process;
+    bool Is64BitWindows()
+    {
+        BOOL bIsWow64 = FALSE;
+
+        //IsWow64Process is not available on all supported versions of Windows.
+        //Use GetModuleHandle to get a handle to the DLL that contains the function
+        //and GetProcAddress to get a pointer to the function if available.
+
+        fnIsWow64Process = (LPFN_ISWOW64PROCESS) GetProcAddress(
+            GetModuleHandle(TEXT("kernel32")),"IsWow64Process");
+
+        if(NULL != fnIsWow64Process)
+        {
+            if (!fnIsWow64Process(GetCurrentProcess(),&bIsWow64))
+            {
+                //handle error
+            }
+        }
+        bool ret =  bIsWow64?true:false;
+        dbg_printf( "Running on %d bit Windows\n", ret?64:32 );
+        return ret;
+    }
+
+    // Raymond Chen's method of determining whether we are running on 64 bit Windows
+    #else  // problem if running on 32 bit Windows XP IsWow64Process() doesn't exist
+    bool Is64BitWindows()
+    {
+        BOOL f64 = FALSE;
+    #if defined(_WIN64)
+        f64 = TRUE;  // 64-bit programs run only on Win64
+    #elif defined(_WIN32)
+        // 32-bit programs run on both 32-bit and 64-bit Windows
+        // so must sniff
+        f64 = IsWow64Process(GetCurrentProcess(), &f64) && f64;
+    #else
+        f64 = FALSE; // Win64 does not support Win16
+    #endif
+        bool ret = (f64 ? true : false);
+        return ret;
+    }
+    #endif
+#endif
 
 Repository::Repository( bool use_defaults )
 {
