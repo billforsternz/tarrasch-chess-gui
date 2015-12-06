@@ -92,28 +92,18 @@ public:
 // main frame
 // ----------------------------------------------------------------------------
 
-//some old debug code
-#if 0
-static wxMessageOutputDebug msg;
-    #ifdef  DEBUG_TO_LOG_FILE
-    {
-        static FILE *log_file;
-        if( log_file == NULL )
-            log_file = fopen("log.txt","wt");
-        if( log_file )
-            fwrite( buf, 1, strlen(buf), log_file );
-    }
-    #endif
-#endif
-
 //  We also optionally prepend the time - to prepend the time instantiate a DebugPrintfTime object
 //  on the stack - no need to use it
 static int dbg_printf_prepend_time=0;
+static bool dbg_console_enabled = true;   // set this to false except during development
 DebugPrintfTime::DebugPrintfTime()  { dbg_printf_prepend_time++; }
 DebugPrintfTime::~DebugPrintfTime() { dbg_printf_prepend_time--; if(dbg_printf_prepend_time<0) dbg_printf_prepend_time=0; }
+
 #ifndef KILL_DEBUG_COMPLETELY
 int core_printf( const char *fmt, ... )
 {
+    if( !dbg_console_enabled )
+        return 0;
     int ret=0;
     if( dbg_printf_prepend_time )
     {
@@ -347,7 +337,7 @@ IMPLEMENT_APP(ChessApp)
 extern void JobBegin();
 extern void JobEnd();
 
-wxString argv1;
+wxString argv1;  // can pass a .pgn file on command line
 bool gbl_small_screen_detected;  // nasty global variable hack, sorry
 
 bool ChessApp::OnInit()
@@ -360,7 +350,20 @@ bool ChessApp::OnInit()
     if( argc == 2 )
     {
         argv1 = argv[1];
+        if( argv1[0] == '-' )   // any switch is interpreted as turn on console
+        {
+            argv1 = "";
+            dbg_console_enabled = true;
+        }
     }
+    #ifndef KILL_DEBUG_COMPLETELY
+    if( dbg_console_enabled )
+    {
+        #ifdef THC_WINDOWS
+        RedirectIOToConsole();
+        #endif
+    }
+    #endif
     wxString error_msg;
     int disp_width, disp_height;
     wxDisplaySize(&disp_width, &disp_height);
@@ -592,11 +595,6 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     : wxFrame((wxFrame *)NULL, wxID_ANY, title, pos, size ) //, wxDEFAULT_FRAME_STYLE|wxCLIP_CHILDREN|
                                                             //        wxNO_FULL_REPAINT_ON_RESIZE )
 {
-    #ifndef KILL_DEBUG_COMPLETELY
-    #ifdef THC_WINDOWS
-    RedirectIOToConsole(); // SimpleDebugPrintf *sdf = new SimpleDebugPrintf(this);   // all child windows are automatically deleted
-    #endif
-    #endif
 
     // Timer
     m_timer.SetOwner(this,TIMER_ID);
