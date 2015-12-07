@@ -725,18 +725,18 @@ void Canvas::AdjustPosition( bool have_players )
     wxButton *button;
     int shift = (have_players?0:FIELD);
 
-    // ChessPosition box
+    // thc::ChessPosition box
     wxPoint pos;
     LOCATE_P( box, pos );
     pos.y -= shift;
     box->SetPosition( pos );
 
-    // ChessPosition status
+    // thc::ChessPosition status
     LOCATE_P( status, pos );
     pos.y -= shift;
     status->SetPosition( pos );
 
-    // ChessPosition buttons
+    // thc::ChessPosition buttons
     int x, y;
     LOCATE_XY( button, x, y );
     y -= shift;
@@ -875,7 +875,7 @@ void Canvas::SetNormalOrientation( bool normal )
     SetPosition();
 }
 
-void Canvas::SetPosition( ChessPosition &pos )
+void Canvas::SetPosition( thc::ChessPosition &pos )
 {
     memcpy( &save_position, &pos, sizeof(save_position) );
     SetPosition();
@@ -906,7 +906,7 @@ void Canvas::BookUpdate( bool suppress )
         have_book_moves = objs.book->Lookup( objs.gl->gd.master_position, bmoves );
     else // during startup
     {
-        ChessPosition temp;
+        thc::ChessPosition temp;
         have_book_moves = objs.book->Lookup( temp, bmoves );
     }
     if( suppress )

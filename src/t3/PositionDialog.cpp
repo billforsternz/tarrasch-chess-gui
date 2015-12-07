@@ -71,7 +71,7 @@ PositionDialog::PositionDialog
 void PositionDialog::Init()
 {
     singleton = this;
-    ChessPosition tmp;
+    thc::ChessPosition tmp;
     m_pos = tmp;                        // init position
     memset( m_pos.squares, ' ', 64 );   // .. but with blank board
     m_pos.wking  = false;               // .. and no castling
@@ -82,7 +82,7 @@ void PositionDialog::Init()
 }
 
 
-void PositionDialog::Pos2Fen( const ChessPosition& pos, wxString& fen )
+void PositionDialog::Pos2Fen( const thc::ChessPosition& pos, wxString& fen )
 {
     const char *src=pos.squares;
     char buf[128];
@@ -382,7 +382,7 @@ void PositionDialog::CreateControls()
     // Move count
     wxBoxSizer* move_count_sizer  = new wxBoxSizer(wxHORIZONTAL);
     wxStaticText* move_count_label = new wxStaticText ( this, wxID_STATIC,
-        wxT("&Move count"), wxDefaultPosition, wxDefaultSize, 0 );
+        wxT("&thc::Move count"), wxDefaultPosition, wxDefaultSize, 0 );
     move_count_ctrl = new wxSpinCtrl ( this, ID_MOVE_COUNT,
         wxEmptyString, wxDefaultPosition, wxSize(50, wxDefaultCoord), //wxDefaultSize, 
         wxSP_ARROW_KEYS, m_pos.full_move_count, 500, 1 );
@@ -617,7 +617,7 @@ void PositionDialog::SetDialogHelp()
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_POSITION_RESET
 void PositionDialog::OnResetClick( wxCommandEvent& WXUNUSED(event) )
 {
-    ChessPosition tmp;
+    thc::ChessPosition tmp;
     m_pos = tmp;
     Pos2Fen( m_pos, fen );
     WriteToControls();
@@ -634,7 +634,7 @@ void PositionDialog::OnCurrentClick( wxCommandEvent& WXUNUSED(event) )
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_POSITION_CLEAR
 void PositionDialog::OnClearClick( wxCommandEvent& WXUNUSED(event) )
 {
-    ChessPosition tmp;
+    thc::ChessPosition tmp;
     m_pos = tmp;
     memset( m_pos.squares, ' ', 64 );
     m_pos.wking  = false;
@@ -648,7 +648,7 @@ void PositionDialog::OnClearClick( wxCommandEvent& WXUNUSED(event) )
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_POSITION_960
 void PositionDialog::OnChess960Click( wxCommandEvent& WXUNUSED(event) )
 {
-    ChessPosition tmp;
+    thc::ChessPosition tmp;
     memset( tmp.squares, ' ', 8 );
 
     // Light squared bishop, one of 4 squares
@@ -755,7 +755,7 @@ void PositionDialog::OnChess960Click( wxCommandEvent& WXUNUSED(event) )
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_APPLY
 void PositionDialog::OnApplyClick( wxCommandEvent& WXUNUSED(event) )
 {
-    ChessRules cr;
+    thc::ChessRules cr;
     bool legal=true;
     ILLEGAL_REASON reason;
     fen = fen_ctrl->GetValue();
@@ -796,7 +796,7 @@ void PositionDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
       wxOK|wxICON_INFORMATION, this);
 }
 
-void PositionDialog::IllegalPositionDialog( const char *caption, ChessRules &cr, ILLEGAL_REASON reason )
+void PositionDialog::IllegalPositionDialog( const char *caption, thc::ChessRules &cr, ILLEGAL_REASON reason )
 {
     wxString msg = "Reason(s) the position is illegal;        \n";
     if( reason & IR_PAWN_POSITION )
@@ -829,7 +829,7 @@ void PositionDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
     if( bsc )
     {
         strcpy( m_pos.squares, bsc->squares );
-        ChessRules cr = m_pos;
+        thc::ChessRules cr = m_pos;
         ILLEGAL_REASON reason;
         if( !cr.IsLegal(reason) )
         {
@@ -877,7 +877,7 @@ void PositionDialog::OnPredefined( wxCommandEvent& WXUNUSED(event) )
     {
         if( txt == labels[i] )
         {
-            ChessRules cr;
+            thc::ChessRules cr;
             wxString fen = fens[i];
             if( cr.Forsyth(fen.c_str()) )
             {

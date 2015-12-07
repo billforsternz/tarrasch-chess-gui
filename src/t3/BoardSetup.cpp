@@ -300,7 +300,7 @@ void BoardSetup::SetPosition( const char *position_ascii )
 {
 #if 0 // Setup a custom position here
     #define CUSTOM_POSITION "rnbqnrk|pp4b|4N|3qk|3QK|8|PPxx|R1BQKBNR| w KQkq - 0 1"
-    ChessPosition pos;
+    thc::ChessPosition pos;
     pos.Forsyth( CUSTOM_POSITION );
     position_ascii = pos.squares;
 #endif

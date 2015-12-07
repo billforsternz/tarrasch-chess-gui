@@ -97,7 +97,7 @@ void CtrlChessTxt::OnMouseLeftDown( wxMouseEvent& ev )
 
 void CtrlChessTxt::OnContext( wxContextMenuEvent &event )
 {
-    ChessRules cr;
+    thc::ChessRules cr;
     string move_txt;
     GAME_MOVE *gm = gd->GetSummaryMove( cr, move_txt );
     popup_mt = gd->GetSummary();
@@ -178,7 +178,7 @@ void CtrlChessTxt::Goto( unsigned long pos, bool from_mouse_move )
     static thc::ChessRules old_cr;
     static std::string old_title;
     static bool old_at_move0;
-    ChessRules cr;
+    thc::ChessRules cr;
     string title;
     bool at_move0;
     MoveTree *mt = gd->Locate(pos,cr,title,at_move0);

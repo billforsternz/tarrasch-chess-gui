@@ -226,7 +226,7 @@ void GraphicBoard::SetPosition( char *position_ascii )
 {
 #if 0 // Setup a custom position here
     #define CUSTOM_POSITION "rnbqnrk|pp4b|4N|3qk|3QK|8|PPxx|R1BQKBNR| w KQkq - 0 1"
-    ChessPosition pos;
+    thc::ChessPosition pos;
     pos.Forsyth( CUSTOM_POSITION );
     position_ascii = pos.squares;
 #endif
@@ -557,7 +557,7 @@ void GraphicBoard::HitTestEx( char &file, char &rank, wxPoint shift )
 
 
 // Setup a position	on the graphic board
-void GraphicBoard::SetPositionEx( ChessPosition pos, bool blank_other_squares, char pickup_file, char pickup_rank, wxPoint shift )
+void GraphicBoard::SetPositionEx( thc::ChessPosition pos, bool blank_other_squares, char pickup_file, char pickup_rank, wxPoint shift )
 {
 	char piece, save_piece=0;
 	int  file=0, rank=7;

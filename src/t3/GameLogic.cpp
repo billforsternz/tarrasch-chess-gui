@@ -51,7 +51,7 @@ void ReportOnProgress
 (
     bool ,//init,
     int  ,//multipv,
-    vector<Move> &, //pv,
+    vector<thc::Move> &, //pv,
     int  ,//   score_cp,
     int   //   depth
 )
@@ -74,7 +74,7 @@ GameLogic::GameLogic( Canvas *canvas, CtrlChessTxt *lb )
     this->lb = lb;
     this->tabs = objs.tabs;
     //human_is_white = false;
-    ChessPosition temp;
+    thc::ChessPosition temp;
     gd.Init( temp );
     file_game_idx = -1;
     tabs->SetInfile(false);
@@ -125,7 +125,7 @@ void GameLogic::CmdFileNew()
         objs.log->SaveGame( &gd, editing_log );
         objs.session->SaveGame( &gd );
         IndicateNoCurrentDocument();
-        ChessPosition temp;
+        thc::ChessPosition temp;
         gd.Init( temp );
         this->file_game_idx = -1;
         tabs->SetInfile(false);
@@ -143,7 +143,7 @@ void GameLogic::CmdNewGame()
         objs.log->SaveGame( &gd, editing_log );
         objs.session->SaveGame( &gd );
         IndicateNoCurrentDocument();
-        ChessPosition temp;
+        thc::ChessPosition temp;
         gd.Init( temp );
         ShowNewDocument();
     }
@@ -161,7 +161,7 @@ void GameLogic::CmdSetPosition()
         if( wxID_OK == dialog.ShowModal() )
         {
             strcpy( after, dialog.fen.c_str() );
-            ChessPosition pos;
+            thc::ChessPosition pos;
             bool okay = pos.Forsyth( after ); // "7K/8/7k/8/P7/8/8/8 b KQ a3 0 9" );
             if( okay )
             {
@@ -184,7 +184,7 @@ void GameLogic::ShowNewDocument()
     CmdClearKibitz(true);
     initial_position = gd.start_position;
     canvas->lb->SetGameDocument(&gd);
-    ChessRules cr;
+    thc::ChessRules cr;
     string title;
     gd.Locate( atom.GetInsertionPoint(), cr ); //, title );
     gd.master_position = cr;
@@ -247,7 +247,7 @@ void GameLogic::CmdPlayWhite()
         }
         objs.canvas->SetMinimumPlaySize();
         glc.Begin( true );
-        ChessRules cr;
+        thc::ChessRules cr;
         string move_txt;
         GAME_MOVE *game_move = gd.GetSummaryMove( cr, move_txt );
         chess_clock.NewHumanEngineGame( true, cr.white );
@@ -291,7 +291,7 @@ void GameLogic::CmdPlayBlack()
         }
         objs.canvas->SetMinimumPlaySize();
         glc.Begin( false );
-        ChessRules cr;
+        thc::ChessRules cr;
         string move_txt;
         GAME_MOVE *game_move = gd.GetSummaryMove( cr, move_txt );
         chess_clock.NewHumanEngineGame( false, cr.white );
@@ -415,7 +415,7 @@ void GameLogic::CmdSwapSides()
             objs.canvas->SetNormalOrientation(!normal);
         }
         SetGroomedPosition();
-        ChessRules cr;
+        thc::ChessRules cr;
         string last_move_txt;
         GAME_MOVE *last_move = gd.GetSummary( cr, last_move_txt );
         glc.Swap();
@@ -466,7 +466,7 @@ void GameLogic::CmdKibitz()
                 {
                     char buf[128];
                     strcpy( buf, gd.master_position.ForsythPublish().c_str() );
-                    ChessPosition pos = gd.master_position;
+                    thc::ChessPosition pos = gd.master_position;
                     objs.rybka->Kibitz( pos, buf );
                 }
             }
@@ -1223,7 +1223,7 @@ void GameLogic::FullUndo( GAME_STATE game_state )
                 white_millisecs_time = engine_millisecs_time_start;
                 black_millisecs_time = human_millisecs_time_start;
             }
-            ChessRules cr;
+            thc::ChessRules cr;
             std::string move_txt;
             gd.GetSummaryMove( cr, move_txt );
             if( !found || move_txt=="" )
@@ -1258,7 +1258,7 @@ void GameLogic::FullUndo( GAME_STATE game_state )
 
                 // Check that the move to ponder is legal
                 bool legal=false;
-                vector<Move> moves;
+                vector<thc::Move> moves;
                 gd.master_position.GenLegalMoveList( moves );
                 for( unsigned int i=0; i<moves.size(); i++ )
                 {
@@ -1354,7 +1354,7 @@ void GameLogic::SetManual( MoveTree *mt, bool at_move0, bool from_mouse_move )
             bool white_clock_visible  = mt->game_move.white_clock_visible;
             int engine_millisecs_time = mt->game_move.engine_millisecs_time;
             bool black_clock_visible  = mt->game_move.black_clock_visible;
-            ChessRules cr;
+            thc::ChessRules cr;
             int ivar, imove;
             human_millisecs_time  = human_millisecs_time_start;
             engine_millisecs_time = engine_millisecs_time_start;
@@ -1857,7 +1857,7 @@ void GameLogic::OnIdle()
     canvas->BlackClock( txt );
     if( state==POPUP || state==POPUP_MANUAL )
     {
-        Move move;
+        thc::Move move;
         bool done = CheckPopup( move );
         if( done )
         {
@@ -1950,13 +1950,13 @@ void GameLogic::OnIdle()
                 KibitzUpdateEngineToMove( false, buf );
             }
         }
-        Move ponder;
-        Move bestmove = objs.rybka->CheckBestMove( ponder );
+        thc::Move ponder;
+        thc::Move bestmove = objs.rybka->CheckBestMove( ponder );
         if( bestmove.Valid() )
         {
             release_printf( "Engine returns. bestmove is %s, ponder is %s\n",
                  bestmove.TerseOut().c_str(), ponder.TerseOut().c_str() );
-            ChessRules cr = gd.master_position;
+            thc::ChessRules cr = gd.master_position;
             cr.PlayMove( bestmove );
             std::string nmove = bestmove.NaturalOut( &gd.master_position );
             LangOut(nmove);
@@ -2004,7 +2004,7 @@ void GameLogic::OnIdle()
 
                     // Check that the move to ponder is legal
                     bool legal=false;
-                    vector<Move> moves;
+                    vector<thc::Move> moves;
                     gd.master_position.GenLegalMoveList( moves );
                     for( unsigned int i=0; i<moves.size(); i++ )
                     {
@@ -2175,20 +2175,20 @@ void GameLogic::MouseUp( char file, char rank, wxPoint &point )
 	{
 
         // It's possible there's more than one move (promotion)
-        vector<Move> moves;
-        vector<Move> menu;
+        vector<thc::Move> moves;
+        vector<thc::Move> menu;
         ChessEvaluation chess_evaluation = gd.master_position;
         chess_evaluation.GenLegalMoveListSorted( moves );
         for( unsigned int i=0; i<moves.size(); i++ )
         {
-            Move move=moves[i];
+            thc::Move move=moves[i];
             if( FILE(move.src)==src_file && RANK(move.src)==src_rank &&
                 FILE(move.dst)==file     && RANK(move.dst)==rank )
             {
                 menu.push_back( move );
             }
         }
-        vector<Move> book_moves;
+        vector<thc::Move> book_moves;
         bool have_book_moves = objs.book->Lookup( gd.master_position, book_moves );
 
         // If 0 moves go to HUMAN or MANUAL
@@ -2208,7 +2208,7 @@ void GameLogic::MouseUp( char file, char rank, wxPoint &point )
         else
         {
             bool play_it_now=false;
-            Move move = menu[0];
+            thc::Move move = menu[0];
             if( menu.size() == 1 )
             {
 
@@ -2217,7 +2217,7 @@ void GameLogic::MouseUp( char file, char rank, wxPoint &point )
                     play_it_now = true;
 
                 // If it's a book move play it
-                vector<Move>::iterator it;
+                vector<thc::Move>::iterator it;
                 for( it = book_moves.begin(); it != book_moves.end(); it++ )
                 {
                     if( move == *it )
@@ -2306,13 +2306,13 @@ void GameLogic::BookHover( wxPoint& WXUNUSED(point) )
 {
     if( state==RESET || state==MANUAL || state==HUMAN || state==PONDERING )
     {
-        vector<Move>  book_moves;
+        vector<thc::Move>  book_moves;
         bool have_book_moves = objs.book->Lookup( gd.master_position, book_moves );
         if( have_book_moves )
         {
             if( objs.rybka )
                 objs.rybka->SuspendResume(false);   // suspend
-            vector<Move> menu; // empty
+            vector<thc::Move> menu; // empty
             wxPoint pt   = objs.canvas->book_moves->GetPosition();
             wxRect  rect = objs.canvas->book_moves->GetRect();
             pt.y = -4;  // just above client area
@@ -2361,16 +2361,16 @@ bool GameLogic::MouseDown( char file, char rank, wxPoint &point )     // return 
             }
             else
             {
-                vector<Move> moves, menu;
+                vector<thc::Move> moves, menu;
                 ChessEvaluation chess_evaluation = gd.master_position;
                 chess_evaluation.GenLegalMoveListSorted( moves );
                 for( unsigned int i=0; i<moves.size(); i++ )
                 {
-                    Move move = moves[i];
+                    thc::Move move = moves[i];
                     if( FILE(move.dst)==file && RANK(move.dst)==rank )
                         menu.push_back( move );
                 }
-                vector<Move> book_moves;
+                vector<thc::Move> book_moves;
                 bool unique_and_in_book = false;
                 bool have_book_moves = objs.book->Lookup( gd.master_position, book_moves );
                 if( !objs.repository->book.m_suggest )
@@ -2649,7 +2649,7 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
         KibitzIntro();
         if( state==MANUAL || state==HUMAN || state==GAMEOVER )
         {
-            ChessPosition pos = gd.master_position;
+            thc::ChessPosition pos = gd.master_position;
             char buf[128];
             strcpy( buf, pos.ForsythPublish().c_str() );
             kibitz_pos = pos;
@@ -2754,8 +2754,8 @@ void GameLogic::StatusUpdate( int idx )
     }
 }
 
-void GameLogic::DoPopup( wxPoint &point, vector<Move> &target_moves,
-                                         vector<Move> &book_moves,
+void GameLogic::DoPopup( wxPoint &point, vector<thc::Move> &target_moves,
+                                         vector<thc::Move> &book_moves,
                                          POPUP_MODE popup_mode,
                                          wxRect hover )
 {
@@ -2781,7 +2781,7 @@ void GameLogic::DoPopup( wxPoint &point, vector<Move> &target_moves,
     // Loop through book moves
     for( unsigned int i=0; i<book_moves.size(); i++ )
     {
-        Move move = book_moves[i];
+        thc::Move move = book_moves[i];
 
         // Is book move a target move ?
         bool found = false;
@@ -2810,7 +2810,7 @@ void GameLogic::DoPopup( wxPoint &point, vector<Move> &target_moves,
     // Loop through target moves
     for( unsigned int i=0; i<target_moves.size(); i++ )
     {
-        Move move = target_moves[i];
+        thc::Move move = target_moves[i];
 
         // Is target move a book move ?
         bool found = false;
@@ -2841,7 +2841,7 @@ void GameLogic::DoPopup( wxPoint &point, vector<Move> &target_moves,
         // Loop through book moves
         for( unsigned int i=0; i<book_moves.size(); i++ )
         {
-            Move move = book_moves[i];
+            thc::Move move = book_moves[i];
 
             // Is book move a target move ?
             bool found = false;
@@ -2878,7 +2878,7 @@ void GameLogic::DoPopup( wxPoint &point, vector<Move> &target_moves,
     canvas->popup = new PopupControl( objs.frame,strs,terses,book,popup_mode,hover,ID_POPUP,point );
 }
 
-bool GameLogic::CheckPopup( Move &move )
+bool GameLogic::CheckPopup( thc::Move &move )
 {
     bool done = false;
     move.Invalid();
@@ -2887,7 +2887,7 @@ bool GameLogic::CheckPopup( Move &move )
         done = canvas->popup->done;
         if( done )
         {
-            ChessRules temp = pre_popup_position;
+            thc::ChessRules temp = pre_popup_position;
             bool okay = move.TerseIn(&temp,canvas->popup->terse_move);
             if( !okay )
                 move.Invalid();
@@ -2898,7 +2898,7 @@ bool GameLogic::CheckPopup( Move &move )
     return done;
 }
 
-bool GameLogic::MakeMove( Move move, GAME_RESULT &result )
+bool GameLogic::MakeMove( thc::Move move, GAME_RESULT &result )
 {
     bool ingame=false;
     switch( state )
@@ -3019,11 +3019,11 @@ void GameLogic::SetGroomedPosition( bool show_title )
         qualifier = " (blindfold)";
     else if( partial_blindfold )
         qualifier = " (partial blindfold)";
-    ChessPosition view_pos = gd.master_position;
+    thc::ChessPosition view_pos = gd.master_position;
     title.sprintf( "Initial position%s", qualifier );
     if( objs.canvas )
     {
-        ChessRules cr;
+        thc::ChessRules cr;
         string move_txt;
         if( lag_nbr == 0 )
         {
@@ -3129,13 +3129,13 @@ bool GameLogic::ShowSlidingPieceOnly()
 
 
 // Start engine thinking after human plays human_move (if not NULL)
-GAME_STATE GameLogic::StartThinking( const Move *human_move )
+GAME_STATE GameLogic::StartThinking( const thc::Move *human_move )
 {
     GAME_STATE ret;
     bool ponderhit=false;
     if( human_or_pondering==PONDERING && human_move && *human_move==ponder_move )
     {
-        ChessPosition pos = gd.master_position;
+        thc::ChessPosition pos = gd.master_position;
         ponderhit = objs.rybka->Ponderhit( pos );
     }
     if( ponderhit )
@@ -3144,9 +3144,9 @@ GAME_STATE GameLogic::StartThinking( const Move *human_move )
     {
         // Use a move list if possible so engine can see repititions
         #define MAX_NBR_MOVES_IN_MOVELIST 100
-        ChessPosition std_startpos;
-        ChessPosition move_list_startpos;
-        ChessPosition pos;
+        thc::ChessPosition std_startpos;
+        thc::ChessPosition move_list_startpos;
+        thc::ChessPosition pos;
         std::vector<GAME_MOVE> game_moves;
         gd.GetSummary( move_list_startpos, game_moves, pos );
 
@@ -3154,7 +3154,7 @@ GAME_STATE GameLogic::StartThinking( const Move *human_move )
         int n=game_moves.size();
         bool okay_to_use_move_list = true;
         wxString smoves;
-        ChessRules cr;
+        thc::ChessRules cr;
         cr = move_list_startpos;
         bool saving_moves = false;
         for( int i=0; okay_to_use_move_list && i<n; i++ )
@@ -3168,7 +3168,7 @@ GAME_STATE GameLogic::StartThinking( const Move *human_move )
                     saving_moves = true;
                 }    
             }
-            Move move  = game_moves[i].move;
+            thc::Move move  = game_moves[i].move;
             if( saving_moves )
             {
                 smoves += " ";
@@ -3217,7 +3217,7 @@ GAME_STATE GameLogic::StartThinking( const Move *human_move )
         }
 
         // Get book move if we are going to play it
-        Move book_move;
+        thc::Move book_move;
         book_move.Invalid();
         if( have_fast_moves )
         {
@@ -3315,12 +3315,12 @@ GAME_STATE GameLogic::StartThinking( const Move *human_move )
 }
 
 // Start engine pondering engine's own proposed ponder move
-bool GameLogic::StartPondering( Move ponder )
+bool GameLogic::StartPondering( thc::Move ponder )
 {
     bool pondering=false;
-    ChessPosition std_startpos;
-    ChessPosition move_list_startpos;
-    ChessPosition pos;
+    thc::ChessPosition std_startpos;
+    thc::ChessPosition move_list_startpos;
+    thc::ChessPosition pos;
     std::vector<GAME_MOVE> game_moves;
     gd.GetSummary( move_list_startpos, game_moves, pos );
 
@@ -3328,7 +3328,7 @@ bool GameLogic::StartPondering( Move ponder )
     int n=game_moves.size();
     bool okay_to_use_move_list = true;
     wxString smoves;
-    ChessRules cr;
+    thc::ChessRules cr;
     cr = move_list_startpos;
     bool saving_moves = false;
     for( int i=0; okay_to_use_move_list && i<n; i++ )
@@ -3342,7 +3342,7 @@ bool GameLogic::StartPondering( Move ponder )
                 saving_moves = true;
             }    
         }
-        Move move  = game_moves[i].move;
+        thc::Move move  = game_moves[i].move;
         if( saving_moves )
         {
             smoves += " ";
@@ -3506,10 +3506,10 @@ void GameLogic::KibitzUpdate( int idx, const char *txt )
 {
     wxString pv;
     bool have_moves=false;
-    Move candidate_move;
+    thc::Move candidate_move;
     candidate_move.Invalid();
     int depth=0, score_cp=0, rank_score_cp=0;
-    ChessRules cr = gd.master_position;
+    thc::ChessRules cr = gd.master_position;
     const char *s, *temp;
     s = strstr(txt,temp=" depth ");
     if( s )
@@ -3545,7 +3545,7 @@ void GameLogic::KibitzUpdate( int idx, const char *txt )
     else
         score_cp = 0-rank_score_cp;
     s = strstr(txt,temp=" pv ");
-    std::vector<Move> var;
+    std::vector<thc::Move> var;
     if( s )
     {
         if( mate )
@@ -3558,7 +3558,7 @@ void GameLogic::KibitzUpdate( int idx, const char *txt )
         #define MAX_NBR_KIBITZ_MOVES 13 //14
         for( unsigned int i=0; /*i<MAX_NBR_KIBITZ_MOVES*/; i++ )
         {
-            Move move;
+            thc::Move move;
             std::string nmove;
             bool have_move = move.TerseIn( &cr, txt );
             if( !have_move )
@@ -3644,7 +3644,7 @@ void GameLogic::KibitzUpdateEngineToMove( bool ponder, const char *txt )
 {
     wxString pv;
     int depth=0, score_cp=0, rank_score_cp=0;
-    ChessRules cr = gd.master_position;
+    thc::ChessRules cr = gd.master_position;
     const char *s, *temp;
     s = strstr(txt,temp=" depth ");
     if( s )
@@ -3694,7 +3694,7 @@ void GameLogic::KibitzUpdateEngineToMove( bool ponder, const char *txt )
             txt++;
         for( unsigned int i=0; /*i<MAX_NBR_KIBITZ_MOVES*/; i++ )
         {
-            Move move;
+            thc::Move move;
             std::string nmove;
             bool have_move=false;
             if( ponder && i==0 )

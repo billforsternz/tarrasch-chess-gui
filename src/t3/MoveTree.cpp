@@ -12,14 +12,14 @@ using namespace thc;
 
 
 // Find a child node's parent
-MoveTree *MoveTree::Parent( MoveTree *child, ChessRules &cr_out, int &ivar, int &imove )
+MoveTree *MoveTree::Parent( MoveTree *child, thc::ChessRules &cr_out, int &ivar, int &imove )
 {
     MoveTree *found=NULL;
     if( child != this ) 
     {
         int level=-1;
         bool first = true;
-        ChessRules cr;
+        thc::ChessRules cr;
         if( root )
             cr = *root;
         found = ParentCrawler( level, first, child, cr, cr_out, ivar, imove );
@@ -27,7 +27,7 @@ MoveTree *MoveTree::Parent( MoveTree *child, ChessRules &cr_out, int &ivar, int 
     return found;
 }
 
-MoveTree *MoveTree::ParentCrawler( int& level, bool& first, MoveTree *child, ChessRules &cr, ChessRules &cr_out, int &ivar, int &imove )
+MoveTree *MoveTree::ParentCrawler( int& level, bool& first, MoveTree *child, thc::ChessRules &cr, thc::ChessRules &cr_out, int &ivar, int &imove )
 {
     MoveTree *found=NULL;
     level++;
@@ -35,7 +35,7 @@ MoveTree *MoveTree::ParentCrawler( int& level, bool& first, MoveTree *child, Che
         found = this;
     else
     {
-        ChessRules cr_before_move = cr;
+        thc::ChessRules cr_before_move = cr;
         bool root = (level==0);
         if( !root )
             cr.PlayMove(game_move.move);
@@ -44,7 +44,7 @@ MoveTree *MoveTree::ParentCrawler( int& level, bool& first, MoveTree *child, Che
         {
             for( int i=0; !found && i<nbr_vars; i++ )
             {
-                ChessRules cr_temp = cr_before_move;
+                thc::ChessRules cr_temp = cr_before_move;
                 vector<MoveTree> &var = variations[i];
                 int j, nbr_moves=var.size();
                 for( j=0; j<nbr_moves; j++ )
@@ -75,7 +75,7 @@ MoveTree *MoveTree::ParentCrawler( int& level, bool& first, MoveTree *child, Che
 //  Return ptr to child node in its new position in the promoted variation
 MoveTree *MoveTree::Promote( MoveTree *child )
 {
-    ChessRules cr;
+    thc::ChessRules cr;
     int ivar;
     int imove;
     MoveTree *promoted_move = NULL;
@@ -251,7 +251,7 @@ MoveTree *MoveTree::Promote( MoveTree *child )
 //  Return ptr to child node in its new position in the demoted variation
 MoveTree *MoveTree::Demote( MoveTree *child )
 {
-    ChessRules cr;
+    thc::ChessRules cr;
     int ivar;
     int imove;
     MoveTree *demoted_move = NULL;
@@ -291,7 +291,7 @@ MoveTree *MoveTree::Demote( MoveTree *child )
 // Delete the rest of a variation
 void MoveTree::DeleteRestOfVariation( MoveTree *child )
 {
-    ChessRules cr;
+    thc::ChessRules cr;
     int ivar;
     int imove;
 
@@ -313,7 +313,7 @@ void MoveTree::DeleteRestOfVariation( MoveTree *child )
 // Delete variation
 void MoveTree::DeleteVariation( MoveTree *child )
 {
-    ChessRules cr;
+    thc::ChessRules cr;
     int ivar;
     int imove;
 
