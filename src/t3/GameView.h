@@ -84,7 +84,7 @@ private:
     std::vector<GameViewElement> expansion;
     int level;                  // track recursion level, 0 = root
     thc::ChessRules cr;         // track chess position for all operations
-    unsigned long offset;       // track input offset of displayable string
+    unsigned long offset;       // track input offset of displayable std::string
     bool newline;
     bool comment;
     std::string result;

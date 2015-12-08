@@ -18,8 +18,6 @@
 #include "Objects.h"
 #include "BoardBitmap40.h"
 #include "BoardBitmap54.h"
-using namespace std;
-using namespace thc;
 
 
 // Initialise the graphic board
@@ -246,7 +244,7 @@ void GraphicBoard::SetPosition( char *position_ascii )
 				   "bwbwbwbw";
     strcpy( _position_ascii, position_ascii );
 
-	// Read string backwards for black at bottom
+	// Read std::string backwards for black at bottom
 	if( !normal_orientation )
 		position_ascii += 63;
 
@@ -574,7 +572,7 @@ void GraphicBoard::SetPositionEx( thc::ChessPosition pos, bool blank_other_squar
 				   "wbwbwbwb"
 				   "bwbwbwbw";
 
-	// Read string backwards for black at bottom
+	// Read std::string backwards for black at bottom
     char *position_ascii = pos.squares; //_position_ascii;
 	if( !normal_orientation )
 		position_ascii += 63;

@@ -13,8 +13,6 @@
 #include "Appdefs.h"
 #include "Lang.h"
 #include "GeneralDialog.h"
-using namespace std;
-using namespace thc;
 
 // GeneralDialog type definition
 IMPLEMENT_CLASS( GeneralDialog, wxDialog )
@@ -104,7 +102,7 @@ void GeneralDialog::CreateControls()
 
     labels.Clear();
     const char **pknown_lang = LangGetKnownArray();
-    const char *user_defined = *pknown_lang++;  // user defined string comes first ...
+    const char *user_defined = *pknown_lang++;  // user defined std::string comes first ...
     while( *pknown_lang )
         labels.Add( *pknown_lang++ );
     labels.Add( user_defined );     // ... but appears last
@@ -226,7 +224,7 @@ void GeneralDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
     wxString helpText =
       wxT("Use this panel to specify some general options, most importantly\n")
       wxT("the algebraic notation characters to use. Select from a major\n")
-      wxT("European language, or define a custom string if your language\n")
+      wxT("European language, or define a custom std::string if your language\n")
       wxT("is not listed\n");
 
     wxMessageBox(helpText,
@@ -248,11 +246,11 @@ void GeneralDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
     else
     {
         const char **pknown_lang = LangGetKnownArray();
-        const char *user_defined = *pknown_lang++;  // user defined string comes first
+        const char *user_defined = *pknown_lang++;  // user defined std::string comes first
         if( txt == user_defined )
-            wxMessageBox( "Replace the '?' characters with your chosen characters for king, queen, rook, knight and bishop respectively", "Illegal notation string", wxOK|wxICON_ERROR );
+            wxMessageBox( "Replace the '?' characters with your chosen characters for king, queen, rook, knight and bishop respectively", "Illegal notation std::string", wxOK|wxICON_ERROR );
         else
-            wxMessageBox( "You must enter or select a string starting with your chosen characters for king, queen, rook, knight and bishop respectively", "Illegal notation string", wxOK|wxICON_ERROR );
+            wxMessageBox( "You must enter or select a std::string starting with your chosen characters for king, queen, rook, knight and bishop respectively", "Illegal notation std::string", wxOK|wxICON_ERROR );
     }
 }
 
@@ -264,7 +262,7 @@ void GeneralDialog::OnNotationLanguage( wxCommandEvent& WXUNUSED(event) )
     else
     {
         if( txt !=  "????? (User defined)" )
-            wxMessageBox( "You must enter or select a string starting with the desired characters for king, queen, rook, knight and bishop respectively", "Illegal notation string", wxOK|wxICON_ERROR );
+            wxMessageBox( "You must enter or select a std::string starting with the desired characters for king, queen, rook, knight and bishop respectively", "Illegal notation std::string", wxOK|wxICON_ERROR );
         notation_language_ctrl->SetValue(dat.m_notation_language);
     }
     ok_button->SetFocus(); */

@@ -1,5 +1,5 @@
 /****************************************************************************
- * Pack a complete game into a single string
+ * Pack a complete game into a single std::string
  *  Author:  Bill Forster
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2015, Bill Forster <billforsternz at gmail dot com>

@@ -24,7 +24,7 @@
 #endif
 
 #if TARRASCH_UNIX
-   #include <string.h>
+   #include <string>
    typedef uint8_t byte;
    #define THC_MAC
    #define MAC_FIX_LATER
@@ -32,7 +32,7 @@
    int strcmpi(const char *s, const char *t);
 #elif TARRASCH_WINDOWS
    #include <Windows.h>
-   #include <string.h>
+   #include <string>
    #define strcmpi _strcmpi
    #define THC_WINDOWS         // Triple Happy Chess, Windows specific code
    #define WINDOWS_FIX_LATER   // Windows only fix later on Mac

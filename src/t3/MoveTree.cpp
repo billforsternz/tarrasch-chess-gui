@@ -7,9 +7,6 @@
 #define _CRT_SECURE_NO_DEPRECATE
 #include "MoveTree.h"
 #include "thc.h"
-using namespace std;
-using namespace thc;
-
 
 // Find a child node's parent
 MoveTree *MoveTree::Parent( MoveTree *child, thc::ChessRules &cr_out, int &ivar, int &imove )
@@ -45,7 +42,7 @@ MoveTree *MoveTree::ParentCrawler( int& level, bool& first, MoveTree *child, thc
             for( int i=0; !found && i<nbr_vars; i++ )
             {
                 thc::ChessRules cr_temp = cr_before_move;
-                vector<MoveTree> &var = variations[i];
+                std::vector<MoveTree> &var = variations[i];
                 int j, nbr_moves=var.size();
                 for( j=0; j<nbr_moves; j++ )
                 {
@@ -108,7 +105,7 @@ MoveTree *MoveTree::Promote( MoveTree *child )
             // Make a copy of the variation to be promoted                           // to_be_promoted
             VARIATION to_be_promoted = parent->variations[ivar];                     //  C0 C1 [C2] C3
                                                                                      //  B0 B1
-            vector<VARIATION>::iterator vpos = parent->variations.begin() + ivar;    //  -> C0 C1 [C2] C3   
+            std::vector<VARIATION>::iterator vpos = parent->variations.begin() + ivar;    //  -> C0 C1 [C2] C3   
                                                                                      //     B0 B1
             // Remove the variation from its current location
             parent->variations.erase(vpos);
@@ -128,7 +125,7 @@ MoveTree *MoveTree::Promote( MoveTree *child )
 
             // Point at the parent within the demoted variation                    // to_be_demoted
             VARIATION to_be_demoted = grand_parent->variations[ivar2];             // P0 P1 P2 [P3] P4 P5
-            vector<MoveTree>::iterator mpos = to_be_demoted.begin() + imove2;      //  ->[P3]
+            std::vector<MoveTree>::iterator mpos = to_be_demoted.begin() + imove2;      //  ->[P3]
 
             // Erase moves up to but not including parent                          // to_be_demoted
             to_be_demoted.erase( to_be_demoted.begin(), mpos );                    // [P3] P4 P5
@@ -304,7 +301,7 @@ void MoveTree::DeleteRestOfVariation( MoveTree *child )
         // If the next move is part of the variation, delete from there
         if( imove+1 < variation.size() )
         {
-            vector<MoveTree>::iterator pos = variation.begin() + imove+1;
+            std::vector<MoveTree>::iterator pos = variation.begin() + imove+1;
             variation.erase( pos, variation.end() );
         }
     }
@@ -323,7 +320,7 @@ void MoveTree::DeleteVariation( MoveTree *child )
     {
 
         // Remove the variation from its current location
-        vector<VARIATION>::iterator pos = parent->variations.begin() + ivar;
+        std::vector<VARIATION>::iterator pos = parent->variations.begin() + ivar;
         parent->variations.erase(pos);
     }
 }

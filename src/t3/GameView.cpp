@@ -13,8 +13,6 @@
 #include "Repository.h"
 #include "DebugPrintf.h"
 #include "GameView.h"
-using namespace std;
-using namespace thc;
 
 void GameView::Build( std::string &result, MoveTree *tree, thc::ChessPosition &start_position )
 {
@@ -191,11 +189,11 @@ void GameView::Crawler( MoveTree *node, bool move0, bool last_move )
         }
         newline = false;
         comment = false;
-        string intro = buf;
-        string move_body = node->game_move.move.NaturalOut(&cr);
+        std::string intro = buf;
+        std::string move_body = node->game_move.move.NaturalOut(&cr);
         LangOut(move_body);
-        string fragment  = intro + move_body;
-        string file_view = need_extra_space ? (intro + " " + move_body) : fragment;
+        std::string fragment  = intro + move_body;
+        std::string file_view = need_extra_space ? (intro + " " + move_body) : fragment;
         GameViewElement gve;
         gve.nag_value1 = 0;
         if( node->game_move.nag_value1 && 
@@ -284,7 +282,7 @@ void GameView::Crawler( MoveTree *node, bool move0, bool last_move )
             }
 
             // Loop through the variation
-            vector<MoveTree> &var = node->variations[i];
+            std::vector<MoveTree> &var = node->variations[i];
             int nbr_moves = var.size();
             for( int j=0; j<nbr_moves; j++ )
             {
@@ -513,11 +511,11 @@ void GameView::ToString( std::string &str, int begin, int end )
                 if( gve.type != PRE_COMMENT )
                     frag = gve.node->game_move.comment;
                 int idx = frag.find(';');
-                bool has_semi = (idx!=string::npos);
+                bool has_semi = (idx!=std::string::npos);
                 idx = frag.find('{');
-                bool has_brace1 = (idx!=string::npos);
+                bool has_brace1 = (idx!=std::string::npos);
                 idx = frag.find('}');
-                bool has_brace2 = (idx!=string::npos);
+                bool has_brace2 = (idx!=std::string::npos);
                 if( has_semi || has_brace1 || has_brace2 )
                 {
                     make_comment = true;
@@ -561,7 +559,7 @@ void GameView::ToString( std::string &str, int begin, int end )
 
         // Append with line wrap
         int idx = frag.find(' ');
-        bool atomic = (idx==string::npos);  // atomic if no space
+        bool atomic = (idx==std::string::npos);  // atomic if no space
         bool splitting = !atomic;           // don't split if atomic
         while( splitting )
         {
@@ -576,14 +574,14 @@ void GameView::ToString( std::string &str, int begin, int end )
             {
                 if( col+idx<80 && frag[idx]==' ' )
                 {
-                    string part1 = frag.substr(0,idx);
-                    string part2 = frag.substr(idx+1);
+                    std::string part1 = frag.substr(0,idx);
+                    std::string part2 = frag.substr(idx+1);
 
                     // In column 0, left trim
                     if( col == 0 )
                     {
                         int idx = part1.find_first_not_of(' ');
-                        if( idx!=string::npos && idx>0 )
+                        if( idx!=std::string::npos && idx>0 )
                             part1 = part1.substr(idx);
                     }   
                     str += part1;
@@ -617,7 +615,7 @@ void GameView::ToString( std::string &str, int begin, int end )
         if( col == 0 )
         {
             int idx = frag.find_first_not_of(' ');
-            if( idx!=string::npos && idx>0 )
+            if( idx!=std::string::npos && idx>0 )
                 frag = frag.substr(idx);
         }   
         int len = frag.length();
@@ -1043,7 +1041,7 @@ void GameView::ToPublishString( std::string &str, int &diagram_base, int &mv_bas
                     frag = gve.str;
                 else
                 {
-                    vector<MoveTree> &variation = parent->variations[ivar];
+                    std::vector<MoveTree> &variation = parent->variations[ivar];
                     int j=0;
                     for( j=0; j<imove; j++ )
                         cr.PlayMove( variation[j].game_move.move );
@@ -1458,7 +1456,7 @@ int GameView::GetInternalOffsetEndOfVariation( int start )
     return end;
 }
 
-MoveTree *GameView::Locate( unsigned long pos, thc::ChessRules &cr, string &title, bool &at_move0 )
+MoveTree *GameView::Locate( unsigned long pos, thc::ChessRules &cr, std::string &title, bool &at_move0 )
 {
     MoveTree *found = NULL;
     at_move0 = false;
@@ -1526,7 +1524,7 @@ MoveTree *GameView::Locate( unsigned long pos, thc::ChessRules &cr, string &titl
                     if( parent )
                     {
                         found = gve.node;
-                        vector<MoveTree> &variation = parent->variations[ivar];
+                        std::vector<MoveTree> &variation = parent->variations[ivar];
                         int i=0;
                         for( i=0; i<imove; i++ )
                             cr.PlayMove( variation[i].game_move.move );
@@ -1900,7 +1898,7 @@ void GameView::DeleteSelection( wxRichTextCtrl *ctrl )
                 {
                     if( gve.node->game_move.comment.length() == 0 )
                     {
-                        vector<GameViewElement>::iterator it = expansion.begin() + i;
+                        std::vector<GameViewElement>::iterator it = expansion.begin() + i;
                         expansion.erase(it);
                     }
                 }
@@ -1908,7 +1906,7 @@ void GameView::DeleteSelection( wxRichTextCtrl *ctrl )
                 {
                     if( gve.node->game_move.pre_comment.length() == 0 )
                     {
-                        vector<GameViewElement>::iterator it = expansion.begin() + i;
+                        std::vector<GameViewElement>::iterator it = expansion.begin() + i;
                         expansion.erase(it);
                     }
                 }

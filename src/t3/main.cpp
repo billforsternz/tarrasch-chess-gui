@@ -69,9 +69,6 @@
     #include "bitmaps24/help.xpm"
 #endif
 
-using namespace std;
-using namespace thc;
-
 Objects objs;
 
 // Should really be a little more sophisticated about this

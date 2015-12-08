@@ -21,7 +21,7 @@ const char * LangCheckDiffBegin();
 // End a check for changed language (return ptr to new lang lookup or NULL if no change)
 const char * LangCheckDiffEnd();
 
-// Set new language (sets English if string is invalid)
+// Set new language (sets English if std::string is invalid)
 void LangSet( wxString &txt );
 
 // Get current language
@@ -36,7 +36,7 @@ void LangToEnglish( std::string &s, const char *language_lookup=0 );
 // Convert line of text, any language to any language
 void LangLine( std::string &s, const char *from, const char *to );
 
-// Check a language specification string, uppercasing it if necessary
+// Check a language specification std::string, uppercasing it if necessary
 bool LangValidateString( wxString &txt );
 
 #endif // LANG_H

@@ -28,14 +28,13 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <string>
 #include <ctype.h>
 #include <assert.h>
 #include <algorithm>
 #include "Portability.h"
 #include "DebugPrintf.h"
 #include "thc.h"
-using namespace std;
 using namespace thc;
 
 /****************************************************************************
@@ -950,7 +949,7 @@ std::string ChessPosition::ToDebugStr( const char *label )
 }
 
 /****************************************************************************
- * Set up position on board from Forsyth string with extensions
+ * Set up position on board from Forsyth std::string with extensions
  *   return bool okay
  ****************************************************************************/
 bool ChessPosition::Forsyth( const char *txt )
@@ -2241,7 +2240,7 @@ void ChessRules::PlayMove( Move imove )
 /****************************************************************************
  * Create a list of all legal moves in this position
  ****************************************************************************/
-void ChessRules::GenLegalMoveList( vector<Move> &moves )
+void ChessRules::GenLegalMoveList( std::vector<Move> &moves )
 {
     MOVELIST movelist;
     GenLegalMoveList( &movelist );
@@ -2252,10 +2251,10 @@ void ChessRules::GenLegalMoveList( vector<Move> &moves )
 /****************************************************************************
  * Create a list of all legal moves in this position, with extra info
  ****************************************************************************/
-void ChessRules::GenLegalMoveList( vector<Move>  &moves,
-                                   vector<bool>  &check,
-                                   vector<bool>  &mate,
-                                   vector<bool>  &stalemate )
+void ChessRules::GenLegalMoveList( std::vector<Move>  &moves,
+                                   std::vector<bool>  &check,
+                                   std::vector<bool>  &mate,
+                                   std::vector<bool>  &stalemate )
 {
     MOVELIST movelist;
     bool bcheck[MAXMOVES];
@@ -5491,7 +5490,7 @@ const int MATERIAL_MIDDLE  = (500 + ((8*10+4*30+2*50+90)*1)/3);
 /****************************************************************************
  * Create a list of all legal moves (sorted strongest first, public version)
  ****************************************************************************/
-void ChessEvaluation::GenLegalMoveListSorted( vector<Move> &moves )
+void ChessEvaluation::GenLegalMoveListSorted( std::vector<Move> &moves )
 {
     MOVELIST movelist;
     GenLegalMoveListSorted( &movelist );
@@ -5517,7 +5516,7 @@ void ChessEvaluation::GenLegalMoveListSorted( MOVELIST *list )
     bool okay;
     TERMINAL terminal_score;
     MOVELIST list2;
-    vector<MOVE_IDX> sortable;
+    std::vector<MOVE_IDX> sortable;
 
     // Call this before calls to EvaluateLeaf()
     Planning();
@@ -5572,8 +5571,6 @@ void ChessEvaluation::GenLegalMoveListSorted( MOVELIST *list )
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-using namespace std;
-using namespace thc;
 
 //-- preferences
 //#define TRANSFORM   // transform so all moves are played by white
@@ -5883,12 +5880,12 @@ extern void ReportOnProgress
 (
     bool    init,
     int     multipv,
-    vector<Move> &pv,
+    std::vector<Move> &pv,
     int     score_cp,
     int     depth
 );
 
-bool ChessEngine::CalculateNextMove( bool new_game, vector<Move> &pv, Move &bestmove, int &score_cp,
+bool ChessEngine::CalculateNextMove( bool new_game, std::vector<Move> &pv, Move &bestmove, int &score_cp,
                             unsigned long ms_time,
                             unsigned long ms_budget,
                             int balance,
@@ -6013,7 +6010,7 @@ bool ChessEngine::CalculateNextMove( bool new_game, vector<Move> &pv, Move &best
 
         // Save the best line in case we can't find a non-repetition that's
         //  not better for us
-        vector<Move> save_best_line = pv;
+        std::vector<Move> save_best_line = pv;
         
         // Convert to centipawns
         score_cp = (score*10)/balance;
@@ -6180,7 +6177,7 @@ bool ChessEngine::IsRepitition()
 /****************************************************************************
  * Retrieve PV (primary variation?), call after CalculateNextMove()
  ****************************************************************************/
-void ChessEngine::GetPV( vector<Move> &pv )
+void ChessEngine::GetPV( std::vector<Move> &pv )
 {
     pv.clear();
 	for( unsigned int i=0; i<pv_count; i++ )
@@ -6833,7 +6830,7 @@ void ChessEngine::Test()
  ****************************************************************************/
 
 /****************************************************************************
- * Read natural string move eg "Nf3"
+ * Read natural std::string move eg "Nf3"
  *  return bool okay
  ****************************************************************************/
 bool Move::NaturalIn( ChessRules *cr, const char *natural_in )
@@ -6872,12 +6869,12 @@ bool Move::NaturalIn( ChessRules *cr, const char *natural_in )
     if( okay )
     {
 
-        // Trim string from end
+        // Trim std::string from end
         s = strchr(move,'\0') - 1;
         while( s>=move && !(isascii(*s) && isalnum(*s)) )
             *s-- = '\0';
 
-        // Trim string from start
+        // Trim std::string from start
         s = move;
         while( *s==' ' || *s=='\t' )
             s++;
@@ -6900,7 +6897,7 @@ bool Move::NaturalIn( ChessRules *cr, const char *natural_in )
                 enpassant = true;
             }
 
-            // Trim string from end, again
+            // Trim std::string from end, again
             s = strchr(move,'\0') - 1;
             while( s>=move && !(isascii(*s) && isalnum(*s)) )
                 *s-- = '\0';
@@ -6925,7 +6922,7 @@ bool Move::NaturalIn( ChessRules *cr, const char *natural_in )
             if( okay )
             {
 
-                // Trim string from end, again
+                // Trim std::string from end, again
                 move[len-1] = '\0';
                 s = strchr(move,'\0') - 1;
                 while( s>=move && !(isascii(*s) && isalnum(*s)) )
@@ -7186,7 +7183,7 @@ bool Move::NaturalIn( ChessRules *cr, const char *natural_in )
 }
 
 /****************************************************************************
- * Read natural string move eg "Nf3"
+ * Read natural std::string move eg "Nf3"
  *  return bool okay
  * Fast alternative for known good input
  ****************************************************************************/
@@ -7931,7 +7928,7 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
 }
 
 /****************************************************************************
- * Read terse string move eg "g1f3"
+ * Read terse std::string move eg "g1f3"
  *  return bool okay
  ****************************************************************************/
 bool Move::TerseIn( ChessRules *cr, const char *tmove )
@@ -8000,7 +7997,7 @@ bool Move::TerseIn( ChessRules *cr, const char *tmove )
 }
 
 /****************************************************************************
- * Convert to natural string
+ * Convert to natural std::string
  *    eg "Nf3"
  ****************************************************************************/
 std::string Move::NaturalOut( ChessRules *cr )
@@ -8202,7 +8199,7 @@ std::string Move::NaturalOut( ChessRules *cr )
 }
 
 /****************************************************************************
- * Convert to terse string eg "e7e8q"
+ * Convert to terse std::string eg "e7e8q"
  ****************************************************************************/
 std::string Move::TerseOut()
 {    

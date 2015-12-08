@@ -13,8 +13,6 @@
 #include "Repository.h"
 #include "Objects.h"
 #include "Log.h"
-using namespace std;
-using namespace thc;
 
 // Init
 Log::Log()

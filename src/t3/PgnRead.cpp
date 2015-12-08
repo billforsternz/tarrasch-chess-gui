@@ -7,7 +7,7 @@
 #define _CRT_SECURE_NO_DEPRECATE
 #include <random>
 #include <stdio.h>
-#include <string.h>
+#include <string>
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdarg.h>
@@ -15,9 +15,6 @@
 #include "PgnRead.h"
 #include "DebugPrintf.h"
 
-
-using namespace std;
-using namespace thc;
 #define nbrof(array) ( sizeof(array) / sizeof((array)[0]) )
 
 // Constructor

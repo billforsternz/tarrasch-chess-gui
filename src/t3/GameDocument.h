@@ -200,7 +200,7 @@ public:
     unsigned long GetInsertionPoint();
     void SetInsertionPoint( unsigned long pos );
     
-    // A start position, a vector of moves, leading to a final position
+    // A start position, a std::vector of moves, leading to a final position
     void GetSummary( thc::ChessPosition &start_position, std::vector<GAME_MOVE> &game_moves, thc::ChessPosition &pos );
     
     // The current position, title text for the last move played eg "Position after 23...Nxd5"
