@@ -15,6 +15,8 @@
 #include "Repository.h"
 #include "GameDocument.h"
 #include "CtrlChessTxt.h"
+using namespace std;
+using namespace thc;
 
 // Create a custom event
 BEGIN_DECLARE_EVENT_TYPES()
@@ -96,7 +98,7 @@ void CtrlChessTxt::OnMouseLeftDown( wxMouseEvent& ev )
 void CtrlChessTxt::OnContext( wxContextMenuEvent &event )
 {
     thc::ChessRules cr;
-    std::string move_txt;
+    string move_txt;
     GAME_MOVE *gm = gd->GetSummaryMove( cr, move_txt );
     popup_mt = gd->GetSummary();
     if( gm && popup_mt && move_txt.length() )
@@ -177,7 +179,7 @@ void CtrlChessTxt::Goto( unsigned long pos, bool from_mouse_move )
     static std::string old_title;
     static bool old_at_move0;
     thc::ChessRules cr;
-    std::string title;
+    string title;
     bool at_move0;
     MoveTree *mt = gd->Locate(pos,cr,title,at_move0);
     bool unchanged = (from_mouse_move && old_from_mouse_move && pos==old_pos && cr==old_cr && title==old_title && at_move0==old_at_move0);

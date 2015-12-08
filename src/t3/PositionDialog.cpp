@@ -18,6 +18,8 @@
 #include "Book.h"
 #include "Repository.h"
 #include "PositionDialog.h"
+using namespace std;
+using namespace thc;
 
 // PositionDialog type definition
 IMPLEMENT_CLASS( PositionDialog, wxDialog )
@@ -117,7 +119,7 @@ void PositionDialog::Pos2Fen( const thc::ChessPosition& pos, wxString& fen )
     bool ep=false;
 
     // White captures enpassant from a6 to h6
-    if( pos.white && thc::a6<=pos.enpassant_target && pos.enpassant_target<=thc::h6 )
+    if( pos.white && a6<=pos.enpassant_target && pos.enpassant_target<=h6 )
     {
         int idx = pos.enpassant_target+8;   // SOUTH
         if( pos.squares[idx] == 'p' )
@@ -125,9 +127,9 @@ void PositionDialog::Pos2Fen( const thc::ChessPosition& pos, wxString& fen )
             #if 1
             ep = true;
             #else
-            if( pos.enpassant_target==thc::a6 && pos.squares[idx+1]=='P' )
+            if( pos.enpassant_target==a6 && pos.squares[idx+1]=='P' )
                 ep = true;
-            else if( pos.enpassant_target==thc::h6 && pos.squares[idx-1]=='P' )
+            else if( pos.enpassant_target==h6 && pos.squares[idx-1]=='P' )
                 ep = true;
             else if( pos.squares[idx-1]=='P' || pos.squares[idx+1]=='P' )
                 ep = true;
@@ -136,7 +138,7 @@ void PositionDialog::Pos2Fen( const thc::ChessPosition& pos, wxString& fen )
     }        
 
     // Black captures enpassant from a3 to h3
-    if( !pos.white && thc::a3<=pos.enpassant_target && pos.enpassant_target<=thc::h3 )
+    if( !pos.white && a3<=pos.enpassant_target && pos.enpassant_target<=h3 )
     {
         int idx = pos.enpassant_target-8;    //NORTH
         if( pos.squares[idx] == 'P' )
@@ -144,7 +146,7 @@ void PositionDialog::Pos2Fen( const thc::ChessPosition& pos, wxString& fen )
             #if 1
             ep = true;
             #else
-            if( pos.enpassant_target==thc::a3 && pos.squares[idx+1]=='p' )
+            if( pos.enpassant_target==a3 && pos.squares[idx+1]=='p' )
                 ep = true;
             else if( pos.enpassant_target==h3 && pos.squares[idx-1]=='p' )
                 ep = true;
@@ -169,13 +171,13 @@ void PositionDialog::Pos2Fen( const thc::ChessPosition& pos, wxString& fen )
     char ep_buf[3];
     ep_buf[0] = '-';
     ep_buf[1] = '\0';
-    if( ep && pos.white && thc::a6<=pos.enpassant_target && pos.enpassant_target<=thc::h6 )
+    if( ep && pos.white && a6<=pos.enpassant_target && pos.enpassant_target<=h6 )
     {
-        ep_buf[0] = 'a' + (pos.enpassant_target-thc::a6);
+        ep_buf[0] = 'a' + (pos.enpassant_target-a6);
         ep_buf[1] = '6';
         ep_buf[2] = '\0';
     }
-    else if( ep && !pos.white && thc::a3<=pos.enpassant_target && pos.enpassant_target<=h3 )
+    else if( ep && !pos.white && a3<=pos.enpassant_target && pos.enpassant_target<=h3 )
     {
         ep_buf[0] = 'a' + (pos.enpassant_target-a3);
         ep_buf[1] = '3';
@@ -201,10 +203,10 @@ void PositionDialog::WriteToControls()
     white_to_move->SetValue( m_pos.white );
     black_to_move->SetValue( !m_pos.white );
     wxString en_passant;
-    if( m_pos.white && thc::a6<=m_pos.enpassant_target && m_pos.enpassant_target<=thc::h6 )
-        en_passant.sprintf( "%c", 'a' + (m_pos.enpassant_target-thc::a6) );
-    else if( !m_pos.white && thc::a3<=m_pos.enpassant_target && m_pos.enpassant_target<=thc::h3 )
-        en_passant.sprintf( "%c", 'a' + (m_pos.enpassant_target-thc::a3) );
+    if( m_pos.white && a6<=m_pos.enpassant_target && m_pos.enpassant_target<=h6 )
+        en_passant.sprintf( "%c", 'a' + (m_pos.enpassant_target-a6) );
+    else if( !m_pos.white && a3<=m_pos.enpassant_target && m_pos.enpassant_target<=h3 )
+        en_passant.sprintf( "%c", 'a' + (m_pos.enpassant_target-a3) );
     else
         en_passant = "None";
     en_passant_ctrl->SetValue(en_passant);
@@ -420,10 +422,10 @@ void PositionDialog::CreateControls()
         "None", wxDefaultPosition,
         wxSize(50, wxDefaultCoord), 9, file_array, wxCB_READONLY );
     wxString en_passant;
-    if( m_pos.white && thc::a6<=m_pos.enpassant_target && m_pos.enpassant_target<=thc::h6 )
-        en_passant.sprintf( "%c", 'a' + (m_pos.enpassant_target-thc::a6) );
-    else if( !m_pos.white && thc::a3<=m_pos.enpassant_target && m_pos.enpassant_target<=thc::h3 )
-        en_passant.sprintf( "%c", 'a' + (m_pos.enpassant_target-thc::a3) );
+    if( m_pos.white && a6<=m_pos.enpassant_target && m_pos.enpassant_target<=h6 )
+        en_passant.sprintf( "%c", 'a' + (m_pos.enpassant_target-a6) );
+    else if( !m_pos.white && a3<=m_pos.enpassant_target && m_pos.enpassant_target<=h3 )
+        en_passant.sprintf( "%c", 'a' + (m_pos.enpassant_target-a3) );
     else
         en_passant = "None";
     en_passant_ctrl->SetValue(en_passant);
@@ -580,7 +582,7 @@ void PositionDialog::SetDialogHelp()
     wxString current_help = "Copy from the current main board position";
     FindWindow(ID_POSITION_CURRENT)->SetHelpText(current_help);
     FindWindow(ID_POSITION_CURRENT)->SetToolTip(current_help);
-    wxString apply_help = "Apply the fen std::string (useful after hand editing)";
+    wxString apply_help = "Apply the fen string (useful after hand editing)";
     FindWindow(ID_APPLY)->SetHelpText(apply_help);
     FindWindow(ID_APPLY)->SetToolTip(apply_help);
     wxString woo_help = "Set if white kingside castling possible";
@@ -760,7 +762,7 @@ void PositionDialog::OnApplyClick( wxCommandEvent& WXUNUSED(event) )
     if( !cr.Forsyth( fen.c_str()) )
     {
         legal = false;
-        wxMessageDialog md(this,"FEN std::string is not properly formed", "Error", wxOK|wxICON_ERROR);
+        wxMessageDialog md(this,"FEN string is not properly formed", "Error", wxOK|wxICON_ERROR);
         md.ShowModal();
     }
     else
@@ -954,7 +956,7 @@ void PositionDialog::ModifyFen()
     wxString ep  = this->en_passant_ctrl->GetValue();
     m_pos.enpassant_target = SQUARE_INVALID;
     if( ep!="None" && 'a'<=ep[0] && ep[0]<='h' )
-        m_pos.enpassant_target = (Square)( (m_pos.white?thc::a6:a3) + (ep[0]-'a') );
+        m_pos.enpassant_target = (Square)( (m_pos.white?a6:a3) + (ep[0]-'a') );
     Pos2Fen( m_pos, fen );
     fen_ctrl->SetValue( fen );
 }

@@ -13,6 +13,7 @@
 #include "thc.h"
 
 using namespace std;
+using namespace thc;
 
 //#define XBORDER 46
 //#define YBORDER 11
@@ -320,7 +321,7 @@ void BoardSetup::SetPosition( const char *position_ascii )
 		"bwbwbwbw";
     strcpy( _position_ascii, position_ascii );
 
-	// Read std::string backwards for black at bottom
+	// Read string backwards for black at bottom
 	if( !normal_orientation )
 		position_ascii += 63;
 

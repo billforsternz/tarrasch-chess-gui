@@ -160,8 +160,8 @@ class ChessRules;
 // We define bitwise == and != operators
 // At one time we had 4 (count em, 4) move representations, but this
 // was always the primary and main representation. The others were
-// FMOVE (16 bit moves), NMOVE (natural std::string representation, eg
-// "Nf3") and TMOVE (terse std::string representation eg "g1f3"). When I
+// FMOVE (16 bit moves), NMOVE (natural string representation, eg
+// "Nf3") and TMOVE (terse string representation eg "g1f3"). When I
 // realised I could streamline an IMOVE (the old name for Move =
 // internal move) to only 32 bits, I realised I could live without
 // FMOVEs and that sparked a large simplification exercise.
@@ -194,24 +194,24 @@ public:
     void Invalid()  { src=a8; dst=a8; }
     bool Valid()    { return src!=a8 || dst!=a8; }
 
-    // Read natural std::string move eg "Nf3"
+    // Read natural string move eg "Nf3"
     //  return bool okay
     bool NaturalIn( ChessRules *cr, const char *natural_in );
 
-    // Read natural std::string move eg "Nf3"
+    // Read natural string move eg "Nf3"
     //  return bool okay
     // Fast alternative for known good input
     bool NaturalInFast( ChessRules *cr, const char *natural_in );
 
-    // Read terse std::string move eg "g1f3"
+    // Read terse string move eg "g1f3"
     //  return bool okay
     bool TerseIn( ChessRules *cr, const char *tmove );
 
-    // Convert to natural std::string
+    // Convert to natural string
     //  eg "Nf3"
     std::string NaturalOut( ChessRules *cr );
 
-    // Convert to terse std::string eg "e7e8q"
+    // Convert to terse string eg "e7e8q"
     std::string TerseOut();
 };
 
@@ -454,7 +454,7 @@ public:
     // For debug
     std::string ToDebugStr( const char *label = 0 );
 
-    // Set up position on board from Forsyth std::string with extensions
+    // Set up position on board from Forsyth string with extensions
     //  return bool okay
     virtual bool Forsyth( const char *txt );
 
@@ -531,7 +531,7 @@ public:
         return *this;
     }
 
-    // Initialise from Forsyth std::string
+    // Initialise from Forsyth string
     bool Forsyth( const char *txt )
     {
         bool okay = ChessPosition::Forsyth(txt);
@@ -553,7 +553,7 @@ public:
     bool IsInsufficientDraw( bool white_asks, DRAWTYPE &result );
 
     // Evaluate a position, returns bool okay (not okay means illegal position)
-    bool Evaluate( thc::TERMINAL &score_terminal );
+    bool Evaluate( TERMINAL &score_terminal );
 
     // Is a square is attacked by enemy ?
     bool AttackedSquare( Square square, bool enemy_is_white );
@@ -616,7 +616,7 @@ protected:
     void BlackPawnMoves( MOVELIST *l, Square square );
 
     // Evaluate a position, returns bool okay (not okay means illegal position)
-    bool Evaluate( MOVELIST *list, thc::TERMINAL &score_terminal );
+    bool Evaluate( MOVELIST *list, TERMINAL &score_terminal );
 
     //### Data
 

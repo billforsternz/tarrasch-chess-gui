@@ -12,6 +12,8 @@
 #include "Repository.h"
 #include "Objects.h"
 #include "Session.h"
+using namespace std;
+using namespace thc;
 
 // Init
 Session::Session()

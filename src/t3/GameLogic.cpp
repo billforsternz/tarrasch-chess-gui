@@ -39,17 +39,19 @@
 #include "CompressMoves.h"
 #include "Tabs.h"
 #include "Database.h"
+using namespace std;
+using namespace thc;
 
 // From PrivateChessDefs.h, avoids including whole file
 #define FILE(sq)    ( (char) (  ((sq)&0x07) + 'a' ) )           // eg c5->'c'
 #define RANK(sq)    ( (char) (  '8' - (((sq)>>3) & 0x07) ) )    // eg c5->'5'
 
-// Stub - just put it anywhere that knows about std::vector
+// Stub - just put it anywhere that knows about vector
 void ReportOnProgress
 (
     bool ,//init,
     int  ,//multipv,
-    std::vector<thc::Move> &, //pv,
+    vector<thc::Move> &, //pv,
     int  ,//   score_cp,
     int   //   depth
 )
@@ -183,36 +185,36 @@ void GameLogic::ShowNewDocument()
     initial_position = gd.start_position;
     canvas->lb->SetGameDocument(&gd);
     thc::ChessRules cr;
-    std::string title;
+    string title;
     gd.Locate( atom.GetInsertionPoint(), cr ); //, title );
     gd.master_position = cr;
 //    objs.frame->SetTitle(title.c_str());
     chess_clock.SetDefault();
     canvas->RedrawClocks();
     GAME_RESULT result = RESULT_NONE;
-    thc::TERMINAL terminal_score;
-    thc::DRAWTYPE draw_type1, draw_type2;
+    TERMINAL terminal_score;
+    DRAWTYPE draw_type1, draw_type2;
     bool gameover = false; 
     gd.master_position.Evaluate(terminal_score);
-    gameover = (terminal_score==thc::TERMINAL_WCHECKMATE || terminal_score==thc::TERMINAL_BCHECKMATE ||
-                terminal_score==thc::TERMINAL_WSTALEMATE || terminal_score==thc::TERMINAL_BSTALEMATE);
+    gameover = (terminal_score==TERMINAL_WCHECKMATE || terminal_score==TERMINAL_BCHECKMATE ||
+                terminal_score==TERMINAL_WSTALEMATE || terminal_score==TERMINAL_BSTALEMATE);
     if( gameover )
     {
         switch( terminal_score )
         {
-            case thc::TERMINAL_WCHECKMATE:  result = RESULT_WHITE_CHECKMATED;   break;
-            case thc::TERMINAL_BCHECKMATE:  result = RESULT_BLACK_CHECKMATED;   break;
-            case thc::TERMINAL_WSTALEMATE:  result = RESULT_DRAW_WHITE_STALEMATED;   break;
-            case thc::TERMINAL_BSTALEMATE:  result = RESULT_DRAW_BLACK_STALEMATED;   break;
+            case TERMINAL_WCHECKMATE:  result = RESULT_WHITE_CHECKMATED;   break;
+            case TERMINAL_BCHECKMATE:  result = RESULT_BLACK_CHECKMATED;   break;
+            case TERMINAL_WSTALEMATE:  result = RESULT_DRAW_WHITE_STALEMATED;   break;
+            case TERMINAL_BSTALEMATE:  result = RESULT_DRAW_BLACK_STALEMATED;   break;
         }
     }
     else if( gd.master_position.IsDraw(true,draw_type1) && gd.master_position.IsDraw(false,draw_type2) )
     {
         gameover = true; 
         result = RESULT_DRAW_INSUFFICIENT;
-        if( draw_type1==thc::DRAWTYPE_50MOVE || draw_type2==thc::DRAWTYPE_50MOVE )
+        if( draw_type1==DRAWTYPE_50MOVE || draw_type2==DRAWTYPE_50MOVE )
             result = RESULT_DRAW_50MOVE;
-        else if( draw_type1==thc::DRAWTYPE_REPITITION || draw_type2==thc::DRAWTYPE_REPITITION )
+        else if( draw_type1==DRAWTYPE_REPITITION || draw_type2==DRAWTYPE_REPITITION )
             result = RESULT_DRAW_REPITITION;
     }
     objs.repository->player.m_white = gd.r.white;
@@ -246,7 +248,7 @@ void GameLogic::CmdPlayWhite()
         objs.canvas->SetMinimumPlaySize();
         glc.Begin( true );
         thc::ChessRules cr;
-        std::string move_txt;
+        string move_txt;
         GAME_MOVE *game_move = gd.GetSummaryMove( cr, move_txt );
         chess_clock.NewHumanEngineGame( true, cr.white );
         chess_clock.GetTimes( human_millisecs_time_start, engine_millisecs_time_start );
@@ -290,7 +292,7 @@ void GameLogic::CmdPlayBlack()
         objs.canvas->SetMinimumPlaySize();
         glc.Begin( false );
         thc::ChessRules cr;
-        std::string move_txt;
+        string move_txt;
         GAME_MOVE *game_move = gd.GetSummaryMove( cr, move_txt );
         chess_clock.NewHumanEngineGame( false, cr.white );
         chess_clock.GetTimes( engine_millisecs_time_start, human_millisecs_time_start );
@@ -414,7 +416,7 @@ void GameLogic::CmdSwapSides()
         }
         SetGroomedPosition();
         thc::ChessRules cr;
-        std::string last_move_txt;
+        string last_move_txt;
         GAME_MOVE *last_move = gd.GetSummary( cr, last_move_txt );
         glc.Swap();
         wxString temp                   = objs.repository->player.m_black;
@@ -547,7 +549,7 @@ void GameLogic::CmdFileOpen()
 void GameLogic::CmdFileOpenLog()
 {
     Atomic begin;
-    std::string filename( objs.repository->log.m_file.c_str() );
+    string filename( objs.repository->log.m_file.c_str() );
     if( filename == "" )
     {
         wxMessageBox( "No log file specified, use options menu to solve this problem", "Cannot read log file", wxOK|wxICON_ERROR );
@@ -1256,7 +1258,7 @@ void GameLogic::FullUndo( GAME_STATE game_state )
 
                 // Check that the move to ponder is legal
                 bool legal=false;
-                std::vector<thc::Move> moves;
+                vector<thc::Move> moves;
                 gd.master_position.GenLegalMoveList( moves );
                 for( unsigned int i=0; i<moves.size(); i++ )
                 {
@@ -1427,15 +1429,15 @@ void GameLogic::CmdDraw()
         GAME_RESULT result = RESULT_DRAW_AGREED;
         if( state==HUMAN || state==PONDERING )
         {
-            thc::DRAWTYPE draw_type;
+            DRAWTYPE draw_type;
             if( gd.master_position.IsDraw(glc.human_is_white,draw_type) )
             {
                 switch( draw_type )
                 {
-                    case thc::DRAWTYPE_INSUFFICIENT:    
-                    case thc::DRAWTYPE_INSUFFICIENT_AUTO:  result = RESULT_DRAW_INSUFFICIENT;   break;
-                    case thc::DRAWTYPE_50MOVE:             result = RESULT_DRAW_50MOVE;         break;
-                    case thc::DRAWTYPE_REPITITION:         result = RESULT_DRAW_REPITITION;     break;
+                    case DRAWTYPE_INSUFFICIENT:    
+                    case DRAWTYPE_INSUFFICIENT_AUTO:  result = RESULT_DRAW_INSUFFICIENT;   break;
+                    case DRAWTYPE_50MOVE:             result = RESULT_DRAW_50MOVE;         break;
+                    case DRAWTYPE_REPITITION:         result = RESULT_DRAW_REPITITION;     break;
                 }
             }
         }
@@ -1696,7 +1698,7 @@ bool GameLogic::CmdUpdateDraw     ()
     bool enabled = (state==MANUAL || state==RESET);
     if( state==HUMAN || state==PONDERING )
     {
-        thc::DRAWTYPE draw_type;
+        DRAWTYPE draw_type;
         if( gd.master_position.IsDraw(glc.human_is_white,draw_type) )
             enabled = true;
     }
@@ -2002,7 +2004,7 @@ void GameLogic::OnIdle()
 
                     // Check that the move to ponder is legal
                     bool legal=false;
-                    std::vector<thc::Move> moves;
+                    vector<thc::Move> moves;
                     gd.master_position.GenLegalMoveList( moves );
                     for( unsigned int i=0; i<moves.size(); i++ )
                     {
@@ -2173,9 +2175,9 @@ void GameLogic::MouseUp( char file, char rank, wxPoint &point )
 	{
 
         // It's possible there's more than one move (promotion)
-        std::vector<thc::Move> moves;
-        std::vector<thc::Move> menu;
-        thc::ChessEvaluation chess_evaluation = gd.master_position;
+        vector<thc::Move> moves;
+        vector<thc::Move> menu;
+        ChessEvaluation chess_evaluation = gd.master_position;
         chess_evaluation.GenLegalMoveListSorted( moves );
         for( unsigned int i=0; i<moves.size(); i++ )
         {
@@ -2186,7 +2188,7 @@ void GameLogic::MouseUp( char file, char rank, wxPoint &point )
                 menu.push_back( move );
             }
         }
-        std::vector<thc::Move> book_moves;
+        vector<thc::Move> book_moves;
         bool have_book_moves = objs.book->Lookup( gd.master_position, book_moves );
 
         // If 0 moves go to HUMAN or MANUAL
@@ -2215,7 +2217,7 @@ void GameLogic::MouseUp( char file, char rank, wxPoint &point )
                     play_it_now = true;
 
                 // If it's a book move play it
-                std::vector<thc::Move>::iterator it;
+                vector<thc::Move>::iterator it;
                 for( it = book_moves.begin(); it != book_moves.end(); it++ )
                 {
                     if( move == *it )
@@ -2304,13 +2306,13 @@ void GameLogic::BookHover( wxPoint& WXUNUSED(point) )
 {
     if( state==RESET || state==MANUAL || state==HUMAN || state==PONDERING )
     {
-        std::vector<thc::Move>  book_moves;
+        vector<thc::Move>  book_moves;
         bool have_book_moves = objs.book->Lookup( gd.master_position, book_moves );
         if( have_book_moves )
         {
             if( objs.rybka )
                 objs.rybka->SuspendResume(false);   // suspend
-            std::vector<thc::Move> menu; // empty
+            vector<thc::Move> menu; // empty
             wxPoint pt   = objs.canvas->book_moves->GetPosition();
             wxRect  rect = objs.canvas->book_moves->GetRect();
             pt.y = -4;  // just above client area
@@ -2359,8 +2361,8 @@ bool GameLogic::MouseDown( char file, char rank, wxPoint &point )     // return 
             }
             else
             {
-                std::vector<thc::Move> moves, menu;
-                thc::ChessEvaluation chess_evaluation = gd.master_position;
+                vector<thc::Move> moves, menu;
+                ChessEvaluation chess_evaluation = gd.master_position;
                 chess_evaluation.GenLegalMoveListSorted( moves );
                 for( unsigned int i=0; i<moves.size(); i++ )
                 {
@@ -2368,7 +2370,7 @@ bool GameLogic::MouseDown( char file, char rank, wxPoint &point )     // return 
                     if( FILE(move.dst)==file && RANK(move.dst)==rank )
                         menu.push_back( move );
                 }
-                std::vector<thc::Move> book_moves;
+                vector<thc::Move> book_moves;
                 bool unique_and_in_book = false;
                 bool have_book_moves = objs.book->Lookup( gd.master_position, book_moves );
                 if( !objs.repository->book.m_suggest )
@@ -2752,8 +2754,8 @@ void GameLogic::StatusUpdate( int idx )
     }
 }
 
-void GameLogic::DoPopup( wxPoint &point, std::vector<thc::Move> &target_moves,
-                                         std::vector<thc::Move> &book_moves,
+void GameLogic::DoPopup( wxPoint &point, vector<thc::Move> &target_moves,
+                                         vector<thc::Move> &book_moves,
                                          POPUP_MODE popup_mode,
                                          wxRect hover )
 {
@@ -2950,28 +2952,28 @@ bool GameLogic::MakeMove( thc::Move move, GAME_RESULT &result )
     else
     {
         gd.master_position.PlayMove(move);
-        thc::TERMINAL terminal_score;
-        thc::DRAWTYPE draw_type1, draw_type2;
+        TERMINAL terminal_score;
+        DRAWTYPE draw_type1, draw_type2;
         gd.master_position.Evaluate(terminal_score);
-        gameover = (terminal_score==thc::TERMINAL_WCHECKMATE || terminal_score==thc::TERMINAL_BCHECKMATE ||
-                    terminal_score==thc::TERMINAL_WSTALEMATE || terminal_score==thc::TERMINAL_BSTALEMATE);
+        gameover = (terminal_score==TERMINAL_WCHECKMATE || terminal_score==TERMINAL_BCHECKMATE ||
+                    terminal_score==TERMINAL_WSTALEMATE || terminal_score==TERMINAL_BSTALEMATE);
         if( gameover )
         {
             switch( terminal_score )
             {
-                case thc::TERMINAL_WCHECKMATE:  result = RESULT_WHITE_CHECKMATED;   break;
-                case thc::TERMINAL_BCHECKMATE:  result = RESULT_BLACK_CHECKMATED;   break;
-                case thc::TERMINAL_WSTALEMATE:  result = RESULT_DRAW_WHITE_STALEMATED;   break;
-                case thc::TERMINAL_BSTALEMATE:  result = RESULT_DRAW_BLACK_STALEMATED;   break;
+                case TERMINAL_WCHECKMATE:  result = RESULT_WHITE_CHECKMATED;   break;
+                case TERMINAL_BCHECKMATE:  result = RESULT_BLACK_CHECKMATED;   break;
+                case TERMINAL_WSTALEMATE:  result = RESULT_DRAW_WHITE_STALEMATED;   break;
+                case TERMINAL_BSTALEMATE:  result = RESULT_DRAW_BLACK_STALEMATED;   break;
             }
         }
         else if( ingame && gd.master_position.IsDraw(true,draw_type1) && gd.master_position.IsDraw(false,draw_type2) )
         {
             gameover = true; 
             result = RESULT_DRAW_INSUFFICIENT;
-            if( draw_type1==thc::DRAWTYPE_50MOVE || draw_type2==thc::DRAWTYPE_50MOVE )
+            if( draw_type1==DRAWTYPE_50MOVE || draw_type2==DRAWTYPE_50MOVE )
                 result = RESULT_DRAW_50MOVE;
-            else if( draw_type1==thc::DRAWTYPE_REPITITION || draw_type2==thc::DRAWTYPE_REPITITION )
+            else if( draw_type1==DRAWTYPE_REPITITION || draw_type2==DRAWTYPE_REPITITION )
                 result = RESULT_DRAW_REPITITION;
         }
     }
@@ -3022,7 +3024,7 @@ void GameLogic::SetGroomedPosition( bool show_title )
     if( objs.canvas )
     {
         thc::ChessRules cr;
-        std::string move_txt;
+        string move_txt;
         if( lag_nbr == 0 )
         {
             GAME_MOVE *game_move = gd.GetSummary( cr, move_txt, 0 );
@@ -3188,7 +3190,7 @@ GAME_STATE GameLogic::StartThinking( const thc::Move *human_move )
         }
 
         // See if the position is in the book
-        std::vector<BookMove> fast_moves;
+        vector<BookMove> fast_moves;
         bool have_fast_moves = objs.book->Lookup( pos, fast_moves );
         if( have_fast_moves )
         {
@@ -3219,7 +3221,7 @@ GAME_STATE GameLogic::StartThinking( const thc::Move *human_move )
         book_move.Invalid();
         if( have_fast_moves )
         {
-            std::vector<BookMove> candidates;
+            vector<BookMove> candidates;
             unsigned int min = 4000000000;
             for( unsigned int i=0; i<fast_moves.size(); i++ )
             {
@@ -3414,7 +3416,7 @@ void GameLogic::CmdKibitzCaptureAll()
       )
     {
         // Rank the available lines according to score
-        std::vector<PV> sortable;
+        vector<PV> sortable;
         for( unsigned int i=0; i<nbrof(kibitz_rank); i++ )
         {
             PV x;
@@ -3461,7 +3463,7 @@ void GameLogic::CmdKibitzCaptureOne()
       )
     {
         // Rank the available lines according to score
-        std::vector<PV> sortable;
+        vector<PV> sortable;
         for( unsigned int i=0; i<nbrof(kibitz_rank); i++ )
         {
             PV x;
@@ -3613,7 +3615,7 @@ void GameLogic::KibitzUpdate( int idx, const char *txt )
     }
 
     // Rank the available lines according to score
-    std::vector<PV> sortable;
+    vector<PV> sortable;
     for( unsigned int i=0; i<nbrof(kibitz_rank); i++ )
     {
         PV x;

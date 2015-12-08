@@ -32,7 +32,7 @@ public:
     bool HaveStartPosition() { return (r.fen.length() > 0 ); }
     thc::ChessPosition &GetStartPosition() { if( r.fen.length()>0 ) start_position.Forsyth(r.fen.c_str()); return start_position; }
     
-    // Return index into std::vector where start position found
+    // Return index into vector where start position found
     bool FindPositionInGame( uint64_t hash_to_match, int &idx )
     {
         thc::ChessRules cr = GetStartPosition();

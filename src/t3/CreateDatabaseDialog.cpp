@@ -304,8 +304,8 @@ void CreateDatabaseDialog::OnCreateDatabase()
         ok = db_primitive_flush();
     if( ok )
         ok = db_primitive_transaction_end();
-    if( ok )
-        ok = db_primitive_create_indexes();
+    //if( ok )
+    //    ok = db_primitive_create_indexes();
     if( ok )
         db_primitive_close();
     if( ok )

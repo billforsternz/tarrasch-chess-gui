@@ -12,6 +12,8 @@
 #include "DebugPrintf.h"
 #include "Objects.h"
 #include "PopupControl.h"
+using namespace std;
+using namespace thc;
 
 PopupControl::PopupControl
 (

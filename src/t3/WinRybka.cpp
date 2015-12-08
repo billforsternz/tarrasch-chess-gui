@@ -12,12 +12,14 @@
 #include <windows.h>
 #include <tlhelp32.h>
 #include <conio.h>
-#include <string>
+#include <string.h>
 #include <winbase.h>
 #include "Rybka.h"
 #include "DebugPrintf.h"
 #include "Repository.h"
 #include "Objects.h"
+using namespace std;
+using namespace thc;
 
 /*
 
@@ -130,7 +132,7 @@ extern void JobEnd()
 }
 
 
-// Some smart std::string functions
+// Some smart string functions
 const char *str_pattern( const char *str, const char *pattern, bool more=false );
 const char *str_search( const char *str, const char *pattern, bool more=false );
 const char *str_pattern_smart( const char *str, const char *pattern );
@@ -1403,8 +1405,8 @@ void Rybka::OptionIn( const char *s )
 
 // Case insensitive pattern match
 // Return NULL if no match
-// Return ptr into std::string beyond matched part of std::string
-// Only if more is true, can the std::string be longer than the matching part
+// Return ptr into string beyond matched part of string
+// Only if more is true, can the string be longer than the matching part
 // So if more is false, and NULL is not returned, the returned ptr always points at trailing '\0'
 const char *str_pattern( const char *str, const char *pattern, bool more )
 {
@@ -1444,8 +1446,8 @@ const char *str_pattern( const char *str, const char *pattern, bool more )
 
 // Case insensitive pattern match - search for start of pattern
 // Return NULL if no match
-// Return ptr into std::string beyond matched part of std::string
-// Only if more is true, can the std::string be longer than the matching part
+// Return ptr into string beyond matched part of string
+// Only if more is true, can the string be longer than the matching part
 // So if more is false, and NULL is not returned, the returned ptr always points at trailing '\0'
 const char *str_search( const char *str, const char *pattern, bool more )
 {
@@ -1481,7 +1483,7 @@ const char *str_search( const char *str, const char *pattern, bool more )
 
 // Case insensitive pattern match - smart version
 // Return NULL if no match
-// Return ptr into std::string beyond matched part of std::string
+// Return ptr into string beyond matched part of string
 // special pattern characters
 //   '|'  alternative token
 //   '*'  any number of tokens including zero
@@ -1530,7 +1532,7 @@ const char *str_pattern_smart( const char *str, const char *pattern )
         else if( *str == '\0' )
             break;
 
-        // Read next token from std::string
+        // Read next token from string
         while( *str && isascii(*str) && !isalnum(*str) )
             str++;
         char *dst = buf_str;

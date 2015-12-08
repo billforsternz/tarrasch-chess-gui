@@ -1415,7 +1415,7 @@ static void make_test_game( std::string &blob, int argc, const char *argv[] )
 {
     thc::ChessRules cr;
     thc::Move mv;
-    std::vector<thc::Move> mvs;
+    vector<thc::Move> mvs;
     for( int i=0; i<argc; i++ )
     {
         mv.NaturalInFast( &cr, argv[i] );
@@ -1488,7 +1488,7 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &gds )
 
     std::vector<MoveColCompareElement> inter;     // intermediate representation
     
-    // Step 1, do a conventional std::string sort
+    // Step 1, do a conventional string sort
     unsigned int sz = gds.size();
     for( unsigned int i=0; i<sz; i++ )
     {

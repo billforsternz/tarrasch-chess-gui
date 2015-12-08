@@ -444,7 +444,7 @@ char CompressMoves::CompressSlowMode( thc::Move mv )
     cr.bking = 1;
     cr.bqueen = 1;
 
-    // Generate a list of all legal moves, in std::string form, sorted
+    // Generate a list of all legal moves, in string form, sorted
     std::vector<thc::Move> moves;
     cr.GenLegalMoveList( moves );
     std::vector<std::string> moves_alpha;
@@ -815,7 +815,7 @@ thc::Move CompressMoves::UncompressSlowMode( char code )
     cr.bking = 1;
     cr.bqueen = 1;
     
-    // Generate a list of all legal moves, in std::string form, sorted
+    // Generate a list of all legal moves, in string form, sorted
     std::vector<thc::Move> moves;
     cr.GenLegalMoveList( moves );
     std::vector<std::string> moves_alpha;

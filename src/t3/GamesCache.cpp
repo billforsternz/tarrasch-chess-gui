@@ -130,7 +130,7 @@ bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen )
                 {
                     p++;
                     
-                    // Skip to 2nd " or end of std::string
+                    // Skip to 2nd " or end of string
                     while( *p && *p!='\"' )
                         p++;
                     
@@ -394,7 +394,7 @@ bool GamesCache::Tagline( GameDocument &gd,  const char *s )
         s++;
         val_begin = s;
 
-        // Skip to 2nd " or end of std::string
+        // Skip to 2nd " or end of string
         while( *s && *s!='\"' )
             s++;
 
@@ -403,8 +403,8 @@ bool GamesCache::Tagline( GameDocument &gd,  const char *s )
         {
             is_header = true;
             val_end = s;
-            std::string tag(tag_begin,tag_end-tag_begin);
-            std::string val(val_begin,val_end-val_begin);
+            string tag(tag_begin,tag_end-tag_begin);
+            string val(val_begin,val_end-val_begin);
             if( tag == "White" )
                 gd.r.white = val;
             if( tag == "Black" )

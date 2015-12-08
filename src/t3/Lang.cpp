@@ -42,7 +42,7 @@ const char * LangCheckDiffEnd()
     return same ? NULL : lookup;
 }
 
-// Set new language (sets English if std::string is invalid)
+// Set new language (sets English if string is invalid)
 void LangSet( wxString &txt )
 {
     bool okay = LangValidateString(txt);
@@ -143,14 +143,14 @@ void LangLine( std::string &s, const char *from, const char *to )
 }
 
 
-// Check a language specification std::string, uppercasing it if necessary
+// Check a language specification string, uppercasing it if necessary
 bool LangValidateString( wxString &txt )
 {
     bool okay=false;
     const char *cstr = txt.c_str();
     int i;
 
-    // If it's a known std::string, definitely okay
+    // If it's a known string, definitely okay
     for( i=1; !okay; i++ )  // skip first which is not okay
     {
         if( known_langs[i] == NULL )
@@ -162,7 +162,7 @@ bool LangValidateString( wxString &txt )
         }
     }
 
-    // If not a known std::string validate
+    // If not a known string validate
     if( !okay )
     {
         okay = true;

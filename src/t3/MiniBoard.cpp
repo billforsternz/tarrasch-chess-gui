@@ -14,6 +14,8 @@
 #include "BoardSetup.h"
 #include "MiniBoard.h"
 #include "bitmaps/miniboard_bitmap.xpm"
+using namespace std;
+using namespace thc;
 
 MiniBoard::MiniBoard
 (

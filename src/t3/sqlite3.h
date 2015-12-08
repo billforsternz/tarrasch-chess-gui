@@ -533,7 +533,7 @@ SQLITE_API int sqlite3_exec(
 ** CAPI3REF: Device Characteristics
 **
 ** The xDeviceCharacteristics method of the [sqlite3_io_methods]
-** object returns an integer which is a std::vector of these
+** object returns an integer which is a vector of these
 ** bit values expressing I/O characteristics of the mass storage
 ** device that holds the file that the [sqlite3_io_methods]
 ** refers to.
@@ -687,7 +687,7 @@ struct sqlite3_file {
 ** device that underlies the file.  The sector size is the
 ** minimum write that can be performed without disturbing
 ** other bytes in the file.  The xDeviceCharacteristics()
-** method returns a bit std::vector describing behaviors of the
+** method returns a bit vector describing behaviors of the
 ** underlying device:
 **
 ** <ul>

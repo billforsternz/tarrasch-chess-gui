@@ -7,7 +7,7 @@
 #ifndef KIBITZQ_H
 #define KIBITZQ_H
 
-#include <string>
+#include <string.h>
 #ifndef nbrof
     #define nbrof(x) ( sizeof(x) / sizeof((x)[0]) )
 #endif
