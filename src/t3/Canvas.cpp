@@ -573,7 +573,7 @@ Canvas::Canvas
     objs.log        = new Log;
     objs.book       = new Book;
     objs.cws        = new CentralWorkSaver;
-    objs.db         = new Database( objs.repository->database.m_file.c_str() );
+//    objs.db         = new Database( objs.repository->database.m_file.c_str() );
     objs.tabs       = new Tabs;
     objs.gl         = NULL;
     GameLogic *gl   = new GameLogic( this, lb );
@@ -589,6 +589,7 @@ Canvas::Canvas
     objs.cws->Init( &objs.gl->undo, &objs.gl->gd, &objs.gl->gc_pgn, &objs.gl->gc_clipboard ); 
     SetPlayers( "", "" );
     PositionButtons();
+//    objs.db         = new Database( objs.repository->database.m_file.c_str() );
 
     lb_sz_base           = lb->GetSize();
     parent_sz_base       = parent->GetSize();

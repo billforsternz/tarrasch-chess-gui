@@ -131,10 +131,10 @@ void Database::BuildDefaultDatabase( const char *db_file_name )
     {
         pgn = db.substr(0,offset) + ".pgn";
         cprintf( "Possible pgn file to build default database is %s\n", pgn.c_str() );
-        wxString wxpgn( pgn.c_str() );
-        wxString wxdb( db_file_name );
-        bool exists_p = wxFile::Exists(wxpgn);
-        bool exists_d = wxFile::Exists(wxdb);
+        wxFileName wxpgn( pgn.c_str() );
+        wxFileName wxdb( db_file_name );
+        bool exists_p = wxpgn.Exists();;
+        bool exists_d = wxdb.Exists();
         build = exists_p && !exists_d;      // pgn present, but not database
         cprintf( "exists_p=%s, exists_d=%s, build=%s\n", exists_p?"true":"false", exists_d?"true":"false", build?"true":"false" );
     }
@@ -159,7 +159,8 @@ void Database::BuildDefaultDatabase( const char *db_file_name )
         {
             std::string title( "Creating database, step 2 of 4");
             std::string desc("Reading file ");
-            desc += pgn;
+            wxFileName wxpgn( pgn.c_str() );
+            desc += wxpgn.GetFullName().c_str();
             ProgressBar progress_bar( title, desc, NULL, ifile );
             PgnRead *pr = new PgnRead('A',&progress_bar);
             bool aborted = pr->Process(ifile);

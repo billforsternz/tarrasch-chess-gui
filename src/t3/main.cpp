@@ -394,6 +394,7 @@ bool ChessApp::OnInit()
     SetTopWindow (frame);
     if( objs.gl )
         objs.gl->StatusUpdate();
+    objs.db         = new Database( objs.repository->database.m_file.c_str() );
     return true;
 }
 
