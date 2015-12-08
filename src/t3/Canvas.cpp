@@ -725,18 +725,18 @@ void Canvas::AdjustPosition( bool have_players )
     wxButton *button;
     int shift = (have_players?0:FIELD);
 
-    // thc::ChessPosition box
+    // Position box
     wxPoint pos;
     LOCATE_P( box, pos );
     pos.y -= shift;
     box->SetPosition( pos );
 
-    // thc::ChessPosition status
+    // Position status
     LOCATE_P( status, pos );
     pos.y -= shift;
     status->SetPosition( pos );
 
-    // thc::ChessPosition buttons
+    // Position buttons
     int x, y;
     LOCATE_XY( button, x, y );
     y -= shift;

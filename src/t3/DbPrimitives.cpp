@@ -734,9 +734,9 @@ bool db_primitive_insert_game( bool &signal_error, const char *white, const char
         {
             //cprintf( "***  DUPLICATE GAME DISCARDED\n" );
             // ZOMBIE bug fix - return here, don't add bogus moves and increment game count
-            db_temporary_hack( white, black, event, site, round, result,
-                                    date, white_elo, black_elo, eco,
-                                    nbr_moves, moves  );
+            //db_temporary_hack( white, black, event, site, round, result,
+            //                        date, white_elo, black_elo, eco,
+            //                        nbr_moves, moves  );
             return false;   // not inserted, not error
         }
         
