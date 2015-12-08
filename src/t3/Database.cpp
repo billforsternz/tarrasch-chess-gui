@@ -14,6 +14,8 @@
 #include "DebugPrintf.h"
 #include "CompressMoves.h"
 #include "ListableGameDb.h"
+#include "PgnRead.h"
+#include "ProgressBar.h"
 #include "DbPrimitives.h"
 #include "Database.h"
 #include "Repository.h"
@@ -36,6 +38,8 @@ Database::Database( const char *db_file )
     gbl_expected = 0;
     gbl_current = 0;
     gbl_count = 0;
+
+    BuildDefaultDatabase( db_file );
     
     // Access the database.
     int retval = sqlite3_open( db_file, &gbl_handle );
@@ -109,6 +113,87 @@ void Database::Reopen( const char *db_file )
     // If connection failed, handle returns NULL
     dbg_printf( "DATABASE REOPEN %s\n", retval ? "FAILED" : "SUCCESSFUL" );
 }
+
+// Build the default database if .pgn exists and .tdb doesn't
+void Database::BuildDefaultDatabase( const char *db_file_name )
+{
+    bool build = true;
+    std::string error_msg;
+    std::string db(db_file_name);
+    std::string pgn;
+    int offset = db.find(".tarrasch_db");
+    if( offset == std::string::npos )
+    {
+        cprintf( "Database file extension not found in %s?!\n", db_file_name );
+        build = false;
+    }
+    else
+    {
+        pgn = db.substr(0,offset) + ".pgn";
+        cprintf( "Possible pgn file to build default database is %s\n", pgn.c_str() );
+        wxString wxpgn( pgn.c_str() );
+        wxString wxdb( db_file_name );
+        bool exists_p = wxFile::Exists(wxpgn);
+        bool exists_d = wxFile::Exists(wxdb);
+        build = exists_p && !exists_d;      // pgn present, but not database
+        cprintf( "exists_p=%s, exists_d=%s, build=%s\n", exists_p?"true":"false", exists_d?"true":"false", build?"true":"false" );
+    }
+    if( build )
+    {
+        db_primitive_error_msg();   // clear error reporting mechanism
+        bool ok = db_primitive_open( db_file_name, true );
+        if( ok )
+            ok = db_primitive_transaction_begin(NULL);
+        if( ok )
+            ok = db_primitive_create_tables();
+        if( ok )
+            ok = (db_primitive_count_games()>=0); // to set game_id to zero
+        FILE *ifile = fopen( pgn.c_str(), "rt" );
+        if( !ifile )
+        {
+            error_msg = "Cannot open ";
+            error_msg += pgn;
+            ok = false;
+        }
+        else
+        {
+            std::string title( "Creating database, step 2 of 4");
+            std::string desc("Reading file ");
+            desc += pgn;
+            ProgressBar progress_bar( title, desc, NULL, ifile );
+            PgnRead *pr = new PgnRead('A',&progress_bar);
+            bool aborted = pr->Process(ifile);
+            if( aborted )
+            {
+                error_msg = db_primitive_error_msg();
+                if( error_msg == "" )
+                    error_msg = "cancel";
+                ok = false;
+            }
+            delete pr;
+            fclose(ifile);
+        }
+        if( ok )
+            ok = db_primitive_flush();
+        if( ok )
+            ok = db_primitive_transaction_end();
+        if( ok )
+            ok = db_primitive_create_indexes();
+        if( ok )
+            db_primitive_close();
+        if( !ok )
+        {
+            if( error_msg == "" )
+                error_msg = db_primitive_error_msg();
+            if( error_msg == "cancel" )
+                error_msg = "Database creation cancelled";
+            wxMessageBox( error_msg.c_str(), "Database creation failed", wxOK|wxICON_ERROR );
+            db_primitive_close();
+            unlink(db.c_str());
+        }
+    }
+}
+
 
 // Return bool operational
 bool Database::IsOperational( std::string &error_msg )

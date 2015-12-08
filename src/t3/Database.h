@@ -29,6 +29,7 @@ public:
     Database( const char *db_file );
     ~Database();
     void Reopen( const char *db_file );
+    void BuildDefaultDatabase( const char *db_file_name );
     bool IsOperational( std::string &error_msg );
     bool GetDatabaseVersion( int &version );
     int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr );
