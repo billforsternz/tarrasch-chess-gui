@@ -134,7 +134,7 @@ void Database::BuildDefaultDatabase( const char *db_file_name )
         wxFileName wxpgn( pgn.c_str() );
         wxFileName wxdb( db_file_name );
         bool exists_p = wxpgn.Exists();;
-        bool exists_d = wxdb.Exists();
+        bool exists_d = wxdb.Exists() && (wxdb.GetSize()>0);
         build = exists_p && !exists_d;      // pgn present, but not database
         cprintf( "exists_p=%s, exists_d=%s, build=%s\n", exists_p?"true":"false", exists_d?"true":"false", build?"true":"false" );
     }
