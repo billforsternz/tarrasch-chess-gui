@@ -825,6 +825,7 @@ void trim( std::string &s )
 //  edited document is added to end of session instead)
 void GameLogic::PutBackDocument()
 {
+	cprintf( "PutBackDocument 0\n" );
     for( int i=0; i<gc_pgn.gds.size(); i++ )
     {
         smart_ptr<ListableGame> smp = gc_pgn.gds[i];
@@ -834,8 +835,10 @@ void GameLogic::PutBackDocument()
             gd.FleshOutMoves();
             GameDocument new_doc = gd;
             new_doc.modified = gd.modified || undo.IsModified();
+			cprintf( "PutBackDocument %d 1, modified=%s\n", i, new_doc.modified?"true":"false" );
             make_smart_ptr( GameDocument, new_smart_ptr, new_doc);
             gc_pgn.gds[i] = std::move(new_smart_ptr);
+			cprintf( "PutBackDocument %d 2, modified=%s\n", i, gc_pgn.gds[i]->IsModified()?"true":"false" );
             return;
         }
     }
@@ -2702,6 +2705,7 @@ void GameLogic::StatusUpdate( int idx )
                 if( ptr && ptr->IsModified() )
                 {
                     nbr_modified++;
+					cprintf( "StatusUpdate> i=%d, modified\n", i );
                 }
                 else if( ptr && game_being_edited )
                 {

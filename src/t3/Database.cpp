@@ -21,6 +21,7 @@
 #include "Repository.h"
 #include "wx/msgout.h"
 #include "wx/progdlg.h"
+#include "wx/filename.h"
 
 //
 //  This class has evolved into a DatabaseRead facility and should be
@@ -133,8 +134,8 @@ void Database::BuildDefaultDatabase( const char *db_file_name )
         cprintf( "Possible pgn file to build default database is %s\n", pgn.c_str() );
         wxFileName wxpgn( pgn.c_str() );
         wxFileName wxdb( db_file_name );
-        bool exists_p = wxpgn.Exists();;
-        bool exists_d = wxdb.Exists() && (wxdb.GetSize()>0);
+        bool exists_p = wxpgn.FileExists();;
+        bool exists_d = wxdb.FileExists() && (wxdb.GetSize()>0);
         build = exists_p && !exists_d;      // pgn present, but not database
         cprintf( "exists_p=%s, exists_d=%s, build=%s\n", exists_p?"true":"false", exists_d?"true":"false", build?"true":"false" );
     }

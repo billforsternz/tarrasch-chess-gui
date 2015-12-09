@@ -93,6 +93,7 @@ bool db_primitive_transaction_begin( wxWindow *parent )
 bool db_primitive_transaction_end()
 {
     bool ok = purge_buckets();
+    ProgressBar prog( "Creating database", "Completing save", window_parent );
     if( ok )
     {
         char *errmsg=NULL;

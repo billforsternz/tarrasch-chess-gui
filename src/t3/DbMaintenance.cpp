@@ -123,8 +123,8 @@ void db_maintenance_verify_compression()
 
 void db_maintenance_create_player_database()
 {
-    std::string input("C:\\Users\\Bill\\Downloads\\millionbase\\millionbase-2.22");
-    //std::string input("C:\\Users\\Bill\\Downloads\\millionbase\\twic-2006-2015");
+    //std::string input("C:\\Users\\Bill\\Documents\\T3Database\\millionbase-2.22");
+    std::string input("C:\\Users\\Bill\\Documents\\T3Database\\twic-2006-2015");
     players_database_begin();
     std::string input_file = input+".pgn";
     std::string output_file = input+"-output.pgn";
@@ -758,7 +758,7 @@ PLAYER players[] =
 { "Gelfand, Boris",           2000, false,  false,  "gelfand", "boris" },
 { "Geller, Efim",             1960, true,   false,  "geller", "efim" },
 { "Georgadze, Tamaz",         1980, false,  false,  "georgadze", "tamaz" },
-{ "Georgiev, Kiril",          2000, false,  false,  "georgiev", "kiril" },
+// { "Georgiev, Kiril",          2000, false,  false,  "georgiev", "kiril" },
 { "Ghaem Maghami, Ehsan",     2005, false,  false,  "ghaem maghami", "ehsan" },
 { "Gharamian, Tigran",        2015, false,  false,  "gharamian", "tigran" },
 { "Gheorghiu, Florin",        1980, false,  false,  "gheorghiu", "florin" },
@@ -1105,9 +1105,11 @@ static int candidate( bool &warning, const char *name )
     {
         if( second_character && players[it->second].extra[1] != second_character )
         {
-            if( 0==strcmp(surname,"petrosian") || 0==strcmp(surname,"lasker")  || 0==strcmp(surname,"georgiev") )
+            // filter out Tigran Petrosian Junior, Edward Lasker and Krum Georgiev
+            if(  0==strcmp(surname,"lasker")  || 0==strcmp(surname,"georgiev") )
                 warning = true;
-                // to filter out Tigran Petrosian Junior, Edward Lasker and Krum Georgiev
+            if( 0==strcmp(surname,"petrosian")  )
+				return -1;
         }
         return it->second;
     }
