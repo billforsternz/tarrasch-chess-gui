@@ -48,9 +48,10 @@ bool GamesCache::Load(std::string &filename )
     FILE *pgn_file = objs.gl->pf.OpenRead( filename, pgn_handle );
     if( pgn_file )
     {
-        pgn_filename = filename;
         gds.clear();
         loaded = Load(pgn_file);
+        if( loaded )
+            pgn_filename = filename;
         objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
     }
     return loaded;
@@ -246,17 +247,17 @@ bool GamesCache::Load( FILE *pgn_file )
 
 static CompactGame *phook;
 void pgn_read_hook( const char *white, const char *black, const char *event, const char *site, const char *result,
-                                    const char *date, const char *white_elo, const char *black_elo,
+                                    const char *date, const char *white_elo, const char *black_elo, const char *eco, const char *round,
                                     int nbr_moves, thc::Move *moves, uint64_t *hashes  )
 {
     phook->r.white     = std::string(white);
     phook->r.black     = std::string(black);
     phook->r.event     = std::string(event);
     phook->r.site      = std::string(site);
-    //phook->r.round   = std::string(round);
+    phook->r.round     = std::string(round);
     phook->r.result    = std::string(result);
     phook->r.date      = std::string(date);
-    //phook->r.eco     = std::string(eco);
+    phook->r.eco       = std::string(eco);
     phook->r.white_elo = std::string(white_elo);
     phook->r.black_elo = std::string(black_elo);
     phook->moves       = std::vector<thc::Move>(moves,moves+nbr_moves);
@@ -438,7 +439,6 @@ bool GamesCache::Tagline( GameDocument &gd,  const char *s )
 // Create a new file
 bool GamesCache::FileCreate( std::string &filename, GameDocument &gd )
 {
-    pgn_filename = filename;
     resume_previous_window = false;
     loaded = false;
 
@@ -447,10 +447,11 @@ bool GamesCache::FileCreate( std::string &filename, GameDocument &gd )
     gd.pgn_handle = 0;
     make_smart_ptr( GameDocument, new_doc, gd );
     gds.push_back( std::move(new_doc) );
-    FILE *pgn_out = objs.gl->pf.OpenCreate( pgn_filename, pgn_handle );
+    FILE *pgn_out = objs.gl->pf.OpenCreate( filename, pgn_handle );
     if( pgn_out )
     {
         loaded = true;
+        pgn_filename = filename;
         FileSaveInner( NULL, NULL, pgn_out );
         objs.gl->pf.Close(NULL);    // close all handles (gc_clipboard
                                     //  only needed for ReopenModify())

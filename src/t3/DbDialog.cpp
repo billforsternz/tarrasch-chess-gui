@@ -611,31 +611,49 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
     int nbr_copied = 0;
     if( list_ctrl )
     {
+        CompactGame pact;
         int sz=gc_db_displayed_games.gds.size();
-        for( int i=0; i<sz; i++ )
+        if( sz == 0 )
         {
-            if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
-                idx_focus = i;
-            if( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED) )
+            int nbr = list_ctrl->GetItemCount();
+            if( 0<=track->focus_idx && track->focus_idx<nbr )
+            {
+                CompressMoves press;
+                std::string blob = press.Compress(track->info.moves);
+                ListableGameDb info( 0, track->info.r, blob );
+                make_smart_ptr( ListableGameDb, new_info, info );
+                gc_clipboard->gds.push_back( std::move(new_info ) );
+                nbr_copied++;
+            }
+        }
+        else
+        {
+            int sz=gc_db_displayed_games.gds.size();
+            for( int i=0; i<sz; i++ )
+            {
+                if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
+                    idx_focus = i;
+                if( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED) )
+                {
+                    if( clear_clipboard )
+                    {
+                        clear_clipboard = false;
+                        gc_clipboard->gds.clear();
+                    }
+                    gc_clipboard->gds.push_back( gc_db_displayed_games.gds[i] ); // assumes smart_ptr is std::shared_ptr
+                    nbr_copied++;
+                }
+            }
+            if( nbr_copied==0 && idx_focus>=0 )
             {
                 if( clear_clipboard )
                 {
                     clear_clipboard = false;
                     gc_clipboard->gds.clear();
                 }
-                gc_clipboard->gds.push_back( gc_db_displayed_games.gds[i] ); // assumes smart_ptr is std::shared_ptr
+                gc_clipboard->gds.push_back( gc_db_displayed_games.gds[idx_focus] ); // assumes smart_ptr is std::shared_ptr
                 nbr_copied++;
             }
-        }
-        if( nbr_copied==0 && idx_focus>=0 )
-        {
-            if( clear_clipboard )
-            {
-                clear_clipboard = false;
-                gc_clipboard->gds.clear();
-            }
-            gc_clipboard->gds.push_back( gc_db_displayed_games.gds[idx_focus] ); // assumes smart_ptr is std::shared_ptr
-            nbr_copied++;
         }
     }
     dbg_printf( "%d games copied\n", nbr_copied );

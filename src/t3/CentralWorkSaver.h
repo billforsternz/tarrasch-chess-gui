@@ -47,7 +47,7 @@ private:
         FILE_NEW_GAME_NEW,
     };
 
-    void Save( bool prompt, bool save_as );
+    void Save( bool prompt, bool save_as, bool open_file=false );
 
     // Prompt user whether to save game, allow game detail editing, returns wxYES or wxNO or wxCANCEL
     int SaveGamePrompt( bool prompt, FILE_MODE fm, bool save_as );

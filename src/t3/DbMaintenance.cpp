@@ -218,7 +218,7 @@ void db_maintenance_create_indexes(const char *db_filename )
 }
 
 extern void pgn_read_hook( const char *white, const char *black, const char *event, const char *site, const char *result,
-                                    const char *date, const char *white_elo, const char *black_elo,
+                                    const char *date, const char *white_elo, const char *black_elo, const char *eco, const char *round,
                                     int nbr_moves, thc::Move *moves, uint64_t *hashes  );
 
 
@@ -249,7 +249,7 @@ bool hook_gameover( char callback_code, const char *event, const char *site, con
         }
             
         // Read one game
-        case 'R': pgn_read_hook( white, black, event, site, result, date, white_elo, black_elo, nbr_moves, moves, hashes ); return true;
+        case 'R': pgn_read_hook( white, black, event, site, result, date, white_elo, black_elo, eco, round, nbr_moves, moves, hashes ); return true;
 
         // Verify
         case 'V':
@@ -1040,11 +1040,13 @@ static void players_database_end()
         const char *name = players[i].full;
         sprintf( buf, "%s, count=%d\n", name, count );
         cprintf( "%s", buf );
-        fprintf( logfile, "%s", buf );
+        if( logfile )
+            fprintf( logfile, "%s", buf );
     }
     sprintf( buf, "games generated=%d\n", players_database_total );
     cprintf( "%s", buf );
-    fprintf( logfile, "%s", buf );
+    if( logfile )
+        fprintf( logfile, "%s", buf );
 }
 
 static int candidate( bool &warning, const char *name )

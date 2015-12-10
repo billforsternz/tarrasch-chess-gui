@@ -176,7 +176,7 @@ struct DatabaseConfig
     wxString    m_file;
     DatabaseConfig()
     {
-        m_file           = "default.tarrasch_db";
+        m_file = "basic.tdb";
     }
 };
 

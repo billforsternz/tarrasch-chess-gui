@@ -120,7 +120,7 @@ void CreateDatabaseDialog::CreateControls()
                                                         create_mode ?
                                                             wxT("Select database to create") :
                                                             wxT("Select database to add games to"),
-                                                        "*.tarrasch_db", wxDefaultPosition, wxDefaultSize,
+                                                        "*.tdb", wxDefaultPosition, wxDefaultSize,
                                                         create_mode ?
                                                             wxFLP_USE_TEXTCTRL|wxFLP_SAVE :
                                                             wxFLP_USE_TEXTCTRL|wxFLP_FILE_MUST_EXIST

@@ -122,7 +122,7 @@ void Database::BuildDefaultDatabase( const char *db_file_name )
     std::string error_msg;
     std::string db(db_file_name);
     std::string pgn;
-    int offset = db.find(".tarrasch_db");
+    int offset = db.find(".tdb");
     if( offset == std::string::npos )
     {
         cprintf( "Database file extension not found in %s?!\n", db_file_name );

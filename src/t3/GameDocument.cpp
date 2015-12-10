@@ -1973,12 +1973,6 @@ void GameDocument::ToFileTxtGameDetails( std::string &str )
     str1 += "[Result \"";
     str1 += (r.result=="" ? "*" : r.result);
     str1 += "\"]" EOL;
-    if( r.eco != "" )
-    {
-        str1 += "[ECO \"";
-        str1 += r.eco;
-        str1 += "\"]" EOL;
-    }
     if( r.white_elo != "" )
     {
         str1 += "[WhiteElo \"";
@@ -1989,6 +1983,12 @@ void GameDocument::ToFileTxtGameDetails( std::string &str )
     {
         str1 += "[BlackElo \"";
         str1 += r.black_elo;
+        str1 += "\"]" EOL;
+    }
+    if( r.eco != "" )
+    {
+        str1 += "[ECO \"";
+        str1 += r.eco;
         str1 += "\"]" EOL;
     }
     thc::ChessPosition tmp;

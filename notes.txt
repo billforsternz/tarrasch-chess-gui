@@ -2219,6 +2219,7 @@ Problems with great players database
 save the edited version of great_players_out.pgn before overwriting it!
 warn on elo difference > x or one elo
 Vachier_Lagrave
+Nispeanu
 Edward Lasker
 Steinitz v Short
 Fischer v Owen

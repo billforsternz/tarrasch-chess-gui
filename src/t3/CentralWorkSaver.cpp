@@ -79,7 +79,7 @@ bool CentralWorkSaver::TestGameInFile()
     for( unsigned int i=0; i<gc->gds.size(); i++ )
     {
         ListableGame *ptr = gc->gds[i].get();
-        if( ptr && ptr->GetGameBeingEdited()==gd->game_being_edited )
+        if( ptr && ptr->GetGameBeingEdited()==gd->game_being_edited && gd->game_being_edited )
         {
             in_file = true;
             break;
@@ -111,7 +111,8 @@ void CentralWorkSaver::AddGameToFile()
     objs.log->SaveGame(gd,editing_log);         // ...and this now because we need to set...
     objs.gl->IndicateNoCurrentDocument();
     gd->in_memory = true;
-    gd->game_being_edited = ++objs.gl->game_being_edited_tag;
+    uint32_t temp = ++objs.gl->game_being_edited_tag;
+    gd->SetGameBeingEdited(temp);
     gd->modified = false;           // ...modified=false, which could mean the game
                                     // not getting to log or session later (not satisfactory I know - too many flags)
     int nbr = gc->gds.size();
@@ -343,7 +344,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
 
 // Save prompt is set by caller to indicate the user has not chosen a save or save as command and
 //  so needs to be prompted to save (eg user has gone File New, prompt him to save existing work)
-void CentralWorkSaver::Save( bool prompt, bool save_as )
+void CentralWorkSaver::Save( bool prompt, bool save_as, bool open_file )
 {
     bool file_exists   = TestFileExists();
     bool game_modified = TestGameModified();
@@ -368,9 +369,12 @@ void CentralWorkSaver::Save( bool prompt, bool save_as )
         if( !file_exists )
         {
             // file doesn't exist, game is modified
-            int answer = SaveGamePrompt(prompt,FILE_NEW_GAME_NEW,true);
-            if( answer == wxYES )
-                SaveFile(false,FILE_NEW_GAME_NEW,true);
+            if( !open_file )    // if opening a file, new tab created, old game can live alone in old tab
+            {
+                int answer = SaveGamePrompt(prompt,FILE_NEW_GAME_NEW,true);
+                if( answer == wxYES )
+                    SaveFile(false,FILE_NEW_GAME_NEW,true);
+            }
         }
         else
         {
@@ -412,7 +416,7 @@ bool CentralWorkSaver::FileNew()
 bool CentralWorkSaver::FileOpen()
 {
     any_cancel = false;
-    Save(true,false);
+    Save(true,false,true);
     bool okay = !any_cancel;
     return okay; 
 }
