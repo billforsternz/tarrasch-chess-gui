@@ -1,0 +1,40 @@
+The command to edit game prefixes like this is currently disabled in Tarrasch,
+but of course you can add them with a text editor
+
+[Event "St Petersburg"]
+[Site "St Petersburg"]
+[Date "1880."]
+[Round "1"]
+[White "Schiffers, Emanuel"]
+[Black "Chigorin, Mikhail"]
+[Result "0-1"]
+[ECO "C01"]
+
+1. e4 e6 2. d4 d5 3. Nc3 Nf6 4. exd5 exd5 5. Nf3 Bd6 6. Bd3 Be6 7. Ne2 Nc6 8.
+c3 Bg4 9. Ng3 Qe7+ 10. Be3 Ne4 11. Qb3 O-O-O 12. Bxe4 Bxg3 13. Bf5+ Bxf5 14.
+hxg3 Na5 15. Qa4 Nc4 16. Qxa7 Nxe3 {#Diagram} 17. Ne5 Nc2+ 18. Kd2 c6 19. Nxc6
+Qc7 20. Nxd8 Nxa1 21. Nxf7 Qxf7 22. Qa8+ Kc7 23. Qxh8 Bg6 24. Re1 Qxf2+ 25. Re2
+Qf5 26. Qxg7+ Kb6 27. Qe5 Qd3+ 28. Ke1 Nc2+ 29. Kf2 Be4 30. Qf4 Ka7 31. Qd2
+Qxd2 32. Rxd2 b5 33. b3 Na3 34. Re2 Nb1 35. Re3 Kb6 36. c4 b4 37. cxd5 Nc3 38.
+Ke1 Bxd5 39. a3 bxa3 40. Rxc3 a2 41. Rc1 Kb5 42. Ra1 Bxb3 43. Kd2 Kb4 44. Kd3
+Bd5 45. g4 Kb3 46. g3 Kb2 47. Rxa2+ Kxa2 48. Kc3 Ka3 49. Kd3 Kb3 50. Ke3 Kc4
+51. g5 Bg2 52. g4 Kd5 53. Kf4 Kxd4 54. Kf5 Be4+ 55. Kf6 Bg6 0-1
+
+The command to edit game prefixes like this is currently disabled in Tarrasch,
+but of course you can add them with a text editor
+
+[Event "London"]
+[Site "London"]
+[Date "1880."]
+[Round "1"]
+[White "Zukertort, Johannes"]
+[Black "Rosenthal, Samuel"]
+[Result "1-0"]
+[ECO "C49"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. Nc3 Bb4 5. O-O O-O 6. Nd5 Be7 7. d3 d6 8. Ne3
+Nd4 9. Bc4 c6 10. c3 Nxf3+ 11. Qxf3 Be6 12. Bb3 Qd7 13. Qe2 d5 14. exd5 cxd5
+15. f4 exf4 16. Rxf4 Bd6 17. Rf1 Rfe8 18. d4 Qc7 19. g3 Bh3 20. Rxf6 gxf6 21.
+Qh5 Be6 22. Bxd5 f5 {#Diagram} 23. Nxf5 Bxf5 24. Qxf5 Re1+ 25. Kf2 Rae8 26. Bh6
+R8e2+ 27. Kf3 Bf8 28. Rxe1 Rxe1 29. Qg4+ Kh8 30. Bxf8 1-0
+
