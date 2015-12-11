@@ -95,7 +95,7 @@ public:
 //  We also optionally prepend the time - to prepend the time instantiate a DebugPrintfTime object
 //  on the stack - no need to use it
 static int dbg_printf_prepend_time=0;
-#define DURING_DEVELOPMENT
+//#define DURING_DEVELOPMENT
 #ifdef DURING_DEVELOPMENT
 static bool dbg_console_enabled = true;     // set this to false except during development
 #else
@@ -687,7 +687,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     menu_database->Append (ID_DATABASE_SELECT,              _T("Select current database"));
     menu_database->Append (ID_DATABASE_CREATE,              _T("Create new database"));
     menu_database->Append (ID_DATABASE_APPEND,              _T("Append to database"));
-    menu_database->Append (ID_DATABASE_MAINTENANCE,         _T("INTERNAL TEST - REMOVE SOON - Maintain database"));
+    // menu_database->Append (ID_DATABASE_MAINTENANCE,         _T("INTERNAL TEST - REMOVE SOON - Maintain database"));
 
     // Help
     wxMenu *menu_help     = new wxMenu;
