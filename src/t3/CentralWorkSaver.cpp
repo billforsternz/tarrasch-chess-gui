@@ -205,7 +205,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                 else
                 {
                     ok = false;
-                    wxFileDialog fd( objs.frame, "Create new .pgn file, or append games to existing .pgn file", "", "", "*.pgn", wxFD_SAVE ); //|wxFD_CHANGE_DIR );
+                    wxFileDialog fd( objs.frame, "Select .pgn file to create, replace or append to", "", "", "*.pgn", wxFD_SAVE ); //|wxFD_CHANGE_DIR );
                     wxString dir = objs.repository->nv.m_doc_dir;
                     fd.SetDirectory(dir);
                     int answer = fd.ShowModal();
@@ -232,52 +232,59 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                             ok = true;
                         }
 
-                        // Else if it's an existing file, load it and add file, then this game to
-                        //  end of a new file game list
+                        // Else if it's an existing file, optionally load it ahead of existing pgn cache
                         else
                         {
-                            if( fm == FILE_EXISTS_GAME_NEW )
-                                AddGameToFile();
-                            else if( fm == FILE_EXISTS_GAME_MODIFIED )
-                                PutBackDocument();
-                            gc->Debug( "Games that are about to be added to an existing file" );
-                            std::vector< smart_ptr<GameDocument> > gds_temp; // FIXME! = gc->gds;   // copy existing file of games to temp
-                            if( !gc->Load(filename) )
+                            ok = true;
+                            bool append=false;
+                            int answer = wxMessageBox( "Append games to existing file ?", "'Yes' to append, 'No' to replace (be careful with 'No')",  wxYES_NO|wxCANCEL, objs.frame );
+                            if( answer == wxYES )
+                                append = true;
+                            else if( answer == wxCANCEL )
+                                ok = false;
+                            if( ok )
                             {
-                                wxString msg="Cannot append to existing file ";
-                                msg += wx_filename;
-                                wxMessageBox( msg, "Error reading file", wxOK|wxICON_ERROR );
-                                //FIXME FIX ME  gc->gds = gds_temp;
+                                if( fm == FILE_EXISTS_GAME_NEW )
+                                    AddGameToFile();
+                                else if( fm == FILE_EXISTS_GAME_MODIFIED )
+                                    PutBackDocument();
                             }
-                            else
+                            if( ok && append )
                             {
-                                gc->Debug( "The existing file" );
-                                int existing_nbr = gc->gds.size();
-                                
-                                // Append copied temp games to newly loaded file
-                                for( int i=0; i<gds_temp.size(); i++ )
+                                std::vector< smart_ptr<ListableGame> > gds_temp = gc->gds;   // copy existing file of games to temp
+                                if( !gc->Load(filename) )
                                 {
-                                    //? gc_vecGet( i, GameDocument, doc ); 
-                                    GameDocument doc; //? = * std::dynamic_pointer_cast<GameDocument> (gds_temp[i]);
-                                    doc.game_nbr = existing_nbr + i;
-                                    if( doc.game_being_edited )
-                                    {
-                                        gd->game_nbr = doc.game_nbr+1;  // todo: why +1 ?
-                                        objs.gl->file_game_idx = doc.game_nbr;
-                                    }
-                                    //? gc->Put( GameDocument, doc ); 
-                                    make_smart_ptr( GameDocument, new_smart_ptr, doc );
-                                    gc->gds.push_back( std::move(new_smart_ptr) );
+                                    wxString msg="Cannot append to existing file ";
+                                    msg += wx_filename;
+                                    wxMessageBox( msg, "Error reading file", wxOK|wxICON_ERROR );
+                                    gc->gds = gds_temp;
+                                    ok = false;
                                 }
-                                gc->FileSave( gc_clipboard );
+                                else
+                                {
+                                    int existing_nbr = gc->gds.size();
+                                
+                                    // Append copied temp games to newly loaded file
+                                    for( int i=0; i<gds_temp.size(); i++ )
+                                    {
+                                        smart_ptr<ListableGame> smp = gds_temp[i];
+                                        gc->gds.push_back( smp );
+                                    }
+                                    objs.gl->file_game_idx += existing_nbr;
+                                }
+                            }
+                            if( ok )
+                            {
+                                if( append )
+                                    gc->FileSave( gc_clipboard );
+                                else
+                                    gc->FileSaveAs( filename, gc_clipboard );
                                 gc->KillResumePreviousWindow();
                                 gd->modified = false;
                                 gd->game_prefix_edited = false;
                                 gd->game_details_edited = false;
                                 undo->Clear(*gd);
-                                ok = true;
                             }
-                            gc->Debug( "After adding games to an existing file" );
                         }
                     }
                 }
@@ -287,7 +294,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
             case FILE_NEW_GAME_NEW:
             {
                 ok = false;
-                wxFileDialog fd( objs.frame, "Save either to a new or existing .pgn file", "", "", "*.pgn", wxFD_SAVE ); //|wxFD_CHANGE_DIR );
+                wxFileDialog fd( objs.frame, "Select .pgn file to create, replace or append to", "", "", "*.pgn", wxFD_SAVE ); //|wxFD_CHANGE_DIR );
                 wxString dir = objs.repository->nv.m_doc_dir;
                 fd.SetDirectory(dir);
                 int answer = fd.ShowModal();
@@ -318,16 +325,29 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                     //  end of a new file game list
                     else
                     {
-                        if( !gc->Load(filename) )
+                        bool append=false;
+                        int answer = wxMessageBox( "Append game to existing file ?", "'Yes' to append, 'No' to overwrite (be careful with 'No')",  wxYES_NO|wxCANCEL, objs.frame );
+                        if( answer == wxYES )
+                            append = true;
+                        else if( answer == wxCANCEL )
+                            ok = false;
+                        if( ok && append )
                         {
-                            wxString msg="Cannot append to existing file ";
-                            msg += wx_filename;
-                            wxMessageBox( msg, "Error reading file", wxOK|wxICON_ERROR );
+                            if( !gc->Load(filename) )
+                            {
+                                wxString msg="Cannot append to existing file ";
+                                msg += wx_filename;
+                                wxMessageBox( msg, "Error reading file", wxOK|wxICON_ERROR );
+                                ok = false;
+                            }
                         }
-                        else
+                        if( ok )
                         {
                             AddGameToFile();
-                            gc->FileSave( gc_clipboard );
+                            if( append )
+                                gc->FileSave( gc_clipboard );
+                            else
+                                gc->FileSaveAs( filename, gc_clipboard );
                             gd->modified = false;
                             gd->game_prefix_edited = false;
                             gd->game_details_edited = false;
@@ -464,7 +484,7 @@ bool CentralWorkSaver::FileSaveGameAs()
             // If file exists, append or replace
             if( ::wxFileExists(wx_filename ) )
             {
-                int answer = wxMessageBox( "Append game to file ?", "Yes to append, no to replace",  wxYES_NO|wxCANCEL, objs.frame );
+                int answer = wxMessageBox( "Append game to file ?", "'Yes' to append, 'No' to replace, be careful with 'No'",  wxYES_NO|wxCANCEL, objs.frame );
                 if( answer == wxYES )
                     append = true;
                 else if( answer == wxCANCEL )

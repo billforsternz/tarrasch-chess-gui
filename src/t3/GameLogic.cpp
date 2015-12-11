@@ -2673,7 +2673,7 @@ void GameLogic::StatusUpdate( int idx )
                 if( ptr && ptr->IsModified() )
                 {
                     nbr_modified++;
-  					cprintf( "StatusUpdate A> i=%d, game_being_edited=%lu, modified\n", i, game_being_edited );
+  					//cprintf( "StatusUpdate A> i=%d, game_being_edited=%lu, modified\n", i, game_being_edited );
                 }
                 else if( ptr && game_being_edited )
                 {
@@ -2682,11 +2682,11 @@ void GameLogic::StatusUpdate( int idx )
                     int tab_idx=0;
                     while( pd && pu )
                     {
-            			cprintf( "StatusUpdate B(%d)> i=%d, game_being_edited=%lu, pd->game_being_edited=%lu\n", tab_idx, i, game_being_edited, pd->game_being_edited );
+            			//cprintf( "StatusUpdate B(%d)> i=%d, game_being_edited=%lu, pd->game_being_edited=%lu\n", tab_idx, i, game_being_edited, pd->game_being_edited );
                         if( game_being_edited == pd->game_being_edited )
                         {
-            				cprintf( "StatusUpdate C(%d)> i=%d, game_being_edited=%lu, modified(%s,%s,%s,%s)\n", tab_idx, i, game_being_edited,
-                                    pd->game_details_edited?"true":"false", pd->game_prefix_edited?"true":"false", pd->modified?"true":"false", pu->IsModified()?"true":"false" );
+            				//cprintf( "StatusUpdate C(%d)> i=%d, game_being_edited=%lu, modified(%s,%s,%s,%s)\n", tab_idx, i, game_being_edited,
+                            //        pd->game_details_edited?"true":"false", pd->game_prefix_edited?"true":"false", pd->modified?"true":"false", pu->IsModified()?"true":"false" );
                             bool doc_modified = (pd->game_details_edited || pd->game_prefix_edited || pd->modified || pu->IsModified());
                             if( doc_modified )
                             {

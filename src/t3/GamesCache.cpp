@@ -1020,7 +1020,7 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
                 } 
                 objs.gl->pf.Close( gc_clipboard );    // close all handles
                 fwrite("<br/>\n",1,6,md_out);
-                if( !markdown )
+                if( !markdown && i+1==gds_nbr )
                 {
                     fwrite("</div>\n"
                            "</body>\n"
