@@ -21,8 +21,9 @@
 #include "Repository.h"
 #include "PgnFiles.h"
 #include "Lang.h"
-#include "PgnDocument.h"
+#include "ListableGamePgn.h"
 #include "PgnRead.h"
+#include "ProgressBar.h"
 #include "GamesCache.h"
 using namespace std;
 
@@ -47,9 +48,10 @@ bool GamesCache::Load(std::string &filename )
     FILE *pgn_file = objs.gl->pf.OpenRead( filename, pgn_handle );
     if( pgn_file )
     {
-        pgn_filename = filename;
         gds.clear();
         loaded = Load(pgn_file);
+        if( loaded )
+            pgn_filename = filename;
         objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
     }
     return loaded;
@@ -231,8 +233,8 @@ bool GamesCache::Load( FILE *pgn_file )
         done = PgnStateMachine( pgn_file, typ, buf, sizeof(buf) );
         if( typ == 'G' )
         {
-            PgnDocument pgn_document(pgn_handle,fposn);
-            make_smart_ptr( PgnDocument, new_doc, pgn_document );
+            ListableGamePgn pgn_document(pgn_handle,fposn);
+            make_smart_ptr( ListableGamePgn, new_doc, pgn_document );
             gds.push_back( std::move(new_doc) );
             if( !done )
                 fposn = ftell(pgn_file);
@@ -245,17 +247,17 @@ bool GamesCache::Load( FILE *pgn_file )
 
 static CompactGame *phook;
 void pgn_read_hook( const char *white, const char *black, const char *event, const char *site, const char *result,
-                                    const char *date, const char *white_elo, const char *black_elo,
+                                    const char *date, const char *white_elo, const char *black_elo, const char *eco, const char *round,
                                     int nbr_moves, thc::Move *moves, uint64_t *hashes  )
 {
     phook->r.white     = std::string(white);
     phook->r.black     = std::string(black);
     phook->r.event     = std::string(event);
     phook->r.site      = std::string(site);
-    //phook->r.round   = std::string(round);
+    phook->r.round     = std::string(round);
     phook->r.result    = std::string(result);
     phook->r.date      = std::string(date);
-    //phook->r.eco     = std::string(eco);
+    phook->r.eco       = std::string(eco);
     phook->r.white_elo = std::string(white_elo);
     phook->r.black_elo = std::string(black_elo);
     phook->moves       = std::vector<thc::Move>(moves,moves+nbr_moves);
@@ -345,6 +347,7 @@ void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &new_doc )
     int nbr_converted;
     gd.PgnParse(true,nbr_converted,moves,cr,NULL);
     gd.fposn0 = fposn;
+    gd.SetPgnHandle(pgn_handle);
     new_doc = gd;
     objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
 }
@@ -436,7 +439,6 @@ bool GamesCache::Tagline( GameDocument &gd,  const char *s )
 // Create a new file
 bool GamesCache::FileCreate( std::string &filename, GameDocument &gd )
 {
-    pgn_filename = filename;
     resume_previous_window = false;
     loaded = false;
 
@@ -445,10 +447,11 @@ bool GamesCache::FileCreate( std::string &filename, GameDocument &gd )
     gd.pgn_handle = 0;
     make_smart_ptr( GameDocument, new_doc, gd );
     gds.push_back( std::move(new_doc) );
-    FILE *pgn_out = objs.gl->pf.OpenCreate( pgn_filename, pgn_handle );
+    FILE *pgn_out = objs.gl->pf.OpenCreate( filename, pgn_handle );
     if( pgn_out )
     {
         loaded = true;
+        pgn_filename = filename;
         FileSaveInner( NULL, NULL, pgn_out );
         objs.gl->pf.Close(NULL);    // close all handles (gc_clipboard
                                     //  only needed for ReopenModify())
@@ -511,28 +514,51 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
     buf = new char [buflen];
     int gds_nbr = gds.size();
     long posn=0;
+    ProgressBar pb( "Saving file", "Saving file" );
     for( int i=0; i<gds_nbr; i++ )
     {
-        MagicBase *mptr = gds[i].get();
+        pb.Permill( (i*1000L) / (gds_nbr?gds_nbr:1) );
+        ListableGame *mptr = gds[i].get();
         if( !mptr->IsInMemory() )
         {
             long fposn = mptr->GetFposn();
-            fseek( pgn_in, fposn, SEEK_SET );
-            char buf[2048];
-            int typ;
-            bool done = PgnStateMachine( NULL, typ,  buf, sizeof(buf) );
-            while( !done )
+            int pgn_handle;
+            bool is_pgn = mptr->GetPgnHandle( pgn_handle );
+            if( is_pgn )
             {
-                done = PgnStateMachine( pgn_in, typ,  buf, sizeof(buf) );
-                fputs( buf, pgn_out );
-                if( typ == 'G' )
-                    break;
+                FILE *pgn_in = objs.gl->pf.ReopenRead ( pgn_handle );
+                if( pgn_in )
+                {
+                    fseek( pgn_in, fposn, SEEK_SET );
+                    char buf[2048];
+                    int typ;
+                    bool done = PgnStateMachine( NULL, typ,  buf, sizeof(buf) );
+                    while( !done )
+                    {
+                        done = PgnStateMachine( pgn_in, typ,  buf, sizeof(buf) );
+                        fputs( buf, pgn_out );
+                        if( typ == 'G' )
+                            break;
+                    }
+                }
             }
         }
         else
         {
             GameDocument *ptr = mptr->GetGameDocumentPtr();
-            if( ptr )
+
+            // A horrible kludge
+            if( mptr->IsDbGameOnly() )
+            {
+                std::string str;
+                ptr->ToFileTxtGameDetails( str );
+                fwrite(str.c_str(),1,str.length(),pgn_out);
+                posn += str.length();
+                ptr->ToFileTxtGameBody( str );
+                fwrite(str.c_str(),1,str.length(),pgn_out);
+                posn += str.length();
+            }
+            else
             {
                 bool replace_game_prefix = true;
                 bool replace_game_details = true;
@@ -665,7 +691,7 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
                     GameDocument *p = objs.tabs->Begin();
                     while( p )
                     {
-                        if( ptr->game_being_edited == p->game_being_edited )
+                        if( ptr->game_being_edited!=0 && (ptr->game_being_edited == p->game_being_edited)  )
                         {
                             p->fposn0 = ptr->fposn0;
                             p->fposn1 = ptr->fposn1;
@@ -994,7 +1020,7 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
                 } 
                 objs.gl->pf.Close( gc_clipboard );    // close all handles
                 fwrite("<br/>\n",1,6,md_out);
-                if( !markdown )
+                if( !markdown && i+1==gds_nbr )
                 {
                     fwrite("</div>\n"
                            "</body>\n"

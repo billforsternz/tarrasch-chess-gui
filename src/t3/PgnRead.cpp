@@ -699,7 +699,7 @@ void PgnRead::GameBegin()
     white_elo[0] = '\0';
     black_elo[0] = '\0';
     fen_flag = false;
-    ChessRules temp;
+    thc::ChessRules temp;
     chess_rules = temp;    // init
     hash = 0x0f6e2dc7837aa12f; //  0x837AA12F; //2205851951; //chess_rules.HashCalculate();
     nbr_games++;
@@ -728,9 +728,8 @@ bool PgnRead::GameOver()
         {
             aborted = hook_gameover( callback_code, event, site, date, round, white, black, result, white_elo, black_elo, eco, s->nbr_moves, s->big_move_array, s->big_hash_array  );
         }
-        //cprintf( "GameOver()\n" );
         stack_idx = 0;
-        ChessRules temp;
+        thc::ChessRules temp;
         chess_rules = temp;    // init
         stack_array[0].nbr_moves = 0;
         stack_array[0].position = chess_rules;
@@ -749,7 +748,7 @@ PgnRead::STATE PgnRead::Push( PgnRead::STATE in )
     s->state     = in;
     s->position  = chess_rules;
     n->nbr_moves = s->nbr_moves;
-    memcpy( n->big_move_array, s->big_move_array, s->nbr_moves*sizeof(Move) );
+    memcpy( n->big_move_array, s->big_move_array, s->nbr_moves*sizeof(thc::Move) );
     return BETWEEN_MOVES;
 }
 
@@ -812,9 +811,9 @@ bool PgnRead::DoMove( bool white, int move_number, char *buf )
     //fprintf( debug, "** DoMove( white=%s, move_number=%d, buf=%s)\n", white?"true":"false", move_number, buf );
     STACK_ELEMENT *n;
     n = &stack_array[stack_idx];
-    Move terse;
+    thc::Move terse;
     char buf2[FIELD_BUFLEN+10];
-    Move move;
+    thc::Move move;
     int nbr_moves = (move_number-1)*2;
     if( !white )
         ++nbr_moves;
@@ -838,7 +837,7 @@ bool PgnRead::DoMove( bool white, int move_number, char *buf )
                 chess_rules.Forsyth( fen );
             else
             {
-                ChessRules temp;
+                thc::ChessRules temp;
                 chess_rules = temp;    // init
             }
             for( int i=0; i<nbr_moves; i++ )
@@ -870,7 +869,7 @@ bool PgnRead::DoMove( bool white, int move_number, char *buf )
         else
         {
             //std::string smove = move.NaturalOut( &chess_rules );
-            //ChessPosition old_position = chess_rules;
+            //thc::ChessPosition old_position = chess_rules;
             hash = chess_rules.Hash64Update(hash, move );
             //db_hash(hash);
             chess_rules.PlayMove( move );

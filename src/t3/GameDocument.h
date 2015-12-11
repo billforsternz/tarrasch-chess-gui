@@ -18,10 +18,10 @@
 #include "GameLifecycle.h"
 #include "CompressMoves.h"
 #include "CompactGame.h"
-#include "GameBase.h"
+#include "ListableGame.h"
 
 class GameLogic;
-class GameDocument : public MagicBase
+class GameDocument : public ListableGame
 {
     
 public:
@@ -43,10 +43,10 @@ public:
         }
         return moves;
     }
+    std::string blob_recalculated_on_request;
     virtual std::string &RefCompressedMoves()
     {
-        static std::string blob;
-        blob.clear();
+        blob_recalculated_on_request.clear();
         CompressMoves press;
         if( press.cr == start_position )
         {
@@ -57,11 +57,26 @@ public:
                 thc::Move mv = variation[i].game_move.move;
                 moves.push_back(mv);
             }
-            blob = press.Compress( moves );
+            blob_recalculated_on_request = press.Compress( moves );
         }
-        return blob;
+        return blob_recalculated_on_request;
     }
     virtual thc::ChessPosition &RefStartPosition() { return start_position; }
+
+    // For now at least, the following are used for fast sorting on column headings
+    virtual const char *White()     { return r.white.c_str();    }
+    virtual const char *Black()     { return r.black.c_str();    }
+    virtual const char *Event()     { return r.event.c_str();    }
+    virtual const char *Site()      { return r.site.c_str();     }
+    virtual const char *Result()    { return r.result.c_str();   }
+    virtual const char *Round()     { return r.round.c_str() ;   }
+    virtual const char *Date()      { return r.date.c_str();     }
+    virtual const char *Eco()       { return r.eco.c_str();      }
+    virtual const char *WhiteElo()  { return r.white_elo.c_str(); }
+    virtual const char *BlackElo()  { return r.black_elo.c_str(); }
+    virtual const char *Fen()       { return r.fen.c_str();     }
+    virtual const char *CompressedMoves() {std::string temp=RefCompressedMoves(); return blob_recalculated_on_request.c_str();}
+
     
     // Copy constructor
     GameDocument( const GameDocument& src )
@@ -114,8 +129,10 @@ public:
 
     // Overrides
     virtual bool IsModified() { return (game_prefix_edited || game_details_edited || modified); }
+    virtual void SetGameBeingEdited( uint32_t game_being_edited ) { this->game_being_edited = game_being_edited; }
     virtual uint32_t GetGameBeingEdited() { return game_being_edited; }
     
+ 
     void FleshOutDate();
     virtual void Init( const thc::ChessPosition &start_position );
     void GetGameDocumentFromFile( GameDocument &gd );

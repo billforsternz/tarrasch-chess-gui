@@ -1,7 +1,7 @@
 /****************************************************************************
  * Run UCI chess engine, eg Rybka
  *  Author:  Bill Forster
- *  Licence: See licencing information in ChessPosition.cpp
+ *  Licence: See licencing information in thc::ChessPosition.cpp
  *  Copyright 2010, Triple Happy Ltd.  All rights reserved.
  ****************************************************************************/
 #define _CRT_SECURE_NO_DEPRECATE
@@ -213,6 +213,23 @@ Rybka::Rybka( const char *filename_uci_exe )
     gbl_state = INIT;
     debug_trigger = false;
 
+    // Check to make sure we are not trying to run 64 bit engine on 32 bit windows
+    extern bool Is64BitWindows();
+    if( !Is64BitWindows() )
+    {
+        DWORD program_type;
+        BOOL is_exe; 
+        is_exe = GetBinaryType( filename_uci_exe, &program_type );
+        if( is_exe && program_type==SCS_64BIT_BINARY )
+        {
+            wxString caption( "Error running UCI engine" );
+            wxString detail ( "It is not possible to run a 64 bit UCI engine on a 32 bit Windows system\r\n"
+                              "Suggestion: Use the Options> Engine menu and Browse button to find a 32 bit engine instead\r\n" );
+            wxMessageBox( detail, caption, wxOK|wxICON_ERROR );
+            return;
+        }
+    }
+
     sa.lpSecurityDescriptor = NULL;
     sa.nLength = sizeof(SECURITY_ATTRIBUTES);
     sa.bInheritHandle = true;         //allow inheritable handles
@@ -343,7 +360,7 @@ bool Rybka::Start()
     return okay;
 }
 
-void Rybka::StartThinking( bool ponder, ChessPosition &pos, const char *forsyth, long wtime_ms, long btime_ms, long winc_ms, long binc_ms )
+void Rybka::StartThinking( bool ponder, thc::ChessPosition &pos, const char *forsyth, long wtime_ms, long btime_ms, long winc_ms, long binc_ms )
 {
     pos_engine_to_move = pos;
     if( forsyth )
@@ -363,7 +380,7 @@ void Rybka::StartThinking( bool ponder, ChessPosition &pos, const char *forsyth,
         NewState( "go (no smoves)", SEND_PLAY_ENGINE1 );
 }
 
-void Rybka::StartThinking( bool ponder, ChessPosition &pos, const char *forsyth, wxString &smoves, long wtime_ms, long btime_ms, long winc_ms, long binc_ms )
+void Rybka::StartThinking( bool ponder, thc::ChessPosition &pos, const char *forsyth, wxString &smoves, long wtime_ms, long btime_ms, long winc_ms, long binc_ms )
 {
     pos_engine_to_move = pos;
     if( forsyth )
@@ -385,7 +402,7 @@ void Rybka::StartThinking( bool ponder, ChessPosition &pos, const char *forsyth,
         NewState( "go (smoves)", SEND_PLAY_ENGINE1 );
 }
 
-bool Rybka::Ponderhit( ChessPosition &pos )
+bool Rybka::Ponderhit( thc::ChessPosition &pos )
 {
     bool okay = false;
     release_printf( "Ponderhit\n" );
@@ -471,7 +488,7 @@ void Rybka::KibitzStop()
     }
 }
 
-void Rybka::Kibitz( ChessPosition &pos, const char *forsyth )
+void Rybka::Kibitz( thc::ChessPosition &pos, const char *forsyth )
 {
     bool skip=false;
     if( gbl_state==SEND_KIBITZ1 ||
@@ -523,9 +540,9 @@ bool Rybka::KibitzPeekEngineToMove( bool run, bool &cleared, char buf[], unsigne
     return have_data;    
 }
 
-Move Rybka::CheckBestMove( Move &ponder )
+thc::Move Rybka::CheckBestMove( thc::Move &ponder )
 {
-    Move move;
+    thc::Move move;
     move.Invalid();
     ponder.Invalid();
     Run();
@@ -1196,8 +1213,8 @@ void Rybka::line_out( const char *s )
             if( p )
             {
                 p += strlen(temp);
-                Move move;
-                ChessRules cr=pos_engine_to_move;
+                thc::Move move;
+                thc::ChessRules cr=pos_engine_to_move;
                 bool legal = move.TerseIn(&cr,p);
                 if( !legal )
                     release_printf( "**!! False bestmove %s detected !!**\n", p );
@@ -1211,7 +1228,7 @@ void Rybka::line_out( const char *s )
                     {
                         cr.PlayMove(move);
                         p += strlen(temp);
-                        Move ponder;
+                        thc::Move ponder;
                         bool okay = ponder.TerseIn(&cr,p);
                         if( okay )
                         {
@@ -1225,29 +1242,49 @@ void Rybka::line_out( const char *s )
         }
         case KIBITZING:
         {
-            if( strstr(s," multipv 3 ") )
-                dbg_printf( "Break here");
-            if( 0==memcmp(s,"info ",5) && strstr(s," pv ") )
+            if( 0==memcmp(s,"info ",5) )
             {
-                int idx = 0; // first attempt at V2 used 0, changed to -1 for when
-                             //  attempting fix for Komodo special edition,
-                             //  back to 0 June 2012, allows Kibitzing with Strelka
-                             //  which doesn't have multipv
-                if( strstr(s," multipv 1 ") )
-                    idx = 0;
-                else if( strstr(s," multipv 2 ") )
-                    idx = 1;
-                else if( strstr(s," multipv 3 ") )
-                    idx = 2;
-                else if( strstr(s," multipv 4 ") )
-                    idx = 3;
-                if( idx >= 0 )
+                static int static_depth;
+                const char *s_depth = strstr(s," depth ");
+                if( s_depth )
                 {
-                    kq[idx].Put(s+4);
-                    dbg_printf( "Kibitz info(%d):%s\n", idx, s+4 );
+                    s_depth += 7;
+                    while( *s_depth == ' ' )
+                        s_depth++;
+                    static_depth = atoi(s_depth);
+                }
+                if( strstr(s," pv ") )
+                {
+                    int idx = 0; // first attempt at V2 used 0, changed to -1 for when
+                                 //  attempting fix for Komodo special edition,
+                                 //  back to 0 June 2012, allows Kibitzing with Strelka
+                                 //  which doesn't have multipv
+                    if( strstr(s," multipv 1 ") )
+                        idx = 0;
+                    else if( strstr(s," multipv 2 ") )
+                        idx = 1;
+                    else if( strstr(s," multipv 3 ") )
+                        idx = 2;
+                    else if( strstr(s," multipv 4 ") )
+                        idx = 3;
+                    if( idx >= 0 )
+                    {
+                        if( s_depth )
+                        {
+                            kq[idx].Put(s+4);
+                            dbg_printf( "Kibitz info(%d):%s\n", idx, s+4 );
+                        }
+                        else
+                        {
+                            // Artificially add separately supplied depth information if it's not present -
+                            //  without this depth always shows as 0 with engine Junior
+                            kq[idx].Put(s+4,static_depth);
+                            dbg_printf( "Kibitz info(%d): depth=%d %s\n", idx, static_depth, s+4 );
+                        }
+                    }
                 }
             }
-            break;
+
         }
     }
 }
@@ -1330,6 +1367,12 @@ void Rybka::OptionIn( const char *s )
 
     // max_cpu_cores
     parm = str_pattern_smart(s,"nbr|number|max|maximum*processors|cpus|cores");
+    if (!parm)
+    {
+        // alternative check for StockFish, which also has "Max Threads per Split Point",
+        // and str_pattern_smart() isn't quite smart enough to discriminate ;)
+        parm = str_pattern(s, "Threads", true);
+    }
     if( parm && str_search(parm,"type spin",true) )
     {
         memset( max_cpu_cores_name, 0, sizeof(max_cpu_cores_name) );
@@ -1470,6 +1513,8 @@ const char *str_pattern_smart( const char *str, const char *pattern )
 */
     char buf_str[128];
     char buf_pattern[128];
+    memset(buf_str, 0, sizeof(buf_str));
+    memset(buf_pattern, 0, sizeof(buf_pattern));
     int c='\0', d;
     bool ultimate_success = false;
     bool skip=false;

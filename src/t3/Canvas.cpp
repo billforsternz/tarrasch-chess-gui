@@ -115,8 +115,8 @@ static int window_id_positions_54[NBR_OF_WIDS][4] =
     {10+XDELTA,488+YDELTA,674,37},         // box
     {20+XDELTA,498+YDELTA,286,22},         // status
     {10,425,116,19},                       // book_moves
-    {512+XDELTA,450,68,28},                // wclock
-    {584+XDELTA,450,68,28},                // bclock
+    {512+XDELTA,480,68,28},                // wclock
+    {584+XDELTA,480,68,28},                // bclock
     {472+XDELTA,11+YDELTA,202,434},        // moves          + 3
     {394+XDELTA,498+YDELTA,0,0},           // button
     {10+XDELTA,558,570,99},                // kibitz
@@ -573,7 +573,7 @@ Canvas::Canvas
     objs.log        = new Log;
     objs.book       = new Book;
     objs.cws        = new CentralWorkSaver;
-    objs.db         = new Database( objs.repository->database.m_file.c_str() );
+//    objs.db         = new Database( objs.repository->database.m_file.c_str() );
     objs.tabs       = new Tabs;
     objs.gl         = NULL;
     GameLogic *gl   = new GameLogic( this, lb );
@@ -586,9 +586,10 @@ Canvas::Canvas
     objs.tabs->gl   = gl;
     GameDocument    blank;
     objs.tabs->TabNew( blank );
-    objs.cws->Init( &objs.gl->undo, &objs.gl->gd, &objs.gl->gc, &objs.gl->gc_clipboard ); 
+    objs.cws->Init( &objs.gl->undo, &objs.gl->gd, &objs.gl->gc_pgn, &objs.gl->gc_clipboard ); 
     SetPlayers( "", "" );
     PositionButtons();
+//    objs.db         = new Database( objs.repository->database.m_file.c_str() );
 
     lb_sz_base           = lb->GetSize();
     parent_sz_base       = parent->GetSize();
@@ -725,18 +726,18 @@ void Canvas::AdjustPosition( bool have_players )
     wxButton *button;
     int shift = (have_players?0:FIELD);
 
-    // ChessPosition box
+    // Position box
     wxPoint pos;
     LOCATE_P( box, pos );
     pos.y -= shift;
     box->SetPosition( pos );
 
-    // ChessPosition status
+    // Position status
     LOCATE_P( status, pos );
     pos.y -= shift;
     status->SetPosition( pos );
 
-    // ChessPosition buttons
+    // Position buttons
     int x, y;
     LOCATE_XY( button, x, y );
     y -= shift;
@@ -875,7 +876,7 @@ void Canvas::SetNormalOrientation( bool normal )
     SetPosition();
 }
 
-void Canvas::SetPosition( ChessPosition &pos )
+void Canvas::SetPosition( thc::ChessPosition &pos )
 {
     memcpy( &save_position, &pos, sizeof(save_position) );
     SetPosition();
@@ -906,7 +907,7 @@ void Canvas::BookUpdate( bool suppress )
         have_book_moves = objs.book->Lookup( objs.gl->gd.master_position, bmoves );
     else // during startup
     {
-        ChessPosition temp;
+        thc::ChessPosition temp;
         have_book_moves = objs.book->Lookup( temp, bmoves );
     }
     if( suppress )

@@ -285,7 +285,7 @@ bool Rybka::Start()
     return okay;
 }
 
-void Rybka::StartThinking( bool ponder, ChessPosition &pos, const char *forsyth, long wtime_ms, long btime_ms, long winc_ms, long binc_ms )
+void Rybka::StartThinking( bool ponder, thc::ChessPosition &pos, const char *forsyth, long wtime_ms, long btime_ms, long winc_ms, long binc_ms )
 {
     pos_engine_to_move = pos;
     if( forsyth )
@@ -305,7 +305,7 @@ void Rybka::StartThinking( bool ponder, ChessPosition &pos, const char *forsyth,
         NewState( "go (no smoves)", SEND_PLAY_ENGINE1 );
 }
 
-void Rybka::StartThinking( bool ponder, ChessPosition &pos, const char *forsyth, wxString &smoves, long wtime_ms, long btime_ms, long winc_ms, long binc_ms )
+void Rybka::StartThinking( bool ponder, thc::ChessPosition &pos, const char *forsyth, wxString &smoves, long wtime_ms, long btime_ms, long winc_ms, long binc_ms )
 {
     pos_engine_to_move = pos;
     if( forsyth )
@@ -327,7 +327,7 @@ void Rybka::StartThinking( bool ponder, ChessPosition &pos, const char *forsyth,
         NewState( "go (smoves)", SEND_PLAY_ENGINE1 );
 }
 
-bool Rybka::Ponderhit( ChessPosition &pos )
+bool Rybka::Ponderhit( thc::ChessPosition &pos )
 {
     bool okay = false;
     release_printf( "Ponderhit\n" );
@@ -413,7 +413,7 @@ void Rybka::KibitzStop()
     }
 }
 
-void Rybka::Kibitz( ChessPosition &pos, const char *forsyth )
+void Rybka::Kibitz( thc::ChessPosition &pos, const char *forsyth )
 {
     bool skip=false;
     if( gbl_state==SEND_KIBITZ1 ||
@@ -465,9 +465,9 @@ bool Rybka::KibitzPeekEngineToMove( bool run, bool &cleared, char buf[], unsigne
     return have_data;    
 }
 
-Move Rybka::CheckBestMove( Move &ponder )
+thc::Move Rybka::CheckBestMove( thc::Move &ponder )
 {
-    Move move;
+    thc::Move move;
     move.Invalid();
     ponder.Invalid();
     Run();
@@ -1083,8 +1083,8 @@ void Rybka::line_out( const char *s )
             if( p )
             {
                 p += strlen(temp);
-                Move move;
-                ChessRules cr=pos_engine_to_move;
+                thc::Move move;
+                thc::ChessRules cr=pos_engine_to_move;
                 bool legal = move.TerseIn(&cr,p);
                 if( !legal )
                     release_printf( "**!! False bestmove %s detected !!**\n", p );
@@ -1098,7 +1098,7 @@ void Rybka::line_out( const char *s )
                     {
                         cr.PlayMove(move);
                         p += strlen(temp);
-                        Move ponder;
+                        thc::Move ponder;
                         bool okay = ponder.TerseIn(&cr,p);
                         if( okay )
                         {

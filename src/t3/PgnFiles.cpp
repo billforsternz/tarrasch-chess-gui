@@ -155,7 +155,7 @@ FILE *PgnFiles::ReopenRead( int handle )
     std::map<int,PgnFile>::iterator it = files.find(handle);
     if( it != files.end() )
     {
-        if( it->second.mode == PgnFile::reading )
+        if( it->second.mode==PgnFile::reading || it->second.mode==PgnFile::modifying )
             pgn_file = it->second.file_read;
         else
         {

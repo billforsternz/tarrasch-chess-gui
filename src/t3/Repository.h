@@ -120,6 +120,7 @@ struct LogConfig
     }
 };
 
+bool Is64BitWindows();
 struct EngineConfig
 {
     wxString    m_file;
@@ -136,7 +137,7 @@ struct EngineConfig
     wxString    m_custom4b;
     EngineConfig()
     {
-        m_file           = DEFAULT_ENGINE;
+        m_file           = Is64BitWindows() ? DEFAULT_ENGINE_64 : DEFAULT_ENGINE;
         m_ponder         = false;
         m_hash           = 64;
         m_max_cpu_cores  = 1;
@@ -175,7 +176,7 @@ struct DatabaseConfig
     wxString    m_file;
     DatabaseConfig()
     {
-        m_file           = "default.tarrasch_db";
+        m_file = "basic.tdb";
     }
 };
 
@@ -216,6 +217,7 @@ struct NonVolatile
     int         m_col8;
     int         m_col9;
     int         m_col10;
+    int         m_col11;
     wxString    m_doc_dir;
     NonVolatile()
     {
@@ -234,6 +236,7 @@ struct NonVolatile
         m_col8 = -1;
         m_col9 = -1;
         m_col10 = -1;
+        m_col11 = -1;
         m_doc_dir = "";
     }
 };

@@ -21,7 +21,7 @@ GameDocument::GameDocument( GameLogic *gl )
     : gv(gl)
 {
     this->gl = gl;
-    ChessPosition initial_position;
+    thc::ChessPosition initial_position;
     Init(initial_position);
 }
 
@@ -29,11 +29,11 @@ GameDocument::GameDocument()
     : gv(objs.gl)
 {
     this->gl = objs.gl;
-    ChessPosition initial_position;
+    thc::ChessPosition initial_position;
     Init(initial_position);
 }
 
-void GameDocument::Init( const ChessPosition &start_position )
+void GameDocument::Init( const thc::ChessPosition &start_position )
 {
     non_zero_start_pos = 0;
     game_details_edited = false;
@@ -300,7 +300,7 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
 
     // Key state variables
  // VARIATION   *pvar;          // the current variation, within this->tree
- // ChessRules   cr;            // the current chess position
+ // thc::ChessRules   cr;            // the current chess position
     PSTATE       state;         // the current state machine state
 
     // Allow stacking of the key state variables    
@@ -309,10 +309,10 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
     {
         PSTATE     state;
         VARIATION  *pvar;
-        ChessRules cr;
+        thc::ChessRules cr;
 
         // these vars are for locating starting point in tree only
-        ChessRules cr_variation_start;
+        thc::ChessRules cr_variation_start;
         vector<VARIATION>::iterator v;
         vector<VARIATION>::iterator vend;
         vector<MoveTree>::iterator m;
@@ -943,7 +943,7 @@ MoveTree *GameDocument::MakeMove( GAME_MOVE game_move, bool allow_overwrite )
 {
     MoveTree *move_played=NULL;
     unsigned long pos = GetInsertionPoint();
-    ChessRules cr = start_position;
+    thc::ChessRules cr = start_position;
     std::string title;
     bool at_move0=true;
     bool empty_with_comment = (!HaveMoves() && tree.game_move.comment!="");
@@ -1073,7 +1073,7 @@ bool GameDocument::AtEndOfMainLine()
     VARIATION &variation = tree.variations[0];
     int nbr_moves = variation.size();
     bool at_end = (nbr_moves==0);
-    ChessRules cr;
+    thc::ChessRules cr;
     std::string move_txt;
     GAME_MOVE *move_ptr = GetSummary( cr, move_txt );
     if( move_ptr && nbr_moves>0 && move_txt.substr(0,15)!="Position before" )
@@ -1083,7 +1083,7 @@ bool GameDocument::AtEndOfMainLine()
     #if 0
     bool at_end=false;
     unsigned long pos = GetInsertionPoint();
-    ChessRules cr = start_position;
+    thc::ChessRules cr = start_position;
     MoveTree *found = Locate( pos, cr );
     int ivar=0;
     int imove=0;
@@ -1107,7 +1107,7 @@ bool GameDocument::AreWeInMain()
 {
     bool is_main=false;
     unsigned long pos = GetInsertionPoint();
-    ChessRules cr = start_position;
+    thc::ChessRules cr = start_position;
     MoveTree *found = Locate( pos, cr );
     int ivar=0;
     int imove=0;
@@ -1171,7 +1171,7 @@ MoveTree *GameDocument::KibitzCaptureStart( const char *engine_name, const char 
     MoveTree *insertion_point = NULL;
     unsigned long pos = GetInsertionPoint();
     unsigned long pos_restore = pos;
-    ChessRules cr = start_position;
+    thc::ChessRules cr = start_position;
     std::string title;
     bool at_move0=true;
 
@@ -1284,7 +1284,7 @@ void GameDocument::KibitzCapture( MoveTree *node, const char *txt, std::vector<t
 /*
     unsigned long pos = GetInsertionPoint();
     unsigned long pos_restore = pos;
-    ChessRules cr = start_position;
+    thc::ChessRules cr = start_position;
     std::string title;
     bool at_move0=true;
     MoveTree *found = Locate( pos, cr, title, at_move0 );
@@ -1352,7 +1352,7 @@ void GameDocument::KibitzCapture( MoveTree *node, const char *txt, std::vector<t
 void GameDocument::Promote()
 {
     unsigned long pos = GetInsertionPoint();
-    ChessRules cr;
+    thc::ChessRules cr;
     MoveTree *found = Locate( pos, cr );
     if( found )
     {
@@ -1369,7 +1369,7 @@ void GameDocument::Promote()
 void GameDocument::Demote()
 {
     unsigned long pos = GetInsertionPoint();
-    ChessRules cr;
+    thc::ChessRules cr;
     MoveTree *found = Locate( pos, cr );
     if( found )
     {
@@ -1395,7 +1395,7 @@ void GameDocument::PromoteRestToVariation()
 bool GameDocument::PromotePaste( std::string &str )
 {
     unsigned long pos = GetInsertionPoint();
-    ChessRules cr;
+    thc::ChessRules cr;
     std::string title;
     MoveTree save=tree;
     bool changes = false;
@@ -1407,7 +1407,7 @@ bool GameDocument::PromotePaste( std::string &str )
         int nbr_converted_b = 0;
 
         // Scenario a, use current language
-        ChessRules cr = *tree.root;
+        thc::ChessRules cr = *tree.root;
         VARIATION &variation = tree.variations[0];
         PgnParse( false, nbr_converted_a, str, cr, &variation, true );
         if( nbr_converted_a > 0 )
@@ -1417,7 +1417,7 @@ bool GameDocument::PromotePaste( std::string &str )
         tree = save;
         Rebuild();
         {
-            ChessRules cr = *tree.root;
+            thc::ChessRules cr = *tree.root;
             VARIATION &variation = tree.variations[0];
             Rebuild();
             PgnParse( false, nbr_converted_b, str, cr, &variation, false );
@@ -1456,7 +1456,7 @@ void GameDocument::PromoteToVariation( unsigned long offset_within_comment )
 {
     unsigned long pos = GetInsertionPoint();
     unsigned long pos_restore = pos;
-    ChessRules cr;
+    thc::ChessRules cr;
     std::string title;
     bool at_move0;
     MoveTree save=tree;
@@ -1473,7 +1473,7 @@ void GameDocument::PromoteToVariation( unsigned long offset_within_comment )
         int nbr_converted_b = 0;
 
         // Scenario a, use current language
-        ChessRules cr = *tree.root;
+        thc::ChessRules cr = *tree.root;
         std::string str = tree.game_move.comment.substr(offset_within_comment);
         tree.game_move.comment = tree.game_move.comment.substr(0,offset_within_comment);
         VARIATION &variation = tree.variations[0];
@@ -1489,7 +1489,7 @@ void GameDocument::PromoteToVariation( unsigned long offset_within_comment )
         tree = save;
         Rebuild();
         {
-            ChessRules cr = *tree.root;
+            thc::ChessRules cr = *tree.root;
             std::string str = tree.game_move.comment.substr(offset_within_comment);
             tree.game_move.comment = tree.game_move.comment.substr(0,offset_within_comment);
             VARIATION &variation = tree.variations[0];
@@ -1540,7 +1540,7 @@ void GameDocument::PromoteToVariation( unsigned long offset_within_comment )
         if( found && found->game_move.comment.length()>offset_within_comment  )
         {
             pos_restore_scenario1 = gv.GetMoveOffset( found ); // where to end up pointing
-            ChessRules cr2;
+            thc::ChessRules cr2;
             int ivar;
             int imove;
             MoveTree *parent = tree.Parent( found, cr2, ivar, imove );
@@ -1562,7 +1562,7 @@ void GameDocument::PromoteToVariation( unsigned long offset_within_comment )
         found = Locate( pos, cr, title, at_move0 );
         if( found && found->game_move.comment.length()>offset_within_comment  )
         {
-            ChessRules cr2;
+            thc::ChessRules cr2;
             int ivar;
             int imove;
             MoveTree *parent = tree.Parent( found, cr2, ivar, imove );
@@ -1588,7 +1588,7 @@ void GameDocument::PromoteToVariation( unsigned long offset_within_comment )
         if( found && found->game_move.comment.length()>offset_within_comment && found->game_move.comment[offset_within_comment]!='(' )
         {
             pos_restore_scenario2 = gv.GetMoveOffset( found ); // where to end up pointing
-            ChessRules cr2;
+            thc::ChessRules cr2;
             int ivar;
             int imove;
             MoveTree *parent = tree.Parent( found, cr2, ivar, imove );
@@ -1613,7 +1613,7 @@ void GameDocument::PromoteToVariation( unsigned long offset_within_comment )
         found = Locate( pos, cr, title, at_move0 );
         if( found && found->game_move.comment.length()>offset_within_comment && found->game_move.comment[offset_within_comment]!='(' )
         {
-            ChessRules cr2;
+            thc::ChessRules cr2;
             int ivar;
             int imove;
             MoveTree *parent = tree.Parent( found, cr2, ivar, imove );
@@ -1686,13 +1686,13 @@ void GameDocument::PromoteToVariation( unsigned long offset_within_comment )
 void GameDocument::DemoteToComment()
 {
     unsigned long pos = GetInsertionPoint();
-    ChessRules cr;
+    thc::ChessRules cr;
     std::string title;
     bool at_move0;
     MoveTree *found = Locate( pos, cr, title, at_move0 );
     if( found )
     {
-        ChessRules cr;
+        thc::ChessRules cr;
         int ivar;
         int imove;
         MoveTree *parent = tree.Parent( found, cr, ivar, imove );
@@ -1757,13 +1757,13 @@ void GameDocument::DemoteToComment()
 void GameDocument::DeleteRestOfVariation()
 {
     unsigned long pos = GetInsertionPoint();
-    ChessRules cr;
+    thc::ChessRules cr;
     std::string title;
     bool at_move0;
     MoveTree *found = Locate( pos, cr, title, at_move0 );
     if( found )
     {
-        ChessRules cr;
+        thc::ChessRules cr;
         int ivar;
         int imove;
         MoveTree *parent = tree.Parent( found, cr, ivar, imove );
@@ -1804,7 +1804,7 @@ void GameDocument::GetSummary( thc::ChessPosition &start_position, std::vector<G
     end_pos = start_position;
     std::string title;
     bool at_move0=false;
-    ChessRules cr;
+    thc::ChessRules cr;
 
     // Locate the node in the tree corresponding to this position, also get the position
     //  on the board, a text title, and the at_move0 flag (true if pointing before the node)
@@ -1859,7 +1859,7 @@ GAME_MOVE *GameDocument::GetSummary( thc::ChessRules &cr, std::string &title_txt
     MoveTree *found = NULL; 
     if( nbr_half_moves_lag )
     {
-        ChessPosition end;
+        thc::ChessPosition end;
         std::vector<GAME_MOVE> game_moves;
         GetSummary( cr, game_moves, end );
         int nbr = game_moves.size();
@@ -1911,7 +1911,7 @@ MoveTree *GameDocument::GetSummary()
 {
     MoveTree *found = NULL; 
     unsigned long pos = GetInsertionPoint();
-    ChessRules cr;
+    thc::ChessRules cr;
     found = Locate( pos, cr );
     return( found );
 }
@@ -1973,12 +1973,6 @@ void GameDocument::ToFileTxtGameDetails( std::string &str )
     str1 += "[Result \"";
     str1 += (r.result=="" ? "*" : r.result);
     str1 += "\"]" EOL;
-    if( r.eco != "" )
-    {
-        str1 += "[ECO \"";
-        str1 += r.eco;
-        str1 += "\"]" EOL;
-    }
     if( r.white_elo != "" )
     {
         str1 += "[WhiteElo \"";
@@ -1991,7 +1985,13 @@ void GameDocument::ToFileTxtGameDetails( std::string &str )
         str1 += r.black_elo;
         str1 += "\"]" EOL;
     }
-    ChessPosition tmp;
+    if( r.eco != "" )
+    {
+        str1 += "[ECO \"";
+        str1 += r.eco;
+        str1 += "\"]" EOL;
+    }
+    thc::ChessPosition tmp;
     bool needs_fen = (tmp!=start_position);
     if( needs_fen )
     {
@@ -2074,7 +2074,7 @@ void GameDocument::Temp()
     struct STACK_ELEMENT
     {
         VARIATION  *pvar;
-        ChessRules cr;
+        thc::ChessRules cr;
         vector<VARIATION>::iterator v;
         vector<VARIATION>::iterator vend;
         vector<MoveTree>::iterator m;

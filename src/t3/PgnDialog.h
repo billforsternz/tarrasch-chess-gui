@@ -23,6 +23,7 @@ class wxVirtualPgnListCtrl;
 // PgnDialog class declaration
 class PgnDialog: public GamesDialog
 {    
+
 public:
     GameDocument *GetCachedDocument( int idx );
     void GetCachedDocumentRaw( int idx, GameDocument &gd );
@@ -46,19 +47,14 @@ public:
     virtual void GdvGetButtonGridDimensions( int &row1, int &col1, int &row2, int &col2 ) { row1=8; col1=2; row2=0; col2=0; }
     virtual void GdvReadItem( int item, CompactGame &info );
     virtual void GdvListColClick( int compare_col );
-    virtual void GdvSaveAllToAFile();
     virtual void GdvHelpClick();
     virtual void GdvSearch();
     virtual void GdvUtility();
     virtual void GdvOnCancel();
     virtual void GdvNextMove( int idx );
 
-
     // Return true if a game has been selected
     bool LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx );
-    void SyncCacheOrderBefore();
-    void SyncCacheOrderAfter();
-
 
     // PgnDialog member variables
 public:

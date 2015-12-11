@@ -7,6 +7,7 @@
 #ifndef DB_MAINTENANCE_H
 #define DB_MAINTENANCE_H
 
+void db_maintenance_create_player_database();
 void db_maintenance_compress_pgn();
 void db_maintenance_decompress_pgn();
 void db_maintenance_verify_compression();

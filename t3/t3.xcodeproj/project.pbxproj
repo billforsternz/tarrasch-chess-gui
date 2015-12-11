@@ -84,6 +84,7 @@
 		E65C87F2183D97F9008E1266 /* Tabs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C87A8183D97F9008E1266 /* Tabs.cpp */; };
 		E65C87F3183D97F9008E1266 /* TrainingDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C87AA183D97F9008E1266 /* TrainingDialog.cpp */; };
 		E65C87F4183D97F9008E1266 /* Undo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E65C87AC183D97F9008E1266 /* Undo.cpp */; };
+		E6A3C7291C0508350085C089 /* CompactGame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6A3C7241C0508350085C089 /* CompactGame.cpp */; };
 		E6AF490018A4881C00463137 /* MaintenanceDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6AF48FE18A4881C00463137 /* MaintenanceDialog.cpp */; };
 		E6C97A811BABB07100F87894 /* ClipboardDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6C97A801BABB07100F87894 /* ClipboardDialog.cpp */; };
 		E6F862F31888D7D20088F2F6 /* DbMaintenance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6F862F01888D7D20088F2F6 /* DbMaintenance.cpp */; };
@@ -114,9 +115,6 @@
 		E61F9E881BF2AB13007FC625 /* CreateDatabaseDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CreateDatabaseDialog.h; path = ../src/t3/CreateDatabaseDialog.h; sourceTree = "<group>"; };
 		E6407D1B1A216AD8004E5634 /* GamesDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = GamesDialog.cpp; path = ../src/t3/GamesDialog.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		E6407D1C1A216AD8004E5634 /* GamesDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GamesDialog.h; path = ../src/t3/GamesDialog.h; sourceTree = "<group>"; };
-		E6440FCE1BC75CF20055C6F0 /* GameBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GameBase.h; path = ../src/t3/GameBase.h; sourceTree = "<group>"; };
-		E6440FCF1BD068AD0055C6F0 /* PgnDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PgnDocument.h; path = ../src/t3/PgnDocument.h; sourceTree = "<group>"; };
-		E6440FD01BD068AD0055C6F0 /* DbDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DbDocument.h; path = ../src/t3/DbDocument.h; sourceTree = "<group>"; };
 		E65C86F5183D9620008E1266 /* t3.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = t3.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E65C86F8183D9620008E1266 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		E65C86FB183D9620008E1266 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -252,6 +250,11 @@
 		E65C87AD183D97F9008E1266 /* Undo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Undo.h; path = ../src/t3/Undo.h; sourceTree = "<group>"; };
 		E65C8819183D99A1008E1266 /* libthc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libthc.a; path = ../thc/build/Debug/libthc.a; sourceTree = "<group>"; };
 		E673327F1895F371006B75A5 /* DbMaintenance.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DbMaintenance.h; path = ../src/t3/DbMaintenance.h; sourceTree = "<group>"; };
+		E6A3C7241C0508350085C089 /* CompactGame.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CompactGame.cpp; path = ../src/t3/CompactGame.cpp; sourceTree = "<group>"; };
+		E6A3C7251C0508350085C089 /* ListableGame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ListableGame.h; path = ../src/t3/ListableGame.h; sourceTree = "<group>"; };
+		E6A3C7261C0508350085C089 /* ListableGameDb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ListableGameDb.h; path = ../src/t3/ListableGameDb.h; sourceTree = "<group>"; };
+		E6A3C7271C0508350085C089 /* ListableGamePgn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ListableGamePgn.h; path = ../src/t3/ListableGamePgn.h; sourceTree = "<group>"; };
+		E6A3C7281C0508350085C089 /* Roster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Roster.h; path = ../src/t3/Roster.h; sourceTree = "<group>"; };
 		E6AF48FE18A4881C00463137 /* MaintenanceDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MaintenanceDialog.cpp; path = ../src/t3/MaintenanceDialog.cpp; sourceTree = "<group>"; };
 		E6AF48FF18A4881C00463137 /* MaintenanceDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MaintenanceDialog.h; path = ../src/t3/MaintenanceDialog.h; sourceTree = "<group>"; };
 		E6C6F7261BFBCC5C00BDABFE /* ProgressBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ProgressBar.h; path = ../src/t3/ProgressBar.h; sourceTree = "<group>"; };
@@ -366,12 +369,14 @@
 		E65C872C183D97AD008E1266 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				E6A3C7241C0508350085C089 /* CompactGame.cpp */,
+				E6A3C7251C0508350085C089 /* ListableGame.h */,
+				E6A3C7261C0508350085C089 /* ListableGameDb.h */,
+				E6A3C7271C0508350085C089 /* ListableGamePgn.h */,
+				E6A3C7281C0508350085C089 /* Roster.h */,
 				E6C6F7261BFBCC5C00BDABFE /* ProgressBar.h */,
 				E61F9E871BF2AB13007FC625 /* CreateDatabaseDialog.cpp */,
 				E61F9E881BF2AB13007FC625 /* CreateDatabaseDialog.h */,
-				E6440FCF1BD068AD0055C6F0 /* PgnDocument.h */,
-				E6440FD01BD068AD0055C6F0 /* DbDocument.h */,
-				E6440FCE1BC75CF20055C6F0 /* GameBase.h */,
 				E65C872E183D97F9008E1266 /* Appdefs.h */,
 				E65C872F183D97F9008E1266 /* Atom.cpp */,
 				E65C8730183D97F9008E1266 /* Atom.h */,
@@ -687,6 +692,7 @@
 				E65C87D6183D97F9008E1266 /* GameClock.cpp in Sources */,
 				E65C87E4183D97F9008E1266 /* LogDialog.cpp in Sources */,
 				E65C87D0183D97F9008E1266 /* CtrlBox2.cpp in Sources */,
+				E6A3C7291C0508350085C089 /* CompactGame.cpp in Sources */,
 				E6AF490018A4881C00463137 /* MaintenanceDialog.cpp in Sources */,
 				E65C87E9183D97F9008E1266 /* PgnDialog.cpp in Sources */,
 				E6F862F41888D7D20088F2F6 /* PgnRead.cpp in Sources */,

@@ -1,24 +1,24 @@
 /****************************************************************************
- * A Game in a GameCache - From the database
+ * A ListableGame that was originally created for the list in the DbDialog
  *  Author:  Bill Forster
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2015, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#ifndef DB_DOCUMENT_H
-#define DB_DOCUMENT_H
+#ifndef LISTABLE_GAME_DB_H
+#define LISTABLE_GAME_DB_H
 #include "GameDocument.h"
 #include "CompactGame.h"
 #include "PackedGame.h"
 #include "CompressMoves.h"
 
-class DbDocument : public MagicBase
+class ListableGameDb : public ListableGame
 {
 private:
     int game_id;
     PackedGame pack;
 
 public:
-    DbDocument( int game_id, Roster &r, std::string str_blob )
+    ListableGameDb( int game_id, Roster &r, std::string str_blob )
     {
         this->game_id = game_id;
         pack.Pack( r, str_blob );
@@ -48,6 +48,19 @@ public:
         pack.Unpack(r);
         return r;
     }
+
+    // For editing the roster
+    /*
+    virtual void SetRoster( Roster &r )
+    {
+        CompactGame pact;
+        if( pack.Empty() )
+            LoadIntoMemory( NULL, true );
+        pack.Unpack(pact);
+        pact.r = r;
+        pack.pack(pact);
+    } */
+
     virtual std::vector<thc::Move> &RefMoves()
     {
         static CompactGame pact;
@@ -68,8 +81,23 @@ public:
         return pact.start_position;
     }
     
+    // For now at least, the following are used for fast sorting on column headings
+    virtual const char *White()     { return pack.White();    }
+    virtual const char *Black()     { return pack.Black();    }
+    virtual const char *Event()     { return pack.Event();    }
+    virtual const char *Site()      { return pack.Site();     }
+    virtual const char *Result()    { return pack.Result();   }
+    virtual const char *Round()     { return pack.Round() ;   }
+    virtual const char *Date()      { return pack.Date();     }
+    virtual const char *Eco()       { return pack.Eco();      }
+    virtual const char *WhiteElo()  { return pack.WhiteElo(); }
+    virtual const char *BlackElo()  { return pack.BlackElo(); }
+    virtual const char *Fen()       { return pack.Fen();      }
+    virtual const char *CompressedMoves() {return pack.Blob();  }
     
+    virtual bool IsDbGameOnly() { return true; }   // a horrible kludge
+    virtual bool IsInMemory()   { return true; }
 };
 
 
-#endif    // DB_DOCUMENT_H
+#endif  // LISTABLE_GAME_DB_H

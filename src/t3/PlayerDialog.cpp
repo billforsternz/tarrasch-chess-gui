@@ -154,13 +154,13 @@ void PlayerDialog::CreateControls()
 void PlayerDialog::SetDialogValidators()
 {
     FindWindow(ID_HUMAN)->SetValidator(
-        wxTextValidator(wxFILTER_ASCII, &dat.m_human));
+        wxTextValidator(wxFILTER_NONE, &dat.m_human));
 //    FindWindow(ID_COMPUTER)->SetValidator(
 //        wxTextValidator(wxFILTER_ASCII, &dat.m_computer));
     FindWindow(ID_WHITE)->SetValidator(
-        wxTextValidator(wxFILTER_ASCII, &dat.m_white));
+        wxTextValidator(wxFILTER_NONE, &dat.m_white));
     FindWindow(ID_BLACK)->SetValidator(
-        wxTextValidator(wxFILTER_ASCII, &dat.m_black));
+        wxTextValidator(wxFILTER_NONE, &dat.m_black));
 }
 
 // Sets the help text for the dialog controls

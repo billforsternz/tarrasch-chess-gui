@@ -30,6 +30,30 @@ public:
     void SetDepth( int depth ) { if( depth<=KQDEPTH ) kqdepth=depth; }
     void Clear() { cleared=true; put=0; get=0; }
     bool TestCleared() { bool temp=cleared; cleared=false; return temp; }
+
+    void Put( const char *txt, int depth )
+    {
+        bool full = Full();
+        unsigned int temp = put;
+        unsigned int len = strlen(txt);
+        char *dst = &buf[temp][0];
+        int maxlen = KQBUFSIZE-1;
+        sprintf( dst, " depth %d ", depth );
+        int offset = strlen(dst);
+        dst += offset;
+        maxlen -= offset;
+        if( len <= maxlen )
+            strcpy( dst, txt );
+        else
+        {
+            memcpy( dst, txt, maxlen );
+            dst[maxlen] = '\0';
+        }
+        put = Bump(temp);
+        if( full )
+            get = Bump(get);
+    }
+
     void Put( const char *txt )
     {
         bool full = Full();

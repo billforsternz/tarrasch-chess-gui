@@ -42,6 +42,7 @@ public:
     int  TabDelete();
     void SetInfile( bool infile ) { if( current_idx<nbr_tabs ) v[current_idx].infile = infile; }
     bool GetInfile() { return current_idx<nbr_tabs ? v[current_idx].infile : false; }
+    bool GetInfile(int idx) { return idx<nbr_tabs ? v[idx].infile : false; }
     void SetTitle( GameDocument &gd );
     GameDocument *Begin();
     Undo         *BeginUndo();

@@ -4,29 +4,13 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2015, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-
 #ifndef COMPACT_GAME_H
 #define COMPACT_GAME_H
 #include <string>
 #include <vector>
 #include <memory>
 #include "thc.h"
-
-class Roster
-{
-public:
-    std::string white;
-    std::string black;
-    std::string event;
-    std::string site;
-    std::string result;
-    std::string round;
-    std::string date;
-    std::string eco;
-    std::string white_elo;
-    std::string black_elo;
-    std::string fen;
-};
+#include "Roster.h"
 
 class GameDocument;
 

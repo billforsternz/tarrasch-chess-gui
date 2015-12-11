@@ -25,7 +25,7 @@ enum
     ID_DB_CHECKBOX2,
     ID_DB_RADIO ,
     ID_DB_COMBO ,
-    ID_DB_RELOAD,
+    ID_DB_SEARCH,
     ID_DB_UTILITY,
     ID_DB_TEXT   ,
     ID_DB_LISTBOX_GAMES,
@@ -35,9 +35,11 @@ enum
     ID_BUTTON_2,
     ID_BUTTON_3,
     ID_BUTTON_4,
+    ID_BUTTON_5,
     ID_PGN_DIALOG_FILE     ,
     ID_PGN_DIALOG_CLIPBOARD,
     ID_PGN_DIALOG_SESSION  ,
+    ID_GAMES_DIALOG_DATABASE   ,
     ID_BOARD2GAME          ,
     ID_PGN_DIALOG_GAME_DETAILS,
     ID_REORDER           ,
@@ -45,7 +47,6 @@ enum
     ID_SAVE_ALL_TO_A_FILE,
     ID_PGN_DIALOG_GAME_PREFIX,
     ID_PGN_DIALOG_PUBLISH    ,
-    ID_PGN_DIALOG_DATABASE   ,
     ID_PGN_DIALOG_UTILITY1   ,
     ID_PGN_DIALOG_UTILITY2   
 };
@@ -59,6 +60,14 @@ struct MiniBoardGame
     int                 focus_offset;
 };
 
+// Used in moves column sort
+struct MoveColCompareElement
+{
+    int idx;
+    int transpo;
+    std::string blob;
+    std::vector<int> counts;
+};
 
 // A GamesListCtrl is a list control within the GamesDialog, it displays a list of games to navigate through and pick from
 class GamesDialog;
@@ -164,6 +173,7 @@ public:
     void OnCopy( wxCommandEvent& event );
     void OnAddToClipboard( wxCommandEvent& event );
     void OnSaveAllToAFile( wxCommandEvent& event );
+    void OnCutOrDelete( bool cut );
     void OnCut( wxCommandEvent& event );
     void OnDelete( wxCommandEvent& event );
     void OnPaste( wxCommandEvent& event );
@@ -177,6 +187,7 @@ public:
     void OnButton2( wxCommandEvent& event );
     void OnButton3( wxCommandEvent& event );
     void OnButton4( wxCommandEvent& event );
+    void OnButton5( wxCommandEvent& event );
     void OnRadio( wxCommandEvent& event );
     void OnSpin( wxCommandEvent& event );
     void OnComboBox( wxCommandEvent& event );
@@ -186,6 +197,7 @@ public:
 
     void Goto( int idx );
     void ReadItemWithSingleLineCache( int item, CompactGame &info );
+    void ColumnSort( int compare_col, std::vector< smart_ptr<ListableGame> > &displayed_games );
 
     // Overrides - Gdv = Games Dialog Override
     virtual void GdvOnActivate();
@@ -206,36 +218,25 @@ public:
     virtual void GdvButton2();
     virtual void GdvButton3();
     virtual void GdvButton4();
+    virtual void GdvButton5();
     virtual void GdvNextMove( int idx );
+    virtual bool MoveColCompareReadGame( MoveColCompareElement &e, int idx, const char *blob );
+    virtual int  GetBasePositionIdx( CompactGame &pact ) { return 0; }
 
-    // Todo later
-    void OnEditGameDetails( wxCommandEvent );
-    void OnEditGamePrefix( wxCommandEvent );
-    //void OnSaveAllToAFile();
-    void OnAddToClipboard( wxCommandEvent );
-    void OnCopy( wxCommandEvent );
-    //void CopyOrAdd( bool clear_clipboard );
-    void OnCut( wxCommandEvent );
-    void OnDelete( wxCommandEvent );
-    void OnPaste( wxCommandEvent );
-    void OnSave( wxCommandEvent );
-    void OnPublish( wxCommandEvent );
-
-    
 //  void OnClose( wxCloseEvent& event );
 //  void SaveColumns();
     bool ShowModalOk( std::string title );
     
     // Return true if a game has been selected
-    bool LoadGame(  GameDocument &gd );
-    void LoadGame( int idx, int focus_offset=0 );
+    bool LoadGameTwo(  GameDocument &gd );
+    void LoadGameOne( int idx, int focus_offset=0 );
     
  
     // Helpers
     GameDocument *GetFocusGame( int &idx );
     void DeselectOthers();
     void OnOk();
-    void SmartCompare( std::vector< smart_ptr<MagicBase> > &gds );
+    void MoveColCompare( std::vector< smart_ptr<ListableGame> > &gds );
     
     // GamesDialog member variables
 public:
@@ -279,6 +280,10 @@ protected:
 
 private:    //TODO - move more vars to private
     bool db_search;
+    int col_last_time;
+    int col_consecutive;
+    int focus_idx;
+
 public:
     bool transpo_activated;
     int nbr_games_in_list_ctrl;

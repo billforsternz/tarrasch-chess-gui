@@ -719,7 +719,7 @@ void Book::GameBegin()
     variation [0] = '\0';
     move_order_type    [0] = '\0';
     fen                [0] = '\0';
-    ChessRules temp;
+    thc::ChessRules temp;
     chess_rules = temp;    // init
     nbr_games++;
     if( (nbr_games%10) == 0 )
@@ -735,7 +735,7 @@ Book::STATE Book::Push( Book::STATE in )
     s->state     = in;
     s->position  = chess_rules;
     n->nbr_moves = s->nbr_moves;
-    memcpy( n->big_move_array, s->big_move_array, s->nbr_moves*sizeof(Move) );
+    memcpy( n->big_move_array, s->big_move_array, s->nbr_moves*sizeof(thc::Move) );
     return BETWEEN_MOVES;
 }
 
@@ -758,7 +758,7 @@ Book::STATE Book::Pop()
 void Book::GameOver()
 {
     stack_idx = 0;
-    ChessRules temp;
+    thc::ChessRules temp;
     chess_rules = temp;    // init
     stack_array[0].nbr_moves = 0;
     stack_array[0].position = chess_rules;
@@ -828,9 +828,9 @@ bool Book::DoMove( bool white, int move_number, char *buf )
     //fprintf( debug, "** DoMove( white=%s, move_number=%d, buf=%s)\n", white?"true":"false", move_number, buf );
     STACK_ELEMENT *n;
     n = &stack_array[stack_idx];
-    Move terse;
+    thc::Move terse;
     char buf2[BOOK_BUFLEN+10];
-    Move move;
+    thc::Move move;
     int nbr_moves = (move_number-1)*2;
     if( !white )
         ++nbr_moves;
@@ -854,7 +854,7 @@ bool Book::DoMove( bool white, int move_number, char *buf )
                 chess_rules.Forsyth( fen );
             else
             {
-                ChessRules temp;
+                thc::ChessRules temp;
                 chess_rules = temp;    // init
             }
             for( int i=0; i<nbr_moves; i++ )
@@ -894,7 +894,7 @@ bool Book::DoMove( bool white, int move_number, char *buf )
                 bp.play_position_count = 0;
                 #if 0
                 { // temp - test Decompress() function
-                    ChessPosition pos;
+                    thc::ChessPosition pos;
                     pos.Decompress( bp.cpos );
                     bool match;
                     match = (chess_rules == pos);
@@ -1019,7 +1019,7 @@ bool Book::Compile( wxString &error_msg, wxString &compile_msg, wxString &pgn_fi
                 fwrite( &ui, sizeof(ui), 1, outfile );
                 fwrite( fen.c_str(), fen.Len(), 1, outfile );
             }
-            ChessRules cr2;
+            thc::ChessRules cr2;
             for( int i=0; i<BOOK_HASH_NBR; i++ )
             {
                 if( bucket[i].size() )
@@ -1190,7 +1190,7 @@ bool Book::LoadCompiled( wxString &error_msg, wxString &pgn_compiled_file )
     }
     if( !error )
     {
-        ChessRules cr2;
+        thc::ChessRules cr2;
         for( ;; )
         {
             // Read a hash idx and a non-zero number of BookPositions for that hash idx
@@ -1258,19 +1258,19 @@ bool Book::LoadCompiled( wxString &error_msg, wxString &pgn_compiled_file )
 }
 
 // Lookup full move list, return true if any moves found
-bool Book::Lookup( ChessPosition &pos, vector<BookMove> &bmoves )
+bool Book::Lookup( thc::ChessPosition &pos, vector<BookMove> &bmoves )
 {
     bool found = false;
     //if( pos.squares[c4]=='P' && pos.squares[f3]=='N' && pos.squares[d5]=='p' )
     if( objs.repository->book.m_enabled )
     {
         bmoves.clear();
-        vector<Move> moves;
-        ChessRules cr = pos;
+        vector<thc::Move> moves;
+        thc::ChessRules cr = pos;
         cr.GenLegalMoveList( moves );
         for( unsigned int i=0; i<moves.size(); i++ )
         {
-            Move move = moves[i];
+            thc::Move move = moves[i];
             cr = pos;
             cr.PlayMove( move );
             CompressedPosition cpos;
@@ -1300,7 +1300,7 @@ bool Book::Lookup( ChessPosition &pos, vector<BookMove> &bmoves )
 }
 
 // Lookup simple move list, return true if any moves found
-bool Book::Lookup( ChessPosition &pos, vector<Move> &moves )
+bool Book::Lookup( thc::ChessPosition &pos, vector<thc::Move> &moves )
 {
     moves.clear();
     vector<BookMove> bms;

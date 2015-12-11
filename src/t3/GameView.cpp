@@ -16,7 +16,7 @@
 using namespace std;
 using namespace thc;
 
-void GameView::Build( std::string &result, MoveTree *tree, ChessPosition &start_position )
+void GameView::Build( std::string &result, MoveTree *tree, thc::ChessPosition &start_position )
 {
     this->result = result;
     final_position_node = NULL;
@@ -259,7 +259,7 @@ void GameView::Crawler( MoveTree *node, bool move0, bool last_move )
     int nbr_vars = node->variations.size();
     if( nbr_vars )
     {
-        ChessRules cr_before_move = cr;
+        thc::ChessRules cr_before_move = cr;
         for( int i=0; i<nbr_vars; i++ )
         {
 
@@ -1035,7 +1035,7 @@ void GameView::ToPublishString( std::string &str, int &diagram_base, int &mv_bas
             }
             case MOVE:
             {
-                ChessRules cr;
+                thc::ChessRules cr;
                 int ivar;
                 int imove;
                 MoveTree *parent = tree->Parent( gve.node, cr, ivar, imove );
@@ -1458,7 +1458,7 @@ int GameView::GetInternalOffsetEndOfVariation( int start )
     return end;
 }
 
-MoveTree *GameView::Locate( unsigned long pos, ChessRules &cr, string &title, bool &at_move0 )
+MoveTree *GameView::Locate( unsigned long pos, thc::ChessRules &cr, string &title, bool &at_move0 )
 {
     MoveTree *found = NULL;
     at_move0 = false;

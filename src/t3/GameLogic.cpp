@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "wx/wx.h"
+#include "wx/clipbrd.h"
 #include "wx/listctrl.h"
 #include "wx/filename.h"
 #include "Appdefs.h"
@@ -50,7 +51,7 @@ void ReportOnProgress
 (
     bool ,//init,
     int  ,//multipv,
-    vector<Move> &, //pv,
+    vector<thc::Move> &, //pv,
     int  ,//   score_cp,
     int   //   depth
 )
@@ -73,7 +74,7 @@ GameLogic::GameLogic( Canvas *canvas, CtrlChessTxt *lb )
     this->lb = lb;
     this->tabs = objs.tabs;
     //human_is_white = false;
-    ChessPosition temp;
+    thc::ChessPosition temp;
     gd.Init( temp );
     file_game_idx = -1;
     tabs->SetInfile(false);
@@ -100,7 +101,7 @@ bool GameLogic::OnExit()
 bool GameLogic::EditingLog()
 {
     std::string log_filename(objs.repository->log.m_file.c_str());
-    std::string pgn_filename(gc.pgn_filename.c_str());
+    std::string pgn_filename(gc_pgn.pgn_filename.c_str());
     bool editing_log = (log_filename == pgn_filename);
     return editing_log;
 }
@@ -119,12 +120,12 @@ void GameLogic::CmdFileNew()
     bool editing_log = objs.gl->EditingLog();
     if( objs.cws->FileNew() )
     {
-        gc.gds.clear();
-        gc.pgn_filename = "";
+        gc_pgn.gds.clear();
+        gc_pgn.pgn_filename = "";
         objs.log->SaveGame( &gd, editing_log );
         objs.session->SaveGame( &gd );
         IndicateNoCurrentDocument();
-        ChessPosition temp;
+        thc::ChessPosition temp;
         gd.Init( temp );
         this->file_game_idx = -1;
         tabs->SetInfile(false);
@@ -142,7 +143,7 @@ void GameLogic::CmdNewGame()
         objs.log->SaveGame( &gd, editing_log );
         objs.session->SaveGame( &gd );
         IndicateNoCurrentDocument();
-        ChessPosition temp;
+        thc::ChessPosition temp;
         gd.Init( temp );
         ShowNewDocument();
     }
@@ -160,7 +161,7 @@ void GameLogic::CmdSetPosition()
         if( wxID_OK == dialog.ShowModal() )
         {
             strcpy( after, dialog.fen.c_str() );
-            ChessPosition pos;
+            thc::ChessPosition pos;
             bool okay = pos.Forsyth( after ); // "7K/8/7k/8/P7/8/8/8 b KQ a3 0 9" );
             if( okay )
             {
@@ -183,7 +184,7 @@ void GameLogic::ShowNewDocument()
     CmdClearKibitz(true);
     initial_position = gd.start_position;
     canvas->lb->SetGameDocument(&gd);
-    ChessRules cr;
+    thc::ChessRules cr;
     string title;
     gd.Locate( atom.GetInsertionPoint(), cr ); //, title );
     gd.master_position = cr;
@@ -246,7 +247,7 @@ void GameLogic::CmdPlayWhite()
         }
         objs.canvas->SetMinimumPlaySize();
         glc.Begin( true );
-        ChessRules cr;
+        thc::ChessRules cr;
         string move_txt;
         GAME_MOVE *game_move = gd.GetSummaryMove( cr, move_txt );
         chess_clock.NewHumanEngineGame( true, cr.white );
@@ -290,7 +291,7 @@ void GameLogic::CmdPlayBlack()
         }
         objs.canvas->SetMinimumPlaySize();
         glc.Begin( false );
-        ChessRules cr;
+        thc::ChessRules cr;
         string move_txt;
         GAME_MOVE *game_move = gd.GetSummaryMove( cr, move_txt );
         chess_clock.NewHumanEngineGame( false, cr.white );
@@ -414,7 +415,7 @@ void GameLogic::CmdSwapSides()
             objs.canvas->SetNormalOrientation(!normal);
         }
         SetGroomedPosition();
-        ChessRules cr;
+        thc::ChessRules cr;
         string last_move_txt;
         GAME_MOVE *last_move = gd.GetSummary( cr, last_move_txt );
         glc.Swap();
@@ -465,7 +466,7 @@ void GameLogic::CmdKibitz()
                 {
                     char buf[128];
                     strcpy( buf, gd.master_position.ForsythPublish().c_str() );
-                    ChessPosition pos = gd.master_position;
+                    thc::ChessPosition pos = gd.master_position;
                     objs.rybka->Kibitz( pos, buf );
                 }
             }
@@ -573,14 +574,14 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
     Atomic begin;
     bool is_empty = gd.IsEmpty();
     bool editing_log = objs.gl->EditingLog();
-    if( !gc.Load(filename) )
+    if( !gc_pgn.Load(filename) )
         wxMessageBox( "Cannot read file", "Error", wxOK|wxICON_ERROR );
     else
     {
         bool have_game = false;
-        if( gc.gds.size()==1 && objs.repository->general.m_straight_to_game )
+        if( gc_pgn.gds.size()==1 && objs.repository->general.m_straight_to_game )
         {
-            GameDocument *gd_file = gc.gds[0]->GetGameDocumentPtr();
+            GameDocument *gd_file = gc_pgn.gds[0]->GetGameDocumentPtr();
             bool have_game = gd_file && gd_file->in_memory;
             if( !have_game && gd_file )
             {
@@ -600,7 +601,7 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
                         gd = *gd_file;
                         gd.PgnParse(true,nbr_converted,s,cr,NULL);
                         make_smart_ptr( GameDocument,new_smart_ptr,gd);
-                        gc.gds[0] = std::move(new_smart_ptr);
+                        gc_pgn.gds[0] = std::move(new_smart_ptr);
                         have_game = true;
                     }
                     pf.Close( &gc_clipboard );
@@ -612,13 +613,18 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
                 objs.log->SaveGame(&gd,editing_log);
                 objs.session->SaveGame(&gd);
                 IndicateNoCurrentDocument();
-                gd_file->game_being_edited = ++game_being_edited_tag;
-                gd_file->GetGameDocumentFromFile(gd);
+
+                //@ Loading up a game
+                uint32_t temp = ++game_being_edited_tag;
+                gd_file->SetGameBeingEdited( temp );
+                gc_pgn.gds[0]->SetGameBeingEdited( temp );
+                GameDocument new_gd;
+                gd_file->GetGameDocumentFromFile(new_gd);
                 gd_file->selected = true;
                 this->file_game_idx = 0;    // game 0
-                tabs->SetInfile(true);
                 if( !is_empty )
-                    tabs->TabNew(gd);
+                    tabs->TabNew(new_gd);
+                tabs->SetInfile(true);
                 ShowNewDocument();
             }
         }
@@ -628,16 +634,21 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
             wxSize sz = objs.frame->GetSize();
             sz.x = (sz.x*9)/10;
             sz.y = (sz.y*9)/10;
-            PgnDialog dialog( objs.frame, &gc, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );   // GamesDialog instance
+            PgnDialog dialog( objs.frame, &gc_pgn, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );   // GamesDialog instance
             std::string title = "File: " + filename;
-            if( dialog.ShowModalOk(title) )
+            if( !dialog.ShowModalOk(title) )
+                gc_pgn.pgn_filename = "";
+            else
             {
                 objs.log->SaveGame(&gd,editing_log);
                 objs.session->SaveGame(&gd);
-                if( dialog.LoadGame(this,gd,this->file_game_idx) )
+                GameDocument new_gd;
+                if( dialog.LoadGame(this,new_gd,this->file_game_idx) )
                 {
-                    if( !is_empty )
-                        tabs->TabNew(gd);
+                    if( is_empty )
+                        gd = new_gd;
+                    else
+                        tabs->TabNew(new_gd);
                     tabs->SetInfile(true);
                     ShowNewDocument();
                 }
@@ -656,8 +667,8 @@ bool GameLogic::CmdUpdateNextGame()
     }
     else
     {
-        size_t nbr = gc.gds.size();
-        return( gc.gds.size()>1 && file_game_idx!=-1 && 0<=file_game_idx+1 && file_game_idx+1<nbr );
+        size_t nbr = gc_pgn.gds.size();
+        return( gc_pgn.gds.size()>1 && file_game_idx!=-1 && 0<=file_game_idx+1 && file_game_idx+1<nbr );
     }
 }
 
@@ -669,8 +680,8 @@ bool GameLogic::CmdUpdatePreviousGame()
     }
     else
     {
-        size_t nbr = gc.gds.size();
-        return( gc.gds.size()>1 && file_game_idx!=-1 && 0<=file_game_idx-1 && file_game_idx-1<nbr );
+        size_t nbr = gc_pgn.gds.size();
+        return( gc_pgn.gds.size()>1 && file_game_idx!=-1 && 0<=file_game_idx-1 && file_game_idx-1<nbr );
     }
 }
 
@@ -679,7 +690,7 @@ void GameLogic::NextGamePreviousGame( int idx )
     Atomic begin;
     bool editing_log = objs.gl->EditingLog();
     bool have_game = false;
-    GameDocument *ptr = gc.gds[idx]->GetGameDocumentPtr();
+    GameDocument *ptr = gc_pgn.gds[idx]->GetGameDocumentPtr();
     if( ptr )
     {
         GameDocument gd_file = *ptr;
@@ -701,7 +712,7 @@ void GameLogic::NextGamePreviousGame( int idx )
                     int nbr_converted;
                     gd_file.PgnParse(true,nbr_converted,s,cr,NULL);
                     make_smart_ptr( GameDocument,new_smart_ptr,gd_file);
-                    gc.gds[idx] = std::move(new_smart_ptr);
+                    gc_pgn.gds[idx] = std::move(new_smart_ptr);
                     have_game = true;
                 }
                 pf.Close( &gc_clipboard );
@@ -714,10 +725,14 @@ void GameLogic::NextGamePreviousGame( int idx )
             objs.log->SaveGame(&gd,editing_log);
             objs.session->SaveGame(&gd);
             IndicateNoCurrentDocument();
-            gd_file.game_being_edited = ++game_being_edited_tag;
+
+            //@ Loading up a game
+            uint32_t temp = ++game_being_edited_tag;
+            gd_file.SetGameBeingEdited( temp );
             gd = gd_file;
-            smart_ptr<MagicBase> smp = gc.gds[idx];
+            smart_ptr<ListableGame> smp = gc_pgn.gds[idx];
             smp->SetSelected(true);
+            smp->SetGameBeingEdited( temp );
             this->file_game_idx = idx;
             tabs->SetInfile(true);
             ShowNewDocument();
@@ -730,32 +745,9 @@ void GameLogic::CmdNextGame()
 {
     if( CmdUpdateNextGame() )
     {
-        if( false )
-        {
-            Atomic begin;
-            bool editing_log = objs.gl->EditingLog();
-            static CompactGame pact;
-            int idx = objs.db->GetCurrent();
-            objs.db->GetRow(idx+1,&pact);
-            GameDocument gd_temp;
-            std::vector<thc::Move> moves;
-            gd_temp.r = pact.r;
-            gd_temp.LoadFromMoveList(pact.moves);
-            PutBackDocument();
-            objs.log->SaveGame(&gd,editing_log);
-            objs.session->SaveGame(&gd);
-            IndicateNoCurrentDocument();
-            gd = gd_temp;
-            tabs->SetInfile(false);
-            ShowNewDocument();
-            atom.StatusUpdate();
-        }
-        else
-        {
-            int idx = file_game_idx+1;
-            NextGamePreviousGame(idx);
-            StatusUpdate(idx);
-        }
+        int idx = file_game_idx+1;
+        NextGamePreviousGame(idx);
+        StatusUpdate(idx);
     }
 }
 
@@ -763,32 +755,9 @@ void GameLogic::CmdPreviousGame()
 {
     if( CmdUpdatePreviousGame() )
     {
-        if( false )
-        {
-            Atomic begin;
-            bool editing_log = objs.gl->EditingLog();
-            static CompactGame pact;
-            int idx = objs.db->GetCurrent();
-            objs.db->GetRow( idx-1, &pact );
-            GameDocument gd_temp;
-            std::vector<thc::Move> moves;
-            gd_temp.r = pact.r;
-            gd_temp.LoadFromMoveList(pact.moves);
-            PutBackDocument();
-            objs.log->SaveGame(&gd,editing_log);
-            objs.session->SaveGame(&gd);
-            IndicateNoCurrentDocument();
-            gd = gd_temp;
-            tabs->SetInfile(false);
-            ShowNewDocument();
-            atom.StatusUpdate();
-        }
-        else
-        {
-            int idx = file_game_idx-1;
-            NextGamePreviousGame(idx);
-            StatusUpdate(idx);
-        }
+        int idx = file_game_idx-1;
+        NextGamePreviousGame(idx);
+        StatusUpdate(idx);
     }
 }
 
@@ -824,24 +793,27 @@ void trim( std::string &s )
 //  edited document is added to end of session instead)
 void GameLogic::PutBackDocument()
 {
-    for( int i=0; i<gc.gds.size(); i++ )
+	cprintf( "PutBackDocument 0\n" );
+    for( int i=0; i<gc_pgn.gds.size(); i++ )
     {
-        smart_ptr<MagicBase> smp = gc.gds[i];
-        if( smp->GetGameBeingEdited() == gd.game_being_edited )
+        smart_ptr<ListableGame> smp = gc_pgn.gds[i];
+        if( smp->GetGameBeingEdited() == gd.game_being_edited && (gd.game_being_edited!=0) )
         {
             gd.FleshOutDate();
             gd.FleshOutMoves();
             GameDocument new_doc = gd;
             new_doc.modified = gd.modified || undo.IsModified();
+			cprintf( "PutBackDocument %d 1, modified=%s\n", i, new_doc.modified?"true":"false" );
             make_smart_ptr( GameDocument, new_smart_ptr, new_doc);
-            gc.gds[i] = std::move(new_smart_ptr);
+            gc_pgn.gds[i] = std::move(new_smart_ptr);
+			cprintf( "PutBackDocument %d 2, modified=%s\n", i, gc_pgn.gds[i]->IsModified()?"true":"false" );
             return;
         }
     }
     for( int i=0; i<gc_clipboard.gds.size(); i++ )
     {
-        smart_ptr<MagicBase> smp = gc_clipboard.gds[i];
-        if( smp->GetGameBeingEdited() == gd.game_being_edited )
+        smart_ptr<ListableGame> smp = gc_clipboard.gds[i];
+        if( smp->GetGameBeingEdited() == gd.game_being_edited && (gd.game_being_edited!=0)  )
         {
             gd.FleshOutDate();
             gd.FleshOutMoves();
@@ -856,16 +828,16 @@ void GameLogic::PutBackDocument()
 
 void GameLogic::IndicateNoCurrentDocument()
 {
-    for( int i=0; i<gc.gds.size(); i++ )
+    for( int i=0; i<gc_pgn.gds.size(); i++ )
     {
-        smart_ptr<MagicBase> smp = gc.gds[i];
+        smart_ptr<ListableGame> smp = gc_pgn.gds[i];
         if( smp->GetGameBeingEdited() == gd.game_being_edited )
              smp->SetGameBeingEdited(0);
         smp->SetSelected(false);
     }
     for( int i=0; i<gc_clipboard.gds.size(); i++ )
     {
-        smart_ptr<MagicBase> smp = gc_clipboard.gds[i];
+        smart_ptr<ListableGame> smp = gc_clipboard.gds[i];
         if( smp->GetGameBeingEdited() == gd.game_being_edited )
              smp->SetGameBeingEdited(0);
         smp->SetSelected(false);
@@ -879,9 +851,9 @@ void GameLogic::CmdGamesCurrent()
     bool ok=CmdUpdateGamesCurrent();
     if( ok )
     {
-        if( !gc.IsSynced() )
+        if( !gc_pgn.IsSynced() )
         {
-            if( !gc.Reload() )
+            if( !gc_pgn.Reload() )
             {
                 ok = false;
                 wxMessageBox( "Cannot read any games", "Error reloading file", wxOK|wxICON_ERROR );
@@ -894,8 +866,8 @@ void GameLogic::CmdGamesCurrent()
         wxSize sz = objs.frame->GetSize();
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
-        gc.Debug( "Before loading current file games dialog" );
-        PgnDialog dialog( objs.frame, &gc, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );   // GamesDialog instance
+        gc_pgn.Debug( "Before loading current file games dialog" );
+        PgnDialog dialog( objs.frame, &gc_pgn, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );   // GamesDialog instance
         if( dialog.ShowModalOk("Current file") )
         {
             objs.log->SaveGame(&gd,editing_log);
@@ -931,24 +903,23 @@ void GameLogic::CmdDatabaseSearch()
     thc::ChessRules start_position;
     std::string title_txt;
     gd.GetSummary( cr, title_txt );
-    CmdDatabase( cr, REQ_POSITION );
+    if( cr == start_position )
+        CmdDatabase( cr, REQ_SHOW_ALL );
+    else
+        CmdDatabase( cr, REQ_POSITION );
 }
 
 void GameLogic::CmdDatabaseShowAll()
 {
     thc::ChessRules cr;
-    thc::ChessRules start_position;
     std::string title_txt;
-    gd.GetSummary( cr, title_txt );
     CmdDatabase( cr, REQ_SHOW_ALL );
 }
 
 void GameLogic::CmdDatabasePlayers()
 {
     thc::ChessRules cr;
-    thc::ChessRules start_position;
     std::string title_txt;
-    gd.GetSummary( cr, title_txt );
     CmdDatabase( cr, REQ_PLAYERS );
 }
 
@@ -973,7 +944,7 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req )
         wxSize sz = objs.frame->GetSize();
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
-        DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard, db_req, ID_PGN_DIALOG_DATABASE, pt, sz );   // GamesDialog instance
+        DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard, db_req, ID_GAMES_DIALOG_DATABASE, pt, sz );   // GamesDialog instance
         if( dialog.ShowModalOk("Database games") )
         {
             objs.log->SaveGame(&gd,editing_log);
@@ -981,7 +952,7 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req )
             GameDocument temp = gd;
             GameDocument new_gd;
             PutBackDocument();
-            if( dialog.LoadGame(new_gd) )
+            if( dialog.LoadGameTwo(new_gd) )
             {
                 tabs->TabNew(new_gd);
                 tabs->SetInfile(false);
@@ -995,7 +966,7 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req )
 
 void GameLogic::CmdDatabaseSelect()
 {
-    wxFileDialog fd( objs.frame, "Select current database", "", "", "*.tarrasch_db", wxFD_FILE_MUST_EXIST );
+    wxFileDialog fd( objs.frame, "Select current database", "", "", "*.tdb", wxFD_FILE_MUST_EXIST );
     wxString path( objs.repository->database.m_file );
     fd.SetPath(path);
     if( wxID_OK == fd.ShowModal() )
@@ -1027,6 +998,29 @@ void GameLogic::CmdDatabaseCreate()
     sz.y = (sz.y*9)/10;
     CreateDatabaseDialog dialog( objs.frame, ID_CREATE_DB_DIALOG, true ); // create_mode = true
     dialog.ShowModal();
+    if( dialog.db_created_ok )
+    {
+        int answer = wxMessageBox( "Would you like to use the new database now?", "Press Yes to set the new database as the current database",  wxYES_NO|wxCANCEL );
+        bool set_current = (answer == wxYES);
+        if( set_current )
+        {
+            wxString previous = objs.repository->database.m_file;
+            wxString s(dialog.db_name.c_str());
+            objs.repository->database.m_file = s;
+            const char *filename = s.c_str();
+            cprintf( "File is %s\n", filename );
+            objs.db->Reopen(filename);
+            std::string error_msg;
+            bool operational = objs.db->IsOperational(error_msg);
+            if( operational )
+                objs.repository->database.m_file = s;
+            else
+            {
+                objs.db->Reopen(previous);
+                wxMessageBox( error_msg.c_str(), "Database selection failed", wxOK|wxICON_ERROR );
+            }
+        }
+    }
     atom.StatusUpdate();
 }
 
@@ -1200,7 +1194,7 @@ void GameLogic::FullUndo( GAME_STATE game_state )
                 white_millisecs_time = engine_millisecs_time_start;
                 black_millisecs_time = human_millisecs_time_start;
             }
-            ChessRules cr;
+            thc::ChessRules cr;
             std::string move_txt;
             gd.GetSummaryMove( cr, move_txt );
             if( !found || move_txt=="" )
@@ -1235,7 +1229,7 @@ void GameLogic::FullUndo( GAME_STATE game_state )
 
                 // Check that the move to ponder is legal
                 bool legal=false;
-                vector<Move> moves;
+                vector<thc::Move> moves;
                 gd.master_position.GenLegalMoveList( moves );
                 for( unsigned int i=0; i<moves.size(); i++ )
                 {
@@ -1331,7 +1325,7 @@ void GameLogic::SetManual( MoveTree *mt, bool at_move0, bool from_mouse_move )
             bool white_clock_visible  = mt->game_move.white_clock_visible;
             int engine_millisecs_time = mt->game_move.engine_millisecs_time;
             bool black_clock_visible  = mt->game_move.black_clock_visible;
-            ChessRules cr;
+            thc::ChessRules cr;
             int ivar, imove;
             human_millisecs_time  = human_millisecs_time_start;
             engine_millisecs_time = engine_millisecs_time_start;
@@ -1532,6 +1526,23 @@ void GameLogic::CmdEditGamePrefix()
     StatusUpdate();
 }
 
+void GameLogic::CmdEditCopyGamePGNToClipboard()
+{
+    if( gd.IsEmpty() )
+        return;
+    gd.FleshOutDate();
+    gd.FleshOutMoves();
+    std::string head;
+    gd.ToFileTxtGameDetails(head);
+    std::string body;
+    gd.ToFileTxtGameBody(body);
+    if( wxTheClipboard->Open() )
+    {
+        wxTheClipboard->SetData( new wxTextDataObject(head + body) );
+        wxTheClipboard->Close();
+    }
+}
+
 // If players or result (possibly) changed, redisplay it
 void GameLogic::GameRedisplayPlayersResult()
 {
@@ -1635,7 +1646,7 @@ bool GameLogic::CmdUpdateGamesCurrent()
 {
     bool enabled = (state==MANUAL || state==RESET || state==HUMAN || state==PONDERING || state==GAMEOVER);
     if( enabled )
-        enabled = gc.IsLoaded();
+        enabled = gc_pgn.IsLoaded();
     return enabled;
 }
 
@@ -1817,7 +1828,7 @@ void GameLogic::OnIdle()
     canvas->BlackClock( txt );
     if( state==POPUP || state==POPUP_MANUAL )
     {
-        Move move;
+        thc::Move move;
         bool done = CheckPopup( move );
         if( done )
         {
@@ -1910,13 +1921,13 @@ void GameLogic::OnIdle()
                 KibitzUpdateEngineToMove( false, buf );
             }
         }
-        Move ponder;
-        Move bestmove = objs.rybka->CheckBestMove( ponder );
+        thc::Move ponder;
+        thc::Move bestmove = objs.rybka->CheckBestMove( ponder );
         if( bestmove.Valid() )
         {
             release_printf( "Engine returns. bestmove is %s, ponder is %s\n",
                  bestmove.TerseOut().c_str(), ponder.TerseOut().c_str() );
-            ChessRules cr = gd.master_position;
+            thc::ChessRules cr = gd.master_position;
             cr.PlayMove( bestmove );
             std::string nmove = bestmove.NaturalOut( &gd.master_position );
             LangOut(nmove);
@@ -1964,7 +1975,7 @@ void GameLogic::OnIdle()
 
                     // Check that the move to ponder is legal
                     bool legal=false;
-                    vector<Move> moves;
+                    vector<thc::Move> moves;
                     gd.master_position.GenLegalMoveList( moves );
                     for( unsigned int i=0; i<moves.size(); i++ )
                     {
@@ -2135,20 +2146,20 @@ void GameLogic::MouseUp( char file, char rank, wxPoint &point )
 	{
 
         // It's possible there's more than one move (promotion)
-        vector<Move> moves;
-        vector<Move> menu;
+        vector<thc::Move> moves;
+        vector<thc::Move> menu;
         ChessEvaluation chess_evaluation = gd.master_position;
         chess_evaluation.GenLegalMoveListSorted( moves );
         for( unsigned int i=0; i<moves.size(); i++ )
         {
-            Move move=moves[i];
+            thc::Move move=moves[i];
             if( FILE(move.src)==src_file && RANK(move.src)==src_rank &&
                 FILE(move.dst)==file     && RANK(move.dst)==rank )
             {
                 menu.push_back( move );
             }
         }
-        vector<Move> book_moves;
+        vector<thc::Move> book_moves;
         bool have_book_moves = objs.book->Lookup( gd.master_position, book_moves );
 
         // If 0 moves go to HUMAN or MANUAL
@@ -2168,7 +2179,7 @@ void GameLogic::MouseUp( char file, char rank, wxPoint &point )
         else
         {
             bool play_it_now=false;
-            Move move = menu[0];
+            thc::Move move = menu[0];
             if( menu.size() == 1 )
             {
 
@@ -2177,7 +2188,7 @@ void GameLogic::MouseUp( char file, char rank, wxPoint &point )
                     play_it_now = true;
 
                 // If it's a book move play it
-                vector<Move>::iterator it;
+                vector<thc::Move>::iterator it;
                 for( it = book_moves.begin(); it != book_moves.end(); it++ )
                 {
                     if( move == *it )
@@ -2266,13 +2277,13 @@ void GameLogic::BookHover( wxPoint& WXUNUSED(point) )
 {
     if( state==RESET || state==MANUAL || state==HUMAN || state==PONDERING )
     {
-        vector<Move>  book_moves;
+        vector<thc::Move>  book_moves;
         bool have_book_moves = objs.book->Lookup( gd.master_position, book_moves );
         if( have_book_moves )
         {
             if( objs.rybka )
                 objs.rybka->SuspendResume(false);   // suspend
-            vector<Move> menu; // empty
+            vector<thc::Move> menu; // empty
             wxPoint pt   = objs.canvas->book_moves->GetPosition();
             wxRect  rect = objs.canvas->book_moves->GetRect();
             pt.y = -4;  // just above client area
@@ -2321,16 +2332,16 @@ bool GameLogic::MouseDown( char file, char rank, wxPoint &point )     // return 
             }
             else
             {
-                vector<Move> moves, menu;
+                vector<thc::Move> moves, menu;
                 ChessEvaluation chess_evaluation = gd.master_position;
                 chess_evaluation.GenLegalMoveListSorted( moves );
                 for( unsigned int i=0; i<moves.size(); i++ )
                 {
-                    Move move = moves[i];
+                    thc::Move move = moves[i];
                     if( FILE(move.dst)==file && RANK(move.dst)==rank )
                         menu.push_back( move );
                 }
-                vector<Move> book_moves;
+                vector<thc::Move> book_moves;
                 bool unique_and_in_book = false;
                 bool have_book_moves = objs.book->Lookup( gd.master_position, book_moves );
                 if( !objs.repository->book.m_suggest )
@@ -2609,7 +2620,7 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
         KibitzIntro();
         if( state==MANUAL || state==HUMAN || state==GAMEOVER )
         {
-            ChessPosition pos = gd.master_position;
+            thc::ChessPosition pos = gd.master_position;
             char buf[128];
             strcpy( buf, pos.ForsythPublish().c_str() );
             kibitz_pos = pos;
@@ -2637,14 +2648,14 @@ void GameLogic::StatusUpdate( int idx )
 {
     if( objs.frame )
     {
-        bool file_loaded =  gc.pgn_filename != "";
+        bool file_loaded =  gc_pgn.pgn_filename != "";
         bool refresh=false;
         std::string str;
         str = "File: ";
         if( !file_loaded )
             str += "(none)";
         else
-            str += gc.pgn_filename;
+            str += gc_pgn.pgn_filename;
         if( str != status_field1 )
         {
             status_field1 = str;
@@ -2655,29 +2666,37 @@ void GameLogic::StatusUpdate( int idx )
         str = "";
         if( file_loaded )
         {
-            for( int i=0; i<gc.gds.size(); i++ )
+            for( int i=0; i<gc_pgn.gds.size(); i++ )
             {
-                MagicBase *ptr = gc.gds[i].get();
+                ListableGame *ptr = gc_pgn.gds[i].get();
                 uint32_t game_being_edited = ptr->GetGameBeingEdited();
                 if( ptr && ptr->IsModified() )
                 {
                     nbr_modified++;
+  					//cprintf( "StatusUpdate A> i=%d, game_being_edited=%lu, modified\n", i, game_being_edited );
                 }
                 else if( ptr && game_being_edited )
                 {
                     GameDocument *pd = tabs->Begin();
                     Undo *pu = tabs->BeginUndo();
+                    int tab_idx=0;
                     while( pd && pu )
                     {
+            			//cprintf( "StatusUpdate B(%d)> i=%d, game_being_edited=%lu, pd->game_being_edited=%lu\n", tab_idx, i, game_being_edited, pd->game_being_edited );
                         if( game_being_edited == pd->game_being_edited )
                         {
+            				//cprintf( "StatusUpdate C(%d)> i=%d, game_being_edited=%lu, modified(%s,%s,%s,%s)\n", tab_idx, i, game_being_edited,
+                            //        pd->game_details_edited?"true":"false", pd->game_prefix_edited?"true":"false", pd->modified?"true":"false", pu->IsModified()?"true":"false" );
                             bool doc_modified = (pd->game_details_edited || pd->game_prefix_edited || pd->modified || pu->IsModified());
                             if( doc_modified )
+                            {
                                 nbr_modified++;
+                            }
                             break;
                         }
                         pd = tabs->Next();
                         pu = tabs->NextUndo();
+                        tab_idx++;
                     }
                 }
             }
@@ -2686,16 +2705,16 @@ void GameLogic::StatusUpdate( int idx )
                 str = "*";
             char buf[80];
             if( idx >= 0 )
-                sprintf( buf, doc_modified?"* Game %d of %ld":"Game %d of %ld", idx+1, gc.gds.size() );
+                sprintf( buf, doc_modified?"* Game %d of %ld":"Game %d of %ld", idx+1, gc_pgn.gds.size() );
             else if( nbr_modified )
             {
                 sprintf( buf, doc_modified?"* File games: %ld (%d modified)":"File games: %ld (%d modified)",
-                     gc.gds.size(), nbr_modified );
+                     gc_pgn.gds.size(), nbr_modified );
             }
             else
             {
                 sprintf( buf, doc_modified?"* File games: %ld":"File games: %ld",
-                     gc.gds.size() );
+                     gc_pgn.gds.size() );
             }
             if( !tabs->GetInfile() )
                 sprintf( buf, " ( this tab not in file ) " );
@@ -2714,8 +2733,8 @@ void GameLogic::StatusUpdate( int idx )
     }
 }
 
-void GameLogic::DoPopup( wxPoint &point, vector<Move> &target_moves,
-                                         vector<Move> &book_moves,
+void GameLogic::DoPopup( wxPoint &point, vector<thc::Move> &target_moves,
+                                         vector<thc::Move> &book_moves,
                                          POPUP_MODE popup_mode,
                                          wxRect hover )
 {
@@ -2741,7 +2760,7 @@ void GameLogic::DoPopup( wxPoint &point, vector<Move> &target_moves,
     // Loop through book moves
     for( unsigned int i=0; i<book_moves.size(); i++ )
     {
-        Move move = book_moves[i];
+        thc::Move move = book_moves[i];
 
         // Is book move a target move ?
         bool found = false;
@@ -2770,7 +2789,7 @@ void GameLogic::DoPopup( wxPoint &point, vector<Move> &target_moves,
     // Loop through target moves
     for( unsigned int i=0; i<target_moves.size(); i++ )
     {
-        Move move = target_moves[i];
+        thc::Move move = target_moves[i];
 
         // Is target move a book move ?
         bool found = false;
@@ -2801,7 +2820,7 @@ void GameLogic::DoPopup( wxPoint &point, vector<Move> &target_moves,
         // Loop through book moves
         for( unsigned int i=0; i<book_moves.size(); i++ )
         {
-            Move move = book_moves[i];
+            thc::Move move = book_moves[i];
 
             // Is book move a target move ?
             bool found = false;
@@ -2838,7 +2857,7 @@ void GameLogic::DoPopup( wxPoint &point, vector<Move> &target_moves,
     canvas->popup = new PopupControl( objs.frame,strs,terses,book,popup_mode,hover,ID_POPUP,point );
 }
 
-bool GameLogic::CheckPopup( Move &move )
+bool GameLogic::CheckPopup( thc::Move &move )
 {
     bool done = false;
     move.Invalid();
@@ -2847,7 +2866,7 @@ bool GameLogic::CheckPopup( Move &move )
         done = canvas->popup->done;
         if( done )
         {
-            ChessRules temp = pre_popup_position;
+            thc::ChessRules temp = pre_popup_position;
             bool okay = move.TerseIn(&temp,canvas->popup->terse_move);
             if( !okay )
                 move.Invalid();
@@ -2858,7 +2877,7 @@ bool GameLogic::CheckPopup( Move &move )
     return done;
 }
 
-bool GameLogic::MakeMove( Move move, GAME_RESULT &result )
+bool GameLogic::MakeMove( thc::Move move, GAME_RESULT &result )
 {
     bool ingame=false;
     switch( state )
@@ -2979,11 +2998,11 @@ void GameLogic::SetGroomedPosition( bool show_title )
         qualifier = " (blindfold)";
     else if( partial_blindfold )
         qualifier = " (partial blindfold)";
-    ChessPosition view_pos = gd.master_position;
+    thc::ChessPosition view_pos = gd.master_position;
     title.sprintf( "Initial position%s", qualifier );
     if( objs.canvas )
     {
-        ChessRules cr;
+        thc::ChessRules cr;
         string move_txt;
         if( lag_nbr == 0 )
         {
@@ -3089,13 +3108,13 @@ bool GameLogic::ShowSlidingPieceOnly()
 
 
 // Start engine thinking after human plays human_move (if not NULL)
-GAME_STATE GameLogic::StartThinking( const Move *human_move )
+GAME_STATE GameLogic::StartThinking( const thc::Move *human_move )
 {
     GAME_STATE ret;
     bool ponderhit=false;
     if( human_or_pondering==PONDERING && human_move && *human_move==ponder_move )
     {
-        ChessPosition pos = gd.master_position;
+        thc::ChessPosition pos = gd.master_position;
         ponderhit = objs.rybka->Ponderhit( pos );
     }
     if( ponderhit )
@@ -3104,9 +3123,9 @@ GAME_STATE GameLogic::StartThinking( const Move *human_move )
     {
         // Use a move list if possible so engine can see repititions
         #define MAX_NBR_MOVES_IN_MOVELIST 100
-        ChessPosition std_startpos;
-        ChessPosition move_list_startpos;
-        ChessPosition pos;
+        thc::ChessPosition std_startpos;
+        thc::ChessPosition move_list_startpos;
+        thc::ChessPosition pos;
         std::vector<GAME_MOVE> game_moves;
         gd.GetSummary( move_list_startpos, game_moves, pos );
 
@@ -3114,7 +3133,7 @@ GAME_STATE GameLogic::StartThinking( const Move *human_move )
         int n=game_moves.size();
         bool okay_to_use_move_list = true;
         wxString smoves;
-        ChessRules cr;
+        thc::ChessRules cr;
         cr = move_list_startpos;
         bool saving_moves = false;
         for( int i=0; okay_to_use_move_list && i<n; i++ )
@@ -3128,7 +3147,7 @@ GAME_STATE GameLogic::StartThinking( const Move *human_move )
                     saving_moves = true;
                 }    
             }
-            Move move  = game_moves[i].move;
+            thc::Move move  = game_moves[i].move;
             if( saving_moves )
             {
                 smoves += " ";
@@ -3177,7 +3196,7 @@ GAME_STATE GameLogic::StartThinking( const Move *human_move )
         }
 
         // Get book move if we are going to play it
-        Move book_move;
+        thc::Move book_move;
         book_move.Invalid();
         if( have_fast_moves )
         {
@@ -3275,12 +3294,12 @@ GAME_STATE GameLogic::StartThinking( const Move *human_move )
 }
 
 // Start engine pondering engine's own proposed ponder move
-bool GameLogic::StartPondering( Move ponder )
+bool GameLogic::StartPondering( thc::Move ponder )
 {
     bool pondering=false;
-    ChessPosition std_startpos;
-    ChessPosition move_list_startpos;
-    ChessPosition pos;
+    thc::ChessPosition std_startpos;
+    thc::ChessPosition move_list_startpos;
+    thc::ChessPosition pos;
     std::vector<GAME_MOVE> game_moves;
     gd.GetSummary( move_list_startpos, game_moves, pos );
 
@@ -3288,7 +3307,7 @@ bool GameLogic::StartPondering( Move ponder )
     int n=game_moves.size();
     bool okay_to_use_move_list = true;
     wxString smoves;
-    ChessRules cr;
+    thc::ChessRules cr;
     cr = move_list_startpos;
     bool saving_moves = false;
     for( int i=0; okay_to_use_move_list && i<n; i++ )
@@ -3302,7 +3321,7 @@ bool GameLogic::StartPondering( Move ponder )
                 saving_moves = true;
             }    
         }
-        Move move  = game_moves[i].move;
+        thc::Move move  = game_moves[i].move;
         if( saving_moves )
         {
             smoves += " ";
@@ -3466,10 +3485,10 @@ void GameLogic::KibitzUpdate( int idx, const char *txt )
 {
     wxString pv;
     bool have_moves=false;
-    Move candidate_move;
+    thc::Move candidate_move;
     candidate_move.Invalid();
     int depth=0, score_cp=0, rank_score_cp=0;
-    ChessRules cr = gd.master_position;
+    thc::ChessRules cr = gd.master_position;
     const char *s, *temp;
     s = strstr(txt,temp=" depth ");
     if( s )
@@ -3505,7 +3524,7 @@ void GameLogic::KibitzUpdate( int idx, const char *txt )
     else
         score_cp = 0-rank_score_cp;
     s = strstr(txt,temp=" pv ");
-    std::vector<Move> var;
+    std::vector<thc::Move> var;
     if( s )
     {
         if( mate )
@@ -3518,7 +3537,7 @@ void GameLogic::KibitzUpdate( int idx, const char *txt )
         #define MAX_NBR_KIBITZ_MOVES 13 //14
         for( unsigned int i=0; /*i<MAX_NBR_KIBITZ_MOVES*/; i++ )
         {
-            Move move;
+            thc::Move move;
             std::string nmove;
             bool have_move = move.TerseIn( &cr, txt );
             if( !have_move )
@@ -3604,7 +3623,7 @@ void GameLogic::KibitzUpdateEngineToMove( bool ponder, const char *txt )
 {
     wxString pv;
     int depth=0, score_cp=0, rank_score_cp=0;
-    ChessRules cr = gd.master_position;
+    thc::ChessRules cr = gd.master_position;
     const char *s, *temp;
     s = strstr(txt,temp=" depth ");
     if( s )
@@ -3654,7 +3673,7 @@ void GameLogic::KibitzUpdateEngineToMove( bool ponder, const char *txt )
             txt++;
         for( unsigned int i=0; /*i<MAX_NBR_KIBITZ_MOVES*/; i++ )
         {
-            Move move;
+            thc::Move move;
             std::string nmove;
             bool have_move=false;
             if( ponder && i==0 )

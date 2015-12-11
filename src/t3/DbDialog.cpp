@@ -57,7 +57,8 @@ wxSizer *DbDialog::GdvAddExtraControls()
     sz5.x = (sz4.x*55)/100;
     //sz5.y = (sz4.y*2)/10;
 
-    //if( db_req == REQ_PLAYERS )
+    text_ctrl = 0;
+    if( db_req == REQ_PLAYERS )
     {
         //text_ctrl->SetSize( sz3.x*2, sz3.y );      // temp temp
         text_ctrl = new wxTextCtrl ( this, ID_DB_TEXT, wxT(""), wxDefaultPosition, sz5, 0 );
@@ -67,22 +68,22 @@ wxSizer *DbDialog::GdvAddExtraControls()
         //text_ctrl->SetSize((sz.x*7)/2,sz2.y);      // temp temp
         text_ctrl->SetValue("White Player");
 
-        wxButton* reload = new wxButton ( this, ID_DB_RELOAD, wxT("Search"),
+        wxButton* search = new wxButton ( this, ID_DB_SEARCH, wxT("Search"),
                                          wxDefaultPosition, wxDefaultSize, 0 );
-        vsiz_panel_button1->Add(reload, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_button1->Add(search, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
         //wxSize sz3=reload->GetSize();
         //text_ctrl->SetSize( sz3.x*2, sz3.y );      // temp temp
     }
  
     
-    wxStaticText* spacer1 = new wxStaticText( this, wxID_ANY, wxT(""),
-                                     wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_button1->Add(spacer1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+//    wxStaticText* spacer1 = new wxStaticText( this, wxID_ANY, wxT(""),
+//                                     wxDefaultPosition, wxDefaultSize, 0 );
+//    vsiz_panel_button1->Add(spacer1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-    white_player_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX2,
-                                 wxT("&White player"), wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_button1->Add(white_player_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    white_player_ctrl->SetValue( true );
+//    white_player_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX2,
+//                                 wxT("&White player"), wxDefaultPosition, wxDefaultSize, 0 );
+//    vsiz_panel_button1->Add(white_player_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+//    white_player_ctrl->SetValue( true );
 
     wxButton* btn1 = new wxButton ( this, ID_BUTTON_1, wxT("Clear Clipboard"),
                                      wxDefaultPosition, wxDefaultSize, 0 );
@@ -94,16 +95,19 @@ wxSizer *DbDialog::GdvAddExtraControls()
     wxButton* btn3 = new wxButton ( this, ID_BUTTON_3, wxT("Add All Player's White Games"),
                                      wxDefaultPosition, wxDefaultSize, 0 );
     vsiz_panel_button1->Add(btn3, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    wxStaticText* spacer2 = new wxStaticText( this, wxID_ANY, wxT(""),
-                                     wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_button1->Add(spacer2, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    
+
+    white_player_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX2,
+                                   wxT("&White player"), wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(white_player_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    white_player_ctrl->SetValue( true );
+
     wxButton* btn4 = new wxButton ( this, ID_BUTTON_4, wxT("Add All Player's Black Games"),
                                    wxDefaultPosition, wxDefaultSize, 0 );
     vsiz_panel_button1->Add(btn4, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    wxStaticText* spacer3 = new wxStaticText( this, wxID_ANY, wxT(""),
-                                     wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_button1->Add(spacer3, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+    wxButton* save_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save all"),
+        wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     
     filter_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX,
                                  wxT("&Clipboard as temp database"), wxDefaultPosition, wxDefaultSize, 0 );
@@ -148,30 +152,38 @@ void DbDialog::GdvOnActivate()
         ok_button->Update();
         ok_button->Refresh();
 
-        wxPoint pos2 = notebook->GetPosition();
-        wxSize  sz2  = notebook->GetSize();
-        wxSize  sz3  = ok_button->GetSize();
-        pos2.x += (sz2.x/2);        
-        pos2.y += (sz2.y/2);        
-        pos2.x -= (sz3.x/2);        
-        pos2.y -= (sz3.y/2);        
-        //pos_button.x += (sz_panel.x/2 - sz_button.x/2);
-        //pos_button.y += (sz_panel.y/2 - sz_button.y/2);
-        utility = new wxButton ( this, ID_DB_UTILITY, wxT("Calculate Stats"),
-                                pos2, wxDefaultSize, 0 );
-        utility->Raise();
-        wxSize sz_panel  = notebook->GetSize();
-        wxSize sz_button = utility->GetSize();
-        wxPoint pos_button = utility->GetPosition();
-        //utility->SetPosition( pos_button );
-        if( objs.gl->db_clipboard )
+        if( db_req == REQ_PLAYERS )
         {
-            StatsCalculate();
+            notebook->Hide();
         }
-        else if( nbr_games_in_list_ctrl <= LOAD_INTO_MEMORY_THRESHOLD )
+        else
         {
-            LoadGamesIntoMemory();
-            StatsCalculate();
+            wxPoint pos2 = notebook->GetPosition();
+            wxSize  sz2  = notebook->GetSize();
+            wxSize  sz3  = ok_button->GetSize();
+            pos2.x += (sz2.x/2);        
+            pos2.y += (sz2.y/2);        
+            pos2.x -= (sz3.x/2);        
+            pos2.y -= (sz3.y/2);        
+            //pos_button.x += (sz_panel.x/2 - sz_button.x/2);
+            //pos_button.y += (sz_panel.y/2 - sz_button.y/2);
+            utility = new wxButton ( this, ID_DB_UTILITY, wxT("Calculate Stats"),
+                                    pos2, wxDefaultSize, 0 );
+            utility->Raise();
+            wxSize sz_panel  = notebook->GetSize();
+            wxSize sz_button = utility->GetSize();
+            wxPoint pos_button = utility->GetPosition();
+            //utility->SetPosition( pos_button );
+            if( objs.gl->db_clipboard )
+            {
+                StatsCalculate();
+            }
+            else if( nbr_games_in_list_ctrl <= LOAD_INTO_MEMORY_THRESHOLD )
+            {
+                bool ok = LoadGamesIntoMemory();
+                if( ok )
+                    StatsCalculate();
+            }
         }
         Goto(0); // list_ctrl->SetFocus();
     }
@@ -194,11 +206,11 @@ bool DbDialog::ReadItemFromMemory( int item, CompactGame &pact )
 {
     bool in_memory = false;
     pact.transpo_nbr = 0;
-    int nbr_games = displayed_games.size();
+    int nbr_games = gc_db_displayed_games.gds.size();
     if( 0<=item && item<nbr_games )
     {
         in_memory = true;
-        displayed_games[nbr_games-1-item]->GetCompactGame(pact);
+        gc_db_displayed_games.gds[item]->GetCompactGame(pact);
         if( transpo_activated && transpositions.size() > 1 )
         {
             for( unsigned int j=0; j<transpositions.size(); j++ )
@@ -206,7 +218,7 @@ bool DbDialog::ReadItemFromMemory( int item, CompactGame &pact )
                 std::string &this_one = transpositions[j].blob;
                 const char *p = this_one.c_str();
                 size_t len = this_one.length();
-                std::string str_blob = displayed_games[nbr_games-1-item]->RefCompressedMoves();
+                std::string str_blob = gc_db_displayed_games.gds[item]->RefCompressedMoves();
                 if( str_blob.length()>=len && 0 == memcmp(p,str_blob.c_str(),len) )
                 {
                     pact.transpo_nbr = j+1;
@@ -239,371 +251,97 @@ DbDialog::DbDialog
 }
 
 
-static DbDialog *backdoor;
-static bool compare( const smart_ptr<DbDocument> g1, const smart_ptr<DbDocument> g2 )
-{
-    bool lt=false;
-    Roster r1 = g1->RefRoster();
-    Roster r2 = g2->RefRoster();
-    switch( backdoor->compare_col )
+// Overidden function used for smart move column compare
+bool DbDialog::MoveColCompareReadGame( MoveColCompareElement &e, int idx, const char *blob  )
+{        
+    std::string str_blob = std::string(blob);
+    unsigned int sz2 = transpositions.size();
+    for( unsigned int j=0; j<sz2; j++ )
     {
-        case 1: lt = r1.white < r2.white;
-                break;
-        case 2:
-        {       
-                int elo_1 = atoi( r1.white_elo.c_str() );
-                int elo_2 = atoi( r2.white_elo.c_str() );
-                lt = elo_1 < elo_2;
-                break;
-        }
-        case 3: lt = r1.black < r2.black;
-                break;
-        case 4:
+        PATH_TO_POSITION *ptp = &transpositions[j];
+        unsigned int offset = ptp->blob.length();
+        if( 0 == memcmp( ptp->blob.c_str(), str_blob.c_str(), offset ) )
         {
-                int elo_1 = atoi( r1.black_elo.c_str() );
-                int elo_2 = atoi( r2.black_elo.c_str() );
-                lt = elo_1 < elo_2;
-                break;
+            e.idx  = idx;
+            e.blob = str_blob.substr(offset);   // rest of game, from start position
+            e.counts.resize( e.blob.length() );
+            e.transpo = transpo_activated ? j+1 : 0;
+            return true;
         }
-        case 5: lt = r1.date < r2.date;
-                break;
-        case 6: lt = r1.site < r2.site;
-                break;
-        case 8: lt = r1.result < r2.result;
-                break;
     }
-    return lt;
-}
-        
-
-static bool rev_compare( const smart_ptr<DbDocument> g1, const smart_ptr<DbDocument> g2 )
-{
-    bool lt=true;
-    Roster r1 = g1->RefRoster();
-    Roster r2 = g2->RefRoster();
-    switch( backdoor->compare_col )
-    {
-        case 1: lt = r1.white > r2.white;           break;
-        case 2:
-        {       int elo_1 = atoi( r1.white_elo.c_str() );
-                int elo_2 = atoi( r2.white_elo.c_str() );
-                lt = elo_1 > elo_2;
-                break;
-        }
-        case 3: lt = r1.black > r2.black;           break;
-        case 4:
-        {       int elo_1 = atoi( r1.black_elo.c_str() );
-                int elo_2 = atoi( r2.black_elo.c_str() );
-                lt = elo_1 > elo_2;
-                break;
-        }
-        case 5: lt = r1.date > r2.date;             break;
-        case 6: lt = r1.site > r2.site;             break;
-        case 8: lt = r1.result > r2.result;         break;
-    }
-    return lt;
+    return false;
 }
 
-struct TempElement
+
+bool DbDialog::LoadGamesPrompted( std::string prompt )
 {
-    int idx;
-    int transpo;
-    std::string blob;
-    std::vector<int> counts;
-};
-
-static bool compare_blob( const TempElement &e1, const TempElement &e2 )
-{
-    bool lt = false;
-    if( e1.transpo == e2.transpo )
-        lt = (e1.blob < e2.blob);
-    else
-        lt = (e1.transpo > e2.transpo);     // smaller transpo nbr should come first
-    return lt;
-}
-
-static bool compare_counts( const TempElement &e1, const TempElement &e2 )
-{
-    bool lt = false;
-    if( e1.transpo != e2.transpo )
-        lt = (e1.transpo > e2.transpo);     // smaller transpo nbr should come first
-    else
-    {
-        unsigned int len = e1.blob.length();
-        if( e2.blob.length() < len )
-            len = e2.blob.length();
-        for( unsigned int i=0; i<len; i++ )
-        {
-            if( e1.counts[i] != e2.counts[i] )
-            {
-                lt = (e1.counts[i] < e2.counts[i]);
-                return lt;
-            }
-        }
-        lt = (e1.blob.length() < e2.blob.length());
-    }
-    return lt;
-}
-
-void DbDialog::SmartCompare()
-{
-    std::vector<TempElement> inter;     // intermediate representation
-    
-    // Step 1, do a conventional string sort, beginning at our offset into the blob
-    unsigned int sz = displayed_games.size();
-    for( unsigned int i=0; i<sz; i++ )
-    {
-        std::string str_blob = displayed_games[i]->RefCompressedMoves();
-        TempElement e;
-        unsigned int sz2 = transpositions.size();
-        for( unsigned int j=0; j<sz2; j++ )
-        {
-            PATH_TO_POSITION *ptp = &transpositions[j];
-            unsigned int offset = ptp->blob.length();
-            if( 0 == memcmp( ptp->blob.c_str(), str_blob.c_str(), offset ) )
-            {
-                e.idx = i;
-                e.blob = str_blob.substr(offset);
-                e.counts.resize( e.blob.length() );
-                e.transpo = transpo_activated ? j+1 : 0;
-                inter.push_back(e);
-                break;
-            }
-        }
-    }
-    std::sort( inter.begin(), inter.end(), compare_blob );
-    
-    
-    // Step 2, work out the nbr of moves in clumps of moves
-/*
-     // Imagine that the compressed one byte codes sort in the same order as multi-char ascii move
-     //  representations (they don't but the key thing is that they are deterministic - the actual order
-     //  doesn't matter)
-     A)  1.d4 Nf6 2.c4 e6 3.Nc3
-     B)  1.d4 Nf6 2.c4 e6 3.Nf3
-     C)  1.d4 Nf6 2.c4 e6 3.Nf3
-     D)  1.d4 d5 2.c4 e6 3.Nc3
-     E)  1.d4 d5 2.c4 e6 3.Nf3
-     F)  1.d4 d5 2.c4 e6 3.Nf3
-     G)  1.d4 d5 2.c4 c5 3.d5
-
-     // Calculate the counts like this
-              j=0 j=1 j=2 j=3 j=4
-     i=0  A)  7
-     i=1  B)  7
-     i=2  C)  7
-     i=3  D)  7      j=0 count 7 '1.d4's at offset 0 into each game 
-     i=4  E)  7
-     i=5  F)  7
-     i=6  G)  7
-
-              j=0 j=1 j=2 j=3 j=4
-     i=0  A)  7   3
-     i=1  B)  7   3
-     i=2  C)  7   3
-     i=3  D)  7   4    j=1 count 3 '1...Nf6's and 4 '1...d5's 
-     i=4  E)  7   4
-     i=5  F)  7   4
-     i=6  G)  7   4
-
-              j=0 j=1 j=2 j=3 j=4
-     i=0  A)  7   3   7   6   1
-     i=1  B)  7   3   7   6   2
-     i=2  C)  7   3   7   6   2     etc.
-     i=3  D)  7   4   7   6   1
-     i=4  E)  7   4   7   6   2
-     i=5  F)  7   4   7   6   2
-     i=6  G)  7   4   7   1   1
-
-     //  Now re-sort based on these counts, bigger counts come first
-     E)  7   4   7   6   2
-     F)  7   4   7   6   2
-     D)  7   4   7   6   1
-     G)  7   4   7   1   1
-     B)  7   3   7   6   2
-     C)  7   3   7   6   2 
-     A)  7   3   7   6   1
-
-     // So final ordering is according to line popularity
-     E)  1.d4 d5 2.c4 e6 3.Nf3
-     F)  1.d4 d5 2.c4 e6 3.Nf3
-     D)  1.d4 d5 2.c4 e6 3.Nc3
-     G)  1.d4 d5 2.c4 c5 3.d5
-     B)  1.d4 Nf6 2.c4 e6 3.Nf3
-     C)  1.d4 Nf6 2.c4 e6 3.Nf3
-     A)  1.d4 Nf6 2.c4 e6 3.Nc3
-*/
-
-
-    sz = inter.size();
-    bool at_least_one = true;
-    for( unsigned int j=0; at_least_one; j++ )
-    {
-        at_least_one = false;  // stop when we've passed end of all strings
-        char current='\0';
-        unsigned int start=0;
-        bool run_in_progress=false;
-        for( unsigned int i=0; i<sz; i++ )
-        {
-            TempElement &e = inter[i];
-            
-            // A short game stops runs
-            if( j >= e.blob.length() )
-            {
-                if( run_in_progress )
-                {
-                    run_in_progress = false;
-                    int count = i-start;
-                    for( int k=start; k<i; k++ )
-                    {
-                        TempElement &f = inter[k];
-                        f.counts[j] = count;
-                    }
-                }
-                continue;
-            }
-            at_least_one = true;
-            char c = e.blob[j];
-            
-            // First time, get something to start a run
-            if( !run_in_progress )
-            {
-                run_in_progress = true;
-                current = c;
-                start = i;
-            }
-            else
-            {
-                
-                // Run can be over because of character change
-                if( c != current )
-                {
-                    int count = i-start;
-                    for( int k=start; k<i; k++ )
-                    {
-                        TempElement &f = inter[k];
-                        f.counts[j] = count;
-                    }
-                    current = c;
-                    start = i;
-                }
-                
-                // And/Or because we reach bottom
-                if( i+1 == sz )
-                {
-                    int count = sz - start;
-                    for( int k=start; k<sz; k++ )
-                    {
-                        TempElement &f = inter[k];
-                        f.counts[j] = count;
-                    }
-                }
-            }
-        }
-    }
-
-    // Step 3 sort again using the counts
-    std::sort( inter.begin(), inter.end(), compare_counts );
-    
-    // Step 4 build sorted version of games list
-    std::vector< smart_ptr<DbDocument> > temp;
-    sz = inter.size();
-    for( unsigned int i=0; i<sz; i++ )
-    {
-        TempElement &e = inter[i];
-        temp.push_back( displayed_games[e.idx] );
-    }
-
-    // Step 5 replace original games list
-    displayed_games = temp;
-}
-
-void DbDialog::GdvListColClick( int compare_col )
-{
-    bool in_memory = (displayed_games.size() > 0);
+    bool ok=true;
+    bool in_memory = (gc_db_displayed_games.gds.size() > 0);
     if( !in_memory )
     {
         if( nbr_games_in_list_ctrl >= QUERY_LOAD_INTO_MEMORY_THRESHOLD )
         {
-            wxString msg( "This column sort requires loading a large number of games into memory, is that okay?" );
+            wxString msg( prompt.c_str() );
             int answer = wxMessageBox( msg, "Press Yes to load games",  wxYES_NO|wxCANCEL, this );
-            bool ok = (answer == wxYES);
-            if( !ok )
-                return;
+            bool load_games = (answer == wxYES);
+            if( !load_games )
+                return false;
         }
-        LoadGamesIntoMemory();
-        StatsCalculate();
+        ok = LoadGamesIntoMemory();
+        if( ok )
+            StatsCalculate();
     }
-    static int last_time;
-    static int consecutive;
-    if( compare_col == last_time )
-        consecutive++;
-    else
-        consecutive=0;
-    this->compare_col = compare_col;
-    backdoor = this;
-    if( compare_col == 10 )
-        SmartCompare();
-    else
-        std::sort( displayed_games.begin(), displayed_games.end(), (consecutive%2==0)?rev_compare:compare );
-    nbr_games_in_list_ctrl = displayed_games.size();
-    list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
-    list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
-    int top = list_ctrl->GetTopItem();
-    int count = 1 + list_ctrl->GetCountPerPage();
-    if( count > nbr_games_in_list_ctrl )
-        count = nbr_games_in_list_ctrl;
-    for( int i=0; i<count; i++ )
-        list_ctrl->RefreshItem(top++);
-    Goto(0);
-    last_time = compare_col;
+    return ok;
+}
+
+void DbDialog::GdvListColClick( int compare_col )
+{
+    if( LoadGamesPrompted
+        ("This column sort requires loading a large number of games into memory, is that okay?")
+      )
+    {
+        ColumnSort( compare_col, gc_db_displayed_games.gds );  
+    }
 }
 
 void DbDialog::GdvSearch()
 {
-    wxString name = text_ctrl->GetValue();
-    std::string sname(name.c_str());
+    if( text_ctrl )
+    {
+        wxString name = text_ctrl->GetValue();
+        std::string sname(name.c_str());
     
-    // Do a "find on page type feature"
-    if( sname.length()>0 && db_req == REQ_PLAYERS )
-    {
-        std::string current = white_player_search ? track->info.r.white : track->info.r.black;
-        int row = objs.db->FindPlayer( sname, current, track->focus_idx, white_player_search );
-        Goto(row);
+        // Do a "find on page type feature"
+        if( sname.length()>0 && db_req == REQ_PLAYERS )
+        {
+            std::string current = white_player_search ? track->info.r.white : track->info.r.black;
+            int row = objs.db->FindPlayer( sname, current, track->focus_idx, white_player_search );
+            cprintf( "row=%d\n", row );
+            Goto(row);
+        }
     }
-
-    #if 0 // not useful, maybe replace with something else
-    // Else limit search to particular player
-    else
-    {
-        nbr_games_in_list_ctrl = objs.db->SetDbPosition( db_req, cr, sname );
-        char buf[200];
-        sprintf(buf,"List of %d matching games from the database",nbr_games_in_list_ctrl);
-        title_ctrl->SetLabel( buf );
-        cprintf( "Reloading, %d games\n", nbr_games_in_list_ctrl);
-        list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
-        list_ctrl->RefreshItems(0,nbr_games_in_list_ctrl-1);
-        if( nbr_games_in_list_ctrl > 0 )
-            Goto(0);
-    }
-    #endif
 }
 
 
 void DbDialog::GdvSaveAllToAFile()
 {
-    wxFileDialog fd( objs.frame, "Save all listed games to a new .pgn file", "", "", "*.pgn", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
-    wxString dir = objs.repository->nv.m_doc_dir;
-    fd.SetDirectory(dir);
-    int answer = fd.ShowModal();
-    if( answer == wxID_OK )
+    if( LoadGamesPrompted
+          ("Saving these games to a file requires loading a large number of games into memory, is that okay?")
+      )
     {
-        wxString dir;
-        wxFileName::SplitPath( fd.GetPath(), &dir, NULL, NULL );
-        objs.repository->nv.m_doc_dir = dir;
-        wxString wx_filename = fd.GetPath();
-        std::string filename( wx_filename.c_str() );
-        gc->FileSaveAllAsAFile( filename );
+        wxFileDialog fd( objs.frame, "Save all listed games to a new .pgn file", "", "", "*.pgn", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
+        wxString dir = objs.repository->nv.m_doc_dir;
+        fd.SetDirectory(dir);
+        int answer = fd.ShowModal();
+        if( answer == wxID_OK )
+        {
+            wxString dir;
+            wxFileName::SplitPath( fd.GetPath(), &dir, NULL, NULL );
+            objs.repository->nv.m_doc_dir = dir;
+            wxString wx_filename = fd.GetPath();
+            std::string filename( wx_filename.c_str() );
+            gc_db_displayed_games.FileSaveAllAsAFile( filename );
+        }
     }
 }
 
@@ -614,7 +352,7 @@ void DbDialog::GdvOnCancel()
     int sz=gc->gds.size();
  /* for( int i=0; i<sz; i++ )
     {
-        smart_ptr<MagicBase> smp = gc->gds[i];
+        smart_ptr<ListableGame> smp = gc->gds[i];
         bool selected = (wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED)) ? true : false;
         smp->SetSelected(selected);
         bool focused  =  (wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED)  ) ? true : false;
@@ -719,8 +457,9 @@ double AutoTimer::End()
 
 void DbDialog::GdvUtility()
 {
-    LoadGamesIntoMemory();
-    StatsCalculate();
+    bool ok = LoadGamesIntoMemory();
+    if( ok )
+        StatsCalculate();
 }
 
 void DbDialog::GdvButton1()
@@ -760,19 +499,58 @@ void DbDialog::GdvButton4()
     Goto( track->focus_idx );
 }
 
+void DbDialog::GdvButton5()
+{
+    std::string s;
+    int sz = track->info.moves.size();
+    thc::ChessRules cr;
+    int move_count=1;
+    bool triggered=false;
+    s += "{";
+    s += track->info.Description();
+    s += "}";
+    for( int i=0; i<track->info.moves.size(); i++ )
+    {
+        std::string s2;
+        thc::Move mv = track->info.moves[i];
+        char buf[100];
+        buf[0] = '\0';
+        if( cr.white )
+            sprintf( buf, "%d.", move_count );
+        s2 += std::string(buf);
+        s2 += mv.NaturalOut(&cr);
+        if( i+1 < sz )
+            s2 += " ";
+        cr.PlayMove(mv);
+        if( cr.white )
+            move_count++;
+        if( !triggered && cr==cr_base )
+            triggered = true;
+        if( triggered )
+            s += s2;
+    }    
+    objs.gl->gd.CommentEdit(objs.gl->lb,s);
+    objs.gl->CmdEditPromoteToVariation();
+    TransferDataToWindow();
+    AcceptAndClose();
+}
+
 void DbDialog::GdvCheckBox2( bool checked )
 {
     white_player_search = checked;
-    std::string s(text_ctrl->GetValue());
-    if( !white_player_search && s=="White Player" )
+    if( text_ctrl )
     {
-        text_ctrl->SetValue("Black Player");
+        std::string s(text_ctrl->GetValue());
+        if( !white_player_search && s=="White Player" )
+        {
+            text_ctrl->SetValue("Black Player");
+        }
+        else if( white_player_search && s=="Black Player" )
+        {
+            text_ctrl->SetValue("White Player");
+        }
+        Goto( track->focus_idx );
     }
-    else if( white_player_search && s=="Black Player" )
-    {
-        text_ctrl->SetValue("White Player");
-    }
-    Goto( track->focus_idx );
 }
 
 void DbDialog::GdvCheckBox( bool checked )
@@ -782,7 +560,7 @@ void DbDialog::GdvCheckBox( bool checked )
     // Clear back to the base position
     this->cr = cr_base;
     moves_from_base_position.clear();
-    displayed_games.clear();
+    gc_db_displayed_games.gds.clear();
     drill_down_set.clear();
     if( objs.gl->db_clipboard )
     {
@@ -802,25 +580,29 @@ void DbDialog::GdvCheckBox( bool checked )
 }
 
 
-void DbDialog::LoadGamesIntoMemory()
+bool DbDialog::LoadGamesIntoMemory()
 {
     AutoTimer at("Load games into memory");
     
     // Load all the matching games from the database
-    objs.db->LoadAllGames( gc->gds, nbr_games_in_list_ctrl );
-    moves_from_base_position.clear();
-    
-    // No need to look for more games in database in base position
-    drill_down_set.clear();
-    uint64_t base_hash = this->cr.Hash64Calculate();
-    drill_down_set.insert(base_hash);
-    games_set.clear();
-    for( unsigned int i=0; i<gc->gds.size(); i++ )
+    bool ok = objs.db->LoadAllGames( gc->gds, nbr_games_in_list_ctrl );
+    if( ok )
     {
-        int game_id = gc->gds[i]->GetGameId();
-        if( game_id )
-            games_set.insert( game_id );
+        moves_from_base_position.clear();
+    
+        // No need to look for more games in database in base position
+        drill_down_set.clear();
+        uint64_t base_hash = this->cr.Hash64Calculate();
+        drill_down_set.insert(base_hash);
+        games_set.clear();
+        for( unsigned int i=0; i<gc->gds.size(); i++ )
+        {
+            int game_id = gc->gds[i]->GetGameId();
+            if( game_id )
+                games_set.insert( game_id );
+        }
     }
+    return ok;
 }
 
 void DbDialog::CopyOrAdd( bool clear_clipboard )
@@ -829,31 +611,49 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
     int nbr_copied = 0;
     if( list_ctrl )
     {
-        int sz=displayed_games.size();
-        for( int i=0; i<sz; i++ )
+        CompactGame pact;
+        int sz=gc_db_displayed_games.gds.size();
+        if( sz == 0 )
         {
-            if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
-                idx_focus = i;
-            if( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED) )
+            int nbr = list_ctrl->GetItemCount();
+            if( 0<=track->focus_idx && track->focus_idx<nbr )
+            {
+                CompressMoves press;
+                std::string blob = press.Compress(track->info.moves);
+                ListableGameDb info( 0, track->info.r, blob );
+                make_smart_ptr( ListableGameDb, new_info, info );
+                gc_clipboard->gds.push_back( std::move(new_info ) );
+                nbr_copied++;
+            }
+        }
+        else
+        {
+            int sz=gc_db_displayed_games.gds.size();
+            for( int i=0; i<sz; i++ )
+            {
+                if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
+                    idx_focus = i;
+                if( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED) )
+                {
+                    if( clear_clipboard )
+                    {
+                        clear_clipboard = false;
+                        gc_clipboard->gds.clear();
+                    }
+                    gc_clipboard->gds.push_back( gc_db_displayed_games.gds[i] ); // assumes smart_ptr is std::shared_ptr
+                    nbr_copied++;
+                }
+            }
+            if( nbr_copied==0 && idx_focus>=0 )
             {
                 if( clear_clipboard )
                 {
                     clear_clipboard = false;
                     gc_clipboard->gds.clear();
                 }
-                gc_clipboard->gds.push_back( displayed_games[sz-1-i] ); // assumes smart_ptr is std::shared_ptr
+                gc_clipboard->gds.push_back( gc_db_displayed_games.gds[idx_focus] ); // assumes smart_ptr is std::shared_ptr
                 nbr_copied++;
             }
-        }
-        if( nbr_copied==0 && idx_focus>=0 )
-        {
-            if( clear_clipboard )
-            {
-                clear_clipboard = false;
-                gc_clipboard->gds.clear();
-            }
-            gc_clipboard->gds.push_back( displayed_games[sz-1-idx_focus] ); // assumes smart_ptr is std::shared_ptr
-            nbr_copied++;
         }
     }
     dbg_printf( "%d games copied\n", nbr_copied );
@@ -868,7 +668,7 @@ void DbDialog::StatsCalculate()
     transpositions.clear();
     stats.clear();
     dirty = true;
-    displayed_games.clear();
+    gc_db_displayed_games.gds.clear();
     cprintf( "Remove focus %d\n", track->focus_idx );
     list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_FOCUSED );
     list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_SELECTED );
@@ -892,7 +692,7 @@ void DbDialog::StatsCalculate()
     // hash to match
     uint64_t gbl_hash = cr_to_match.Hash64Calculate();
     CompressMoves press_to_match(cr_to_match);
-    objs.db->gbl_hash = gbl_hash;
+    objs.db->SetPositionHash( gbl_hash );
     objs.db->gbl_position = cr_to_match;
     int maxlen = 1000000;   // absurdly large until a match found
 
@@ -908,103 +708,100 @@ void DbDialog::StatsCalculate()
     }
     
     // For each cached game
-    std::vector< smart_ptr<MagicBase> > &source = (objs.gl->db_clipboard ? objs.gl->gc_clipboard.gds : gc->gds );
+    std::vector< smart_ptr<ListableGame> > &source = (objs.gl->db_clipboard ? objs.gl->gc_clipboard.gds : gc->gds );
     for( unsigned int i=0; i<source.size(); i++ )
     {
         Roster r         = source[i]->RefRoster();
         std::string blob = source[i]->RefCompressedMoves();
-        if( blob.size() > 0 )
-        {
     
-            // Search for a match to this game
-            bool new_transposition_found=false;
-            bool found=false;
-            int found_idx=0;
-            for( unsigned int j=0; !found && j<transpositions.size(); j++ )
+        // Search for a match to this game
+        bool new_transposition_found=false;
+        bool found=false;
+        int found_idx=0;
+        for( unsigned int j=0; !found && j<transpositions.size(); j++ )
+        {
+            size_t len = transpositions[j].blob.size();
+            std::string s1 = blob.substr(0,len);
+            std::string s2 = transpositions[j].blob;
+            if( s1 == s2 )
             {
-                size_t len = transpositions[j].blob.size();
-                std::string s1 = blob.substr(0,len);
-                std::string s2 = transpositions[j].blob;
-                if( s1 == s2 )
-                {
-                    found = true;
-                    found_idx = j;
-                }
+                found = true;
+                found_idx = j;
             }
+        }
         
-            // If none so far add the one from this game
-            if( !found )
+        // If none so far add the one from this game
+        if( !found )
+        {
+            PATH_TO_POSITION ptp;
+            CompressMoves press;
+            size_t len = blob.length();
+            const char *b = (const char*)blob.c_str();
+            uint64_t hash = press.cr.Hash64Calculate();
+            found = (hash==gbl_hash && press.cr==cr_to_match );
+            int offset=0;
+            while( !found && offset<len && offset<maxlen )
             {
-                PATH_TO_POSITION ptp;
-                CompressMoves press;
-                size_t len = blob.length();
-                const char *b = (const char*)blob.c_str();
-                uint64_t hash = press.cr.Hash64Calculate();
-                found = (hash==gbl_hash && press.cr==cr_to_match );
-                int offset=0;
-                while( !found && offset<len && offset<maxlen )
-                {
-                    thc::ChessRules cr_hash = press.cr;
-                    thc::Move mv = press.UncompressMove( *b++ );
-                    hash = cr_hash.Hash64Update( hash, mv );
-                    offset++;
-                    if( hash == gbl_hash && press.cr==cr_to_match )
-                        found = true;
-                }
-                if( found )
-                {
-                    new_transposition_found = true;
-                    ptp.blob = blob.substr(0,offset);
-                    transpositions.push_back(ptp);
-                    found_idx = transpositions.size()-1;
-                    maxlen = offset+16; // stops unbounded searching through unrelated game
-                }
+                thc::ChessRules cr_hash = press.cr;
+                thc::Move mv = press.UncompressMove( *b++ );
+                hash = cr_hash.Hash64Update( hash, mv );
+                offset++;
+                if( hash == gbl_hash && press.cr==cr_to_match )
+                    found = true;
             }
             if( found )
             {
-                bool white_wins = (r.result=="1-0");
-                if( white_wins )
-                    total_white_wins++;
-                bool black_wins = (r.result=="0-1");
-                if( black_wins )
-                    total_black_wins++;
-                bool draw       = (r.result=="1/2-1/2");
-                if( draw )
-                    total_draws++;
-                DbDocument temp(0,r,blob);
-                make_smart_ptr( DbDocument, smptr, temp );
-                displayed_games.push_back(smptr);
-                PATH_TO_POSITION *p = &transpositions[found_idx];
-                p->frequency++;
-                size_t len = p->blob.length();
-                if( len < blob.length() ) // must be more moves
+                new_transposition_found = true;
+                ptp.blob = blob.substr(0,offset);
+                transpositions.push_back(ptp);
+                found_idx = transpositions.size()-1;
+                maxlen = offset+16; // stops unbounded searching through unrelated game
+            }
+        }
+        if( found )
+        {
+            bool white_wins = (r.result=="1-0");
+            if( white_wins )
+                total_white_wins++;
+            bool black_wins = (r.result=="0-1");
+            if( black_wins )
+                total_black_wins++;
+            bool draw       = (r.result=="1/2-1/2");
+            if( draw )
+                total_draws++;
+            ListableGameDb temp(0,r,blob);
+            make_smart_ptr( ListableGameDb, smptr, temp );
+            gc_db_displayed_games.gds.push_back(smptr);
+            PATH_TO_POSITION *p = &transpositions[found_idx];
+            p->frequency++;
+            size_t len = p->blob.length();
+            if( len < blob.length() ) // must be more moves
+            {
+                const char *next_compressed_move = blob.c_str()+len;
+                CompressMoves press = press_to_match;
+                thc::Move mv = press.UncompressMove( *next_compressed_move );
+                uint32_t imv = 0;
+                assert( sizeof(imv) == sizeof(mv) );
+                memcpy( &imv, &mv, sizeof(mv) ); // FIXME
+                std::map< uint32_t, MOVE_STATS >::iterator it;
+                it = stats.find(imv);
+                if( it == stats.end() )
                 {
-                    const char *next_compressed_move = blob.c_str()+len;
-                    CompressMoves press = press_to_match;
-                    thc::Move mv = press.UncompressMove( *next_compressed_move );
-                    uint32_t imv = 0;
-                    assert( sizeof(imv) == sizeof(mv) );
-                    memcpy( &imv, &mv, sizeof(mv) ); // FIXME
-                    std::map< uint32_t, MOVE_STATS >::iterator it;
+                    MOVE_STATS empty;
+                    empty.nbr_games = 0;
+                    empty.nbr_white_wins = 0;
+                    empty.nbr_black_wins = 0;
+                    empty.nbr_draws = 0;
+                    stats[imv] = empty;
                     it = stats.find(imv);
-                    if( it == stats.end() )
-                    {
-                        MOVE_STATS empty;
-                        empty.nbr_games = 0;
-                        empty.nbr_white_wins = 0;
-                        empty.nbr_black_wins = 0;
-                        empty.nbr_draws = 0;
-                        stats[imv] = empty;
-                        it = stats.find(imv);
-                    }
-                    it->second.nbr_games++;
-                    if( white_wins )
-                        it->second.nbr_white_wins++;
-                    else if( black_wins )
-                        it->second.nbr_black_wins++;
-                    else if( draw )
-                        it->second.nbr_draws++;
                 }
+                it->second.nbr_games++;
+                if( white_wins )
+                    it->second.nbr_white_wins++;
+                else if( black_wins )
+                    it->second.nbr_black_wins++;
+                else if( draw )
+                    it->second.nbr_draws++;
             }
 
             // For speed, have the most frequent transpositions first        
@@ -1078,14 +875,14 @@ void DbDialog::StatsCalculate()
             txt += " ";
             cr.PlayMove(mv);
         }
-        char buf[200];
+        char buf[2000];
         sprintf( buf, "T%d: %s: %d occurences", j+1, txt.c_str(), p->frequency );
         cprintf( "%s\n", buf );
         wxString wstr(buf);
         strings_transpos.Add(wstr);
     }
 
-    nbr_games_in_list_ctrl = displayed_games.size();
+    nbr_games_in_list_ctrl = gc_db_displayed_games.gds.size();
     dirty = true;
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
     list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );

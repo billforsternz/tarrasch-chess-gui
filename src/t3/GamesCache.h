@@ -12,7 +12,7 @@
 class GamesCache
 {    
 public:
-    std::vector< smart_ptr<MagicBase> >  gds;
+    std::vector< smart_ptr<ListableGame> >  gds;
     std::vector<int>           col_flags;
     std::string                pgn_filename;
     int game_nbr;

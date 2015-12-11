@@ -59,8 +59,6 @@ public:
     bool OnIdleNeeded();
     int MillisecsToNextSecond();
 
-    void LoadGame( GameLogic *gl, GameDocument& gd );
-
     // Command handlers
     void OnTabSelected( int idx );
     bool OnExit();
@@ -109,6 +107,7 @@ public:
     void CmdPlayers();
     void CmdClocks();
     void CmdEditGameDetails();
+    void CmdEditCopyGamePGNToClipboard();
     void CmdEditGamePrefix();
     void CmdEditPromote();
     void CmdEditDemote();
@@ -220,7 +219,7 @@ public:
     thc::Move ponder_move;
     GameLifecycle glc;
     GameDocument gd;
-    GamesCache gc;
+    GamesCache gc_pgn;
     GamesCache gc_clipboard;
     GamesCache gc_session;
     GamesCache gc_database;

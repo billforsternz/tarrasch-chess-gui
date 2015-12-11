@@ -40,6 +40,7 @@ CreateDatabaseDialog::CreateDatabaseDialog(
                            wxWindowID id, bool create_mode,
                            const wxPoint& pos, const wxSize& size, long style )
 {
+    db_created_ok = false;
     this->create_mode = create_mode;
     Create(parent, id, create_mode?"Create Database":"Add Games to Database", pos, size, style);
 }
@@ -119,7 +120,7 @@ void CreateDatabaseDialog::CreateControls()
                                                         create_mode ?
                                                             wxT("Select database to create") :
                                                             wxT("Select database to add games to"),
-                                                        "*.tarrasch_db", wxDefaultPosition, wxDefaultSize,
+                                                        "*.tdb", wxDefaultPosition, wxDefaultSize,
                                                         create_mode ?
                                                             wxFLP_USE_TEXTCTRL|wxFLP_SAVE :
                                                             wxFLP_USE_TEXTCTRL|wxFLP_FILE_MUST_EXIST
@@ -245,7 +246,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
         }
     }
     bool exists = wxFile::Exists(db_filename);
-    std::string db_name = std::string( db_filename.c_str() );
+    db_name = std::string( db_filename.c_str() );
     if( exists )
     {
         error_msg = "Tarrasch database file " + db_name + " already exists";
@@ -264,7 +265,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
     if( ok )
         ok = db_primitive_open( db_name.c_str(), true );
     if( ok )
-        ok = db_primitive_transaction_begin();
+        ok = db_primitive_transaction_begin(this);
     if( ok )
         ok = db_primitive_create_tables();
     if( ok )
@@ -285,7 +286,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
             char buf[80];
             sprintf( buf, "%d of %d", i+1, cnt );
             desc += buf;
-            ProgressBar progress_bar( title, desc, ifile );
+            ProgressBar progress_bar( title, desc, this, ifile );
             PgnRead *pgn = new PgnRead('A',&progress_bar);
             bool aborted = pgn->Process(ifile);
             if( aborted )
@@ -306,11 +307,12 @@ void CreateDatabaseDialog::OnCreateDatabase()
     if( ok )
         ok = db_primitive_create_indexes();
     if( ok )
-        ok = db_primitive_create_extra_indexes();
-    if( ok )
         db_primitive_close();
     if( ok )
+    {
         AcceptAndClose();
+        db_created_ok = true;
+    }
     else
     {
         if( error_msg == "" )
@@ -358,7 +360,7 @@ void CreateDatabaseDialog::OnAppendDatabase()
         }
     }
     bool exists = wxFile::Exists(db_filename);
-    std::string db_name = std::string( db_filename.c_str() );
+    db_name = std::string( db_filename.c_str() );
     if( !exists )
     {
         error_msg = "Tarrasch database file " + db_name + " doesn't exist";
@@ -372,7 +374,7 @@ void CreateDatabaseDialog::OnAppendDatabase()
     if( ok )
         ok = db_primitive_open( db_name.c_str(), false );
     if( ok )
-        ok = db_primitive_transaction_begin();
+        ok = db_primitive_transaction_begin(this);
     if( ok )
         ok = (db_primitive_count_games()>=0); // to set game_id to zero
     for( int i=0; ok && i<cnt; i++ )
@@ -391,7 +393,7 @@ void CreateDatabaseDialog::OnAppendDatabase()
             char buf[80];
             sprintf( buf, "%d of %d", i+1, cnt );
             desc += buf;
-            ProgressBar progress_bar( title, desc, ifile );
+            ProgressBar progress_bar( title, desc, this, ifile );
             PgnRead *pgn = new PgnRead('A',&progress_bar);
             bool aborted = pgn->Process(ifile);
             if( aborted )

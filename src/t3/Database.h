@@ -29,6 +29,7 @@ public:
     Database( const char *db_file );
     ~Database();
     void Reopen( const char *db_file );
+    void BuildDefaultDatabase( const char *db_file_name );
     bool IsOperational( std::string &error_msg );
     bool GetDatabaseVersion( int &version );
     int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr );
@@ -36,7 +37,7 @@ public:
     // int GetNbrGames( thc::ChessRules &cr );
     int GetRow( int row, CompactGame *info );
     int GetRowRaw( CompactGame *info, int row );
-    int LoadAllGames( std::vector< smart_ptr<MagicBase> > &cache, int nbr_games );
+    bool LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int nbr_games );
     bool TestNextRow();
     bool TestPrevRow();
     int GetCurrent();
@@ -44,8 +45,8 @@ public:
     void FindPlayerEnd();
 
     int LoadGameWithQuery( CompactGame *info, int game_id );
-    int LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<MagicBase> > &games, std::unordered_set<int> &games_set );
-    int LoadGamesWithQuery( std::string &player_name, bool white, std::vector< smart_ptr<MagicBase> > &games );
+    int LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<ListableGame> > &games, std::unordered_set<int> &games_set );
+    int LoadGamesWithQuery( std::string &player_name, bool white, std::vector< smart_ptr<ListableGame> > &games );
   
 private:
     DB_REQ db_req;
@@ -55,7 +56,7 @@ private:
     sqlite3 *gbl_handle;
     
     // A prepared statement for fetching from positions table
-    sqlite3_stmt *gbl_stmt;
+    sqlite3_stmt *positions_stmt;
     
     // A prepared statement for player search
     sqlite3_stmt *player_search_stmt;
@@ -82,8 +83,11 @@ private:
     
     // The position we are looking for
 public:
+    uint64_t GetPositionHash()                  { return position_hash; }
+    void     SetPositionHash( uint64_t hash )   { position_hash=hash; }
     thc::ChessPosition gbl_position;
-    uint64_t gbl_hash;
+private:
+    uint64_t position_hash;
     
 };
 
