@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <string>
+#include "DebugPrintf.h"
 #include "wx/progdlg.h"
 
 class ProgressBar
@@ -22,6 +23,7 @@ public:
                                     wxPD_CAN_ABORT+
                                     wxPD_ESTIMATED_TIME )
     {
+        cprintf( "ProgressBar() %s, %s\n", title.c_str(), parent==NULL?"parent==NULL":"?" );
         modulo_256=0;
         old_permill=0;
         this->ifile = ifile;
@@ -49,6 +51,7 @@ public:
                     permill = (int)( file_offset / (file_len/1000L) );
                 if( permill != old_permill )
                 {
+                    progress.SetFocus();
                     bool abort = !progress.Update( permill>1000 ? 1000 : permill );
                     if( abort )
                         return true;
@@ -67,6 +70,7 @@ public:
     bool Permill( int permill, const std::string &s="" )  // return true if abort
     {
         wxString wxmsg( s.c_str() );
+        progress.SetFocus();
         bool abort = !progress.Update( permill>1000 ? 1000 : permill, wxmsg );
         old_permill = permill;
         return abort;

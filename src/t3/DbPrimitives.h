@@ -34,5 +34,8 @@ bool db_primitive_insert_game( bool &signal_error, const char *white, const char
                                     const char *date, const char *white_elo, const char *black_elo, const char *eco,
                                     int nbr_moves, thc::Move *moves, uint64_t *hashes  );
 
+// Build the default database if .pgn exists and .tdb doesn't
+void db_primitive_build_default_database( const char *db_file_name );
+
 
 #endif // DB_PRIMITIVES_H

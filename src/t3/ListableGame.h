@@ -26,6 +26,7 @@ public:
     virtual GameDocument *GetGameDocumentPtr()  {
         cprintf("FIXME DANGER WILL ROBINSON 3\n");  return NULL; }
     virtual long GetFposn() { return 0; }
+    virtual void SetFposn(long posn) {}
     virtual bool GetPgnHandle( int &pgn_handle ) { return false; }
     virtual void SetPgnHandle( int pgn_handle )  {}
     virtual bool IsInMemory()        { return false; }

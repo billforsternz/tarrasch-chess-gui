@@ -22,8 +22,9 @@ private:
     long fposn;
     PackedGame pack;
 public:
-    ListableGamePgn( int pgn_handle, long fposn ) { this->pgn_handle=pgn_handle, this->fposn = fposn;  }
+    ListableGamePgn( int pgn_handle, long fposn ) { this->pgn_handle=pgn_handle, this->fposn = fposn; game_being_edited=0;  }
     virtual long GetFposn() { return fposn; }
+    virtual void SetFposn(long posn) { fposn=posn; }
     virtual bool GetPgnHandle( int &pgn_handle ) { pgn_handle=this->pgn_handle; return true; }
     virtual void *LoadIntoMemory( void *context, bool end )
     {

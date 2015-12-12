@@ -22,6 +22,7 @@
 #include "DebugPrintf.h"
 #include "Log.h"
 #include "Session.h"
+#include "DbPrimitives.h"
 #include "Database.h"
 #include "Book.h"
 #include "Tabs.h"
@@ -572,6 +573,7 @@ Canvas::Canvas
     objs.session    = new Session;
     objs.log        = new Log;
     objs.book       = new Book;
+    db_primitive_build_default_database( objs.repository->database.m_file.c_str() );    // immediately after book compile
     objs.cws        = new CentralWorkSaver;
 //    objs.db         = new Database( objs.repository->database.m_file.c_str() );
     objs.tabs       = new Tabs;

@@ -513,20 +513,23 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
     file_irrevocably_modified = false;
     buf = new char [buflen];
     int gds_nbr = gds.size();
-    long posn=0;
+    long write_posn=0;
     ProgressBar pb( "Saving file", "Saving file" );
     for( int i=0; i<gds_nbr; i++ )
     {
         pb.Permill( (i*1000L) / (gds_nbr?gds_nbr:1) );
         ListableGame *mptr = gds[i].get();
+        long game_len = 0;
         if( !mptr->IsInMemory() )
         {
             long fposn = mptr->GetFposn();
-            int pgn_handle;
-            bool is_pgn = mptr->GetPgnHandle( pgn_handle );
+            int pgn_handle2;
+            bool is_pgn = mptr->GetPgnHandle( pgn_handle2 );
             if( is_pgn )
             {
-                FILE *pgn_in = objs.gl->pf.ReopenRead ( pgn_handle );
+                if( pgn_handle == pgn_handle2 )
+                    mptr->SetFposn( write_posn );
+                FILE *pgn_in = objs.gl->pf.ReopenRead ( pgn_handle2 );
                 if( pgn_in )
                 {
                     fseek( pgn_in, fposn, SEEK_SET );
@@ -537,6 +540,7 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
                     {
                         done = PgnStateMachine( pgn_in, typ,  buf, sizeof(buf) );
                         fputs( buf, pgn_out );
+                        game_len += strlen(buf);
                         if( typ == 'G' )
                             break;
                     }
@@ -545,6 +549,7 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
         }
         else
         {
+            
             GameDocument *ptr = mptr->GetGameDocumentPtr();
 
             // A horrible kludge
@@ -553,157 +558,69 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
                 std::string str;
                 ptr->ToFileTxtGameDetails( str );
                 fwrite(str.c_str(),1,str.length(),pgn_out);
-                posn += str.length();
+                game_len = str.length();
                 ptr->ToFileTxtGameBody( str );
                 fwrite(str.c_str(),1,str.length(),pgn_out);
-                posn += str.length();
+                game_len += str.length();
             }
             else
             {
-                bool replace_game_prefix = true;
-                bool replace_game_details = true;
-                bool replace_moves = true;
                 ptr->modified = false;
-                replace_game_prefix = ptr->game_prefix_edited || ptr->pgn_handle==0;
                 ptr->game_prefix_edited = false;
-                replace_game_details = ptr->game_details_edited || ptr->pgn_handle==0;
                 ptr->game_details_edited = false;
-                replace_moves = ptr->in_memory || ptr->pgn_handle==0;
-                bool no_replacements = (!replace_moves && !replace_game_details && !replace_game_prefix);
-                bool replace_all     = (replace_moves && replace_game_details && replace_game_prefix);
-                
-                //   fposn0
-                //     prefix text
-                //   fposn1
-                //     [game details]
-                //   fposn2
-                //     [game moves]
-                //   fposn3
-                //
-                long fposn0 = ptr->fposn0;
-                long fposn1 = ptr->fposn1;
-                long fposn2 = ptr->fposn2;
-                long fposn3 = ptr->fposn3;
-                long len;
-                bool same_file = (ptr->pgn_handle==pgn_handle);
-                FILE *pgn = pgn_in;
-                if( !same_file && !replace_all )
-                {
-                    pgn = objs.gl->pf.ReopenRead( ptr->pgn_handle );
-                    if( !pgn )
-                        continue; // whoops, can't read the game
-                }
                 ptr->pgn_handle = pgn_handle;  // irrespective of where it came from, now this
-                //  game is in this file
-                ptr->fposn0 = posn;
-
-                // TEMP TEMP FIXME
-                no_replacements = false;
-                replace_all = true;
-                replace_game_prefix = true;
-                replace_game_details = true;
-                replace_moves = true;
-                
-                if( no_replacements )
+                                               //  game is in this file
+                ptr->fposn0 = write_posn;      // at this position
+                std::string s = ptr->prefix_txt;
+                int len = s.length();
+                #ifdef _WINDOWS
+                #define EOL "\r\n"
+                #else
+                #define EOL "\n"
+                #endif
+                if( len > 0 )
                 {
-                    len = fposn3-fposn0;
-                    fseek(pgn,fposn0,SEEK_SET);
-                    while( len >= buflen )
+                    if( i != 0 )    // blank line needed before all but first prefix
                     {
-                        delete[] buf;
-                        buflen *= 2;
-                        buf = new char [buflen];
+                        fwrite( EOL, 1, strlen(EOL), pgn_out );
+                        game_len += strlen(EOL);
                     }
-                    fread(buf,1,len,pgn);
-                    fwrite(buf,1,len,pgn_out);
-                    ptr->fposn1 = posn + (fposn1-fposn0);
-                    ptr->fposn2 = posn + (fposn2-fposn0);
-                    posn += len;
-                    ptr->fposn3 = posn;
+                    fwrite( s.c_str(), 1, len, pgn_out );
+                    game_len += len;
+                    fwrite( EOL, 1, strlen(EOL), pgn_out );
+                    game_len += strlen(EOL);
                 }
-                else
-                {
-                    ptr->fposn0 = posn;
-                    std::string s = ptr->prefix_txt;
-                    int len = s.length();
-                    if( len > 0 )
-                    {
-                        if( i != 0 )    // blank line needed before all but first prefix
-                        {
-                            fwrite( "\r\n", 1, 2 ,pgn_out);
-                            posn += 2;
-                        }
-                        fwrite( s.c_str(),1,len,pgn_out);
-                        fwrite( "\r\n", 1, 2 ,pgn_out);
-                        posn += (len+2);
-                    }
-                    ptr->fposn1 = posn;
-                    if( replace_game_details )
-                    {
-                        std::string str;
-                        GameDocument temp = *ptr;
-                        temp.ToFileTxtGameDetails( str );
-                        fwrite(str.c_str(),1,str.length(),pgn_out);
-                        posn += str.length();
-                    }
-                    else
-                    {
-                        len = fposn2-fposn1;
-                        fseek(pgn,fposn1,SEEK_SET);
-                        while( len >= buflen )
-                        {
-                            delete[] buf;
-                            buflen *= 2;
-                            buf = new char [buflen];
-                        }
-                        fread(buf,1,len,pgn);
-                        fwrite(buf,1,len,pgn_out);
-                        posn += len;
-                    }
-                    ptr->fposn2 = posn;
-                    if( replace_moves )
-                    {
-                        std::string str;
-                        GameDocument temp = *ptr;
-                        temp.ToFileTxtGameBody( str );
-                        fwrite(str.c_str(),1,str.length(),pgn_out);
-                        posn += str.length();
-                    }
-                    else
-                    {
-                        len = fposn3-fposn2;
-                        fseek(pgn,fposn2,SEEK_SET);
-                        while( len >= buflen )
-                        {
-                            delete[] buf;
-                            buflen *= 2;
-                            buf = new char [buflen];
-                        }
-                        fread(buf,1,len,pgn);
-                        fwrite(buf,1,len,pgn_out);
-                        posn += len;
-                    }
-                    ptr->fposn3 = posn;
+                ptr->fposn1 = write_posn + game_len;
+                std::string str;
+                GameDocument temp = *ptr;
+                temp.ToFileTxtGameDetails( str );
+                fwrite(str.c_str(),1,str.length(),pgn_out);
+                game_len += str.length();
+                ptr->fposn2 = write_posn + game_len;
+                temp.ToFileTxtGameBody( str );
+                fwrite(str.c_str(),1,str.length(),pgn_out);
+                game_len += str.length();
+                ptr->fposn3 = write_posn + game_len;
                     
-                    // Fix a nasty bug in T2 up to and including V2.01. A later PutBackDocument()
-                    //  was overwriting the correctly calculated values of fposn0 etc. with stale
-                    //  values. Fix is to update those stale values here.
-                    GameDocument *p = objs.tabs->Begin();
-                    while( p )
+                // Fix a nasty bug in T2 up to and including V2.01. A later PutBackDocument()
+                //  was overwriting the correctly calculated values of fposn0 etc. with stale
+                //  values. Fix is to update those stale values here.
+                GameDocument *p = objs.tabs->Begin();
+                while( p )
+                {
+                    if( ptr->game_being_edited!=0 && (ptr->game_being_edited == p->game_being_edited)  )
                     {
-                        if( ptr->game_being_edited!=0 && (ptr->game_being_edited == p->game_being_edited)  )
-                        {
-                            p->fposn0 = ptr->fposn0;
-                            p->fposn1 = ptr->fposn1;
-                            p->fposn2 = ptr->fposn2;
-                            p->fposn3 = ptr->fposn3;
-                            p->pgn_handle = ptr->pgn_handle;
-                        }
-                        p = objs.tabs->Next();
+                        p->fposn0 = ptr->fposn0;  
+                        p->fposn1 = ptr->fposn1;  
+                        p->fposn2 = ptr->fposn2;  
+                        p->fposn3 = ptr->fposn3;  
+                        p->pgn_handle = ptr->pgn_handle;
                     }
+                    p = objs.tabs->Next();
                 }
             }
         }
+        write_posn += game_len;
     }
     
     // Restore sort order .game_nbr field is restored to its original value

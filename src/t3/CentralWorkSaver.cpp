@@ -325,6 +325,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                     //  end of a new file game list
                     else
                     {
+                        ok = true;
                         bool append=false;
                         int answer = wxMessageBox( "Append game to existing file ?", "'Yes' to append, 'No' to overwrite (be careful with 'No')",  wxYES_NO|wxCANCEL, objs.frame );
                         if( answer == wxYES )
@@ -352,7 +353,6 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                             gd->game_prefix_edited = false;
                             gd->game_details_edited = false;
                             undo->Clear(*gd);
-                            ok = true;
                         }
                     }
                 }

@@ -29,7 +29,8 @@ public:
     GameDocument();
 	virtual GameDocument        *GetGameDocumentPtr()           { return this; }
     virtual bool IsInMemory()        { return true; }
-    virtual long GetFposn() { return fposn0; }
+    virtual long GetFposn()          { return fposn0; }
+    virtual void SetFposn(long posn) { fposn0=posn; }
     virtual Roster &RefRoster() { return r; }
     virtual std::vector<thc::Move> &RefMoves()
     {
