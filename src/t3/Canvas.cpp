@@ -573,12 +573,11 @@ Canvas::Canvas
     objs.session    = new Session;
     objs.log        = new Log;
     objs.book       = new Book;
-    db_primitive_build_default_database( objs.repository->database.m_file.c_str() );    // immediately after book compile
     objs.cws        = new CentralWorkSaver;
-//    objs.db         = new Database( objs.repository->database.m_file.c_str() );
     objs.tabs       = new Tabs;
     objs.gl         = NULL;
     GameLogic *gl   = new GameLogic( this, lb );
+    db_primitive_build_default_database( objs.repository->database.m_file.c_str() );    // immediately after book compile
 
     // Hook up connections to GameLogic
     objs.gl         = gl;
