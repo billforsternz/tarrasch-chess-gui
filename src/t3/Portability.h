@@ -17,7 +17,7 @@
 #elif defined __WXOSX__
     #define THC_MAC
     #define THC_UNIX
-#elif
+#else
     #error "Unknown target platform - not Windows, Linux GTK or OSX" 
 #endif
 

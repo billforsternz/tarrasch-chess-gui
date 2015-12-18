@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include "Portability.h"
 
-#ifdef THC_MAC
+#ifdef THC_UNIX
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
