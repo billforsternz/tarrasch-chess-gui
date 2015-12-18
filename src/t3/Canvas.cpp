@@ -59,7 +59,7 @@ enum
     NBR_OF_WIDS
 };
 
-#ifdef MAC_FIX_LATER
+#ifdef THC_MAC
 #define YDELTA_TOP 10
 #define YDELTA 30
 static int window_id_positions_54[NBR_OF_WIDS][4] =
@@ -831,10 +831,6 @@ void Canvas::PositionButtons()
             r = button->GetRect();
             r.x = x;
             x += (r.width+MARGIN);
-#if 0 //def MAC_FIX_LATER
-            r.x += 3;
-            //r.y += 8;
-#endif
             button->SetSize(r);
         }
     }
@@ -844,7 +840,7 @@ void Canvas::SetSmallBox( bool is_small )
 {
     wxRect r;
     LOCATE_R( box, r );
-#ifdef MAC_FIX_LATER
+#ifdef THC_MAC
     box_width = is_small ? ((r.width*505)/1000) : r.width;
 #else
     box_width = is_small ? ((r.width*48)/100) : r.width;

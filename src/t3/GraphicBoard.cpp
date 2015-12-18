@@ -21,7 +21,6 @@
 using namespace std;
 using namespace thc;
 
-
 // Initialise the graphic board
 GraphicBoard::GraphicBoard
 (
@@ -66,38 +65,48 @@ GraphicBoard::GraphicBoard
 	ClearHighlight1();
 	ClearHighlight2();
 
-#ifdef MAC_FIX_LATER
-    
-    height = my_chess_bmp.GetHeight();
-	width_bytes  = 512;   // bytes
-	width        = 128;        // pixels
-  	assert( (width_bytes%width) == 0 );
-	density      = width_bytes/width;
-	height       = 128;
-    wxAlphaPixelData bmdata(my_chess_bmp);
-    height = bmdata.GetHeight();
-    width  = bmdata.GetWidth();
-    wxPoint x = bmdata.GetOrigin();
-    wxSize  z = bmdata.GetSize();
-    int row_stride = bmdata.GetRowStride();
-    cprintf( "x=%d,%d z=%d,%d, height=%d, width=%d, row_stride=%d\n",x.x,x.y,z.x,z.y,height,width,row_stride);
-    width_bytes = row_stride;
-#else
+#ifdef THC_WINDOWS
 	BITMAP info;
-
 	// Get dimensions of the wxBitmap
 	//my_chess_bmp.GetBitmap( &info ); // return ::GetObject(m_hObject, sizeof(BITMAP), pBitMap);
     ::GetObject( my_chess_bmp.GetHBITMAP(), sizeof(BITMAP), &info ); //@@
     //this->board_rect = board_rect;
 	width_bytes  = info.bmWidthBytes;   // bytes
 	width        = info.bmWidth;        // pixels
-  	assert( (info.bmWidthBytes%info.bmWidth) == 0 );
-	density      = info.bmWidthBytes/info.bmWidth;
 	height       = info.bmHeight;
-  	dbg_printf( "width_bytes=%lu, width=%lu, height=%lu\n",
+  	cprintf( "width_bytes=%lu, width=%lu, height=%lu\n",
 						(unsigned long)info.bmWidthBytes,
 						(unsigned long)info.bmWidth,
 						(unsigned long)info.bmHeight );
+	density      = info.bmWidthBytes/info.bmWidth;
+#else
+    height = my_chess_bmp.GetHeight();
+    wxAlphaPixelData bmdata(my_chess_bmp);
+    wxNativePixelData bmdata2(my_chess_bmp);
+    if( bmdata )
+    {
+        height = bmdata.GetHeight();
+        width  = bmdata.GetWidth();
+        wxPoint x = bmdata.GetOrigin();
+        wxSize  z = bmdata.GetSize();
+        int row_stride = bmdata.GetRowStride();
+        if( row_stride < 0 )
+            row_stride = 0-row_stride;
+        cprintf( "Alpha x=%d,%d z=%d,%d, height=%d, width=%d, row_stride=%d\n",x.x,x.y,z.x,z.y,height,width,row_stride);
+        width_bytes = row_stride;
+    }
+    else
+    {
+        height = bmdata2.GetHeight();
+        width  = bmdata2.GetWidth();
+        wxPoint x = bmdata2.GetOrigin();
+        wxSize  z = bmdata2.GetSize();
+        int row_stride = bmdata2.GetRowStride();
+        cprintf( "Native x=%d,%d z=%d,%d, height=%d, width=%d, row_stride=%d\n",x.x,x.y,z.x,z.y,height,width,row_stride);
+        width_bytes = row_stride;
+    }
+    if( width )
+	    density      = width_bytes/width;
 #endif
 	xborder	     = (width_bytes%8) / 2;
 	yborder	     = (height%8) / 2;
@@ -110,22 +119,36 @@ GraphicBoard::GraphicBoard
 	buf_box   = new byte[width_bytes*height];
 
 	// Read the initial position displayed on the bitmap
-#ifdef MAC_FIX_LATER
-    wxAlphaPixelData::Iterator p(bmdata);
-    byte *dst = buf_board;
-    for( int i=0; i<height*width; i++ )
-    {
-        *dst++ = p.Alpha();
-        *dst++ = p.Red();
-        *dst++ = p.Green();
-        *dst++ = p.Blue();
-        p++;
-    }
-    cprintf("a,r,g,b = %d,%d,%d,%d\n", buf_board[0], buf_board[1], buf_board[2], buf_board[3] );
-#else
+#ifdef THC_WINDOWS
 	//my_chess_bmp.GetBitmapBits( width_bytes*height, buf_board );   //@@
     int ret= ::GetBitmapBits((HBITMAP)(my_chess_bmp.GetHBITMAP()), width_bytes*height, buf_board );
     //dbg_printf( "::GetBitmapBits() returns %d\n",ret);
+#else
+    if( bmdata )
+    {
+        wxAlphaPixelData::Iterator p(bmdata);
+        byte *dst = buf_board;
+        for( int i=0; i<height*width; i++ )
+        {
+            *dst++ = p.Alpha();
+            *dst++ = p.Red();
+            *dst++ = p.Green();
+            *dst++ = p.Blue();
+            p++;
+        }
+    }
+    else
+    {
+        wxNativePixelData::Iterator p(bmdata2);
+        byte *dst = buf_board;
+        for( int i=0; i<height*width; i++ )
+        {
+            *dst++ = p.Red();
+            *dst++ = p.Green();
+            *dst++ = p.Blue();
+            p++;
+        }
+    }
 #endif
 
 	// Read from position on left below (the .bmp resource) into the box
@@ -337,22 +360,38 @@ void GraphicBoard::SetPosition( char *position_ascii )
 	}
 
 	// Copy from the image buffer into the wxBitmap
-#ifdef MAC_FIX_LATER
-    wxAlphaPixelData bmdata(my_chess_bmp);
-    wxAlphaPixelData::Iterator p(bmdata);
-    byte *src = buf_board;
-    for( int i=0; i<height*width; i++ )
-    {
-        p.Alpha() = *src++;
-        p.Red()   = *src++;
-        p.Green() = *src++;
-        p.Blue()  = *src++;
-        p++;
-    }
-#else
+#ifdef THC_WINDOWS
 	//my_chess_bmp.SetBitmapBits( width_bytes*height, buf_board );
     /*int ret = ::*/SetBitmapBits( (HBITMAP)(my_chess_bmp.GetHBITMAP()), width_bytes*height, buf_board );  //@@
     //dbg_printf( "::SetBitmapBits() returns %d\n", ret );
+#else
+    wxAlphaPixelData bmdata(my_chess_bmp);
+    wxNativePixelData bmdata2(my_chess_bmp);
+    if( bmdata )
+    {
+        wxAlphaPixelData::Iterator p(bmdata);
+        byte *src = buf_board;
+        for( int i=0; i<height*width; i++ )
+        {
+            p.Alpha() = *src++;
+            p.Red()   = *src++;
+            p.Green() = *src++;
+            p.Blue()  = *src++;
+            p++;
+        }
+    }
+    else
+    {
+        wxNativePixelData::Iterator p(bmdata2);
+        byte *src = buf_board;
+        for( int i=0; i<height*width; i++ )
+        {
+            p.Red()   = *src++;
+            p.Green() = *src++;
+            p.Blue()  = *src++;
+            p++;
+        }
+    }
 #endif
 
     // Now use GDI to add highlights
@@ -693,22 +732,38 @@ void GraphicBoard::SetPositionEx( thc::ChessPosition pos, bool blank_other_squar
     PutEx( save_piece, pickup2_file, pickup2_rank, shift );
 
 	// Copy from the image buffer into the wxBitmap
-#ifdef MAC_FIX_LATER
-    wxAlphaPixelData bmdata(my_chess_bmp);
-    wxAlphaPixelData::Iterator p(bmdata);
-    byte *src = buf_board;
-    for( int i=0; i<height*width; i++ )
-    {
-        p.Alpha() = *src++;
-        p.Red()   = *src++;
-        p.Green() = *src++;
-        p.Blue()  = *src++;
-        p++;
-    }
-#else
+#ifdef THC_WINDOWS
 	//my_chess_bmp.SetBitmapBits( width_bytes*height, buf_board );
     /*int ret = ::*/SetBitmapBits( (HBITMAP)(my_chess_bmp.GetHBITMAP()), width_bytes*height, buf_board );  //@@
     //dbg_printf( "::SetBitmapBits() returns %d\n", ret );
+#else
+    wxAlphaPixelData bmdata(my_chess_bmp);
+    wxNativePixelData bmdata2(my_chess_bmp);
+    if( bmdata )
+    {
+        wxAlphaPixelData::Iterator p(bmdata);
+        byte *src = buf_board;
+        for( int i=0; i<height*width; i++ )
+        {
+            p.Alpha() = *src++;
+            p.Red()   = *src++;
+            p.Green() = *src++;
+            p.Blue()  = *src++;
+            p++;
+        }
+    }
+    else
+    {
+        wxNativePixelData::Iterator p(bmdata2);
+        byte *src = buf_board;
+        for( int i=0; i<height*width; i++ )
+        {
+            p.Red()   = *src++;
+            p.Green() = *src++;
+            p.Blue()  = *src++;
+            p++;
+        }
+    }
 #endif
 
     // Now use GDI to add highlights

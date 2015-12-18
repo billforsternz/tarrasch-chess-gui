@@ -361,7 +361,7 @@ void CtrlChessTxt::OnChar(wxKeyEvent& event)
             case WXK_NUMPAD_PAGEUP:         nk=NK_PGUP;     break;
             case WXK_NUMPAD_PAGEDOWN:       nk=NK_PGDOWN;   break;
             case WXK_NUMPAD_END:            nk=NK_END;      break;
-#ifdef MAC_FIX_LATER
+#ifdef THC_MAC
             case '[':
 #endif
             case WXK_LEFT:
@@ -371,7 +371,7 @@ void CtrlChessTxt::OnChar(wxKeyEvent& event)
                 nk=NK_LEFT;
                 break;
             }
-#ifdef MAC_FIX_LATER
+#ifdef THC_MAC
             case ']':
 #endif
             case WXK_RIGHT:

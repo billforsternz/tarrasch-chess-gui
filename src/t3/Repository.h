@@ -11,7 +11,7 @@
 #include "wx/wx.h"
 #include "wx/utils.h"
 
-#if TARRASCH_UNIX
+#ifndef THC_WINDOWS
    #include "wx/config.h"      //(to let wxWidgets choose a wxConfig class for your platform)
    #include "wx/confbase.h"    //(base config class)
    #include "wx/fileconf.h"    //(wxFileConfig class)

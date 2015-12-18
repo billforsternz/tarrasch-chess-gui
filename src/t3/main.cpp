@@ -389,10 +389,7 @@ bool ChessApp::OnInit()
     else if( disp_height < 800 )
         win_point = wxPoint(20, 0);
     #endif
-#ifdef MAC_FIX_LATER
-    //wxSystemOptions::SetOption(wxT("mac.toolbar.no-native"), 1);
-#endif
-    ChessFrame *frame = new ChessFrame (_T("Tarrasch Chess GUI V3 -- ALPHA VERSION USE VERY CAUTIOUSLY"),
+    ChessFrame *frame = new ChessFrame (_T("Tarrasch Chess GUI V3 -- ALPHA VERSION USE CAUTIOUSLY"),
                                   win_point, win_size );
     objs.frame = frame;
     frame->Show (true);

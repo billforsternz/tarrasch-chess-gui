@@ -351,41 +351,12 @@ void GameView::Crawler( MoveTree *node, bool move0, bool last_move )
     level--;
 }
 
-#if 0
 void GameView::Display( unsigned long pos )
 {
     wxRichTextCtrl *ctrl = objs.canvas->lb;
     if( ctrl )
     {
-        pos = 6;
-#ifndef MAC_FIX_LATER
-        ctrl->Freeze();
-#endif
-        ctrl->BeginSuppressUndo();
-        ctrl->Clear();
-        ctrl->EndAllStyles();
-        ctrl->BeginParagraphSpacing(0, 10);
-        ctrl->BeginBold();
-        ctrl->BeginLeftIndent(0);
-        ctrl->WriteText("Bill was here");
-        ctrl->EndBold();
-        ctrl->SetInsertionPoint(pos);
-        ctrl->EndSuppressUndo();
-#ifndef MAC_FIX_LATER
-        ctrl->Thaw();
-#endif
-        ctrl->ShowPosition(pos);
-        ctrl->Update();
-    }
-}
-
-#else
-void GameView::Display( unsigned long pos )
-{
-    wxRichTextCtrl *ctrl = objs.canvas->lb;
-    if( ctrl )
-    {
-#ifndef MAC_FIX_LATER
+#ifndef THC_MAC
         ctrl->Freeze();
 #endif
         ctrl->BeginSuppressUndo();
@@ -480,14 +451,13 @@ void GameView::Display( unsigned long pos )
             ctrl->EndItalic();
         ctrl->SetInsertionPoint(pos);
         ctrl->EndSuppressUndo();
-#ifndef MAC_FIX_LATER
+#ifndef THC_MAC
         ctrl->Thaw();
 #endif
         ctrl->ShowPosition(pos);
         ctrl->Update();
     }
 }
-#endif
 
 void GameView::ToString( std::string &str )
 {
