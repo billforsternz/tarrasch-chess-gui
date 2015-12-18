@@ -9,7 +9,7 @@
 #include <deque>
 #include "GameState.h"
 #include "GameDocument.h"
-#include "GameLifeCycle.h"
+#include "GameLifecycle.h"
 #include "thc.h"
 #include "DebugPrintf.h"
 
