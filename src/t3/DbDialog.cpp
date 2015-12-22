@@ -248,6 +248,7 @@ DbDialog::DbDialog
     activated_at_least_once = false;
     transpo_activated = false;
     white_player_search = true;
+    utility = NULL;
 }
 
 
@@ -908,7 +909,8 @@ void DbDialog::StatsCalculate()
 
     if( !list_ctrl_stats )
     {
-        utility->Hide();
+        if( utility )
+            utility->Hide();
         wxSize sz4 = mini_board->GetSize();
         sz4.x = (sz4.x*13)/10;
         sz4.y = (sz4.y*10)/10;
