@@ -179,28 +179,18 @@ BoardSetup::BoardSetup( wxBitmap *bitmap, wxWindow *parent, int XBORDER, int YBO
 						(unsigned long)info.bmHeight );
 
 #else
+#ifdef THC_MAC
     wxAlphaPixelData bmdata(*bitmap);
-    wxNativePixelData bmdata2(*bitmap);
-    if( bmdata )
-    {
-        height = bmdata.GetHeight();
-        width  = bmdata.GetWidth();
-        wxPoint x = bmdata.GetOrigin();
-        wxSize  z = bmdata.GetSize();
-        int row_stride = bmdata.GetRowStride();
-        cprintf( "Alpha x=%d,%d z=%d,%d, height=%d, width=%d, row_stride=%d\n",x.x,x.y,z.x,z.y,height,width,row_stride);
-        width_bytes = row_stride;
-    }
-    else
-    {
-        height = bmdata2.GetHeight();
-        width  = bmdata2.GetWidth();
-        wxPoint x = bmdata2.GetOrigin();
-        wxSize  z = bmdata2.GetSize();
-        int row_stride = bmdata2.GetRowStride();
-        cprintf( "Native x=%d,%d z=%d,%d, height=%d, width=%d, row_stride=%d\n",x.x,x.y,z.x,z.y,height,width,row_stride);
-        width_bytes = row_stride;
-    }
+#else
+    wxNativePixelData bmdata(*bitmap);
+#endif
+    height = bmdata.GetHeight();
+    width  = bmdata.GetWidth();
+    wxPoint x = bmdata.GetOrigin();
+    wxSize  z = bmdata.GetSize();
+    int row_stride = bmdata.GetRowStride();
+    cprintf( "x=%d,%d z=%d,%d, height=%d, width=%d, row_stride=%d\n",x.x,x.y,z.x,z.y,height,width,row_stride);
+    width_bytes = row_stride;
     density = width_bytes/width;
 #endif
 
@@ -219,30 +209,21 @@ BoardSetup::BoardSetup( wxBitmap *bitmap, wxWindow *parent, int XBORDER, int YBO
 	//bitmap->GetBitmapBits( width_bytes*height, buf_board );   //@@
     ::GetBitmapBits((HBITMAP)(bitmap->GetHBITMAP()), width_bytes*height, buf_board );
 #else
-    if( bmdata )
+#ifdef THC_MAC
+    wxAlphaPixelData::Iterator p(bmdata);
+#else
+    wxNativePixelData::Iterator p(bmdata);
+#endif
+    byte *dst = buf_board;
+    for( int i=0; i<height*width; i++ )
     {
-        wxAlphaPixelData::Iterator p(bmdata);
-        byte *dst = buf_board;
-        for( int i=0; i<height*width; i++ )
-        {
-            *dst++ = p.Alpha();
-            *dst++ = p.Red();
-            *dst++ = p.Green();
-            *dst++ = p.Blue();
-            p++;
-        }
-    }
-    else
-    {
-        wxNativePixelData::Iterator p(bmdata2);
-        byte *dst = buf_board;
-        for( int i=0; i<height*width; i++ )
-        {
-            *dst++ = p.Red();
-            *dst++ = p.Green();
-            *dst++ = p.Blue();
-            p++;
-        }
+#ifdef THC_MAC
+        *dst++ = p.Alpha();
+#endif
+        *dst++ = p.Red();
+        *dst++ = p.Green();
+        *dst++ = p.Blue();
+        p++;
     }
 #endif
 
@@ -444,32 +425,23 @@ void BoardSetup::SetPosition( const char *position_ascii )
 	//bitmap->SetBitmapBits( width_bytes*height, buf_board );
     /*int ret = */::SetBitmapBits( (HBITMAP)(bitmap->GetHBITMAP()), width_bytes*height, buf_board );  //@@
 #else
+#ifdef THC_MAC
     wxAlphaPixelData bmdata(*bitmap);
-    wxNativePixelData bmdata2(*bitmap);
-    if( bmdata )
+    wxAlphaPixelData::Iterator p(bmdata);
+#else
+    wxNativePixelData bmdata(*bitmap);
+    wxNativePixelData::Iterator p(bmdata);
+#endif
+    byte *src = buf_board;
+    for( i=0; i<height*width; i++ )
     {
-        wxAlphaPixelData::Iterator p(bmdata);
-        byte *src = buf_board;
-        for( i=0; i<height*width; i++ )
-        {
-            p.Alpha() = *src++;
-            p.Red()   = *src++;
-            p.Green() = *src++;
-            p.Blue()  = *src++;
-            p++;
-        }
-    }
-    else
-    {
-        wxNativePixelData::Iterator p(bmdata2);
-        byte *src = buf_board;
-        for( i=0; i<height*width; i++ )
-        {
-            p.Red()   = *src++;
-            p.Green() = *src++;
-            p.Blue()  = *src++;
-            p++;
-        }
+#ifdef THC_MAC
+        p.Alpha() = *src++;
+#endif
+        p.Red()   = *src++;
+        p.Green() = *src++;
+        p.Blue()  = *src++;
+        p++;
     }
 #endif
 
