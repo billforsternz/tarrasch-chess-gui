@@ -1,4 +1,3 @@
-#
 # This makefile was created by hacking on the makefile.unx file in the
 # wxWidgets/samples/richtext directory. Basically this reflects the general
 # idea that one way of building Tarrasch on any platform is to first get
