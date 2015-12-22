@@ -351,6 +351,8 @@ void Repository::SetDirectories()
 
     // If .ini file doesn't exist, assume new instalation so copy data files
     //  from exe directory
+    std::string s(ini_filename.c_str());
+    cprintf( "%s file:%s\n", ini_exists?"true":"false", s.c_str() );
 #ifdef WINDOWS_FIX_LATER
     if( !ini_exists )
     {

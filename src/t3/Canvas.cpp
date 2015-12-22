@@ -59,7 +59,49 @@ enum
     NBR_OF_WIDS
 };
 
-#ifdef THC_MAC
+#ifdef THC_WINDOWS
+#define XDELTA 10
+#define YDELTA 24
+static int window_id_positions_54[NBR_OF_WIDS][4] =
+{
+    {32+XDELTA,11+YDELTA,435,435},         // gb
+    {10,10+YDELTA,20,20},                  // who_top
+    {10,422+YDELTA,20,20},                 // who_bottom
+    {32+XDELTA,464+YDELTA,206,22},         // white_player
+    {238+XDELTA,464+YDELTA,20,22},         // dash_player
+    {258+XDELTA,464+YDELTA,206,22},        // black_player
+    {10+XDELTA,488+YDELTA,674,37},         // box
+    {20+XDELTA,498+YDELTA,286,22},         // status
+    {10,425,116,19},                       // book_moves
+    {512+XDELTA,480,68,28},                // wclock
+    {584+XDELTA,480,68,28},                // bclock
+    {472+XDELTA,11+YDELTA,202,434},        // moves          + 3
+    {394+XDELTA,498+YDELTA,0,0},           // button
+    {10+XDELTA,558,570,99},                // kibitz
+    {590+XDELTA,580,60,20},                // kibitz_button1
+    {590+XDELTA,608,60,20}                 // kibitz_button2
+};
+
+static int window_id_positions_40[NBR_OF_WIDS][4] =
+{
+    {32,4,322,322},             // gb                       {32 /*151*/,11,432,432},        // gb
+    {10,4,20,20},               // who_top                  {10 /*129*/,10,20,20},          // who_top
+    {10,296,20,20},             // who_bottom               {10 /*129*/,422,20,20},         // who_bottom
+    {32,334,206,22},            // white_player             {32 /*151*/,454,206,22},        // white_player
+    {238,334,20,22},            // dash_player              {238 /*357*/,454,20,22},        // dash_player
+    {258,334,206,22},           // black_player             {258 /*377*/,454,206,22},       // black_player
+    {10,360,674,37},            // box                      {10,478,674/*574*/,37},         // box
+    {20,370,286,22},            // status                   {20,488,286,22},                // status
+    {10,313,116,19},            // book_moves               {10,425,116,19},                // book_moves
+    {512,334,68,28},            // wclock                   {467+216/2-4-68,450,68,28},     // wclock
+    {584,334,68,28},            // bclock                   {467+216/2+4,450,68,28},        // bclock
+    {360,4, 320,322},           // moves                    {467 /*10*/,10,216/*116*/,434}, // moves          + 3
+    {296,370,0,0},              // button                   {394,488,0,0},                  // button
+    {10,402,578,80},            // kibitz               //  {10,518,578,99},                // kibitz
+    {600,414,60,20},            // kibitz_button1           {600,540,60,20},                // kibitz_button1
+    {600,442,60,20}             // kibitz_button2           {600,568,60,20}                 // kibitz_button2
+};
+#else
 #define YDELTA_TOP 10
 #define YDELTA 30
 static int window_id_positions_54[NBR_OF_WIDS][4] =
@@ -102,48 +144,6 @@ static int window_id_positions_40[NBR_OF_WIDS][4] =
     {600,442+YDELTA,60,20}             // kibitz_button2           {600,568,60,20}                 // kibitz_button2
 };
 
-#else
-#define XDELTA 10
-#define YDELTA 24
-static int window_id_positions_54[NBR_OF_WIDS][4] =
-{
-    {32+XDELTA,11+YDELTA,435,435},         // gb
-    {10,10+YDELTA,20,20},                  // who_top
-    {10,422+YDELTA,20,20},                 // who_bottom
-    {32+XDELTA,464+YDELTA,206,22},         // white_player
-    {238+XDELTA,464+YDELTA,20,22},         // dash_player
-    {258+XDELTA,464+YDELTA,206,22},        // black_player
-    {10+XDELTA,488+YDELTA,674,37},         // box
-    {20+XDELTA,498+YDELTA,286,22},         // status
-    {10,425,116,19},                       // book_moves
-    {512+XDELTA,480,68,28},                // wclock
-    {584+XDELTA,480,68,28},                // bclock
-    {472+XDELTA,11+YDELTA,202,434},        // moves          + 3
-    {394+XDELTA,498+YDELTA,0,0},           // button
-    {10+XDELTA,558,570,99},                // kibitz
-    {590+XDELTA,580,60,20},                // kibitz_button1
-    {590+XDELTA,608,60,20}                 // kibitz_button2
-};
-
-static int window_id_positions_40[NBR_OF_WIDS][4] =
-{
-    {32,4,322,322},             // gb                       {32 /*151*/,11,432,432},        // gb
-    {10,4,20,20},               // who_top                  {10 /*129*/,10,20,20},          // who_top
-    {10,296,20,20},             // who_bottom               {10 /*129*/,422,20,20},         // who_bottom
-    {32,334,206,22},            // white_player             {32 /*151*/,454,206,22},        // white_player
-    {238,334,20,22},            // dash_player              {238 /*357*/,454,20,22},        // dash_player
-    {258,334,206,22},           // black_player             {258 /*377*/,454,206,22},       // black_player
-    {10,360,674,37},            // box                      {10,478,674/*574*/,37},         // box
-    {20,370,286,22},            // status                   {20,488,286,22},                // status
-    {10,313,116,19},            // book_moves               {10,425,116,19},                // book_moves
-    {512,334,68,28},            // wclock                   {467+216/2-4-68,450,68,28},     // wclock
-    {584,334,68,28},            // bclock                   {467+216/2+4,450,68,28},        // bclock
-    {360,4, 320,322},           // moves                    {467 /*10*/,10,216/*116*/,434}, // moves          + 3
-    {296,370,0,0},              // button                   {394,488,0,0},                  // button
-    {10,402,578,80},            // kibitz               //  {10,518,578,99},                // kibitz
-    {600,414,60,20},            // kibitz_button1           {600,540,60,20},                // kibitz_button1
-    {600,442,60,20}             // kibitz_button2           {600,568,60,20}                 // kibitz_button2
-};
 #endif
 
 // 1st cut, create table
@@ -391,7 +391,7 @@ Canvas::Canvas
     book_moves->SetForegroundColour( *wxBLACK );
     book_moves->SetFont( *font_book );
     book_moves->SetTxt("no book moves",false);
-
+    
     font_clock = new wxFont( 14, wxROMAN, wxNORMAL, wxBOLD,   false );
     LOCATE_R( wclock, r );
     pt.x = r.x;
@@ -840,10 +840,10 @@ void Canvas::SetSmallBox( bool is_small )
 {
     wxRect r;
     LOCATE_R( box, r );
-#ifdef THC_MAC
-    box_width = is_small ? ((r.width*505)/1000) : r.width;
-#else
+#ifdef THC_WINDOWS
     box_width = is_small ? ((r.width*48)/100) : r.width;
+#else
+    box_width = is_small ? ((r.width*505)/1000) : r.width;
 #endif
     r.width = box_width;
     box->SetSize(r);

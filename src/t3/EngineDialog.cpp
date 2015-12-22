@@ -119,7 +119,11 @@ void EngineDialog::CreateControls()
     // File picker control
     wxString path = dat.m_file;
     wxFilePickerCtrl *picker = new wxFilePickerCtrl( this, ID_ENGINE_PICKER, path, wxT("Select UCI Engine"),
-        "*.exe", wxDefaultPosition, wxDefaultSize, 
+#ifdef THC_WINDOWS
+        "*.exe", wxDefaultPosition, wxDefaultSize,
+#else         
+        "*", wxDefaultPosition, wxDefaultSize,
+#endif        
         wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST ); //|wxFLP_CHANGE_DIR );    
     box_sizer->Add(picker, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
 

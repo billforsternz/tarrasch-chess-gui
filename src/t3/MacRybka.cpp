@@ -234,7 +234,12 @@ Rybka::Rybka( const char *filename_uci_exe )
         close( pipeto[1] );
         close( pipefrom[0] );
         close( pipefrom[1] );
+        #ifdef THC_MAC
         execlp( "/Users/billforster/Downloads/critter_1.6a_osx/critter-16a", "/Users/billforster/Downloads/critter_1.6a_osx/critter-16a", NULL ); //"/Users/billforster/Downloads/critter_1.6a_osx/critter-16a"
+        #else
+        execlp( objs.repository->engine.m_file.c_str(),
+        objs.repository->engine.m_file.c_str(), NULL );
+        #endif
         perror( "execlp()" );
         _exit(255);
     }

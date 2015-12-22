@@ -151,16 +151,16 @@ void RedirectIOToConsole()
     coninfo.dwSize.Y = MAX_CONSOLE_LINES;
     SetConsoleScreenBufferSize( handle, coninfo.dwSize);
 
-    int height = 60; 
-    int width = 80; 
+    int height = 60;
+    int width = 80;
 
-    _SMALL_RECT rect; 
-    rect.Top = 0; 
-    rect.Left = 0; 
-    rect.Bottom = height - 1; 
-    rect.Right = width - 1; 
+    _SMALL_RECT rect;
+    rect.Top = 0;
+    rect.Left = 0;
+    rect.Bottom = height - 1;
+    rect.Right = width - 1;
 
-    SetConsoleWindowInfo( handle, TRUE, &rect);            // Set Window Size 
+    SetConsoleWindowInfo( handle, TRUE, &rect);            // Set Window Size
 
     // redirect unbuffered STDOUT to the console
     lStdHandle = (long)GetStdHandle(STD_OUTPUT_HANDLE);
@@ -464,9 +464,9 @@ BEGIN_EVENT_TABLE(ChessFrame, wxFrame)
     EVT_MENU (ID_HELP_CREDITS,     ChessFrame::OnCredits)
     EVT_MENU (ID_CMD_FLIP,         ChessFrame::OnFlip)
     EVT_MENU (ID_CMD_KIBITZ,       ChessFrame::OnKibitz)
-        EVT_UPDATE_UI (ID_CMD_KIBITZ,      ChessFrame::OnUpdateKibitz)  
+        EVT_UPDATE_UI (ID_CMD_KIBITZ,      ChessFrame::OnUpdateKibitz)
     EVT_MENU (ID_CMD_CLEAR_KIBITZ,      ChessFrame::OnClearKibitz)
-        EVT_UPDATE_UI (ID_CMD_CLEAR_KIBITZ,      ChessFrame::OnUpdateClearKibitz)  
+        EVT_UPDATE_UI (ID_CMD_CLEAR_KIBITZ,      ChessFrame::OnUpdateClearKibitz)
     EVT_MENU (ID_CMD_SET_POSITION, ChessFrame::OnSetPosition)
     EVT_MENU (ID_CMD_NEW_GAME,     ChessFrame::OnNewGame)
     EVT_MENU (wxID_UNDO,           ChessFrame::OnEditUndo)
@@ -521,29 +521,29 @@ BEGIN_EVENT_TABLE(ChessFrame, wxFrame)
     EVT_MENU (ID_CMD_PREVIOUS_GAME,         ChessFrame::OnPreviousGame)
         EVT_UPDATE_UI (ID_CMD_PREVIOUS_GAME,    ChessFrame::OnUpdatePreviousGame)
 
-    EVT_MENU (wxID_COPY,                    ChessFrame::OnEditCopy)    
+    EVT_MENU (wxID_COPY,                    ChessFrame::OnEditCopy)
         EVT_UPDATE_UI (wxID_COPY,                       ChessFrame::OnUpdateEditCopy)
-    EVT_MENU (wxID_CUT,                     ChessFrame::OnEditCut)        
+    EVT_MENU (wxID_CUT,                     ChessFrame::OnEditCut)
         EVT_UPDATE_UI (wxID_CUT,                        ChessFrame::OnUpdateEditCut)
-    EVT_MENU (wxID_PASTE,                   ChessFrame::OnEditPaste)        
+    EVT_MENU (wxID_PASTE,                   ChessFrame::OnEditPaste)
         EVT_UPDATE_UI (wxID_PASTE,                      ChessFrame::OnUpdateEditPaste)
-    EVT_MENU (wxID_DELETE,                  ChessFrame::OnEditDelete)        
+    EVT_MENU (wxID_DELETE,                  ChessFrame::OnEditDelete)
         EVT_UPDATE_UI (wxID_DELETE,                     ChessFrame::OnUpdateEditDelete)
-    EVT_MENU (ID_EDIT_GAME_DETAILS,         ChessFrame::OnEditGameDetails)        
+    EVT_MENU (ID_EDIT_GAME_DETAILS,         ChessFrame::OnEditGameDetails)
         EVT_UPDATE_UI (ID_EDIT_GAME_DETAILS,            ChessFrame::OnUpdateEditGameDetails)
-    EVT_MENU (ID_EDIT_GAME_PREFIX,          ChessFrame::OnEditGamePrefix)        
+    EVT_MENU (ID_EDIT_GAME_PREFIX,          ChessFrame::OnEditGamePrefix)
         EVT_UPDATE_UI (ID_EDIT_GAME_PREFIX,             ChessFrame::OnUpdateEditGamePrefix)
     EVT_MENU(ID_COPY_GAME_PGN_TO_CLIPBOARD, ChessFrame::OnEditCopyGamePGNToClipboard)
         EVT_UPDATE_UI(ID_COPY_GAME_PGN_TO_CLIPBOARD,    ChessFrame::OnUpdateEditCopyGamePGNToClipboard)
-    EVT_MENU (ID_EDIT_PROMOTE,              ChessFrame::OnEditPromote)        
+    EVT_MENU (ID_EDIT_PROMOTE,              ChessFrame::OnEditPromote)
         EVT_UPDATE_UI (ID_EDIT_PROMOTE,                 ChessFrame::OnUpdateEditPromote)
-    EVT_MENU (ID_EDIT_DEMOTE,               ChessFrame::OnEditDemote)    
+    EVT_MENU (ID_EDIT_DEMOTE,               ChessFrame::OnEditDemote)
         EVT_UPDATE_UI (ID_EDIT_DEMOTE,                  ChessFrame::OnUpdateEditDemote)
-    EVT_MENU (ID_EDIT_DEMOTE_TO_COMMENT,    ChessFrame::OnEditDemoteToComment)    
+    EVT_MENU (ID_EDIT_DEMOTE_TO_COMMENT,    ChessFrame::OnEditDemoteToComment)
         EVT_UPDATE_UI (ID_EDIT_DEMOTE_TO_COMMENT,       ChessFrame::OnUpdateEditDemoteToComment)
-    EVT_MENU (ID_EDIT_PROMOTE_TO_VARIATION, ChessFrame::OnEditPromoteToVariation)    
+    EVT_MENU (ID_EDIT_PROMOTE_TO_VARIATION, ChessFrame::OnEditPromoteToVariation)
         EVT_UPDATE_UI (ID_EDIT_PROMOTE_TO_VARIATION,    ChessFrame::OnUpdateEditPromoteToVariation)
-    EVT_MENU (ID_EDIT_PROMOTE_REST_TO_VARIATION, ChessFrame::OnEditPromoteRestToVariation)    
+    EVT_MENU (ID_EDIT_PROMOTE_REST_TO_VARIATION, ChessFrame::OnEditPromoteRestToVariation)
         EVT_UPDATE_UI (ID_EDIT_PROMOTE_REST_TO_VARIATION,    ChessFrame::OnUpdateEditPromoteRestToVariation)
 
     EVT_MENU (ID_OPTIONS_PLAYERS,  ChessFrame::OnPlayers)
@@ -558,15 +558,15 @@ BEGIN_EVENT_TABLE(ChessFrame, wxFrame)
         EVT_UPDATE_UI (ID_OPTIONS_ENGINE,   ChessFrame::OnUpdateEngine)
     EVT_MENU (ID_OPTIONS_TRAINING, ChessFrame::OnTraining)
         EVT_UPDATE_UI (ID_OPTIONS_TRAINING, ChessFrame::OnUpdateTraining)
-    EVT_MENU (ID_OPTIONS_GENERAL,  ChessFrame::OnGeneral) 
+    EVT_MENU (ID_OPTIONS_GENERAL,  ChessFrame::OnGeneral)
         EVT_UPDATE_UI (ID_OPTIONS_GENERAL,  ChessFrame::OnUpdateGeneral)
     EVT_MENU (ID_OPTIONS_RESET,    ChessFrame::OnOptionsReset)
         EVT_UPDATE_UI (ID_OPTIONS_RESET,    ChessFrame::OnUpdateOptionsReset)
 
-    EVT_MENU (ID_DATABASE_SEARCH,                   ChessFrame::OnDatabaseSearch)          
-        EVT_UPDATE_UI (ID_DATABASE_SEARCH,               ChessFrame::OnUpdateDatabaseSearch)          
-    EVT_MENU (ID_DATABASE_SHOW_ALL,                 ChessFrame::OnDatabaseShowAll)        
-        EVT_UPDATE_UI (ID_DATABASE_SHOW_ALL,             ChessFrame::OnUpdateDatabaseShowAll)        
+    EVT_MENU (ID_DATABASE_SEARCH,                   ChessFrame::OnDatabaseSearch)
+        EVT_UPDATE_UI (ID_DATABASE_SEARCH,               ChessFrame::OnUpdateDatabaseSearch)
+    EVT_MENU (ID_DATABASE_SHOW_ALL,                 ChessFrame::OnDatabaseShowAll)
+        EVT_UPDATE_UI (ID_DATABASE_SHOW_ALL,             ChessFrame::OnUpdateDatabaseShowAll)
     EVT_MENU (ID_DATABASE_PLAYERS,                  ChessFrame::OnDatabasePlayers)
         EVT_UPDATE_UI (ID_DATABASE_PLAYERS,              ChessFrame::OnUpdateDatabasePlayers)
     EVT_MENU (ID_DATABASE_SELECT,                   ChessFrame::OnDatabaseSelect)
@@ -575,8 +575,8 @@ BEGIN_EVENT_TABLE(ChessFrame, wxFrame)
         EVT_UPDATE_UI (ID_DATABASE_APPEND,              ChessFrame::OnUpdateDatabaseCreate)
     EVT_MENU (ID_DATABASE_APPEND,                   ChessFrame::OnDatabaseAppend)
         EVT_UPDATE_UI (ID_DATABASE_APPEND,              ChessFrame::OnUpdateDatabaseAppend)
-    EVT_MENU (ID_DATABASE_MAINTENANCE,              ChessFrame::OnDatabaseMaintenance)     
-        EVT_UPDATE_UI (ID_DATABASE_MAINTENANCE,          ChessFrame::OnUpdateDatabaseMaintenance)     
+    EVT_MENU (ID_DATABASE_MAINTENANCE,              ChessFrame::OnDatabaseMaintenance)
+        EVT_UPDATE_UI (ID_DATABASE_MAINTENANCE,          ChessFrame::OnUpdateDatabaseMaintenance)
 
     EVT_TOOL (ID_CMD_FLIP,         ChessFrame::OnFlip)
     EVT_TOOL (ID_CMD_NEXT_GAME,    ChessFrame::OnNextGame)
@@ -588,10 +588,9 @@ BEGIN_EVENT_TABLE(ChessFrame, wxFrame)
     EVT_TOOL (ID_BUTTON_RIGHT,     ChessFrame::OnButtonRight)
     EVT_IDLE (ChessFrame::OnIdle)
     EVT_TIMER( TIMER_ID, ChessFrame::OnTimeout)
-    EVT_MOVE (ChessFrame::OnMove) 
+    EVT_MOVE (ChessFrame::OnMove)
 END_EVENT_TABLE()
 CtrlBoxBookMoves *gbl_book_moves;
-
 
 
 ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
@@ -694,13 +693,13 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 
     // Menu bar
     wxMenuBar *menu = new wxMenuBar;
-    menu->Append (menu_file,     _T("&File"));    
-    menu->Append (menu_edit,     _T("&Edit"));    
-    menu->Append (menu_games,    _T("&Games"));    
+    menu->Append (menu_file,     _T("&File"));
+    menu->Append (menu_edit,     _T("&Edit"));
+    menu->Append (menu_games,    _T("&Games"));
     menu->Append (menu_commands, _T("&Commands"));
     menu->Append (menu_options,  _T("&Options"));
     menu->Append (menu_database, _T("&Database"));
-    menu->Append (menu_help,     _T("&Help"));    
+    menu->Append (menu_help,     _T("&Help"));
     SetMenuBar( menu );
 
     // Create a status bar
@@ -752,7 +751,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
                         wxNullBitmap, wxITEM_NORMAL,
                         wxT("New file"), wxEmptyString, NULL); */
 
-    
+
     ADD_TOOL( wxID_NEW,  bmpNew,  wxT("New file") );
     ADD_TOOL( ID_CMD_NEW_GAME,  bmp_game_new,  wxT("New game") );
     ADD_TOOL( wxID_OPEN, bmpOpen, wxT("Open") );
@@ -800,7 +799,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 
     #if 0 // Wake up this code to generate some icon .xpm data
           //  (the link between original .bmps and generated .xpms
-          //   has been muddied and perhaps even lost)  
+          //   has been muddied and perhaps even lost)
     extern void TempCreateXpm( wxBitmap &bmp, const char *name );
     wxBitmap temp_bmp( "myicons.bmp", wxBITMAP_TYPE_BMP );
     TempCreateXpm( temp_bmp, "myicons_base" );
@@ -981,7 +980,7 @@ void ChessFrame::OnCredits(wxCommandEvent& WXUNUSED(event))
         "\n\n"
         "Foundation supporter: Yves Catineau."
         "\n\n"
-        "Foundation donors: Paul Cook, Gary Baydo, Ransith Fernando, " 
+        "Foundation donors: Paul Cook, Gary Baydo, Ransith Fernando, "
         "Lukasz Berezowski, Eric Ziegler, Laurence Dayton, Albrecht Schmidt, "
         "Lloyd Standish and David Beagan."
         "\n\n"
@@ -1001,7 +1000,7 @@ void ChessFrame::OnCredits(wxCommandEvent& WXUNUSED(event))
         "Thanks to the Stockfish team, Stockfish is now the default engine. "
         "Permission to include Stockfish is inherent in its licence, as long "
         "as the location of the Stockfish source code is provided. The "
-        "location is https://stockfishchess.org." 
+        "location is https://stockfishchess.org."
         "\n\n"
         "Thanks to Inno Setup from Jordan Russell (jrsoftware.org), for "
         "the setup program."
@@ -1193,7 +1192,7 @@ void ChessFrame::OnNextGame (wxCommandEvent &)
 
 void ChessFrame::OnUpdateNextGame( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdateNextGame();
+    bool enabled = objs.gl ? objs.gl->CmdUpdateNextGame() : false;
     event.Enable(enabled);
 }
 
@@ -1204,7 +1203,7 @@ void ChessFrame::OnPreviousGame (wxCommandEvent &)
 
 void ChessFrame::OnUpdatePreviousGame( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdatePreviousGame();
+    bool enabled = objs.gl ? objs.gl->CmdUpdatePreviousGame() : false;
     event.Enable(enabled);
 }
 
@@ -1276,19 +1275,19 @@ void ChessFrame::OnUpdateFileNew( wxUpdateUIEvent &event )
 
 void ChessFrame::OnUpdateFileOpen( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdateFileOpen();
+    bool enabled = objs.gl ? objs.gl->CmdUpdateFileOpen() : false;
     event.Enable(enabled);
 }
 
 void ChessFrame::OnUpdateFileOpenLog( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdateFileOpenLog();
+    bool enabled = objs.gl ? objs.gl->CmdUpdateFileOpenLog()  : false;
     event.Enable(enabled);
 }
 
 void ChessFrame::OnUpdateGamesCurrent( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdateGamesCurrent();
+    bool enabled = objs.gl ? objs.gl->CmdUpdateGamesCurrent()  : false;
     event.Enable(enabled);
 }
 
@@ -1324,19 +1323,19 @@ void ChessFrame::OnUpdateGamesSession( wxUpdateUIEvent &event )
 
 void ChessFrame::OnUpdateGamesClipboard( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdateGamesClipboard();
+    bool enabled = objs.gl ? objs.gl->CmdUpdateGamesClipboard()  : false;
     event.Enable(enabled);
 }
 
 void ChessFrame::OnUpdateEditCopy( wxUpdateUIEvent &event )
 {
-    bool enabled = (objs.canvas->lb->GetStringSelection().Length() > 0);
+    bool enabled = objs.canvas ? (objs.canvas->lb->GetStringSelection().Length() > 0) : false;
     event.Enable(enabled);
 }
 
 void ChessFrame::OnUpdateEditCut( wxUpdateUIEvent &event )
 {
-    bool enabled = (objs.canvas->lb->GetStringSelection().Length() > 0);
+    bool enabled = objs.canvas ? (objs.canvas->lb->GetStringSelection().Length() > 0) : false;
     event.Enable(enabled);
 }
 
@@ -1350,13 +1349,13 @@ void ChessFrame::OnUpdateEditPaste( wxUpdateUIEvent &event )
 
 void ChessFrame::OnUpdateEditUndo( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdateEditUndo();
+    bool enabled = objs.gl ? objs.gl->CmdUpdateEditUndo()  : false;
     event.Enable(enabled);
 }
 
 void ChessFrame::OnUpdateEditRedo( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdateEditRedo();
+    bool enabled = objs.gl ? objs.gl->CmdUpdateEditRedo()  : false;
     event.Enable(enabled);
 }
 
@@ -1427,7 +1426,7 @@ void ChessFrame::OnWhiteResigns(wxCommandEvent &)
 
 void ChessFrame::OnUpdateWhiteResigns( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdateWhiteResigns();
+    bool enabled = objs.gl ? objs.gl->CmdUpdateWhiteResigns()  : false;
     event.Enable(enabled);
 }
 
@@ -1438,75 +1437,75 @@ void ChessFrame::OnBlackResigns(wxCommandEvent &)
 
 void ChessFrame::OnUpdateBlackResigns( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdateBlackResigns();
+    bool enabled = objs.gl ? objs.gl->CmdUpdateBlackResigns()  : false;
     event.Enable(enabled);
 }
 
 void ChessFrame::OnUpdateTakeback( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdateTakeback();
+    bool enabled = objs.gl ? objs.gl->CmdUpdateTakeback()  : false;
     event.Enable(enabled);
 }
 
 void ChessFrame::OnUpdateMoveNow( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdateMoveNow();
+    bool enabled = objs.gl ? objs.gl->CmdUpdateMoveNow()  : false;
     event.Enable(enabled);
 }
 
 void ChessFrame::OnUpdateDraw( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdateDraw();
+    bool enabled = objs.gl ? objs.gl->CmdUpdateDraw()  : false;
     event.Enable(enabled);
 }
 
 void ChessFrame::OnUpdatePlayWhite( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdatePlayWhite();
+    bool enabled = objs.gl ? objs.gl->CmdUpdatePlayWhite()  : false;
     event.Enable(enabled);
 }
 
 void ChessFrame::OnUpdatePlayBlack( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdatePlayBlack();
+    bool enabled = objs.gl ? objs.gl->CmdUpdatePlayBlack()  : false;
     event.Enable(enabled);
 }
 
 void ChessFrame::OnUpdateSwapSides( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdateSwapSides();
+    bool enabled = objs.gl ? objs.gl->CmdUpdateSwapSides()  : false;
     event.Enable(enabled);
 }
 
 void ChessFrame::OnUpdateTabNew( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdateTabNew();
+    bool enabled = objs.gl ? objs.gl->CmdUpdateTabNew()  : false;
     event.Enable(enabled);
 }
 
 void ChessFrame::OnUpdateTabClose( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdateTabClose();
+    bool enabled = objs.gl ? objs.gl->CmdUpdateTabClose() : false;
     event.Enable(enabled);
 }
 
 void ChessFrame::OnUpdateTabInclude( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdateTabInclude();
+    bool enabled = objs.gl ? objs.gl->CmdUpdateTabInclude() : false;
     event.Enable(enabled);
 }
 
 void ChessFrame::OnUpdateKibitz( wxUpdateUIEvent &event )
 {
     wxString txt;
-    bool enabled = objs.gl->CmdUpdateKibitz( txt );
+    bool enabled = objs.gl ? objs.gl->CmdUpdateKibitz( txt ) : false;
     event.SetText( txt );
     event.Enable(enabled);
 }
 
 void ChessFrame::OnUpdateClearKibitz( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->CmdUpdateClearKibitz();
+    bool enabled = objs.gl ? objs.gl->CmdUpdateClearKibitz() : false;
     event.Enable(enabled);
 }
 
@@ -1557,7 +1556,7 @@ void ChessFrame::OnPlayers(wxCommandEvent &)
 
 void ChessFrame::OnUpdatePlayers(wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->UpdateOptions();
+    bool enabled = objs.gl ? objs.gl->UpdateOptions() : false;
     event.Enable(enabled);
 }
 
@@ -1568,7 +1567,7 @@ void ChessFrame::OnClocks(wxCommandEvent &)
 
 void ChessFrame::OnUpdateClocks(wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->UpdateOptions();
+    bool enabled = objs.gl ? objs.gl->UpdateOptions() : false;
     event.Enable(enabled);
 }
 
@@ -1592,7 +1591,7 @@ void ChessFrame::OnOptionsReset(wxCommandEvent &)
         if( objs.repository->book.m_enabled )
         {
             wxString error_msg;
-            bool error = objs.book->Load( error_msg, objs.repository->book.m_file ); 
+            bool error = objs.book->Load( error_msg, objs.repository->book.m_file );
             if( error )
                 wxMessageBox( error_msg, "Error loading book", wxOK|wxICON_ERROR );
             objs.canvas->BookUpdate( false );
@@ -1616,7 +1615,7 @@ void ChessFrame::OnOptionsReset(wxCommandEvent &)
 
 void ChessFrame::OnUpdateOptionsReset(wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->UpdateOptions();
+    bool enabled = objs.gl ? objs.gl->UpdateOptions() : false;
     event.Enable(enabled);
 }
 
@@ -1639,7 +1638,7 @@ void ChessFrame::OnBook(wxCommandEvent &)
             if( objs.repository->book.m_enabled )
             {
                 wxString error_msg;
-                bool error = objs.book->Load( error_msg, objs.repository->book.m_file ); 
+                bool error = objs.book->Load( error_msg, objs.repository->book.m_file );
                 if( error )
                     wxMessageBox( error_msg, "Error loading book", wxOK|wxICON_ERROR );
                 objs.canvas->BookUpdate( false );
@@ -1652,7 +1651,7 @@ void ChessFrame::OnBook(wxCommandEvent &)
 
 void ChessFrame::OnUpdateBook(wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->UpdateOptions();
+    bool enabled = objs.gl ? objs.gl->UpdateOptions() : false;
     event.Enable(enabled);
 }
 
@@ -1671,7 +1670,7 @@ void ChessFrame::OnLog(wxCommandEvent &)
 
 void ChessFrame::OnUpdateLog(wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->UpdateOptions();
+    bool enabled = objs.gl ? objs.gl->UpdateOptions()  : false;
     event.Enable(enabled);
 }
 
@@ -1766,14 +1765,14 @@ void ChessFrame::OnDatabaseMaintenance(wxCommandEvent &)
 
 void ChessFrame::OnUpdateDatabaseMaintenance( wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->UpdateOptions();
+    bool enabled = objs.gl ? objs.gl->UpdateOptions()  : false;
     event.Enable(enabled);
 }
 
 
 void ChessFrame::OnUpdateEngine(wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->UpdateOptions();
+    bool enabled = objs.gl ? objs.gl->UpdateOptions()  : false;
     event.Enable(enabled);
 }
 
@@ -1839,7 +1838,7 @@ void ChessFrame::RefreshLanguageFont( const char *from, bool before_large_font, 
 
 void ChessFrame::OnUpdateGeneral(wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->UpdateOptions();
+    bool enabled = objs.gl ? objs.gl->UpdateOptions()  : false;
     event.Enable(enabled);
 }
 
@@ -1867,6 +1866,6 @@ void ChessFrame::OnTraining(wxCommandEvent &)
 
 void ChessFrame::OnUpdateTraining(wxUpdateUIEvent &event )
 {
-    bool enabled = objs.gl->UpdateOptions();
+    bool enabled = objs.gl ? objs.gl->UpdateOptions()  : false;
     event.Enable(enabled);
 }
