@@ -42,6 +42,8 @@ PgnRead::PgnRead( char callback_code, ProgressBar *pb )
     site   [0] = '\0';
     move_order_type[0] = '\0';
     fen_flag = false;
+    first_move = false;
+    first_move_offset = 0;
     nbr_games = 0;
     file_rep = NULL;
     file_inc = NULL;
@@ -526,16 +528,13 @@ bool PgnRead::Process( FILE *infile )
                                     old_state==PRE_MOVE_WHITE ||
                                     old_state==PRE_MOVE_BLACK ||
                                     old_state==IN_MOVE_WHITE  ||
-                                    old_state==IN_MOVE_BLACK
+                                    old_state==IN_MOVE_BLACK  ||
+                                    old_state==ERROR_STATE
                                  )
               )
             {
                 if( GameOver() )
                 {
-                    //int err =
-                    //fseek( infile, 860, SEEK_SET );
-                    //if( err != 0 )
-                    //    cprintf("Whoops");
                     return true;
                 }
             }
@@ -699,6 +698,8 @@ void PgnRead::GameBegin()
     white_elo[0] = '\0';
     black_elo[0] = '\0';
     fen_flag = false;
+    first_move = true;
+    first_move_offset = 0;
     thc::ChessRules temp;
     chess_rules = temp;    // init
     hash = 0x0f6e2dc7837aa12f; //  0x837AA12F; //2205851951; //chess_rules.HashCalculate();
@@ -724,10 +725,8 @@ bool PgnRead::GameOver()
     {
         STACK_ELEMENT *s;
         s = &stack_array[0];
-        if( !fen_flag )
-        {
-            aborted = hook_gameover( callback_code, event, site, date, round, white, black, result, white_elo, black_elo, eco, s->nbr_moves, s->big_move_array, s->big_hash_array  );
-        }
+        const char *pfen = (fen_flag && fen[0]) ? fen : NULL;
+        aborted = hook_gameover( callback_code, pfen, event, site, date, round, white, black, result, white_elo, black_elo, eco, s->nbr_moves, s->big_move_array, s->big_hash_array  );
         stack_idx = 0;
         thc::ChessRules temp;
         chess_rules = temp;    // init
@@ -819,6 +818,14 @@ bool PgnRead::DoMove( bool white, int move_number, char *buf )
         ++nbr_moves;
     bool okay = false;
     //bool dbg_trigger=false;
+    if( first_move )
+    {
+        first_move = false;
+        first_move_offset = nbr_moves;
+    }
+    nbr_moves -= first_move_offset;    
+
+#if 1
     if( nbr_moves > n->nbr_moves )
     {
         Error( white ? "White move synchronisation"
@@ -849,6 +856,34 @@ bool PgnRead::DoMove( bool white, int move_number, char *buf )
             n->nbr_moves = nbr_moves;
         }
     }
+#else
+    okay = true;
+    if( nbr_moves != n->nbr_moves )
+    {
+        if( nbr_moves < n->nbr_moves )
+            n->nbr_moves = nbr_moves;
+        else
+            nbr_moves = n->nbr_moves;
+        //fprintf( debug, "** nbr_moves=%d < n->nbr_moves=%d\n", nbr_moves, n->nbr_moves );
+        //dbg_trigger=true;
+        //fprintf( debug_log_file(), "\nnbr_moves=%d, node_idx=%d\n", nbr_moves, node_idx );
+        const char *fen = fen_flag ? this->fen : NULL;
+        if( fen && *fen )
+            chess_rules.Forsyth( fen );
+        else
+        {
+            thc::ChessRules temp;
+            chess_rules = temp;    // init
+        }
+        for( int i=0; i<nbr_moves; i++ )
+        {
+            //fprintf( debug_log_file(), "%s (0x%04x)\n", n->readable[i], n->terse[i] );
+            terse = n->big_move_array[i];
+            chess_rules.PlayMove( terse );
+        }
+    }
+#endif
+
     if( okay )
     {
         strcpy( buf2, buf );

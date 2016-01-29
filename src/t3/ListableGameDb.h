@@ -50,7 +50,6 @@ public:
     }
 
     // For editing the roster
-    /*
     virtual void SetRoster( Roster &r )
     {
         CompactGame pact;
@@ -58,8 +57,8 @@ public:
             LoadIntoMemory( NULL, true );
         pack.Unpack(pact);
         pact.r = r;
-        pack.pack(pact);
-    } */
+        pack.Pack(pact);
+    }
 
     virtual std::vector<thc::Move> &RefMoves()
     {

@@ -48,7 +48,8 @@ enum
     ID_PGN_DIALOG_GAME_PREFIX,
     ID_PGN_DIALOG_PUBLISH    ,
     ID_PGN_DIALOG_UTILITY1   ,
-    ID_PGN_DIALOG_UTILITY2   
+    ID_PGN_DIALOG_UTILITY2   ,
+    ID_DIALOG_ECO
 };
 
 // Track the game presented on the mini board
@@ -179,6 +180,7 @@ public:
     void OnPaste( wxCommandEvent& event );
     void OnSave( wxCommandEvent& event );
     void OnPublish( wxCommandEvent& event );
+    void OnEco( wxCommandEvent& event );
     void OnHelpClick( wxCommandEvent& event );
     
     void OnSearch( wxCommandEvent& event );

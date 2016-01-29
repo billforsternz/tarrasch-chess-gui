@@ -14,7 +14,7 @@
 #define FIELD_BUFLEN 200
 
 // Callback
-bool hook_gameover( char callback_code, const char *event, const char *site, const char *date, const char *round,
+bool hook_gameover( char callback_code, const char *fen, const char *event, const char *site, const char *date, const char *round,
                    const char *white, const char *black, const char *result, const char *white_elo, const char *black_elo, const char *eco,
                    int nbr_moves, thc::Move *moves, uint64_t *hashes );
 
@@ -53,6 +53,8 @@ private:
 
     // Misc
     bool fen_flag;
+    bool first_move;
+    int first_move_offset;
     int nbr_games;
     FILE *debug_log_file_txt;
     FILE *file_rep;

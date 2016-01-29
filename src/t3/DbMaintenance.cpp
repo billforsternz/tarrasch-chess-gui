@@ -217,12 +217,12 @@ void db_maintenance_create_indexes(const char *db_filename )
     db_primitive_close();
 }
 
-extern void pgn_read_hook( const char *white, const char *black, const char *event, const char *site, const char *result,
+extern void pgn_read_hook( const char *fen, const char *white, const char *black, const char *event, const char *site, const char *result,
                                     const char *date, const char *white_elo, const char *black_elo, const char *eco, const char *round,
                                     int nbr_moves, thc::Move *moves, uint64_t *hashes  );
 
 
-bool hook_gameover( char callback_code, const char *event, const char *site, const char *date, const char *round,
+bool hook_gameover( char callback_code, const char *fen, const char *event, const char *site, const char *date, const char *round,
                   const char *white, const char *black, const char *result, const char *white_elo, const char *black_elo, const char *eco,
                   int nbr_moves, thc::Move *moves, uint64_t *hashes )
 {
@@ -230,6 +230,8 @@ bool hook_gameover( char callback_code, const char *event, const char *site, con
     static int counter;
     if( (++counter % 100000) == 0 )
         cprintf( "%d games processed so far\n", counter );
+    if( fen && callback_code!='R' )
+        return false;
     switch( callback_code )
     {
         // Compress
@@ -249,7 +251,7 @@ bool hook_gameover( char callback_code, const char *event, const char *site, con
         }
             
         // Read one game
-        case 'R': pgn_read_hook( white, black, event, site, result, date, white_elo, black_elo, eco, round, nbr_moves, moves, hashes ); return true;
+        case 'R': pgn_read_hook( fen, white, black, event, site, result, date, white_elo, black_elo, eco, round, nbr_moves, moves, hashes ); return true;
 
         // Verify
         case 'V':

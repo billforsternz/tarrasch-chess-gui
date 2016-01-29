@@ -513,7 +513,7 @@ static bool purge_buckets( bool force )
             if( ok )
             {
                 if( i%10 == 0 )
-                    cprintf( "Purging bucket %d\n", i );
+                    ; //cprintf( "Purging bucket %d\n", i );
                 if( pb.Permill( (i*1000) / NBR_BUCKETS ) )
                 {
                     error_msg = "cancel";
@@ -635,9 +635,35 @@ bool db_primitive_check_for_duplicate( bool &signal_error, uint64_t game_hash, c
                 // All rows finished
                 sqlite3_finalize(stmt);
                 stmt = NULL;
+                #if 0
                 if( white_match && black_match && result_match && moves_match )
                 {
                     cprintf( "Duplicate game %s-%s %s found\n", white,black,result);
+                #else   // TEMP - reject all duplicate games
+                if( /*white_match && black_match && result_match &&*/ moves_match )
+                {
+                    cprintf( "Duplicate game %s-%s %s found\n", white,black,result);
+                    {   // print the moves as well
+                        CompressMoves press;
+                        std::string blob(blob_moves);
+                        std::vector<thc::Move> v = press.Uncompress(blob);
+                        thc::ChessRules cr;
+                        std::string txt;
+                        for( int i=0; i<v.size(); i++ )
+                        {
+                            thc::Move mv = v[i];
+                            std::string move_txt = mv.NaturalOut( &cr );
+                            char buf[80];
+                            if( cr.white )
+                                sprintf( buf, "%s%d. %s", i==0?"": i%8==0 ? "\n" : " ", cr.full_move_count, move_txt.c_str() );
+                            else
+                                sprintf( buf, "%s%s", i==0?"": i%8==0 ? "\n" : " ", move_txt.c_str() );
+                            txt += std::string(buf);
+                            cr.PlayMove(mv);
+                        }
+                        cprintf( "%s\n", txt.c_str() );
+                    }
+                #endif
                     return true;    // duplicate found
                 }
                 break;

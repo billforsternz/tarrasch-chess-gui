@@ -75,6 +75,11 @@ wxSizer *PgnDialog::GdvAddExtraControls()
         wxButton* publish = new wxButton ( this, ID_PGN_DIALOG_PUBLISH, wxT("Publish"),
             wxDefaultPosition, wxDefaultSize, 0 );
         vsiz_panel_button1->Add(publish, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+        // ECO codes
+        wxButton* eco_codes = new wxButton ( this, ID_DIALOG_ECO, wxT("ECO codes"),
+            wxDefaultPosition, wxDefaultSize, 0 );
+        vsiz_panel_button1->Add(eco_codes, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
     else if( id == ID_PGN_DIALOG_CLIPBOARD )
     {

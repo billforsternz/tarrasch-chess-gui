@@ -24,6 +24,7 @@
 #include "ListableGamePgn.h"
 #include "PgnRead.h"
 #include "ProgressBar.h"
+#include "Eco.h"
 #include "GamesCache.h"
 using namespace std;
 
@@ -246,10 +247,11 @@ bool GamesCache::Load( FILE *pgn_file )
 }
 
 static CompactGame *phook;
-void pgn_read_hook( const char *white, const char *black, const char *event, const char *site, const char *result,
+void pgn_read_hook( const char *fen, const char *white, const char *black, const char *event, const char *site, const char *result,
                                     const char *date, const char *white_elo, const char *black_elo, const char *eco, const char *round,
                                     int nbr_moves, thc::Move *moves, uint64_t *hashes  )
 {
+    phook->r.fen       = fen ? std::string(fen) : "";
     phook->r.white     = std::string(white);
     phook->r.black     = std::string(black);
     phook->r.event     = std::string(event);
@@ -349,7 +351,7 @@ void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &new_doc )
     gd.fposn0 = fposn;
     gd.SetPgnHandle(pgn_handle);
     new_doc = gd;
-    objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
+    // objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
 }
 
 
@@ -520,7 +522,7 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
         pb.Permill( (i*1000L) / (gds_nbr?gds_nbr:1) );
         ListableGame *mptr = gds[i].get();
         long game_len = 0;
-        if( !mptr->IsInMemory() )
+        if( false ) //!mptr->IsInMemory() )
         {
             long fposn = mptr->GetFposn();
             int pgn_handle2;
@@ -593,6 +595,7 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
                 ptr->fposn1 = write_posn + game_len;
                 std::string str;
                 GameDocument temp = *ptr;
+                temp.r = mptr->RefRoster();
                 temp.ToFileTxtGameDetails( str );
                 fwrite(str.c_str(),1,str.length(),pgn_out);
                 game_len += str.length();
@@ -639,6 +642,41 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
         sort( gds.begin(), gds.end() );
     }  */
     delete[] buf;
+
+    #if 0
+    ProgressBar pb2( "Saving csv", "Saving csv" );
+    FILE *fout = fopen( "/Users/Bill/Documents/T3Database/check-work.csv", "wt" );
+    for( int i=0; fout, i<gds_nbr; i++ )
+    {
+        pb2.Permill( (i*1000L) / (gds_nbr?gds_nbr:1) );
+        ListableGame *mptr = gds[i].get();
+        CompactGame pact;
+        mptr->GetCompactGame( pact );
+        thc::ChessRules cr = pact.GetStartPosition();
+        std::string txt;
+        for( int j=0; j<pact.moves.size(); j++ )
+        {
+            thc::Move mv = pact.moves[j];
+            txt += mv.NaturalOut(&cr);
+            if( j+1 < pact.moves.size() )
+                txt += " ";
+            cr.PlayMove(mv);
+        }
+        fprintf( fout, "\"%s\",%s,\"%s\",%s,%s,%s,%s,%s,%s,%s\n",
+                    pact.r.white.c_str(),
+                    pact.r.white_elo.c_str(),
+                    pact.r.black.c_str(),
+                    pact.r.black_elo.c_str(),
+                    pact.r.result.c_str(),
+                    pact.r.date.c_str(),
+                    pact.r.event.c_str(),
+                    pact.r.site.c_str(),
+                    pact.r.eco.c_str(),
+                    txt.c_str() );
+    }
+    if( fout )
+        fclose(fout);
+    #endif
 }
 
 
@@ -647,6 +685,112 @@ void GamesCache::Debug( const char *intro_message )
 }
 
 //#define NOMARKDOWN x
+
+static void PgnNameCommaGroom( std::string &name )
+{
+    name.erase( name.find_last_not_of(" \n\r\t")+1 ); // right trim
+    if( name.find(',') == std::string::npos )
+    {
+        size_t first_space = name.find_first_of(" ");
+        if( first_space != std::string::npos )
+        {
+            std::string surname = name.substr( first_space+1 );
+            std::string forname = name.substr( 0, first_space );
+            std::string lower_surname;
+            for( int i=0; i<surname.length(); i++ )
+            {
+                int c = surname[i];
+                if( isalpha(c) && isupper(c) )
+                    c = tolower(c);
+                lower_surname.push_back(c);
+            }
+            if( lower_surname.substr(0,3) != "van" )
+            { 
+                size_t last_space = name.find_last_of(" ");
+                if( last_space != std::string::npos )
+                {
+                    surname = name.substr( last_space+1 );
+                    forname = name.substr( 0, last_space );
+                }
+            }
+            name = surname + ", " + forname;
+        }
+    }
+}
+
+void GamesCache::Eco(  GamesCache *gc_clipboard )
+{
+    eco_begin();
+    int gds_nbr = gds.size();
+    ProgressBar pb( "Recalculating ECO codes", "Recalculating ECO codes" );
+    for( int i=0; i<gds_nbr; i++ )
+    {
+        pb.Permill( (i*1000L) / (gds_nbr?gds_nbr:1) );
+        ListableGame *mptr = gds[i].get();
+        CompactGame pact;
+        mptr->GetCompactGame( pact );
+        CompressMoves press;
+        std::string blob = press.Compress(pact.moves);
+        pact.r.eco = eco_calculate( blob );
+        PgnNameCommaGroom( pact.r.black );
+        PgnNameCommaGroom( pact.r.white );
+        mptr->SetRoster(pact.r);
+    }
+}
+
+// Check the ECO code implemenation
+#if 0
+void GamesCache::Eco(  GamesCache *gc_clipboard )
+{
+    eco_begin();
+    int gds_nbr = gds.size();
+    ProgressBar pb( "Checking ECO", "Checking ECO" );
+    int successes=0;
+    int failures=0;
+    for( int i=0; i<gds_nbr; i++ )
+    {
+        pb.Permill( (i*1000L) / (gds_nbr?gds_nbr:1) );
+        ListableGame *mptr = gds[i].get();
+        std::string eco  = mptr->Eco();
+        std::string blob = mptr->CompressedMoves();
+        const char *file = eco.c_str();
+        const char *calc = eco_calculate(blob);
+        bool match = (0==strcmp(file,calc));
+        if( match )
+            successes++;
+        else
+            failures++;
+        if( !match && failures<20 )
+        {
+            thc::ChessRules cr;
+            CompressMoves press;
+            std::vector<thc::Move> v = press.Uncompress(blob);
+            std::string txt;
+            for( int j=0; j<30 && j<v.size(); j++ )
+            {
+                thc::Move mv = v[j];
+                char buf[100];
+                if( cr.white )
+                    sprintf( buf, "%s%d. ", j==0?"":" ", cr.full_move_count );
+                else
+                    sprintf( buf, " " );
+                txt += std::string(buf);
+                txt += mv.NaturalOut(&cr);
+                cr.PlayMove(mv);
+            }
+            cprintf( "File %s = %s\n"
+                     "Calc %s = %s\n"
+                     "Game     = %s\n",
+                     file, eco_ref(file), calc, eco_ref(calc), txt.c_str() );
+        }
+    }
+
+    // results twic-1078-1102.pgn
+    //   eco4.txt 72161 successes, 8583 failures
+    //   eco5.txt 71537 successes, 9207 failures
+    cprintf( "%d successes, %d failures\n", successes, failures );
+}
+#endif
 
 // Publish to a markdown (later html) file
 void GamesCache::Publish(  GamesCache *gc_clipboard )

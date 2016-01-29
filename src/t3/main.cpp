@@ -95,7 +95,7 @@ public:
 //  We also optionally prepend the time - to prepend the time instantiate a DebugPrintfTime object
 //  on the stack - no need to use it
 static int dbg_printf_prepend_time=0;
-//#define DURING_DEVELOPMENT
+#define DURING_DEVELOPMENT
 #ifdef DURING_DEVELOPMENT
 static bool dbg_console_enabled = true;     // set this to false except during development
 #else

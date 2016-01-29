@@ -32,6 +32,7 @@ public:
     void FileSaveAllAsAFile( std::string &filename );
     void FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pgn_out );
     void Publish( GamesCache *gc_clipboard );
+    void Eco( GamesCache *gc_clipboard );
     bool IsLoaded();
     bool IsSynced();
     void KillResumePreviousWindow()

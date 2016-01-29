@@ -1035,6 +1035,7 @@
     <ClInclude Include="src\t3\DbMaintenance.h" />
     <ClInclude Include="src\t3\DbPrimitives.h" />
     <ClInclude Include="src\t3\DebugPrintf.h" />
+    <ClInclude Include="src\t3\Eco.h" />
     <ClInclude Include="src\t3\EngineDialog.h" />
     <ClInclude Include="src\t3\GameClock.h" />
     <ClInclude Include="src\t3\GameClockHalf.h" />
@@ -1105,6 +1106,7 @@
     <ClCompile Include="src\t3\DbDialog.cpp" />
     <ClCompile Include="src\t3\DbMaintenance.cpp" />
     <ClCompile Include="src\t3\DbPrimitives.cpp" />
+    <ClCompile Include="src\t3\Eco.cpp" />
     <ClCompile Include="src\t3\EngineDialog.cpp" />
     <ClCompile Include="src\t3\GameClock.cpp" />
     <ClCompile Include="src\t3\GameClockHalf.cpp" />

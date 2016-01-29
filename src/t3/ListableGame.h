@@ -58,7 +58,7 @@ public:
     virtual thc::ChessPosition      &RefStartPosition()   { static thc::ChessPosition cp; return cp; }
 
     // For editing the roster
-    //virtual void SetRoster( Roster &r ) {}
+    virtual void SetRoster( Roster &r ) {}
     
     // Easy to use
     virtual void GetCompactGame( CompactGame &pact )

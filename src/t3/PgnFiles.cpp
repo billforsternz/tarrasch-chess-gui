@@ -261,7 +261,7 @@ void PgnFiles::Close( GamesCache *gc_clipboard )
         if( modifying || copying )
         {
             fclose(it->second.file_read);
-            int sz=gc_clipboard->gds.size();
+            int sz = (gc_clipboard ? gc_clipboard->gds.size() : 0);
             for( int i=0; !still_needed && i<sz; i++ )
             {
                 int pgn_handle;
@@ -317,7 +317,7 @@ void PgnFiles::Close( GamesCache *gc_clipboard )
     //  at a new element in the map; this new element represents the
     //  previous (i.e. unmodified) version of the current file, which
     //  is still present as a temporary file.
-    if( still_needed )
+    if( gc_clipboard && still_needed )
     {
         int handle = next_handle++;
         int sz=gc_clipboard->gds.size();

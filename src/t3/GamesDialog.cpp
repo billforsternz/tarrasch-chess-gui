@@ -59,6 +59,7 @@ BEGIN_EVENT_TABLE( GamesDialog, wxDialog )
     EVT_BUTTON( ID_PGN_DIALOG_GAME_DETAILS,   GamesDialog::OnEditGameDetails )
     EVT_BUTTON( ID_PGN_DIALOG_GAME_PREFIX,    GamesDialog::OnEditGamePrefix )
     EVT_BUTTON( ID_PGN_DIALOG_PUBLISH,  GamesDialog::OnPublish )
+    EVT_BUTTON( ID_DIALOG_ECO,          GamesDialog::OnEco )
     EVT_BUTTON( wxID_COPY,              GamesDialog::OnCopy )
     EVT_BUTTON( wxID_CUT,               GamesDialog::OnCut )
     EVT_BUTTON( wxID_DELETE,            GamesDialog::OnDelete )
@@ -568,6 +569,9 @@ void GamesDialog::CreateControls()
         wxButton* save_all_to_a_file = new wxButton ( this, wxID_SAVE, wxT("Save"),
             wxDefaultPosition, wxDefaultSize, 0 );
         vsiz_panel_button1->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxButton* save_as_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save as"),
+            wxDefaultPosition, wxDefaultSize, 0 );
+        vsiz_panel_button1->Add(save_as_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
     else if( id == ID_GAMES_DIALOG_DATABASE )
     {
@@ -1185,6 +1189,15 @@ void GamesDialog::OnSave( wxCommandEvent& WXUNUSED(event) )
 void GamesDialog::OnPublish( wxCommandEvent& WXUNUSED(event) )
 {
     gc->Publish( gc_clipboard );
+}
+
+void GamesDialog::OnEco( wxCommandEvent& WXUNUSED(event) )
+{
+    int idx_focus=focus_idx;
+    int sz=gc->gds.size();
+    gc->Eco( gc_clipboard );
+    Goto(idx_focus);
+    list_ctrl->RefreshItems(0,sz-1);
 }
 
 
