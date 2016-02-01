@@ -500,38 +500,10 @@ void DbDialog::GdvButton4()
     Goto( track->focus_idx );
 }
 
+// UseGame feature
 void DbDialog::GdvButton5()
 {
-    std::string s;
-    int sz = track->info.moves.size();
-    thc::ChessRules cr;
-    int move_count=1;
-    bool triggered=false;
-    s += "{";
-    s += track->info.Description();
-    s += "}";
-    for( int i=0; i<track->info.moves.size(); i++ )
-    {
-        std::string s2;
-        thc::Move mv = track->info.moves[i];
-        char buf[100];
-        buf[0] = '\0';
-        if( cr.white )
-            sprintf( buf, "%d.", move_count );
-        s2 += std::string(buf);
-        s2 += mv.NaturalOut(&cr);
-        if( i+1 < sz )
-            s2 += " ";
-        cr.PlayMove(mv);
-        if( cr.white )
-            move_count++;
-        if( !triggered && cr==cr_base )
-            triggered = true;
-        if( triggered )
-            s += s2;
-    }    
-    objs.gl->gd.CommentEdit(objs.gl->lb,s);
-    objs.gl->CmdEditPromoteToVariation();
+    objs.gl->gd.UseGame( cr_base, moves_from_base_position, track->info );
     TransferDataToWindow();
     AcceptAndClose();
 }

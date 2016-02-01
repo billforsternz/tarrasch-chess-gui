@@ -189,6 +189,7 @@ public:
     void PromoteToVariation( unsigned long offset_within_comment=0 );
     void PromoteRestToVariation();
     void DemoteToComment();
+    void UseGame( const thc::ChessPosition &cp, const std::vector<thc::Move> &moves_from_base_position, CompactGame &pact );
     void Rebuild() { gv.Build( r.result, &tree, this->start_position ); }
     void DeleteRestOfVariation();
     void RedisplayRequest( MoveTree *found );

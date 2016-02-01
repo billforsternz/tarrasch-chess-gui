@@ -522,7 +522,12 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
         pb.Permill( (i*1000L) / (gds_nbr?gds_nbr:1) );
         ListableGame *mptr = gds[i].get();
         long game_len = 0;
+        //#define FORCE_REGENERATE_ALL_GAMES  // used this for regenerating/repairing a big .pgn
+        #ifdef FORCE_REGENERATE_ALL_GAMES   // will crash unless games are in memory - so user should (for example) sort first
         if( false ) //!mptr->IsInMemory() )
+        #else
+        if( !mptr->IsInMemory() )
+        #endif
         {
             long fposn = mptr->GetFposn();
             int pgn_handle2;

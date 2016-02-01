@@ -1754,6 +1754,122 @@ void GameDocument::DemoteToComment()
     }
 }
 
+void GameDocument::UseGame( const thc::ChessPosition &cp, const std::vector<thc::Move> &moves_from_base_position, CompactGame &pact )
+{
+    unsigned long offset_within_comment=0;
+    unsigned long pos = GetInsertionPoint();
+    unsigned long pos_restore = pos;
+    thc::ChessRules cr;
+    std::string title;
+    bool at_move0;
+    MoveTree save=tree;
+    bool no_changes=false;
+
+    MoveTree *found = Locate( pos, cr, title, at_move0 );
+    if( found && cr == cp )
+    {
+        cprintf( "Step 1 okay\n" );
+        for( int i=0; i<moves_from_base_position.size(); i++ )
+        {
+            thc::Move mv = moves_from_base_position[i];
+            cr.PlayMove(mv);
+        }
+        thc::ChessRules cr2 = pact.GetStartPosition();
+        int offset_of_rest_of_game=0;
+        bool position_found = false;
+        if( cr2 == cr )
+            position_found = true;
+        else
+        {
+            for( int i=0; i<pact.moves.size(); i++ )
+            {
+                thc::Move mv = pact.moves[i];
+                cr2.PlayMove(mv);
+                if( cr2 == cr )
+                {
+                    offset_of_rest_of_game = i+1;
+                    position_found = true;  // don't break, go to later position if repetitions
+                }
+            }
+        }
+        if( position_found )
+        {
+            cprintf( "Full move count initially=%d, %d further moves, then pick up from offset %d\n",
+                cp.full_move_count,
+                moves_from_base_position.size(),
+                offset_of_rest_of_game );
+
+            // Game description
+            std::string description = pact.Description();
+
+            // combined moves to end of game variation
+            std::vector<thc::Move> rest_of_game( pact.moves.begin()+offset_of_rest_of_game, pact.moves.end() );
+            std::vector<thc::Move> combined = moves_from_base_position;
+            combined.insert( combined.end(), rest_of_game.begin(), rest_of_game.end() );  // combined += rest_of_game;
+
+            // find the variation we are in
+            thc::ChessRules cr3;
+            int ivar;
+            int imove;
+            MoveTree *parent = tree.Parent( found, cr3, ivar, imove );
+            if( parent )
+            {
+                cprintf( "Parent found, ivar=%d, imove=%d\n", ivar, imove );
+                VARIATION &variation = parent->variations[ivar];
+                int nbr_common_moves=0;
+                for( int j=imove+1, k=0; j<variation.size() && k<combined.size(); j++, k++ )
+                {
+                    MoveTree m = variation[j];
+                    if( m.game_move.move == combined[k] )
+                        nbr_common_moves++;
+                }
+                int offset_last_common_move = imove + nbr_common_moves;
+                bool append_not_branch = offset_last_common_move >= variation.size()-1;
+                if( append_not_branch )
+                {
+                    cprintf( "Append, nbr_common_moves=%d, combined.size()=%d\n", nbr_common_moves, combined.size() );
+                    MoveTree &branch_point = *(variation.begin() + offset_last_common_move);
+                    branch_point.game_move.comment += description;
+                    branch_point.game_move.comment += " continued";
+                    for( int j=nbr_common_moves; j<combined.size(); j++ )
+                    {
+                        MoveTree m;
+                        thc::Move mv = combined[j];
+                        m.game_move.move = mv;
+                        variation.push_back(m);
+                    }
+                }
+                else
+                {
+                    cprintf( "Branch, nbr_common_moves=%d, combined.size()=%d\n", nbr_common_moves, combined.size() );
+                    MoveTree &branch_point = *(variation.begin() + offset_last_common_move + 1);
+                    std::vector<MoveTree> sub_variation;
+                    bool first=true;
+                    for( int j=nbr_common_moves; j<combined.size(); j++ )
+                    {
+                        MoveTree m;
+                        m.game_move.move = combined[j];
+                        if( first )
+                        {
+                            m.game_move.pre_comment = description;
+                            first = false;
+                        }
+                        sub_variation.push_back(m);
+                    }
+                    branch_point.variations.push_back( sub_variation );
+                }
+            }
+        }
+    }
+
+    // Rebuild
+    Rebuild();
+    //if( !no_changes )
+    //    gl->atom.Undo();
+    pos = pos_restore;
+    gl->atom.Redisplay( pos );
+}
+
 void GameDocument::DeleteRestOfVariation()
 {
     unsigned long pos = GetInsertionPoint();
