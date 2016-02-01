@@ -1822,6 +1822,8 @@ void GameDocument::UseGame( const thc::ChessPosition &cp, const std::vector<thc:
                     MoveTree m = variation[j];
                     if( m.game_move.move == combined[k] )
                         nbr_common_moves++;
+                    else
+                        break;
                 }
                 int offset_last_common_move = imove + nbr_common_moves;
                 bool append_not_branch = offset_last_common_move >= variation.size()-1;
