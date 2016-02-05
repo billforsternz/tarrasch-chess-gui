@@ -15,6 +15,7 @@
 #include "sqlite3.h"
 #include "thc.h"
 #include "GameDocument.h"
+#include "MemoryPositionSearch.h"
 #include "GamesCache.h"
 
 enum DB_REQ
@@ -33,10 +34,10 @@ public:
     bool GetDatabaseVersion( int &version );
     int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr );
     int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &player_name );
-    // int GetNbrGames( thc::ChessRules &cr );
     int GetRow( int row, CompactGame *info );
     int GetRowRaw( CompactGame *info, int row );
     bool LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int nbr_games );
+    bool LoadAllGamesForPositionSearch( std::vector< std::pair<int,std::string> > &cache );
     bool TestNextRow();
     bool TestPrevRow();
     int GetCurrent();
@@ -50,6 +51,7 @@ public:
 private:
     DB_REQ db_req;
     bool is_open;
+    MemoryPositionSearch tiny_db;
 
     // Create a handle for database connection, create a pointer to sqlite3
     sqlite3 *gbl_handle;

@@ -1026,6 +1026,11 @@ void GameLogic::CmdDatabaseCreate()
 
 void GameLogic::CmdDatabaseAppend()
 {
+#if 0  //temp testing
+    std::vector< std::pair<int,std::string> > cache;
+    objs.db->LoadAllGamesForPositionSearch( cache );
+
+#else
     Atomic begin;
     wxPoint pt(0,0);
     wxSize sz = objs.frame->GetSize();
@@ -1034,6 +1039,7 @@ void GameLogic::CmdDatabaseAppend()
     CreateDatabaseDialog dialog( objs.frame, ID_CREATE_DB_DIALOG, false ); // create_mode = false
     dialog.ShowModal();
     atom.StatusUpdate();
+#endif
 }
 
 void GameLogic::CmdGamesSession()

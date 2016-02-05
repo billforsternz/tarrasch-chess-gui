@@ -24,6 +24,12 @@ public:
         pack.Pack( r, str_blob );
     }
 
+    ListableGameDb( int game_id, CompactGame &pact )
+    {
+        this->game_id = game_id;
+        pack.Pack( pact );
+    }
+
     virtual int GetGameId()  { return game_id; }
 
     virtual void GetCompactGame( CompactGame &pact )

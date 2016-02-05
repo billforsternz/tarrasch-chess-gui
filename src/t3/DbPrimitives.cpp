@@ -251,6 +251,8 @@ bool db_primitive_create_tables()
         error_msg = "cancel";
         return false;
     }
+    #define DB_TINY
+    #ifndef DB_TINY
     cprintf( "Create positions tables");
     for( int i=0; i<NBR_BUCKETS; i++ )
     {
@@ -273,6 +275,7 @@ bool db_primitive_create_tables()
         }
     }
     cprintf( "Create positions tables end");
+    #endif
     return true;
 }
 
@@ -339,6 +342,7 @@ bool db_primitive_create_indexes()
         error_msg = "cancel";
         return false;
     }
+    #ifndef DB_TINY
     for( int i=0; i<NBR_BUCKETS; i++ )
     {
         if( prog.Permill( 30 + (i*970) / NBR_BUCKETS ) )
@@ -359,6 +363,7 @@ bool db_primitive_create_indexes()
             return false;
         }
     }
+    #endif
     return true;
 }
 
@@ -527,6 +532,7 @@ static bool purge_buckets( bool force )
 
 static bool purge_bucket( int bucket_idx )
 {
+    #ifndef DB_TINY
     char *errmsg;
     char insert_buf[2000];
     std::vector<std::pair<int,int>> *bucket = &buckets[bucket_idx];
@@ -554,6 +560,7 @@ static bool purge_bucket( int bucket_idx )
         }
         bucket->clear();
     }
+    #endif
     return true;
 }
 

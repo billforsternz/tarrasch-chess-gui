@@ -507,7 +507,7 @@ class ChessRules: public ChessPosition
 public:
     // Default constructor
     ChessRules() : ChessPosition() { Init(); }
-    void Init()
+    void Init()    // TODO == ChessRules::Init() should call ChessPosition::Init() right ????!!!!
     {
         history_idx    = 1;    // prevent bogus repition draws
         history[0].src = a8;   // (look backwards through history stops when src==dst)
