@@ -1059,6 +1059,7 @@
     <ClInclude Include="src\t3\Log.h" />
     <ClInclude Include="src\t3\LogDialog.h" />
     <ClInclude Include="src\t3\MaintenanceDialog.h" />
+    <ClInclude Include="src\t3\MemoryPositionSearch.h" />
     <ClInclude Include="src\t3\MiniBoard.h" />
     <ClInclude Include="src\t3\MoveTree.h" />
     <ClInclude Include="src\t3\NavigationKey.h" />
@@ -1126,6 +1127,7 @@
     <ClCompile Include="src\t3\MacRybka.cpp" />
     <ClCompile Include="src\t3\main.cpp" />
     <ClCompile Include="src\t3\MaintenanceDialog.cpp" />
+    <ClCompile Include="src\t3\MemoryPositionSearch.cpp" />
     <ClCompile Include="src\t3\MiniBoard.cpp" />
     <ClCompile Include="src\t3\MoveTree.cpp" />
     <ClCompile Include="src\t3\PackedGame.cpp" />
