@@ -30,6 +30,8 @@ static bool purge_buckets( bool force=false );
 #define NBR_BUCKETS 4096
 #define PURGE_QUOTA 10000
 
+#define TINY_DB
+
 
 // Handle for database connection
 static sqlite3 *handle;
@@ -217,7 +219,12 @@ bool db_primitive_create_tables()
         return false;
     }
     char buf[200];
-    sprintf( buf,"INSERT INTO description VALUES('Description of database, not currently used for anything, goes here', %d )", DATABASE_VERSION_NUMBER_SUPPORTED );
+    sprintf( buf,"INSERT INTO description VALUES('Description of database, not currently used for anything, goes here', %d )", 
+    #ifdef TINY_DB
+        DATABASE_VERSION_NUMBER_TINY );
+    #else
+        DATABASE_VERSION_NUMBER_NORMAL );
+    #endif
     retval = sqlite3_exec(handle,buf,0,0,0);
     if( retval )
     {
@@ -251,8 +258,7 @@ bool db_primitive_create_tables()
         error_msg = "cancel";
         return false;
     }
-    #define DB_TINY
-    #ifndef DB_TINY
+    #ifndef TINY_DB
     cprintf( "Create positions tables");
     for( int i=0; i<NBR_BUCKETS; i++ )
     {
@@ -342,7 +348,7 @@ bool db_primitive_create_indexes()
         error_msg = "cancel";
         return false;
     }
-    #ifndef DB_TINY
+    #ifndef TINY_DB
     for( int i=0; i<NBR_BUCKETS; i++ )
     {
         if( prog.Permill( 30 + (i*970) / NBR_BUCKETS ) )
@@ -532,7 +538,7 @@ static bool purge_buckets( bool force )
 
 static bool purge_bucket( int bucket_idx )
 {
-    #ifndef DB_TINY
+    #ifndef TINY_DB
     char *errmsg;
     char insert_buf[2000];
     std::vector<std::pair<int,int>> *bucket = &buckets[bucket_idx];

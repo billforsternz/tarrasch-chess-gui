@@ -46,7 +46,6 @@ public:
     }
     bool TryFastMode( MpsSide *side );
     bool SearchGame( std::string &moves_in );
-    thc::Move UncompressMove( char c );
     void Init() { thc::ChessPosition *cp = static_cast<thc::ChessPosition *>(&cr); cp->Init(); TryFastMode( &sides[0]); TryFastMode( &sides[1]); }
     int  DoSearch( uint64_t position_hash );
     bool GetGameidFromRow( int row, int &game_id );

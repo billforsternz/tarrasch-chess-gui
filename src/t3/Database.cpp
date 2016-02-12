@@ -28,7 +28,6 @@
 //  renamed as such
 //
 
-#define TINY_DB
 #define NBR_BUCKETS 4096
 
 Database::Database( const char *db_file )
@@ -39,14 +38,15 @@ Database::Database( const char *db_file )
     gbl_expected = 0;
     gbl_current = 0;
     gbl_count = 0;
+    is_tiny_db = false;
 
     // Access the database.
     int retval = sqlite3_open( db_file, &gbl_handle );
     is_open = (retval==0);
-    #ifdef TINY_DB
-    if( is_open )
+    std::string nomsg;
+    IsOperational( nomsg );
+    if( is_open && is_tiny_db  )
         LoadAllGamesForPositionSearch( tiny_db.in_memory_game_cache );
-    #endif
     
     // If connection failed, handle returns NULL
     dbg_printf( "DATABASE CONSTRUCTOR %s\n", retval ? "FAILED" : "SUCCESSFUL" );
@@ -108,14 +108,15 @@ void Database::Reopen( const char *db_file )
     gbl_expected = 0;
     gbl_current = 0;
     gbl_count = 0;
+    is_tiny_db = false;
     
     // Access the database.
     int retval = sqlite3_open(db_file,&gbl_handle);
     is_open = (retval==0);
-    #ifdef TINY_DB
-    if( is_open )
+    std::string nomsg;
+    IsOperational( nomsg );
+    if( is_open && is_tiny_db  )
         LoadAllGamesForPositionSearch( tiny_db.in_memory_game_cache );
-    #endif
     
     // If connection failed, handle returns NULL
     dbg_printf( "DATABASE REOPEN %s\n", retval ? "FAILED" : "SUCCESSFUL" );
@@ -137,10 +138,16 @@ bool Database::IsOperational( std::string &error_msg )
             error_msg = "Could not read version number from database";
         else
         {
-            if( version != DATABASE_VERSION_NUMBER_SUPPORTED )
-                error_msg = "The database file is not in the correct format for this version of Tarrasch";
+            operational = true;
+            if( version == DATABASE_VERSION_NUMBER_NORMAL )
+                is_tiny_db = false;
+            else if( version == DATABASE_VERSION_NUMBER_TINY )
+                is_tiny_db = true;
             else
-                operational = true;
+            {
+                error_msg = "The database file is not in the correct format for this version of Tarrasch";
+                operational = false;
+            }
         }
     }
     return operational;
@@ -249,13 +256,16 @@ int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &pl
     }
     else if( db_req == REQ_POSITION )
     {
-        #ifdef TINY_DB
-        game_count = tiny_db.DoSearch(position_hash);
-        db_access_required = false;
-        #else
-        sprintf( buf, "SELECT COUNT(*) from games, positions_%d WHERE %spositions_%d.position_hash=%d AND games.game_id = positions_%d.game_id",
-                table_nbr, white_and.c_str(), table_nbr, hash, table_nbr );
-        #endif
+        if( is_tiny_db )
+        {
+            game_count = tiny_db.DoSearch(position_hash);
+            db_access_required = false;
+        }
+        else
+        {
+            sprintf( buf, "SELECT COUNT(*) from games, positions_%d WHERE %spositions_%d.position_hash=%d AND games.game_id = positions_%d.game_id",
+                    table_nbr, white_and.c_str(), table_nbr, hash, table_nbr );
+        }
     }
     //sprintf( buf, "SELECT COUNT(*) from games, positions_%d WHERE games.white = 'Carlsen, Magnus'  AND positions_%d.position_hash=%d AND games.game_id = positions_%d.game_id", table_nbr, table_nbr, hash, table_nbr );
     //    sprintf( buf, "SELECT COUNT(*) from games JOIN positions_%d ON games.game_id = positions_%d.game_id WHERE games.white = 'Carlsen, Magnus' AND positions_%d.position_hash=%d", table_nbr, table_nbr, table_nbr, hash );
@@ -568,33 +578,34 @@ int Database::LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<Listable
     
 
     int retval=-1;
-    #ifdef TINY_DB
-    int game_count = tiny_db.DoSearch(hash);
-    bool ok=true;
-    for( int i=0; ok && i<game_count; i++ )
+    if( is_tiny_db )
     {
-        int game_id;
-        bool ok = tiny_db.GetGameidFromRow( i, game_id );
-        int count = games_set.count(game_id);
-        bool already = (count > 0);
-        if( already )
-            continue;
-        if( ok )
+        int game_count = tiny_db.DoSearch(hash);
+        bool ok=true;
+        for( int i=0; ok && i<game_count; i++ )
         {
-            CompactGame pact;
-            retval = LoadGameWithQuery( &pact, game_id );
-            ok = (retval==0);
+            int game_id;
+            bool ok = tiny_db.GetGameidFromRow( i, game_id );
+            int count = games_set.count(game_id);
+            bool already = (count > 0);
+            if( already )
+                continue;
             if( ok )
             {
-                games_set.insert( game_id );
-                ListableGameDb info( game_id, pact );
-                make_smart_ptr( ListableGameDb, new_info, info );
-                games.push_back( std::move(new_info) );
+                CompactGame pact;
+                retval = LoadGameWithQuery( &pact, game_id );
+                ok = (retval==0);
+                if( ok )
+                {
+                    games_set.insert( game_id );
+                    ListableGameDb info( game_id, pact );
+                    make_smart_ptr( ListableGameDb, new_info, info );
+                    games.push_back( std::move(new_info) );
+                }
             }
         }
+        return 0;
     }
-    return 0;
-    #endif
     
     // select matching rows from the table
     char buf[1000];
@@ -777,8 +788,7 @@ int Database::GetRow( int row, CompactGame *info )
 
 int Database::GetRowRaw( CompactGame *pact, int row )
 {
-    #ifdef TINY_DB
-    if( db_req == REQ_POSITION )
+    if( is_tiny_db )
     {
         int game_id;
         bool ok = tiny_db.GetGameidFromRow( row, game_id );
@@ -787,7 +797,6 @@ int Database::GetRowRaw( CompactGame *pact, int row )
             retval = LoadGameWithQuery( pact, game_id );
         return retval;
     }
-    #endif
     if( gbl_protect_recursion )
     {
         cprintf( "Didn't expect that\n");
@@ -925,8 +934,7 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
     uint64_t temp = position_hash;
     int hash = (int)(temp);
     int table_nbr = (int)((temp>>32)&(NBR_BUCKETS-1));
-    #ifdef TINY_DB
-    if( db_req == REQ_POSITION )
+    if( is_tiny_db && db_req==REQ_POSITION )
     {
         int game_count = tiny_db.DoSearch(position_hash);
         bool ok=true;
@@ -953,9 +961,9 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
                 }
             }
         }
+        gbl_protect_recursion = false;
         return ok;
     }
-    #endif
     if( db_req == REQ_PLAYERS )
     {
         sprintf( buf,

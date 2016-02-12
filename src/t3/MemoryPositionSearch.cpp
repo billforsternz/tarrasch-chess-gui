@@ -257,28 +257,6 @@ bool MemoryPositionSearch::SearchGame( std::string &moves_in )
     return false;
 }
 
-thc::Move MemoryPositionSearch::UncompressMove( char c )
-{
-    MpsSide *side  = cr.white ? &sides[0] : &sides[1];
-    MpsSide *other = cr.white ? &sides[1] : &sides[0];
-    thc::Move mv;
-    if( side->fast_mode )
-    {
-        mv = UncompressFastMode(c,side,other);
-    }
-    else if( TryFastMode(side) )
-    {
-        mv = UncompressFastMode(c,side,other);
-    }
-    else
-    {
-        mv = UncompressSlowMode(c);
-        other->fast_mode = false;   // force other side to reset and retry
-    }
-    cr.PlayMove(mv);
-    return mv;
-}
-
 thc::Move MemoryPositionSearch::UncompressSlowMode( char code )
 {
 

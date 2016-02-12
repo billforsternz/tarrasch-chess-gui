@@ -51,6 +51,7 @@ public:
 private:
     DB_REQ db_req;
     bool is_open;
+    bool is_tiny_db;
     MemoryPositionSearch tiny_db;
 
     // Create a handle for database connection, create a pointer to sqlite3
