@@ -46,6 +46,7 @@ BEGIN_EVENT_TABLE( GamesDialog, wxDialog )
     EVT_BUTTON( ID_DB_UTILITY,          GamesDialog::OnUtility )
     EVT_BUTTON( ID_DB_SEARCH,           GamesDialog::OnSearch )
     EVT_BUTTON( wxID_CANCEL,            GamesDialog::OnCancel )
+    EVT_RADIOBUTTON( ID_SITE_EVENT,     GamesDialog::OnSiteEvent )
     EVT_BUTTON( ID_SAVE_ALL_TO_A_FILE,  GamesDialog::OnSaveAllToAFile )
     EVT_BUTTON( ID_BUTTON_1,            GamesDialog::OnButton1 )
     EVT_BUTTON( ID_BUTTON_2,            GamesDialog::OnButton2 )
@@ -202,7 +203,7 @@ wxString GamesListCtrl::OnGetItemText( long item, long column) const
         case 3: txt =   info.r.black.c_str();         break;
         case 4: txt =   info.r.black_elo.c_str();     break;
         case 5: txt =   info.r.date.c_str();          break;
-        case 6: txt =   info.r.site.c_str();          break;
+        case 6: txt =   objs.repository->nv.m_event_not_site ? info.r.event.c_str() : info.r.site.c_str();          break;
         case 7: txt =   info.r.round.c_str();         break;
         case 8: txt =   info.r.result.c_str();        break;
         case 9: txt =   info.r.eco.c_str();           break;
@@ -426,7 +427,7 @@ void GamesDialog::CreateControls()
     list_ctrl->InsertColumn( 3, "Black"    );
     list_ctrl->InsertColumn( 4, "Elo"      );
     list_ctrl->InsertColumn( 5, "Date"     );
-    list_ctrl->InsertColumn( 6, "Site"     );
+    list_ctrl->InsertColumn( 6, "Site/Event"     );
     list_ctrl->InsertColumn( 7, "Round"    );
     list_ctrl->InsertColumn( 8, "Result"   );
     list_ctrl->InsertColumn( 9, "ECO"      );
@@ -473,7 +474,7 @@ void GamesDialog::CreateControls()
         objs.repository->nv.m_col3 = cols[3] =  16*x/142;    // "Black" 
         objs.repository->nv.m_col4 = cols[4] =   5*x/142;    // "Elo B" 
         objs.repository->nv.m_col5 = cols[5] =   9*x/142;    // "Date"  
-        objs.repository->nv.m_col6 = cols[6] =  13*x/142;    // "Site"  
+        objs.repository->nv.m_col6 = cols[6] =  13*x/142;    // "Site/Event"  
         objs.repository->nv.m_col7 = cols[7] =   6*x/142;    // "Round" 
         objs.repository->nv.m_col8 = cols[8] =   7*x/142;    // "Result"
         objs.repository->nv.m_col9 = cols[9] =   5*x/142;    // "ECO"   
@@ -486,7 +487,7 @@ void GamesDialog::CreateControls()
     cprintf( "cols[3] = %d\n", cols[3] );
     cprintf( "cols[4] = %d\n", cols[4] );
     cprintf( "cols[5] = %d\n", cols[5] );
-    cprintf( "Site cols[6] = %d\n", cols[6] );
+    cprintf( "cols[6] = %d\n", cols[6] );
     cprintf( "cols[7] = %d\n", cols[7] );
     cprintf( "cols[8] = %d\n", cols[8] );
     cprintf( "cols[9] = %d\n", cols[9] );
@@ -504,7 +505,7 @@ void GamesDialog::CreateControls()
     gc->col_flags.push_back(col_flag);
     list_ctrl->SetColumnWidth( 5, cols[5] );    // "Date"  
     gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth( 6, cols[6] );    // "Site"  
+    list_ctrl->SetColumnWidth( 6, cols[6] );    // "Site/Event"  
     gc->col_flags.push_back(col_flag);
     list_ctrl->SetColumnWidth( 7, cols[7] );    // "Round"
     gc->col_flags.push_back(col_flag);
@@ -590,6 +591,16 @@ void GamesDialog::CreateControls()
     wxButton* cancel = new wxButton ( this, wxID_CANCEL,
         wxT("Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
     vsiz_panel_button1->Add(cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+    // Select site/or event
+    wxRadioButton *site_button = new wxRadioButton( this, ID_SITE_EVENT,
+       wxT("&Site"), wxDefaultPosition, wxDefaultSize,  wxRB_GROUP );
+    wxRadioButton *event_button = new wxRadioButton( this, ID_SITE_EVENT,
+       wxT("&Event"), wxDefaultPosition, wxDefaultSize, 0 );
+    site_button->SetValue( !objs.repository->nv.m_event_not_site );
+    event_button->SetValue( objs.repository->nv.m_event_not_site );
+    vsiz_panel_button1->Add(site_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_button1->Add(event_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     // The Help button
     wxButton* help = new wxButton( this, wxID_HELP, wxT("Help"),
@@ -936,7 +947,7 @@ bool GamesDialog::ShowModalOk( std::string title )
     objs.repository->nv.m_col3  = list_ctrl->GetColumnWidth( 3 );    // "Black"
     objs.repository->nv.m_col4  = list_ctrl->GetColumnWidth( 4 );    // "Elo B" 
     objs.repository->nv.m_col5  = list_ctrl->GetColumnWidth( 5 );    // "Date"  
-    objs.repository->nv.m_col6  = list_ctrl->GetColumnWidth( 6 );    // "Site"
+    objs.repository->nv.m_col6  = list_ctrl->GetColumnWidth( 6 );    // "Site/Event"
     cprintf( "Site width = %d\n",   objs.repository->nv.m_col6 );
     objs.repository->nv.m_col7  = list_ctrl->GetColumnWidth( 7 );    // "Round" 
     objs.repository->nv.m_col8  = list_ctrl->GetColumnWidth( 8 );    // "Result"
@@ -979,7 +990,7 @@ void GamesDialog::OnEditGameDetails( wxCommandEvent& WXUNUSED(event) )
                 list_ctrl->SetItem( idx, 3, temp.r.black );
                 list_ctrl->SetItem( idx, 4, temp.r.black_elo );
                 list_ctrl->SetItem( idx, 5, temp.r.date );
-                list_ctrl->SetItem( idx, 6, temp.r.site );
+                list_ctrl->SetItem( idx, 6, objs.repository->nv.m_event_not_site ? temp.r.event : temp.r.site );
                 list_ctrl->SetItem( idx, 7, temp.r.round );
                 list_ctrl->SetItem( idx, 8, temp.r.result );
                 list_ctrl->SetItem( idx, 9, temp.r.eco );
@@ -1095,6 +1106,15 @@ void GamesDialog::OnCutOrDelete( bool cut )
         }
     }
     dbg_printf( "%d games %s\n", nbr_cut, cut?"cut":"deleted" );
+}
+
+void GamesDialog::OnSiteEvent( wxCommandEvent& WXUNUSED(event) )
+{
+    int gds_nbr = gc->gds.size();
+    objs.repository->nv.m_event_not_site = !objs.repository->nv.m_event_not_site;
+    for( int i=0; i<gds_nbr; i++ )    
+        list_ctrl->SetItem( i, 6, objs.repository->nv.m_event_not_site ? gc->gds[i]->Event() : gc->gds[i]->Site() );
+    list_ctrl->RefreshItems( 0, gds_nbr-1 );
 }
 
 void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
@@ -1245,8 +1265,8 @@ static bool compare( const smart_ptr<ListableGame> g1, const smart_ptr<ListableG
         }
         case 6:
         {
-            parm1 = g1->Site();
-            parm2 = g2->Site();
+            parm1 = objs.repository->nv.m_event_not_site ? g1->Event() : g1->Site();
+            parm2 = objs.repository->nv.m_event_not_site ? g2->Event() : g2->Site();
             break;
         }
         case 7:
@@ -1331,8 +1351,8 @@ static bool rev_compare( const smart_ptr<ListableGame> g1, const smart_ptr<Lista
         }
         case 6:
         {
-            parm1 = g1->Site();
-            parm2 = g2->Site();
+            parm1 = objs.repository->nv.m_event_not_site ? g1->Event() : g1->Site();
+            parm2 = objs.repository->nv.m_event_not_site ? g2->Event() : g2->Site();
             break;
         }
         case 8:

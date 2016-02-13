@@ -469,6 +469,15 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
                 {
                     if( comment_ch == ';' )
                         push_back = ch;
+                    else
+                    {
+                        // New policy from V2.03c
+                        //  Only create '{' comments (most chess software doesn't understand ';' comments)
+                        //  If  "}" appears in comment transform to "|>"    (change *is* restored when reading .pgn)
+                        //  If  "|>" appears in comment transform to "| >"  (change is *not* restored when reading .pgn)
+                        std::string ReplaceAll( const std::string &in, const std::string &from, const std::string &to );
+                        comment_str = ReplaceAll( comment_str, "|>", "}" );
+                    }
                     if( (*pvar).size() == 0 )
                     {
                         if( 0 == buffered_comment.length() )

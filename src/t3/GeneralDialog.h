@@ -21,7 +21,9 @@ enum
     ID_STRAIGHT_TO_GAME  = 10003,
     ID_LARGE_FONT        = 10004, 
     ID_SMALL_BOARD       = 10005,
-    ID_NO_AUTO_FLIP      = 10006
+    ID_NO_AUTO_FLIP      = 10006,
+    ID_STRAIGHT_TO_FIRST_GAME  = 10007,
+    ID_EMIT_BELL         = 10008
 };
 
 // GeneralDialog class declaration

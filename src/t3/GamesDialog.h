@@ -45,6 +45,7 @@ enum
     ID_REORDER           ,
     ID_ADD_TO_CLIPBOARD  ,
     ID_SAVE_ALL_TO_A_FILE,
+    ID_SITE_EVENT,
     ID_PGN_DIALOG_GAME_PREFIX,
     ID_PGN_DIALOG_PUBLISH    ,
     ID_PGN_DIALOG_UTILITY1   ,
@@ -168,6 +169,7 @@ public:
     void OnCancel( wxCommandEvent& event );
     void OnBoard2Game( wxCommandEvent& event );
     void OnRenumber( wxCommandEvent& event );
+    void OnSiteEvent( wxCommandEvent& event );
     void OnSelectAll( wxCommandEvent& event );
     void OnEditGameDetails( wxCommandEvent& event );
     void OnEditGamePrefix( wxCommandEvent& event );

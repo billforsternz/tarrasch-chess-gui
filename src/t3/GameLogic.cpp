@@ -11,6 +11,7 @@
 #include "wx/clipbrd.h"
 #include "wx/listctrl.h"
 #include "wx/filename.h"
+#include "wx/utils.h"
 #include "Appdefs.h"
 #include "Canvas.h"
 #include "thc.h"
@@ -579,7 +580,10 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
     else
     {
         bool have_game = false;
-        if( gc_pgn.gds.size()==1 && objs.repository->general.m_straight_to_game )
+        if(
+            ( gc_pgn.gds.size()==1 && objs.repository->general.m_straight_to_game )  ||
+            ( gc_pgn.gds.size()>0  && objs.repository->general.m_straight_to_first_game )
+          )
         {
             GameDocument *gd_file = gc_pgn.gds[0]->GetGameDocumentPtr();
             bool have_game = gd_file && gd_file->in_memory;
@@ -1941,6 +1945,8 @@ void GameLogic::OnIdle()
                                                  gd.master_position.WhiteToPlay()?".":"...", nmove.c_str() );
             GAME_RESULT result;
             bool gameover = MakeMove( bestmove, result );
+            if( objs.repository->general.m_bell )
+                wxBell();
             glc.Set( result );
             if( gameover )
             {
@@ -2067,6 +2073,8 @@ void GameLogic::OnIdle()
                                                  gd.master_position.WhiteToPlay()?".":"...", nmove.c_str() );
             GAME_RESULT result;
             bool gameover = MakeMove( move_after_delay, result );
+            if( objs.repository->general.m_bell )
+                wxBell();
             glc.Set( result );
             NewState( gameover ? GAMEOVER : HUMAN );
             if( gameover )

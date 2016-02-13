@@ -147,11 +147,25 @@ void GeneralDialog::CreateControls()
     box_sizer->Add( straight_to_game_box, 0,
         wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
+    // Go straight to game for all pgns
+    wxCheckBox* straight_to_first_game_box = new wxCheckBox( this, ID_STRAIGHT_TO_FIRST_GAME,
+       wxT("Go straight to first game for all .pgn files"), wxDefaultPosition, wxDefaultSize, 0 );
+    straight_to_first_game_box->SetValue( dat.m_straight_to_first_game );
+    box_sizer->Add( straight_to_first_game_box, 0,
+        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
     // No auto flip at start of game or on swap sides
     wxCheckBox* no_auto_flip = new wxCheckBox( this, ID_NO_AUTO_FLIP,
        wxT("Don't flip board to put human at bottom"), wxDefaultPosition, wxDefaultSize, 0 );
     no_auto_flip->SetValue( dat.m_no_auto_flip );
     box_sizer->Add( no_auto_flip, 0,
+        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+    // Emit bell sound when engine moves
+    wxCheckBox* emit_bell_sound_when_engine_moves = new wxCheckBox( this, ID_EMIT_BELL,
+       wxT("Emit bell sound when engine moves"), wxDefaultPosition, wxDefaultSize, 0 );
+    emit_bell_sound_when_engine_moves->SetValue( dat.m_bell );
+    box_sizer->Add( emit_bell_sound_when_engine_moves, 0,
         wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     // A dividing line before the OK and Cancel buttons
@@ -192,6 +206,10 @@ void GeneralDialog::SetDialogValidators()
         wxGenericValidator(& dat.m_no_italics));
     FindWindow(ID_STRAIGHT_TO_GAME)->SetValidator(
         wxGenericValidator(& dat.m_straight_to_game));
+    FindWindow(ID_STRAIGHT_TO_FIRST_GAME)->SetValidator(
+        wxGenericValidator(& dat.m_straight_to_first_game));
+    FindWindow(ID_EMIT_BELL)->SetValidator(
+        wxGenericValidator(& dat.m_bell));
     FindWindow(ID_NO_AUTO_FLIP)->SetValidator(
         wxGenericValidator(& dat.m_no_auto_flip));
 }
@@ -208,6 +226,9 @@ void GeneralDialog::SetDialogHelp()
     wxString help3 = "Set this to skip the game selection dialog when a newly opened file has only one game";
     FindWindow(ID_STRAIGHT_TO_GAME)->SetHelpText(help3);
     FindWindow(ID_STRAIGHT_TO_GAME)->SetToolTip(help3);
+    wxString help3b = "Set this to skip the game selection dialog and go straight to the first game";
+    FindWindow(ID_STRAIGHT_TO_FIRST_GAME)->SetHelpText(help3b);
+    FindWindow(ID_STRAIGHT_TO_FIRST_GAME)->SetToolTip(help3b);
     wxString help4 = "Set this to use small board graphics on a large screen (takes effect at next restart)";
     FindWindow(ID_SMALL_BOARD)->SetHelpText(help4);
     FindWindow(ID_SMALL_BOARD)->SetToolTip(help4);
@@ -217,6 +238,9 @@ void GeneralDialog::SetDialogHelp()
     wxString help6 = "Set this if you don't want the board to automatically flip around when you start a game as black";
     FindWindow(ID_NO_AUTO_FLIP)->SetHelpText(help6);
     FindWindow(ID_NO_AUTO_FLIP)->SetToolTip(help6);
+    wxString help7 = "Set this if you want the engine to emit a bell sound when it moves in human versus engine games";
+    FindWindow(ID_EMIT_BELL)->SetHelpText(help7);
+    FindWindow(ID_EMIT_BELL)->SetToolTip(help7);
 }
 
 

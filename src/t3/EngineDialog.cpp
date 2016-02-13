@@ -387,9 +387,12 @@ void EngineDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
       wxT("(say) 1200 with two custom parameters as follows;\n")
       wxT(" Parameter 1, set name=UCI_Elo and value=1200.\n")
       wxT(" Parameter 2, set name=UCI_LimitStrength and value=true\n\n")
-      wxT("(Komodo does not support this option at all and Rybka\n")
-      wxT("doesn't support it very well, it seems very reluctant to\n")
-      wxT("play like a beginner)\n\n")
+      wxT("Komodo does not support this option at all and Rybka\n")
+      wxT("doesn't support it very well. Stockfish uses a different\n")
+      wxT("parameter entirely for this function. To try it out;\n")
+      wxT(" Parameter 1, set name=Skill Level and value=0.\n") 
+      wxT("Experiment with values in the range 0 to 20 (higher is\n")
+      wxT("stronger - it's not clear how the value maps to Elo).\n\n")
       wxT("Please exercise caution when using the custom parameters!\n");
     wxMessageBox(helpText,
       wxT("Engine dialog help"),

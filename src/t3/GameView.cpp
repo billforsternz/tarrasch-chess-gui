@@ -459,6 +459,18 @@ void GameView::Display( unsigned long pos )
     }
 }
 
+std::string ReplaceAll( const std::string &in, const std::string &from, const std::string &to )
+{
+    std::string out = in;
+    int pos = out.find(from);
+    while( pos != std::string::npos )
+    {
+        out.replace( pos, from.length(), to );
+        pos = out.find( from, pos+to.length() );
+    }
+    return out;
+}
+
 void GameView::ToString( std::string &str )
 {
     int nbr = expansion.size();
@@ -480,26 +492,19 @@ void GameView::ToString( std::string &str, int begin, int end )
                 frag = gve.node->game_move.pre_comment;   // fall-thru
             case COMMENT:
             {
+
+                // New policy with V2.03c
+                //  Only create '{' comments (most chess software doesn't understand ';' comments)
+                //  If  "}" appears in comment transform to "|>"    (change *is* restored when reading .pgn)
+                //  If  "|>" appears in comment transform to "| >"  (change is *not* restored when reading .pgn)
                 if( gve.type != PRE_COMMENT )
                     frag = gve.node->game_move.comment;
-                int idx = frag.find(';');
-                bool has_semi = (idx!=string::npos);
-                idx = frag.find('{');
-                bool has_brace1 = (idx!=string::npos);
-                idx = frag.find('}');
-                bool has_brace2 = (idx!=string::npos);
-                if( has_semi || has_brace1 || has_brace2 )
-                {
-                    make_comment = true;
-                    frag = ";" + frag;
-                }
+                std::string groomed = ReplaceAll(frag,"|>", "| >");
+                groomed = ReplaceAll(groomed,"}","|>");
+                if( i == begin )
+                    frag = "{" + groomed + "} ";
                 else
-                {
-                    if( i == begin )
-                        frag = "{" + frag + "} ";
-                    else
-                        frag = " {" + frag + "} ";
-                }
+                    frag = " {" + groomed + "} ";
                 break;
             }
             case MOVE0:
