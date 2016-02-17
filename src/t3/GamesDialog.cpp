@@ -478,8 +478,8 @@ void GamesDialog::CreateControls()
         objs.repository->nv.m_col7 = cols[7] =   6*x/142;    // "Round" 
         objs.repository->nv.m_col8 = cols[8] =   7*x/142;    // "Result"
         objs.repository->nv.m_col9 = cols[9] =   5*x/142;    // "ECO"   
-        objs.repository->nv.m_col10 = cols[10] = 5*x/142;    // "Ply"   
-        objs.repository->nv.m_col11= cols[11]=  54*x/142;    // "Moves"
+        objs.repository->nv.m_col10= cols[10]=  54*x/142;    // "Moves"
+        objs.repository->nv.m_col11 = cols[11] = 5*x/142;    // "Ply"   
     }
     cprintf( "cols[0] = %d\n", cols[0] );
     cprintf( "cols[1] = %d\n", cols[1] );
@@ -513,9 +513,9 @@ void GamesDialog::CreateControls()
     gc->col_flags.push_back(col_flag);
     list_ctrl->SetColumnWidth( 9, cols[9] );    // "ECO"   
     gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth(10, cols[10] );   // "Ply"
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth(11, cols[11] );   // "Moves"
+    list_ctrl->SetColumnWidth(10, cols[11] );   // "Ply"
+    gc->col_flags.push_back(col_flag);                       // Note that Ply and Moves are inverted here for compatibility with T2 (on T2 there is no Ply so nv.m_col10 is Moves)
+    list_ctrl->SetColumnWidth(11, cols[10] );   // "Moves"
     gc->col_flags.push_back(col_flag);
     //int top_item;
     //bool resuming = gc->IsResumingPreviousWindow(top_item);
@@ -592,16 +592,6 @@ void GamesDialog::CreateControls()
         wxT("Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
     vsiz_panel_button1->Add(cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-    // Select site/or event
-    wxRadioButton *site_button = new wxRadioButton( this, ID_SITE_EVENT,
-       wxT("&Site"), wxDefaultPosition, wxDefaultSize,  wxRB_GROUP );
-    wxRadioButton *event_button = new wxRadioButton( this, ID_SITE_EVENT,
-       wxT("&Event"), wxDefaultPosition, wxDefaultSize, 0 );
-    site_button->SetValue( !objs.repository->nv.m_event_not_site );
-    event_button->SetValue( objs.repository->nv.m_event_not_site );
-    vsiz_panel_button1->Add(site_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    vsiz_panel_button1->Add(event_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-
     // The Help button
     wxButton* help = new wxButton( this, wxID_HELP, wxT("Help"),
         wxDefaultPosition, wxDefaultSize, 0 );
@@ -613,6 +603,17 @@ void GamesDialog::CreateControls()
     
     // Overridden by specialised classes
     GdvAddExtraControls();
+
+    // Select site/or event
+    wxRadioButton *site_button = new wxRadioButton( this, ID_SITE_EVENT,
+       wxT("&Site"), wxDefaultPosition, wxDefaultSize,  wxRB_GROUP );
+    wxRadioButton *event_button = new wxRadioButton( this, ID_SITE_EVENT,
+       wxT("&Event"), wxDefaultPosition, wxDefaultSize, 0 );
+    site_button->SetValue( !objs.repository->nv.m_event_not_site );
+    event_button->SetValue( objs.repository->nv.m_event_not_site );
+    vsiz_panel_button1->Add(site_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_button1->Add(event_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
 }
 
 
@@ -952,8 +953,9 @@ bool GamesDialog::ShowModalOk( std::string title )
     objs.repository->nv.m_col7  = list_ctrl->GetColumnWidth( 7 );    // "Round" 
     objs.repository->nv.m_col8  = list_ctrl->GetColumnWidth( 8 );    // "Result"
     objs.repository->nv.m_col9  = list_ctrl->GetColumnWidth( 9 );    // "ECO"   
-    objs.repository->nv.m_col10 = list_ctrl->GetColumnWidth(10 );    // "Ply"
-    objs.repository->nv.m_col11 = list_ctrl->GetColumnWidth(11 );    // "Moves"
+    objs.repository->nv.m_col10 = list_ctrl->GetColumnWidth(11 );    // "Moves"
+            // Note that Ply and Moves are inverted here for compatibility with T2 (on T2 there is no Ply so nv.m_col10 is Moves)
+    objs.repository->nv.m_col11 = list_ctrl->GetColumnWidth(10 );    // "Ply"
     return ok;
 }
 
@@ -1051,6 +1053,7 @@ void GamesDialog::CopyOrAdd( bool clear_clipboard )
             gc_clipboard->gds.push_back( gc->gds[idx_focus] ); // assumes smart_ptr is std::shared_ptr
             nbr_copied++;
         }
+        Goto( 0<=idx_focus && idx_focus<sz ? idx_focus : 0 );
     }
     dbg_printf( "%d games copied\n", nbr_copied );
 }
@@ -1110,11 +1113,27 @@ void GamesDialog::OnCutOrDelete( bool cut )
 
 void GamesDialog::OnSiteEvent( wxCommandEvent& WXUNUSED(event) )
 {
-    int gds_nbr = gc->gds.size();
+    int gds_nbr = list_ctrl->GetItemCount();
+    int top = list_ctrl->GetTopItem();
+    int end = top + list_ctrl->GetCountPerPage();
+    if( top > gds_nbr-1 )
+        top = gds_nbr-1;
+    if( end > gds_nbr )
+        end = gds_nbr;
     objs.repository->nv.m_event_not_site = !objs.repository->nv.m_event_not_site;
-    for( int i=0; i<gds_nbr; i++ )    
-        list_ctrl->SetItem( i, 6, objs.repository->nv.m_event_not_site ? gc->gds[i]->Event() : gc->gds[i]->Site() );
-    list_ctrl->RefreshItems( 0, gds_nbr-1 );
+    for( int i=top; i<end; i++ )    
+    {
+        CompactGame info;
+        GdvReadItem( i, info );
+        std::string field;
+        if( objs.repository->nv.m_event_not_site )
+            field = info.r.event;
+        else
+            field = info.r.site;
+        list_ctrl->SetItem( i, 6, field.c_str() );
+    }
+    list_ctrl->RefreshItems( top, end-1 );
+    Goto( 0<=track->focus_idx && track->focus_idx<gds_nbr ? track->focus_idx : 0 );
 }
 
 void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )

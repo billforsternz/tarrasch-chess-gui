@@ -45,14 +45,14 @@ public:
     void FindPlayerEnd();
 
     int LoadGameWithQuery( CompactGame *info, int game_id );
-    int LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<ListableGame> > &games, std::unordered_set<int> &games_set );
+    int LoadGamesWithQuery( const thc::ChessPosition &cp, uint64_t hash, std::vector< smart_ptr<ListableGame> > &games, std::unordered_set<int> &games_set );
     int LoadGamesWithQuery( std::string &player_name, bool white, std::vector< smart_ptr<ListableGame> > &games );
+    MemoryPositionSearch tiny_db;
   
 private:
     DB_REQ db_req;
     bool is_open;
     bool is_tiny_db;
-    MemoryPositionSearch tiny_db;
 
     // Create a handle for database connection, create a pointer to sqlite3
     sqlite3 *gbl_handle;

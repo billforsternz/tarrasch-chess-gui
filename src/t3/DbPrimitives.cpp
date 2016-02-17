@@ -32,7 +32,6 @@ static bool purge_buckets( bool force=false );
 
 #define TINY_DB
 
-
 // Handle for database connection
 static sqlite3 *handle;
 static int game_id;
@@ -648,7 +647,7 @@ bool db_primitive_check_for_duplicate( bool &signal_error, uint64_t game_hash, c
                 // All rows finished
                 sqlite3_finalize(stmt);
                 stmt = NULL;
-                #if 0
+                #if 1
                 if( white_match && black_match && result_match && moves_match )
                 {
                     cprintf( "Duplicate game %s-%s %s found\n", white,black,result);

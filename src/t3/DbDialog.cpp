@@ -113,6 +113,9 @@ wxSizer *DbDialog::GdvAddExtraControls()
                                  wxT("&Clipboard as temp database"), wxDefaultPosition, wxDefaultSize, 0 );
     vsiz_panel_button1->Add(filter_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     filter_ctrl->SetValue( objs.gl->db_clipboard );
+    wxStaticText* spacer1 = new wxStaticText( this, wxID_ANY, wxT(""),
+                                     wxDefaultPosition, wxDefaultSize, 0 );
+    vsiz_panel_button1->Add(spacer1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     
     /*radio_ctrl = new wxRadioButton( this,  ID_DB_RADIO,
      wxT("&Radio"), wxDefaultPosition, wxDefaultSize,  wxRB_GROUP );
@@ -585,49 +588,51 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
     if( list_ctrl )
     {
         CompactGame pact;
-        int sz=gc_db_displayed_games.gds.size();
-        if( sz == 0 )
+        int nbr = list_ctrl->GetItemCount();
+        for( int i=0; i<nbr; i++ )
         {
-            int nbr = list_ctrl->GetItemCount();
-            if( 0<=track->focus_idx && track->focus_idx<nbr )
-            {
-                CompressMoves press;
-                std::string blob = press.Compress(track->info.moves);
-                ListableGameDb info( 0, track->info.r, blob );
-                make_smart_ptr( ListableGameDb, new_info, info );
-                gc_clipboard->gds.push_back( std::move(new_info ) );
-                nbr_copied++;
-            }
-        }
-        else
-        {
-            int sz=gc_db_displayed_games.gds.size();
-            for( int i=0; i<sz; i++ )
-            {
-                if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
-                    idx_focus = i;
-                if( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED) )
-                {
-                    if( clear_clipboard )
-                    {
-                        clear_clipboard = false;
-                        gc_clipboard->gds.clear();
-                    }
-                    gc_clipboard->gds.push_back( gc_db_displayed_games.gds[i] ); // assumes smart_ptr is std::shared_ptr
-                    nbr_copied++;
-                }
-            }
-            if( nbr_copied==0 && idx_focus>=0 )
+            if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
+                idx_focus = i;
+            if( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED) )
             {
                 if( clear_clipboard )
                 {
                     clear_clipboard = false;
                     gc_clipboard->gds.clear();
                 }
-                gc_clipboard->gds.push_back( gc_db_displayed_games.gds[idx_focus] ); // assumes smart_ptr is std::shared_ptr
+                if( nbr == gc_db_displayed_games.gds.size() )
+                    gc_clipboard->gds.push_back( gc_db_displayed_games.gds[i] ); // assumes smart_ptr is std::shared_ptr
+                else
+                {
+                    CompactGame pact;
+                    GdvReadItem( i, pact );
+                    ListableGameDb info( pact.game_id, pact );
+                    make_smart_ptr( ListableGameDb, new_info, info );
+                    gc_clipboard->gds.push_back( std::move(new_info ) );
+                }
                 nbr_copied++;
             }
         }
+        if( nbr_copied==0 && idx_focus>=0 )
+        {
+            if( clear_clipboard )
+            {
+                clear_clipboard = false;
+                gc_clipboard->gds.clear();
+            }
+            if( nbr == gc_db_displayed_games.gds.size() )
+                gc_clipboard->gds.push_back( gc_db_displayed_games.gds[idx_focus] ); // assumes smart_ptr is std::shared_ptr
+            else
+            {
+                CompactGame pact;
+                GdvReadItem( idx_focus, pact );
+                ListableGameDb info( pact.game_id, pact );
+                make_smart_ptr( ListableGameDb, new_info, info );
+                gc_clipboard->gds.push_back( std::move(new_info ) );
+            }
+            nbr_copied++;
+        }
+        Goto( 0<=idx_focus && idx_focus<nbr ? idx_focus : 0 );
     }
     dbg_printf( "%d games copied\n", nbr_copied );
 }
@@ -677,7 +682,7 @@ void DbDialog::StatsCalculate()
     else
     {
         drill_down_set.insert(gbl_hash);
-        objs.db->LoadGamesWithQuery( gbl_hash, gc->gds, games_set );
+        objs.db->LoadGamesWithQuery( cr_to_match, gbl_hash, gc->gds, games_set );
     }
     
     // For each cached game

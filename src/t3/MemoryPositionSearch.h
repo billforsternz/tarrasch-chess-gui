@@ -47,7 +47,7 @@ public:
     bool TryFastMode( MpsSide *side );
     bool SearchGame( std::string &moves_in );
     void Init() { thc::ChessPosition *cp = static_cast<thc::ChessPosition *>(&cr); cp->Init(); TryFastMode( &sides[0]); TryFastMode( &sides[1]); }
-    int  DoSearch( uint64_t position_hash );
+    int  DoSearch( const thc::ChessPosition &cp, uint64_t position_hash );
     bool GetGameidFromRow( int row, int &game_id );
     
 public:
@@ -55,6 +55,10 @@ public:
     std::vector< std::pair<int,std::string> > in_memory_game_cache;
 
 private:
+    int black_count_target;
+    int black_pawn_count_target;
+    int white_count_target;
+    int white_pawn_count_target;
     uint64_t hash_target;
     uint64_t hash_initial;
     std::vector<int> games_found;

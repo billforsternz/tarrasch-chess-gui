@@ -193,11 +193,26 @@ bool MemoryPositionSearch::TryFastMode( MpsSide *side )
     side->fast_mode = okay;
     return okay;
 }
-    
-int  MemoryPositionSearch::DoSearch( uint64_t position_hash )
+
+int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t position_hash )
 {
-    wxBell();
     games_found.clear();
+    black_count_target = 0;
+    black_pawn_count_target = 0;
+    white_count_target = 0;
+    white_pawn_count_target = 0;
+    for( int i=0; i<64; i++ )
+    {
+        char piece = cp.squares[i];
+        if( isalpha(piece) && isupper(piece) )
+            white_count_target++;
+        if( isalpha(piece) && islower(piece) )
+            black_count_target++;
+        if( piece == 'P' )
+            white_pawn_count_target++;
+        if( piece == 'p' )
+            black_pawn_count_target++;
+    }
     hash_target = position_hash;
     int nbr = in_memory_game_cache.size();
     for( int i=0; i<nbr; i++ )
@@ -225,6 +240,10 @@ bool MemoryPositionSearch::GetGameidFromRow( int row, int &game_id )
 
 bool MemoryPositionSearch::SearchGame( std::string &moves_in )
 {
+    int black_count=16;
+    int black_pawn_count=8;
+    int white_count=16;
+    int white_pawn_count=8;
     Init();
     uint64_t hash = hash_initial;
     int len = moves_in.size();
@@ -253,6 +272,39 @@ bool MemoryPositionSearch::SearchGame( std::string &moves_in )
         if( hash == hash_target )
             return true;
         cr.PlayMove(mv);
+        if( isalpha(mv.capture) )
+        {
+            if( islower(mv.capture) )
+            {
+                black_count--;
+                if( black_count < black_count_target )
+                    return false;            
+                if( mv.capture == 'p' )
+                {
+                    black_pawn_count--;  // pawns can also disappear at promotion time
+                                         //  disregarding that means we sometimes
+                                         //  continue searching unnecessarily but
+                                         //  doesn't cause errors
+                    if( black_pawn_count < black_pawn_count_target )
+                        return false;            
+                }
+            }
+            else
+            {
+                white_count--;
+                if( white_count < white_count_target )
+                    return false;            
+                if( mv.capture == 'P' )
+                {
+                    white_pawn_count--;  // pawns can also disappear at promotion time
+                                         //  disregarding that means we sometimes
+                                         //  continue searching unnecessarily but
+                                         //  doesn't cause errors
+                    if( white_pawn_count < white_pawn_count_target )
+                        return false;            
+                }
+            }
+        }
     }
     return false;
 }

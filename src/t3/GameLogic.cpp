@@ -12,6 +12,10 @@
 #include "wx/listctrl.h"
 #include "wx/filename.h"
 #include "wx/utils.h"
+#if !wxUSE_THREADS
+    #error "Requires thread support!"
+#endif // wxUSE_THREADS
+#include "wx/thread.h"
 #include "Appdefs.h"
 #include "Canvas.h"
 #include "thc.h"
@@ -929,42 +933,48 @@ void GameLogic::CmdDatabasePlayers()
 
 void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req )
 {
-    std::string error_msg;
-    bool operational = objs.db->IsOperational(error_msg);
-    if( !operational )
+    cprintf( "May wait for tiny database load here...\n" );
+    extern wxMutex s_mutex_tiny_database;
+    wxMutexLocker lock(s_mutex_tiny_database);
     {
-        wxMessageBox(
-            "The database is not currently running. To correct this select a database "
-            "using the database menu. If you don't have a database, the database menu "
-            "also offers a command to create a database.", "Database problem", wxOK|wxICON_ERROR
-        );
-    }
-    else
-    {
-        Atomic begin;
-        bool editing_log = objs.gl->EditingLog();
-        std::vector<GameDocument> games;
-        wxPoint pt(0,0);
-        wxSize sz = objs.frame->GetSize();
-        sz.x = (sz.x*9)/10;
-        sz.y = (sz.y*9)/10;
-        DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard, db_req, ID_GAMES_DIALOG_DATABASE, pt, sz );   // GamesDialog instance
-        if( dialog.ShowModalOk("Database games") )
+        cprintf( "...if we did wait, that wait is now over\n" );
+        std::string error_msg;
+        bool operational = objs.db->IsOperational(error_msg);
+        if( !operational )
         {
-            objs.log->SaveGame(&gd,editing_log);
-            //objs.session->SaveGame(&gd);        //careful...
-            GameDocument temp = gd;
-            GameDocument new_gd;
-            PutBackDocument();
-            if( dialog.LoadGameTwo(new_gd) )
-            {
-                tabs->TabNew(new_gd);
-                tabs->SetInfile(false);
-                ShowNewDocument();
-            }
-            objs.session->SaveGame(&temp);      // ...modify session only after loading old game
+            wxMessageBox(
+                "The database is not currently running. To correct this select a database "
+                "using the database menu. If you don't have a database, the database menu "
+                "also offers a command to create a database.", "Database problem", wxOK|wxICON_ERROR
+            );
         }
-        atom.StatusUpdate();
+        else
+        {
+            Atomic begin;
+            bool editing_log = objs.gl->EditingLog();
+            std::vector<GameDocument> games;
+            wxPoint pt(0,0);
+            wxSize sz = objs.frame->GetSize();
+            sz.x = (sz.x*9)/10;
+            sz.y = (sz.y*9)/10;
+            DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard, db_req, ID_GAMES_DIALOG_DATABASE, pt, sz );   // GamesDialog instance
+            if( dialog.ShowModalOk("Database games") )
+            {
+                objs.log->SaveGame(&gd,editing_log);
+                //objs.session->SaveGame(&gd);        //careful...
+                GameDocument temp = gd;
+                GameDocument new_gd;
+                PutBackDocument();
+                if( dialog.LoadGameTwo(new_gd) )
+                {
+                    tabs->TabNew(new_gd);
+                    tabs->SetInfile(false);
+                    ShowNewDocument();
+                }
+                objs.session->SaveGame(&temp);      // ...modify session only after loading old game
+            }
+            atom.StatusUpdate();
+        }
     }
 }
 

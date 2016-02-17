@@ -19,6 +19,10 @@
 #include "DbPrimitives.h"
 #include "Database.h"
 #include "Repository.h"
+#if !wxUSE_THREADS
+    #error "Requires thread support!"
+#endif // wxUSE_THREADS
+#include "wx/thread.h"
 #include "wx/msgout.h"
 #include "wx/progdlg.h"
 #include "wx/filename.h"
@@ -29,6 +33,42 @@
 //
 
 #define NBR_BUCKETS 4096
+
+// Use a worker thread to load tiny database games
+class WorkerThread : public wxThread
+{
+public:
+    //WorkerThread();
+    //virtual ~WorkerThread();
+
+    // thread execution starts here
+    virtual void *Entry();
+};
+
+
+static Database *the_database;
+
+static void LoadInBackground( Database *ptr1 )
+{
+    the_database = ptr1;
+    WorkerThread *thread = new WorkerThread;
+    int err = thread->Create();
+    cprintf( "LoadInBackground(), err=%d\n", err ); 
+    if( err == wxTHREAD_NO_ERROR )
+    {
+        cprintf( "Running worker thread\n" ); 
+        thread->Run();
+    }
+}
+
+wxMutex s_mutex_tiny_database;
+void * WorkerThread::Entry()
+{
+    cprintf( "Entering worker thread\n" );
+    wxMutexLocker lock(s_mutex_tiny_database);
+    the_database->LoadAllGamesForPositionSearch( the_database->tiny_db.in_memory_game_cache );
+    return 0;
+}
 
 Database::Database( const char *db_file )
 {
@@ -46,7 +86,14 @@ Database::Database( const char *db_file )
     std::string nomsg;
     IsOperational( nomsg );
     if( is_open && is_tiny_db  )
+    {
+#define USE_BACKGROUND_THREAD
+#ifdef USE_BACKGROUND_THREAD
+        LoadInBackground( this );
+#else
         LoadAllGamesForPositionSearch( tiny_db.in_memory_game_cache );
+#endif
+    }
     
     // If connection failed, handle returns NULL
     dbg_printf( "DATABASE CONSTRUCTOR %s\n", retval ? "FAILED" : "SUCCESSFUL" );
@@ -116,7 +163,13 @@ void Database::Reopen( const char *db_file )
     std::string nomsg;
     IsOperational( nomsg );
     if( is_open && is_tiny_db  )
+    {
+#ifdef USE_BACKGROUND_THREAD
+        LoadInBackground( this );
+#else
         LoadAllGamesForPositionSearch( tiny_db.in_memory_game_cache );
+#endif
+    }
     
     // If connection failed, handle returns NULL
     dbg_printf( "DATABASE REOPEN %s\n", retval ? "FAILED" : "SUCCESSFUL" );
@@ -258,7 +311,7 @@ int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &pl
     {
         if( is_tiny_db )
         {
-            game_count = tiny_db.DoSearch(position_hash);
+            game_count = tiny_db.DoSearch(cr,position_hash);
             db_access_required = false;
         }
         else
@@ -566,7 +619,7 @@ int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::ve
 }
 
 
-int Database::LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<ListableGame> > &games, std::unordered_set<int> &games_set )
+int Database::LoadGamesWithQuery( const thc::ChessPosition &cp, uint64_t hash, std::vector< smart_ptr<ListableGame> > &games, std::unordered_set<int> &games_set )
 {
     int nbr_before = games.size();
     sqlite3_stmt *stmt;    // A prepared statement for fetching from games table
@@ -580,7 +633,7 @@ int Database::LoadGamesWithQuery( uint64_t hash, std::vector< smart_ptr<Listable
     int retval=-1;
     if( is_tiny_db )
     {
-        int game_count = tiny_db.DoSearch(hash);
+        int game_count = tiny_db.DoSearch(cp,hash);
         bool ok=true;
         for( int i=0; ok && i<game_count; i++ )
         {
@@ -788,7 +841,7 @@ int Database::GetRow( int row, CompactGame *info )
 
 int Database::GetRowRaw( CompactGame *pact, int row )
 {
-    if( is_tiny_db )
+    if( is_tiny_db && db_req==REQ_POSITION )
     {
         int game_id;
         bool ok = tiny_db.GetGameidFromRow( row, game_id );
@@ -936,7 +989,7 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
     int table_nbr = (int)((temp>>32)&(NBR_BUCKETS-1));
     if( is_tiny_db && db_req==REQ_POSITION )
     {
-        int game_count = tiny_db.DoSearch(position_hash);
+        int game_count = tiny_db.DoSearch(gbl_position,position_hash);
         bool ok=true;
         int retval=-1;
         for( int i=0; ok && i<game_count; i++ )

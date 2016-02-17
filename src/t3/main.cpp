@@ -681,7 +681,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     menu_database->Append (ID_DATABASE_SHOW_ALL,            _T("Show all games"));
     menu_database->Append (ID_DATABASE_PLAYERS,             _T("Show all ordered by player"));
     menu_database->Append (ID_DATABASE_SELECT,              _T("Select current database"));
-    menu_database->Append (ID_DATABASE_CREATE,              _T("Create new database"));
+    menu_database->Append (ID_DATABASE_CREATE,              _T("Create new database\tAlt-B"));
     menu_database->Append (ID_DATABASE_APPEND,              _T("Append to database"));
     // menu_database->Append (ID_DATABASE_MAINTENANCE,         _T("INTERNAL TEST - REMOVE SOON - Maintain database"));
 
