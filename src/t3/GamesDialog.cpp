@@ -1133,7 +1133,8 @@ void GamesDialog::OnSiteEvent( wxCommandEvent& WXUNUSED(event) )
         list_ctrl->SetItem( i, 6, field.c_str() );
     }
     list_ctrl->RefreshItems( top, end-1 );
-    Goto( 0<=track->focus_idx && track->focus_idx<gds_nbr ? track->focus_idx : 0 );
+    //Goto( 0<=track->focus_idx && track->focus_idx<gds_nbr ? track->focus_idx : 0 );
+    list_ctrl->SetFocus();
 }
 
 void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )

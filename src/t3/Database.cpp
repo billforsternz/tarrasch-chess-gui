@@ -64,9 +64,16 @@ static void LoadInBackground( Database *ptr1 )
 wxMutex s_mutex_tiny_database;
 void * WorkerThread::Entry()
 {
-    cprintf( "Entering worker thread\n" );
-    wxMutexLocker lock(s_mutex_tiny_database);
-    the_database->LoadAllGamesForPositionSearch( the_database->tiny_db.in_memory_game_cache );
+    static int count;
+    int temp = ++count;
+    cprintf( "Entering worker thread, may wait for mutex (%d)...\n", temp );
+    {
+        wxMutexLocker lock(s_mutex_tiny_database);
+        {
+            cprintf( "... if we waited for mutex, wait is over (%d)\n", temp );
+            the_database->LoadAllGamesForPositionSearch( the_database->tiny_db.in_memory_game_cache );
+        }
+    }
     return 0;
 }
 
@@ -1169,6 +1176,15 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
 }
 
 
+/* static void Delay( int count )
+{
+    for( int i=0; i<count; i++ )
+    {
+        char buf[100];
+        sprintf( buf, "%d", i );
+    }
+}  */
+
 bool Database::LoadAllGamesForPositionSearch( std::vector< std::pair<int,std::string> > &cache )
 {
     int nbr_games=0;
@@ -1230,6 +1246,7 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< std::pair<int,std::st
                 }
                 std::pair<int, std::string> game(game_id,str_blob);
                 cache.push_back( game );
+                //Delay(1000);
                 nbr_games++;
                 if(
                    ((nbr_games%10000) == 0 ) /* ||

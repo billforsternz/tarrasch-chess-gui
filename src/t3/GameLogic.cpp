@@ -933,11 +933,13 @@ void GameLogic::CmdDatabasePlayers()
 
 void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req )
 {
-    cprintf( "May wait for tiny database load here...\n" );
+    static int count;
+    int temp = ++count;
+    cprintf( "CmdDatabase(): May wait for tiny database load here (%d)...\n", temp );
     extern wxMutex s_mutex_tiny_database;
     wxMutexLocker lock(s_mutex_tiny_database);
     {
-        cprintf( "...if we did wait, that wait is now over\n" );
+        cprintf( "...CmdDatabase() if we did wait, that wait is now over (%d)\n", temp );
         std::string error_msg;
         bool operational = objs.db->IsOperational(error_msg);
         if( !operational )
@@ -985,20 +987,28 @@ void GameLogic::CmdDatabaseSelect()
     fd.SetPath(path);
     if( wxID_OK == fd.ShowModal() )
     {
-        wxString s = fd.GetPath();
-        wxString previous = objs.repository->database.m_file;
-        objs.repository->database.m_file = s;
-        const char *filename = s.c_str();
-        cprintf( "File is %s\n", filename );
-        objs.db->Reopen(filename);
-        std::string error_msg;
-        bool operational = objs.db->IsOperational(error_msg);
-        if( operational )
-            objs.repository->database.m_file = s;
-        else
+        static int count;
+        int temp = ++count;
+        cprintf( "CmdDatabaseSelect(): May wait for tiny database load here (%d)...\n", temp );
+        extern wxMutex s_mutex_tiny_database;
+        wxMutexLocker lock(s_mutex_tiny_database);
         {
-            objs.db->Reopen(previous);
-            wxMessageBox( error_msg.c_str(), "Database selection failed", wxOK|wxICON_ERROR );
+            cprintf( "...CmdDatabaseSelect() if we did wait, that wait is now over (%d)\n", temp );
+            wxString s = fd.GetPath();
+            wxString previous = objs.repository->database.m_file;
+            objs.repository->database.m_file = s;
+            const char *filename = s.c_str();
+            cprintf( "File is %s\n", filename );
+            objs.db->Reopen(filename);
+            std::string error_msg;
+            bool operational = objs.db->IsOperational(error_msg);
+            if( operational )
+                objs.repository->database.m_file = s;
+            else
+            {
+                objs.db->Reopen(previous);
+                wxMessageBox( error_msg.c_str(), "Database selection failed", wxOK|wxICON_ERROR );
+            }
         }
     }
 }
@@ -1018,20 +1028,28 @@ void GameLogic::CmdDatabaseCreate()
         bool set_current = (answer == wxYES);
         if( set_current )
         {
-            wxString previous = objs.repository->database.m_file;
-            wxString s(dialog.db_name.c_str());
-            objs.repository->database.m_file = s;
-            const char *filename = s.c_str();
-            cprintf( "File is %s\n", filename );
-            objs.db->Reopen(filename);
-            std::string error_msg;
-            bool operational = objs.db->IsOperational(error_msg);
-            if( operational )
-                objs.repository->database.m_file = s;
-            else
+            static int count;
+            int temp = ++count;
+            cprintf( "CmdDatabaseCreate(): May wait for tiny database load here (%d)...\n", temp );
+            extern wxMutex s_mutex_tiny_database;
+            wxMutexLocker lock(s_mutex_tiny_database);
             {
-                objs.db->Reopen(previous);
-                wxMessageBox( error_msg.c_str(), "Database selection failed", wxOK|wxICON_ERROR );
+                cprintf( "...CmdDatabaseCreate() if we did wait, that wait is now over (%d)\n", temp );
+                wxString previous = objs.repository->database.m_file;
+                wxString s(dialog.db_name.c_str());
+                objs.repository->database.m_file = s;
+                const char *filename = s.c_str();
+                cprintf( "File is %s\n", filename );
+                objs.db->Reopen(filename);
+                std::string error_msg;
+                bool operational = objs.db->IsOperational(error_msg);
+                if( operational )
+                    objs.repository->database.m_file = s;
+                else
+                {
+                    objs.db->Reopen(previous);
+                    wxMessageBox( error_msg.c_str(), "Database selection failed", wxOK|wxICON_ERROR );
+                }
             }
         }
     }
