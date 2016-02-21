@@ -135,7 +135,7 @@ bool MemoryPositionSearch::TryFastMode( MpsSide *side )
         
         // Pawns are traversed according to pawn_ordering[]
         int j = static_cast<int>(traverse_order[i]);
-        if( cr.squares[j] == (side->white?'P':'p') )
+        if( msi.cr.squares[j] == (side->white?'P':'p') )
         {
             if( side->nbr_pawns < 8 )
                 side->pawns[side->nbr_pawns++] = j;
@@ -144,21 +144,21 @@ bool MemoryPositionSearch::TryFastMode( MpsSide *side )
         }
         
         // Other pieces are traversed in normal square convention order
-        if( cr.squares[i] == (side->white?'R':'r') )
+        if( msi.cr.squares[i] == (side->white?'R':'r') )
         {
             if( side->nbr_rooks < 2 )
                 side->rooks[side->nbr_rooks++] = i;
             else
                 okay = false;
         }
-        else if( cr.squares[i] == (side->white?'N':'n') )
+        else if( msi.cr.squares[i] == (side->white?'N':'n') )
         {
             if( side->nbr_knights < 2 )
                 side->knights[side->nbr_knights++] = i;
             else
                 okay = false;
         }
-        else if( cr.squares[i] == (side->white?'B':'b') )
+        else if( msi.cr.squares[i] == (side->white?'B':'b') )
         {
             if( is_dark(i) )
             {
@@ -177,14 +177,14 @@ bool MemoryPositionSearch::TryFastMode( MpsSide *side )
                     okay = false;
             }
         }
-        else if( cr.squares[i] == (side->white?'Q':'q') )
+        else if( msi.cr.squares[i] == (side->white?'Q':'q') )
         {
             if( side->nbr_queens < 2 )
                 side->queens[side->nbr_queens++] = i;
             else
                 okay = false;
         }
-        else if( cr.squares[i] == (side->white?'K':'k') )
+        else if( msi.cr.squares[i] == (side->white?'K':'k') )
         {
             side->king = i;
         }
@@ -200,63 +200,63 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
     games_found.clear();
 
     // Set up counts of total pieces, and individual pieces in the target position
-    black_count_target = 0;
-    black_pawn_count_target = 0;
-    white_count_target = 0;
-    white_pawn_count_target = 0;
-    mqi_init.white_pawn_target = 0;
-    mqi_init.white_rook_target = 0;
-    mqi_init.white_knight_target = 0;
-    mqi_init.white_light_bishop_target = 0;
-    mqi_init.white_dark_bishop_target = 0;
-    mqi_init.white_queen_target = 0;
-    mqi_init.black_pawn_target = 0;
-    mqi_init.black_rook_target = 0;
-    mqi_init.black_knight_target = 0;
-    mqi_init.black_light_bishop_target = 0;
-    mqi_init.black_dark_bishop_target = 0;
-    mqi_init.black_queen_target = 0;
+    ms.black_count_target = 0;
+    ms.black_pawn_count_target = 0;
+    ms.white_count_target = 0;
+    ms.white_pawn_count_target = 0;
+    mq.white_pawn_target = 0;
+    mq.white_rook_target = 0;
+    mq.white_knight_target = 0;
+    mq.white_light_bishop_target = 0;
+    mq.white_dark_bishop_target = 0;
+    mq.white_queen_target = 0;
+    mq.black_pawn_target = 0;
+    mq.black_rook_target = 0;
+    mq.black_knight_target = 0;
+    mq.black_light_bishop_target = 0;
+    mq.black_dark_bishop_target = 0;
+    mq.black_queen_target = 0;
     for( int i=0; i<64; i++ )
     {
         char piece = cp.squares[i];
-        slow_target_squares[i] = piece;     // no transform of B->D or b->d
+        ms.slow_target_squares[i] = piece;     // no transform of B->D or b->d
         switch(piece)
         {
             case 'P':
             {
-                white_count_target++;
-                white_pawn_count_target++;
-                mqi_init.white_pawn_target++;
+                ms.white_count_target++;
+                ms.white_pawn_count_target++;
+                mq.white_pawn_target++;
                 break;
             }
             case 'R':
             {
-                white_count_target++;
-                mqi_init.white_rook_target++;
+                ms.white_count_target++;
+                mq.white_rook_target++;
                 break;
             }
             case 'N':
             {
-                white_count_target++;
-                mqi_init.white_knight_target++;
+                ms.white_count_target++;
+                mq.white_knight_target++;
                 break;
             }
             case 'B':
             {
-                white_count_target++;
+                ms.white_count_target++;
                 if( !is_dark(i)  )
-                    mqi_init.white_light_bishop_target++;
+                    mq.white_light_bishop_target++;
                 else
                 {
-                    mqi_init.white_dark_bishop_target++;
+                    mq.white_dark_bishop_target++;
                     piece = 'D';
                 }
                 break;
             }
             case 'Q':
             {
-                white_count_target++;
-                mqi_init.white_queen_target++;
+                ms.white_count_target++;
+                mq.white_queen_target++;
                 break;
             }
             case 'K':
@@ -265,39 +265,39 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
             }
             case 'p':
             {
-                black_count_target++;
-                black_pawn_count_target++;
-                mqi_init.black_pawn_target++;
+                ms.black_count_target++;
+                ms.black_pawn_count_target++;
+                mq.black_pawn_target++;
                 break;
             }
             case 'r':
             {
-                black_count_target++;
-                mqi_init.black_rook_target++;
+                ms.black_count_target++;
+                mq.black_rook_target++;
                 break;
             }
             case 'n':
             {
-                black_count_target++;
-                mqi_init.black_knight_target++;
+                ms.black_count_target++;
+                mq.black_knight_target++;
                 break;
             }
             case 'b':
             {
-                black_count_target++;
+                ms.black_count_target++;
                 if( !is_dark(i)  )
-                    mqi_init.black_light_bishop_target++;
+                    mq.black_light_bishop_target++;
                 else
                 {
-                    mqi_init.black_dark_bishop_target++;
+                    mq.black_dark_bishop_target++;
                     piece = 'd';
                 }
                 break;
             }
             case 'q':
             {
-                black_count_target++;
-                mqi_init.black_queen_target++;
+                ms.black_count_target++;
+                mq.black_queen_target++;
                 break;
             }
             case 'k':
@@ -311,11 +311,11 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
         }
 
         // Also set up a target position, with the refinement that D/d is a dark bishop B/b is a light bishop
-        target_squares[i] = piece;
+        mq.target_squares[i] = piece;
     }
 
     // Set up white_home_mask and white_home_pawns to support the following logic;
-    //  bool home_pawns_still_in_place = ((white_home_mask&*rank2_ptr) == white_home_pawns );
+    //  bool home_pawns_still_in_place = ((white_home_mask&*mq.rank2_ptr) == white_home_pawns );
     //
     //  A home row pawn from the target position must be in place in all positions leading
     //   to the target position - if it's not then this game doesn't include the target position
@@ -325,7 +325,7 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
     char *pawns = reinterpret_cast<char *>(&white_home_pawns);
     for( int i=0; i<8; i++ )
     {
-        if( target_squares[48+i] == 'P' )
+        if( mq.target_squares[48+i] == 'P' )
         {
             mask[i] = '\x7f';
             pawns[i] = 'P';
@@ -342,7 +342,7 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
     pawns = reinterpret_cast<char *>(&black_home_pawns);
     for( int i=0; i<8; i++ )
     {
-        if( target_squares[8+i] == 'p' )
+        if( mq.target_squares[8+i] == 'p' )
         {
             mask[i] = '\x7f';
             pawns[i] = 'p';
@@ -392,8 +392,8 @@ bool MemoryPositionSearch::SearchGameBase( std::string &moves_in )
         return true;
     for( int i=0; i<len; i++ )
     {
-        MpsSide *side  = cr.white ? &sides[0] : &sides[1];
-        MpsSide *other = cr.white ? &sides[1] : &sides[0];
+        MpsSide *side  = msi.cr.white ? &msi.sides[0] : &msi.sides[1];
+        MpsSide *other = msi.cr.white ? &msi.sides[1] : &msi.sides[0];
         char code = moves_in[i];
         thc::Move mv;
         if( side->fast_mode )
@@ -409,16 +409,16 @@ bool MemoryPositionSearch::SearchGameBase( std::string &moves_in )
             mv = UncompressSlowMode(code);
             other->fast_mode = false;   // force other side to reset and retry
         }
-        hash = cr.Hash64Update(hash,mv);
+        hash = msi.cr.Hash64Update(hash,mv);
         if( hash == hash_target )
             return true;
-        cr.PlayMove(mv);
+        msi.cr.PlayMove(mv);
         if( isalpha(mv.capture) )
         {
             if( islower(mv.capture) )
             {
                 black_count--;
-                if( black_count < black_count_target )
+                if( black_count < ms.black_count_target )
                     return false;            
                 if( mv.capture == 'p' )
                 {
@@ -426,14 +426,14 @@ bool MemoryPositionSearch::SearchGameBase( std::string &moves_in )
                                          //  disregarding that means we sometimes
                                          //  continue searching unnecessarily but
                                          //  doesn't cause errors
-                    if( black_pawn_count < black_pawn_count_target )
+                    if( black_pawn_count < ms.black_pawn_count_target )
                         return false;            
                 }
             }
             else
             {
                 white_count--;
-                if( white_count < white_count_target )
+                if( white_count < ms.white_count_target )
                     return false;            
                 if( mv.capture == 'P' )
                 {
@@ -441,7 +441,7 @@ bool MemoryPositionSearch::SearchGameBase( std::string &moves_in )
                                          //  disregarding that means we sometimes
                                          //  continue searching unnecessarily but
                                          //  doesn't cause errors
-                    if( white_pawn_count < white_pawn_count_target )
+                    if( white_pawn_count < ms.white_pawn_count_target )
                         return false;            
                 }
             }
@@ -454,14 +454,14 @@ thc::Move MemoryPositionSearch::UncompressSlowMode( char code )
 {
 
     // Support algorithm ALLOW_CASTLING_EVEN_AFTER_KING_AND_ROOK_MOVES
-    cr.wking = 1;
-    cr.wqueen = 1;
-    cr.bking = 1;
-    cr.bqueen = 1;
+    msi.cr.wking = 1;
+    msi.cr.wqueen = 1;
+    msi.cr.bking = 1;
+    msi.cr.bqueen = 1;
     
     // Generate a list of all legal moves, in string form, sorted
     std::vector<thc::Move> moves;
-    cr.GenLegalMoveList( moves );
+    msi.cr.GenLegalMoveList( moves );
     std::vector<std::string> moves_alpha;
     
     // Coding scheme relies on 254 valid codes 0x02-0xff and one error code 0x01,
@@ -481,7 +481,7 @@ thc::Move MemoryPositionSearch::UncompressSlowMode( char code )
         idx = 0;    // all errors resolve to this - take first move from list
     std::string the_move = moves_alpha[idx];
     thc::Move mv;
-    mv.TerseIn( &cr, the_move.c_str() );
+    mv.TerseIn( &msi.cr, the_move.c_str() );
     return mv;
 }
 
@@ -511,7 +511,7 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
                 case K_VECTOR_SE:    delta =  9; break;  // 18-9
                 case K_K_CASTLING:
                 {
-                    special = cr.white ? thc::SPECIAL_WK_CASTLING : thc::SPECIAL_BK_CASTLING;
+                    special = msi.cr.white ? thc::SPECIAL_WK_CASTLING : thc::SPECIAL_BK_CASTLING;
                     delta = 2;
                     int rook_offset = (side->rooks[0]==src+3 ? 0 : 1);  // a rook will be 3 squares to right of king
                     side->rooks[rook_offset] = src+1;                   // that rook ends up 1 square right of king
@@ -520,7 +520,7 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
                 }
                 case K_Q_CASTLING:
                 {
-                    special = cr.white ? thc::SPECIAL_WQ_CASTLING : thc::SPECIAL_BQ_CASTLING;
+                    special = msi.cr.white ? thc::SPECIAL_WQ_CASTLING : thc::SPECIAL_BQ_CASTLING;
                     delta = -2;
                     int rook_offset = (side->rooks[0]==src-4 ? 0 : 1);  // a rook will be 4 squares to left of king
                     side->rooks[rook_offset] = src-1;                   // that rook ends up 1 square left of king
@@ -707,7 +707,7 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
             bool promoting = false;
             src = side->pawns[pawn_offset];
             bool reordering_possible = false;
-            bool white = cr.white;
+            bool white = msi.cr.white;
             int delta;
             switch( code&0x0f )
             {
@@ -718,7 +718,7 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
                 {
                     reordering_possible = true;
                     delta = white?-9:9;
-                    if( !isalpha(cr.squares[src+delta]) )
+                    if( !isalpha(msi.cr.squares[src+delta]) )
                         special = (white ? thc::SPECIAL_WEN_PASSANT : thc::SPECIAL_BEN_PASSANT);
                     break;
                 }
@@ -726,7 +726,7 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
                 {
                     reordering_possible = true;
                     delta = white?-7:7;
-                    if( !isalpha(cr.squares[src+delta]) )
+                    if( !isalpha(msi.cr.squares[src+delta]) )
                         special = (white ? thc::SPECIAL_WEN_PASSANT : thc::SPECIAL_BEN_PASSANT);
                     break;
                 }
@@ -790,7 +790,7 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
         capture_location = dst+8;
     else if( special == thc::SPECIAL_BEN_PASSANT )
         capture_location = dst-8;
-    char capture = cr.squares[capture_location];
+    char capture = msi.cr.squares[capture_location];
     bool making_capture = (isalpha(capture) ? true : false);
     if( making_capture && other->fast_mode )
     {
@@ -853,10 +853,10 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
 }
 
 
-#define WHITE_HOME_ROW_TEST ((*rank2_ptr & white_home_mask) == white_home_pawns)    
-#define BLACK_HOME_ROW_TEST ((*rank7_ptr & black_home_mask) == black_home_pawns)    
-#define SLOW_WHITE_HOME_ROW_TEST ((*slow_rank2_ptr & white_home_mask) == white_home_pawns)    
-#define SLOW_BLACK_HOME_ROW_TEST ((*slow_rank7_ptr & black_home_mask) == black_home_pawns)    
+#define WHITE_HOME_ROW_TEST ((*mq.rank2_ptr & white_home_mask) == white_home_pawns)    
+#define BLACK_HOME_ROW_TEST ((*mq.rank7_ptr & black_home_mask) == black_home_pawns)    
+#define SLOW_WHITE_HOME_ROW_TEST ((*ms.slow_rank2_ptr & white_home_mask) == white_home_pawns)    
+#define SLOW_BLACK_HOME_ROW_TEST ((*ms.slow_rank7_ptr & black_home_mask) == black_home_pawns)    
 
 bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &moves_in )
 {
@@ -883,7 +883,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &m
         cprintf( "%s%s%s", before, s.c_str(), after );
         cr.PlayMove(mv);
     } */
-    GameInit();
+    QuickGameInit();
     int i=0, len=moves_in.size();
     int ndebug_positions=60;
     for(;;)
@@ -903,14 +903,14 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &m
 
         // Check for match before every move
         if( 
-            *rank3_ptr == *rank3_target_ptr &&
-            *rank4_ptr == *rank4_target_ptr &&
-            *rank5_ptr == *rank5_target_ptr &&
-            *rank6_ptr == *rank6_target_ptr &&
-            *rank7_ptr == *rank7_target_ptr &&
-            *rank8_ptr == *rank8_target_ptr &&
-            *rank1_ptr == *rank1_target_ptr &&
-            *rank2_ptr == *rank2_target_ptr
+            *mq.rank3_ptr == *mq.rank3_target_ptr &&
+            *mq.rank4_ptr == *mq.rank4_target_ptr &&
+            *mq.rank5_ptr == *mq.rank5_target_ptr &&
+            *mq.rank6_ptr == *mq.rank6_target_ptr &&
+            *mq.rank7_ptr == *mq.rank7_target_ptr &&
+            *mq.rank8_ptr == *mq.rank8_target_ptr &&
+            *mq.rank1_ptr == *mq.rank1_target_ptr &&
+            *mq.rank2_ptr == *mq.rank2_target_ptr
         )
         {
             return true;
@@ -1115,7 +1115,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &m
                         mqi.squares[dst] = 'P';
                         mqi.squares[src] = '.';
                         mqi.side_white.pawns[pawn_offset] = dst;
-                        if( !((*rank2_ptr & white_home_mask) == white_home_pawns) ) //WHITE_HOME_ROW_TEST )
+                        if( !((*mq.rank2_ptr & white_home_mask) == white_home_pawns) ) //WHITE_HOME_ROW_TEST )
                             return false;
                         break;
                     }
@@ -1205,13 +1205,13 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &m
                             mqi.side_black.pawns[i] = mqi.side_black.pawns[i+1];
                         }
                     }
-                    if( --mqi.side_black.nbr_pawns < mqi.black_pawn_target )
+                    if( --mqi.side_black.nbr_pawns < mq.black_pawn_target )
                         return false;
                     break;
                 }
                 case 'q':
                 {
-                    if( mqi.black_queen_target == 1 )
+                    if( mq.black_queen_target == 1 )
                         return false;
                     break;
                 }
@@ -1219,7 +1219,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &m
                 {
                     if( mqi.side_black.nbr_rooks==2 && mqi.side_black.rooks[0]==dst )
                         mqi.side_black.rooks[0] = mqi.side_black.rooks[1];
-                    if( --mqi.side_black.nbr_rooks < mqi.black_rook_target )
+                    if( --mqi.side_black.nbr_rooks < mq.black_rook_target )
                         return false;
                     break;
                 }
@@ -1227,18 +1227,18 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &m
                 {
                     if( mqi.side_black.nbr_knights==2 && mqi.side_black.knights[0]==dst )
                         mqi.side_black.knights[0] = mqi.side_black.knights[1];
-                    if( --mqi.side_black.nbr_knights < mqi.black_knight_target )
+                    if( --mqi.side_black.nbr_knights < mq.black_knight_target )
                         return false;
                     break;
                 }
                 case 'b':
                 {
-                    if( mqi.black_light_bishop_target == 1 )
+                    if( mq.black_light_bishop_target == 1 )
                         return false;
                 }
                 case 'd':
                 {
-                    if( mqi.black_dark_bishop_target == 1 )
+                    if( mq.black_dark_bishop_target == 1 )
                         return false;
                 }
             }
@@ -1256,14 +1256,14 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &m
             }
         }    */
         if( 
-            *rank3_ptr == *rank3_target_ptr &&
-            *rank4_ptr == *rank4_target_ptr &&
-            *rank5_ptr == *rank5_target_ptr &&
-            *rank6_ptr == *rank6_target_ptr &&
-            *rank7_ptr == *rank7_target_ptr &&
-            *rank8_ptr == *rank8_target_ptr &&
-            *rank1_ptr == *rank1_target_ptr &&
-            *rank2_ptr == *rank2_target_ptr
+            *mq.rank3_ptr == *mq.rank3_target_ptr &&
+            *mq.rank4_ptr == *mq.rank4_target_ptr &&
+            *mq.rank5_ptr == *mq.rank5_target_ptr &&
+            *mq.rank6_ptr == *mq.rank6_target_ptr &&
+            *mq.rank7_ptr == *mq.rank7_target_ptr &&
+            *mq.rank8_ptr == *mq.rank8_target_ptr &&
+            *mq.rank1_ptr == *mq.rank1_target_ptr &&
+            *mq.rank2_ptr == *mq.rank2_target_ptr
         )
         {
             return true;
@@ -1557,13 +1557,13 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &m
                             mqi.side_white.pawns[i] = mqi.side_white.pawns[i+1];
                         }
                     }
-                    if( --mqi.side_white.nbr_pawns < mqi.white_pawn_target )
+                    if( --mqi.side_white.nbr_pawns < mq.white_pawn_target )
                         return false;
                     break;
                 }
                 case 'Q':
                 {
-                    if( mqi.white_queen_target == 1 )
+                    if( mq.white_queen_target == 1 )
                         return false;
                     break;
                 }
@@ -1571,7 +1571,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &m
                 {
                     if( mqi.side_white.nbr_rooks==2 && mqi.side_white.rooks[0]==dst )
                         mqi.side_white.rooks[0] = mqi.side_white.rooks[1];
-                    if( --mqi.side_white.nbr_rooks < mqi.white_rook_target )
+                    if( --mqi.side_white.nbr_rooks < mq.white_rook_target )
                         return false;
                     break;
                 }
@@ -1579,18 +1579,18 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &m
                 {
                     if( mqi.side_white.nbr_knights==2 && mqi.side_white.knights[0]==dst )
                         mqi.side_white.knights[0] = mqi.side_white.knights[1];
-                    if( --mqi.side_white.nbr_knights < mqi.white_knight_target )
+                    if( --mqi.side_white.nbr_knights < mq.white_knight_target )
                         return false;
                     break;
                 }
                 case 'B':
                 {
-                    if( mqi.white_light_bishop_target == 1 )
+                    if( mq.white_light_bishop_target == 1 )
                         return false;
                 }
                 case 'D':
                 {
-                    if( mqi.white_dark_bishop_target == 1 )
+                    if( mq.white_dark_bishop_target == 1 )
                         return false;
                 }
             }
@@ -1610,22 +1610,22 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( std::string &moves_in
     SlowGameInit();
     int len = moves_in.size();
     if( 
-        *slow_rank3_ptr == *slow_rank3_target_ptr &&
-        *slow_rank4_ptr == *slow_rank4_target_ptr &&
-        *slow_rank5_ptr == *slow_rank5_target_ptr &&
-        *slow_rank6_ptr == *slow_rank6_target_ptr &&
-        *slow_rank7_ptr == *slow_rank7_target_ptr &&
-        *slow_rank8_ptr == *slow_rank8_target_ptr &&
-        *slow_rank1_ptr == *slow_rank1_target_ptr &&
-        *slow_rank2_ptr == *slow_rank2_target_ptr
+        *ms.slow_rank3_ptr == *ms.slow_rank3_target_ptr &&
+        *ms.slow_rank4_ptr == *ms.slow_rank4_target_ptr &&
+        *ms.slow_rank5_ptr == *ms.slow_rank5_target_ptr &&
+        *ms.slow_rank6_ptr == *ms.slow_rank6_target_ptr &&
+        *ms.slow_rank7_ptr == *ms.slow_rank7_target_ptr &&
+        *ms.slow_rank8_ptr == *ms.slow_rank8_target_ptr &&
+        *ms.slow_rank1_ptr == *ms.slow_rank1_target_ptr &&
+        *ms.slow_rank2_ptr == *ms.slow_rank2_target_ptr
     )
     {
         return true;
     }
     for( int i=0; i<len; i++ )
     {
-        MpsSide *side  = cr.white ? &sides[0] : &sides[1];
-        MpsSide *other = cr.white ? &sides[1] : &sides[0];
+        MpsSide *side  = msi.cr.white ? &msi.sides[0] : &msi.sides[1];
+        MpsSide *other = msi.cr.white ? &msi.sides[1] : &msi.sides[0];
         char code = moves_in[i];
         thc::Move mv;
         if( side->fast_mode )
@@ -1642,20 +1642,20 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( std::string &moves_in
             other->fast_mode = false;   // force other side to reset and retry
         }
         if( 
-            *slow_rank3_ptr == *slow_rank3_target_ptr &&
-            *slow_rank4_ptr == *slow_rank4_target_ptr &&
-            *slow_rank5_ptr == *slow_rank5_target_ptr &&
-            *slow_rank6_ptr == *slow_rank6_target_ptr &&
-            *slow_rank7_ptr == *slow_rank7_target_ptr &&
-            *slow_rank8_ptr == *slow_rank8_target_ptr &&
-            *slow_rank1_ptr == *slow_rank1_target_ptr &&
-            *slow_rank2_ptr == *slow_rank2_target_ptr
+            *ms.slow_rank3_ptr == *ms.slow_rank3_target_ptr &&
+            *ms.slow_rank4_ptr == *ms.slow_rank4_target_ptr &&
+            *ms.slow_rank5_ptr == *ms.slow_rank5_target_ptr &&
+            *ms.slow_rank6_ptr == *ms.slow_rank6_target_ptr &&
+            *ms.slow_rank7_ptr == *ms.slow_rank7_target_ptr &&
+            *ms.slow_rank8_ptr == *ms.slow_rank8_target_ptr &&
+            *ms.slow_rank1_ptr == *ms.slow_rank1_target_ptr &&
+            *ms.slow_rank2_ptr == *ms.slow_rank2_target_ptr
         )
         {
             return true;
         }
-        char mover = cr.squares[mv.src];
-        cr.PlayMove(mv);
+        char mover = msi.cr.squares[mv.src];
+        msi.cr.PlayMove(mv);
         if( mover=='P' && 48<=mv.src && mv.src<56 && !SLOW_WHITE_HOME_ROW_TEST )
             return false;
         if( mover=='p' && 8<=mv.src && mv.src<16 && !SLOW_BLACK_HOME_ROW_TEST )
@@ -1665,7 +1665,7 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( std::string &moves_in
             if( islower(mv.capture) )
             {
                 black_count--;
-                if( black_count < black_count_target )
+                if( black_count < ms.black_count_target )
                     return false;            
                 if( mv.capture == 'p' )
                 {
@@ -1673,7 +1673,7 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( std::string &moves_in
                                          //  disregarding that means we sometimes
                                          //  continue searching unnecessarily but
                                          //  doesn't cause errors
-                    if( black_pawn_count < black_pawn_count_target )
+                    if( black_pawn_count < ms.black_pawn_count_target )
                         return false;
                     if(  8<=mv.dst && mv.dst<16 && !SLOW_BLACK_HOME_ROW_TEST )
                         return false;
@@ -1683,7 +1683,7 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( std::string &moves_in
             else
             {
                 white_count--;
-                if( white_count < white_count_target )
+                if( white_count < ms.white_count_target )
                     return false;            
                 if( mv.capture == 'P' )
                 {
@@ -1691,7 +1691,7 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( std::string &moves_in
                                          //  disregarding that means we sometimes
                                          //  continue searching unnecessarily but
                                          //  doesn't cause errors
-                    if( white_pawn_count < white_pawn_count_target )
+                    if( white_pawn_count < ms.white_pawn_count_target )
                         return false;            
                     if( 48<=mv.dst && mv.dst<56 && !SLOW_WHITE_HOME_ROW_TEST )
                         return false;
