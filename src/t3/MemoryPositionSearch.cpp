@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <wx/utils.h>
 #include "MemoryPositionSearch.h"
+#include "CompressMoves.h"  //temp testing
 #include "DebugPrintf.h"
 
 
@@ -197,27 +198,167 @@ bool MemoryPositionSearch::TryFastMode( MpsSide *side )
 int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t position_hash )
 {
     games_found.clear();
+
+    // Set up counts of total pieces, and individual pieces in the target position
     black_count_target = 0;
     black_pawn_count_target = 0;
     white_count_target = 0;
     white_pawn_count_target = 0;
+    mqi_init.white_pawn_target = 0;
+    mqi_init.white_rook_target = 0;
+    mqi_init.white_knight_target = 0;
+    mqi_init.white_light_bishop_target = 0;
+    mqi_init.white_dark_bishop_target = 0;
+    mqi_init.white_queen_target = 0;
+    mqi_init.black_pawn_target = 0;
+    mqi_init.black_rook_target = 0;
+    mqi_init.black_knight_target = 0;
+    mqi_init.black_light_bishop_target = 0;
+    mqi_init.black_dark_bishop_target = 0;
+    mqi_init.black_queen_target = 0;
     for( int i=0; i<64; i++ )
     {
         char piece = cp.squares[i];
-        if( isalpha(piece) && isupper(piece) )
-            white_count_target++;
-        if( isalpha(piece) && islower(piece) )
-            black_count_target++;
-        if( piece == 'P' )
-            white_pawn_count_target++;
-        if( piece == 'p' )
-            black_pawn_count_target++;
+        slow_target_squares[i] = piece;     // no transform of B->D or b->d
+        switch(piece)
+        {
+            case 'P':
+            {
+                white_count_target++;
+                white_pawn_count_target++;
+                mqi_init.white_pawn_target++;
+                break;
+            }
+            case 'R':
+            {
+                white_count_target++;
+                mqi_init.white_rook_target++;
+                break;
+            }
+            case 'N':
+            {
+                white_count_target++;
+                mqi_init.white_knight_target++;
+                break;
+            }
+            case 'B':
+            {
+                white_count_target++;
+                if( !is_dark(i)  )
+                    mqi_init.white_light_bishop_target++;
+                else
+                {
+                    mqi_init.white_dark_bishop_target++;
+                    piece = 'D';
+                }
+                break;
+            }
+            case 'Q':
+            {
+                white_count_target++;
+                mqi_init.white_queen_target++;
+                break;
+            }
+            case 'K':
+            {
+                break;
+            }
+            case 'p':
+            {
+                black_count_target++;
+                black_pawn_count_target++;
+                mqi_init.black_pawn_target++;
+                break;
+            }
+            case 'r':
+            {
+                black_count_target++;
+                mqi_init.black_rook_target++;
+                break;
+            }
+            case 'n':
+            {
+                black_count_target++;
+                mqi_init.black_knight_target++;
+                break;
+            }
+            case 'b':
+            {
+                black_count_target++;
+                if( !is_dark(i)  )
+                    mqi_init.black_light_bishop_target++;
+                else
+                {
+                    mqi_init.black_dark_bishop_target++;
+                    piece = 'd';
+                }
+                break;
+            }
+            case 'q':
+            {
+                black_count_target++;
+                mqi_init.black_queen_target++;
+                break;
+            }
+            case 'k':
+            {
+                break;
+            }
+            default:
+            {
+                piece = '.';
+            }
+        }
+
+        // Also set up a target position, with the refinement that D/d is a dark bishop B/b is a light bishop
+        target_squares[i] = piece;
     }
+
+    // Set up white_home_mask and white_home_pawns to support the following logic;
+    //  bool home_pawns_still_in_place = ((white_home_mask&*rank2_ptr) == white_home_pawns );
+    //
+    //  A home row pawn from the target position must be in place in all positions leading
+    //   to the target position - if it's not then this game doesn't include the target position
+    //   e.g. After 1.e4 we can already conclude the game is never going to include a position
+    //   in which a white pawn is on e2
+    char *mask  = reinterpret_cast<char *>(&white_home_mask);
+    char *pawns = reinterpret_cast<char *>(&white_home_pawns);
+    for( int i=0; i<8; i++ )
+    {
+        if( target_squares[48+i] == 'P' )
+        {
+            mask[i] = '\x7f';
+            pawns[i] = 'P';
+        }
+        else
+        {
+            mask[i] = 0;
+            pawns[i] = 0;
+        }
+    }
+
+    // Do the same for the black home row
+    mask  = reinterpret_cast<char *>(&black_home_mask);
+    pawns = reinterpret_cast<char *>(&black_home_pawns);
+    for( int i=0; i<8; i++ )
+    {
+        if( target_squares[8+i] == 'p' )
+        {
+            mask[i] = '\x7f';
+            pawns[i] = 'p';
+        }
+        else
+        {
+            mask[i] = 0;
+            pawns[i] = 0;
+        }
+    }
+
     hash_target = position_hash;
     int nbr = in_memory_game_cache.size();
     for( int i=0; i<nbr; i++ )
     {
-        bool game_found = SearchGame( in_memory_game_cache[i].second );
+        bool game_found = SearchGameOptimisedNoPromotionAllowed( in_memory_game_cache[i].second );
         if( game_found )
             games_found.push_back( in_memory_game_cache[i].first );
     }    
@@ -238,7 +379,7 @@ bool MemoryPositionSearch::GetGameidFromRow( int row, int &game_id )
     return ok;
 }
 
-bool MemoryPositionSearch::SearchGame( std::string &moves_in )
+bool MemoryPositionSearch::SearchGameBase( std::string &moves_in )
 {
     int black_count=16;
     int black_pawn_count=8;
@@ -711,4 +852,853 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
     return mv;
 }
 
+
+#define WHITE_HOME_ROW_TEST ((*rank2_ptr & white_home_mask) == white_home_pawns)    
+#define BLACK_HOME_ROW_TEST ((*rank7_ptr & black_home_mask) == black_home_pawns)    
+#define SLOW_WHITE_HOME_ROW_TEST ((*slow_rank2_ptr & white_home_mask) == white_home_pawns)    
+#define SLOW_BLACK_HOME_ROW_TEST ((*slow_rank7_ptr & black_home_mask) == black_home_pawns)    
+
+bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &moves_in )
+{
+/*  CompressMoves press;
+    std::vector<thc::Move> moves = press.Uncompress( moves_in );
+    thc::ChessRules cr;
+    for( int j=0; j<moves.size(); j++ )
+    {
+        thc::Move mv = moves[j];
+        std::string s = mv.NaturalOut(&cr);
+        char buf[20];
+        sprintf( buf, "%d.", cr.full_move_count );
+        const char *before = buf;
+        if( !cr.white )
+            before = " ";
+        const char *after = "";
+        if( j+1 < moves.size() )
+        {
+            if( ((j+1)&3) == 0 )
+                after = "\n";
+            else
+                after = " ";
+        }
+        cprintf( "%s%s%s", before, s.c_str(), after );
+        cr.PlayMove(mv);
+    } */
+    GameInit();
+    int i=0, len=moves_in.size();
+    int ndebug_positions=60;
+    for(;;)
+    {
+        /*char rank[9];
+        rank[8] = '\0';
+        if( ndebug_positions >= 0 )
+        {
+            ndebug_positions--;
+            cprintf( "\n");
+            for( int k=0; k<8; k++ )
+            {
+                memcpy( rank, &mqi.squares[k*8], 8 );
+                cprintf( "%s\n", rank );
+            }
+        }  */
+
+        // Check for match before every move
+        if( 
+            *rank3_ptr == *rank3_target_ptr &&
+            *rank4_ptr == *rank4_target_ptr &&
+            *rank5_ptr == *rank5_target_ptr &&
+            *rank6_ptr == *rank6_target_ptr &&
+            *rank7_ptr == *rank7_target_ptr &&
+            *rank8_ptr == *rank8_target_ptr &&
+            *rank1_ptr == *rank1_target_ptr &&
+            *rank2_ptr == *rank2_target_ptr
+        )
+        {
+            return true;
+        }
+
+        // No match on end of game
+        if( i >= len )
+        {
+            return false;
+        }
+
+        // White move
+        char code = moves_in[i++];
+        int src=0;
+        int dst=0;
+        int hi_nibble = code&0xf0;
+        char captured='.';
+        switch( hi_nibble )
+        {
+            case CODE_KING:
+            {
+                src = mqi.side_white.king;
+                int delta;
+                switch( code&0x0f )     // 0, 1, 2
+                {                       // 8, 9, 10
+                                        // 16,17,18
+                    case K_VECTOR_NW:    delta = -9; break;  // 0-9
+                    case K_VECTOR_N:     delta = -8; break;  // 1-9
+                    case K_VECTOR_NE:    delta = -7; break;  // 2-9
+                    case K_VECTOR_W:     delta = -1; break;  // 8-9
+                    case K_VECTOR_E:     delta =  1; break;  // 10-9
+                    case K_VECTOR_SW:    delta =  7; break;  // 16-9
+                    case K_VECTOR_S:     delta =  8; break;  // 17-9
+                    case K_VECTOR_SE:    delta =  9; break;  // 18-9
+                    case K_K_CASTLING:
+                    {
+                        // Idea: replace this with a single 32 bit ptr store of ' RK '
+                        delta = 2;
+                        int rook_offset = (mqi.side_white.rooks[0]==src+3 ? 0 : 1);  // a rook will be 3 squares to right of king
+                        mqi.side_white.rooks[rook_offset] = src+1;                   // that rook ends up 1 square right of king
+                        // note that there is no way the rooks ordering can swap during castling
+                        mqi.squares[src+1] = 'R';    //f1
+                        mqi.squares[src+3] = '.';    //h1
+                        break;
+                    }
+                    case K_Q_CASTLING:
+                    {
+                        delta = -2;
+                        int rook_offset = (mqi.side_white.rooks[0]==src-4 ? 0 : 1);  // a rook will be 4 squares to left of king
+                        mqi.side_white.rooks[rook_offset] = src-1;                   // that rook ends up 1 square left of king
+                        // note that there is no way the rooks ordering can swap during castling
+                        mqi.squares[src-1] = 'R';    //d1
+                        mqi.squares[src-4] = '.';    //a1
+                        break;
+                    }
+                }
+                mqi.side_white.king = dst = src+delta;
+                captured = mqi.squares[dst];
+                mqi.squares[dst] = 'K';
+                mqi.squares[src] = '.';
+                break;
+            }
+            
+            case CODE_ROOK_LO:
+            case CODE_ROOK_HI:
+            {
+                int rook_offset = (hi_nibble==CODE_ROOK_LO ? 0 : 1 );
+                src = mqi.side_white.rooks[rook_offset];
+			    if( code & R_RANK )                // code encodes rank ?
+			    {
+                    dst = ((code<<3)&0x38) | (src&7);   // same file as src, rank from code
+			    }
+			    else
+			    {
+                    dst = (src&0x38) | (code&7);        // same rank as src, file from code
+			    }
+                mqi.side_white.rooks[rook_offset] = dst;
+                captured = mqi.squares[dst];
+                mqi.squares[dst] = 'R';
+                mqi.squares[src] = '.';
+
+                // swap ?
+                if( mqi.side_white.nbr_rooks==2 && mqi.side_white.rooks[0]>mqi.side_white.rooks[1] )
+                {
+                    int temp = mqi.side_white.rooks[0];
+                    mqi.side_white.rooks[0] = mqi.side_white.rooks[1];
+                    mqi.side_white.rooks[1] = temp;
+                }
+                break;
+            }
+            
+            case CODE_BISHOP_DARK:
+            {
+                src = mqi.side_white.bishop_dark;
+                int file_delta = (code&7) - (src&7);
+                if( code & B_FALL )  // FALL\ + file
+                    dst = src + 9*file_delta;   // eg src=b8(1), dst=h2(55), file_delta=6  -> 9*6 =54
+                else                  // RISE/ + file
+                    dst = src - 7*file_delta;   // eg src=h8(7), dst=a1(56), file_delta=7  -> 7*7 =49
+                captured = mqi.squares[dst];
+                mqi.squares[dst] = 'D';
+                mqi.squares[src] = '.';
+                mqi.side_white.bishop_dark = dst;
+                break;
+            }
+            
+            case CODE_BISHOP_LIGHT:
+            {
+                src = mqi.side_white.bishop_light;
+                int file_delta = (code&7) - (src&7);
+                if( code & B_FALL )  // FALL\ + file
+                    dst = src + 9*file_delta;   // eg src=a8(0), dst=h1(63), file_delta=7  -> 9*7 =63
+                else                  // RISE/ + file
+                    dst = src - 7*file_delta;   // eg src=g8(6), dst=a2(48), file_delta=6  -> 7*6 =42
+                captured = mqi.squares[dst];
+                mqi.squares[dst] = 'B';
+                mqi.squares[src] = '.';
+                mqi.side_white.bishop_light = dst;
+                break;
+            }
+            
+            case CODE_QUEEN_ROOK:
+            {
+                src = mqi.side_white.queens[0];
+			    if( code & R_RANK )                // code encodes rank ?
+                    dst = ((code<<3)&0x38) | (src&7);   // same file as src, rank from code
+			    else
+                    dst = (src&0x38) | (code&7);        // same rank as src, file from code
+                captured = mqi.squares[dst];
+                mqi.squares[dst] = 'Q';
+                mqi.squares[src] = '.';
+                mqi.side_white.queens[0] = dst;
+                break;
+            }
+
+            case CODE_QUEEN_BISHOP:
+            {
+                src = mqi.side_white.queens[0];
+                int file_delta = (code&7) - (src&7);
+                if( code & B_FALL )  // FALL\ + file
+                    dst = src + 9*file_delta;   // eg src=a8(0), dst=h1(63), file_delta=7  -> 9*7 =63
+                else                  // RISE/ + file
+                    dst = src - 7*file_delta;   // eg src=h8(7), dst=a1(56), file_delta=7  -> 7*7 =49
+                captured = mqi.squares[dst];
+                mqi.squares[dst] = 'Q';
+                mqi.squares[src] = '.';
+                mqi.side_white.queens[0] = dst;
+                break;
+            }
+            
+            case CODE_KNIGHT:
+            {
+                int knight_offset = ((code&N_HI) ? 1 : 0 );
+                src = mqi.side_white.knights[knight_offset];
+                int delta;
+                switch(code&7)          // 0, 1, 2, 3
+                {                       // 8, 9, 10,11
+                                        // 16,17,18,19
+                                        // 24,25,26,27
+                    case N_VECTOR_NNE:   delta = -15;   break; // 2-17
+                    case N_VECTOR_NEE:   delta = -6;    break; // 11-17
+                    case N_VECTOR_SEE:   delta = 10;    break; // 27-17
+                    case N_VECTOR_SSE:   delta = 17;    break; // 27-10
+                    case N_VECTOR_SSW:   delta = 15;    break; // 25-10
+                    case N_VECTOR_SWW:   delta = 6;     break; // 16-10
+                    case N_VECTOR_NWW:   delta = -10;   break; // 0-10
+                    case N_VECTOR_NNW:   delta = -17;   break; // 0-17
+                }
+                dst = src+delta;
+                captured = mqi.squares[dst];
+                mqi.squares[dst] = 'N';
+                mqi.squares[src] = '.';
+                mqi.side_white.knights[knight_offset] = dst;
+
+                // swap ?
+                if( mqi.side_white.nbr_knights==2 && mqi.side_white.knights[0]>mqi.side_white.knights[1] )
+                {
+                    int temp = mqi.side_white.knights[0];
+                    mqi.side_white.knights[0] = mqi.side_white.knights[1];
+                    mqi.side_white.knights[1] = temp;
+                }
+                break;
+            }
+            
+            // PAWN
+            default:
+            {
+                int pawn_offset = (code>>4)&0x07;
+                src = mqi.side_white.pawns[pawn_offset];
+                int delta;
+                switch( code&0x0f )
+                {
+                    default:
+                    {
+                        return false;   // this code doesn't handle promotions
+                    }
+
+                    case P_DOUBLE:
+                    {
+                        delta = -16;
+                        dst = src+delta;
+                        mqi.squares[dst] = 'P';
+                        mqi.squares[src] = '.';
+                        mqi.side_white.pawns[pawn_offset] = dst;
+                        if( !((*rank2_ptr & white_home_mask) == white_home_pawns) ) //WHITE_HOME_ROW_TEST )
+                            return false;
+                        break;
+                    }
+                    case P_SINGLE:
+                    {
+                        delta = -8;
+                        dst = src+delta;
+                        mqi.squares[dst] = 'P';
+                        mqi.squares[src] = '.';
+                        mqi.side_white.pawns[pawn_offset] = dst;
+                        if( 48<=src && src<56 && !WHITE_HOME_ROW_TEST )
+                            return false;
+                        break;
+                    }
+                    case P_LEFT:
+                    {
+                        delta = -9;
+                        dst = src+delta;
+                        captured = mqi.squares[dst];
+                        mqi.squares[dst] = 'P';
+                        mqi.squares[src] = '.';
+                        mqi.side_white.pawns[pawn_offset] = dst;
+                        if( captured == '.' )
+                        {
+                            captured = 'p';     // en-passant
+                            mqi.squares[dst=src-1] = '.';
+                        }
+                        else if( 48<=src && src<56 && !WHITE_HOME_ROW_TEST )
+                            return false;
+
+                        // Decreasing capture possibly requires reordering White pawns 
+                        for( int i=pawn_offset; i-1>=0 && pawn_ordering[mqi.side_white.pawns[i-1]]>pawn_ordering[mqi.side_white.pawns[i]]; i-- )
+                        {
+                            int temp = mqi.side_white.pawns[i-1];
+                            mqi.side_white.pawns[i-1] = mqi.side_white.pawns[i];
+                            mqi.side_white.pawns[i] = temp;
+                        }
+                        break;
+                    }
+
+                    case P_RIGHT:
+                    {
+                        delta = -7;
+                        dst = src+delta;
+                        captured = mqi.squares[dst];
+                        mqi.squares[dst] = 'P';
+                        mqi.squares[src] = '.';
+                        mqi.side_white.pawns[pawn_offset] = dst;
+                        if( captured == '.' )
+                        {
+                            captured = 'p';     // en-passant
+                            mqi.squares[dst=src+1] = '.';
+                        }
+                        else if( 48<=src && src<56 && !WHITE_HOME_ROW_TEST )    // en-passant capture can't be from home row
+                            return false;
+
+                        // Increasing capture possibly requires reordering White pawns
+                        for( int i=pawn_offset; i+1<mqi.side_white.nbr_pawns && pawn_ordering[mqi.side_white.pawns[i]]>pawn_ordering[mqi.side_white.pawns[i+1]]; i++ )
+                        {
+                            int temp = mqi.side_white.pawns[i];
+                            mqi.side_white.pawns[i] = mqi.side_white.pawns[i+1];
+                            mqi.side_white.pawns[i+1] = temp;
+                        }
+                        break;
+                    }
+                }
+            }  // end switch on pawn types
+        }   // end switch all pieces
+
+        // White captures black
+        if( captured != '.' )
+        {
+            switch( captured )
+            {
+                case 'p':
+                {
+                    if( 8<=dst && dst<16 && !BLACK_HOME_ROW_TEST )
+                        return false;
+                    bool zap=false;
+                    for( int i=0; i<mqi.side_black.nbr_pawns-1; i++ )
+                    {
+                        if( zap )
+                            mqi.side_black.pawns[i] = mqi.side_black.pawns[i+1];
+                        else if( mqi.side_black.pawns[i] == dst )
+                        {
+                            zap = true;
+                            mqi.side_black.pawns[i] = mqi.side_black.pawns[i+1];
+                        }
+                    }
+                    if( --mqi.side_black.nbr_pawns < mqi.black_pawn_target )
+                        return false;
+                    break;
+                }
+                case 'q':
+                {
+                    if( mqi.black_queen_target == 1 )
+                        return false;
+                    break;
+                }
+                case 'r':
+                {
+                    if( mqi.side_black.nbr_rooks==2 && mqi.side_black.rooks[0]==dst )
+                        mqi.side_black.rooks[0] = mqi.side_black.rooks[1];
+                    if( --mqi.side_black.nbr_rooks < mqi.black_rook_target )
+                        return false;
+                    break;
+                }
+                case 'n':
+                {
+                    if( mqi.side_black.nbr_knights==2 && mqi.side_black.knights[0]==dst )
+                        mqi.side_black.knights[0] = mqi.side_black.knights[1];
+                    if( --mqi.side_black.nbr_knights < mqi.black_knight_target )
+                        return false;
+                    break;
+                }
+                case 'b':
+                {
+                    if( mqi.black_light_bishop_target == 1 )
+                        return false;
+                }
+                case 'd':
+                {
+                    if( mqi.black_dark_bishop_target == 1 )
+                        return false;
+                }
+            }
+        }
+
+        // Check for match before every move
+     /* if( ndebug_positions >= 0 )
+        {
+            ndebug_positions--;
+            cprintf( "\n");
+            for( int k=0; k<8; k++ )
+            {
+                memcpy( rank, &mqi.squares[k*8], 8 );
+                cprintf( "%s\n", rank );
+            }
+        }    */
+        if( 
+            *rank3_ptr == *rank3_target_ptr &&
+            *rank4_ptr == *rank4_target_ptr &&
+            *rank5_ptr == *rank5_target_ptr &&
+            *rank6_ptr == *rank6_target_ptr &&
+            *rank7_ptr == *rank7_target_ptr &&
+            *rank8_ptr == *rank8_target_ptr &&
+            *rank1_ptr == *rank1_target_ptr &&
+            *rank2_ptr == *rank2_target_ptr
+        )
+        {
+            return true;
+        }
+
+        // No match on end of game
+        if( i >= len )
+        {
+            return false;
+        }
+
+        // Black move
+        code = moves_in[i++];
+        src=0;
+        dst=0;
+        hi_nibble = code&0xf0;
+        captured='.';
+        switch( hi_nibble )
+        {
+            case CODE_KING:
+            {
+                src = mqi.side_black.king;
+                int delta;
+                switch( code&0x0f )     // 0, 1, 2
+                {                       // 8, 9, 10
+                                        // 16,17,18
+                    case K_VECTOR_NW:    delta = -9; break;  // 0-9
+                    case K_VECTOR_N:     delta = -8; break;  // 1-9
+                    case K_VECTOR_NE:    delta = -7; break;  // 2-9
+                    case K_VECTOR_W:     delta = -1; break;  // 8-9
+                    case K_VECTOR_E:     delta =  1; break;  // 10-9
+                    case K_VECTOR_SW:    delta =  7; break;  // 16-9
+                    case K_VECTOR_S:     delta =  8; break;  // 17-9
+                    case K_VECTOR_SE:    delta =  9; break;  // 18-9
+                    case K_K_CASTLING:
+                    {
+                        delta = 2;
+                        int rook_offset = (mqi.side_black.rooks[0]==src+3 ? 0 : 1);  // a rook will be 3 squares to right of king
+                        mqi.side_black.rooks[rook_offset] = src+1;                   // that rook ends up 1 square right of king
+                        // note that there is no way the rooks ordering can swap during castling
+                        mqi.squares[src+1] = 'r';    //f8
+                        mqi.squares[src+3] = '.';    //h8
+                        break;
+                    }
+                    case K_Q_CASTLING:
+                    {
+                        delta = -2;
+                        int rook_offset = (mqi.side_black.rooks[0]==src-4 ? 0 : 1);  // a rook will be 4 squares to left of king
+                        mqi.side_black.rooks[rook_offset] = src-1;                   // that rook ends up 1 square left of king
+                        // note that there is no way the rooks ordering can swap during castling
+                        mqi.squares[src-1] = 'r';    //d8
+                        mqi.squares[src-4] = '.';    //a8
+                        break;
+                    }
+                }
+                mqi.side_black.king = dst = src+delta;
+                captured = mqi.squares[dst];
+                mqi.squares[dst] = 'k';
+                mqi.squares[src] = '.';
+                break;
+            }
+            
+            case CODE_ROOK_LO:
+            case CODE_ROOK_HI:
+            {
+                int rook_offset = (hi_nibble==CODE_ROOK_LO ? 0 : 1 );
+                src = mqi.side_black.rooks[rook_offset];
+			    if( code & R_RANK )                // code encodes rank ?
+			    {
+                    dst = ((code<<3)&0x38) | (src&7);   // same file as src, rank from code
+			    }
+			    else
+			    {
+                    dst = (src&0x38) | (code&7);        // same rank as src, file from code
+			    }
+                mqi.side_black.rooks[rook_offset] = dst;
+                captured = mqi.squares[dst];
+                mqi.squares[dst] = 'r';
+                mqi.squares[src] = '.';
+
+                // swap ?
+                if( mqi.side_black.nbr_rooks==2 && mqi.side_black.rooks[0]>mqi.side_black.rooks[1] )
+                {
+                    int temp = mqi.side_black.rooks[0];
+                    mqi.side_black.rooks[0] = mqi.side_black.rooks[1];
+                    mqi.side_black.rooks[1] = temp;
+                }
+                break;
+            }
+            
+            case CODE_BISHOP_DARK:
+            {
+                src = mqi.side_black.bishop_dark;
+                int file_delta = (code&7) - (src&7);
+                if( code & B_FALL )  // FALL\ + file
+                    dst = src + 9*file_delta;   // eg src=b8(1), dst=h2(55), file_delta=6  -> 9*6 =54
+                else                  // RISE/ + file
+                    dst = src - 7*file_delta;   // eg src=h8(7), dst=a1(56), file_delta=7  -> 7*7 =49
+                captured = mqi.squares[dst];
+                mqi.squares[dst] = 'd';
+                mqi.squares[src] = '.';
+                mqi.side_black.bishop_dark = dst;
+                break;
+            }
+            
+            case CODE_BISHOP_LIGHT:
+            {
+                src = mqi.side_black.bishop_light;
+                int file_delta = (code&7) - (src&7);
+                if( code & B_FALL )  // FALL\ + file
+                    dst = src + 9*file_delta;   // eg src=a8(0), dst=h1(63), file_delta=7  -> 9*7 =63
+                else                  // RISE/ + file
+                    dst = src - 7*file_delta;   // eg src=g8(6), dst=a2(48), file_delta=6  -> 7*6 =42
+                captured = mqi.squares[dst];
+                mqi.squares[dst] = 'b';
+                mqi.squares[src] = '.';
+                mqi.side_black.bishop_light = dst;
+                break;
+            }
+            
+            case CODE_QUEEN_ROOK:
+            {
+                src = mqi.side_black.queens[0];
+			    if( code & R_RANK )                // code encodes rank ?
+                    dst = ((code<<3)&0x38) | (src&7);   // same file as src, rank from code
+			    else
+                    dst = (src&0x38) | (code&7);        // same rank as src, file from code
+                captured = mqi.squares[dst];
+                mqi.squares[dst] = 'q';
+                mqi.squares[src] = '.';
+                mqi.side_black.queens[0] = dst;
+                break;
+            }
+
+            case CODE_QUEEN_BISHOP:
+            {
+                src = mqi.side_black.queens[0];
+                int file_delta = (code&7) - (src&7);
+                if( code & B_FALL )  // FALL\ + file
+                    dst = src + 9*file_delta;   // eg src=a8(0), dst=h1(63), file_delta=7  -> 9*7 =63
+                else                  // RISE/ + file
+                    dst = src - 7*file_delta;   // eg src=h8(7), dst=a1(56), file_delta=7  -> 7*7 =49
+                captured = mqi.squares[dst];
+                mqi.squares[dst] = 'q';
+                mqi.squares[src] = '.';
+                mqi.side_black.queens[0] = dst;
+                break;
+            }
+            
+            case CODE_KNIGHT:
+            {
+                int knight_offset = ((code&N_HI) ? 1 : 0 );
+                src = mqi.side_black.knights[knight_offset];
+                int delta;
+                switch(code&7)          // 0, 1, 2, 3
+                {                       // 8, 9, 10,11
+                                        // 16,17,18,19
+                                        // 24,25,26,27
+                    case N_VECTOR_NNE:   delta = -15;   break; // 2-17
+                    case N_VECTOR_NEE:   delta = -6;    break; // 11-17
+                    case N_VECTOR_SEE:   delta = 10;    break; // 27-17
+                    case N_VECTOR_SSE:   delta = 17;    break; // 27-10
+                    case N_VECTOR_SSW:   delta = 15;    break; // 25-10
+                    case N_VECTOR_SWW:   delta = 6;     break; // 16-10
+                    case N_VECTOR_NWW:   delta = -10;   break; // 0-10
+                    case N_VECTOR_NNW:   delta = -17;   break; // 0-17
+                }
+                dst = src+delta;
+                captured = mqi.squares[dst];
+                mqi.squares[dst] = 'n';
+                mqi.squares[src] = '.';
+                mqi.side_black.knights[knight_offset] = dst;
+
+                // swap ?
+                if( mqi.side_black.nbr_knights==2 && mqi.side_black.knights[0]>mqi.side_black.knights[1] )
+                {
+                    int temp = mqi.side_black.knights[0];
+                    mqi.side_black.knights[0] = mqi.side_black.knights[1];
+                    mqi.side_black.knights[1] = temp;
+                }
+                break;
+            }
+            
+            // PAWN
+            default:
+            {
+                int pawn_offset = (code>>4)&0x07;
+                src = mqi.side_black.pawns[pawn_offset];
+                int delta;
+                switch( code&0x0f )
+                {
+                    default:
+                    {
+                        return false;   // this code doesn't handle promotions
+                    }
+
+                    case P_DOUBLE:
+                    {
+                        delta = 16;
+                        dst = src+delta;
+                        mqi.squares[dst] = 'p';
+                        mqi.squares[src] = '.';
+                        mqi.side_black.pawns[pawn_offset] = dst;
+                        if( !BLACK_HOME_ROW_TEST )
+                            return false;
+                        break;
+                    }
+                    case P_SINGLE:
+                    {
+                        delta = 8;
+                        dst = src+delta;
+                        mqi.squares[dst] = 'p';
+                        mqi.squares[src] = '.';
+                        mqi.side_black.pawns[pawn_offset] = dst;
+                        if( 8<=src && src<6 && !BLACK_HOME_ROW_TEST )
+                            return false;
+                        break;
+                    }
+                    case P_LEFT:
+                    {
+                        delta = 9;
+                        dst = src+delta;
+                        captured = mqi.squares[dst];
+                        mqi.squares[dst] = 'p';
+                        mqi.squares[src] = '.';
+                        mqi.side_black.pawns[pawn_offset] = dst;
+                        if( captured == '.' )
+                        {
+                            captured = 'P';     // en-passant
+                            mqi.squares[dst=src+1] = '.';
+                        }
+                        else if( 8<=src && src<16 && !BLACK_HOME_ROW_TEST )
+                            return false;
+
+                        // Increasing capture possibly requires reordering Black pawns
+                        for( int i=pawn_offset; i+1<mqi.side_black.nbr_pawns && pawn_ordering[mqi.side_black.pawns[i]]>pawn_ordering[mqi.side_black.pawns[i+1]]; i++ )
+                        {
+                            int temp = mqi.side_black.pawns[i];
+                            mqi.side_black.pawns[i] = mqi.side_black.pawns[i+1];
+                            mqi.side_black.pawns[i+1] = temp;
+                        }
+                        break;
+                    }
+
+                    case P_RIGHT:
+                    {
+                        delta = 7;
+                        dst = src+delta;
+                        captured = mqi.squares[dst];
+                        mqi.squares[dst] = 'p';
+                        mqi.squares[src] = '.';
+                        mqi.side_black.pawns[pawn_offset] = dst;
+                        if( captured == '.' )
+                        {
+                            captured = 'P';     // en-passant
+                            mqi.squares[dst=src-1] = '.';
+                        }
+                        else if( 8<=src && src<16 && !BLACK_HOME_ROW_TEST )    // en-passant capture can't be from home row
+                            return false;
+
+                        // Decreasing capture possibly requires reordering Black pawns 
+                        for( int i=pawn_offset; i-1>=0 && pawn_ordering[mqi.side_black.pawns[i-1]]>pawn_ordering[mqi.side_black.pawns[i]]; i-- )
+                        {
+                            int temp = mqi.side_black.pawns[i-1];
+                            mqi.side_black.pawns[i-1] = mqi.side_black.pawns[i];
+                            mqi.side_black.pawns[i] = temp;
+                        }
+                        break;
+                    }
+                }
+            }  // end switch on pawn types
+        }   // end switch all pieces
+
+        // Black captures white
+        if( captured != '.' )
+        {
+            switch( captured )
+            {
+                case 'P':
+                {
+                    if( 48<=dst && dst<56 && !WHITE_HOME_ROW_TEST )
+                        return false;
+                    bool zap=false;
+                    for( int i=0; i<mqi.side_white.nbr_pawns-1; i++ )
+                    {
+                        if( zap )
+                            mqi.side_white.pawns[i] = mqi.side_white.pawns[i+1];
+                        else if( mqi.side_white.pawns[i] == dst )
+                        {
+                            zap = true;
+                            mqi.side_white.pawns[i] = mqi.side_white.pawns[i+1];
+                        }
+                    }
+                    if( --mqi.side_white.nbr_pawns < mqi.white_pawn_target )
+                        return false;
+                    break;
+                }
+                case 'Q':
+                {
+                    if( mqi.white_queen_target == 1 )
+                        return false;
+                    break;
+                }
+                case 'R':
+                {
+                    if( mqi.side_white.nbr_rooks==2 && mqi.side_white.rooks[0]==dst )
+                        mqi.side_white.rooks[0] = mqi.side_white.rooks[1];
+                    if( --mqi.side_white.nbr_rooks < mqi.white_rook_target )
+                        return false;
+                    break;
+                }
+                case 'N':
+                {
+                    if( mqi.side_white.nbr_knights==2 && mqi.side_white.knights[0]==dst )
+                        mqi.side_white.knights[0] = mqi.side_white.knights[1];
+                    if( --mqi.side_white.nbr_knights < mqi.white_knight_target )
+                        return false;
+                    break;
+                }
+                case 'B':
+                {
+                    if( mqi.white_light_bishop_target == 1 )
+                        return false;
+                }
+                case 'D':
+                {
+                    if( mqi.white_dark_bishop_target == 1 )
+                        return false;
+                }
+            }
+        }
+
+
+    }
+    return false;
+}
+
+bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( std::string &moves_in )          // semi fast
+{
+    int black_count=16;
+    int black_pawn_count=8;
+    int white_count=16;
+    int white_pawn_count=8;
+    SlowGameInit();
+    int len = moves_in.size();
+    if( 
+        *slow_rank3_ptr == *slow_rank3_target_ptr &&
+        *slow_rank4_ptr == *slow_rank4_target_ptr &&
+        *slow_rank5_ptr == *slow_rank5_target_ptr &&
+        *slow_rank6_ptr == *slow_rank6_target_ptr &&
+        *slow_rank7_ptr == *slow_rank7_target_ptr &&
+        *slow_rank8_ptr == *slow_rank8_target_ptr &&
+        *slow_rank1_ptr == *slow_rank1_target_ptr &&
+        *slow_rank2_ptr == *slow_rank2_target_ptr
+    )
+    {
+        return true;
+    }
+    for( int i=0; i<len; i++ )
+    {
+        MpsSide *side  = cr.white ? &sides[0] : &sides[1];
+        MpsSide *other = cr.white ? &sides[1] : &sides[0];
+        char code = moves_in[i];
+        thc::Move mv;
+        if( side->fast_mode )
+        {
+            mv = UncompressFastMode(code,side,other);
+        }
+        else if( TryFastMode(side) )
+        {
+            mv = UncompressFastMode(code,side,other);
+        }
+        else
+        {
+            mv = UncompressSlowMode(code);
+            other->fast_mode = false;   // force other side to reset and retry
+        }
+        if( 
+            *slow_rank3_ptr == *slow_rank3_target_ptr &&
+            *slow_rank4_ptr == *slow_rank4_target_ptr &&
+            *slow_rank5_ptr == *slow_rank5_target_ptr &&
+            *slow_rank6_ptr == *slow_rank6_target_ptr &&
+            *slow_rank7_ptr == *slow_rank7_target_ptr &&
+            *slow_rank8_ptr == *slow_rank8_target_ptr &&
+            *slow_rank1_ptr == *slow_rank1_target_ptr &&
+            *slow_rank2_ptr == *slow_rank2_target_ptr
+        )
+        {
+            return true;
+        }
+        char mover = cr.squares[mv.src];
+        cr.PlayMove(mv);
+        if( mover=='P' && 48<=mv.src && mv.src<56 && !SLOW_WHITE_HOME_ROW_TEST )
+            return false;
+        if( mover=='p' && 8<=mv.src && mv.src<16 && !SLOW_BLACK_HOME_ROW_TEST )
+            return false;
+        if( isalpha(mv.capture) )
+        {
+            if( islower(mv.capture) )
+            {
+                black_count--;
+                if( black_count < black_count_target )
+                    return false;            
+                if( mv.capture == 'p' )
+                {
+                    black_pawn_count--;  // pawns can also disappear at promotion time
+                                         //  disregarding that means we sometimes
+                                         //  continue searching unnecessarily but
+                                         //  doesn't cause errors
+                    if( black_pawn_count < black_pawn_count_target )
+                        return false;
+                    if(  8<=mv.dst && mv.dst<16 && !SLOW_BLACK_HOME_ROW_TEST )
+                        return false;
+            
+                }
+            }
+            else
+            {
+                white_count--;
+                if( white_count < white_count_target )
+                    return false;            
+                if( mv.capture == 'P' )
+                {
+                    white_pawn_count--;  // pawns can also disappear at promotion time
+                                         //  disregarding that means we sometimes
+                                         //  continue searching unnecessarily but
+                                         //  doesn't cause errors
+                    if( white_pawn_count < white_pawn_count_target )
+                        return false;            
+                    if( 48<=mv.dst && mv.dst<56 && !SLOW_WHITE_HOME_ROW_TEST )
+                        return false;
+                }
+            }
+        }
+    }
+    return false;
+}
 

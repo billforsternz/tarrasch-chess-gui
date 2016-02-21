@@ -346,7 +346,7 @@ bool PgnRead::Process( FILE *infile )
                     {
                         push_back = ch;
                         state = MOVE_NUMBER;
-                    }
+                    } 
                     break;
                 }
 

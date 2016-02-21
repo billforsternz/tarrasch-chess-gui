@@ -987,7 +987,7 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other 
             
         case CODE_KNIGHT:
         {
-            int knight_offset = ((code&N_HI) ? 1 : 0 );;
+            int knight_offset = ((code&N_HI) ? 1 : 0 );
             src = side->knights[knight_offset];
             int delta;
             switch(code&7)          // 0, 1, 2, 3

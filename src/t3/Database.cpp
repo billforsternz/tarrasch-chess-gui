@@ -1188,6 +1188,7 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
 bool Database::LoadAllGamesForPositionSearch( std::vector< std::pair<int,std::string> > &cache )
 {
     int nbr_games=0;
+    int nbr_promotion_games=0;
     gbl_protect_recursion = true;
     bool ok=true;
     sqlite3_stmt *stmt;
@@ -1225,6 +1226,7 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< std::pair<int,std::st
                 // SQLITE_ROW means fetched a row
             
                 // sqlite3_column_text returns a const void* , typecast it to const char*
+                bool promotion=false;
                 for( int col=0; col<cols; col++ )
                 {
                     if( col == 0 )
@@ -1237,6 +1239,14 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< std::pair<int,std::st
                         int len = sqlite3_column_bytes(stmt,col);
                         //fprintf(f,"Move len = %d\n",len);
                         const char *blob = (const char*)sqlite3_column_blob(stmt,col);
+                        for( int i=0; i<len; i++ )
+                        {
+                            if( (blob[i]&0x8c) > 0x80 )
+                            {
+                                promotion = true;
+                                break;
+                            }
+                        }
                         if( len && blob )
                         {
                             std::string temp(blob,len);
@@ -1247,6 +1257,8 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< std::pair<int,std::st
                 std::pair<int, std::string> game(game_id,str_blob);
                 cache.push_back( game );
                 //Delay(1000);
+                if( promotion )
+                    nbr_promotion_games++;
                 nbr_games++;
                 if(
                    ((nbr_games%10000) == 0 ) /* ||
@@ -1255,7 +1267,7 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< std::pair<int,std::st
                                               ((nbr_games%10) == 0 )
                                               ) */
                    )
-                    cprintf( "%d games\n", nbr_games );
+                    cprintf( "%d games (%d include promotion)\n", nbr_games, nbr_promotion_games );
 
             }
             else if( retval == SQLITE_DONE )
@@ -1267,6 +1279,7 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< std::pair<int,std::st
             }
         }
     }
+    cprintf( "%d games (%d include promotion)\n", nbr_games, nbr_promotion_games );
     gbl_protect_recursion = false;
     if( !ok )
         cache.clear();
