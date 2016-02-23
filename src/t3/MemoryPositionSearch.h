@@ -137,6 +137,8 @@ public:
         TryFastMode( &sides[1]);
         mqi_init.side_white = sides[0];
         mqi_init.side_black = sides[1];
+        msi.sides[0] = sides[0];
+        msi.sides[1] = sides[0];
         memcpy( mqi_init.squares, "rnbqkdnrpppppppp................................PPPPPPPPRNDQKBNR", 64 );
         mq.rank8_ptr = reinterpret_cast<uint64_t*>(&mqi.squares[ 0]);
         mq.rank7_ptr = reinterpret_cast<uint64_t*>(&mqi.squares[ 8]);

@@ -1,3 +1,31 @@
+4r3/3q1pk1/3p1bn1/2pP1ppQ/1p2P3/6P1/r2B1PK1/1R5R w - - 2 42
+BASE_START_POINT 7987ms
+CONSERVATIVE 2630ms
+NO_PROMOTIONS_FLAWED 751ms
+CORRECT_BEST_PRACTICE 855ms     (858,857)
+
+8/6p1/5p2/2kp2pr/7P/1P4P1/3RKP2/8 w - - 0 52
+BASE_START_POINT 7941ms
+CONSERVATIVE 2207ms
+NO_PROMOTIONS_FLAWED 974ms
+CORRECT_BEST_PRACTICE 1068ms     (1037,1041)
+
+
+Proposed duplicate game algorithm
+ White and Black - split into tokens, at least one common multi-char token required for both white and black
+ Date - non-contradictory; eg "2008.12.31" matches "" or "2008" or "2008.12" but doesn't match "2007" or "2008.11" or "2008.12.30"
+ All other fields - don't care
+
+Bugs
+ T icon has disappeared
+ Publish works but Wellington website games don't show
+ Doesn't go straight to game if selected
+ Create small millionbase exceptions out
+ End app whilst loading games exceptions out
+
+Ideas
+ Cascading ordering
+
 In directory T3Database
 
 The BigDatabase 2007 as .pgn, in 2 parts, original and rebuilt.

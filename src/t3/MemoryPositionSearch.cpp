@@ -9,6 +9,12 @@
 #include <algorithm>
 #include <vector>
 #include <stdlib.h>
+#ifdef THC_UNIX
+#include <sys/time.h>               // for gettimeofday()
+#endif
+#ifdef THC_WINDOWS
+#include <windows.h>                // for QueryPerformanceCounter()
+#endif
 #include <wx/utils.h>
 #include "MemoryPositionSearch.h"
 #include "CompressMoves.h"  //temp testing
@@ -356,12 +362,48 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
 
     hash_target = position_hash;
     int nbr = in_memory_game_cache.size();
+
+    // Later - use AutoTimer class
+    LARGE_INTEGER frequency;        // ticks per second
+    LARGE_INTEGER t1, t2;           // ticks
+    QueryPerformanceFrequency(&frequency);    // get ticks per second
+    QueryPerformanceCounter(&t1);   // start timer
+
+    // Leave only one defined
+    //#define BASE_START_POINT
+    //#define CONSERVATIVE
+    //#define NO_PROMOTIONS_FLAWED
+    #define CORRECT_BEST_PRACTICE
     for( int i=0; i<nbr; i++ )
     {
-        bool game_found = SearchGameOptimisedNoPromotionAllowed( in_memory_game_cache[i].second );
+        int idx = in_memory_game_cache[i].first;
+        bool promotion_in_game = (idx<=0);
+        if( promotion_in_game )
+            idx = 0-idx;
+        bool game_found;
+        #ifdef BASE_START_POINT
+        game_found = SearchGameBase( in_memory_game_cache[i].second );
+        #endif
+        #ifdef CONSERVATIVE
+        game_found = SearchGameSlowPromotionAllowed( in_memory_game_cache[i].second );
+        #endif
+        #ifdef NO_PROMOTIONS_FLAWED
+        game_found = SearchGameOptimisedNoPromotionAllowed( in_memory_game_cache[i].second );
+        #endif
+        #ifdef CORRECT_BEST_PRACTICE
+        if( promotion_in_game )
+            game_found = SearchGameSlowPromotionAllowed( in_memory_game_cache[i].second );
+        else
+            game_found = SearchGameOptimisedNoPromotionAllowed( in_memory_game_cache[i].second );
+        #endif
         if( game_found )
-            games_found.push_back( in_memory_game_cache[i].first );
+            games_found.push_back( idx );
     }    
+
+    // compute the elapsed time in millisec
+    QueryPerformanceCounter(&t2);   // stop timer
+    double elapsed_time = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
+    cprintf( "Search time = %f ms\n", elapsed_time );
     return games_found.size();
 }
 
@@ -381,11 +423,8 @@ bool MemoryPositionSearch::GetGameidFromRow( int row, int &game_id )
 
 bool MemoryPositionSearch::SearchGameBase( std::string &moves_in )
 {
-    int black_count=16;
-    int black_pawn_count=8;
-    int white_count=16;
-    int white_pawn_count=8;
     Init();
+    SlowGameInit();
     uint64_t hash = hash_initial;
     int len = moves_in.size();
     if( hash == hash_target )
@@ -413,39 +452,6 @@ bool MemoryPositionSearch::SearchGameBase( std::string &moves_in )
         if( hash == hash_target )
             return true;
         msi.cr.PlayMove(mv);
-        if( isalpha(mv.capture) )
-        {
-            if( islower(mv.capture) )
-            {
-                black_count--;
-                if( black_count < ms.black_count_target )
-                    return false;            
-                if( mv.capture == 'p' )
-                {
-                    black_pawn_count--;  // pawns can also disappear at promotion time
-                                         //  disregarding that means we sometimes
-                                         //  continue searching unnecessarily but
-                                         //  doesn't cause errors
-                    if( black_pawn_count < ms.black_pawn_count_target )
-                        return false;            
-                }
-            }
-            else
-            {
-                white_count--;
-                if( white_count < ms.white_count_target )
-                    return false;            
-                if( mv.capture == 'P' )
-                {
-                    white_pawn_count--;  // pawns can also disappear at promotion time
-                                         //  disregarding that means we sometimes
-                                         //  continue searching unnecessarily but
-                                         //  doesn't cause errors
-                    if( white_pawn_count < ms.white_pawn_count_target )
-                        return false;            
-                }
-            }
-        }
     }
     return false;
 }
@@ -858,6 +864,7 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
 #define SLOW_WHITE_HOME_ROW_TEST ((*ms.slow_rank2_ptr & white_home_mask) == white_home_pawns)    
 #define SLOW_BLACK_HOME_ROW_TEST ((*ms.slow_rank7_ptr & black_home_mask) == black_home_pawns)    
 
+
 bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &moves_in )
 {
 /*  CompressMoves press;
@@ -885,21 +892,40 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &m
     } */
     QuickGameInit();
     int i=0, len=moves_in.size();
-    int ndebug_positions=60;
+    //#define PRINT_POSITIONS
+    #ifndef PRINT_POSITIONS
     for(;;)
     {
-        /*char rank[9];
-        rank[8] = '\0';
-        if( ndebug_positions >= 0 )
+    #else
+    for(;;)
+    {
+        static int debug_trigger=0, debug_count=0;
+        #define    debug_low_threshold  90
+        #define    debug_high_threshold 110
+        if( debug_trigger == 0 )
         {
-            ndebug_positions--;
+            debug_count++;
+            if( debug_count > debug_low_threshold )
+                debug_trigger = 1;
+        }
+        else if( debug_trigger == 1 )
+        {
+            debug_count++;
+            if( debug_count > debug_high_threshold )
+                debug_trigger = 2;
+        }
+        if( debug_trigger == 1 )
+        {
+            char rank[9];
+            rank[8] = '\0';
             cprintf( "\n");
             for( int k=0; k<8; k++ )
             {
                 memcpy( rank, &mqi.squares[k*8], 8 );
                 cprintf( "%s\n", rank );
             }
-        }  */
+        }
+    #endif
 
         // Check for match before every move
         if( 
@@ -1235,26 +1261,43 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &m
                 {
                     if( mq.black_light_bishop_target == 1 )
                         return false;
+                    break;
                 }
                 case 'd':
                 {
                     if( mq.black_dark_bishop_target == 1 )
                         return false;
+                    break;
                 }
             }
         }
 
-        // Check for match before every move
-     /* if( ndebug_positions >= 0 )
+        #ifdef PRINT_POSITIONS
+        if( debug_trigger == 0 )
         {
-            ndebug_positions--;
+            debug_count++;
+            if( debug_count > debug_low_threshold )
+                debug_trigger = 1;
+        }
+        else if( debug_trigger == 1 )
+        {
+            debug_count++;
+            if( debug_count > debug_high_threshold )
+                debug_trigger = 2;
+        }
+        if( debug_trigger == 1 )
+        {
+            char rank[9];
+            rank[8] = '\0';
             cprintf( "\n");
             for( int k=0; k<8; k++ )
             {
                 memcpy( rank, &mqi.squares[k*8], 8 );
                 cprintf( "%s\n", rank );
             }
-        }    */
+        }
+        #endif
+
         if( 
             *mq.rank3_ptr == *mq.rank3_target_ptr &&
             *mq.rank4_ptr == *mq.rank4_target_ptr &&
@@ -1587,11 +1630,13 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &m
                 {
                     if( mq.white_light_bishop_target == 1 )
                         return false;
+                    break;
                 }
                 case 'D':
                 {
                     if( mq.white_dark_bishop_target == 1 )
                         return false;
+                    break;
                 }
             }
         }
@@ -1641,6 +1686,8 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( std::string &moves_in
             mv = UncompressSlowMode(code);
             other->fast_mode = false;   // force other side to reset and retry
         }
+        char mover = msi.cr.squares[mv.src];
+        msi.cr.PlayMove(mv);
         if( 
             *ms.slow_rank3_ptr == *ms.slow_rank3_target_ptr &&
             *ms.slow_rank4_ptr == *ms.slow_rank4_target_ptr &&
@@ -1654,8 +1701,6 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( std::string &moves_in
         {
             return true;
         }
-        char mover = msi.cr.squares[mv.src];
-        msi.cr.PlayMove(mv);
         if( mover=='P' && 48<=mv.src && mv.src<56 && !SLOW_WHITE_HOME_ROW_TEST )
             return false;
         if( mover=='p' && 8<=mv.src && mv.src<16 && !SLOW_BLACK_HOME_ROW_TEST )

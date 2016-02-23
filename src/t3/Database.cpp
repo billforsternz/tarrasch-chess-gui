@@ -1254,7 +1254,7 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< std::pair<int,std::st
                         }
                     }
                 }
-                std::pair<int, std::string> game(game_id,str_blob);
+                std::pair<int, std::string> game(promotion?0-game_id:game_id,str_blob);
                 cache.push_back( game );
                 //Delay(1000);
                 if( promotion )
