@@ -25,7 +25,8 @@ enum
     ID_CREATE_DB_PICKER3         = 10006,
     ID_CREATE_DB_PICKER4         = 10007,
     ID_CREATE_DB_PICKER5         = 10008,
-    ID_CREATE_DB_PICKER6         = 10009
+    ID_CREATE_DB_PICKER6         = 10009,
+    ID_CREATE_TINY_DB            = 10010
 };
 
 // CreateDatabaseDialog class declaration
@@ -77,6 +78,7 @@ public:
     void OnPgnFile1Picked( wxFileDirPickerEvent& event );
     void OnPgnFile2Picked( wxFileDirPickerEvent& event );
     void OnPgnFile3Picked( wxFileDirPickerEvent& event );
+    void OnCreateTinyDb( wxCommandEvent& event );
     
     // CreateDatabaseDialog member variables
     
@@ -92,6 +94,7 @@ public:
     bool create_mode;   // or append
     bool db_created_ok;
     std::string db_name;
+    bool create_tiny_db;
 };
 
 #endif    // CREATE_DATABASE_DIALOG_H

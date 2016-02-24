@@ -33,6 +33,7 @@ EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER_DB, CreateDatabaseDialog::OnDbFilePi
 EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER1,   CreateDatabaseDialog::OnPgnFile1Picked )
 EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER2,   CreateDatabaseDialog::OnPgnFile2Picked )
 EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER3,   CreateDatabaseDialog::OnPgnFile3Picked )
+EVT_CHECKBOX(           ID_CREATE_TINY_DB,      CreateDatabaseDialog::OnCreateTinyDb )
 END_EVENT_TABLE()
 
 CreateDatabaseDialog::CreateDatabaseDialog(
@@ -40,6 +41,7 @@ CreateDatabaseDialog::CreateDatabaseDialog(
                            wxWindowID id, bool create_mode,
                            const wxPoint& pos, const wxSize& size, long style )
 {
+    create_tiny_db = true;
     db_created_ok = false;
     this->create_mode = create_mode;
     Create(parent, id, create_mode?"Create Database":"Add Games to Database", pos, size, style);
@@ -162,6 +164,11 @@ void CreateDatabaseDialog::CreateControls()
                                                         "*.pgn", wxDefaultPosition, wxDefaultSize,
                                                         wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST ); //|wxFLP_CHANGE_DIR );
         box_sizer->Add(picker6, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
+
+        wxCheckBox* tiny_db_box = new wxCheckBox( this, ID_CREATE_TINY_DB, // moving towards always using this
+                wxT("&Create compact database"), wxDefaultPosition, wxDefaultSize, 0 );
+        tiny_db_box->SetValue( create_tiny_db );
+        box_sizer->Add( tiny_db_box, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
     }
 
     
@@ -210,6 +217,12 @@ void CreateDatabaseDialog::OnOk( wxCommandEvent& WXUNUSED(event) )
     else
         OnAppendDatabase();
 }
+
+void CreateDatabaseDialog::OnCreateTinyDb( wxCommandEvent& event )
+{
+    create_tiny_db = event.IsChecked();
+}
+
 
 // Create
 void CreateDatabaseDialog::OnCreateDatabase()
@@ -267,7 +280,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
     if( ok )
         ok = db_primitive_transaction_begin(this);
     if( ok )
-        ok = db_primitive_create_tables();
+        ok = db_primitive_create_tables(create_tiny_db);
     if( ok )
         ok = (db_primitive_count_games()>=0); // to set game_id to zero
     for( int i=0; ok && i<cnt; i++ )
@@ -281,13 +294,13 @@ void CreateDatabaseDialog::OnCreateDatabase()
         }
         else
         {
-            std::string title( "Creating database, step 2 of 4");
+            std::string title( create_tiny_db?"Creating database, step 2 of 3":"Creating database, step 2 of 4");
             std::string desc("Reading file #");
             char buf[80];
             sprintf( buf, "%d of %d", i+1, cnt );
             desc += buf;
             ProgressBar progress_bar( title, desc, this, ifile );
-            PgnRead *pgn = new PgnRead('A',&progress_bar);
+            PgnRead *pgn = new PgnRead(create_tiny_db?'T':'A',&progress_bar);
             bool aborted = pgn->Process(ifile);
             if( aborted )
             {
@@ -305,7 +318,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
     if( ok )
         ok = db_primitive_transaction_end();
     if( ok )
-        ok = db_primitive_create_indexes();
+        ok = db_primitive_create_indexes( create_tiny_db );
     if( ok )
         db_primitive_close();
     if( ok )
@@ -376,7 +389,14 @@ void CreateDatabaseDialog::OnAppendDatabase()
     if( ok )
         ok = db_primitive_transaction_begin(this);
     if( ok )
-        ok = (db_primitive_count_games()>=0); // to set game_id to zero
+        ok = (db_primitive_count_games()>=0);
+    bool create_tiny_db=false;
+    if( ok )
+    {
+        int version = db_primitive_get_database_version();
+        ok = (version>0);
+        create_tiny_db = (version==2);
+    }    
     for( int i=0; ok && i<cnt; i++ )
     {
         FILE *ifile = fopen( files[i].c_str(), "rt" );
@@ -388,13 +408,13 @@ void CreateDatabaseDialog::OnAppendDatabase()
         }
         else
         {
-            std::string title( "Adding games to database, step 1 of 2");
+            std::string title( create_tiny_db?"Adding games to database":"Adding games to database, step 1 of 2");
             std::string desc("Reading file #");
             char buf[80];
             sprintf( buf, "%d of %d", i+1, cnt );
             desc += buf;
             ProgressBar progress_bar( title, desc, this, ifile );
-            PgnRead *pgn = new PgnRead('A',&progress_bar);
+            PgnRead *pgn = new PgnRead(create_tiny_db?'T':'A',&progress_bar);
             bool aborted = pgn->Process(ifile);
             if( aborted )
             {

@@ -191,7 +191,7 @@ void db_maintenance_create_or_append_to_database(  const char *db_filename, cons
         PgnRead *pgn = new PgnRead('A');
         db_primitive_open( db_filename );
         db_primitive_transaction_begin(NULL);
-        db_primitive_create_tables();
+        db_primitive_create_tables(true);
         db_primitive_count_games();
         pgn->Process(ifile);
         cprintf( "Before db_primitive_transaction_end()\n");
@@ -212,7 +212,7 @@ void db_maintenance_create_indexes(const char *db_filename )
     //db_utility_test();
     db_primitive_open(db_filename);
     db_primitive_transaction_begin(NULL);
-    db_primitive_create_indexes();
+    db_primitive_create_indexes(true);
     db_primitive_transaction_end();
     db_primitive_close();
 }
@@ -242,9 +242,10 @@ bool hook_gameover( char callback_code, const char *fen, const char *event, cons
             
         // Append
         case 'A':
+        case 'T':   // append in tiny_db mode
         {
             bool signal_error;
-            db_primitive_insert_game( signal_error, white, black, event, site, round, result, date, white_elo, black_elo, eco, nbr_moves, moves, hashes );
+            db_primitive_insert_game( signal_error, callback_code=='T' /*tiny?*/, white, black, event, site, round, result, date, white_elo, black_elo, eco, nbr_moves, moves, hashes );
             if( signal_error )
                 return true;
             break;

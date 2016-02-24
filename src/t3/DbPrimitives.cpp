@@ -30,8 +30,6 @@ static bool purge_buckets( bool force=false );
 #define NBR_BUCKETS 4096
 #define PURGE_QUOTA 10000
 
-#define TINY_DB
-
 // Handle for database connection
 static sqlite3 *handle;
 static int game_id;
@@ -69,7 +67,7 @@ void db_primitive_build_default_database( const char *db_file_name )
         if( ok )
             ok = db_primitive_transaction_begin(NULL);
         if( ok )
-            ok = db_primitive_create_tables();
+            ok = db_primitive_create_tables(true);
         if( ok )
             ok = (db_primitive_count_games()>=0); // to set game_id to zero
         FILE *ifile = fopen( pgn.c_str(), "rt" );
@@ -81,7 +79,7 @@ void db_primitive_build_default_database( const char *db_file_name )
         }
         else
         {
-            std::string title( "Creating database, step 2 of 4");
+            std::string title( "Creating database");
             std::string desc("Reading file ");
             wxFileName wxpgn( pgn.c_str() );
             desc += wxpgn.GetFullName().c_str();
@@ -103,7 +101,7 @@ void db_primitive_build_default_database( const char *db_file_name )
         if( ok )
             ok = db_primitive_transaction_end();
         if( ok )
-            ok = db_primitive_create_indexes();
+            ok = db_primitive_create_indexes(true);
         if( ok )
             db_primitive_close();
         if( !ok )
@@ -198,9 +196,9 @@ bool db_primitive_transaction_end()
 }
 
 // Returns bool ok
-bool db_primitive_create_tables()
+bool db_primitive_create_tables( bool create_tiny_db )
 {
-    ProgressBar prog( "Creating database, step 1 of 4", "Creating database tables", window_parent );
+    ProgressBar prog( create_tiny_db?"Creating database, step 1 of 3":"Creating database, step 1 of 4", "Creating database tables", window_parent );
     
     cprintf( "db_primitive_create_tables()\n" );
     
@@ -212,25 +210,21 @@ bool db_primitive_create_tables()
         error_msg = "Database error: sqlite3_exec(CREATE description) FAILED";
         return false;
     }
-    if( prog.Percent(2) )
+    if( prog.Percent(create_tiny_db?20:2) )
     {
         error_msg = "cancel";
         return false;
     }
     char buf[200];
     sprintf( buf,"INSERT INTO description VALUES('Description of database, not currently used for anything, goes here', %d )", 
-    #ifdef TINY_DB
-        DATABASE_VERSION_NUMBER_TINY );
-    #else
-        DATABASE_VERSION_NUMBER_NORMAL );
-    #endif
+        create_tiny_db ? DATABASE_VERSION_NUMBER_TINY : DATABASE_VERSION_NUMBER_NORMAL );
     retval = sqlite3_exec(handle,buf,0,0,0);
     if( retval )
     {
         error_msg = "Database error: sqlite3_exec(INSERT description) FAILED";
         return false;
     }
-    if( prog.Percent(4) )
+    if( prog.Percent(create_tiny_db?40:4) )
     {
         error_msg = "cancel";
         return false;
@@ -241,7 +235,7 @@ bool db_primitive_create_tables()
         error_msg = "Database error: sqlite3_exec(CREATE games) FAILED";
         return false;
     }
-    if( prog.Percent(6) )
+    if( prog.Percent(create_tiny_db?60:6) )
     {
         error_msg = "cancel";
         return false;
@@ -252,35 +246,36 @@ bool db_primitive_create_tables()
         error_msg = "Database error: sqlite3_exec(CREATE games_duplicates) FAILED";
         return false;
     }
-    if( prog.Percent(8) )
+    if( prog.Percent(create_tiny_db?80:8) )
     {
         error_msg = "cancel";
         return false;
     }
-    #ifndef TINY_DB
-    cprintf( "Create positions tables");
-    for( int i=0; i<NBR_BUCKETS; i++ )
+    if( !create_tiny_db )
     {
-        if( prog.Permill( 100 + (i*900) / NBR_BUCKETS ) )
+        cprintf( "Create positions tables");
+        for( int i=0; i<NBR_BUCKETS; i++ )
         {
-            error_msg = "cancel";
-            return false;
+            if( prog.Permill( 100 + (i*900) / NBR_BUCKETS ) )
+            {
+                error_msg = "cancel";
+                return false;
+            }
+		    if( i%10 == 0 )
+			    cprintf( "Creating bucket %d\n", i);
+            char buf[200];
+            sprintf( buf, "CREATE TABLE IF NOT EXISTS positions_%d (game_id INTEGER, position_hash INTEGER)", i );
+            retval = sqlite3_exec(handle,buf,0,0,0);
+            if( retval )
+            {
+                char buf[100];
+                sprintf( buf, "Database error: sqlite3_exec(CREATE positions_%d) FAILED\n",i);
+                error_msg = buf;
+                return false;
+            }
         }
-		if( i%10 == 0 )
-			cprintf( "Creating bucket %d\n", i);
-        char buf[200];
-        sprintf( buf, "CREATE TABLE IF NOT EXISTS positions_%d (game_id INTEGER, position_hash INTEGER)", i );
-        retval = sqlite3_exec(handle,buf,0,0,0);
-        if( retval )
-        {
-            char buf[100];
-            sprintf( buf, "Database error: sqlite3_exec(CREATE positions_%d) FAILED\n",i);
-            error_msg = buf;
-            return false;
-        }
+        cprintf( "Create positions tables end");
     }
-    cprintf( "Create positions tables end");
-    #endif
     return true;
 }
 
@@ -303,9 +298,9 @@ bool db_primitive_delete_previous_data()
 }
 
 // Returns bool ok
-bool db_primitive_create_indexes()
+bool db_primitive_create_indexes( bool create_tiny_db )
 {
-    ProgressBar prog( "Creating database, step 4 of 4", "Indexing positions", window_parent );
+    ProgressBar prog( create_tiny_db?"Creating database, step 3 of 4":"Creating database, step 4 of 4", create_tiny_db?"Creating indexes":"Indexing positions", window_parent );
     DebugPrintfTime turn_on_time_reporting;
     bool ok = purge_buckets();
     if( !ok )
@@ -318,7 +313,7 @@ bool db_primitive_create_indexes()
         error_msg = "Database error: sqlite3_exec(CREATE INDEX games) FAILED";
         return false;
     }
-    if( prog.Percent(1) )
+    if( prog.Percent(create_tiny_db?40:1) )
     {
         error_msg = "cancel";
         return false;
@@ -330,7 +325,7 @@ bool db_primitive_create_indexes()
         error_msg = "Database error: sqlite3_exec() FAILED 1";
         return false;
     }
-    if( prog.Percent(2) )
+    if( prog.Percent(create_tiny_db?70:2) )
     {
         error_msg = "cancel";
         return false;
@@ -342,33 +337,34 @@ bool db_primitive_create_indexes()
         error_msg = "Database error: sqlite3_exec() FAILED 2";
         return false;
     }
-    if( prog.Percent(3) )
+    if( prog.Percent(create_tiny_db?100:3) )
     {
         error_msg = "cancel";
         return false;
     }
-    #ifndef TINY_DB
-    for( int i=0; i<NBR_BUCKETS; i++ )
+    if( !create_tiny_db )
     {
-        if( prog.Permill( 30 + (i*970) / NBR_BUCKETS ) )
+        for( int i=0; i<NBR_BUCKETS; i++ )
         {
-            error_msg = "cancel";
-            return false;
-        }
-        char buf[200];
-        if( i%100 == 0 )
-            cprintf( "Create idx%d begin\n", i );
-        sprintf( buf, "CREATE INDEX IF NOT EXISTS idx%d ON positions_%d(position_hash,game_id)",i,i);
-        retval = sqlite3_exec(handle,buf,0,0,0);
-        if( i%100 == 0 )
-            cprintf( "Create idx%d end\n", i );
-        if( retval )
-        {
-            error_msg = "Database error: sqlite3_exec() FAILED 3";
-            return false;
+            if( prog.Permill( 30 + (i*970) / NBR_BUCKETS ) )
+            {
+                error_msg = "cancel";
+                return false;
+            }
+            char buf[200];
+            if( i%100 == 0 )
+                cprintf( "Create idx%d begin\n", i );
+            sprintf( buf, "CREATE INDEX IF NOT EXISTS idx%d ON positions_%d(position_hash,game_id)",i,i);
+            retval = sqlite3_exec(handle,buf,0,0,0);
+            if( i%100 == 0 )
+                cprintf( "Create idx%d end\n", i );
+            if( retval )
+            {
+                error_msg = "Database error: sqlite3_exec() FAILED 3";
+                return false;
+            }
         }
     }
-    #endif
     return true;
 }
 
@@ -409,6 +405,47 @@ void db_primitive_close()
     }
 }
 
+
+int db_primitive_get_database_version()
+{
+    int version = 0;
+    sqlite3_stmt *stmt;
+    int retval;
+    retval = sqlite3_prepare_v2( handle, "SELECT description,version from description", -1, &stmt, 0 );
+    if( retval )
+    {
+        error_msg = "Database error: SELECT description,version FROM DB FAILED";
+        return -1;
+    }
+    
+    // Read the number of rows fetched
+    int cols = sqlite3_column_count(stmt);
+    retval = sqlite3_step(stmt);
+    if( retval == SQLITE_ROW )
+    {
+        for( int col=0; col<cols; col++ )
+        {
+            switch(col)
+            {
+                case 0:
+                {
+                    const char *val = (const char*)sqlite3_column_text(stmt,col);
+                    cprintf( "Description = %s\n", val );
+                    break;
+                }
+                case 1:
+                {
+                    version = (int)sqlite3_column_int(stmt,col);
+                    cprintf( "Version integer = %d\n", version );
+                    break;
+                }
+            }
+        }
+    }
+    sqlite3_finalize(stmt);
+    stmt = NULL;
+    return version;
+}
 
 int db_primitive_count_games()
 {
@@ -537,7 +574,6 @@ static bool purge_buckets( bool force )
 
 static bool purge_bucket( int bucket_idx )
 {
-    #ifndef TINY_DB
     char *errmsg;
     char insert_buf[2000];
     std::vector<std::pair<int,int>> *bucket = &buckets[bucket_idx];
@@ -565,7 +601,6 @@ static bool purge_bucket( int bucket_idx )
         }
         bucket->clear();
     }
-    #endif
     return true;
 }
 
@@ -760,7 +795,7 @@ void db_temporary_hack( const char *white, const char *black, const char *event,
 }
 
 // returns bool inserted
-bool db_primitive_insert_game( bool &signal_error, const char *white, const char *black, const char *event, const char *site, const char *round, const char *result,
+bool db_primitive_insert_game( bool &signal_error, bool create_tiny_db, const char *white, const char *black, const char *event, const char *site, const char *round, const char *result,
                                     const char *date, const char *white_elo, const char *black_elo, const char *eco,
                                     int nbr_moves, thc::Move *moves, uint64_t *hashes  )
 {
@@ -907,22 +942,25 @@ bool db_primitive_insert_game( bool &signal_error, const char *white, const char
     }
     
     // Save the position hashes
-    for( int i=0; i<nbr_moves; i++ )
+    if( !create_tiny_db )
     {
-        uint64_t hash64 = *hashes++;
-        int hash32 = (int)(hash64);
-        int table_nbr = ((int)(hash64>>32))&(NBR_BUCKETS-1);
-        std::vector<std::pair<int,int>> *bucket = &buckets[table_nbr];
-        std::pair<int,int> duo(hash32,game_id);
-        bucket->push_back(duo);
-        int count = bucket->size();
-        if( count >= PURGE_QUOTA )
+        for( int i=0; i<nbr_moves; i++ )
         {
-            bool ok = purge_bucket(table_nbr);
-            if( !ok )
+            uint64_t hash64 = *hashes++;
+            int hash32 = (int)(hash64);
+            int table_nbr = ((int)(hash64>>32))&(NBR_BUCKETS-1);
+            std::vector<std::pair<int,int>> *bucket = &buckets[table_nbr];
+            std::pair<int,int> duo(hash32,game_id);
+            bucket->push_back(duo);
+            int count = bucket->size();
+            if( count >= PURGE_QUOTA )
             {
-                signal_error = true;
-                return false;   // not inserted, error
+                bool ok = purge_bucket(table_nbr);
+                if( !ok )
+                {
+                    signal_error = true;
+                    return false;   // not inserted, error
+                }
             }
         }
     }
