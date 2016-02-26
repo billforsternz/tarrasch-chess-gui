@@ -299,7 +299,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
             char buf[80];
             sprintf( buf, "%d of %d", i+1, cnt );
             desc += buf;
-            ProgressBar progress_bar( title, desc, this, ifile );
+            ProgressBar progress_bar( title, desc, true, this, ifile );
             PgnRead *pgn = new PgnRead(create_tiny_db?'T':'A',&progress_bar);
             bool aborted = pgn->Process(ifile);
             if( aborted )
@@ -413,7 +413,7 @@ void CreateDatabaseDialog::OnAppendDatabase()
             char buf[80];
             sprintf( buf, "%d of %d", i+1, cnt );
             desc += buf;
-            ProgressBar progress_bar( title, desc, this, ifile );
+            ProgressBar progress_bar( title, desc, true, this, ifile );
             PgnRead *pgn = new PgnRead(create_tiny_db?'T':'A',&progress_bar);
             bool aborted = pgn->Process(ifile);
             if( aborted )

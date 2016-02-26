@@ -319,7 +319,7 @@ int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &pl
     {
         if( is_tiny_db )
         {
-            game_count = tiny_db.DoSearch(cr,position_hash);
+            game_count = tiny_db.DoSearch(cr,position_hash,"Database search", "Searching..." );
             db_access_required = false;
         }
         else
@@ -629,19 +629,10 @@ int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::ve
 
 int Database::LoadGamesWithQuery( const thc::ChessPosition &cp, uint64_t hash, std::vector< smart_ptr<ListableGame> > &games, std::unordered_set<int> &games_set )
 {
-    int nbr_before = games.size();
-    sqlite3_stmt *stmt;    // A prepared statement for fetching from games table
-    wxProgressDialog progress( "Searching for extra games", "Searching for extra games", 100, NULL,
-                              wxPD_APP_MODAL+
-                              wxPD_AUTO_HIDE+
-                              wxPD_ELAPSED_TIME+
-                              wxPD_ESTIMATED_TIME );
-    
-
     int retval=-1;
     if( is_tiny_db )
     {
-        int game_count = tiny_db.DoSearch(cp,hash);
+        int game_count = tiny_db.DoSearch(cp,hash,"Searching for extra games", "Searching for extra games");
         bool ok=true;
         for( int i=0; ok && i<game_count; i++ )
         {
@@ -667,6 +658,14 @@ int Database::LoadGamesWithQuery( const thc::ChessPosition &cp, uint64_t hash, s
         }
         return 0;
     }
+
+    int nbr_before = games.size();
+    sqlite3_stmt *stmt;    // A prepared statement for fetching from games table
+    wxProgressDialog progress( "Searching for extra games", "Searching for extra games", 100, NULL,
+                              wxPD_APP_MODAL+
+                              wxPD_AUTO_HIDE+
+                              wxPD_ELAPSED_TIME+
+                              wxPD_ESTIMATED_TIME );
     
     // select matching rows from the table
     char buf[1000];
@@ -978,27 +977,10 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
     gbl_protect_recursion = true;
     bool ok=true;
     sqlite3_stmt *stmt;
-
-    wxProgressDialog progress( "Loading games into memory", "Loading games", 100, NULL,
-                              wxPD_APP_MODAL+
-                              wxPD_AUTO_HIDE+
-                              wxPD_ELAPSED_TIME+
-                              wxPD_CAN_ABORT+
-                              wxPD_ESTIMATED_TIME );
-    
-    int retval=-1;
-    cache.clear();
-    
-    // select matching rows from the table
-    char buf[1000];
-    gbl_expected = -1;
-    uint64_t temp = position_hash;
-    int hash = (int)(temp);
-    int table_nbr = (int)((temp>>32)&(NBR_BUCKETS-1));
     if( is_tiny_db && db_req==REQ_POSITION )
     {
         cache.clear();
-        int game_count = tiny_db.DoSearch(gbl_position,position_hash);
+        int game_count = tiny_db.DoSearch(gbl_position,position_hash,"Loading games into memory", "Loading games");
         int nbr = tiny_db.in_memory_game_cache.size();
         int next;
         int j=0;
@@ -1021,46 +1003,32 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
         gbl_protect_recursion = false;
         return true;
     }
-/*  {
-        int game_count = tiny_db.DoSearch(gbl_position,position_hash);
-        bool ok=true;
-        int retval=-1;
-        for( int i=0; ok && i<game_count; i++ )
-        {
-            int game_id;
-            bool ok = tiny_db.GetGameidFromRow( i, game_id );
-            if( ok )
-            {
-                CompactGame pact;
-                retval = LoadGameWithQuery( &pact, game_id );
-                ok = (retval==0);
-                if( ok )
-                {
-                    ListableGameDb info( game_id, pact );
-                    make_smart_ptr( ListableGameDb, new_info, info );
-                    cache.push_back( std::move(new_info) );
-                    int percent = (cache.size()*100) / (nbr_games?nbr_games:1);
-                    if( percent < 1 )
-                        percent = 1;
-                    if( !progress.Update( percent>100 ? 100 : percent ) )
-                        ok = false;
-                }
-            }
-        }
-        gbl_protect_recursion = false;
-        return ok;
-    } */
+
+    int retval=-1;
+    cache.clear();
+    
+    // select matching rows from the table
+    char buf[1000];
+    gbl_expected = -1;
+    uint64_t temp = position_hash;
+    int hash = (int)(temp);
+    int table_nbr = (int)((temp>>32)&(NBR_BUCKETS-1));
     if( is_tiny_db && db_req==REQ_SHOW_ALL )
     {
+        ProgressBar progress( "Loading games into memory", "Loading games", false );
         cache.clear();
         int nbr = tiny_db.in_memory_game_cache.size();
         for( int i=0; i<nbr; i++ )
         {
             cache.push_back( tiny_db.in_memory_game_cache[i] );
+            progress.Permill( i*1000 / nbr );
         }
         gbl_protect_recursion = false;
         return true;
     }
+
+
+    ProgressBar progress( "Loading games into memory", "Loading games" );
     if( db_req == REQ_PLAYERS )
     {
         sprintf( buf,
@@ -1182,11 +1150,10 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
                 ListableGameDb info( game_id, r, str_blob );
                 make_smart_ptr( ListableGameDb, new_info, info );
                 cache.push_back( std::move(new_info) );
-                int percent = (cache.size()*100) / (nbr_games?nbr_games:1);
-                if( percent < 1 )
-                    percent = 1;
-                if( !progress.Update( percent>100 ? 100 : percent ) )
-                    ok = false;
+                int permill = (cache.size()*1000) / (nbr_games?nbr_games:1);
+                if( permill < 1 )
+                    permill = 1;
+                ok = !progress.Permill( permill>1000 ? 1000 : permill );
             }
             else if( retval == SQLITE_DONE )
             {

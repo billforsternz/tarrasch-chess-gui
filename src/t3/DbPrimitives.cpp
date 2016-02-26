@@ -83,7 +83,7 @@ void db_primitive_build_default_database( const char *db_file_name )
             std::string desc("Reading file ");
             wxFileName wxpgn( pgn.c_str() );
             desc += wxpgn.GetFullName().c_str();
-            ProgressBar progress_bar( title, desc, NULL, ifile );
+            ProgressBar progress_bar( title, desc, true, NULL, ifile );
             PgnRead *pr = new PgnRead('A',&progress_bar);
             bool aborted = pr->Process(ifile);
             if( aborted )
@@ -175,7 +175,7 @@ bool db_primitive_transaction_begin( wxWindow *parent )
 bool db_primitive_transaction_end()
 {
     bool ok = purge_buckets();
-    ProgressBar prog( "Creating database", "Completing save", window_parent );
+    ProgressBar prog( "Creating database", "Completing save", true, window_parent );
     if( ok )
     {
         char *errmsg=NULL;
@@ -198,7 +198,7 @@ bool db_primitive_transaction_end()
 // Returns bool ok
 bool db_primitive_create_tables( bool create_tiny_db )
 {
-    ProgressBar prog( create_tiny_db?"Creating database, step 1 of 3":"Creating database, step 1 of 4", "Creating database tables", window_parent );
+    ProgressBar prog( create_tiny_db?"Creating database, step 1 of 3":"Creating database, step 1 of 4", "Creating database tables", true, window_parent );
     
     cprintf( "db_primitive_create_tables()\n" );
     
@@ -300,7 +300,7 @@ bool db_primitive_delete_previous_data()
 // Returns bool ok
 bool db_primitive_create_indexes( bool create_tiny_db )
 {
-    ProgressBar prog( create_tiny_db?"Creating database, step 3 of 4":"Creating database, step 4 of 4", create_tiny_db?"Creating indexes":"Indexing positions", window_parent );
+    ProgressBar prog( create_tiny_db?"Creating database, step 3 of 4":"Creating database, step 4 of 4", create_tiny_db?"Creating indexes":"Indexing positions", true, window_parent );
     DebugPrintfTime turn_on_time_reporting;
     bool ok = purge_buckets();
     if( !ok )
@@ -553,7 +553,7 @@ static bool purge_buckets( bool force )
     }
     if( required )
     {
-        ProgressBar pb( create_mode ? "Creating database, step 3 of 4" : "Adding games to database, step 2 of 2", "Writing to database" , window_parent );
+        ProgressBar pb( create_mode ? "Creating database, step 3 of 4" : "Adding games to database, step 2 of 2", "Writing to database" , true, window_parent );
         for( int i=0; ok && i<NBR_BUCKETS; i++ )
         {
             ok = purge_bucket(i);

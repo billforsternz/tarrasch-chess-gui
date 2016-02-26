@@ -174,7 +174,7 @@ public:
         ms.slow_rank2_target_ptr = reinterpret_cast<uint64_t*>(&ms.slow_target_squares[48]);
         ms.slow_rank1_target_ptr = reinterpret_cast<uint64_t*>(&ms.slow_target_squares[56]);
     }
-    int  DoSearch( const thc::ChessPosition &cp, uint64_t position_hash );
+    int  DoSearch( const thc::ChessPosition &cp, uint64_t position_hash, const std::string &progress_title, const std::string &progress_desc );
     bool GetGameidFromRow( int row, int &game_id );
 
 public:

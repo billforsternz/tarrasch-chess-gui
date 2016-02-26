@@ -15,12 +15,12 @@
 class ProgressBar
 {
 public:
-    ProgressBar( std::string title, std::string desc, wxWindow *parent=NULL, FILE *ifile=0 ) :
+    ProgressBar( std::string title, std::string desc, bool abortable=true, wxWindow *parent=NULL, FILE *ifile=0 ) :
         progress( title, desc, 1000, parent,
                                     wxPD_APP_MODAL+
                                     wxPD_AUTO_HIDE+
                                     wxPD_ELAPSED_TIME+
-                                    wxPD_CAN_ABORT+
+                                    (abortable ? wxPD_CAN_ABORT : 0)+
                                     wxPD_ESTIMATED_TIME )
     {
         cprintf( "ProgressBar() %s, %s\n", title.c_str(), parent==NULL?"parent==NULL":"?" );
@@ -69,10 +69,10 @@ public:
     }
     bool Permill( int permill, const std::string &s="" )  // return true if abort
     {
-        wxString wxmsg( s.c_str() );
         bool abort = false;
         if( old_permill != permill )
         {
+            wxString wxmsg( s.c_str() );
             progress.SetFocus();
             abort = !progress.Update( permill>1000 ? 1000 : permill, wxmsg );
             old_permill = permill;
