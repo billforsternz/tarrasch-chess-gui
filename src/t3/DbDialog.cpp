@@ -11,15 +11,10 @@
 #include "wx/listctrl.h"
 #include "wx/notebook.h"
 #include "Portability.h"
-#ifdef THC_UNIX
-#include <sys/time.h>               // for gettimeofday()
-#endif
-#ifdef THC_WINDOWS
-#include <windows.h>                // for QueryPerformanceCounter()
-#endif
 #include "Appdefs.h"
 #include "DebugPrintf.h"
 #include "thc.h"
+#include "AutoTimer.h"
 #include "GameDetailsDialog.h"
 #include "GamePrefixDialog.h"
 #include "GameLogic.h"
@@ -181,7 +176,7 @@ void DbDialog::GdvOnActivate()
             {
                 StatsCalculate();
             }
-            else if( nbr_games_in_list_ctrl <= LOAD_INTO_MEMORY_THRESHOLD )
+            else if( objs.db->IsTinyDb() || nbr_games_in_list_ctrl <= LOAD_INTO_MEMORY_THRESHOLD )
             {
                 bool ok = LoadGamesIntoMemory();
                 if( ok )
@@ -394,69 +389,6 @@ std::multimap<B,A> flip_and_sort_map(const std::map<A,B> &src)
     std::transform(src.begin(), src.end(), std::inserter(dst, dst.begin()),
                    flip_pair<A,B>);
     return dst;
-}
-
-class AutoTimer
-{
-public:
-    void Begin();
-    double End();
-    AutoTimer( const char *desc )
-    {
-        this->desc = desc;
-        Begin();
-    }
-    ~AutoTimer()
-    {
-        double elapsed = End();;
-        cprintf( "%s: time elapsed (ms) = %f\n", desc, elapsed );
-    }
-private:
-#ifdef THC_WINDOWS
-    LARGE_INTEGER frequency;        // ticks per second
-    LARGE_INTEGER t1, t2;           // ticks
-#endif
-#ifdef THC_MAC
-    timeval t1, t2;
-#endif
-    const char *desc;
-};
-
-
-void AutoTimer::Begin()
-{
-#ifdef THC_WINDOWS
-    // get ticks per second
-    QueryPerformanceFrequency(&frequency);
-    
-    // start timer
-    QueryPerformanceCounter(&t1);
-#endif
-#ifdef THC_MAC
-    // start timer
-    gettimeofday(&t1, NULL);
-#endif
-}
-
-double AutoTimer::End()
-{
-    double elapsed_time;
-#ifdef THC_WINDOWS
-    // stop timer
-    QueryPerformanceCounter(&t2);
-
-    // compute the elapsed time in millisec
-    elapsed_time = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
-#endif
-#ifdef THC_MAC
-    // stop timer
-    gettimeofday(&t2, NULL);
-    
-    // compute the elapsed time in millisec
-    elapsed_time = (t2.tv_sec - t1.tv_sec) * 1000.0;      // sec to ms
-    elapsed_time += (t2.tv_usec - t1.tv_usec) / 1000.0;   // us to ms
-#endif
-    return elapsed_time;
 }
 
 void DbDialog::GdvUtility()

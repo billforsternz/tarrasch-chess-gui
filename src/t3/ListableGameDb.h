@@ -18,6 +18,8 @@ private:
     PackedGame pack;
 
 public:
+
+
     ListableGameDb( int game_id, Roster &r, std::string str_blob )
     {
         this->game_id = game_id;
@@ -28,6 +30,40 @@ public:
     {
         this->game_id = game_id;
         pack.Pack( pact );
+    }
+
+    ListableGameDb
+    (
+        int id,
+        const char *white, int len1,
+        const char *black, int len2,
+        const char *event, int len3,
+        const char *site, int len4,
+        const char *result, int len5,
+        const char *round, int len6,
+        const char *date, int len7,
+        const char *eco, int len8,
+        const char *white_elo, int len9,
+        const char *black_elo, int len10,
+        const char *fen, int len11,
+        const char *moves_blob, int len12
+    ) : game_id(id),
+        pack
+        (
+            white, len1,
+            black, len2,
+            event, len3,
+            site, len4,
+            result, len5,
+            round, len6,
+            date, len7,
+            eco, len8,
+            white_elo, len9,
+            black_elo, len10,
+            fen, len11,
+            moves_blob, len12
+        )
+    {
     }
 
     virtual int GetGameId()  { return game_id; }

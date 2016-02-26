@@ -32,18 +32,18 @@ public:
     void Reopen( const char *db_file );
     bool IsOperational( std::string &error_msg );
     bool GetDatabaseVersion( int &version );
+    bool IsTinyDb() { return is_tiny_db; }
     int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr );
     int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &player_name );
     int GetRow( int row, CompactGame *info );
     int GetRowRaw( CompactGame *info, int row );
     bool LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int nbr_games );
-    bool LoadAllGamesForPositionSearch( std::vector< std::pair<int,std::string> > &cache );
+    bool LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGame> > &mega_cache );
     bool TestNextRow();
     bool TestPrevRow();
     int GetCurrent();
     int  FindPlayer( std::string &name, std::string &current, int start_row, bool white );
     void FindPlayerEnd();
-
     int LoadGameWithQuery( CompactGame *info, int game_id );
     int LoadGamesWithQuery( const thc::ChessPosition &cp, uint64_t hash, std::vector< smart_ptr<ListableGame> > &games, std::unordered_set<int> &games_set );
     int LoadGamesWithQuery( std::string &player_name, bool white, std::vector< smart_ptr<ListableGame> > &games );

@@ -17,6 +17,22 @@ private:
     
 public:
     bool Empty() { return fields.size() == 0; }
+    PackedGame() {}
+    PackedGame(
+        const char *white, int len1,
+        const char *black, int len2,
+        const char *event, int len3,
+        const char *site, int len4,
+        const char *result, int len5,
+        const char *round, int len6,
+        const char *date, int len7,
+        const char *eco, int len8,
+        const char *white_elo, int len9,
+        const char *black_elo, int len10,
+        const char *fen, int len11,
+        const char *moves_blob, int len12
+    );
+
     void Pack( CompactGame &pact );
     void Pack( Roster &r, std::string &blob );
     void Unpack( CompactGame &pact );

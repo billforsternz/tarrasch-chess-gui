@@ -11,6 +11,178 @@
 #define HDR_LEN_SINGLE 12    // '1' + single byte offsets of 11 fields
 #define HDR_LEN_DOUBLE 23    // '2' + double byte offsets of 11 fields
 
+PackedGame::PackedGame
+(
+    const char *white, int len1,
+    const char *black, int len2,
+    const char *event, int len3,
+    const char *site, int len4,
+    const char *result, int len5,
+    const char *round, int len6,
+    const char *date, int len7,
+    const char *eco, int len8,
+    const char *white_elo, int len9,
+    const char *black_elo, int len10,
+    const char *fen, int len11,
+    const char *moves_blob, int len12
+)
+{
+    char buf[2048];
+    bool complete=false;
+    char *ptr;
+    for( int attempt=0; !complete && attempt<2; attempt++ )
+    {
+        ptr = buf;
+        complete = true; // normally only one attempt required
+        if( attempt == 0 )
+        {
+            strcpy( ptr, "112345678901" );
+            ptr += 12;
+        }
+        else
+        {
+            strcpy( ptr, "2x1x2x3x4x5x6x7x8x9x0x1" );
+            ptr += 23;
+        }
+        const char *base = ptr;
+        unsigned int offset_idx=1;
+        if( len1 > 128 )
+            len1 = 128;
+        memcpy( ptr, white, len1 );
+        ptr += len1;
+        *ptr++ = '\0';
+        for( int i=2; i<=12; i++ )
+        {
+            int offset = (ptr-base);
+            switch(i)
+            {
+                case 2:
+                {
+                    if( len2 > 128 )
+                        len2 = 128;
+                    memcpy( ptr, black, len2 );
+                    ptr += len2;
+                    *ptr++ = '\0';
+                    break;
+                }
+                case 3:
+                {
+                    if( len3 > 128 )
+                        len3 = 128;
+                    memcpy( ptr, event, len3 );
+                    ptr += len3;
+                    *ptr++ = '\0';
+                    break;
+                }
+                case 4:
+                {
+                    if( len4 > 128 )
+                        len4 = 128;
+                    memcpy( ptr, site, len4 );
+                    ptr += len4;
+                    *ptr++ = '\0';
+                    break;
+                }
+                case 5:
+                {
+                    if( len5 > 8 )
+                        len5 = 8;
+                    memcpy( ptr, result, len5 );
+                    ptr += len5;
+                    *ptr++ = '\0';
+                    break;
+                }
+                case 6:
+                {
+                    if( len6 > 32 )
+                        len6 = 32;
+                    memcpy( ptr, round, len6 );
+                    ptr += len6;
+                    *ptr++ = '\0';
+                    break;
+                }
+                case 7:
+                {
+                    if( len7 > 16 )
+                        len7 = 16;
+                    memcpy( ptr, date, len7 );
+                    ptr += len7;
+                    *ptr++ = '\0';
+                    break;
+                }
+                case 8:
+                {
+                    if( len8 > 8 )
+                        len8 = 8;
+                    memcpy( ptr, eco, len8 );
+                    ptr += len8;
+                    *ptr++ = '\0';
+                    break;
+                }
+                case 9:
+                {
+                    if( len9 > 8 )
+                        len9 = 8;
+                    memcpy( ptr, white_elo, len9 );
+                    ptr += len9;
+                    *ptr++ = '\0';
+                    break;
+                }
+                case 10:
+                {
+                    if( len10 > 8 )
+                        len10 = 8;
+                    memcpy( ptr, black_elo, len10 );
+                    ptr += len10;
+                    *ptr++ = '\0';
+                    break;
+                }
+                case 11:
+                {
+                    if( len11 > 128 )
+                        len11 = 128;
+                    memcpy( ptr, fen, len11 );
+                    ptr += len11;
+                    *ptr++ = '\0';
+                    break;
+                }
+                case 12:
+                {
+                    if( ptr+len12 > &buf[sizeof(buf)-2] )
+                        len12 = &buf[sizeof(buf)-2] - ptr;
+                    memcpy( ptr, moves_blob, len12 );
+                    ptr += len12;
+                    *ptr++ = '\0';
+                    break;
+                }
+            }
+            if( attempt == 0 )
+            {
+                if( offset > 255 )
+                {
+                    complete = false; // move on to second attempt
+                    break;
+                }
+                unsigned char c = static_cast<unsigned char>(offset);
+                buf[offset_idx++] = c;
+            }
+            else
+            {
+                unsigned char c = static_cast<unsigned char>(offset&0xff);
+                unsigned char d = static_cast<unsigned char>((offset>>8)&0xff);
+                if( offset > 65535 )
+                {
+                    c = 255;
+                    d = 255;
+                }
+                buf[offset_idx++] = c;
+                buf[offset_idx++] = d;
+            }
+        }
+    }
+    fields = std::string(buf,ptr);
+}
+
 void PackedGame::Pack( Roster &r, std::string &blob )
 {
     bool complete=false;

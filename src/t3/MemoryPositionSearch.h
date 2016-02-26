@@ -12,6 +12,7 @@
 #include <vector>
 #include <string>
 #include "thc.h"
+#include "ListableGame.h"
 
 // Same as Side in CompressMoves
 struct MpsSide
@@ -177,7 +178,7 @@ public:
     bool GetGameidFromRow( int row, int &game_id );
 
 public:
-    std::vector< std::pair<int,std::string> > in_memory_game_cache;
+    std::vector< smart_ptr<ListableGame> > in_memory_game_cache;
 
 private:
     std::vector<int> games_found;

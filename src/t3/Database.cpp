@@ -12,6 +12,7 @@
 #include "thc.h"
 #include "Portability.h"
 #include "DebugPrintf.h"
+#include "AutoTimer.h"
 #include "CompressMoves.h"
 #include "ListableGameDb.h"
 #include "PgnRead.h"
@@ -996,6 +997,31 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
     int table_nbr = (int)((temp>>32)&(NBR_BUCKETS-1));
     if( is_tiny_db && db_req==REQ_POSITION )
     {
+        cache.clear();
+        int game_count = tiny_db.DoSearch(gbl_position,position_hash);
+        int nbr = tiny_db.in_memory_game_cache.size();
+        int next;
+        int j=0;
+        if( j<game_count )
+        {
+            bool ok = tiny_db.GetGameidFromRow( j++, next );
+            for( int i=nbr-1; ok && i>=0; i-- )
+            {
+                int game_id = tiny_db.in_memory_game_cache[i]->GetGameId();
+                if( game_id == next )
+                {
+                    cache.push_back( tiny_db.in_memory_game_cache[i] );
+                    if( j<game_count )
+                        ok = tiny_db.GetGameidFromRow( j++, next );
+                    else
+                        break;
+                }
+            }
+        }
+        gbl_protect_recursion = false;
+        return true;
+    }
+/*  {
         int game_count = tiny_db.DoSearch(gbl_position,position_hash);
         bool ok=true;
         int retval=-1;
@@ -1023,6 +1049,17 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
         }
         gbl_protect_recursion = false;
         return ok;
+    } */
+    if( is_tiny_db && db_req==REQ_SHOW_ALL )
+    {
+        cache.clear();
+        int nbr = tiny_db.in_memory_game_cache.size();
+        for( int i=0; i<nbr; i++ )
+        {
+            cache.push_back( tiny_db.in_memory_game_cache[i] );
+        }
+        gbl_protect_recursion = false;
+        return true;
     }
     if( db_req == REQ_PLAYERS )
     {
@@ -1185,16 +1222,147 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
     }
 }  */
 
-bool Database::LoadAllGamesForPositionSearch( std::vector< std::pair<int,std::string> > &cache )
+
+//std::vector< smart_ptr<ListableGame> > mega_cache;
+
+bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGame> > &mega_cache )
 {
+    AutoTimer at("Load all games");
     int nbr_games=0;
     int nbr_promotion_games=0;
     gbl_protect_recursion = true;
     bool ok=true;
     sqlite3_stmt *stmt;
-
     int retval=-1;
     cache.clear();
+    #if 1
+/*    wxProgressDialog progress( "Loading games into memory", "Loading games", 100, NULL,
+                              wxPD_APP_MODAL+
+                              wxPD_AUTO_HIDE+
+                              wxPD_ELAPSED_TIME+
+                              wxPD_CAN_ABORT+
+                              wxPD_ESTIMATED_TIME ); */
+    
+    // select matching rows from the table
+    char buf[1000];
+    gbl_expected = -1;
+    sprintf( buf,
+            "SELECT games.game_id, games.white, games.black, games.event, games.site, games.round, games.result, games.date, games.white_elo, games.black_elo, games.eco, games.moves from games" );
+    cprintf( "LoadAllGames() QUERY IN: %s\n",buf);
+    retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &stmt, 0 );
+    cprintf( "LoadAllGames() QUERY OUT: %s\n",buf);
+    if( retval )
+    {
+        cprintf("SELECTING DATA FROM DB FAILED 2\n");
+        ok = false;
+    }
+    
+    // Read the game info
+    if( ok )
+    {
+        //int cols = sqlite3_column_count(stmt);
+        while(ok)
+        {
+            retval = sqlite3_step(stmt);
+            if( retval == SQLITE_ROW )
+            {
+                // SQLITE_ROW means fetched a row
+                int game_id=0;
+            
+                // sqlite3_column_text returns a const void* , typecast it to const char*
+                bool promotion=false;
+                const char *val        = (const char*)sqlite3_column_text(stmt,0);
+                game_id                = atoi(val);
+                const char      *white = (const char*)sqlite3_column_text(stmt,1);
+                int              len1  = sqlite3_column_bytes(stmt,1);
+                const char      *black = (const char*)sqlite3_column_text(stmt,2);
+                int               len2 = sqlite3_column_bytes(stmt,2);
+                const char      *event = (const char*)sqlite3_column_text(stmt,3);
+                int               len3 = sqlite3_column_bytes(stmt,3);
+                const char       *site = (const char*)sqlite3_column_text(stmt,4);
+                int               len4 = sqlite3_column_bytes(stmt,4);
+                const char      *round = (const char*)sqlite3_column_text(stmt,5);
+                int               len6 = sqlite3_column_bytes(stmt,5);
+                const char     *result = (const char*)sqlite3_column_text(stmt,6);
+                int               len5 = sqlite3_column_bytes(stmt,6);
+                const char       *date = (const char*)sqlite3_column_text(stmt,7);
+                int               len7 = sqlite3_column_bytes(stmt,7);
+                const char  *white_elo = (const char*)sqlite3_column_text(stmt,8);
+                int               len9 = sqlite3_column_bytes(stmt,8);
+                const char  *black_elo = (const char*)sqlite3_column_text(stmt,9);
+                int              len10 = sqlite3_column_bytes(stmt,9);
+                const char        *eco = (const char*)sqlite3_column_text(stmt,10);
+                int               len8 = sqlite3_column_bytes(stmt,10);
+                const char *moves_blob = (const char*)sqlite3_column_text(stmt,11);
+                int              len12 = sqlite3_column_bytes(stmt,11);
+                ListableGameDb info
+                (
+                    game_id,
+                    white, len1,
+                    black, len2,
+                    event, len3,
+                    site, len4,
+                    result, len5,
+                    round, len6,
+                    date, len7,
+                    eco, len8,
+                    white_elo, len9,
+                    black_elo, len10,
+                    "", 0, //fen
+                    moves_blob, len12
+                );
+                make_smart_ptr( ListableGameDb, new_info, info );
+                mega_cache.push_back( std::move(new_info) );
+
+            /*  ListableGameDb info( game_id, r, str_blob );
+                make_smart_ptr( ListableGameDb, new_info, info );
+                cache.push_back( std::move(new_info) );
+                int percent = (cache.size()*100) / (nbr_games?nbr_games:1);
+                if( percent < 1 )
+                    percent = 1;
+                if( !progress.Update( percent>100 ? 100 : percent ) )
+                    ok = false;  */
+                if( promotion )
+                    nbr_promotion_games++;
+                nbr_games++;
+                if(
+                   ((nbr_games%10000) == 0 ) /* ||
+                                              (
+                                              (nbr_games < 100) &&
+                                              ((nbr_games%10) == 0 )
+                                              ) */
+                   )
+                {
+                    cprintf( "%d games (%d include promotion)\n", nbr_games, nbr_promotion_games );
+                }
+
+            }
+            else if( retval == SQLITE_DONE )
+            {
+                // All rows finished
+                sqlite3_finalize(stmt);
+                stmt = NULL;
+                //cprintf( "Reversing order to get newest games first\n" );
+                //std::reverse( cache.begin(), cache.end() );
+                //cprintf("LoadAllGames(): %u game_ids loaded\n", cache.size() );
+                break;
+            }
+            else
+            {
+                // Some error encountered
+                cprintf("SOME ERROR ENCOUNTERED\n");
+                ok = false;
+            }
+        }
+    }
+    int cache_nbr = mega_cache.size();
+    cprintf( "Number of games = %d\n", cache_nbr );
+    if( 2 < cache_nbr )
+    {
+        smart_ptr<ListableGame> p = mega_cache[2];
+        cprintf( "White=%s Black=%s Result=%s Round=%s\n", p->White(), p->Black(), p->Result(), p->Round() );
+    }
+    #else
     
     // select matching rows from the table
     char buf[1000];
@@ -1267,7 +1435,9 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< std::pair<int,std::st
                                               ((nbr_games%10) == 0 )
                                               ) */
                    )
+                {
                     cprintf( "%d games (%d include promotion)\n", nbr_games, nbr_promotion_games );
+                }
 
             }
             else if( retval == SQLITE_DONE )
@@ -1279,13 +1449,13 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< std::pair<int,std::st
             }
         }
     }
+    #endif
     cprintf( "%d games (%d include promotion)\n", nbr_games, nbr_promotion_games );
     gbl_protect_recursion = false;
     if( !ok )
         cache.clear();
     return ok;
 }
-
 
 
 void Database::FindPlayerEnd()

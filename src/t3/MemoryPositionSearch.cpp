@@ -9,16 +9,10 @@
 #include <algorithm>
 #include <vector>
 #include <stdlib.h>
-#ifdef THC_UNIX
-#include <sys/time.h>               // for gettimeofday()
-#endif
-#ifdef THC_WINDOWS
-#include <windows.h>                // for QueryPerformanceCounter()
-#endif
 #include <wx/utils.h>
+#include "AutoTimer.h"
 #include "MemoryPositionSearch.h"
 #include "CompressMoves.h"  //temp testing
-#include "DebugPrintf.h"
 
 
 // The ALLOW_CASTLING_EVEN_AFTER_KING_AND_ROOK_MOVES algorithm
@@ -362,48 +356,46 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
 
     hash_target = position_hash;
     int nbr = in_memory_game_cache.size();
-
-    // Later - use AutoTimer class
-    LARGE_INTEGER frequency;        // ticks per second
-    LARGE_INTEGER t1, t2;           // ticks
-    QueryPerformanceFrequency(&frequency);    // get ticks per second
-    QueryPerformanceCounter(&t1);   // start timer
-
-    // Leave only one defined
-    //#define BASE_START_POINT
-    //#define CONSERVATIVE
-    //#define NO_PROMOTIONS_FLAWED
-    #define CORRECT_BEST_PRACTICE
-    for( int i=0; i<nbr; i++ )
     {
-        int idx = in_memory_game_cache[i].first;
-        bool promotion_in_game = (idx<=0);
-        if( promotion_in_game )
-            idx = 0-idx;
-        bool game_found;
-        #ifdef BASE_START_POINT
-        game_found = SearchGameBase( in_memory_game_cache[i].second );
-        #endif
-        #ifdef CONSERVATIVE
-        game_found = SearchGameSlowPromotionAllowed( in_memory_game_cache[i].second );
-        #endif
-        #ifdef NO_PROMOTIONS_FLAWED
-        game_found = SearchGameOptimisedNoPromotionAllowed( in_memory_game_cache[i].second );
-        #endif
-        #ifdef CORRECT_BEST_PRACTICE
-        if( promotion_in_game )
-            game_found = SearchGameSlowPromotionAllowed( in_memory_game_cache[i].second );
-        else
-            game_found = SearchGameOptimisedNoPromotionAllowed( in_memory_game_cache[i].second );
-        #endif
-        if( game_found )
-            games_found.push_back( idx );
-    }    
+        AutoTimer at("Search time");
 
-    // compute the elapsed time in millisec
-    QueryPerformanceCounter(&t2);   // stop timer
-    double elapsed_time = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
-    cprintf( "Search time = %f ms\n", elapsed_time );
+        // Leave only one defined
+        //#define BASE_START_POINT
+        //#define CONSERVATIVE
+        //#define NO_PROMOTIONS_FLAWED
+        #define CORRECT_BEST_PRACTICE
+        for( int i=0; i<nbr; i++ )
+        {
+            int idx = in_memory_game_cache[i]->GetGameId();
+            Roster r = in_memory_game_cache[i]->RefRoster();
+            /*cprintf( "idx=%d, white=%s[%s], black=%s[%s], blob=%s[%s]\n",
+                        in_memory_game_cache[i]->GetGameId(),
+                        in_memory_game_cache[i]->White(),  r.white.c_str(),
+                        in_memory_game_cache[i]->Black(),  r.black.c_str(),
+                        in_memory_game_cache[i]->CompressedMoves(),  in_memory_game_cache[i]->RefCompressedMoves().c_str() ); */
+            bool promotion_in_game = (idx<=0);
+            if( promotion_in_game )
+                idx = 0-idx;
+            bool game_found;
+            #ifdef BASE_START_POINT
+            game_found = SearchGameBase( in_memory_game_cache[i]->RefCompressedMoves() );
+            #endif
+            #ifdef CONSERVATIVE
+            game_found = SearchGameSlowPromotionAllowed( in_memory_game_cache[i]->RefCompressedMoves() );
+            #endif
+            #ifdef NO_PROMOTIONS_FLAWED
+            game_found = SearchGameOptimisedNoPromotionAllowed( in_memory_game_cache[i]->RefCompressedMoves() );
+            #endif
+            #ifdef CORRECT_BEST_PRACTICE
+            if( promotion_in_game )
+                game_found = SearchGameSlowPromotionAllowed( in_memory_game_cache[i]->RefCompressedMoves() );
+            else
+                game_found = SearchGameOptimisedNoPromotionAllowed( in_memory_game_cache[i]->RefCompressedMoves() );
+            #endif
+            if( game_found )
+                games_found.push_back( idx );
+        }    
+    }
     return games_found.size();
 }
 
