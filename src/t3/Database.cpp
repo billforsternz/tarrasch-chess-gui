@@ -319,7 +319,8 @@ int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &pl
     {
         if( is_tiny_db )
         {
-            game_count = tiny_db.DoSearch(cr,position_hash,"Database search", "Searching..." );
+            ProgressBar progress("Database search", "Searching...",false);
+            game_count = tiny_db.DoSearch( cr, position_hash, &progress );
             db_access_required = false;
         }
         else
@@ -632,7 +633,8 @@ int Database::LoadGamesWithQuery( const thc::ChessPosition &cp, uint64_t hash, s
     int retval=-1;
     if( is_tiny_db )
     {
-        int game_count = tiny_db.DoSearch(cp,hash,"Searching for extra games", "Searching for extra games");
+        ProgressBar progress("Checking for transpositions", "Searching for extra games",false);
+        int game_count = tiny_db.DoSearch(cp,hash,&progress);
         bool ok=true;
         for( int i=0; ok && i<game_count; i++ )
         {
@@ -980,7 +982,11 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
     if( is_tiny_db && db_req==REQ_POSITION )
     {
         cache.clear();
-        int game_count = tiny_db.DoSearch(gbl_position,position_hash,"Loading games into memory", "Loading games");
+        int game_count;
+        {
+            ProgressBar progress("Loading games into memory", "Loading games",false);
+            game_count = tiny_db.DoSearch(gbl_position,position_hash,&progress);
+        }
         int nbr = tiny_db.in_memory_game_cache.size();
         int next;
         int j=0;

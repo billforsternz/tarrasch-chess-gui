@@ -196,7 +196,7 @@ bool MemoryPositionSearch::TryFastMode( MpsSide *side )
     return okay;
 }
 
-int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t position_hash, const std::string &progress_title, const std::string &progress_desc )
+int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t position_hash, ProgressBar *progress )
 {
     games_found.clear();
 
@@ -358,7 +358,6 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
     hash_target = position_hash;
     int nbr = in_memory_game_cache.size();
     {
-        ProgressBar progress( progress_title, progress_desc, false );
         AutoTimer at("Search time");
 
         // Leave only one defined
@@ -369,8 +368,8 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
         for( int i=0; i<nbr; i++ )
         {
             int idx = in_memory_game_cache[i]->GetGameId();
-            //Roster r = in_memory_game_cache[i]->RefRoster();
-            /*cprintf( "idx=%d, white=%s[%s], black=%s[%s], blob=%s[%s]\n",
+            /* Roster r = in_memory_game_cache[i]->RefRoster();
+            cprintf( "idx=%d, white=%s[%s], black=%s[%s], blob=%s[%s]\n",
                         in_memory_game_cache[i]->GetGameId(),
                         in_memory_game_cache[i]->White(),  r.white.c_str(),
                         in_memory_game_cache[i]->Black(),  r.black.c_str(),
@@ -396,8 +395,8 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
             #endif
             if( game_found )
                 games_found.push_back( idx );
-            if( (i&0xff) == 0 )
-                progress.Permill( i*1000 / nbr );
+            if( (i&0xff)==0 && progress )
+                progress->Permill( i*1000 / nbr );
         }    
     }
     return games_found.size();
