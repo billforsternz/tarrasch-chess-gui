@@ -499,7 +499,7 @@ int Database::LoadGameWithQuery( CompactGame *pact, int game_id )
 static bool gbl_protect_recursion;   // FIXME
 
 
-int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::vector< smart_ptr<ListableGame> > &games )
+int Database::LoadPlayerGamesWithQuery(  std::string &player_name, bool white, std::vector< smart_ptr<ListableGame> > &games )
 {
     int nbr_before = games.size();
     int retval=-1;
@@ -513,9 +513,9 @@ int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::ve
     sprintf( buf,
             "SELECT games.game_id, games.white, games.black, games.event, games.site, games.round, games.result, games.date, games.white_elo, games.black_elo, games.eco, games.moves from games "
             "WHERE games.%s='%s'",  white?"white":"black",  player_name.c_str() );
-    cprintf( "LoadGamesWithQuery(), player; QUERY IN: %s\n",buf);
+    cprintf( "LoadPlayerGamesWithQuery(), player; QUERY IN: %s\n",buf);
     retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &stmt, 0 );
-    cprintf( "LoadGamesWithQuery(), player; QUERY OUT: %s\n",buf);
+    cprintf( "LoadPlayerGamesWithQuery(), player; QUERY OUT: %s\n",buf);
     if( retval )
     {
         cprintf("SELECTING DATA FROM DB FAILED 2\n");
@@ -614,7 +614,7 @@ int Database::LoadGamesWithQuery(  std::string &player_name, bool white, std::ve
             sqlite3_finalize(stmt);
             stmt = NULL;
             int nbr_after = games.size();
-            cprintf("LoadGamesWithQuery(): %d games loaded\n", nbr_after-nbr_before );
+            cprintf("LoadPlayerGamesWithQuery(): %d games loaded\n", nbr_after-nbr_before );
             return nbr_after-nbr_before;
         }
         else
@@ -982,11 +982,11 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
     if( is_tiny_db && db_req==REQ_POSITION )
     {
         cache.clear();
-        int game_count;
-        {
+        int game_count = tiny_db.GetNbrGamesFound();
+     /*   {
             ProgressBar progress("Loading games into memory", "Loading games",false);
             game_count = tiny_db.DoSearch(gbl_position,position_hash,&progress);
-        }
+        } */
         int nbr = tiny_db.in_memory_game_cache.size();
         int next;
         int j=0;

@@ -95,14 +95,14 @@ struct MpsQuick
     uint64_t *rank3_ptr;
     uint64_t *rank2_ptr;
     uint64_t *rank1_ptr;
-    uint64_t *rank8_target_ptr;
-    uint64_t *rank7_target_ptr;
-    uint64_t *rank6_target_ptr;
-    uint64_t *rank5_target_ptr;
-    uint64_t *rank4_target_ptr;
-    uint64_t *rank3_target_ptr;
-    uint64_t *rank2_target_ptr;
-    uint64_t *rank1_target_ptr;
+    const uint64_t *rank8_target_ptr;
+    const uint64_t *rank7_target_ptr;
+    const uint64_t *rank6_target_ptr;
+    const uint64_t *rank5_target_ptr;
+    const uint64_t *rank4_target_ptr;
+    const uint64_t *rank3_target_ptr;
+    const uint64_t *rank2_target_ptr;
+    const uint64_t *rank1_target_ptr;
     char     target_squares[64];
 };
 
@@ -124,8 +124,9 @@ public:
     }
     bool TryFastMode( MpsSide *side );
     bool SearchGameBase( std::string &moves_in );   // the original version
-    bool SearchGameOptimisedNoPromotionAllowed( std::string &moves_in );    // much faster
+    bool SearchGameOptimisedNoPromotionAllowed( const char *moves_in );    // much faster
     bool SearchGameSlowPromotionAllowed(  std::string &moves_in );          // semi fast
+    int  GetNbrGamesFound() { return games_found.size(); }
     void Init()
     {
         thc::ChessPosition *cp = static_cast<thc::ChessPosition *>(&msi.cr);

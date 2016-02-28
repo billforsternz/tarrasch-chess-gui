@@ -391,7 +391,7 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
             if( promotion_in_game )
                 game_found = SearchGameSlowPromotionAllowed( in_memory_game_cache[i]->RefCompressedMoves() );
             else
-                game_found = SearchGameOptimisedNoPromotionAllowed( in_memory_game_cache[i]->RefCompressedMoves() );
+                game_found = SearchGameOptimisedNoPromotionAllowed( in_memory_game_cache[i]->CompressedMoves() );
             #endif
             if( game_found )
                 games_found.push_back( idx );
@@ -860,7 +860,7 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
 #define SLOW_BLACK_HOME_ROW_TEST ((*ms.slow_rank7_ptr & black_home_mask) == black_home_pawns)    
 
 
-bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &moves_in )
+bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *moves_in )
 {
 /*  CompressMoves press;
     std::vector<thc::Move> moves = press.Uncompress( moves_in );
@@ -886,7 +886,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &m
         cr.PlayMove(mv);
     } */
     QuickGameInit();
-    int i=0, len=moves_in.size();
+    //int i=0, len=moves_in.size();
     //#define PRINT_POSITIONS
     #ifndef PRINT_POSITIONS
     for(;;)
@@ -938,13 +938,15 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &m
         }
 
         // No match on end of game
+        #if 0
         if( i >= len )
         {
             return false;
         }
+        #endif
 
         // White move
-        char code = moves_in[i++];
+        char code = *moves_in++; //[i++];
         int src=0;
         int dst=0;
         int hi_nibble = code&0xf0;
@@ -958,6 +960,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &m
                 switch( code&0x0f )     // 0, 1, 2
                 {                       // 8, 9, 10
                                         // 16,17,18
+                    case 0: return false;
                     case K_VECTOR_NW:    delta = -9; break;  // 0-9
                     case K_VECTOR_N:     delta = -8; break;  // 1-9
                     case K_VECTOR_NE:    delta = -7; break;  // 2-9
@@ -1308,13 +1311,15 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &m
         }
 
         // No match on end of game
+        #if 0
         if( i >= len )
         {
             return false;
         }
+        #endif
 
         // Black move
-        code = moves_in[i++];
+        code = *moves_in++; //[i++];
         src=0;
         dst=0;
         hi_nibble = code&0xf0;
@@ -1328,6 +1333,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( std::string &m
                 switch( code&0x0f )     // 0, 1, 2
                 {                       // 8, 9, 10
                                         // 16,17,18
+                    case 0: return false;
                     case K_VECTOR_NW:    delta = -9; break;  // 0-9
                     case K_VECTOR_N:     delta = -8; break;  // 1-9
                     case K_VECTOR_NE:    delta = -7; break;  // 2-9

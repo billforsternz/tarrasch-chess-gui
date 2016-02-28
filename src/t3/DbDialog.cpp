@@ -412,7 +412,7 @@ void DbDialog::GdvButton2()
 void DbDialog::GdvButton3()
 {
     std::string player_name = white_player_search ? track->info.r.white : track->info.r.black;
-    int nbr_loaded = objs.db->LoadGamesWithQuery( player_name, true, objs.gl->gc_clipboard.gds );
+    int nbr_loaded = objs.db->LoadPlayerGamesWithQuery( player_name, true, objs.gl->gc_clipboard.gds );
     if( nbr_loaded > 0 )
     {
         char buf[2000];
@@ -425,7 +425,7 @@ void DbDialog::GdvButton3()
 void DbDialog::GdvButton4()
 {
     std::string player_name = white_player_search ? track->info.r.white : track->info.r.black;
-    int nbr_loaded = objs.db->LoadGamesWithQuery( player_name, false, objs.gl->gc_clipboard.gds );
+    int nbr_loaded = objs.db->LoadPlayerGamesWithQuery( player_name, false, objs.gl->gc_clipboard.gds );
     if( nbr_loaded > 0 )
     {
         char buf[2000];
@@ -619,8 +619,11 @@ void DbDialog::StatsCalculate()
     
     // For each cached game
     std::vector< smart_ptr<ListableGame> > &source = (objs.gl->db_clipboard ? objs.gl->gc_clipboard.gds : gc->gds );
-    for( unsigned int i=0; i<source.size(); i++ )
+    ProgressBar progress("Calculating Stats","Calculating Stats",false);
+    int nbr_source_games=source.size();
+    for( unsigned int i=0; i<nbr_source_games; i++ )
     {
+        progress.Permill(i*1000/nbr_source_games);
         Roster r         = source[i]->RefRoster();
         std::string blob = source[i]->RefCompressedMoves();
     
@@ -679,9 +682,13 @@ void DbDialog::StatsCalculate()
             bool draw       = (r.result=="1/2-1/2");
             if( draw )
                 total_draws++;
+            #if 0
             ListableGameDb temp(0,r,blob);
             make_smart_ptr( ListableGameDb, smptr, temp );
             gc_db_displayed_games.gds.push_back(smptr);
+            #else
+            gc_db_displayed_games.gds.push_back(source[i]);
+            #endif
             PATH_TO_POSITION *p = &transpositions[found_idx];
             p->frequency++;
             size_t len = p->blob.length();

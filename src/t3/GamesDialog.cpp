@@ -710,6 +710,7 @@ void GamesDialog::Goto( int idx )
             list_ctrl->EnsureVisible(idx+10<sz?idx+span:sz-1);
             list_ctrl->EnsureVisible(idx);
         }
+        list_ctrl->SetFocus();
     }
 }
 
