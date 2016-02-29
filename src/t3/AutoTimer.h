@@ -4,8 +4,8 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#ifndef DB_PRIMITIVES_H
-#define DB_PRIMITIVES_H
+#ifndef AUTO_TIMER_H
+#define AUTO_TIMER_H
 
 #include "Portability.h"
 #ifdef THC_UNIX
@@ -34,7 +34,7 @@ public:
         #endif
     }
 
-    double End()
+    double Elapsed()
     {
         double elapsed_time;
         #ifdef THC_WINDOWS
@@ -61,8 +61,9 @@ public:
     }
     ~AutoTimer()
     {
-        double elapsed = End();
-        cprintf( "%s: time elapsed (ms) = %f\n", desc, elapsed );
+        double elapsed = Elapsed();
+        if( desc )
+            cprintf( "%s: time elapsed (ms) = %f\n", desc, elapsed );
     }
 private:
 #ifdef THC_WINDOWS
@@ -75,7 +76,4 @@ private:
     const char *desc;
 };
 
-
-
-
-#endif //DB_PRIMITIVES_H
+#endif //AUTO_TIMER__H
