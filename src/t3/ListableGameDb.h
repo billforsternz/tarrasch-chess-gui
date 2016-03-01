@@ -18,8 +18,6 @@ private:
     PackedGame pack;
 
 public:
-
-
     ListableGameDb( int game_id, Roster &r, std::string str_blob )
     {
         this->game_id = game_id;

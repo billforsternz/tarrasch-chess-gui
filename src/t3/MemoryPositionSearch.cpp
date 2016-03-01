@@ -367,38 +367,44 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
         #define CORRECT_BEST_PRACTICE
         for( int i=0; i<nbr; i++ )
         {
-            int idx = in_memory_game_cache[i]->GetGameId();
+            DoSearchFoundGame dsfg;
+            dsfg.idx = i;
+            dsfg.game_id = in_memory_game_cache[i]->GetGameId();
+            dsfg.offset_first=0;
+            dsfg.offset_last=0;
             /* Roster r = in_memory_game_cache[i]->RefRoster();
             cprintf( "idx=%d, white=%s[%s], black=%s[%s], blob=%s[%s]\n",
                         in_memory_game_cache[i]->GetGameId(),
                         in_memory_game_cache[i]->White(),  r.white.c_str(),
                         in_memory_game_cache[i]->Black(),  r.black.c_str(),
                         in_memory_game_cache[i]->CompressedMoves(),  in_memory_game_cache[i]->RefCompressedMoves().c_str() ); */
-            bool promotion_in_game = (idx<=0);
-            if( promotion_in_game )
-                idx = 0-idx;
+            bool promotion_in_game = false; //TEMP TEMP (in_memory_game_cache[i]->game_attributes!=0);
             bool game_found;
             #ifdef BASE_START_POINT
             game_found = SearchGameBase( in_memory_game_cache[i]->RefCompressedMoves() );
             #endif
             #ifdef CONSERVATIVE
-            game_found = SearchGameSlowPromotionAllowed( in_memory_game_cache[i]->RefCompressedMoves() );
+            game_found = SearchGameSlowPromotionAllowed( in_memory_game_cache[i]->RefCompressedMoves(), dsfg.offset_first, dsfg.offset_last  );
             #endif
             #ifdef NO_PROMOTIONS_FLAWED
-            game_found = SearchGameOptimisedNoPromotionAllowed( in_memory_game_cache[i]->RefCompressedMoves() );
+            game_found = SearchGameOptimisedNoPromotionAllowed( in_memory_game_cache[i]->RefCompressedMoves(), dsfg.offset_first, dsfg.offset_last  );
             #endif
             #ifdef CORRECT_BEST_PRACTICE
             if( promotion_in_game )
-                game_found = SearchGameSlowPromotionAllowed( in_memory_game_cache[i]->RefCompressedMoves() );
+                game_found = SearchGameSlowPromotionAllowed( in_memory_game_cache[i]->RefCompressedMoves(), dsfg.offset_first, dsfg.offset_last  );
             else
-                game_found = SearchGameOptimisedNoPromotionAllowed( in_memory_game_cache[i]->CompressedMoves() );
+                game_found = SearchGameOptimisedNoPromotionAllowed( in_memory_game_cache[i]->CompressedMoves(), dsfg.offset_first, dsfg.offset_last );
             #endif
             if( game_found )
-                games_found.push_back( idx );
+            {
+                games_found.push_back( dsfg );
+            }
             if( (i&0xff)==0 && progress )
                 progress->Permill( i*1000 / nbr );
         }    
-    }
+    }                         
+    search_position = cp;
+    search_position_set = true;
     return games_found.size();
 }
 
@@ -407,7 +413,7 @@ bool MemoryPositionSearch::GetGameidFromRow( int row, int &game_id )
     bool ok=true;
     int nbr = games_found.size();
     if( 0<=row && row<nbr )
-        game_id = games_found[nbr-1-row];
+        game_id = games_found[nbr-1-row].game_id;
     else
     {
         ok = false;
@@ -860,8 +866,9 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
 #define SLOW_BLACK_HOME_ROW_TEST ((*ms.slow_rank7_ptr & black_home_mask) == black_home_pawns)    
 
 
-bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *moves_in )
+bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *moves_in, unsigned short &offset_first, unsigned short &offset_last )
 {
+    unsigned short offset=0;
 /*  CompressMoves press;
     std::vector<thc::Move> moves = press.Uncompress( moves_in );
     thc::ChessRules cr;
@@ -934,19 +941,13 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
             *mq.rank2_ptr == *mq.rank2_target_ptr
         )
         {
+            offset_last = offset_first = offset;    // later - separate offset_first and offset_last
             return true;
         }
 
-        // No match on end of game
-        #if 0
-        if( i >= len )
-        {
-            return false;
-        }
-        #endif
-
         // White move
-        char code = *moves_in++; //[i++];
+        char code = *moves_in++;
+        offset++;
         int src=0;
         int dst=0;
         int hi_nibble = code&0xf0;
@@ -960,7 +961,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                 switch( code&0x0f )     // 0, 1, 2
                 {                       // 8, 9, 10
                                         // 16,17,18
-                    case 0: return false;
+                    case 0: return false;   // CODE_KING = 0, so '\0' string terminator
                     case K_VECTOR_NW:    delta = -9; break;  // 0-9
                     case K_VECTOR_N:     delta = -8; break;  // 1-9
                     case K_VECTOR_NE:    delta = -7; break;  // 2-9
@@ -1307,19 +1308,13 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
             *mq.rank2_ptr == *mq.rank2_target_ptr
         )
         {
+            offset_last = offset_first = offset;    // later - separate offset_first and offset_last
             return true;
         }
 
-        // No match on end of game
-        #if 0
-        if( i >= len )
-        {
-            return false;
-        }
-        #endif
-
         // Black move
-        code = *moves_in++; //[i++];
+        code = *moves_in++;
+        offset++;
         src=0;
         dst=0;
         hi_nibble = code&0xf0;
@@ -1333,7 +1328,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                 switch( code&0x0f )     // 0, 1, 2
                 {                       // 8, 9, 10
                                         // 16,17,18
-                    case 0: return false;
+                    case 0: return false;   // CODE_KING = 0, so '\0' string terminator
                     case K_VECTOR_NW:    delta = -9; break;  // 0-9
                     case K_VECTOR_N:     delta = -8; break;  // 1-9
                     case K_VECTOR_NE:    delta = -7; break;  // 2-9
@@ -1647,7 +1642,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
     return false;
 }
 
-bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( std::string &moves_in )          // semi fast
+bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last )          // semi fast
 {
     int black_count=16;
     int black_pawn_count=8;
@@ -1666,6 +1661,7 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( std::string &moves_in
         *ms.slow_rank2_ptr == *ms.slow_rank2_target_ptr
     )
     {
+        offset_last = offset_first = 0;    // later - separate offset_first and offset_last
         return true;
     }
     for( int i=0; i<len; i++ )
@@ -1700,6 +1696,7 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( std::string &moves_in
             *ms.slow_rank2_ptr == *ms.slow_rank2_target_ptr
         )
         {
+            offset_last = offset_first = (i+1);    // later - separate offset_first and offset_last
             return true;
         }
         if( mover=='P' && 48<=mv.src && mv.src<56 && !SLOW_WHITE_HOME_ROW_TEST )

@@ -114,6 +114,14 @@ struct MpsQuickInit
     char squares[64];
 };
 
+struct DoSearchFoundGame
+{
+    int idx;            // index into memory db
+    int game_id;
+    unsigned short offset_first;
+    unsigned short offset_last;
+};
+
 class MemoryPositionSearch
 {
 public:
@@ -124,11 +132,15 @@ public:
     }
     bool TryFastMode( MpsSide *side );
     bool SearchGameBase( std::string &moves_in );   // the original version
-    bool SearchGameOptimisedNoPromotionAllowed( const char *moves_in );    // much faster
-    bool SearchGameSlowPromotionAllowed(  std::string &moves_in );          // semi fast
+    bool SearchGameOptimisedNoPromotionAllowed( const char *moves_in, unsigned short &offset_first, unsigned short &offset_last  );    // much faster
+    bool SearchGameSlowPromotionAllowed(  std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last  );          // semi fast
     int  GetNbrGamesFound() { return games_found.size(); }
+    std::vector< smart_ptr<ListableGame> >  &GetVectorAllGames()   { return in_memory_game_cache; }
+    std::vector<DoSearchFoundGame>          &GetVectorGamesFound() { return games_found; }
+    
     void Init()
     {
+        search_position_set=false;
         thc::ChessPosition *cp = static_cast<thc::ChessPosition *>(&msi.cr);
         cp->Init();
         MpsSide      sides[2];
@@ -178,12 +190,16 @@ public:
     }
     int  DoSearch( const thc::ChessPosition &cp, uint64_t position_hash, ProgressBar *progress );
     bool GetGameidFromRow( int row, int &game_id );
+    bool IsThisSearchPosition( const thc::ChessPosition &cp )
+        { return search_position_set && cp==search_position; }
 
 public:
     std::vector< smart_ptr<ListableGame> > in_memory_game_cache;
 
 private:
-    std::vector<int> games_found;
+    thc::ChessPosition search_position;
+    bool search_position_set;
+    std::vector<DoSearchFoundGame> games_found;
     MpsSlow      ms;
     MpsSlowInit  msi;
     MpsQuick     mq;

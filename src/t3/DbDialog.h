@@ -98,6 +98,8 @@ public:
     bool LoadGamesIntoMemory();
     bool LoadGamesPrompted( std::string prompt );
     void CopyOrAdd( bool clear_clipboard );
+    void StatsCalculateLegacy();
+    void StatsCalculateInMemory();
     void StatsCalculate();
     GameDocument *GetFocusGame( int &idx );
     void DeselectOthers();

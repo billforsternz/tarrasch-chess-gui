@@ -19,7 +19,7 @@
 class ListableGame
 {
 public:
-    ListableGame() { transpo_nbr=0; }
+    ListableGame() { transpo_nbr=0; game_attributes=0; }
     virtual ~ListableGame() {}
     virtual int GetGameId() { return 0; }
     virtual bool IsDbGameOnly() { return false; }   // a horrible kludge
@@ -70,7 +70,9 @@ public:
     }
     
 private:
-    int transpo_nbr;    // it would be nice to move this into ListableGameDb.h
+    int transpo_nbr;                    // it would be nice to move this into ListableGameDb.h
+public:
+    uint8_t game_attributes;            // maybe this too - at the moment this is effectively bool game_has_promotion; 
 };
 
         
