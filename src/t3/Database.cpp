@@ -628,6 +628,7 @@ int Database::LoadPlayerGamesWithQuery(  std::string &player_name, bool white, s
 }
 
 
+//Legacy only
 int Database::LoadGamesWithQuery( const thc::ChessPosition &cp, uint64_t hash, std::vector< smart_ptr<ListableGame> > &games, std::unordered_set<int> &games_set )
 {
     int retval=-1;
@@ -1207,6 +1208,7 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGam
     bool ok=true;
     sqlite3_stmt *stmt;
     int retval=-1;
+    mega_cache.clear();
     cache.clear();
     #if 1
 /*    wxProgressDialog progress( "Loading games into memory", "Loading games", 100, NULL,

@@ -490,6 +490,11 @@ void DbDialog::GdvCheckBox( bool checked )
 
 bool DbDialog::LoadGamesIntoMemory()
 {
+    if( objs.db->IsTinyDb() )
+    {
+        moves_from_base_position.clear();
+        return true;    // StatsCalculate() will load the games into gc_db_displayed_games[]
+    }
     AutoTimer at("Load games into memory");
     
     // Load all the matching games from the database
@@ -570,35 +575,14 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
 }
 
 
-void DbDialog::StatsCalculateLegacy()
+void DbDialog::StatsCalculateLegacy
+(
+    thc::ChessRules &cr_to_match,
+    int &total_white_wins,
+    int &total_black_wins,
+    int &total_draws
+)
 {
-    int total_white_wins = 0;
-    int total_black_wins = 0;
-    int total_draws = 0;
-    transpositions.clear();
-    stats.clear();
-    dirty = true;
-    gc_db_displayed_games.gds.clear();
-    cprintf( "Remove focus %d\n", track->focus_idx );
-    list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_FOCUSED );
-    list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_SELECTED );
-    thc::ChessRules cr_to_match = this->cr;
-    bool add_go_back = false;
-    std::string go_back_string;
-    for( int i=0; i<moves_from_base_position.size(); i++ )
-    {
-        thc::Move mv = moves_from_base_position[i];
-        if( i+1 == moves_from_base_position.size() )
-        {
-            std::string s = mv.NaturalOut(&cr_to_match);
-            if( !cr_to_match.white )
-                s = "..." + s;
-            go_back_string = "Go back (undo " + s + ")";
-            add_go_back = true;
-        }
-        cr_to_match.PlayMove(mv);
-    }
-
     // hash to match
     uint64_t gbl_hash = cr_to_match.Hash64Calculate();
     CompressMoves press_to_match(cr_to_match);
@@ -728,151 +712,16 @@ void DbDialog::StatsCalculateLegacy()
             }
         }
     }
-    
-    // Sort the stats according to number of games
-    std::multimap< MOVE_STATS,  uint32_t > dst = flip_and_sort_map(stats);
-    std::multimap< MOVE_STATS,  uint32_t >::reverse_iterator it;
-    moves_in_this_position.clear();
-    wxArrayString strings_stats;
-    for( it=dst.rbegin(); it!=dst.rend(); it++ )
-    {
-        double percentage_score = 0.0;
-        int nbr_games      = it->first.nbr_games;
-        int nbr_white_wins = it->first.nbr_white_wins;
-        int nbr_black_wins = it->first.nbr_black_wins;
-        int nbr_draws      = it->first.nbr_draws;
-        int draws_plus_no_result = nbr_games - nbr_white_wins - nbr_black_wins;
-        if( nbr_games )
-            percentage_score = ((1.0*nbr_white_wins + 0.5*draws_plus_no_result) * 100.0) / nbr_games;
-        uint32_t imv=it->second;
-        thc::Move mv;
-        memcpy( &mv, &imv, sizeof(mv) ); // FIXME
-        if( add_go_back )
-        {
-            add_go_back = false;
-            wxString wstr( go_back_string.c_str() );
-            strings_stats.Add(wstr);
-            moves_in_this_position.push_back(mv);
-        }
-        moves_in_this_position.push_back(mv);
-        std::string s = mv.NaturalOut(&cr_to_match);
-        if( !cr_to_match.white )
-            s = "..." + s;
-        char buf[200];
-        sprintf( buf, "%s: %d games, white scores %.1f%% +%d -%d =%d",
-                s.c_str(),
-                nbr_games, percentage_score,
-                nbr_white_wins, nbr_black_wins, nbr_draws );
-        cprintf( "%s\n", buf );
-        wxString wstr(buf);
-        strings_stats.Add(wstr);
-    }
-
-    // Print the transpositions in order
-    cprintf( "%d transpositions\n", transpositions.size() );
-    wxArrayString strings_transpos;
-    for( unsigned int j=0; j<transpositions.size(); j++ )
-    {
-        PATH_TO_POSITION *p = &transpositions[j];
-        size_t len = p->blob.length();
-        CompressMoves press;
-        std::vector<thc::Move> unpacked = press.Uncompress(p->blob);
-        std::string txt;
-        thc::ChessRules cr;
-        for( int k=0; k<len; k++ )
-        {
-            thc::Move mv = unpacked[k];
-            if( cr.white )
-            {
-                char buf[100];
-                sprintf( buf, "%d.", cr.full_move_count );
-                txt += buf;
-            }
-            txt += mv.NaturalOut(&cr);
-            txt += " ";
-            cr.PlayMove(mv);
-        }
-        char buf[2000];
-        sprintf( buf, "T%d: %s: %d occurences", j+1, txt.c_str(), p->frequency );
-        cprintf( "%s\n", buf );
-        wxString wstr(buf);
-        strings_transpos.Add(wstr);
-    }
-
-    nbr_games_in_list_ctrl = gc_db_displayed_games.gds.size();
-    dirty = true;
-    list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
-    list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
-    char buf[1000];
-    int total_games  = nbr_games_in_list_ctrl;
-    int total_draws_plus_no_result = total_games - total_white_wins - total_black_wins;
-    double percent_score=0.0;
-    if( total_games )
-        percent_score= ((1.0*total_white_wins + 0.5*total_draws_plus_no_result) * 100.0) / total_games;
-    sprintf( buf, "%d games, white scores %.1f%% +%d -%d =%d",
-            total_games, percent_score,
-            total_white_wins, total_black_wins, total_draws );
-    cprintf( "Got here #5\n" );
-    title_ctrl->SetLabel( buf );
-
-    int top = list_ctrl->GetTopItem();
-    int count = 1 + list_ctrl->GetCountPerPage();
-    if( count > nbr_games_in_list_ctrl )
-        count = nbr_games_in_list_ctrl;
-    for( int i=0; i<count; i++ )
-        list_ctrl->RefreshItem(top++);
-    list_ctrl->SetFocus();
-
-    if( !list_ctrl_stats )
-    {
-        if( utility )
-            utility->Hide();
-        wxSize sz4 = mini_board->GetSize();
-        sz4.x = (sz4.x*13)/10;
-        sz4.y = (sz4.y*10)/10;
-        
-        list_ctrl_stats   = new wxListBox( notebook, ID_DB_LISTBOX_STATS, wxDefaultPosition, sz4, 0, NULL, wxLB_HSCROLL );
-        list_ctrl_transpo = new wxListBox( notebook, ID_DB_LISTBOX_TRANSPO, wxDefaultPosition, sz4, 0, NULL, wxLB_HSCROLL );
-        notebook->AddPage(list_ctrl_stats,"Next Move",true);
-        notebook->AddPage(list_ctrl_transpo,"Transpositions",false);
-    }
-    
-    list_ctrl_stats->Clear();
-    list_ctrl_transpo->Clear();
-    list_ctrl_stats->InsertItems( strings_stats, 0 );
-    list_ctrl_transpo->InsertItems( strings_transpos, 0 );
-    Goto(0);
 }
 
-void DbDialog::StatsCalculateInMemory()
+void DbDialog::StatsCalculateInMemory
+(
+    thc::ChessRules &cr_to_match,
+    int &total_white_wins,
+    int &total_black_wins,
+    int &total_draws
+)
 {
-    int total_white_wins = 0;
-    int total_black_wins = 0;
-    int total_draws = 0;
-    transpositions.clear();
-    stats.clear();
-    dirty = true;
-    gc_db_displayed_games.gds.clear();
-    cprintf( "Remove focus %d\n", track->focus_idx );
-    list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_FOCUSED );
-    list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_SELECTED );
-    thc::ChessRules cr_to_match = this->cr;
-    bool add_go_back = false;
-    std::string go_back_string;
-    for( int i=0; i<moves_from_base_position.size(); i++ )
-    {
-        thc::Move mv = moves_from_base_position[i];
-        if( i+1 == moves_from_base_position.size() )
-        {
-            std::string s = mv.NaturalOut(&cr_to_match);
-            if( !cr_to_match.white )
-                s = "..." + s;
-            go_back_string = "Go back (undo " + s + ")";
-            add_go_back = true;
-        }
-        cr_to_match.PlayMove(mv);
-    }
-
     // hash to match
     uint64_t gbl_hash = cr_to_match.Hash64Calculate();
     CompressMoves press_to_match(cr_to_match);
@@ -979,6 +828,44 @@ void DbDialog::StatsCalculateInMemory()
         }
     }
     
+}
+
+void DbDialog::StatsCalculate()
+{
+    int total_white_wins = 0;
+    int total_black_wins = 0;
+    int total_draws = 0;
+    transpositions.clear();
+    stats.clear();
+    dirty = true;
+    gc_db_displayed_games.gds.clear();
+    cprintf( "Remove focus %d\n", track->focus_idx );
+    list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_FOCUSED );
+    list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_SELECTED );
+    thc::ChessRules cr_to_match = this->cr;
+    bool add_go_back = false;
+    std::string go_back_string;
+    for( int i=0; i<moves_from_base_position.size(); i++ )
+    {
+        thc::Move mv = moves_from_base_position[i];
+        if( i+1 == moves_from_base_position.size() )
+        {
+            std::string s = mv.NaturalOut(&cr_to_match);
+            if( !cr_to_match.white )
+                s = "..." + s;
+            go_back_string = "Go back (undo " + s + ")";
+            add_go_back = true;
+        }
+        cr_to_match.PlayMove(mv);
+    }       
+
+    bool use_legacy = (objs.gl->db_clipboard || !objs.db->IsTinyDb());
+    cprintf( "use_legacy = %s\n", use_legacy?"true":"false" );
+    if( use_legacy )
+        StatsCalculateLegacy( cr_to_match, total_white_wins, total_black_wins, total_draws );
+    else
+        StatsCalculateInMemory( cr_to_match, total_white_wins, total_black_wins, total_draws );
+
     // Sort the stats according to number of games
     std::multimap< MOVE_STATS,  uint32_t > dst = flip_and_sort_map(stats);
     std::multimap< MOVE_STATS,  uint32_t >::reverse_iterator it;
@@ -1092,16 +979,6 @@ void DbDialog::StatsCalculateInMemory()
     list_ctrl_stats->InsertItems( strings_stats, 0 );
     list_ctrl_transpo->InsertItems( strings_transpos, 0 );
     Goto(0);
-}
-
-void DbDialog::StatsCalculate()
-{
-    bool use_legacy = (objs.gl->db_clipboard || !objs.db->IsTinyDb());
-    cprintf( "use_legacy = %s\n", use_legacy?"true":"false" );
-    if( use_legacy )
-        StatsCalculateLegacy();
-    else
-        StatsCalculateInMemory();
 }
 
 

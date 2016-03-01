@@ -98,8 +98,20 @@ public:
     bool LoadGamesIntoMemory();
     bool LoadGamesPrompted( std::string prompt );
     void CopyOrAdd( bool clear_clipboard );
-    void StatsCalculateLegacy();
-    void StatsCalculateInMemory();
+    void StatsCalculateLegacy
+    (
+        thc::ChessRules &cr_to_match,
+        int &total_white_wins,
+        int &total_black_wins,
+        int &total_draws
+    );
+    void StatsCalculateInMemory
+    (
+        thc::ChessRules &cr_to_match,
+        int &total_white_wins,
+        int &total_black_wins,
+        int &total_draws
+    );
     void StatsCalculate();
     GameDocument *GetFocusGame( int &idx );
     void DeselectOthers();
