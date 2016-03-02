@@ -53,6 +53,7 @@ private:
     DB_REQ db_req;
     bool is_open;
     bool is_tiny_db;
+    bool is_pristine;
 
     // Create a handle for database connection, create a pointer to sqlite3
     sqlite3 *gbl_handle;

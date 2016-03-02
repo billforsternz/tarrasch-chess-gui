@@ -378,7 +378,7 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
                         in_memory_game_cache[i]->White(),  r.white.c_str(),
                         in_memory_game_cache[i]->Black(),  r.black.c_str(),
                         in_memory_game_cache[i]->CompressedMoves(),  in_memory_game_cache[i]->RefCompressedMoves().c_str() ); */
-            bool promotion_in_game = false; //TEMP TEMP (in_memory_game_cache[i]->game_attributes!=0);
+            bool promotion_in_game = (in_memory_game_cache[i]->game_attributes!=0);
             bool game_found;
             #ifdef BASE_START_POINT
             game_found = SearchGameBase( in_memory_game_cache[i]->RefCompressedMoves() );
@@ -406,20 +406,6 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
     search_position = cp;
     search_position_set = true;
     return games_found.size();
-}
-
-bool MemoryPositionSearch::GetGameidFromRow( int row, int &game_id )
-{
-    bool ok=true;
-    int nbr = games_found.size();
-    if( 0<=row && row<nbr )
-        game_id = games_found[nbr-1-row].game_id;
-    else
-    {
-        ok = false;
-        game_id = 0;
-    }
-    return ok;
 }
 
 bool MemoryPositionSearch::SearchGameBase( std::string &moves_in )

@@ -140,6 +140,7 @@ public:
     
     void Init()
     {
+        in_memory_game_cache.clear();
         search_position_set=false;
         thc::ChessPosition *cp = static_cast<thc::ChessPosition *>(&msi.cr);
         cp->Init();
@@ -189,7 +190,6 @@ public:
         ms.slow_rank1_target_ptr = reinterpret_cast<uint64_t*>(&ms.slow_target_squares[56]);
     }
     int  DoSearch( const thc::ChessPosition &cp, uint64_t position_hash, ProgressBar *progress );
-    bool GetGameidFromRow( int row, int &game_id );
     bool IsThisSearchPosition( const thc::ChessPosition &cp )
         { return search_position_set && cp==search_position; }
 

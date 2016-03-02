@@ -87,6 +87,7 @@ Database::Database( const char *db_file )
     gbl_current = 0;
     gbl_count = 0;
     is_tiny_db = false;
+    is_pristine = false;
 
     // Access the database.
     int retval = sqlite3_open( db_file, &gbl_handle );
@@ -164,6 +165,7 @@ void Database::Reopen( const char *db_file )
     gbl_current = 0;
     gbl_count = 0;
     is_tiny_db = false;
+    tiny_db.Init();
     
     // Access the database.
     int retval = sqlite3_open(db_file,&gbl_handle);
@@ -390,6 +392,11 @@ int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &pl
 int Database::LoadGameWithQuery( CompactGame *pact, int game_id )
 {
     pact->game_id = game_id;
+    if( is_tiny_db && is_pristine )
+    {
+        tiny_db.in_memory_game_cache[game_id]->GetCompactGame(*pact);
+        return 0;
+    }
     
     // Get white player
     char buf[1000];
@@ -632,36 +639,6 @@ int Database::LoadPlayerGamesWithQuery(  std::string &player_name, bool white, s
 int Database::LoadGamesWithQuery( const thc::ChessPosition &cp, uint64_t hash, std::vector< smart_ptr<ListableGame> > &games, std::unordered_set<int> &games_set )
 {
     int retval=-1;
-    if( is_tiny_db )
-    {
-        ProgressBar progress("Checking for transpositions", "Searching for extra games",false);
-        int game_count = tiny_db.DoSearch(cp,hash,&progress);
-        bool ok=true;
-        for( int i=0; ok && i<game_count; i++ )
-        {
-            int game_id;
-            bool ok = tiny_db.GetGameidFromRow( i, game_id );
-            int count = games_set.count(game_id);
-            bool already = (count > 0);
-            if( already )
-                continue;
-            if( ok )
-            {
-                CompactGame pact;
-                retval = LoadGameWithQuery( &pact, game_id );
-                ok = (retval==0);
-                if( ok )
-                {
-                    games_set.insert( game_id );
-                    ListableGameDb info( game_id, pact );
-                    make_smart_ptr( ListableGameDb, new_info, info );
-                    games.push_back( std::move(new_info) );
-                }
-            }
-        }
-        return 0;
-    }
-
     int nbr_before = games.size();
     sqlite3_stmt *stmt;    // A prepared statement for fetching from games table
     wxProgressDialog progress( "Searching for extra games", "Searching for extra games", 100, NULL,
@@ -851,14 +828,9 @@ int Database::GetRow( int row, CompactGame *info )
 
 int Database::GetRowRaw( CompactGame *pact, int row )
 {
-    if( is_tiny_db && db_req==REQ_POSITION )
+    if( is_tiny_db && db_req != REQ_PLAYERS )
     {
-        int game_id;
-        bool ok = tiny_db.GetGameidFromRow( row, game_id );
-        int retval = -1;
-        if( ok )
-            retval = LoadGameWithQuery( pact, game_id );
-        return retval;
+        return 0;
     }
     if( gbl_protect_recursion )
     {
@@ -977,40 +949,16 @@ int Database::GetRowRaw( CompactGame *pact, int row )
 
 bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int nbr_games )
 {
-    gbl_protect_recursion = true;
-    bool ok=true;
-    sqlite3_stmt *stmt;
     if( is_tiny_db && db_req==REQ_POSITION )
     {
+        // StatsCalculate() will load games
         cache.clear();
-        int game_count = tiny_db.GetNbrGamesFound();
-     /*   {
-            ProgressBar progress("Loading games into memory", "Loading games",false);
-            game_count = tiny_db.DoSearch(gbl_position,position_hash,&progress);
-        } */
-        int nbr = tiny_db.in_memory_game_cache.size();
-        int next;
-        int j=0;
-        if( j<game_count )
-        {
-            bool ok = tiny_db.GetGameidFromRow( j++, next );
-            for( int i=nbr-1; ok && i>=0; i-- )
-            {
-                int game_id = tiny_db.in_memory_game_cache[i]->GetGameId();
-                if( game_id == next )
-                {
-                    cache.push_back( tiny_db.in_memory_game_cache[i] );
-                    if( j<game_count )
-                        ok = tiny_db.GetGameidFromRow( j++, next );
-                    else
-                        break;
-                }
-            }
-        }
-        gbl_protect_recursion = false;
         return true;
     }
 
+    gbl_protect_recursion = true;
+    bool ok=true;
+    sqlite3_stmt *stmt;
     int retval=-1;
     cache.clear();
     
@@ -1202,6 +1150,8 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
 bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGame> > &mega_cache )
 {
     AutoTimer at("Load all games");
+    is_pristine=true;     // true if game_id = idx for every idx in mega_cache[idx] 
+    int idx=0;
     int nbr_games=0;
     int nbr_promotion_games=0;
     gbl_protect_recursion = true;
@@ -1286,8 +1236,19 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGam
                     "", 0, //fen
                     moves_blob, len12
                 );
+                for( int i=0; i<len12; i++ )
+                {
+                    if( (moves_blob[i]&0x8c) > 0x80 )
+                    {
+                        promotion = true;
+                        break;
+                    }
+                }
+                info.game_attributes = static_cast<unsigned char>(promotion);
                 make_smart_ptr( ListableGameDb, new_info, info );
                 mega_cache.push_back( std::move(new_info) );
+                if( game_id != idx++ )
+                    is_pristine = false;
 
             /*  ListableGameDb info( game_id, r, str_blob );
                 make_smart_ptr( ListableGameDb, new_info, info );
@@ -1331,7 +1292,7 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGam
         }
     }
     int cache_nbr = mega_cache.size();
-    cprintf( "Number of games = %d\n", cache_nbr );
+    cprintf( "Number of games = %d, is_pristine=%s\n", cache_nbr, is_pristine?"true":"false" );
     if( 2 < cache_nbr )
     {
         smart_ptr<ListableGame> p = mega_cache[2];

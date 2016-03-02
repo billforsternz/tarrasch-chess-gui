@@ -295,6 +295,8 @@ bool DbDialog::LoadGamesPrompted( std::string prompt )
 
 void DbDialog::GdvListColClick( int compare_col )
 {
+    if( objs.db->IsTinyDb() && db_req==REQ_PLAYERS )
+        return; // not supported
     if( LoadGamesPrompted
         ("This column sort requires loading a large number of games into memory, is that okay?")
       )
@@ -896,9 +898,11 @@ void DbDialog::StatsCalculate()
         if( !cr_to_match.white )
             s = "..." + s;
         char buf[200];
-        sprintf( buf, "%s: %d games, white scores %.1f%% +%d -%d =%d",
+        sprintf( buf, "%s: %d %s, white scores %.1f%% +%d -%d =%d",
                 s.c_str(),
-                nbr_games, percentage_score,
+                nbr_games,
+                nbr_games==1 ? "game" : "games",
+                percentage_score,
                 nbr_white_wins, nbr_black_wins, nbr_draws );
         cprintf( "%s\n", buf );
         wxString wstr(buf);
@@ -946,8 +950,10 @@ void DbDialog::StatsCalculate()
     double percent_score=0.0;
     if( total_games )
         percent_score= ((1.0*total_white_wins + 0.5*total_draws_plus_no_result) * 100.0) / total_games;
-    sprintf( buf, "%d games, white scores %.1f%% +%d -%d =%d",
-            total_games, percent_score,
+    sprintf( buf, "%d %s, white scores %.1f%% +%d -%d =%d",
+            total_games,
+            total_games==1 ? "game" : "games",
+            percent_score,
             total_white_wins, total_black_wins, total_draws );
     cprintf( "Got here #5\n" );
     title_ctrl->SetLabel( buf );
