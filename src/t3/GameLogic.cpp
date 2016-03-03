@@ -936,8 +936,9 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req )
     static int count;
     int temp = ++count;
     cprintf( "CmdDatabase(): May wait for tiny database load here (%d)...\n", temp );
-    extern wxMutex s_mutex_tiny_database;
-    wxMutexLocker lock(s_mutex_tiny_database);
+    extern wxMutex *WaitForWorkerThread();
+    wxMutex *ptr_mutex_tiny_database = WaitForWorkerThread();
+    wxMutexLocker lock(*ptr_mutex_tiny_database);
     {
         cprintf( "...CmdDatabase() if we did wait, that wait is now over (%d)\n", temp );
         std::string error_msg;
@@ -990,8 +991,9 @@ void GameLogic::CmdDatabaseSelect()
         static int count;
         int temp = ++count;
         cprintf( "CmdDatabaseSelect(): May wait for tiny database load here (%d)...\n", temp );
-        extern wxMutex s_mutex_tiny_database;
-        wxMutexLocker lock(s_mutex_tiny_database);
+        extern wxMutex *WaitForWorkerThread();
+        wxMutex *ptr_mutex_tiny_database = WaitForWorkerThread();
+        wxMutexLocker lock(*ptr_mutex_tiny_database);
         {
             cprintf( "...CmdDatabaseSelect() if we did wait, that wait is now over (%d)\n", temp );
             wxString s = fd.GetPath();

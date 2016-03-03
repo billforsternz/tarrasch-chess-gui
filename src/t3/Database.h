@@ -35,6 +35,7 @@ public:
     bool IsTinyDb() { return is_tiny_db; }
     int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr );
     int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &player_name );
+    int GetGameCount();
     int GetRow( int row, CompactGame *info );
     int GetRowRaw( CompactGame *info, int row );
     bool LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int nbr_games );
@@ -48,6 +49,8 @@ public:
     int LoadGamesWithQuery( const thc::ChessPosition &cp, uint64_t hash, std::vector< smart_ptr<ListableGame> > &games, std::unordered_set<int> &games_set );
     int LoadPlayerGamesWithQuery( std::string &player_name, bool white, std::vector< smart_ptr<ListableGame> > &games );
     MemoryPositionSearch tiny_db;
+    int background_load_permill;
+    bool kill_background_load;
   
 private:
     DB_REQ db_req;

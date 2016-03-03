@@ -78,9 +78,33 @@ void * WorkerThread::Entry()
     return 0;
 }
 
+wxMutex *KillWorkerThread()
+{   
+    the_database->kill_background_load = true;
+    return &s_mutex_tiny_database;
+}
+
+
+wxMutex *WaitForWorkerThread()
+{   
+    if( wxMUTEX_BUSY == s_mutex_tiny_database.TryLock() )
+    {
+        ProgressBar progress("Initial Database Load","Loading database into memory",false);
+        while( wxMUTEX_BUSY == s_mutex_tiny_database.TryLock() )
+        {
+            progress.Permill( the_database->background_load_permill );
+            wxSafeYield();
+        }
+    }
+    s_mutex_tiny_database.Unlock();
+    return &s_mutex_tiny_database;
+}
+
 Database::Database( const char *db_file )
 {
     gbl_handle = 0;
+    background_load_permill = 0;
+    kill_background_load = false;
     positions_stmt = 0;
     player_search_stmt = 0;
     gbl_expected = 0;
@@ -159,6 +183,8 @@ void Database::Reopen( const char *db_file )
         gbl_handle = NULL;
     }
     gbl_handle = 0;
+    background_load_permill = 0;
+    kill_background_load = false;
     positions_stmt = 0;
     player_search_stmt = 0;
     gbl_expected = 0;
@@ -501,6 +527,62 @@ int Database::LoadGameWithQuery( CompactGame *pact, int game_id )
     sqlite3_finalize(stmt);
     stmt = NULL;
     return 0;
+}
+
+int Database::GetGameCount()
+{
+    if( !gbl_handle )
+        return 0;
+    int game_count = 0;
+    sqlite3_stmt *stmt;
+    const char *sql = "SELECT COUNT(*) from games";
+    cprintf("QUERY IN: %s\n",sql);
+    int retval = sqlite3_prepare_v2( gbl_handle, sql, -1, &stmt, 0 );
+    cprintf("QUERY OUT: %s\n",sql);
+    if( retval )
+    {
+        cprintf("SELECTING DATA FROM DB FAILED 1\n");
+        return 0;
+    }
+    
+    // Read the number of rows fetched
+    int cols = sqlite3_column_count(stmt);
+    
+    cprintf( "Get games count begin\n");
+    while(1)
+    {
+        // fetch a row's status
+        retval = sqlite3_step(stmt);
+        if(retval == SQLITE_ROW)
+        {
+            // SQLITE_ROW means fetched a row
+            
+            // sqlite3_column_text returns a const void* , typecast it to const char*
+            for( int col=0; col<cols; col++ )
+            {
+                const char *val = (const char*)sqlite3_column_text(stmt,col);
+                if( col == 0 )
+                {
+                    game_count = atoi(val);
+                    cprintf( "Game count = %d\n", game_count );
+                }
+            }
+        }
+        else if( retval == SQLITE_DONE )
+        {
+            // All rows finished
+            sqlite3_finalize(stmt);
+            stmt = NULL;
+            break;
+        }
+        else
+        {
+            // Some error encountered
+            cprintf("SOME ERROR ENCOUNTERED\n");
+        }
+    }
+    cprintf("Get game count end\n");
+    return game_count;
 }
 
 static bool gbl_protect_recursion;   // FIXME
@@ -1150,7 +1232,9 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
 bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGame> > &mega_cache )
 {
     AutoTimer at("Load all games");
-    is_pristine=true;     // true if game_id = idx for every idx in mega_cache[idx] 
+    is_pristine=true;     // true if game_id = idx for every idx in mega_cache[idx]
+    background_load_permill = 0;
+    kill_background_load = false;
     int idx=0;
     int nbr_games=0;
     int nbr_promotion_games=0;
@@ -1160,8 +1244,9 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGam
     int retval=-1;
     mega_cache.clear();
     cache.clear();
+    int game_count = GetGameCount();
     #if 1
-/*    wxProgressDialog progress( "Loading games into memory", "Loading games", 100, NULL,
+/*    wxProgressDialog progress( "Loading games into memory", "Loading games", 100, NULL,       
                               wxPD_APP_MODAL+
                               wxPD_AUTO_HIDE+
                               wxPD_ELAPSED_TIME+
@@ -1186,7 +1271,7 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGam
     if( ok )
     {
         //int cols = sqlite3_column_count(stmt);
-        while(ok)
+        while(ok && !kill_background_load )
         {
             retval = sqlite3_step(stmt);
             if( retval == SQLITE_ROW )
@@ -1249,6 +1334,7 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGam
                 mega_cache.push_back( std::move(new_info) );
                 if( game_id != idx++ )
                     is_pristine = false;
+                background_load_permill = (idx*1000) / (game_count?game_count:1);
 
             /*  ListableGameDb info( game_id, r, str_blob );
                 make_smart_ptr( ListableGameDb, new_info, info );

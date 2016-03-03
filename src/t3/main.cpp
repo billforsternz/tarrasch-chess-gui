@@ -402,7 +402,11 @@ bool ChessApp::OnInit()
 
 int ChessApp::OnExit()
 {
-    dbg_printf( "ChessApp::OnExit()\n" );
+    cprintf( "ChessApp::OnExit(): May wait for tiny database load here...\n" );
+    extern wxMutex *KillWorkerThread();
+    wxMutex *ptr_mutex_tiny_database = KillWorkerThread();
+    wxMutexLocker lock(*ptr_mutex_tiny_database);
+    cprintf( "ChessApp::OnExit() if we did wait, that wait is now over\n" );
     if( objs.rybka )
     {
         delete objs.rybka;
