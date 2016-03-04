@@ -103,6 +103,14 @@ struct MpsQuick
     const uint64_t *rank3_target_ptr;
     const uint64_t *rank2_target_ptr;
     const uint64_t *rank1_target_ptr;
+    uint64_t rank3_target;
+    uint64_t rank4_target;
+    uint64_t rank5_target;
+    uint64_t rank6_target;
+    uint64_t rank7_target;
+    uint64_t rank8_target;
+    uint64_t rank1_target;
+    uint64_t rank2_target;
     char     target_squares[64];
 };
 

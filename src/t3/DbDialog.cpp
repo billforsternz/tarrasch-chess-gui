@@ -680,14 +680,9 @@ void DbDialog::StatsCalculateLegacy
             size_t len = p->blob.length();
             if( len < blob.length() ) // must be more moves
             {
-                const char *next_compressed_move = blob.c_str()+len;
-                CompressMoves press = press_to_match;
-                thc::Move mv = press.UncompressMove( *next_compressed_move );
-                uint32_t imv = 0;
-                assert( sizeof(imv) == sizeof(mv) );
-                memcpy( &imv, &mv, sizeof(mv) ); // FIXME
-                std::map< uint32_t, MOVE_STATS >::iterator it;
-                it = stats.find(imv);
+                char compressed_move = blob[len];
+                std::map< char, MOVE_STATS >::iterator it;
+                it = stats.find(compressed_move);
                 if( it == stats.end() )
                 {
                     MOVE_STATS empty;
@@ -695,8 +690,8 @@ void DbDialog::StatsCalculateLegacy
                     empty.nbr_white_wins = 0;
                     empty.nbr_black_wins = 0;
                     empty.nbr_draws = 0;
-                    stats[imv] = empty;
-                    it = stats.find(imv);
+                    stats[compressed_move] = empty;
+                    it = stats.find(compressed_move);
                 }
                 it->second.nbr_games++;
                 if( white_wins )
@@ -751,7 +746,7 @@ void DbDialog::StatsCalculateInMemory
         gc_db_displayed_games.gds.push_back(db_games[idx]);
         unsigned short offset_first = found_games[i].offset_first;
         unsigned short offset_last  = found_games[i].offset_last;
-        Roster r         = db_games[idx]->RefRoster();
+        //Roster r         = db_games[idx]->RefRoster();
         std::string blob = db_games[idx]->RefCompressedMoves();
     
         // Search for a match to this game
@@ -782,6 +777,7 @@ void DbDialog::StatsCalculateInMemory
             transpositions.push_back(ptp);
             found_idx = transpositions.size()-1;
         }
+        #if 0
         bool white_wins = (r.result=="1-0");
         if( white_wins )
             total_white_wins++;
@@ -791,19 +787,26 @@ void DbDialog::StatsCalculateInMemory
         bool draw       = (r.result=="1/2-1/2");
         if( draw )
             total_draws++;
+        #else
+        const char *result = db_games[idx]->Result();
+        bool white_wins = (0==strcmp(result,"1-0"));
+        if( white_wins )
+            total_white_wins++;
+        bool black_wins = (0==strcmp(result,"0-1"));
+        if( black_wins )
+            total_black_wins++;
+        bool draw       = (0==strcmp(result,"1/2-1/2"));
+        if( draw )
+            total_draws++;
+        #endif
         PATH_TO_POSITION *p = &transpositions[found_idx];
         p->frequency++;
         size_t len = p->blob.length();
         if( offset_last < blob.length() ) // must be more moves
         {
-            const char *next_compressed_move = blob.c_str()+offset_last;
-            CompressMoves press = press_to_match;
-            thc::Move mv = press.UncompressMove( *next_compressed_move );
-            uint32_t imv = 0;
-            assert( sizeof(imv) == sizeof(mv) );
-            memcpy( &imv, &mv, sizeof(mv) ); // FIXME
-            std::map< uint32_t, MOVE_STATS >::iterator it;
-            it = stats.find(imv);
+            char compressed_move = blob[offset_last];
+            std::map< char, MOVE_STATS >::iterator it;
+            it = stats.find(compressed_move);
             if( it == stats.end() )
             {
                 MOVE_STATS empty;
@@ -811,8 +814,8 @@ void DbDialog::StatsCalculateInMemory
                 empty.nbr_white_wins = 0;
                 empty.nbr_black_wins = 0;
                 empty.nbr_draws = 0;
-                stats[imv] = empty;
-                it = stats.find(imv);
+                stats[compressed_move] = empty;
+                it = stats.find(compressed_move);
             }
             it->second.nbr_games++;
             if( white_wins )
@@ -869,8 +872,8 @@ void DbDialog::StatsCalculate()
         StatsCalculateInMemory( cr_to_match, total_white_wins, total_black_wins, total_draws );
 
     // Sort the stats according to number of games
-    std::multimap< MOVE_STATS,  uint32_t > dst = flip_and_sort_map(stats);
-    std::multimap< MOVE_STATS,  uint32_t >::reverse_iterator it;
+    std::multimap< MOVE_STATS,  char > dst = flip_and_sort_map(stats);
+    std::multimap< MOVE_STATS,  char >::reverse_iterator it;
     moves_in_this_position.clear();
     wxArrayString strings_stats;
     for( it=dst.rbegin(); it!=dst.rend(); it++ )
@@ -883,9 +886,9 @@ void DbDialog::StatsCalculate()
         int draws_plus_no_result = nbr_games - nbr_white_wins - nbr_black_wins;
         if( nbr_games )
             percentage_score = ((1.0*nbr_white_wins + 0.5*draws_plus_no_result) * 100.0) / nbr_games;
-        uint32_t imv=it->second;
-        thc::Move mv;
-        memcpy( &mv, &imv, sizeof(mv) ); // FIXME
+        char compressed_move = it->second;
+        CompressMoves press(cr_to_match);
+        thc::Move mv = press.UncompressMove( compressed_move );
         if( add_go_back )
         {
             add_go_back = false;

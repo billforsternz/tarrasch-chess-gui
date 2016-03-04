@@ -1775,7 +1775,8 @@ void GameDocument::UseGame( const thc::ChessPosition &cp, const std::vector<thc:
     bool no_changes=false;
 
     MoveTree *found = Locate( pos, cr, title, at_move0 );
-    if( found && cr == cp )
+    bool have_moves = HaveMoves();
+    if( !have_moves || (found && cr==cp) )
     {
         cprintf( "Step 1 okay\n" );
         for( int i=0; i<moves_from_base_position.size(); i++ )
@@ -1821,7 +1822,31 @@ void GameDocument::UseGame( const thc::ChessPosition &cp, const std::vector<thc:
             int ivar;
             int imove;
             MoveTree *parent = tree.Parent( found, cr3, ivar, imove );
-            if( parent )
+            if( !have_moves )
+            {
+                VARIATION &variation = tree.variations[0];
+                for( int j=0; j<combined.size(); j++ )
+                {
+                    MoveTree m;
+                    if( j == 0 )
+                    {
+                        int len = tree.game_move.comment.size();
+                        if( len > 0 )
+                        {
+                            m.game_move.pre_comment = tree.game_move.comment + " " + description;
+                            tree.game_move.comment.clear();
+                        }
+                        else
+                        {
+                            m.game_move.pre_comment = description;
+                        }
+                    }
+                    thc::Move mv = combined[j];
+                    m.game_move.move = mv;
+                    variation.push_back(m);
+                }
+            }
+            else if( parent )
             {
                 cprintf( "Parent found, ivar=%d, imove=%d\n", ivar, imove );
                 VARIATION &variation = parent->variations[ivar];
@@ -1835,7 +1860,8 @@ void GameDocument::UseGame( const thc::ChessPosition &cp, const std::vector<thc:
                         break;
                 }
                 int offset_last_common_move = imove + nbr_common_moves;
-                bool append_not_branch = offset_last_common_move >= variation.size()-1;
+                int variation_size = variation.size();
+                bool append_not_branch = offset_last_common_move >= (variation_size-1);
                 if( append_not_branch )
                 {
                     cprintf( "Append, nbr_common_moves=%d, combined.size()=%d\n", nbr_common_moves, combined.size() );

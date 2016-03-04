@@ -121,7 +121,7 @@ public:
 
     // Data members
 private:
-    std::map< uint32_t, MOVE_STATS > stats; // map each move in the position to move stats
+    std::map< char, MOVE_STATS > stats; // map each compressed move in the position to move stats
     bool white_player_search;
     std::unordered_set<int>   games_set;    // game_ids for all games in memory
     std::unordered_set<uint64_t> drill_down_set;  // positions already encountered drilling down

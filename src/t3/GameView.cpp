@@ -1464,6 +1464,7 @@ MoveTree *GameView::Locate( unsigned long pos, thc::ChessRules &cr, string &titl
             found = gve.node;
             break;
         }
+
         else
         {
             if( not_yet && gve.type==MOVE )

@@ -199,6 +199,8 @@ bool MemoryPositionSearch::TryFastMode( MpsSide *side )
 int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t position_hash, ProgressBar *progress )
 {
     games_found.clear();
+    search_position = cp;
+    search_position_set = true;
 
     // Set up counts of total pieces, and individual pieces in the target position
     ms.black_count_target = 0;
@@ -356,9 +358,17 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
     }
 
     hash_target = position_hash;
+    mq.rank3_target = *mq.rank3_target_ptr;
+    mq.rank4_target = *mq.rank4_target_ptr;
+    mq.rank5_target = *mq.rank5_target_ptr;
+    mq.rank6_target = *mq.rank6_target_ptr;
+    mq.rank7_target = *mq.rank7_target_ptr;
+    mq.rank8_target = *mq.rank8_target_ptr;
+    mq.rank1_target = *mq.rank1_target_ptr;
+    mq.rank2_target = *mq.rank2_target_ptr;
     int nbr = in_memory_game_cache.size();
     {
-        AutoTimer at("Search time");
+        // TEMP AutoTimer at("Search time");
 
         // Leave only one defined
         //#define BASE_START_POINT
@@ -403,8 +413,6 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
                 progress->Permill( i*1000 / nbr );
         }    
     }                         
-    search_position = cp;
-    search_position_set = true;
     return games_found.size();
 }
 
@@ -855,6 +863,7 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
 bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *moves_in, unsigned short &offset_first, unsigned short &offset_last )
 {
     unsigned short offset=0;
+    bool target_white = search_position.white;  // searching for position with white to move?
 /*  CompressMoves press;
     std::vector<thc::Move> moves = press.Uncompress( moves_in );
     thc::ChessRules cr;
@@ -916,7 +925,18 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
     #endif
 
         // Check for match before every move
-        if( 
+        if(
+            target_white && 
+            #if 1
+            *mq.rank3_ptr == mq.rank3_target &&
+            *mq.rank4_ptr == mq.rank4_target &&
+            *mq.rank5_ptr == mq.rank5_target &&
+            *mq.rank6_ptr == mq.rank6_target &&
+            *mq.rank7_ptr == mq.rank7_target &&
+            *mq.rank8_ptr == mq.rank8_target &&
+            *mq.rank1_ptr == mq.rank1_target &&
+            *mq.rank2_ptr == mq.rank2_target
+            #else
             *mq.rank3_ptr == *mq.rank3_target_ptr &&
             *mq.rank4_ptr == *mq.rank4_target_ptr &&
             *mq.rank5_ptr == *mq.rank5_target_ptr &&
@@ -925,6 +945,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
             *mq.rank8_ptr == *mq.rank8_target_ptr &&
             *mq.rank1_ptr == *mq.rank1_target_ptr &&
             *mq.rank2_ptr == *mq.rank2_target_ptr
+            #endif
         )
         {
             offset_last = offset_first = offset;    // later - separate offset_first and offset_last
@@ -1284,6 +1305,17 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
         #endif
 
         if( 
+            !target_white && 
+            #if 1
+            *mq.rank3_ptr == mq.rank3_target &&
+            *mq.rank4_ptr == mq.rank4_target &&
+            *mq.rank5_ptr == mq.rank5_target &&
+            *mq.rank6_ptr == mq.rank6_target &&
+            *mq.rank7_ptr == mq.rank7_target &&
+            *mq.rank8_ptr == mq.rank8_target &&
+            *mq.rank1_ptr == mq.rank1_target &&
+            *mq.rank2_ptr == mq.rank2_target
+            #else
             *mq.rank3_ptr == *mq.rank3_target_ptr &&
             *mq.rank4_ptr == *mq.rank4_target_ptr &&
             *mq.rank5_ptr == *mq.rank5_target_ptr &&
@@ -1292,6 +1324,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
             *mq.rank8_ptr == *mq.rank8_target_ptr &&
             *mq.rank1_ptr == *mq.rank1_target_ptr &&
             *mq.rank2_ptr == *mq.rank2_target_ptr
+            #endif
         )
         {
             offset_last = offset_first = offset;    // later - separate offset_first and offset_last
