@@ -62,6 +62,7 @@ public:
             moves_blob, len12
         )
     {
+        SetAttributes(moves_blob,len12);
     }
 
     virtual int GetGameId()  { return game_id; }

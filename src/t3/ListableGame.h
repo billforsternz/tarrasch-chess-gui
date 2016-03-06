@@ -72,7 +72,34 @@ public:
 private:
     int transpo_nbr;                    // it would be nice to move this into ListableGameDb.h
 public:
-    uint8_t game_attributes;            // maybe this too - at the moment this is effectively bool game_has_promotion; 
+    uint8_t game_attributes;            // maybe this too - at the moment this is effectively bool game_has_promotion;
+    virtual void SetAttributes( const char *blob, int len )
+    {
+        game_attributes = static_cast<uint8_t>(false);
+        while( len-- )
+        {
+            if( (*blob++&0x8c) > 0x80 )     // binary 1pppttxx is a pawn move, ppp selects the pawn,
+            {                               //  tt selects the major move type, xx selects the minor
+                                            //  move type. Only tt=00 is a non-promoting pawn move
+                game_attributes = static_cast<uint8_t>(true);
+                break;
+            }
+        }
+    }
+    virtual void SetAttributes()
+    {
+        const char *blob = CompressedMoves();
+        game_attributes = static_cast<uint8_t>(false);
+        while( *blob )
+        {
+            if( (*blob++&0x8c) > 0x80 )
+            {
+                game_attributes = static_cast<uint8_t>(true);
+                break;
+            }
+        }
+    }
+ 
 };
 
         

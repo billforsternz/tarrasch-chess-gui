@@ -623,8 +623,18 @@ void DbDialog::StatsCalculate()
         do_partial_search = false;
     }
     int game_count = 0;
+
+    // The fast MemoryPositionSearch facility was developed to scan all the games in a tiny database,
+    //  but once it was available it made sense to apply it to searching for positions in any game
+    //  list, in particular games from a disk based (i.e. not tiny) database and the clipboard. These
+    //  latter types of search we are calling 'partial' search because they aren't of an entire, (albeit
+    //  tiny) in memory database
     if( do_partial_search )
     {
+
+        // The promotion attribute is only set automatically for the tiny database games (at the moment)
+        for( int i=0; i<source->size(); i++ )
+            (*source)[i]->SetAttributes();
         ProgressBar progress2(objs.gl->db_clipboard ? "Searching" : "Checking for transpositions", "Searching",false);
         game_count = mps->DoSearch(cr_to_match,gbl_hash,&progress2,source);
     }

@@ -374,7 +374,7 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
     mq.rank2_target = *mq.rank2_target_ptr;
     int nbr = source->size();
     {
-        // TEMP AutoTimer at("Search time");
+        AutoTimer at("Search time");
 
         // Leave only one defined
         //#define BASE_START_POINT
@@ -1670,13 +1670,15 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
 
 bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last )          // semi fast
 {
+    bool target_white = search_position.white;  // searching for position with white to move?
     int black_count=16;
     int black_pawn_count=8;
     int white_count=16;
     int white_pawn_count=8;
     SlowGameInit();
     int len = moves_in.size();
-    if( 
+    if(
+        (msi.cr.white == target_white) && 
         *ms.slow_rank3_ptr == *ms.slow_rank3_target_ptr &&
         *ms.slow_rank4_ptr == *ms.slow_rank4_target_ptr &&
         *ms.slow_rank5_ptr == *ms.slow_rank5_target_ptr &&
@@ -1712,6 +1714,7 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( std::string &moves_in
         char mover = msi.cr.squares[mv.src];
         msi.cr.PlayMove(mv);
         if( 
+            (msi.cr.white == target_white) && 
             *ms.slow_rank3_ptr == *ms.slow_rank3_target_ptr &&
             *ms.slow_rank4_ptr == *ms.slow_rank4_target_ptr &&
             *ms.slow_rank5_ptr == *ms.slow_rank5_target_ptr &&
