@@ -198,9 +198,15 @@ bool MemoryPositionSearch::TryFastMode( MpsSide *side )
 
 int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t position_hash, ProgressBar *progress )
 {
+    return DoSearch(cp,position_hash,progress,&in_memory_game_cache);
+}
+
+int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t position_hash, ProgressBar *progress, std::vector< smart_ptr<ListableGame> > *source )
+{
     games_found.clear();
     search_position = cp;
     search_position_set = true;
+    search_source = source;
 
     // Set up counts of total pieces, and individual pieces in the target position
     ms.black_count_target = 0;
@@ -366,7 +372,7 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
     mq.rank8_target = *mq.rank8_target_ptr;
     mq.rank1_target = *mq.rank1_target_ptr;
     mq.rank2_target = *mq.rank2_target_ptr;
-    int nbr = in_memory_game_cache.size();
+    int nbr = source->size();
     {
         // TEMP AutoTimer at("Search time");
 
@@ -377,9 +383,10 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
         #define CORRECT_BEST_PRACTICE
         for( int i=0; i<nbr; i++ )
         {
+            smart_ptr<ListableGame> p = (*source)[i];
             DoSearchFoundGame dsfg;
             dsfg.idx = i;
-            dsfg.game_id = in_memory_game_cache[i]->GetGameId();
+            dsfg.game_id = p->GetGameId();
             dsfg.offset_first=0;
             dsfg.offset_last=0;
             /* Roster r = in_memory_game_cache[i]->RefRoster();
@@ -388,22 +395,22 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
                         in_memory_game_cache[i]->White(),  r.white.c_str(),
                         in_memory_game_cache[i]->Black(),  r.black.c_str(),
                         in_memory_game_cache[i]->CompressedMoves(),  in_memory_game_cache[i]->RefCompressedMoves().c_str() ); */
-            bool promotion_in_game = (in_memory_game_cache[i]->game_attributes!=0);
+            bool promotion_in_game = (p->game_attributes!=0);
             bool game_found;
             #ifdef BASE_START_POINT
-            game_found = SearchGameBase( in_memory_game_cache[i]->RefCompressedMoves() );
+            game_found = SearchGameBase( p->RefCompressedMoves() );
             #endif
             #ifdef CONSERVATIVE
-            game_found = SearchGameSlowPromotionAllowed( in_memory_game_cache[i]->RefCompressedMoves(), dsfg.offset_first, dsfg.offset_last  );
+            game_found = SearchGameSlowPromotionAllowed( p->RefCompressedMoves(), dsfg.offset_first, dsfg.offset_last  );
             #endif
             #ifdef NO_PROMOTIONS_FLAWED
-            game_found = SearchGameOptimisedNoPromotionAllowed( in_memory_game_cache[i]->RefCompressedMoves(), dsfg.offset_first, dsfg.offset_last  );
+            game_found = SearchGameOptimisedNoPromotionAllowed( p->RefCompressedMoves(), dsfg.offset_first, dsfg.offset_last  );
             #endif
             #ifdef CORRECT_BEST_PRACTICE
             if( promotion_in_game )
-                game_found = SearchGameSlowPromotionAllowed( in_memory_game_cache[i]->RefCompressedMoves(), dsfg.offset_first, dsfg.offset_last  );
+                game_found = SearchGameSlowPromotionAllowed( p->RefCompressedMoves(), dsfg.offset_first, dsfg.offset_last  );
             else
-                game_found = SearchGameOptimisedNoPromotionAllowed( in_memory_game_cache[i]->CompressedMoves(), dsfg.offset_first, dsfg.offset_last );
+                game_found = SearchGameOptimisedNoPromotionAllowed( p->CompressedMoves(), dsfg.offset_first, dsfg.offset_last );
             #endif
             if( game_found )
             {

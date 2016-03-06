@@ -577,168 +577,73 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
 }
 
 
-void DbDialog::StatsCalculateLegacy
-(
-    thc::ChessRules &cr_to_match,
-    int &total_white_wins,
-    int &total_black_wins,
-    int &total_draws
-)
+void DbDialog::StatsCalculate()
 {
+    int total_white_wins = 0;
+    int total_black_wins = 0;
+    int total_draws = 0;
+    transpositions.clear();
+    stats.clear();
+    dirty = true;
+    gc_db_displayed_games.gds.clear();
+    cprintf( "Remove focus %d\n", track->focus_idx );
+    list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_FOCUSED );
+    list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_SELECTED );
+    thc::ChessRules cr_to_match = this->cr;
+    bool add_go_back = false;
+    std::string go_back_string;
+    for( int i=0; i<moves_from_base_position.size(); i++ )
+    {
+        thc::Move mv = moves_from_base_position[i];
+        if( i+1 == moves_from_base_position.size() )
+        {
+            std::string s = mv.NaturalOut(&cr_to_match);
+            if( !cr_to_match.white )
+                s = "..." + s;
+            go_back_string = "Go back (undo " + s + ")";
+            add_go_back = true;
+        }
+        cr_to_match.PlayMove(mv);
+    }       
+
     // hash to match
     uint64_t gbl_hash = cr_to_match.Hash64Calculate();
     CompressMoves press_to_match(cr_to_match);
     objs.db->SetPositionHash( gbl_hash );
     objs.db->gbl_position = cr_to_match;
-    int maxlen = 1000000;   // absurdly large until a match found
-
-    // Only if we haven't seen this position, look for and load extra games (due to transposition) from database
-    if( objs.gl->db_clipboard || drill_down_set.count(gbl_hash) > 0 )
+    MemoryPositionSearch partial;
+    MemoryPositionSearch *mps = &partial;
+    std::vector< smart_ptr<ListableGame> > *source = &gc->gds;
+    bool do_partial_search = true;
+    if( objs.gl->db_clipboard )
+        source = &objs.gl->gc_clipboard.gds;
+    else if( objs.db->IsTinyDb() )
     {
-        cprintf( "Already seen this position\n" );
+        mps = &objs.db->tiny_db;
+        do_partial_search = false;
+    }
+    int game_count = 0;
+    if( do_partial_search )
+    {
+        ProgressBar progress2(objs.gl->db_clipboard ? "Searching" : "Checking for transpositions", "Searching",false);
+        game_count = mps->DoSearch(cr_to_match,gbl_hash,&progress2,source);
     }
     else
     {
-        drill_down_set.insert(gbl_hash);
-        objs.db->LoadGamesWithQuery( cr_to_match, gbl_hash, gc->gds, games_set );
-    }
-    
-    // For each cached game
-    std::vector< smart_ptr<ListableGame> > &source = (objs.gl->db_clipboard ? objs.gl->gc_clipboard.gds : gc->gds );
-    ProgressBar progress("Calculating Stats","Calculating Stats",false);
-    int nbr_source_games=source.size();
-    for( unsigned int i=0; i<nbr_source_games; i++ )
-    {
-        progress.Permill(i*1000/nbr_source_games);
-        Roster r         = source[i]->RefRoster();
-        std::string blob = source[i]->RefCompressedMoves();
-    
-        // Search for a match to this game
-        bool new_transposition_found=false;
-        bool found=false;
-        int found_idx=0;
-        for( unsigned int j=0; !found && j<transpositions.size(); j++ )
+        bool search_needed = !mps->IsThisSearchPosition(cr_to_match);
+        cprintf( "search_needed = %s\n", search_needed?"true":"false" );
+        if( search_needed )
         {
-            size_t len = transpositions[j].blob.size();
-            std::string s1 = blob.substr(0,len);
-            std::string s2 = transpositions[j].blob;
-            if( s1 == s2 )
-            {
-                found = true;
-                found_idx = j;
-            }
-        }
-        
-        // If none so far add the one from this game
-        if( !found )
-        {
-            PATH_TO_POSITION ptp;
-            CompressMoves press;
-            size_t len = blob.length();
-            const char *b = (const char*)blob.c_str();
-            uint64_t hash = press.cr.Hash64Calculate();
-            found = (hash==gbl_hash && press.cr==cr_to_match );
-            int offset=0;
-            while( !found && offset<len && offset<maxlen )
-            {
-                thc::ChessRules cr_hash = press.cr;
-                thc::Move mv = press.UncompressMove( *b++ );
-                hash = cr_hash.Hash64Update( hash, mv );
-                offset++;
-                if( hash == gbl_hash && press.cr==cr_to_match )
-                    found = true;
-            }
-            if( found )
-            {
-                new_transposition_found = true;
-                ptp.blob = blob.substr(0,offset);
-                transpositions.push_back(ptp);
-                found_idx = transpositions.size()-1;
-                maxlen = offset+16; // stops unbounded searching through unrelated game
-            }
-        }
-        if( found )
-        {
-            bool white_wins = (r.result=="1-0");
-            if( white_wins )
-                total_white_wins++;
-            bool black_wins = (r.result=="0-1");
-            if( black_wins )
-                total_black_wins++;
-            bool draw       = (r.result=="1/2-1/2");
-            if( draw )
-                total_draws++;
-            #if 0
-            ListableGameDb temp(0,r,blob);
-            make_smart_ptr( ListableGameDb, smptr, temp );
-            gc_db_displayed_games.gds.push_back(smptr);
-            #else
-            gc_db_displayed_games.gds.push_back(source[i]);
-            #endif
-            PATH_TO_POSITION *p = &transpositions[found_idx];
-            p->frequency++;
-            size_t len = p->blob.length();
-            if( len < blob.length() ) // must be more moves
-            {
-                char compressed_move = blob[len];
-                std::map< char, MOVE_STATS >::iterator it;
-                it = stats.find(compressed_move);
-                if( it == stats.end() )
-                {
-                    MOVE_STATS empty;
-                    empty.nbr_games = 0;
-                    empty.nbr_white_wins = 0;
-                    empty.nbr_black_wins = 0;
-                    empty.nbr_draws = 0;
-                    stats[compressed_move] = empty;
-                    it = stats.find(compressed_move);
-                }
-                it->second.nbr_games++;
-                if( white_wins )
-                    it->second.nbr_white_wins++;
-                else if( black_wins )
-                    it->second.nbr_black_wins++;
-                else if( draw )
-                    it->second.nbr_draws++;
-            }
-
-            // For speed, have the most frequent transpositions first        
-            if( new_transposition_found )
-            {
-                std::sort( transpositions.rbegin(), transpositions.rend() );
-            }
+            ProgressBar progress2("Checking for transpositions", "Searching for extra games",false);
+            game_count = mps->DoSearch(cr_to_match,gbl_hash,&progress2);
         }
     }
-}
-
-void DbDialog::StatsCalculateInMemory
-(
-    thc::ChessRules &cr_to_match,
-    int &total_white_wins,
-    int &total_black_wins,
-    int &total_draws
-)
-{
-    // hash to match
-    uint64_t gbl_hash = cr_to_match.Hash64Calculate();
-    CompressMoves press_to_match(cr_to_match);
-    objs.db->SetPositionHash( gbl_hash );
-    objs.db->gbl_position = cr_to_match;
-
-    MemoryPositionSearch *mps = &objs.db->tiny_db;
-    bool search_needed = !mps->IsThisSearchPosition(cr_to_match);
-    cprintf( "search_needed = %s\n", search_needed?"true":"false" );
-    if( search_needed )
-    {
-        ProgressBar progress("Checking for transpositions", "Searching for extra games",false);
-        int game_count = mps->DoSearch(cr_to_match,gbl_hash,&progress);
-    }
     
-    // For each cached game
-    ProgressBar progress("Calculating Stats","Calculating Stats",false);
-    std::vector< smart_ptr<ListableGame> >  &db_games    = mps->GetVectorAllGames();
+    std::vector< smart_ptr<ListableGame> >  &db_games    = mps->GetVectorSourceGames();
     std::vector<DoSearchFoundGame>          &found_games = mps->GetVectorGamesFound();
     int nbr_found_games = found_games.size();
+    
+    ProgressBar progress("Calculating Stats","Calculating Stats",false);
     for( unsigned int i=0; i<nbr_found_games; i++ )
     {
         progress.Permill(i*1000/nbr_found_games);
@@ -777,17 +682,6 @@ void DbDialog::StatsCalculateInMemory
             transpositions.push_back(ptp);
             found_idx = transpositions.size()-1;
         }
-        #if 0
-        bool white_wins = (r.result=="1-0");
-        if( white_wins )
-            total_white_wins++;
-        bool black_wins = (r.result=="0-1");
-        if( black_wins )
-            total_black_wins++;
-        bool draw       = (r.result=="1/2-1/2");
-        if( draw )
-            total_draws++;
-        #else
         const char *result = db_games[idx]->Result();
         bool white_wins = (0==strcmp(result,"1-0"));
         if( white_wins )
@@ -798,7 +692,6 @@ void DbDialog::StatsCalculateInMemory
         bool draw       = (0==strcmp(result,"1/2-1/2"));
         if( draw )
             total_draws++;
-        #endif
         PATH_TO_POSITION *p = &transpositions[found_idx];
         p->frequency++;
         size_t len = p->blob.length();
@@ -832,44 +725,8 @@ void DbDialog::StatsCalculateInMemory
             std::sort( transpositions.rbegin(), transpositions.rend() );
         }
     }
-    
-}
 
-void DbDialog::StatsCalculate()
-{
-    int total_white_wins = 0;
-    int total_black_wins = 0;
-    int total_draws = 0;
-    transpositions.clear();
-    stats.clear();
-    dirty = true;
-    gc_db_displayed_games.gds.clear();
-    cprintf( "Remove focus %d\n", track->focus_idx );
-    list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_FOCUSED );
-    list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_SELECTED );
-    thc::ChessRules cr_to_match = this->cr;
-    bool add_go_back = false;
-    std::string go_back_string;
-    for( int i=0; i<moves_from_base_position.size(); i++ )
-    {
-        thc::Move mv = moves_from_base_position[i];
-        if( i+1 == moves_from_base_position.size() )
-        {
-            std::string s = mv.NaturalOut(&cr_to_match);
-            if( !cr_to_match.white )
-                s = "..." + s;
-            go_back_string = "Go back (undo " + s + ")";
-            add_go_back = true;
-        }
-        cr_to_match.PlayMove(mv);
-    }       
 
-    bool use_legacy = (objs.gl->db_clipboard || !objs.db->IsTinyDb());
-    cprintf( "use_legacy = %s\n", use_legacy?"true":"false" );
-    if( use_legacy )
-        StatsCalculateLegacy( cr_to_match, total_white_wins, total_black_wins, total_draws );
-    else
-        StatsCalculateInMemory( cr_to_match, total_white_wins, total_black_wins, total_draws );
 
     // Sort the stats according to number of games
     std::multimap< MOVE_STATS,  char > dst = flip_and_sort_map(stats);

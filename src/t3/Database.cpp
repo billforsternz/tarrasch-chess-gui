@@ -80,7 +80,8 @@ void * WorkerThread::Entry()
 
 wxMutex *KillWorkerThread()
 {   
-    the_database->kill_background_load = true;
+    if( the_database )
+        the_database->kill_background_load = true;
     return &s_mutex_tiny_database;
 }
 
@@ -1103,6 +1104,8 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
     if( ok )
     {
         int cols = sqlite3_column_count(stmt);
+        int previous_game_id = -1;
+        //int dbg_idx=0;
         while(ok)
         {
             retval = sqlite3_step(stmt);
@@ -1184,9 +1187,19 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
                         }
                     }
                 }
-                ListableGameDb info( game_id, r, str_blob );
-                make_smart_ptr( ListableGameDb, new_info, info );
-                cache.push_back( std::move(new_info) );
+                //if( game_id == 3619485 )
+                //    cprintf( "game_id=%d, dbg_idx=%d\n", game_id, dbg_idx );
+                //dbg_idx++;
+                if( game_id != previous_game_id )   // TEMP bug workaround. Unfortunately if a position
+                                                    // occurs multiple times in a game (through repitition)
+                                                    // the database query returns multiple instances of the
+                                                    // game
+                {
+                    previous_game_id = game_id;
+                    ListableGameDb info( game_id, r, str_blob );
+                    make_smart_ptr( ListableGameDb, new_info, info );
+                    cache.push_back( std::move(new_info) );
+                }
                 int permill = (cache.size()*1000) / (nbr_games?nbr_games:1);
                 if( permill < 1 )
                     permill = 1;

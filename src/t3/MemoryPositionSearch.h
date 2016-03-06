@@ -143,13 +143,15 @@ public:
     bool SearchGameOptimisedNoPromotionAllowed( const char *moves_in, unsigned short &offset_first, unsigned short &offset_last  );    // much faster
     bool SearchGameSlowPromotionAllowed(  std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last  );          // semi fast
     int  GetNbrGamesFound() { return games_found.size(); }
-    std::vector< smart_ptr<ListableGame> >  &GetVectorAllGames()   { return in_memory_game_cache; }
+    std::vector< smart_ptr<ListableGame> > *search_source;
+    std::vector< smart_ptr<ListableGame> >  &GetVectorSourceGames()   { return *search_source; }
     std::vector<DoSearchFoundGame>          &GetVectorGamesFound() { return games_found; }
     
     void Init()
     {
         in_memory_game_cache.clear();
         search_position_set=false;
+        search_source = &in_memory_game_cache;
         thc::ChessPosition *cp = static_cast<thc::ChessPosition *>(&msi.cr);
         cp->Init();
         MpsSide      sides[2];
@@ -198,6 +200,7 @@ public:
         ms.slow_rank1_target_ptr = reinterpret_cast<uint64_t*>(&ms.slow_target_squares[56]);
     }
     int  DoSearch( const thc::ChessPosition &cp, uint64_t position_hash, ProgressBar *progress );
+    int  DoSearch( const thc::ChessPosition &cp, uint64_t position_hash, ProgressBar *progress, std::vector< smart_ptr<ListableGame> > *source );
     bool IsThisSearchPosition( const thc::ChessPosition &cp )
         { return search_position_set && cp==search_position; }
 
