@@ -79,6 +79,7 @@ private:
         IN_MOVE_WHITE,
         IN_MOVE_BLACK,
         ERROR_STATE,
+        NORMAL_EXIT,
         IN_DOLLAR
     };
 
@@ -117,6 +118,7 @@ private:
     void Header( char *buf );
     bool DoMove( bool white, int move_number, char *buf );
     void GameBegin();
+    void GameParse( std::string &str );
     bool GameOver();
     void FileOver();
     void Error( const char *msg );

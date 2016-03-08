@@ -140,6 +140,379 @@ void PgnRead::debug_dump()
     #endif
 }
 
+
+
+
+#define LINE_STATE_MACHINE_IMPLEMENTATION
+#ifdef LINE_STATE_MACHINE_IMPLEMENTATION
+// Returns true if aborted
+bool PgnRead::Process( FILE *infile )
+{
+    std::string prefix_txt;
+    std::string moves;
+    int typ;
+    char buf[2048];
+    extern bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen );
+    bool done = PgnStateMachine( NULL, typ,  buf, sizeof(buf) );
+    GameBegin();
+    while( !done )
+    {
+        done = PgnStateMachine( infile, typ,  buf, sizeof(buf) );
+        switch( typ )
+        {
+            default:
+            {
+                break;
+            }
+            case 'T':
+            case 't':
+            {
+                Header( buf );
+                break;
+            }
+            case 'P':
+            case 'p':
+            {
+				prefix_txt += std::string(buf);
+				//prefix_txt += '\n';
+                break;
+            }
+            case 'M':
+            case 'm':
+            {
+                moves += std::string(buf);
+                moves += '\n';
+                break;
+            }
+            case 'G':
+            {
+                GameParse(moves);
+                moves.clear();
+                prefix_txt.clear();
+                if( GameOver() )
+                {
+                    return true;
+                }
+                GameBegin();
+                break;
+            }
+        }
+    }
+    FileOver();
+    return false;
+}
+
+
+void PgnRead::GameParse( std::string &str )
+{
+    char buf[FIELD_BUFLEN+10];
+    static char comment_buf[10000];
+    int ch, comment_ch=0, previous_ch=0, push_back=0, len=0, move_number=0;
+    STATE state=MOVE_NUMBER, old_state, save_state=MOVE_NUMBER;
+    static int nag_value;
+    int input_len = str.length();
+    int idx = 0;
+    if( idx < input_len )
+        ch = str[idx++];
+    else
+        ch = EOF;
+    while( ch != EOF )
+    {
+        if( push_back == '\0' )
+        {
+            error_buf[error_ptr++] = (char)ch;
+            error_ptr &= (sizeof(error_buf)-1);
+        }
+        push_back = '\0';
+
+        debug_buf[debug_ptr].c     = (char)ch;
+        debug_buf[debug_ptr].state = state;
+        debug_ptr++;
+        debug_ptr &= (nbrof(debug_buf)-1);
+
+        // State machine
+        old_state = state;
+        if( ch == '{' && (
+                                state!=IN_COMMENT &&
+                                state!=IN_MOVE_BLACK &&
+                                state!=IN_MOVE_WHITE
+                            )
+            )
+        {
+            save_state = state;
+            comment_ch = '{';
+            state = IN_COMMENT;
+        }
+        else if( ch == ';' && (
+                                state!=IN_COMMENT &&
+                                state!=IN_MOVE_BLACK &&
+                                state!=IN_MOVE_WHITE
+                                )
+                )
+        {
+            save_state = state;
+            comment_ch = ';';
+            state = IN_COMMENT;
+        }
+        else if( state==IN_COMMENT &&
+                    (
+                        (comment_ch=='{' && ch=='}') ||
+                        (comment_ch==';' && ch!=';' && previous_ch=='\n')
+                    )
+                )
+        {
+            if( comment_ch == ';' )
+                push_back = ch;
+            comment_buf[len] = '\0';
+
+            // Added the following to fix an ugly bug we were going IN_DOLLAR->IN_COMMENT then back to IN_DOLLAR
+            //  and never escaping from IN_DOLLAR because save_state was IN_DOLLAR. Yuk. Maybe we should adopt
+            //  the main tarrasch pgn parser practice of only going to IN_COMMENT and IN_DOLLAR from BETWEEN_MOVES
+            state = (save_state==IN_DOLLAR?BETWEEN_MOVES:save_state);
+        }
+        else if( ch == '$' && (
+                                state!=IN_COMMENT &&
+                                state!=IN_DOLLAR &&
+                                state!=IN_MOVE_BLACK &&
+                                state!=IN_MOVE_WHITE
+                            )
+            )
+        {
+            save_state = state;
+            state = IN_DOLLAR;
+            nag_value = 0;
+        }
+        else if( state==IN_DOLLAR && isascii(ch) && isdigit(ch) )
+        {
+            nag_value = nag_value*10+(ch-'0');
+        }
+        else if( state==IN_DOLLAR && isascii(ch) && !isdigit(ch) )
+        {
+        /*  const char *nag_array[] =
+            {
+                "",
+                " !",     // $1   
+                " ?",     // $2   
+                " !!",    // $3   
+                " ??",    // $4   
+                " !?",    // $5   
+                " ?!",    // $6   
+                "",       // $7   
+                "",       // $8   
+                " ??",    // $9   
+                " =",     // $10  
+                " =",     // $11  
+                " =",     // $12  
+                "",       // $13  
+                " +=",    // $14  
+                " =+",    // $15  
+                " +/-",   // $16  
+                " -/+",   // $17  
+                " +-",    // $18  
+                " -+",    // $19  
+                " +-",    // $20  
+                " -+"     // $21
+            };   */
+            push_back = ch;
+
+            // Added the following to fix an ugly bug we were going IN_DOLLAR->IN_COMMENT then back to IN_DOLLAR
+            //  and never escaping from IN_DOLLAR because save_state was IN_DOLLAR. Yuk. Maybe we should adopt
+            //  the main tarrasch pgn parser practice of only going to IN_COMMENT and IN_DOLLAR from BETWEEN_MOVES
+            state = (save_state==IN_COMMENT?BETWEEN_MOVES:save_state);
+        }
+        else if( ch == '(' && (
+                                state!=IN_COMMENT    &&
+                                state!=ERROR_STATE   &&
+                                state!=IN_MOVE_BLACK &&
+                                state!=IN_MOVE_WHITE
+                                )
+                )
+            state = Push(state);
+        else if( ch == ')' && (
+                                state!=IN_COMMENT &&
+                                state!=ERROR_STATE      &&
+                                state!=IN_MOVE_BLACK &&
+                                state!=IN_MOVE_WHITE
+                                )
+                )
+        {
+            state = Pop();
+        }
+        else
+        {
+
+            switch( state )
+            {
+                default: break;
+                case IN_COMMENT:
+                {
+                    if( len < sizeof(comment_buf)-3 )
+                    {
+                        if( comment_ch == '{' )
+                            comment_buf[len++] = (char)ch;
+                        else
+                        {
+                            if( ch!=';' || previous_ch!='\n' )
+                                comment_buf[len++] = (char)ch;
+                        }
+                    }
+                    break;
+                }
+
+                case MOVE_NUMBER:
+                {
+                    if( ch=='.' || ch==' ' || ch=='\t' || ch=='\n' )
+                    {
+                        buf[len] = '\0';
+                        len = 0;
+                        if( TestResult(buf) )
+                            state = NORMAL_EXIT;
+                        else if( (move_number=atoi(buf)) > 0 )
+                        {
+                            state = POST_MOVE_NUMBER;
+                            if( ch == '.' )
+                                push_back = ch;
+                        }
+                        else
+                        {
+                            Error( "Bad move number" );
+                            state = ERROR_STATE;
+                        }
+                    }
+                    else
+                    {
+                        if( len < FIELD_BUFLEN )
+                            buf[len++] = (char)ch;
+                        else
+                        {
+                            Error( "Internal buffer overflow" );
+                            state = ERROR_STATE;
+                        }
+                    }
+                    break;
+                }
+
+                case POST_MOVE_NUMBER:
+                {
+                    if( ch == '.' )
+                        state = POST_MOVE_NUMBER_HAVE_PERIOD;
+                    else if( ch!=' ' && ch!='\t' && ch!='\n' )
+                    {
+                        Error( "Bad move number" );
+                        state = ERROR_STATE;
+                    }
+                    break;
+                }
+
+                case POST_MOVE_NUMBER_HAVE_PERIOD:
+                {
+                    if( ch == '.' )
+                        state = POST_MOVE_NUMBER_BLACK;
+                    else
+                    {
+                        push_back = ch;
+                        state = PRE_MOVE_WHITE;
+                    }
+                    break;
+                }
+
+                case POST_MOVE_NUMBER_BLACK:
+                {
+                    if( ch != '.' )
+                    {
+                        push_back = ch;
+                        state = PRE_MOVE_BLACK;
+                    }
+                    break;
+                }
+
+                case PRE_MOVE_WHITE:
+                case PRE_MOVE_BLACK:
+                {
+                    if( isascii(ch) && isdigit(ch) )
+                    {
+                        push_back = ch;
+                        state = MOVE_NUMBER;
+                    }
+                    else if( ch!=' ' && ch!='\t' && ch!='\n' )
+                    {
+                        push_back = ch;
+                        state = (state==PRE_MOVE_WHITE?IN_MOVE_WHITE:IN_MOVE_BLACK);
+                    }
+                    break;
+                }
+
+                case IN_MOVE_WHITE:
+                case IN_MOVE_BLACK:
+                {
+                    if( ch==' ' || ch=='\t' || ch=='\n' || ch=='(' || ch==')' || ch=='{' || ch=='}' || ch=='$' )
+                    {
+                        buf[len] = '\0';
+                        len = 0;
+                        if( TestResult(buf) )
+                            state = PREFIX;
+                        else if( !DoMove(state==IN_MOVE_WHITE,move_number,buf) )
+                            state = ERROR_STATE;
+                        else
+                            state = (state==IN_MOVE_WHITE?PRE_MOVE_BLACK:BETWEEN_MOVES);
+                        if( ch=='(' || ch==')' || ch=='{' || ch=='}' || ch=='?' )
+                            push_back = ch;
+                    }
+                    else
+                    {
+                        if( len < FIELD_BUFLEN )
+                            buf[len++] = (char)ch;
+                        else
+                        {
+                            Error( "Internal buffer overflow" );
+                            state = ERROR_STATE;
+                        }
+                    }
+                    break;
+                }
+
+                case BETWEEN_MOVES:
+                {
+                    if( isascii(ch) && isdigit(ch) )
+                    {
+                        push_back = ch;
+                        state = MOVE_NUMBER;
+                    }
+                    break;
+                }
+            }
+        }
+
+        if( state==NORMAL_EXIT || state==ERROR_STATE )
+            return;
+
+        // State changes
+        if( state != old_state )
+        {
+            if( state==IN_COMMENT || state==MOVE_NUMBER || state==IN_MOVE_WHITE || state==IN_MOVE_BLACK )
+                len=0;
+        }
+
+        // Next character
+        previous_ch = ch;
+        if( push_back )
+            ch = push_back;
+        else
+        {
+            do {
+                if( idx < input_len )
+                    ch = str[idx++];
+                else
+                    ch = EOF;
+            } while ( ch == '\r' );
+        }
+    }
+}
+
+#endif
+
+
+#ifdef ORIGINAL_IMPLEMENTATION
 // Returns true if aborted
 bool PgnRead::Process( FILE *infile )
 {
@@ -572,6 +945,7 @@ bool PgnRead::Process( FILE *infile )
     FileOver();
     return aborted;
 }
+#endif
 
 void PgnRead::Header( char *buf )
 {
