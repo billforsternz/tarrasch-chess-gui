@@ -137,7 +137,6 @@ public:
                     permill = (int)( file_offset / (file_len/1000L) );
                 if( permill != old_permill )
                 {
-                    progress->SetFocus();
                     if( !progress && permill>0 && PredictEnd(permill)>2000 )
                     {
                         progress = new wxProgressDialog( title, desc, 1000, parent,
@@ -149,6 +148,7 @@ public:
                     }
                     else if( progress )
                     {
+                        progress->SetFocus();
                         bool abort = !progress->Update( permill>1000 ? 1000 : permill );
                         if( abort )
                             return true;

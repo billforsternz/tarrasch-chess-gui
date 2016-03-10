@@ -141,8 +141,6 @@ void PgnRead::debug_dump()
 }
 
 
-
-
 #define LINE_STATE_MACHINE_IMPLEMENTATION
 #ifdef LINE_STATE_MACHINE_IMPLEMENTATION
 // Returns true if aborted

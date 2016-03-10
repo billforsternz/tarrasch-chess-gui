@@ -590,7 +590,7 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
           )
         {
             GameDocument *gd_file = gc_pgn.gds[0]->GetGameDocumentPtr();
-            bool have_game = gd_file && gd_file->in_memory;
+            have_game = gd_file && gd_file->in_memory;
             if( !have_game && gd_file )
             {
                 FILE *pgn_in = pf.ReopenRead( gd_file->pgn_handle );
@@ -630,7 +630,9 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
                 gd_file->GetGameDocumentFromFile(new_gd);
                 gd_file->selected = true;
                 this->file_game_idx = 0;    // game 0
-                if( !is_empty )
+                if( is_empty )
+                    gd = new_gd;
+                else
                     tabs->TabNew(new_gd);
                 tabs->SetInfile(true);
                 ShowNewDocument();

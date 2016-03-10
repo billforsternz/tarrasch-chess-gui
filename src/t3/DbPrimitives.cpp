@@ -175,6 +175,7 @@ bool db_primitive_transaction_begin( wxWindow *parent )
 bool db_primitive_transaction_end()
 {
     bool ok = purge_buckets();
+    cprintf( "db_primitive_transaction_end() begin\n" );
     ProgressBar prog( "Creating database", "Completing save", true, window_parent );
     if( ok )
     {
@@ -192,6 +193,7 @@ bool db_primitive_transaction_end()
             error_msg = "Database error: sqlite3_exec(COMMIT TRANSACTION) FAILED";
         }
     }
+    cprintf( "db_primitive_transaction_end() end\n" );
     return ok;
 }
 
@@ -300,7 +302,7 @@ bool db_primitive_delete_previous_data()
 // Returns bool ok
 bool db_primitive_create_indexes( bool create_tiny_db )
 {
-    ProgressBar prog( create_tiny_db?"Creating database, step 3 of 4":"Creating database, step 4 of 4", create_tiny_db?"Creating indexes":"Indexing positions", true, window_parent );
+    ProgressBar prog( create_tiny_db?"Creating database, step 3 of 3":"Creating database, step 4 of 4", create_tiny_db?"Creating indexes":"Indexing positions", true, window_parent );
     DebugPrintfTime turn_on_time_reporting;
     bool ok = purge_buckets();
     if( !ok )
@@ -604,17 +606,124 @@ static bool purge_bucket( int bucket_idx )
     return true;
 }
 
+// Split out printable, 2 character or more uppercased tokens from input string
+static void Split( const char *in, std::vector<std::string> &out )
+{
+    bool in_word=true;
+    out.clear();
+    std::string token;
+    while( *in )
+    {
+        char c = *in++;
+        bool delimit = (c<=' ' || c==',' || c=='.' || c==':' || c==';');
+        if( !in_word )
+        {
+            if( !delimit )
+            {
+                in_word = true;
+                token = c;
+            }
+        }
+        else
+        {
+            if( delimit )
+            {
+                in_word = false;
+                if( token.length() > 1 )
+                    out.push_back(token);
+            }
+            else
+            {
+                if( isalpha(c) )
+                    c = toupper(c);
+                token += c;
+            }
+        }
+    }
+    if( in_word && token.length() > 1 )
+        out.push_back(token);
+}
+
+static bool IsPlayerMatch( const char *player, std::vector<std::string> &tokens )
+{
+    std::vector<std::string> tokens2;
+    Split( player, tokens2 );
+    int len=tokens.size();
+    int len2=tokens2.size();
+    for( int i=0; i<len; i++ )
+    {
+        for( int j=0; j<len2; j++ )
+        {
+            if( tokens[i] == tokens2[j] )
+                return true;
+        }
+    }
+    return false;
+}
+
+static void DateParse( const char *date, int &yyyy, int &mm, int &dd )
+{
+    int state=0;
+    int n=0, y=0, m=0, d=0;
+    while( *date && state<3 )
+    {
+        char c = *date++;
+        if( '0'<=c && c<='9' )
+            n = n*10 + c-'0';
+        else if( c=='.' || c=='-' || c==' ' || c==':' )
+        {
+            switch( state )
+            {
+                case 0: y = n;  break;
+                case 1: m = n;  break;
+                case 2: d = n;  break;
+            }
+            state++;
+            n = 0;
+        }
+        else
+            break;
+    }
+    switch( state )
+    {
+        case 0: y = n;  break;
+        case 1: m = n;  break;
+        case 2: d = n;  break;
+    }
+    yyyy = (1<=y && y<=3000) ? y : 0;
+    mm   = (1<=m && m<=12)   ? m : 0;
+    dd   = (1<=d && d<=31)   ? d : 0;
+}
+
+static bool IsDateMatch( const char *date, int yyyy, int mm, int dd )
+{
+    int y, m, d;
+    DateParse( date, y, m, d );
+    bool match = (yyyy == y);   // must match
+    if( match )
+    {
+        match = (mm==m || mm==0 || m==0);    // if month unspecified still matches 
+        if( match )
+            match = (dd==d || dd==0 || d==0);    // if day unspecified still matches
+    }
+    return match;
+}
 
 // Return true if this game already in database
-bool db_primitive_check_for_duplicate( bool &signal_error, uint64_t game_hash, const char *white, const char *black, const char *result, const char *blob_moves )
+bool db_primitive_check_for_duplicate( bool &signal_error, uint64_t game_hash, const char *white, const char *black, const char *date, const char *result, const char *blob_moves )
 {
+    static int max_so_far;
     signal_error = false;
-    for( int table_idx=0; table_idx<2; table_idx++ )
+    bool duplicate_found=false;
+    std::vector<std::string> white_tokens;
+    std::vector<std::string> black_tokens;
+    int yyyy=0,mm,dd;
+    sqlite3_stmt *stmt=NULL;    // A prepared statement for fetching tables
+    for( int table_idx=0; !duplicate_found && !signal_error && table_idx<2; table_idx++ )
     {
         // select matching rows from the table
         char buf[200];
-        sqlite3_stmt *stmt;    // A prepared statement for fetching tables
-        sprintf( buf, "SELECT white, black, result, moves from %s WHERE game_hash=%lld", table_idx==0?"games":"games_duplicates", game_hash );
+        sprintf( buf, "SELECT white, black, date, result, moves from %s WHERE game_hash=%lld", table_idx==0?"games":"games_duplicates", game_hash );
         const char *errmsg;
         int retval = sqlite3_prepare_v2( handle, buf, -1, &stmt, &errmsg );
         if( retval && errmsg )
@@ -635,37 +744,85 @@ bool db_primitive_check_for_duplicate( bool &signal_error, uint64_t game_hash, c
         }
         
         // Read the game info
-        bool white_match=false;
-        bool black_match=false;
-        bool result_match=false;
-        bool moves_match=false;
         int cols = sqlite3_column_count(stmt);
-        for(;;)  // Read one row from games, potentially many rows in games_duplicates
+        while(!duplicate_found)  // Read one row from games, potentially many rows in games_duplicates
         {
             retval = sqlite3_step(stmt);
             if( retval == SQLITE_ROW )
             {
+                bool white_match=false;
+                bool black_match=false;
+                bool date_match=false;
+                bool result_match=false;
+                bool moves_match=false;
+                bool imperfect_match=false;
+                const char *val_w, *val_b, *val_d;
                 for( int col=0; col<cols; col++ )
                 {
                     if( col == 0 )
                     {
-                        const char *val = (const char*)sqlite3_column_text(stmt,col);
-                        if( val )
-                            white_match = (0 == strcmp(white,val));
+                        val_w = (const char*)sqlite3_column_text(stmt,col);
+                        if( val_w )
+                        {
+                            white_match = (0 == strcmp(white,val_w));
+                            #define SMART_DUP_DETECT
+                            #ifdef SMART_DUP_DETECT
+                            if( !white_match )
+                            {
+                                if( white_tokens.size() == 0 )
+                                    Split(white,white_tokens);
+                                white_match = IsPlayerMatch(val_w,white_tokens);
+                                if( white_match )
+                                    imperfect_match = true;
+                            }
+                            #endif
+                        }
                     }
                     else if( col == 1 )
                     {
-                        const char *val = (const char*)sqlite3_column_text(stmt,col);
-                        if( val )
-                            black_match = (0 == strcmp(black,val));
+                        val_b = (const char*)sqlite3_column_text(stmt,col);
+                        if( val_b )
+                        {
+                            black_match = (0 == strcmp(black,val_b));
+                            #ifdef SMART_DUP_DETECT
+                            if( !black_match )
+                            {
+                                if( black_tokens.size() == 0 )
+                                    Split(black,black_tokens);
+                                black_match = IsPlayerMatch(val_b,black_tokens);
+                                if( black_match )
+                                    imperfect_match = true;
+                            }
+                            #endif
+                        }
                     }
                     else if( col == 2 )
                     {
-                        const char *val = (const char*)sqlite3_column_text(stmt,col);
-                        if( val )
-                            result_match = (0 == strcmp(result,val));
+                        val_d = (const char*)sqlite3_column_text(stmt,col);
+                        if( val_d )
+                        {
+                            date_match = (0 == strcmp(date,val_d));
+                            #ifdef SMART_DUP_DETECT
+                            if( !date_match )
+                            {
+                                if( yyyy == 0 )
+                                    DateParse(date,yyyy,mm,dd);
+                                date_match = IsDateMatch(val_d,yyyy,mm,dd);
+                                if( date_match )
+                                    imperfect_match = true;
+                            }
+                            #endif
+                        }
                     }
                     else if( col == 3 )
+                    {
+                        const char *val = (const char*)sqlite3_column_text(stmt,col);
+                        if( val )
+                        {
+                            result_match = (0 == strcmp(result,val));
+                        }
+                    }
+                    else if( col == 4 )
                     {
                         int len = sqlite3_column_bytes(stmt,col);
                         //fprintf(f,"Move len = %d\n",len);
@@ -676,21 +833,32 @@ bool db_primitive_check_for_duplicate( bool &signal_error, uint64_t game_hash, c
                             moves_match = (0 == memcmp(blob_moves,blob,len));
                     }
                 }
-            }
-            else if( retval == SQLITE_DONE )
-            {
-                // All rows finished
-                sqlite3_finalize(stmt);
-                stmt = NULL;
-                #if 1
-                if( white_match && black_match && result_match && moves_match )
+                const char *dump_game = NULL;
+                bool dup1 = (white_match && black_match && /*date_match &&*/ result_match && moves_match);
+                bool dup2 = (white_match && black_match && date_match && result_match && moves_match);
+                bool dup3 = moves_match;
+                if( dup1 && !dup2 )
+                    dump_game = "Surprisingly date matters";
+                if( dup1 )
                 {
-                    cprintf( "Duplicate game %s-%s %s found\n", white,black,result);
-                #else   // TEMP - reject all duplicate games
-                if( /*white_match && black_match && result_match &&*/ moves_match )
+                    duplicate_found = true;
+                    //cprintf( "Duplicate game %s-%s %s %s found\n", white,black,date,result);
+                    if( imperfect_match )
+                    {
+                        //cprintf( "Imperfect match %s-%s %s %s found\n", white,black,date,result);
+                        //cprintf( "                %s-%s %s %s\n", val_w,val_b,val_d,result);
+                    }
+                }
+                else if( strlen(blob_moves) > max_so_far  && moves_match )
                 {
-                    cprintf( "Duplicate game %s-%s %s found\n", white,black,result);
-                    {   // print the moves as well
+                    dump_game = "Longest dual game so far";
+                    max_so_far = strlen(blob_moves);
+                }
+                if( dump_game )
+                {
+                    cprintf( "%s %s-%s %s %s\n", dump_game, white,black,date,result);
+                    cprintf( " and  %s-%s %s %s\n", val_w,val_b,val_d,result);
+                    {
                         CompressMoves press;
                         std::string blob(blob_moves);
                         std::vector<thc::Move> v = press.Uncompress(blob);
@@ -710,9 +878,11 @@ bool db_primitive_check_for_duplicate( bool &signal_error, uint64_t game_hash, c
                         }
                         cprintf( "%s\n", txt.c_str() );
                     }
-                #endif
-                    return true;    // duplicate found
                 }
+            }
+            else if( retval == SQLITE_DONE )
+            {
+                // All rows finished
                 break;
             }
             else
@@ -720,14 +890,17 @@ bool db_primitive_check_for_duplicate( bool &signal_error, uint64_t game_hash, c
                 // Some error encountered
                 error_msg = "Database error: db_primitive_check_for_duplicate() 2";
                 signal_error = true;
-                return false;
+                break;
             }
         }
     }
-    return false;   // return false unless we explicitly DID find a duplicate
+    if( stmt != NULL )
+    {
+        sqlite3_finalize(stmt);
+        stmt = NULL;
+    }
+    return duplicate_found;   // return false unless we explicitly DID find a duplicate
 }
-
-
 
 
 void db_temporary_hack( const char *white, const char *black, const char *event, const char *site, const char *round, const char *result,
@@ -882,7 +1055,7 @@ bool db_primitive_insert_game( bool &signal_error, bool create_tiny_db, const ch
 
         // Otherwise see if the game is a duplicate of existing game (if it's not, then it will be the same
         //  game played on a different occasion)
-        bool is_duplicate = db_primitive_check_for_duplicate( signal_error, game_hash, white_buf, black_buf, result, blob_buf );
+        bool is_duplicate = db_primitive_check_for_duplicate( signal_error, game_hash, white_buf, black_buf, date, result, blob_buf );
         if( signal_error )
             return false;   // not inserted, error
         

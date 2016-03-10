@@ -81,6 +81,7 @@ BEGIN_EVENT_TABLE( GamesDialog, wxDialog )
     EVT_NOTEBOOK_PAGE_CHANGED( wxID_ANY, GamesDialog::OnTabSelected)
 END_EVENT_TABLE()
 
+static bool gbl_right_arrow_pressed;
 
 GamesListCtrl::GamesListCtrl( GamesDialog *parent, wxWindowID id, const wxPoint &pos, const wxSize &size, long style )
     : wxListCtrl( (wxWindow *)parent, id, pos, size, wxLC_REPORT|wxLC_VIRTUAL )
@@ -109,6 +110,10 @@ void GamesListCtrl::ReceiveFocus( int focus_idx )
             {
                 desc += ", after ";
                 desc += previous_move;
+            }
+            if( !gbl_right_arrow_pressed )
+            {
+                desc += "  (use right arrow key to browse)";
             }
             parent->player_names->SetLabel(wxString(desc.c_str()));
         }
@@ -257,6 +262,7 @@ void GamesListCtrl::OnChar( wxKeyEvent &event )
             {
                 track->focus_offset++;
                 update = true;
+                gbl_right_arrow_pressed = true;
             }
             break;
         default:
@@ -275,6 +281,10 @@ void GamesListCtrl::OnChar( wxKeyEvent &event )
             {
                 desc += ", after ";
                 desc += previous_move;
+            }
+            if( !gbl_right_arrow_pressed )
+            {
+                desc += "  (use arrow keys to browse)";
             }
             parent->player_names->SetLabel(wxString(desc.c_str()));
         }
