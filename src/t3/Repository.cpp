@@ -311,29 +311,29 @@ void Repository::SetDirectories()
     wxStandardPathsBase& stdp = wxStandardPaths::Get();
 
     // Defaults to use in case of error
-    wxString name = "Tarrasch";
+    wxString name = "TarraschDb";
 #ifdef WINDOWS_FIX_LATER
-    exe_dir = "C:/Program Files (x86)/Tarrasch";
+    exe_dir = "C:/Program Files (x86)/TarraschDb";
 #else
     exe_dir = ".";
 #endif
 
     // Find directories we plan to use
     wxString doc = stdp.GetDocumentsDir();              // eg "C:\Documents and Settings\Bill\My Documents"
-    wxString tmp = stdp.GetExecutablePath();            // eg "C:\Program Files\Tarrasch\Tarrasch.exe"
+    wxString tmp = stdp.GetExecutablePath();            // eg "C:\Program Files\TarraschDb\TarraschDb.exe"
     wxFileName exe(tmp);     
     wxArrayString dirs = exe.GetDirs();
     exe_dir = exe.GetPath();
     if( dirs.Count() > 1 )
         name = dirs[dirs.Count()-1];
     if( name=="vc_mswd" || name=="vc_msw" ) // during development
-        name = "Tarrasch";
+        name = "TarraschDb";
     if( name.Len() == 0 )
-        name = "Tarrasch";
+        name = "TarraschDb";
     bool ini_exists = false;
     bool mkdir = false;
     doc_dir = doc + "/" + name;
-    ini_filename = exe_dir + "/Tarrasch.ini";
+    ini_filename = exe_dir + "/TarraschDb.ini";
     wxFileName ini1(ini_filename);
     if( ini1.FileExists() )
     {
@@ -349,7 +349,7 @@ void Repository::SetDirectories()
             else
                 doc_dir = doc;
         }
-        ini_filename = doc_dir + "/Tarrasch.ini";
+        ini_filename = doc_dir + "/TarraschDb.ini";
         wxFileName ini2(ini_filename);
         if( !mkdir && ini2.FileExists() )
             ini_exists = true;
@@ -365,9 +365,30 @@ void Repository::SetDirectories()
         bool okay = wxCopyFile( exe_dir+"/book.pgn", doc_dir+"/book.pgn" );
         if( okay )
             wxRemoveFile( exe_dir+"/book.pgn" );
+        cprintf( "Copy book.pgn %s\n", okay?"okay":"error" );
         okay = wxCopyFile( exe_dir+"/book.pgn_compiled", doc_dir+"/book.pgn_compiled" );
         if( okay )
             wxRemoveFile( exe_dir+"/book.pgn_compiled" );
+        cprintf( "Copy book.pgn_compiled %s\n", okay?"okay":"error" );
     }
 #endif
+
+    // Hopefully one time only, copy (actually move) original default.tdb
+    wxString orig_db = exe_dir + "/default.tdb";
+    wxString db_file = doc_dir + "/default.tdb";
+    wxFileName fn_orig_db(orig_db);
+    wxFileName fn_db(db_file);
+    bool current_doesnt_exist = !fn_db.FileExists();
+    bool orig_exist           = fn_orig_db.FileExists();
+    cprintf( "current_doesnt_exist=%s(%s), orig_exist=%s(%s)\n",
+                current_doesnt_exist?"true":"false",
+                db_file.c_str(),
+                orig_exist?"true":"false",
+                orig_db.c_str() );
+    if( current_doesnt_exist && orig_exist )
+    {
+        cprintf( "wxRenameFile(\"%s\",\"%s\") IN\n", orig_db.c_str(), db_file.c_str() );
+        wxRenameFile( wxString(orig_db), wxString(db_file) );   // Rename === Move
+        cprintf( "wxRenameFileFile() OUT\n" );
+    }
 }

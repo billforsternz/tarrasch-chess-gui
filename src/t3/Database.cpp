@@ -23,10 +23,13 @@
 #if !wxUSE_THREADS
     #error "Requires thread support!"
 #endif // wxUSE_THREADS
+#include "wx/wx.h"
+#include "wx/file.h"
 #include "wx/thread.h"
 #include "wx/msgout.h"
 #include "wx/progdlg.h"
 #include "wx/filename.h"
+#include "wx/stdpaths.h"
 
 //
 //  This class has evolved into a DatabaseRead facility and should be

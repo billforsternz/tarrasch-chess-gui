@@ -389,7 +389,7 @@ bool ChessApp::OnInit()
     else if( disp_height < 800 )
         win_point = wxPoint(20, 0);
     #endif
-    ChessFrame *frame = new ChessFrame (_T("Tarrasch Chess GUI V3 -- ALPHA VERSION USE CAUTIOUSLY"),
+    ChessFrame *frame = new ChessFrame (_T("Tarrasch Chess GUI V3 -- DEMO VERSION USE CAUTIOUSLY"),
                                   win_point, win_size );
     objs.frame = frame;
     frame->Show (true);
@@ -684,8 +684,8 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     menu_database->Append (ID_DATABASE_SEARCH,              _T("Position search"));
     menu_database->Append (ID_DATABASE_SHOW_ALL,            _T("Show all games"));
     menu_database->Append (ID_DATABASE_PLAYERS,             _T("Show all ordered by player"));
-    menu_database->Append (ID_DATABASE_SELECT,              _T("Select current database\tAlt-A"));
-    menu_database->Append (ID_DATABASE_CREATE,              _T("Create new database\tAlt-B"));
+    menu_database->Append (ID_DATABASE_SELECT,              _T("Select current database"));
+    menu_database->Append (ID_DATABASE_CREATE,              _T("Create new database"));
     menu_database->Append (ID_DATABASE_APPEND,              _T("Append to database"));
     // menu_database->Append (ID_DATABASE_MAINTENANCE,         _T("INTERNAL TEST - REMOVE SOON - Maintain database"));
 
@@ -889,10 +889,10 @@ void ChessFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
     wxString msg;
     msg.Printf(
-        "This is the Tarrasch Chess GUI. Tarrasch is intended to be "
+        "This is the Tarrasch Chess GUI V3. Tarrasch is intended to be "
         "an easy to use yet powerful system for playing, analysing and "
-        "training with UCI standard chess engines. Tarrasch now has "
-        "full support for creating, reading and editing .pgn files."
+        "training with UCI standard chess engines. Tarrasch now supports "
+        "useful database features."
         "\n\n"
         "Tarrasch includes the simple Tarrasch toy engine as well "
         "as one or more strong engines. "
@@ -904,7 +904,7 @@ void ChessFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
         "Visit the publisher's website www.triplehappy.com for Tarrasch "
         "Chess GUI news and updates."
     );
-    wxMessageBox(msg, "About the Tarrasch Chess GUI " MASTER_VERSION, wxOK|wxICON_INFORMATION|wxCENTRE, this);
+    wxMessageBox(msg, "About the Tarrasch Chess GUI V3 " MASTER_VERSION, wxOK|wxICON_INFORMATION|wxCENTRE, this);
 }
 
 /*
@@ -996,6 +996,11 @@ void ChessFrame::OnCredits(wxCommandEvent& WXUNUSED(event))
         "Thanks to Pawel Koziol for the icon."
         "\n\n"
         "Thanks to Yusuke Kamiyamane for some of the toolbar icons."
+        "\n\n"
+        "Thanks to Yusuke Kamiyamane for some of the toolbar icons."
+        "\n\n"
+        "Thanks to Pierre Havard for KingBase and Mark Crowther for TWIC which "
+        "is the basis of all modern chess database curation."
         "\n\n"
         "Thanks to the engine authors who provided explicit permission to "
         "include their engines. In chronological order, Vasik Rajlich (Rybka), "

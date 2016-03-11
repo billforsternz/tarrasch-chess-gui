@@ -9,9 +9,9 @@
 
 #include "wx/wx.h"
 
-#define MASTER_VERSION "V3 alpha 2015-12-23-a"
-#define DEFAULT_ENGINE "stockfish-6-32.exe"
-#define DEFAULT_ENGINE_64 "stockfish-6-64.exe"
+#define MASTER_VERSION "V3 demo 2016-03-11-a"
+#define DEFAULT_ENGINE "stockfish 7 32bit.exe"
+#define DEFAULT_ENGINE_64 "stockfish 7 x64.exe"
 #define DATABASE_VERSION_NUMBER_NORMAL 1
 #define DATABASE_VERSION_NUMBER_TINY   2
 

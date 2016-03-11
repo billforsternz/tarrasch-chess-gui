@@ -943,6 +943,7 @@ bool Book::DoMove( bool white, int move_number, char *buf )
 // Compile book. Returns bool error
 bool Book::Compile( wxString &error_msg, wxString &compile_msg, wxString &pgn_file, wxString &pgn_compiled_file )
 {
+    cprintf("Compiling book\n");
     wxProgressDialog progress( "One time only book digestion", compile_msg, 100, NULL,
                                      wxPD_APP_MODAL+
                                      wxPD_AUTO_HIDE+

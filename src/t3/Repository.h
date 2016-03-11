@@ -176,7 +176,7 @@ struct DatabaseConfig
     wxString    m_file;
     DatabaseConfig()
     {
-        m_file = "basic.tdb";
+        m_file = "default.tdb";
     }
 };
 
