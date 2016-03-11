@@ -64,6 +64,7 @@ enum
 #define YDELTA 24
 static int window_id_positions_54[NBR_OF_WIDS][4] =
 {
+    #if 0
     {32+XDELTA,11+YDELTA,435,435},         // gb
     {10,10+YDELTA,20,20},                  // who_top
     {10,422+YDELTA,20,20},                 // who_bottom
@@ -80,6 +81,25 @@ static int window_id_positions_54[NBR_OF_WIDS][4] =
     {10+XDELTA,558,570,99},                // kibitz
     {590+XDELTA,580,60,20},                // kibitz_button1
     {590+XDELTA,608,60,20}                 // kibitz_button2
+
+    #else
+    {32+XDELTA,5+YDELTA,435,435},          // gb = graphic board
+    {10,10+YDELTA,20,20},                  // who_top
+    {10,402+YDELTA,20,20},                 // who_bottom
+    {32+XDELTA,446+YDELTA,206,22},         // white_player
+    {238+XDELTA,446+YDELTA,20,22},         // dash_player
+    {258+XDELTA,446+YDELTA,206,22},        // black_player
+    {10+XDELTA,468+YDELTA,674,37},         // box
+    {20+XDELTA,478+YDELTA,286,22},         // status
+    {10,425,116,19},                       // book_moves
+    {512+XDELTA,460,68,28},                // wclock
+    {584+XDELTA,460,68,28},                // bclock
+    {472+XDELTA,5+YDELTA,202,434},         // moves          + 3
+    {394+XDELTA,478+YDELTA,0,0},           // button
+    {10+XDELTA,530,570,99},                // kibitz
+    {590+XDELTA,550,60,20},                // kibitz_button1
+    {590+XDELTA,580,60,20}                 // kibitz_button2
+    #endif
 };
 
 static int window_id_positions_40[NBR_OF_WIDS][4] =
@@ -337,10 +357,10 @@ Canvas::Canvas
     pt2 = pt;
     //pt2.x = 0;
     //pt2.x -= 9;
-    pt2.y -= 30;
+    pt2.y -= 28;
     sz2 = sz;
     sz2.x += 7;
-    sz2.y = 30;
+    sz2.y = 28;
     //sz2.x += 4;
     int x,y,h,w;
     LOCATE_4( moves, x, y, w, h );

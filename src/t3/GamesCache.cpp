@@ -546,17 +546,19 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
                     while( !done )
                     {
                         done = PgnStateMachine( pgn_in, typ,  buf, sizeof(buf) );
-                        fputs( buf, pgn_out );
-                        game_len += strlen(buf);
-                        if( typ == 'G' )
-                            break;
+                        if( !done )
+                        {
+                            fputs( buf, pgn_out );
+                            game_len += strlen(buf);
+                            if( typ == 'G' )
+                                break;
+                        }
                     }
                 }
             }
         }
         else
         {
-            
             GameDocument *ptr = mptr->GetGameDocumentPtr();
 
             // A horrible kludge

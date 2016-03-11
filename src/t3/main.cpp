@@ -997,8 +997,6 @@ void ChessFrame::OnCredits(wxCommandEvent& WXUNUSED(event))
         "\n\n"
         "Thanks to Yusuke Kamiyamane for some of the toolbar icons."
         "\n\n"
-        "Thanks to Yusuke Kamiyamane for some of the toolbar icons."
-        "\n\n"
         "Thanks to Pierre Havard for KingBase and Mark Crowther for TWIC which "
         "is the basis of all modern chess database curation."
         "\n\n"
