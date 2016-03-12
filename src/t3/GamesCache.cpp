@@ -727,7 +727,6 @@ static void PgnNameCommaGroom( std::string &name )
 
 void GamesCache::Eco(  GamesCache *gc_clipboard )
 {
-    eco_begin();
     int gds_nbr = gds.size();
     ProgressBar pb( "Recalculating ECO codes", "Recalculating ECO codes" );
     for( int i=0; i<gds_nbr; i++ )
@@ -736,9 +735,9 @@ void GamesCache::Eco(  GamesCache *gc_clipboard )
         ListableGame *mptr = gds[i].get();
         CompactGame pact;
         mptr->GetCompactGame( pact );
-        CompressMoves press;
-        std::string blob = press.Compress(pact.moves);
-        pact.r.eco = eco_calculate( blob );
+        //CompressMoves press;
+        //std::string blob = press.Compress(pact.moves);
+        pact.r.eco = eco_calculate( pact.moves );
         PgnNameCommaGroom( pact.r.black );
         PgnNameCommaGroom( pact.r.white );
         mptr->SetRoster(pact.r);
@@ -749,7 +748,6 @@ void GamesCache::Eco(  GamesCache *gc_clipboard )
 #if 0
 void GamesCache::Eco(  GamesCache *gc_clipboard )
 {
-    eco_begin();
     int gds_nbr = gds.size();
     ProgressBar pb( "Checking ECO", "Checking ECO" );
     int successes=0;

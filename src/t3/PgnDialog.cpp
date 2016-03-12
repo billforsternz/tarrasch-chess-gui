@@ -138,7 +138,31 @@ void PgnDialog::GdvReadItem( int item, CompactGame &info )
     mb->GetCompactGame( info );
 }
 
-void PgnDialog::GdvHelpClick() {}
+void PgnDialog::GdvHelpClick()
+{
+    // Normally we would wish to display proper online help.
+    // For this example, we're just using a message box.
+    /*
+    wxGetApp().GetHelpController().DisplaySection(wxT("Personal record dialog"));
+     */
+
+    wxString helpText =
+    "Use this panel to preview the games in a .pgn file."
+    "\n\n"
+    "Two special features are provided at the moment. ECO calculates ECO codes. Note "
+    "that existing ECO codes are overwritten. Since different chess programs may differ "
+    "in how they calculate ECO codes, this may modify existing codes."
+    "\n\n"
+    "The Publish button is used to create interactive web content. This is still under "
+    "development and should be treated as an extra-for-experts. There is a file "
+    "named web.zip in your TarraschDb installation directory with supplementary files "
+    "and instructions for the keen and well motivated."
+    "\n\n";
+    wxMessageBox(helpText,
+    wxT("Database Dialog Help"),
+    wxOK|wxICON_INFORMATION, NULL );
+}
+
 void PgnDialog::GdvSearch() {}
 void PgnDialog::GdvUtility() {}
 void PgnDialog::GdvOnCancel() {}

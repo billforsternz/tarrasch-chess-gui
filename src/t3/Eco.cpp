@@ -533,22 +533,28 @@ static std::map<uint64_t,int> lookup;
 static void eco_codes_inner();
 static void eco_test();
 static void eco_regen();
-void eco_begin()
+static void eco_begin()
 {
-    //cprintf( "in\n" );
-    unsigned long t1 = time(NULL);
-    for( int i=0; i<1; i++ )
-        eco_codes_inner();
-    unsigned long t2 = time(NULL);
-    //eco_regen();
-    //cprintf( "out - elapsed %d\n", (int)(t2-t1) );
-    //for( int i=0; i<10; i++ )
-    //    cprintf( "%lld\n", eco_codes[i].hash );
-    //eco_test();
+    static bool once;
+    if( !once )
+    {
+        once = true;
+        //cprintf( "in\n" );
+        //unsigned long t1 = time(NULL);
+        for( int i=0; i<1; i++ )
+            eco_codes_inner();
+        //unsigned long t2 = time(NULL);
+        //eco_regen();
+        //cprintf( "out - elapsed %d\n", (int)(t2-t1) );
+        //for( int i=0; i<10; i++ )
+        //    cprintf( "%lld\n", eco_codes[i].hash );
+        //eco_test();
+    }
 }
 
 static void eco_regen()
 {
+    eco_begin();
     FILE *ofile = fopen( "/users/bill/documents/github/tarrasch-chess-gui/eco-regen.txt", "wt" );
     int nbr = sizeof(eco_codes)/(sizeof(eco_codes[0]));
     for( int i=0; ofile && i<nbr; i++ )
@@ -581,6 +587,7 @@ static void eco_regen()
 
 static void eco_test()
 {
+    eco_begin();
     int nbr = sizeof(eco_codes)/(sizeof(eco_codes[0]));
     int failures=0;
     for( int i=0; i<nbr; i++ )
@@ -600,6 +607,7 @@ static void eco_test()
 
 const char *eco_ref( const char *eco_in )
 {
+    eco_begin();
     int nbr = sizeof(eco_codes)/(sizeof(eco_codes[0]));
     for( int i=0; i<nbr; i++ )
     {
@@ -657,16 +665,22 @@ static void eco_codes_inner()
     }
 }
 
-const char *eco_calculate( std::string compressed_moves )
+const char *eco_calculate( std::string &compressed_moves )
 {
-    int best_so_far=0;
     CompressMoves press;
     std::vector<thc::Move> v = press.Uncompress(compressed_moves);
+    return eco_calculate( v );
+}
+
+const char *eco_calculate( const std::vector<thc::Move> &moves )
+{
+    eco_begin();
+    int best_so_far=0;
     thc::ChessRules cr;
     uint64_t hash = cr.Hash64Calculate();
-    for( int i=0; i<30 && i<v.size(); i++ )
+    for( int i=0; i<30 && i<moves.size(); i++ )
     {
-        thc::Move mv = v[i];
+        thc::Move mv = moves[i];
         hash = cr.Hash64Update( hash, mv );
         cr.PlayMove( mv );
         std::map<uint64_t,int>::iterator it = lookup.find(hash);

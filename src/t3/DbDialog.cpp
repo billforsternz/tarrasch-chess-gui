@@ -370,7 +370,41 @@ void DbDialog::GdvHelpClick()
      */
 
     wxString helpText =
-    wxT("Use this panel to load games from the database\n\n");
+    db_req == REQ_PLAYERS ?
+    "Use this panel to navigate the current database. Use Load Game to "
+    "load a game into a new tab and Use Game to add the game as a variation "
+    "in the current tab."
+    "\n\n"
+    "You can add games to the clipboard and set the clipboard as the "
+    "temporary database so that only games from the clipboard appear "
+    "and the drill down stats (available in other database views) apply to those games only."
+    "\n\n"
+    "One way to use this clipboard-as-temporary-database feature for preparation is "
+    "to copy games from one player to the clipboard. To make this easy, buttons "
+    "are provided to add a player's games to the clipboard."
+    "\n\n"
+    "You can sort on any column including the moves column. Sorting on the moves "
+    "column shows the most popular lines of play first."
+    "\n\n"
+    :
+    "Use this panel to navigate the current database. Use Load Game to "
+    "load a game into a new tab and Use Game to add the game as a variation "
+    "in the current tab."
+    "\n\n"
+    "You can drill down by clicking on moves in the Next Move box."
+    "\n\n"
+    "You can add games to the clipboard and set the clipboard as the "
+    "temporary database so that only games from the clipboard appear "
+    "and the drill down stats apply to those games only."
+    "\n\n"
+    "One way to use this clipboard-as-temporary-database feature for preparation is "
+    "to copy games from one player to the clipboard. To make this easy, buttons "
+    "are provided to add a player's games to the clipboard. Use the Show all ordered "
+    " by player menu to search for players."
+    "\n\n"
+    "You can sort on any column including the moves column. Sorting on the moves "
+    "column shows the most popular lines of play first."
+    "\n\n";
     wxMessageBox(helpText,
     wxT("Database Dialog Help"),
     wxOK|wxICON_INFORMATION, NULL );

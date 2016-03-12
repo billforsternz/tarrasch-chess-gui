@@ -10,6 +10,7 @@
 #include "wx/valtext.h"
 #include "wx/valgen.h"
 #include "Appdefs.h"
+#include "Eco.h"
 #include "GameDetailsDialog.h"
 
 // GameDetailsDialog type definition
@@ -582,6 +583,12 @@ bool GameDetailsDialog::Run( GameDocument &gd )
     black_elo = gd.r.black_elo;      // "BlackElo"
     if( result!="1-0" && result!="0-1" && result!="1/2-1/2" )
         result = "(no result)";
+    if( eco=="" )
+    {
+        CompactGame pact;
+        gd.GetCompactGame(pact);
+        eco = eco_calculate( pact.moves );
+    }
     if( date=="" )
     {
         time_t rawtime;

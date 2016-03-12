@@ -362,33 +362,32 @@ void Repository::SetDirectories()
 #ifdef WINDOWS_FIX_LATER
     if( !ini_exists )
     {
-        bool okay = wxCopyFile( exe_dir+"/book.pgn", doc_dir+"/book.pgn" );
-        if( okay )
-            wxRemoveFile( exe_dir+"/book.pgn" );
-        cprintf( "Copy book.pgn %s\n", okay?"okay":"error" );
-        okay = wxCopyFile( exe_dir+"/book.pgn_compiled", doc_dir+"/book.pgn_compiled" );
-        if( okay )
-            wxRemoveFile( exe_dir+"/book.pgn_compiled" );
-        cprintf( "Copy book.pgn_compiled %s\n", okay?"okay":"error" );
+        bool okay = wxRenameFile( exe_dir+"/book.pgn", doc_dir+"/book.pgn" );   // rename === move
+        cprintf( "Move book.pgn %s\n", okay?"okay":"error" );
+        okay = wxRenameFile( exe_dir+"/book.pgn_compiled", doc_dir+"/book.pgn_compiled" );
+        cprintf( "Move book.pgn_compiled %s\n", okay?"okay":"error" );
     }
 #endif
 
     // Hopefully one time only, copy (actually move) original default.tdb
-    wxString orig_db = exe_dir + "/default.tdb";
-    wxString db_file = doc_dir + "/default.tdb";
-    wxFileName fn_orig_db(orig_db);
-    wxFileName fn_db(db_file);
-    bool current_doesnt_exist = !fn_db.FileExists();
-    bool orig_exist           = fn_orig_db.FileExists();
-    cprintf( "current_doesnt_exist=%s(%s), orig_exist=%s(%s)\n",
-                current_doesnt_exist?"true":"false",
-                db_file.c_str(),
-                orig_exist?"true":"false",
-                orig_db.c_str() );
-    if( current_doesnt_exist && orig_exist )
+    wxString exe_db = exe_dir + "/default.tdb";
+    wxString doc_db = doc_dir + "/default.tdb";
+    wxFileName fn_exe_db(exe_db);
+    wxFileName fn_doc_db(doc_db);
+    bool doc_exist = fn_doc_db.FileExists();
+    bool exe_exist = fn_exe_db.FileExists();
+    bool replace   = (!doc_exist && exe_exist);
+    if( doc_exist && exe_exist )
     {
-        cprintf( "wxRenameFile(\"%s\",\"%s\") IN\n", orig_db.c_str(), db_file.c_str() );
-        wxRenameFile( wxString(orig_db), wxString(db_file) );   // Rename === Move
-        cprintf( "wxRenameFileFile() OUT\n" );
+        wxDateTime doc_t = fn_doc_db.GetModificationTime();
+        wxDateTime exe_t = fn_exe_db.GetModificationTime();
+        if( exe_t.IsLaterThan(doc_t) )
+            replace = true;
+    }
+    if( replace )
+    {
+        cprintf( "wxRenameFile(\"%s\",\"%s\") IN\n", exe_db.c_str(), doc_db.c_str() );
+        bool okay = wxRenameFile( wxString(exe_db), wxString(doc_db) );   // Rename === Move
+        cprintf( "wxRenameFileFile() OUT %s\n", okay?"okay":"error" );
     }
 }
