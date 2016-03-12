@@ -1,3 +1,75 @@
+kingbase-2015-11
+864651 games in  
+864560 games out without smart dup detection need matching date
+862658 games out without smart dup detection don't need matching date
+862670 games out before smart dup detection
+862091 games out smart dup detection need matching date
+859989 games out smart dup detection don't need matching date
+854325 games out no tolerance dup policy
+
+kingbase-2016-02
+932965 games in
+896022 games out without smart dup detection don't need matching date
+888768 games out smart dup detection need matching date
+885836 games out smart dup detection don't need matching date   ** shipped!
+879422 games out no tolerance dup policy
+
+Amin, Bassem - Jakovenko, Dmitry
+
+g3 d5  Bg2 c6 ... 109. Rxg7+ Kxg7
+
+Retime MemoryPositionSearch with
+4r3/3q1pk1/3p1bn1/2pP1ppQ/1p2P3/6P1/r2B1PK1/1R5R w - - 2 42
+Got 810ms,811ms,818ms
+Compares favourably to the original 855ms,858ms,857ms
+We are now checking for promotion and passing that information using
+game_attributes, so we are now really doing CORRECT_BEST_PRACTICE.
+
+Did it again a few days later and got 840ms (ish), oh well. Hadn't really
+tried any speedups.
+
+Things to do before new alpha release;
+
+Fix odd visualls for stats
+Add use arrows comment ?
+Update to new kingbase lite?
+Auto detect whether to reverse pgn records ?
+Use game feature works on empty game
+
+Implement promotion check so search works beyond promotions
+Update credits
+Update about box
+Get rid of Alt-A, Alt-B
+Change to TarraschDb.ini .exe etc.
+Search on initial position should be faster
+Test search algorithm
+Doesn't go straight to game if selected (maybe?)
+Progress bar doesn't bother if super quick
+Fix exception on exit if still loading database
+Check game ordering
+Implement match on player to move
+Goto(0) needs to set focus
+* Improved duplicate game algorithm (see below)
+* Progress bar on database load
+ which requires get game count
+* Publish works but Wellington website games don't show
+
+
+After hooking up MemoryPositionSearch to the program proper, we retimed
+4r3/3q1pk1/3p1bn1/2pP1ppQ/1p2P3/6P1/r2B1PK1/1R5R w - - 2 42
+using for the moment (at least in effect because we aren't checking
+for promotions) NO_PROMOTIONS_FLAWED (not a great name it means
+possible false negatives if match after promotion)
+
+We got;
+    988ms,1004ms,997ms
+i.e significantly worse that 751ms below. Acting
+on a hunch we changed DoSearch() to use a const char * parameter instead
+of a string reference and then we got;
+    765ms,759ms,765ms
+Woohoo.
+
+Timing improvements to our fast MemoryPositionSearch algorithm;
 4r3/3q1pk1/3p1bn1/2pP1ppQ/1p2P3/6P1/r2B1PK1/1R5R w - - 2 42
 BASE_START_POINT 7987ms
 CONSERVATIVE 2630ms
