@@ -1,0 +1,4 @@
+The Tarrasch chess GUI and the Tarrasch Toy Engine are provided free of charge
+by Triple Happy Ltd. Triple Happy Ltd. does not guarantee the performance of
+these programs and is not responsible for any direct or indirect losses or
+damage consequent from their use.
