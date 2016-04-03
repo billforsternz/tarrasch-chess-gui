@@ -55,6 +55,7 @@ public:
 private:
     DB_REQ db_req;
     bool is_open;
+    bool is_bin_db;
     bool is_tiny_db;
     bool is_pristine;
 

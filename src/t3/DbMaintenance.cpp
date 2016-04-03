@@ -9,6 +9,7 @@
 #include <map>
 #include "thc.h"
 #include "DebugPrintf.h"
+#include "BinDb.h"
 #include "PgnRead.h"
 #include "CompressMoves.h"
 #include "DbPrimitives.h"
@@ -251,6 +252,9 @@ bool hook_gameover( char callback_code, const char *fen, const char *event, cons
             break;
         }
             
+        // Binary database append
+        case 'B': bin_db_append( fen, event, site, date, round, white, black, result, white_elo, black_elo, eco, nbr_moves, moves );  break;
+
         // Read one game
         case 'R': pgn_read_hook( fen, white, black, event, site, result, date, white_elo, black_elo, eco, round, nbr_moves, moves, hashes ); return true;
 

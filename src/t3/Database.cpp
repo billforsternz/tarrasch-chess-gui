@@ -18,6 +18,7 @@
 #include "PgnRead.h"
 #include "ProgressBar.h"
 #include "DbPrimitives.h"
+#include "BinDb.h"
 #include "Database.h"
 #include "Repository.h"
 #if !wxUSE_THREADS
@@ -118,11 +119,14 @@ Database::Database( const char *db_file )
     is_pristine = false;
 
     // Access the database.
-    int retval = sqlite3_open( db_file, &gbl_handle );
+    is_bin_db = BinDbOpen( db_file );
+    int retval = 0;
+    if( !is_bin_db )
+        retval = sqlite3_open( db_file, &gbl_handle );
     is_open = (retval==0);
     std::string nomsg;
     IsOperational( nomsg );
-    if( is_open && is_tiny_db  )
+    if( is_open && (is_bin_db||is_tiny_db)  )
     {
 #define USE_BACKGROUND_THREAD
 #ifdef USE_BACKGROUND_THREAD
@@ -198,11 +202,14 @@ void Database::Reopen( const char *db_file )
     tiny_db.Init();
     
     // Access the database.
-    int retval = sqlite3_open(db_file,&gbl_handle);
+    is_bin_db = BinDbOpen( db_file );
+    int retval = 0;
+    if( !is_bin_db )
+        retval = sqlite3_open(db_file,&gbl_handle);
     is_open = (retval==0);
     std::string nomsg;
     IsOperational( nomsg );
-    if( is_open && is_tiny_db  )
+    if( is_open && (is_bin_db||is_tiny_db)  )
     {
 #ifdef USE_BACKGROUND_THREAD
         LoadInBackground( this );
@@ -232,10 +239,13 @@ bool Database::IsOperational( std::string &error_msg )
         else
         {
             operational = true;
+            is_tiny_db = false;
             if( version == DATABASE_VERSION_NUMBER_NORMAL )
-                is_tiny_db = false;
+                ;
             else if( version == DATABASE_VERSION_NUMBER_TINY )
                 is_tiny_db = true;
+            else if( version == DATABASE_VERSION_NUMBER_BIN_DB )
+                ;
             else
             {
                 error_msg = "The database file is not in the correct format for this version of Tarrasch";
@@ -251,43 +261,48 @@ bool Database::GetDatabaseVersion( int &version )
 {
     bool ok=false;
     version = 0;
-    sqlite3_stmt *stmt;
-    int retval;
-    retval = sqlite3_prepare_v2( gbl_handle, "SELECT description,version from description", -1, &stmt, 0 );
-    if( retval )
+    if( is_bin_db )
+        BinDbGetDatabaseVersion( version );
+    else
     {
-        cprintf("SELECT description,version FROM DB FAILED\n");
-        return false;
-    }
-    
-    // Read the number of rows fetched
-    int cols = sqlite3_column_count(stmt);
-    retval = sqlite3_step(stmt);
-    if( retval == SQLITE_ROW )
-    {
-        for( int col=0; col<cols; col++ )
+        sqlite3_stmt *stmt;
+        int retval;
+        retval = sqlite3_prepare_v2( gbl_handle, "SELECT description,version from description", -1, &stmt, 0 );
+        if( retval )
         {
-            switch(col)
+            cprintf("SELECT description,version FROM DB FAILED\n");
+            return false;
+        }
+    
+        // Read the number of rows fetched
+        int cols = sqlite3_column_count(stmt);
+        retval = sqlite3_step(stmt);
+        if( retval == SQLITE_ROW )
+        {
+            for( int col=0; col<cols; col++ )
             {
-                case 0:
+                switch(col)
                 {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    cprintf( "Description = %s\n", val );
-                    break;
-                }
-                case 1:
-                {
-                    int val = (int)sqlite3_column_int(stmt,col);
-                    cprintf( "Version integer = %d\n", val );
-                    version = val;
-                    ok = true;
-                    break;
+                    case 0:
+                    {
+                        const char *val = (const char*)sqlite3_column_text(stmt,col);
+                        cprintf( "Description = %s\n", val );
+                        break;
+                    }
+                    case 1:
+                    {
+                        int val = (int)sqlite3_column_int(stmt,col);
+                        cprintf( "Version integer = %d\n", val );
+                        version = val;
+                        ok = true;
+                        break;
+                    }
                 }
             }
         }
+        sqlite3_finalize(stmt);
+        stmt = NULL;
     }
-    sqlite3_finalize(stmt);
-    stmt = NULL;
     return ok;
 }
 
@@ -349,7 +364,7 @@ int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &pl
     }
     else if( db_req == REQ_POSITION )
     {
-        if( is_tiny_db )
+        if( is_bin_db || is_tiny_db )
         {
             ProgressBar progress("Database search", "Searching...",false);
             game_count = tiny_db.DoSearch( cr, position_hash, &progress );
@@ -422,7 +437,7 @@ int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &pl
 int Database::LoadGameWithQuery( CompactGame *pact, int game_id )
 {
     pact->game_id = game_id;
-    if( is_tiny_db && is_pristine )
+    if( is_bin_db || is_tiny_db )
     {
         tiny_db.in_memory_game_cache[game_id]->GetCompactGame(*pact);
         return 0;
