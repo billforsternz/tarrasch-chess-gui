@@ -1013,6 +1013,7 @@
     <ClInclude Include="src\t3\Appdefs.h" />
     <ClInclude Include="src\t3\Atom.h" />
     <ClInclude Include="src\t3\AutoTimer.h" />
+    <ClInclude Include="src\t3\BinDb.h" />
     <ClInclude Include="src\t3\BoardBitmap.h" />
     <ClInclude Include="src\t3\BoardBitmap40.h" />
     <ClInclude Include="src\t3\BoardBitmap54.h" />
@@ -1087,6 +1088,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\t3\Atom.cpp" />
+    <ClCompile Include="src\t3\BinDb.cpp" />
     <ClCompile Include="src\t3\BoardBitmap40.cpp" />
     <ClCompile Include="src\t3\BoardBitmap54.cpp" />
     <ClCompile Include="src\t3\BoardSetup.cpp" />
