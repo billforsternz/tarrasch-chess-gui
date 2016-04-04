@@ -1013,6 +1013,7 @@
     <ClInclude Include="src\t3\Appdefs.h" />
     <ClInclude Include="src\t3\Atom.h" />
     <ClInclude Include="src\t3\AutoTimer.h" />
+    <ClInclude Include="src\t3\BinaryBlock.h" />
     <ClInclude Include="src\t3\BinDb.h" />
     <ClInclude Include="src\t3\BoardBitmap.h" />
     <ClInclude Include="src\t3\BoardBitmap40.h" />
@@ -1056,6 +1057,7 @@
     <ClInclude Include="src\t3\kibitzq.h" />
     <ClInclude Include="src\t3\Lang.h" />
     <ClInclude Include="src\t3\ListableGame.h" />
+    <ClInclude Include="src\t3\ListableGameBinDb.h" />
     <ClInclude Include="src\t3\ListableGameDb.h" />
     <ClInclude Include="src\t3\ListableGamePgn.h" />
     <ClInclude Include="src\t3\Log.h" />
@@ -1067,6 +1069,7 @@
     <ClInclude Include="src\t3\NavigationKey.h" />
     <ClInclude Include="src\t3\Objects.h" />
     <ClInclude Include="src\t3\PackedGame.h" />
+    <ClInclude Include="src\t3\PackedGameBinDb.h" />
     <ClInclude Include="src\t3\PgnDialog.h" />
     <ClInclude Include="src\t3\PgnFiles.h" />
     <ClInclude Include="src\t3\PgnRead.h" />
@@ -1134,6 +1137,7 @@
     <ClCompile Include="src\t3\MiniBoard.cpp" />
     <ClCompile Include="src\t3\MoveTree.cpp" />
     <ClCompile Include="src\t3\PackedGame.cpp" />
+    <ClCompile Include="src\t3\PackedGameBinDb.cpp" />
     <ClCompile Include="src\t3\PgnDialog.cpp" />
     <ClCompile Include="src\t3\PgnFiles.cpp" />
     <ClCompile Include="src\t3\PgnRead.cpp" />
