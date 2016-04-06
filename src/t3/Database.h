@@ -40,6 +40,8 @@ public:
     int GetRowRaw( CompactGame *info, int row );
     bool LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int nbr_games );
     bool LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGame> > &mega_cache );
+    bool LoadAllGamesForPositionSearchBinDb( std::vector< smart_ptr<ListableGame> > &mega_cache );
+    bool LoadAllGamesForPositionSearchSql( std::vector< smart_ptr<ListableGame> > &mega_cache );
     bool TestNextRow();
     bool TestPrevRow();
     int GetCurrent();

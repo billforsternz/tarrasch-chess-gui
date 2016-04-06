@@ -10,12 +10,21 @@
 #include "CompactGame.h"
 #include "BinaryBlock.h"
 
+struct PackedGameBinDbCommonData
+{
+    BinaryBlock bb;
+    std::vector<std::string> players;
+    std::vector<std::string> events;
+    std::vector<std::string> sites;
+};
+
 class PackedGameBinDb
 {
 private:
     std::string fields;
     
 public:
+    static PackedGameBinDbCommonData& PackedGameBinDb::GetCommonData();
     bool Empty() { return fields.size() == 0; }
     PackedGameBinDb() {}
     PackedGameBinDb( std::string fields ) { this->fields = fields; }
@@ -36,7 +45,7 @@ public:
     const char *Eco();
     const char *WhiteElo();
     const char *BlackElo();
-    const char *Fen();
+    const char *Fen() { return NULL; }
     const char *Blob();
 private:
     const char *GetField( int field_nbr );

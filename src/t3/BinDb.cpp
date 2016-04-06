@@ -14,6 +14,7 @@
 #include "CompressMoves.h"
 #include "PgnRead.h"
 #include "CompactGame.h"
+#include "PackedGameBinDb.h"
 #include "BinDb.h"
 
 static FILE *bin_file;  //temp
@@ -96,7 +97,7 @@ void Tdb2Pgn( const char *infile, const char *outfile )
         FILE *fout = fopen( outfile, "wt" );
         if( outfile )
         {
-            Tdb2Pgn( fin, fout );
+            // later recover Tdb2Pgn() from git history, Tdb2Pgn( fin, fout );
             fclose(fout);
         }
         fclose(fin);
@@ -404,105 +405,6 @@ struct FileHeader
     int nbr_games;
 };
 
-
-/*
-
-6, 14,3
-
-bit offsets
-0
-6
-20
-23
-
-byte offsets /8
-0
-0
-2
-2
-
-shift %8
-0
-6
-4
-7
-
-mask log
-
-
-
-*/
-class BinaryBlock
-{
-    uint8_t buf[128];
-    int offset[20];
-    int shift[20];
-    int mask[20];
-    int idx;
-    int bit_offset;  
-public:
-    BinaryBlock() { idx=0; bit_offset=0; }
-    char *GetPtr() { return reinterpret_cast<char *>(&buf[0]); }
-    void Next( int nbits )
-    {
-        offset[idx] = bit_offset/8;
-        shift[idx] = bit_offset%8;
-        switch(nbits)
-        {
-            case 1:  mask[idx] = 0x01;        break;
-            case 2:  mask[idx] = 0x03;        break;
-            case 3:  mask[idx] = 0x07;        break;
-            case 4:  mask[idx] = 0x0f;        break;
-            case 5:  mask[idx] = 0x1f;        break;
-            case 6:  mask[idx] = 0x3f;        break;
-            case 7:  mask[idx] = 0x7f;        break;
-            case 8:  mask[idx] = 0xff;        break;
-            case 9:  mask[idx] = 0x1ff;       break;
-            case 10: mask[idx] = 0x3ff;       break;
-            case 11: mask[idx] = 0x7ff;       break;
-            case 12: mask[idx] = 0xfff;       break;
-            case 13: mask[idx] = 0x1fff;      break;
-            case 14: mask[idx] = 0x3fff;      break;
-            case 15: mask[idx] = 0x7fff;      break;
-            case 16: mask[idx] = 0xffff;      break;
-            case 17: mask[idx] = 0x1ffff;     break;
-            case 18: mask[idx] = 0x3ffff;     break;
-            case 19: mask[idx] = 0x7ffff;     break;
-            case 20: mask[idx] = 0xfffff;     break;
-            case 21: mask[idx] = 0x1fffff;    break;
-            case 22: mask[idx] = 0x3fffff;    break;
-            case 23: mask[idx] = 0x7fffff;    break;
-            case 24: mask[idx] = 0xffffff;    break;
-        }
-        idx++;
-        bit_offset += nbits;        
-    }
-    int Size()
-    {
-        return bit_offset/8 + ((bit_offset%8==0)?0:1);  // round up
-    }
-    void Write( int idx, uint32_t dat )
-    {
-        uint32_t *p = reinterpret_cast<uint32_t *>(&buf[offset[idx]]);
-        uint32_t raw = *p;
-        uint32_t msk = mask[idx];
-        msk = msk << shift[idx];
-        dat = dat << shift[idx];
-        raw = raw & (~msk);
-        raw = raw | dat;
-        *p = raw;
-    }    
-    uint32_t Read( int idx )
-    {
-        uint32_t *p = reinterpret_cast<uint32_t *>(&buf[offset[idx]]);
-        uint32_t raw = *p;
-        raw = raw >> (shift[idx]);
-        uint32_t dat = raw & mask[idx];
-        return dat;
-    }    
-};
-
-
 bool TestBinaryBlock()
 {
     bool ok;
@@ -680,7 +582,6 @@ void WriteOutToFile( FILE *ofile )
     static int nbr_games_written;
     for( int i=0; i<fh.nbr_games; i++ )
     {
-        bool last_game = (i==fh.nbr_games-1);
         GameBinary *ptr = &games[i];
         //std::set<std::string>::iterator it = set_player.find(ptr->white);
         //int white_offset = std::distance(player_begin,it);
@@ -708,8 +609,6 @@ void WriteOutToFile( FILE *ofile )
         int n = ptr->compressed_moves.length() + 1;
         const char *cstr = ptr->compressed_moves.c_str();
         fwrite( cstr, n, 1, ofile );
-        if( last_game )
-            cprintf("%d: %s-%s %d moves\n", i, ptr->white.c_str(), ptr->black.c_str(), n-1 );
         if( (++nbr_games_written % 10000) == 0 )
             cprintf( "%d games written to compressed file so far\n", nbr_games_written );
     }
@@ -742,37 +641,41 @@ void ReadStrings( FILE *fin, int nbr_strings, std::vector<std::string> &strings 
         cprintf( "%s\n", strings[strings.size()-i].c_str() ); */
 }
 
-void Tdb2Pgn( FILE *fin, FILE *fout )
+void BinDbLoadAllGames(  std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load )
 {
+    PackedGameBinDbCommonData& common = PackedGameBinDb::GetCommonData();
     FileHeader fh;
+    FILE *fin = bin_file;   // later allow this to be closed!
+    rewind(fin);
     fread( &fh, sizeof(fh), 1, fin );
     cprintf( "%d games, %d players, %d events, %d sites\n", fh.nbr_games, fh.nbr_players, fh.nbr_events, fh.nbr_sites );
     int nbr_bits_player = BitsRequired(fh.nbr_players);
     int nbr_bits_event  = BitsRequired(fh.nbr_events);  
     int nbr_bits_site   = BitsRequired(fh.nbr_sites);   
     cprintf( "%d player bits, %d event bits, %d site bits\n", nbr_bits_player, nbr_bits_event, nbr_bits_site );
-    ReadStrings( fin, fh.nbr_players, players );
-    ReadStrings( fin, fh.nbr_events, events );
-    ReadStrings( fin, fh.nbr_sites, sites );
+    ReadStrings( fin, fh.nbr_players, common.players );
+    ReadStrings( fin, fh.nbr_events, common.events );
+    ReadStrings( fin, fh.nbr_sites, common.sites );
 
-    BinaryBlock bb;
-    bb.Next(nbr_bits_event);    // Event
-    bb.Next(nbr_bits_site);     // Site
-    bb.Next(nbr_bits_player);   // White
-    bb.Next(nbr_bits_player);   // Black
-    bb.Next(19);                // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
-    bb.Next(16);                // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), bb=board(0-1023)
-    bb.Next(9);                 // ECO For now 500 codes (9 bits) (A..E)(00..99)
-    bb.Next(2);                 // Result (2 bits)
-    bb.Next(12);                // WhiteElo 12 bits (range 0..4095)
-    bb.Next(12);                // BlackElo
-    int bb_sz = bb.Size();
-    static int nbr_games_converted;
-    for( int i=0; i<fh.nbr_games; i++ )
+    common.bb.Next(nbr_bits_event);    // Event
+    common.bb.Next(nbr_bits_site);     // Site
+    common.bb.Next(nbr_bits_player);   // White
+    common.bb.Next(nbr_bits_player);   // Black
+    common.bb.Next(19);                // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
+    common.bb.Next(16);                // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), common.bb=board(0-1023)
+    common.bb.Next(9);                 // ECO For now 500 codes (9 bits) (A..E)(00..99)
+    common.bb.Next(2);                 // Result (2 bits)
+    common.bb.Next(12);                // WhiteElo 12 bits (range 0..4095)
+    common.bb.Next(12);                // BlackElo
+    int bb_sz = common.bb.Size();
+    int game_count = fh.nbr_games;
+    int nbr_games=0;
+    int nbr_promotion_games=0;  // later
+    for( int i=0; i<game_count && !kill_background_load; i++ )
     {
-        bool last_game = (i==fh.nbr_games-1);
-        fread( bb.GetPtr(), bb_sz, 1, fin );
-        std::string blob;
+        char buf[sizeof(common.bb)];
+        fread( buf, bb_sz, 1, fin );
+        std::string blob(buf,bb_sz);
         int ch = fgetc(fin);
         while( ch && ch!=EOF )
         {
@@ -781,100 +684,21 @@ void Tdb2Pgn( FILE *fin, FILE *fout )
         }
         if( ch == EOF )
             cprintf( "Whoops\n" );
-        CompressMoves press;
-        std::vector<thc::Move> moves = press.Uncompress(blob);
-        int ievent = bb.Read(0);       // Event
-        int isite  = bb.Read(1);       // Site
-        int iwhite = bb.Read(2);       // White
-        int iblack = bb.Read(3);       // Black
-        uint32_t date = bb.Read(4);    // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
-        int round = bb.Read(5);        // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), bb=board(0-1023)
-        int eco = bb.Read(6);          // ECO For now 500 codes (9 bits) (A..E)(00..99)
-        int result = bb.Read(7);       // Result (2 bits)
-        int white_elo = bb.Read(8);    // WhiteElo 12 bits (range 0..4095)
-        int black_elo = bb.Read(9);    // BlackElo 12 bits (range 0..4095)
-        std::string sdate;
-        std::string sround;  
-        std::string seco;    
-        std::string sresult; 
-        Bin2Date  (date,sdate);
-        Bin2Round (round,sround);
-        Bin2Eco   (eco,seco);
-        Bin2Result(result,sresult);
-    /*  std::string swhite_elo;
-        std::string sblack_elo;
-        Bin2Elo   (white_elo,swhite_elo);
-        Bin2Elo   (black_elo,sblack_elo); */
-        fprintf( fout, "[Event \"%s\"]\n",     events[ievent].c_str() );
-        fprintf( fout, "[Site \"%s\"]\n",      sites[isite].c_str() );
-        fprintf( fout, "[Date \"%s\"]\n",      sdate.c_str() );
-        fprintf( fout, "[Round \"%s\"]\n",     sround.c_str() );
-        fprintf( fout, "[White \"%s\"]\n",     players[iwhite].c_str() );
-        fprintf( fout, "[Black \"%s\"]\n",     players[iblack].c_str() );
-        fprintf( fout, "[Result \"%s\"]\n",    sresult.c_str() );
-        fprintf( fout, "[ECO \"%s\"]\n",       seco.c_str() );
-        fprintf( fout, "[WhiteElo \"%d\"]\n",  white_elo );
-        fprintf( fout, "[BlackElo \"%d\"]\n",  black_elo );
-        fprintf( fout, "\n" );
-        thc::ChessRules cr;
-        int nbr_moves = moves.size();
-        std::string line;
-        std::string before;
-        for( int j=0; j<nbr_moves+1; j++ )  // nbr_moves + 1 for result
+        ListableGameBinDb info( i, blob );
+        make_smart_ptr( ListableGameBinDb, new_info, info );
+        mega_cache.push_back( std::move(new_info) );
+        background_load_permill = (i*1000) / (game_count?game_count:1);
+        nbr_games++;
+        if(
+            ((nbr_games%10000) == 0 ) /* ||
+                                        (
+                                        (nbr_games < 100) &&
+                                        ((nbr_games%10) == 0 )
+                                        ) */
+            )
         {
-
-            // Calculate prefix text
-            std::string move_prefix;
-            bool end = (j>=nbr_moves);
-            if( !end && cr.white )
-            {
-                char buf[20];
-                sprintf( buf, "%d.", cr.full_move_count );
-                move_prefix = buf;
-            }
-
-            // Print prefix text
-            if( move_prefix.length() )
-            {
-                before = line;
-                line += ((before.length()?" ":"") + move_prefix);
-                if( line.length() >= 80 )
-                {
-                    fprintf( fout, "%s\n", before.c_str() );
-                    line = move_prefix;
-                }
-            }
-
-            // Calculate move text 
-            std::string move_text;
-            if( end )
-                move_text = sresult;
-            else
-            {
-                thc::Move mv = moves[j];
-                #if 0
-                move_text = mv.TerseOut();
-                #else
-                move_text = mv.NaturalOut(&cr);//mv.TerseOut();
-                #endif
-                cr.PlayMove(mv);
-            }
-
-            // Print move text
-            before = line;
-            line += ((before.length()?" ":"") + move_text);
-            if( line.length() >= 80 )
-            {
-                fprintf( fout, "%s\n", before.c_str() );
-                line = move_text;
-            }
+            cprintf( "%d games (%d include promotion)\n", nbr_games, nbr_promotion_games );
         }
-        fprintf( fout, "%s\n\n", line.c_str() );
-        if( last_game )
-            cprintf("%d:%s-%s %d moves\n", i, players[iwhite].c_str(), players[iblack].c_str(), nbr_moves );
-        if( (++nbr_games_converted % 10000) == 0 )
-            cprintf( "%d games written to reconstituted .pgn so far\n", nbr_games_converted );
     }
-    cprintf( "%d games written to reconstituted .pgn\n", nbr_games_converted );
 }
 

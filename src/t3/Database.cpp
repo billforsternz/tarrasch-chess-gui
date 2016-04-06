@@ -1248,21 +1248,103 @@ bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int 
 }
 
 
-/* static void Delay( int count )
-{
-    for( int i=0; i<count; i++ )
-    {
-        char buf[100];
-        sprintf( buf, "%d", i );
-    }
-}  */
-
-
-//std::vector< smart_ptr<ListableGame> > mega_cache;
 
 bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGame> > &mega_cache )
 {
     AutoTimer at("Load all games");
+    bool ok;
+    if( is_bin_db )
+        ok = LoadAllGamesForPositionSearchBinDb( mega_cache );
+    else
+        ok = LoadAllGamesForPositionSearchSql( mega_cache );
+    #ifdef TEST_SEARCH
+    int max_so_far=0;
+    for( int i=0; i<mega_cache.size(); i++ )
+    {
+        smart_ptr<ListableGame> p = mega_cache[i];
+        if( (i+1)==10 || ((i+1)%1000==0) )
+            cprintf( "Testing search, %d games\n", i+1 );
+        std::vector<thc::Move> moves = p->RefMoves();
+        thc::ChessRules cr;
+        for( int j=0; j<moves.size(); j++ )
+        {
+            thc::Move mv = moves[j];
+            cr.PlayMove(mv);
+        }
+        bool multiple=false;
+        bool found =  tiny_db.DoSearch( cr, 0, 0 );
+        if( found )
+        {
+            found = false;
+            std::vector<DoSearchFoundGame> vec = tiny_db.GetVectorGamesFound();
+            int nbr = vec.size();
+            if( nbr>1 && moves.size()>max_so_far )
+            {
+                max_so_far = moves.size();
+                multiple = true;
+            }
+            for( int j=0; j<nbr; j++ )
+            {
+                DoSearchFoundGame& dsfg = vec[j];
+                if( dsfg.idx == i )
+                    found = true;
+            }
+        }
+        if( !found || multiple )
+        {
+            std::string txt;
+            thc::ChessRules cr2;
+            for( int j=0; j<moves.size(); j++ )
+            {
+                thc::Move mv2 = moves[j];
+                std::string s = mv2.NaturalOut(&cr2);
+                char buf[20];
+                sprintf( buf, "%d.", cr2.full_move_count );
+                const char *before = buf;
+                if( !cr2.white )
+                    before = " ";
+                const char *after = "";
+                if( j+1 < moves.size() )
+                {
+                    if( ((j+1)&3) == 0 )
+                        after = "\n";
+                    else
+                        after = " ";
+                }
+                char buf2[100];
+                sprintf( buf2, "%s%s%s", before, s.c_str(), after );
+                txt += std::string(buf2);
+                cr2.PlayMove(mv2);
+            }
+            Roster r = p->RefRoster();
+            cprintf( "%s %s-%s> %s\n",
+                !found ? "Not found" : "Longest possible duplicate game to date",
+                r.white.c_str(),
+                r.black.c_str(),
+                txt.c_str()
+            );
+            FILE *out = fopen("testing-out.txt","at");
+            if( !out )
+                cprintf( "whoops?");
+            else
+            {
+                fprintf( out, "%s %s-%s> %s\n",
+                    !found ? "Not found" : "Longest possible duplicate game to date",
+                    r.white.c_str(),
+                    r.black.c_str(),
+                    txt.c_str()
+                );
+                fclose(out);
+            }
+        }
+    }
+    #endif
+    return ok;
+}
+
+
+bool Database::LoadAllGamesForPositionSearchSql( std::vector< smart_ptr<ListableGame> > &mega_cache )
+{
     is_pristine=true;     // true if game_id = idx for every idx in mega_cache[idx]
     background_load_permill = 0;
     kill_background_load = false;
@@ -1393,93 +1475,26 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGam
     }
     cprintf( "%d games (%d include promotion)\n", nbr_games, nbr_promotion_games );
     gbl_protect_recursion = false;
-
-    //#define TEST_SEARCH
-    #ifdef TEST_SEARCH
-    int max_so_far=0;
-    for( int i=0; i<mega_cache.size(); i++ )
-    {
-        smart_ptr<ListableGame> p = mega_cache[i];
-        if( (i+1)==10 || ((i+1)%1000==0) )
-            cprintf( "Testing search, %d games\n", i+1 );
-        std::vector<thc::Move> moves = p->RefMoves();
-        thc::ChessRules cr;
-        for( int j=0; j<moves.size(); j++ )
-        {
-            thc::Move mv = moves[j];
-            cr.PlayMove(mv);
-        }
-        bool multiple=false;
-        bool found =  tiny_db.DoSearch( cr, 0, 0 );
-        if( found )
-        {
-            found = false;
-            std::vector<DoSearchFoundGame> vec = tiny_db.GetVectorGamesFound();
-            int nbr = vec.size();
-            if( nbr>1 && moves.size()>max_so_far )
-            {
-                max_so_far = moves.size();
-                multiple = true;
-            }
-            for( int j=0; j<nbr; j++ )
-            {
-                DoSearchFoundGame& dsfg = vec[j];
-                if( dsfg.idx == i )
-                    found = true;
-            }
-        }
-        if( !found || multiple )
-        {
-            std::string txt;
-            thc::ChessRules cr2;
-            for( int j=0; j<moves.size(); j++ )
-            {
-                thc::Move mv2 = moves[j];
-                std::string s = mv2.NaturalOut(&cr2);
-                char buf[20];
-                sprintf( buf, "%d.", cr2.full_move_count );
-                const char *before = buf;
-                if( !cr2.white )
-                    before = " ";
-                const char *after = "";
-                if( j+1 < moves.size() )
-                {
-                    if( ((j+1)&3) == 0 )
-                        after = "\n";
-                    else
-                        after = " ";
-                }
-                char buf2[100];
-                sprintf( buf2, "%s%s%s", before, s.c_str(), after );
-                txt += std::string(buf2);
-                cr2.PlayMove(mv2);
-            }
-            Roster r = p->RefRoster();
-            cprintf( "%s %s-%s> %s\n",
-                !found ? "Not found" : "Longest possible duplicate game to date",
-                r.white.c_str(),
-                r.black.c_str(),
-                txt.c_str()
-            );
-            FILE *out = fopen("testing-out.txt","at");
-            if( !out )
-                cprintf( "whoops?");
-            else
-            {
-                fprintf( out, "%s %s-%s> %s\n",
-                    !found ? "Not found" : "Longest possible duplicate game to date",
-                    r.white.c_str(),
-                    r.black.c_str(),
-                    txt.c_str()
-                );
-                fclose(out);
-            }
-        }
-    }
-    #endif
     return ok;
 }
 
+bool Database::LoadAllGamesForPositionSearchBinDb( std::vector< smart_ptr<ListableGame> > &mega_cache )
+{
+    is_pristine = true;
+    background_load_permill = 0;
+    kill_background_load = false;
+    mega_cache.clear();
+    cache.clear();
+    BinDbLoadAllGames( mega_cache, background_load_permill, kill_background_load );
+    int cache_nbr = mega_cache.size();
+    cprintf( "Number of games = %d, is_pristine=%s\n", cache_nbr, is_pristine?"true":"false" );
+    if( 2 < cache_nbr )
+    {
+        smart_ptr<ListableGame> p = mega_cache[2];
+        cprintf( "White=%s Black=%s Result=%s Round=%s\n", p->White(), p->Black(), p->Result(), p->Round() );
+    }
+    return cache_nbr>0;
+}
 
 void Database::FindPlayerEnd()
 {
