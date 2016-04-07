@@ -21,18 +21,23 @@ static FILE *bin_file;  //temp
 
 bool BinDbOpen( const char *db_file )
 {
+    bool is_bin_db=false;
     if( bin_file )
     {
         fclose( bin_file );
         bin_file = NULL;
     }
     bin_file = fopen( db_file, "rb" );
-    char buf[3];
-    fread( buf, sizeof(buf), 1, bin_file );
-    bool sql_file = (buf[0]=='S' && buf[1]=='Q' && buf[2]=='L');
-    if( sql_file )
-        fclose(bin_file);
-    return !sql_file;   // for now we'll just assume if it's not SQl it *is* our binary format
+    if( bin_file )
+    {
+        char buf[3];
+        fread( buf, sizeof(buf), 1, bin_file );
+        bool sql_file = (buf[0]=='S' && buf[1]=='Q' && buf[2]=='L');
+        if( sql_file )
+            fclose(bin_file);
+        is_bin_db = !sql_file;    // for now we'll just assume if it's not SQl it *is* our binary format
+    }
+    return is_bin_db;
 }
 
 void BinDbGetDatabaseVersion( int &version )

@@ -24,7 +24,7 @@ private:
     std::string fields;
     
 public:
-    static PackedGameBinDbCommonData& PackedGameBinDb::GetCommonData();
+    static PackedGameBinDbCommonData& GetCommonData();
     bool Empty() { return fields.size() == 0; }
     PackedGameBinDb() {}
     PackedGameBinDb( std::string fields ) { this->fields = fields; }
@@ -47,8 +47,6 @@ public:
     const char *BlackElo();
     const char *Fen() { return NULL; }
     const char *Blob();
-private:
-    const char *GetField( int field_nbr );
 };
 
 #endif // PACKED_GAME_BIN_DB_H

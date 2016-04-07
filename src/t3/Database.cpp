@@ -262,7 +262,10 @@ bool Database::GetDatabaseVersion( int &version )
     bool ok=false;
     version = 0;
     if( is_bin_db )
+    {
         BinDbGetDatabaseVersion( version );
+        ok = true;
+    }
     else
     {
         sqlite3_stmt *stmt;
@@ -318,7 +321,7 @@ int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &pl
 {
     bool db_access_required = true;
     this->db_req = db_req;
-    if( !gbl_handle )
+    if( !is_bin_db && !gbl_handle )
         return 0;
     gbl_expected = -1;
     int game_count = 0;

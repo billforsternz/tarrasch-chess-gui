@@ -32,7 +32,7 @@ public:
     void Reopen( const char *db_file );
     bool IsOperational( std::string &error_msg );
     bool GetDatabaseVersion( int &version );
-    bool IsTinyDb() { return is_tiny_db; }
+    bool IsTinyDb() { return is_tiny_db || is_bin_db; }
     int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr );
     int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &player_name );
     int GetGameCount();
