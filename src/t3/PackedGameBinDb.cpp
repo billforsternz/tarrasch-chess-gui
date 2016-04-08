@@ -13,7 +13,11 @@
 #include "PackedGameBinDb.h"
 #include "ListableGameBinDb.h"
 
+#define POOL_SIZE 8 // must be power of 2
 static PackedGameBinDbCommonData common;
+static std::string pool[POOL_SIZE];
+static int pool_idx;
+
 PackedGameBinDbCommonData& PackedGameBinDb::GetCommonData()
 {
     return common;
@@ -50,16 +54,16 @@ void PackedGameBinDb::Unpack( std::string &blob )
 
 void PackedGameBinDb::Unpack( Roster &r )
 {
-    int ievent = common.bb.Read(0);       // Event
-    int isite  = common.bb.Read(1);       // Site
-    int iwhite = common.bb.Read(2);       // White
-    int iblack = common.bb.Read(3);       // Black
-    uint32_t date = common.bb.Read(4);    // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
-    int round = common.bb.Read(5);        // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), common.bb=board(0-1023)
-    int eco = common.bb.Read(6);          // ECO For now 500 codes (9 bits) (A..E)(00..99)
-    int result = common.bb.Read(7);       // Result (2 bits)
-    int white_elo = common.bb.Read(8);    // WhiteElo 12 bits (range 0..4095)
-    int black_elo = common.bb.Read(9);    // BlackElo 12 bits (range 0..4095)
+    int ievent = common.bb.Read(0,&fields[0]);       // Event
+    int isite  = common.bb.Read(1,&fields[0]);       // Site
+    int iwhite = common.bb.Read(2,&fields[0]);       // White
+    int iblack = common.bb.Read(3,&fields[0]);       // Black
+    uint32_t date = common.bb.Read(4,&fields[0]);    // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
+    int round = common.bb.Read(5,&fields[0]);        // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), common.bb=board(0-1023)
+    int eco = common.bb.Read(6,&fields[0]);          // ECO For now 500 codes (9 bits) (A..E)(00..99)
+    int result = common.bb.Read(7,&fields[0]);       // Result (2 bits)
+    int white_elo = common.bb.Read(8,&fields[0]);    // WhiteElo 12 bits (range 0..4095)
+    int black_elo = common.bb.Read(9,&fields[0]);    // BlackElo 12 bits (range 0..4095)
     std::string sdate;
     std::string sround;  
     std::string seco;    
@@ -86,72 +90,77 @@ void PackedGameBinDb::Unpack( Roster &r )
 
 const char *PackedGameBinDb::Event()
 {
-    int i = common.bb.Read(0);
+    int i = common.bb.Read(0,&fields[0]);
     return common.events[i].c_str();
 }
 
 const char *PackedGameBinDb::Site()
 {
-    int i = common.bb.Read(1);
+    int i = common.bb.Read(1,&fields[0]);
     return common.sites[i].c_str();
 }
 
 const char *PackedGameBinDb::White()
 {
-    int i = common.bb.Read(2);
+    int i = common.bb.Read(2,&fields[0]);
     return common.players[i].c_str();
 }
 
 const char *PackedGameBinDb::Black()
 {
-    int i = common.bb.Read(3);
+    int i = common.bb.Read(3,&fields[0]);
     return common.players[i].c_str();
 }
 
 const char *PackedGameBinDb::Result()
 {
     static std::string sresult; 
-    int result = common.bb.Read(7);       // Result (2 bits)
+    int result = common.bb.Read(7,&fields[0]);       // Result (2 bits)
     Bin2Result(result,sresult);
     return sresult.c_str();
 }
 
 const char *PackedGameBinDb::Round()
 {
-    static std::string sround;  
-    int round = common.bb.Read(5);        // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), common.bb=board(0-1023)
+    std::string& sround = pool[pool_idx++];
+    pool_idx &= (POOL_SIZE-1);
+    int round = common.bb.Read(5,&fields[0]);        // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), common.bb=board(0-1023)
     Bin2Round (round,sround);
     return sround.c_str();
 }
 
 const char *PackedGameBinDb::Date()
 {
-    static std::string sdate;
-    uint32_t date = common.bb.Read(4);    // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
+    std::string& sdate = pool[pool_idx++];
+    pool_idx &= (POOL_SIZE-1);
+    uint32_t date = common.bb.Read(4,&fields[0]);    // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
     Bin2Date  (date,sdate);
     return sdate.c_str();
 }
 
 const char *PackedGameBinDb::Eco()
 {
-    static std::string seco;    
-    int eco = common.bb.Read(6);          // ECO For now 500 codes (9 bits) (A..E)(00..99)
+    std::string& seco = pool[pool_idx++];
+    pool_idx &= (POOL_SIZE-1);
+    int eco = common.bb.Read(6,&fields[0]);          // ECO For now 500 codes (9 bits) (A..E)(00..99)
     Bin2Eco   (eco,seco);
     return seco.c_str();
 }
 
 const char *PackedGameBinDb::WhiteElo()
 {
-    int white_elo = common.bb.Read(8);    // WhiteElo 12 bits (range 0..4095)
-    static std::string swhite_elo;
+    int white_elo = common.bb.Read(8,&fields[0]);    // WhiteElo 12 bits (range 0..4095)
+    std::string& swhite_elo = pool[pool_idx++];
+    pool_idx &= (POOL_SIZE-1);
     Bin2Elo   (white_elo,swhite_elo);
     return swhite_elo.c_str();
 }
 
 const char *PackedGameBinDb::BlackElo()
 {
-    int black_elo = common.bb.Read(9);    // BlackElo 12 bits (range 0..4095)
-    static std::string sblack_elo;
+    int black_elo = common.bb.Read(9,&fields[0]);    // BlackElo 12 bits (range 0..4095)
+    std::string& sblack_elo = pool[pool_idx++];
+    pool_idx &= (POOL_SIZE-1);
     Bin2Elo   (black_elo,sblack_elo);
     return sblack_elo.c_str();
 }
@@ -160,4 +169,3 @@ const char *PackedGameBinDb::Blob()
 {
     return &fields[ common.bb.Size() ];
 }
-

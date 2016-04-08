@@ -15,6 +15,7 @@ class BinaryBlock
     int mask[20];
     int idx;
     int bit_offset;  
+    int frozen_size;  
 public:
     BinaryBlock() { idx=0; bit_offset=0; }
     char *GetPtr() { return reinterpret_cast<char *>(&buf[0]); }
@@ -56,6 +57,14 @@ public:
     {
         return bit_offset/8 + ((bit_offset%8==0)?0:1);  // round up
     }
+    void Freeze()
+    {
+        frozen_size = Size();
+    }
+    int FrozenSize()
+    {
+        return frozen_size;
+    }
     void Write( int idx, uint32_t dat )
     {
         uint32_t *p = reinterpret_cast<uint32_t *>(&buf[offset[idx]]);
@@ -70,6 +79,14 @@ public:
     uint32_t Read( int idx )
     {
         uint32_t *p = reinterpret_cast<uint32_t *>(&buf[offset[idx]]);
+        uint32_t raw = *p;
+        raw = raw >> (shift[idx]);
+        uint32_t dat = raw & mask[idx];
+        return dat;
+    }    
+    uint32_t Read( int idx, const char *location )
+    {
+        const uint32_t *p = reinterpret_cast<const uint32_t *>(&location[offset[idx]]);
         uint32_t raw = *p;
         raw = raw >> (shift[idx]);
         uint32_t dat = raw & mask[idx];

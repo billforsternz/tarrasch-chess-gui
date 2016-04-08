@@ -672,7 +672,8 @@ void BinDbLoadAllGames(  std::vector< smart_ptr<ListableGame> > &mega_cache, int
     common.bb.Next(2);                 // Result (2 bits)
     common.bb.Next(12);                // WhiteElo 12 bits (range 0..4095)
     common.bb.Next(12);                // BlackElo
-    int bb_sz = common.bb.Size();
+    common.bb.Freeze();
+    int bb_sz = common.bb.FrozenSize();
     int game_count = fh.nbr_games;
     int nbr_games=0;
     int nbr_promotion_games=0;  // later
