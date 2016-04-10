@@ -81,6 +81,7 @@ public:
     }
     
     // For now at least, the following are used for fast sorting on column headings
+	virtual int WhiteBin()			{ return pack.WhiteBin(); }
     virtual const char *White()     { return pack.White();    }
     virtual const char *Black()     { return pack.Black();    }
     virtual const char *Event()     { return pack.Event();    }

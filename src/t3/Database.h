@@ -48,7 +48,7 @@ public:
     int  FindPlayer( std::string &name, std::string &current, int start_row, bool white );
     void FindPlayerEnd();
     int LoadGameWithQuery( CompactGame *info, int game_id );
-    int LoadGamesWithQuery( const thc::ChessPosition &cp, uint64_t hash, std::vector< smart_ptr<ListableGame> > &games, std::unordered_set<int> &games_set );
+    //int LoadGamesWithQuery( const thc::ChessPosition &cp, uint64_t hash, std::vector< smart_ptr<ListableGame> > &games, std::unordered_set<int> &games_set );
     int LoadPlayerGamesWithQuery( std::string &player_name, bool white, std::vector< smart_ptr<ListableGame> > &games );
     MemoryPositionSearch tiny_db;
     int background_load_permill;
@@ -69,6 +69,7 @@ private:
     
     // A prepared statement for player search
     sqlite3_stmt *player_search_stmt;
+    bool player_search_stmt_bin_db;
 
     // Whereabouts we are in the virtual list control
     int gbl_expected;

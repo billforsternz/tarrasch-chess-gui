@@ -314,7 +314,10 @@ void Bin2Elo( uint32_t bin, std::string &elo )
         bin = 4095;
     else if( bin < 0 )
         bin = 0;
-    sprintf( buf, "%d", bin );
+	if( bin )
+		sprintf( buf, "%d", bin );
+	else
+		buf[0] = '\0';
     elo = buf;
 }
 

@@ -59,7 +59,7 @@ void PackedGameBinDb::Unpack( Roster &r )
     int iwhite = common.bb.Read(2,&fields[0]);       // White
     int iblack = common.bb.Read(3,&fields[0]);       // Black
     uint32_t date = common.bb.Read(4,&fields[0]);    // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
-    int round = common.bb.Read(5,&fields[0]);        // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), common.bb=board(0-1023)
+    int round = common.bb.Read(5,&fields[0]);        // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), bb=board(0-1023)
     int eco = common.bb.Read(6,&fields[0]);          // ECO For now 500 codes (9 bits) (A..E)(00..99)
     int result = common.bb.Read(7,&fields[0]);       // Result (2 bits)
     int white_elo = common.bb.Read(8,&fields[0]);    // WhiteElo 12 bits (range 0..4095)
@@ -167,5 +167,5 @@ const char *PackedGameBinDb::BlackElo()
 
 const char *PackedGameBinDb::Blob()
 {
-    return &fields[ common.bb.Size() ];
+    return &fields[ common.bb.FrozenSize() ];
 }

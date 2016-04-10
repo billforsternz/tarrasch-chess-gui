@@ -35,6 +35,7 @@ public:
     void Unpack( Roster &r, std::string &blob );
     void Unpack( Roster &r );
     void Unpack( std::string &blob );
+	int WhiteBin() { return GetCommonData().bb.Read(2,&fields[0]); }
     const char *White();
     const char *Black();
     const char *Event();

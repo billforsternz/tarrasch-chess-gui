@@ -38,6 +38,7 @@ public:
     virtual void SetGameBeingEdited( uint32_t game_being_edited ) {}
     virtual uint32_t GetGameBeingEdited() { return 0; }
     virtual void *LoadIntoMemory( void *context, bool end )  {return 0;}
+	virtual int         WhiteBin() {return 0;}
     virtual const char *White() {return "";}
     virtual const char *Black() {return "";}
     virtual const char *Event() {return "";}
