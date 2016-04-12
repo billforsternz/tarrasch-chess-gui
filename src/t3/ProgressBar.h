@@ -198,6 +198,17 @@ public:
         }
         return abort;
     }
+    bool Perfraction( int numerator, int denominator, const std::string &s="" )  // return true if abort
+    {
+        int permill;
+        if( numerator>=denominator || denominator==0 )
+            permill = 1000;
+        else if( denominator > 1000000 )
+            permill = numerator / (denominator/1000);
+        else
+            permill = (numerator*1000) / denominator;
+        return Permill( permill, s );
+    }
 
 private:
     unsigned char modulo_256;

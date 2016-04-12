@@ -90,7 +90,7 @@ void Pgn2Tdb( FILE *fin, FILE *fout )
     #else
     PgnRead pr('B',0);
     pr.Process(fin);
-    WriteOutToFile(fout);
+    BinDbWriteOutToFile(fout);
     #endif
 }
 
@@ -525,7 +525,20 @@ int BitsRequired( int max )
 std::map<std::string,int> map_player;
 std::map<std::string,int> map_event;
 std::map<std::string,int> map_site;
-void WriteOutToFile( FILE *ofile )
+
+void BinDbWriteClear()
+{
+    set_player.clear();
+    set_site.clear();
+    set_event.clear();
+    games.clear();
+    map_player.clear();
+    map_event.clear();
+    map_site.clear();
+}
+
+// Return bool okay
+bool BinDbWriteOutToFile( FILE *ofile, ProgressBar *pb )
 {
     std::set<std::string>::iterator it = set_player.begin();
     FileHeader fh;
@@ -540,6 +553,8 @@ void WriteOutToFile( FILE *ofile )
     cprintf( "%d player bits, %d event bits, %d site bits\n", nbr_bits_player, nbr_bits_event, nbr_bits_site );
     fwrite( &fh, sizeof(fh), 1, ofile );
     int idx=0;
+    int total_strings = fh.nbr_players + fh.nbr_events + fh.nbr_sites + fh.nbr_games;
+    int nbr_strings_so_far = 0;
     while( it != set_player.end() )
     {
         std::string str = *it;
@@ -547,6 +562,10 @@ void WriteOutToFile( FILE *ofile )
         const char *s = str.c_str();
         fwrite( s, strlen(s)+1, 1, ofile );
         it++;
+        nbr_strings_so_far++;
+        if( pb )
+            if( pb->Perfraction( nbr_strings_so_far, total_strings ) )
+                return false;   // abort
     }
     it = set_event.begin();
     idx=0;
@@ -557,6 +576,10 @@ void WriteOutToFile( FILE *ofile )
         const char *s = str.c_str();
         fwrite( s, strlen(s)+1, 1, ofile );
         it++;
+        nbr_strings_so_far++;
+        if( pb )
+            if( pb->Perfraction( nbr_strings_so_far, total_strings ) )
+                return false;   // abort
     }
     it = set_site.begin();
     idx=0;
@@ -567,6 +590,10 @@ void WriteOutToFile( FILE *ofile )
         const char *s = str.c_str();
         fwrite( s, strlen(s)+1, 1, ofile );
         it++;
+        nbr_strings_so_far++;
+        if( pb )
+            if( pb->Perfraction( nbr_strings_so_far, total_strings ) )
+                return false;   // abort
     }
     std::set<std::string>::iterator player_begin = set_player.begin();
     std::set<std::string>::iterator player_end   = set_player.end();
@@ -587,7 +614,6 @@ void WriteOutToFile( FILE *ofile )
     bb.Next(12);                // BlackElo
     int bb_sz = bb.Size();
     cprintf( "bb_sz=%d\n", bb_sz );
-    static int nbr_games_written;
     for( int i=0; i<fh.nbr_games; i++ )
     {
         GameBinary *ptr = &games[i];
@@ -611,16 +637,21 @@ void WriteOutToFile( FILE *ofile )
         bb.Write(5,ptr->round);         // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), bb=board(0-1023)
         bb.Write(6,ptr->eco);           // ECO For now 500 codes (9 bits) (A..E)(00..99)
         bb.Write(7,ptr->result);        // Result (2 bits)
-        bb.Write(8,ptr->white_elo);     // WhiteElo 12 bits (range 0..4095)
+        bb.Write(8,ptr->white_elo);     // WhiteElo 12 bits (range 0..4095)                                                                 
         bb.Write(9,ptr->black_elo);     // BlackElo
         fwrite( bb.GetPtr(), bb_sz, 1, ofile );
         int n = ptr->compressed_moves.length() + 1;
         const char *cstr = ptr->compressed_moves.c_str();
         fwrite( cstr, n, 1, ofile );
-        if( (++nbr_games_written % 10000) == 0 )
-            cprintf( "%d games written to compressed file so far\n", nbr_games_written );
+        if( (i % 10000) == 0 )
+            cprintf( "%d games written to compressed file so far\n", i );
+        nbr_strings_so_far++;
+        if( pb )
+            if( pb->Perfraction( nbr_strings_so_far, total_strings ) )
+                return false;   // abort
     }
-    cprintf( "%d games written to compressed file\n", nbr_games_written );
+    cprintf( "%d games written to compressed file\n", fh.nbr_games );
+    return true;
 }
 
 std::vector<std::string> players;

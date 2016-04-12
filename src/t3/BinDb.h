@@ -7,6 +7,7 @@
 #ifndef BINDB_H
 #define BINDB_H
 #include "Appdefs.h"
+#include "ProgressBar.h"
 #include "ListableGameBinDb.h"
 
 bool BinDbOpen( const char *db_file );
@@ -18,7 +19,8 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
                   int nbr_moves, thc::Move *moves );
 
 bool TestBinaryBlock();
-void WriteOutToFile( FILE *ofile );
+void BinDbWriteClear();
+bool BinDbWriteOutToFile( FILE *ofile, ProgressBar *pb=NULL );
 bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen );
 
 void Pgn2Tdb( const char *infile, const char *outfile );
@@ -50,7 +52,6 @@ uint16_t Elo2Bin( const char *elo );
 void Bin2Elo( uint32_t bin, std::string &elo );
 
 int BitsRequired( int max );
-void WriteOutToFile( FILE *ofile );
 void ReadStrings( FILE *fin, int nbr_strings, std::vector<std::string> &strings );
 
 #endif  // BINDB_H
