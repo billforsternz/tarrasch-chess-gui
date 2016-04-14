@@ -302,7 +302,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
             }
             else
             {
-                std::string title( "Creating database, step 1 of 2");
+                std::string title( "Creating database, step 1 of 3");
                 std::string desc("Reading file #");
                 char buf[80];
                 sprintf( buf, "%d of %d", i+1, cnt );
@@ -321,7 +321,14 @@ void CreateDatabaseDialog::OnCreateDatabase()
         }
         if( ok )
         {
-            std::string title( "Creating database, step 2 of 2");
+            std::string title( "Creating database, step 2 of 3");
+            std::string desc("Duplicate Removal");
+            ProgressBar progress_bar( title, desc, true, this );
+            ok = BinDbDuplicateRemoval(&progress_bar);
+        }
+        if( ok )
+        {
+            std::string title( "Creating database, step 3 of 3");
             std::string desc("Writing file");
             ProgressBar progress_bar( title, desc, true, this );
             ok = BinDbWriteOutToFile(ofile,&progress_bar);

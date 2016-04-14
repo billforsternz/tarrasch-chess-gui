@@ -18,8 +18,8 @@ private:
     PackedGameBinDb pack;
 
 public:
-    ListableGameBinDb( int game_id, std::string binary_game )
-        : pack(binary_game)
+    ListableGameBinDb( int cb_idx, int game_id, std::string binary_game )
+        : pack( cb_idx, binary_game )
     {
         this->game_id = game_id;
     }

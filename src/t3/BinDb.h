@@ -20,6 +20,7 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
 
 bool TestBinaryBlock();
 void BinDbWriteClear();
+bool BinDbDuplicateRemoval( ProgressBar *pb );
 bool BinDbWriteOutToFile( FILE *ofile, ProgressBar *pb=NULL );
 bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen );
 

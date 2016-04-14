@@ -323,6 +323,7 @@ void Bin2Elo( uint32_t bin, std::string &elo )
 
 struct GameBinary
 {
+    int         id;
     std::string event;
     std::string site;
     std::string white;
@@ -336,6 +337,7 @@ struct GameBinary
     std::string compressed_moves;
     GameBinary
     (
+        int         id,
         std::string event,
         std::string site,
         std::string white,
@@ -349,6 +351,7 @@ struct GameBinary
         std::string compressed_moves
     )
     {
+        this->id               = id;
         this->event            = event;
         this->site             = site;
         this->white            = white;
@@ -363,20 +366,38 @@ struct GameBinary
     }
 };
 
-std::set<std::string> set_player;
-std::set<std::string> set_site;
-std::set<std::string> set_event;
-std::vector<GameBinary> games;
+static std::set<std::string> set_player;
+static std::set<std::string> set_site;
+static std::set<std::string> set_event;
+static std::vector<GameBinary> games;
 
+static int game_counter;
 bool bin_db_append( const char *fen, const char *event, const char *site, const char *date, const char *round,
                   const char *white, const char *black, const char *result, const char *white_elo, const char *black_elo, const char *eco,
                   int nbr_moves, thc::Move *moves )
 {
     bool aborted = false;
-    static int counter;
-    if( (++counter % 10000) == 0 )
-        cprintf( "%d games read from input .pgn so far\n", counter );
+    int id = game_counter;
+    if( (++game_counter % 10000) == 0 )
+        cprintf( "%d games read from input .pgn so far\n", game_counter );
     if( fen )
+        return false;
+    if( nbr_moves < 3 )    // skip 'games' with zero, one or two moves
+        return false;           // not inserted, not error
+    int elo_w = Elo2Bin(white_elo);
+    int elo_b = Elo2Bin(black_elo);
+    if( 0<elo_w && elo_w<2000 && 0<elo_b && elo_b<2000 )
+        // if any elo information, need at least one good player
+        return false;   // not inserted, not error
+    const char *s =  white;
+    while( *s==' ' )
+        s++;
+    if( *s == '\0' )
+        return false;
+    s =  black;
+    while( *s==' ' )
+        s++;
+    if( *s == '\0' )
         return false;
 
     CompressMoves press;
@@ -384,6 +405,7 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
     std::string compressed_moves = press.Compress(v);
     GameBinary gp1
     ( 
+        id,
         std::string(event),
         std::string(site),
         std::string(white),
@@ -392,8 +414,8 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
         Round2Bin(round),
         Result2Bin(result),
         Eco2Bin(eco),
-        Elo2Bin(white_elo),
-        Elo2Bin(black_elo),
+        elo_w,
+        elo_b,
         compressed_moves
     );
     set_event.insert(gp1.event);
@@ -528,6 +550,7 @@ std::map<std::string,int> map_site;
 
 void BinDbWriteClear()
 {
+    game_counter = 0;
     set_player.clear();
     set_site.clear();
     set_event.clear();
@@ -536,6 +559,173 @@ void BinDbWriteClear()
     map_event.clear();
     map_site.clear();
 }
+
+static bool predicate_sorts_by_id( const GameBinary &e1, const GameBinary &e2 )
+{
+    return e1.id < e2.id;
+}
+
+static bool predicate_sorts_by_game_moves( const GameBinary &e1, const GameBinary &e2 )
+{
+    return e1.compressed_moves < e2.compressed_moves;
+}
+
+
+// Split out printable, 2 character or more uppercased tokens from input string
+static void Split( const char *in, std::vector<std::string> &out )
+{
+    bool in_word=true;
+    out.clear();
+    std::string token;
+    while( *in )
+    {
+        char c = *in++;
+        bool delimit = (c<=' ' || c==',' || c=='.' || c==':' || c==';');
+        if( !in_word )
+        {
+            if( !delimit )
+            {
+                in_word = true;
+                token = c;
+            }
+        }
+        else
+        {
+            if( delimit )
+            {
+                in_word = false;
+                if( token.length() > 1 )
+                    out.push_back(token);
+            }
+            else
+            {
+                if( isalpha(c) )
+                    c = toupper(c);
+                token += c;
+            }
+        }
+    }
+    if( in_word && token.length() > 1 )
+        out.push_back(token);
+}
+
+static bool IsPlayerMatch( const char *player, std::vector<std::string> &tokens )
+{
+    std::vector<std::string> tokens2;
+    Split( player, tokens2 );
+    int len=tokens.size();
+    int len2=tokens2.size();
+    for( int i=0; i<len; i++ )
+    {
+        for( int j=0; j<len2; j++ )
+        {
+            if( tokens[i] == tokens2[j] )
+                return true;
+        }
+    }
+    return false;
+}
+
+static bool DupDetect( GameBinary *p1, std::vector<std::string> &white_tokens1, std::vector<std::string> &black_tokens1, GameBinary *p2 )
+{
+    bool white_match = (p1->white==p2->white);
+    if( !white_match )
+        white_match = IsPlayerMatch(p2->white.c_str(),white_tokens1);
+    bool black_match = (p1->black==p2->black);
+    if( !black_match )
+        black_match = IsPlayerMatch(p2->black.c_str(),black_tokens1);
+    bool result_match = (p1->result == p2->result);
+    bool dup = (white_match && black_match && /*date_match &&*/ result_match);
+    return dup;
+}
+
+bool BinDbDuplicateRemoval( ProgressBar *pb )
+{
+    pb->DrawNow();
+    std::sort( games.begin(), games.end(), predicate_sorts_by_game_moves );
+    int nbr_games = games.size();
+    bool in_dups=false;
+    int start;
+    for( int i=0; i<nbr_games-1; i++ )
+    {
+        if( pb->Perfraction( i,nbr_games-1) )
+            return false;   // abort
+        bool more = (i+1<games.size()-1);
+        bool next_matches = (games[i].compressed_moves == games[i+1].compressed_moves);
+        bool eval_dups = (in_dups && !more);
+        if( !in_dups )
+        {
+            if( next_matches )
+            {
+                start = i;
+                in_dups = true;
+            }
+        }
+        else
+        {
+            if( !next_matches )
+            {
+                in_dups = false;
+                eval_dups = true;
+            }
+        }
+
+        // For subranges with identical moves, mark dups with id -1
+        if( eval_dups )
+        {
+            int end = i+1;
+            std::sort( games.begin()+start, games.begin()+end, predicate_sorts_by_id );
+            static int trigger = 3;
+            if( end-start > 3 ) //trigger > 0 )
+            {
+                printf( "Eval Dups in\n" );
+                for( GameBinary *p=&games[start]; p<&games[end]; p++ )
+                {
+                    cprintf( "%d: %s-%s, %s %d ply\n", p->id, p->white.c_str(), p->black.c_str(), p->event.c_str(), p->compressed_moves.size() );
+                }
+            }
+
+            for( GameBinary *p=&games[start]; p<&games[end]; p++ )
+            {
+                if( p->id != -1 )
+                {
+                    std::vector<std::string> white_tokens;
+                    Split(p->white.c_str(),white_tokens);
+                    std::vector<std::string> black_tokens;
+                    Split(p->black.c_str(),black_tokens);
+                    for( GameBinary *q=p+1; q<&games[end]; q++ )
+                    {       
+                        if( q->id!=-1 && DupDetect(p,white_tokens,black_tokens,q) )
+                            q->id = -1;    
+                    }
+                }
+            }
+
+            if( end-start > 3 ) //trigger > 0 )
+            {
+                //trigger--;
+                printf( "Eval Dups out\n" );
+                for( GameBinary *p=&games[start]; p<&games[end]; p++ )
+                {
+                    cprintf( "%d: %s-%s, %s %d ply\n", p->id, p->white.c_str(), p->black.c_str(), p->event.c_str(), p->compressed_moves.size() );
+                }
+            }
+        }
+    }
+    std::sort( games.begin(), games.end(), predicate_sorts_by_id );
+    int nbr_deleted=0;
+    for( int i=0; i<games.size(); i++ )
+    {
+        if( games[i].id == -1 )
+            nbr_deleted++;
+        else
+            break;
+    }
+    cprintf( "Number of duplicates deleted: %d\n", nbr_deleted );
+    games.erase( games.begin(), games.begin()+nbr_deleted );
+    return true;
+}
+
 
 // Return bool okay
 bool BinDbWriteOutToFile( FILE *ofile, ProgressBar *pb )
@@ -654,9 +844,9 @@ bool BinDbWriteOutToFile( FILE *ofile, ProgressBar *pb )
     return true;
 }
 
-std::vector<std::string> players;
-std::vector<std::string> events;
-std::vector<std::string> sites;
+static std::vector<std::string> players;
+static std::vector<std::string> events;
+static std::vector<std::string> sites;
 
 void ReadStrings( FILE *fin, int nbr_strings, std::vector<std::string> &strings )
 {
@@ -682,7 +872,8 @@ void ReadStrings( FILE *fin, int nbr_strings, std::vector<std::string> &strings 
 
 void BinDbLoadAllGames(  std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load )
 {
-    PackedGameBinDbCommonData& common = PackedGameBinDb::GetCommonData();
+    int cb_idx = PackedGameBinDb::AllocateNewControlBlock();
+    PackedGameBinDbControlBlock& common = PackedGameBinDb::GetControlBlock(cb_idx);
     FileHeader fh;
     FILE *fin = bin_file;   // later allow this to be closed!
     rewind(fin);
@@ -724,7 +915,7 @@ void BinDbLoadAllGames(  std::vector< smart_ptr<ListableGame> > &mega_cache, int
         }
         if( ch == EOF )
             cprintf( "Whoops\n" );
-        ListableGameBinDb info( i, blob );
+        ListableGameBinDb info( cb_idx, i, blob );
         make_smart_ptr( ListableGameBinDb, new_info, info );
         mega_cache.push_back( std::move(new_info) );
         background_load_permill = (i*1000) / (game_count?game_count:1);

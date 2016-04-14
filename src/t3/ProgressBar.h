@@ -121,6 +121,19 @@ public:
         progress = NULL;
     }
 
+    void DrawNow()
+    {
+        if( !progress )
+        {
+            progress = new wxProgressDialog( title, desc, 1000, parent,
+                                wxPD_APP_MODAL+
+                                wxPD_AUTO_HIDE+
+                                wxPD_ELAPSED_TIME+
+                                (abortable ? wxPD_CAN_ABORT : 0)+
+                                wxPD_ESTIMATED_TIME );
+        }
+    }
+
     bool ProgressFile() // return true if abort
     {
         if( ifile )

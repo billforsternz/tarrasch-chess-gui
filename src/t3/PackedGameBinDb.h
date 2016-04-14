@@ -10,7 +10,7 @@
 #include "CompactGame.h"
 #include "BinaryBlock.h"
 
-struct PackedGameBinDbCommonData
+struct PackedGameBinDbControlBlock
 {
     BinaryBlock bb;
     std::vector<std::string> players;
@@ -18,16 +18,21 @@ struct PackedGameBinDbCommonData
     std::vector<std::string> sites;
 };
 
+extern std::vector<PackedGameBinDbControlBlock> bin_db_control_blocks;
+
 class PackedGameBinDb
 {
 private:
+    uint8_t     cb_idx;     // control block idx
     std::string fields;
     
 public:
-    static PackedGameBinDbCommonData& GetCommonData();
+    static int AllocateNewControlBlock();
+    static PackedGameBinDbControlBlock& GetControlBlock(int cb_idx);
+
     bool Empty() { return fields.size() == 0; }
     PackedGameBinDb() {}
-    PackedGameBinDb( std::string fields ) { this->fields = fields; }
+    PackedGameBinDb( uint8_t cb_idx, std::string fields ) { this->cb_idx=cb_idx; this->fields=fields; }
 
     void Pack( CompactGame &pact );
     void Pack( Roster &r, std::string &blob );
@@ -35,7 +40,7 @@ public:
     void Unpack( Roster &r, std::string &blob );
     void Unpack( Roster &r );
     void Unpack( std::string &blob );
-	int WhiteBin() { return GetCommonData().bb.Read(2,&fields[0]); }
+	int WhiteBin() { return bin_db_control_blocks[cb_idx].bb.Read(2,&fields[0]); }
     const char *White();
     const char *Black();
     const char *Event();
