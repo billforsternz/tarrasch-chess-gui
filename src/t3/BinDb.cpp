@@ -321,23 +321,16 @@ void Bin2Elo( uint32_t bin, std::string &elo )
     elo = buf;
 }
 
-struct GameBinary
+// GameBinary stores the game info temporarily as we build databases - make it
+//  a ListableGame so we can temporarily combine GameBinary objects in the same
+//  array as other games when we are appending to a database
+class GameBinary : public ListableGame
 {
-    int         id;
-    std::string event;
-    std::string site;
-    std::string white;
-    std::string black;
-    uint32_t    date;
-    uint16_t    round;
-    uint8_t     result;
-    uint16_t    eco;
-    uint16_t    white_elo;
-    uint16_t    black_elo;
-    std::string compressed_moves;
+public:
+    int         game_id;
     GameBinary
     (
-        int         id,
+        int         game_id,
         std::string event,
         std::string site,
         std::string white,
@@ -351,7 +344,7 @@ struct GameBinary
         std::string compressed_moves
     )
     {
-        this->id               = id;
+        this->game_id          = game_id;
         this->event            = event;
         this->site             = site;
         this->white            = white;
@@ -364,6 +357,30 @@ struct GameBinary
         this->black_elo        = black_elo;
         this->compressed_moves = compressed_moves;
     }
+    virtual const char *White()     { return white.c_str();   }
+    virtual const char *Black()     { return black.c_str();   }
+    virtual const char *Event()     { return event.c_str();   }
+    virtual const char *Site()      { return site.c_str();    }
+    virtual int ResultBin()         { return result;   }
+    virtual int RoundBin()          { return round;   }
+    virtual int DateBin()           { return date;     }
+    virtual int EcoBin()            { return eco;      }
+    virtual int WhiteEloBin()       { return white_elo; }
+    virtual int BlackEloBin()       { return black_elo; }
+    virtual const char *CompressedMoves() const {  return compressed_moves.c_str(); }
+    virtual const std::string &RefCompressedMoves() const { return compressed_moves; }
+private:
+    std::string white;
+    std::string black;
+    std::string site;
+    std::string event;
+    uint32_t    date;
+    uint16_t    round;
+    uint8_t     result;
+    uint16_t    eco;
+    uint16_t    white_elo;
+    uint16_t    black_elo;
+    std::string compressed_moves;
 };
 
 static std::set<std::string> set_player;
@@ -403,13 +420,17 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
     CompressMoves press;
     std::vector<thc::Move> v(moves,moves+nbr_moves);
     std::string compressed_moves = press.Compress(v);
-    GameBinary gp1
+    std::string sevent(event);
+    std::string ssite(site);
+    std::string swhite(white);
+    std::string sblack(black);
+    GameBinary gb
     ( 
         id,
-        std::string(event),
-        std::string(site),
-        std::string(white),
-        std::string(black),
+        sevent,
+        ssite,
+        swhite,
+        sblack,
         Date2Bin(date),
         Round2Bin(round),
         Result2Bin(result),
@@ -418,11 +439,11 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
         elo_b,
         compressed_moves
     );
-    set_event.insert(gp1.event);
-    set_site.insert(gp1.site);
-    set_player.insert(gp1.white);
-    set_player.insert(gp1.black);
-    games.push_back( gp1 );
+    set_event.insert(sevent);
+    set_site.insert(ssite);
+    set_player.insert(swhite);
+    set_player.insert(sblack);
+    games.push_back( gb );
     return aborted;
 }
 
@@ -562,14 +583,13 @@ void BinDbWriteClear()
 
 static bool predicate_sorts_by_id( const GameBinary &e1, const GameBinary &e2 )
 {
-    return e1.id < e2.id;
+    return e1.game_id < e2.game_id;
 }
 
 static bool predicate_sorts_by_game_moves( const GameBinary &e1, const GameBinary &e2 )
 {
-    return e1.compressed_moves < e2.compressed_moves;
+    return e1.RefCompressedMoves() < e2.RefCompressedMoves();
 }
-
 
 // Split out printable, 2 character or more uppercased tokens from input string
 static void Split( const char *in, std::vector<std::string> &out )
@@ -628,13 +648,13 @@ static bool IsPlayerMatch( const char *player, std::vector<std::string> &tokens 
 
 static bool DupDetect( GameBinary *p1, std::vector<std::string> &white_tokens1, std::vector<std::string> &black_tokens1, GameBinary *p2 )
 {
-    bool white_match = (p1->white==p2->white);
+    bool white_match = (0 == strcmp(p1->White(),p2->White()) );
     if( !white_match )
-        white_match = IsPlayerMatch(p2->white.c_str(),white_tokens1);
-    bool black_match = (p1->black==p2->black);
+        white_match = IsPlayerMatch(p2->White(),white_tokens1);
+    bool black_match = (0 == strcmp(p1->Black(),p2->Black()) );
     if( !black_match )
-        black_match = IsPlayerMatch(p2->black.c_str(),black_tokens1);
-    bool result_match = (p1->result == p2->result);
+        black_match = IsPlayerMatch(p2->Black(),black_tokens1);
+    bool result_match = (p1->ResultBin() == p2->ResultBin() );
     bool dup = (white_match && black_match && /*date_match &&*/ result_match);
     return dup;
 }
@@ -651,7 +671,7 @@ bool BinDbDuplicateRemoval( ProgressBar *pb )
         if( pb->Perfraction( i,nbr_games-1) )
             return false;   // abort
         bool more = (i+1<games.size()-1);
-        bool next_matches = (games[i].compressed_moves == games[i+1].compressed_moves);
+        bool next_matches = (0 == strcmp(games[i].CompressedMoves(),games[i+1].CompressedMoves()) );
         bool eval_dups = (in_dups && !more);
         if( !in_dups )
         {
@@ -681,22 +701,22 @@ bool BinDbDuplicateRemoval( ProgressBar *pb )
                 printf( "Eval Dups in\n" );
                 for( GameBinary *p=&games[start]; p<&games[end]; p++ )
                 {
-                    cprintf( "%d: %s-%s, %s %d ply\n", p->id, p->white.c_str(), p->black.c_str(), p->event.c_str(), p->compressed_moves.size() );
+                    cprintf( "%d: %s-%s, %s %d ply\n", p->game_id, p->White(), p->Black(), p->Event(), strlen(p->CompressedMoves()) );
                 }
             }
 
             for( GameBinary *p=&games[start]; p<&games[end]; p++ )
             {
-                if( p->id != -1 )
+                if( p->game_id != -1 )
                 {
                     std::vector<std::string> white_tokens;
-                    Split(p->white.c_str(),white_tokens);
+                    Split(p->White(),white_tokens);
                     std::vector<std::string> black_tokens;
-                    Split(p->black.c_str(),black_tokens);
+                    Split(p->Black(),black_tokens);
                     for( GameBinary *q=p+1; q<&games[end]; q++ )
                     {       
-                        if( q->id!=-1 && DupDetect(p,white_tokens,black_tokens,q) )
-                            q->id = -1;    
+                        if( q->game_id!=-1 && DupDetect(p,white_tokens,black_tokens,q) )
+                            q->game_id = -1;    
                     }
                 }
             }
@@ -707,7 +727,7 @@ bool BinDbDuplicateRemoval( ProgressBar *pb )
                 printf( "Eval Dups out\n" );
                 for( GameBinary *p=&games[start]; p<&games[end]; p++ )
                 {
-                    cprintf( "%d: %s-%s, %s %d ply\n", p->id, p->white.c_str(), p->black.c_str(), p->event.c_str(), p->compressed_moves.size() );
+                    cprintf( "%d: %s-%s, %s %d ply\n", p->game_id, p->White(), p->Black(), p->Event(), strlen(p->CompressedMoves()) );
                 }
             }
         }
@@ -716,7 +736,7 @@ bool BinDbDuplicateRemoval( ProgressBar *pb )
     int nbr_deleted=0;
     for( int i=0; i<games.size(); i++ )
     {
-        if( games[i].id == -1 )
+        if( games[i].game_id == -1 )
             nbr_deleted++;
         else
             break;
@@ -807,31 +827,23 @@ bool BinDbWriteOutToFile( FILE *ofile, ProgressBar *pb )
     for( int i=0; i<fh.nbr_games; i++ )
     {
         GameBinary *ptr = &games[i];
-        //std::set<std::string>::iterator it = set_player.find(ptr->white);
-        //int white_offset = std::distance(player_begin,it);
-        int white_offset = map_player[ptr->white];
-        //it = set_player.find(ptr->black);
-        //int black_offset = std::distance(player_begin,it);
-        int black_offset = map_player[ptr->black];
-        //it = set_event.find(ptr->event);
-        //int event_offset = std::distance(event_begin,it);
-        int event_offset = map_event[ptr->event];
-        //it = set_site.find(ptr->site);
-        //int site_offset = std::distance(site_begin,it);
-        int site_offset = map_site[ptr->site];
-        bb.Write(0,event_offset);       // Event
-        bb.Write(1,site_offset);        // Site
-        bb.Write(2,white_offset);       // White
-        bb.Write(3,black_offset);       // Black
-        bb.Write(4,ptr->date);          // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
-        bb.Write(5,ptr->round);         // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), bb=board(0-1023)
-        bb.Write(6,ptr->eco);           // ECO For now 500 codes (9 bits) (A..E)(00..99)
-        bb.Write(7,ptr->result);        // Result (2 bits)
-        bb.Write(8,ptr->white_elo);     // WhiteElo 12 bits (range 0..4095)                                                                 
-        bb.Write(9,ptr->black_elo);     // BlackElo
+        int white_offset = map_player[std::string(ptr->White())];
+        int black_offset = map_player[std::string(ptr->Black())];
+        int event_offset = map_event[std::string(ptr->Event())];
+        int site_offset = map_site[std::string(ptr->Site())];
+        bb.Write(0,event_offset);           // Event
+        bb.Write(1,site_offset);            // Site
+        bb.Write(2,white_offset);           // White
+        bb.Write(3,black_offset);           // Black
+        bb.Write(4,ptr->DateBin());         // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
+        bb.Write(5,ptr->RoundBin());        // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), bb=board(0-1023)
+        bb.Write(6,ptr->EcoBin());          // ECO For now 500 codes (9 bits) (A..E)(00..99)
+        bb.Write(7,ptr->ResultBin());       // Result (2 bits)
+        bb.Write(8,ptr->WhiteEloBin());     // WhiteElo 12 bits (range 0..4095)                                                                 
+        bb.Write(9,ptr->BlackEloBin());     // BlackElo
         fwrite( bb.GetPtr(), bb_sz, 1, ofile );
-        int n = ptr->compressed_moves.length() + 1;
-        const char *cstr = ptr->compressed_moves.c_str();
+        int n = strlen(ptr->CompressedMoves()) + 1;
+        const char *cstr = ptr->CompressedMoves();
         fwrite( cstr, n, 1, ofile );
         if( (i % 10000) == 0 )
             cprintf( "%d games written to compressed file so far\n", i );

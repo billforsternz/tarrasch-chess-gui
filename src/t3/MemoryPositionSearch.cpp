@@ -1668,7 +1668,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
     return false;
 }
 
-bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last )          // semi fast
+bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( const std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last )          // semi fast
 {
     bool target_white = search_position.white;  // searching for position with white to move?
     int black_count=16;
