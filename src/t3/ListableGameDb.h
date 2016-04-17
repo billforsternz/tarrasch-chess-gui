@@ -107,7 +107,7 @@ public:
         GetCompactGame( pact );
         return pact.moves;
     }
-    virtual std::string &RefCompressedMoves()
+    virtual const std::string &RefCompressedMoves()
     {
         static std::string blob;
         blob.clear();

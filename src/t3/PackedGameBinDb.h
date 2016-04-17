@@ -40,7 +40,6 @@ public:
     void Unpack( Roster &r, std::string &blob );
     void Unpack( Roster &r );
     void Unpack( std::string &blob );
-	int WhiteBin() { return bin_db_control_blocks[cb_idx].bb.Read(2,&fields[0]); }
     const char *White();
     const char *Black();
     const char *Event();
@@ -52,7 +51,22 @@ public:
     const char *WhiteElo();
     const char *BlackElo();
     const char *Fen() { return NULL; }
-    const char *Blob();
+    const char *Blob() const
+    {
+        PackedGameBinDbControlBlock *cb = &bin_db_control_blocks[cb_idx];
+        int sz = cb->bb.FrozenSize();
+        return fields.c_str() + sz;
+    }
+	int EventBin()    { return bin_db_control_blocks[cb_idx].bb.Read(0,&fields[0]); }
+	int SiteBin()     { return bin_db_control_blocks[cb_idx].bb.Read(1,&fields[0]); }
+	int WhiteBin()    { return bin_db_control_blocks[cb_idx].bb.Read(2,&fields[0]); }
+	int BlackBin()    { return bin_db_control_blocks[cb_idx].bb.Read(3,&fields[0]); }
+    int DateBin()     { return bin_db_control_blocks[cb_idx].bb.Read(4,&fields[0]); }
+    int RoundBin()    { return bin_db_control_blocks[cb_idx].bb.Read(5,&fields[0]); }
+    int EcoBin()      { return bin_db_control_blocks[cb_idx].bb.Read(6,&fields[0]); }
+    int ResultBin()   { return bin_db_control_blocks[cb_idx].bb.Read(7,&fields[0]); }
+    int WhiteEloBin() { return bin_db_control_blocks[cb_idx].bb.Read(8,&fields[0]); }
+    int BlackEloBin() { return bin_db_control_blocks[cb_idx].bb.Read(9,&fields[0]); }
 };
 
 #endif // PACKED_GAME_BIN_DB_H

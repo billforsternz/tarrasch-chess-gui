@@ -4,6 +4,7 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2015, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
+#define _CRT_SECURE_NO_DEPRECATE
 #include "GameDocument.h"
 
 std::string CompactGame::Description()

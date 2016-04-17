@@ -185,8 +185,3 @@ const char *PackedGameBinDb::BlackElo()
     return sblack_elo.c_str();
 }
 
-const char *PackedGameBinDb::Blob()
-{
-    PackedGameBinDbControlBlock *cb = &bin_db_control_blocks[cb_idx];
-    return &fields[ cb->bb.FrozenSize() ];
-}

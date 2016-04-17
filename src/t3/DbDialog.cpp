@@ -695,8 +695,7 @@ void DbDialog::StatsCalculate()
         gc_db_displayed_games.gds.push_back(db_games[idx]);
         unsigned short offset_first = found_games[i].offset_first;
         unsigned short offset_last  = found_games[i].offset_last;
-        //Roster r         = db_games[idx]->RefRoster();
-        std::string blob = db_games[idx]->RefCompressedMoves();
+        std::string blob = db_games[idx]->CompressedMoves();
     
         // Search for a match to this game
         bool new_transposition_found=false;

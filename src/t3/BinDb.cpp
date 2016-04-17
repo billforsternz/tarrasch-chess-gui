@@ -15,12 +15,93 @@
 #include "PgnRead.h"
 #include "CompactGame.h"
 #include "PackedGameBinDb.h"
+#include "ListableGameBinDb.h"
 #include "BinDb.h"
 
 static FILE *bin_file;  //temp
 
+// GameBinary stores the game info temporarily as we build databases - make it
+//  a ListableGame so we can temporarily combine GameBinary objects in the same
+//  array as other games when we are appending to a database
+class GameBinary : public ListableGameBinDb
+{
+public:
+    GameBinary() {}
+    GameBinary
+    (
+        int         game_id,
+        std::string event,
+        std::string site,
+        std::string white,
+        std::string black,
+        uint32_t    date,
+        uint16_t    round,
+        uint8_t     result,
+        uint16_t    eco,
+        uint16_t    white_elo,
+        uint16_t    black_elo,
+        std::string compressed_moves
+    )
+    {
+        this->game_id          = game_id;
+        this->event            = event;
+        this->site             = site;
+        this->white            = white;
+        this->black            = black;
+        this->date             = date;
+        this->round            = round;
+        this->result           = result;
+        this->eco              = eco;
+        this->white_elo        = white_elo;
+        this->black_elo        = black_elo;
+        this->compressed_moves = compressed_moves;
+    }
+    virtual const char *White()     { return white.c_str();   }
+    virtual const char *Black()     { return black.c_str();   }
+    virtual const char *Event()     { return event.c_str();   }
+    virtual const char *Site()      { return site.c_str();    }
+    virtual int ResultBin()         { return result;   }
+    virtual int RoundBin()          { return round;   }
+    virtual int DateBin()           { return date;     }
+    virtual int EcoBin()            { return eco;      }
+    virtual int WhiteEloBin()       { return white_elo; }
+    virtual int BlackEloBin()       { return black_elo; }
+    virtual const char *CompressedMoves() {  return compressed_moves.c_str(); }
+    virtual const std::string &RefCompressedMoves() { return compressed_moves; }
+private:
+    std::string white;
+    std::string black;
+    std::string site;
+    std::string event;
+    uint32_t    date;
+    uint16_t    round;
+    uint8_t     result;
+    uint16_t    eco;
+    uint16_t    white_elo;
+    uint16_t    black_elo;
+    std::string compressed_moves;
+};
+
+static bool predicate_sorts_by_id( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 )
+{
+    return e1->game_id < e2->game_id;
+}
+
+static bool predicate_sorts_by_game_moves( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 )
+{
+    return e1->RefCompressedMoves() < e2->RefCompressedMoves();
+}
+
+
 bool BinDbOpen( const char *db_file )
 {
+    /*ListableGame g1;
+    ListableGameBinDb g2;
+    GameBinary g3;
+    g1.RefCompressedMoves();
+    g2.RefCompressedMoves();
+    g3.RefCompressedMoves();
+    predicate_sorts_by_game_moves( g2, g3 ); */
     bool is_bin_db=false;
     if( bin_file )
     {
@@ -38,6 +119,15 @@ bool BinDbOpen( const char *db_file )
         is_bin_db = !sql_file;    // for now we'll just assume if it's not SQl it *is* our binary format
     }
     return is_bin_db;
+}
+
+void BinDbClose()
+{
+    if( bin_file )
+    {
+        fclose(bin_file);
+        bin_file = NULL;
+    }
 }
 
 void BinDbGetDatabaseVersion( int &version )
@@ -189,6 +279,8 @@ void Bin2Date( uint32_t bin, std::string &date )
 // for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), bb=board(0-1023)
 uint16_t Round2Bin( const char *round )
 {
+    if( !round )
+        return 0;
     uint16_t rnd=0,brd=0,bin=0;
     int state=0;
     while( *round && state<2 )
@@ -243,6 +335,8 @@ void Bin2Round( uint32_t bin, std::string &round )
 // For now 500 codes (9 bits) (A..E)(00..99), 0 (or A00) if unknown
 uint16_t Eco2Bin( const char *eco )
 {
+    if( !eco )
+        return 0;
     uint16_t bin=0;
     if( 'A'<=eco[0] && eco[0]<='E' &&
         '0'<=eco[1] && eco[1]<='9' &&
@@ -270,6 +364,8 @@ void Bin2Eco( uint32_t bin, std::string &eco )
 // 4 codes (2 bits)
 uint8_t Result2Bin( const char *result )
 {
+    if( !result )
+        return 0;
     uint8_t bin=0;
     if( 0 == strcmp(result,"*") )
         bin = 0;
@@ -298,6 +394,8 @@ void Bin2Result( uint32_t bin, std::string &result )
 // 12 bits (range 0..4095)
 uint16_t Elo2Bin( const char *elo )
 {
+    if( !elo )
+        return 0;
     uint16_t bin=0;
     bin = atoi(elo);
     if( bin > 4095 )
@@ -321,72 +419,10 @@ void Bin2Elo( uint32_t bin, std::string &elo )
     elo = buf;
 }
 
-// GameBinary stores the game info temporarily as we build databases - make it
-//  a ListableGame so we can temporarily combine GameBinary objects in the same
-//  array as other games when we are appending to a database
-class GameBinary : public ListableGame
-{
-public:
-    int         game_id;
-    GameBinary
-    (
-        int         game_id,
-        std::string event,
-        std::string site,
-        std::string white,
-        std::string black,
-        uint32_t    date,
-        uint16_t    round,
-        uint8_t     result,
-        uint16_t    eco,
-        uint16_t    white_elo,
-        uint16_t    black_elo,
-        std::string compressed_moves
-    )
-    {
-        this->game_id          = game_id;
-        this->event            = event;
-        this->site             = site;
-        this->white            = white;
-        this->black            = black;
-        this->date             = date;
-        this->round            = round;
-        this->result           = result;
-        this->eco              = eco;
-        this->white_elo        = white_elo;
-        this->black_elo        = black_elo;
-        this->compressed_moves = compressed_moves;
-    }
-    virtual const char *White()     { return white.c_str();   }
-    virtual const char *Black()     { return black.c_str();   }
-    virtual const char *Event()     { return event.c_str();   }
-    virtual const char *Site()      { return site.c_str();    }
-    virtual int ResultBin()         { return result;   }
-    virtual int RoundBin()          { return round;   }
-    virtual int DateBin()           { return date;     }
-    virtual int EcoBin()            { return eco;      }
-    virtual int WhiteEloBin()       { return white_elo; }
-    virtual int BlackEloBin()       { return black_elo; }
-    virtual const char *CompressedMoves() const {  return compressed_moves.c_str(); }
-    virtual const std::string &RefCompressedMoves() const { return compressed_moves; }
-private:
-    std::string white;
-    std::string black;
-    std::string site;
-    std::string event;
-    uint32_t    date;
-    uint16_t    round;
-    uint8_t     result;
-    uint16_t    eco;
-    uint16_t    white_elo;
-    uint16_t    black_elo;
-    std::string compressed_moves;
-};
-
 static std::set<std::string> set_player;
 static std::set<std::string> set_site;
 static std::set<std::string> set_event;
-static std::vector<GameBinary> games;
+static std::vector< smart_ptr<ListableGame> > games;
 
 static int game_counter;
 bool bin_db_append( const char *fen, const char *event, const char *site, const char *date, const char *round,
@@ -443,7 +479,8 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
     set_site.insert(ssite);
     set_player.insert(swhite);
     set_player.insert(sblack);
-    games.push_back( gb );
+    make_smart_ptr( GameBinary, new_gb, gb );
+    games.push_back( std::move(new_gb) );
     return aborted;
 }
 
@@ -581,16 +618,6 @@ void BinDbWriteClear()
     map_site.clear();
 }
 
-static bool predicate_sorts_by_id( const GameBinary &e1, const GameBinary &e2 )
-{
-    return e1.game_id < e2.game_id;
-}
-
-static bool predicate_sorts_by_game_moves( const GameBinary &e1, const GameBinary &e2 )
-{
-    return e1.RefCompressedMoves() < e2.RefCompressedMoves();
-}
-
 // Split out printable, 2 character or more uppercased tokens from input string
 static void Split( const char *in, std::vector<std::string> &out )
 {
@@ -646,7 +673,7 @@ static bool IsPlayerMatch( const char *player, std::vector<std::string> &tokens 
     return false;
 }
 
-static bool DupDetect( GameBinary *p1, std::vector<std::string> &white_tokens1, std::vector<std::string> &black_tokens1, GameBinary *p2 )
+static bool DupDetect( smart_ptr<ListableGame> p1, std::vector<std::string> &white_tokens1, std::vector<std::string> &black_tokens1, smart_ptr<ListableGame> p2 )
 {
     bool white_match = (0 == strcmp(p1->White(),p2->White()) );
     if( !white_match )
@@ -671,7 +698,7 @@ bool BinDbDuplicateRemoval( ProgressBar *pb )
         if( pb->Perfraction( i,nbr_games-1) )
             return false;   // abort
         bool more = (i+1<games.size()-1);
-        bool next_matches = (0 == strcmp(games[i].CompressedMoves(),games[i+1].CompressedMoves()) );
+        bool next_matches = (0 == strcmp(games[i]->CompressedMoves(),games[i+1]->CompressedMoves()) );
         bool eval_dups = (in_dups && !more);
         if( !in_dups )
         {
@@ -696,37 +723,41 @@ bool BinDbDuplicateRemoval( ProgressBar *pb )
             int end = i+1;
             std::sort( games.begin()+start, games.begin()+end, predicate_sorts_by_id );
             static int trigger = 3;
-            if( end-start > 3 ) //trigger > 0 )
+            if( false ) //end-start > 8 ) //trigger > 0 )
             {
                 printf( "Eval Dups in\n" );
-                for( GameBinary *p=&games[start]; p<&games[end]; p++ )
+                for( int idx=start; idx<end; idx++ )
                 {
+                    smart_ptr<ListableGame> p = games[idx];
                     cprintf( "%d: %s-%s, %s %d ply\n", p->game_id, p->White(), p->Black(), p->Event(), strlen(p->CompressedMoves()) );
                 }
             }
 
-            for( GameBinary *p=&games[start]; p<&games[end]; p++ )
+            for( int idx=start; idx<end; idx++ )
             {
+                smart_ptr<ListableGame> p = games[idx];
                 if( p->game_id != -1 )
                 {
                     std::vector<std::string> white_tokens;
                     Split(p->White(),white_tokens);
                     std::vector<std::string> black_tokens;
                     Split(p->Black(),black_tokens);
-                    for( GameBinary *q=p+1; q<&games[end]; q++ )
-                    {       
+                    for( int j=idx+1; j<end; j++ )
+                    {
+                        smart_ptr<ListableGame> q = games[j];
                         if( q->game_id!=-1 && DupDetect(p,white_tokens,black_tokens,q) )
                             q->game_id = -1;    
                     }
                 }
             }
 
-            if( end-start > 3 ) //trigger > 0 )
+            if( false ) //end-start > 8 ) //trigger > 0 )
             {
                 //trigger--;
                 printf( "Eval Dups out\n" );
-                for( GameBinary *p=&games[start]; p<&games[end]; p++ )
+                for( int idx=start; idx<end; idx++ )
                 {
+                    smart_ptr<ListableGame> p = games[idx];
                     cprintf( "%d: %s-%s, %s %d ply\n", p->game_id, p->White(), p->Black(), p->Event(), strlen(p->CompressedMoves()) );
                 }
             }
@@ -736,7 +767,7 @@ bool BinDbDuplicateRemoval( ProgressBar *pb )
     int nbr_deleted=0;
     for( int i=0; i<games.size(); i++ )
     {
-        if( games[i].game_id == -1 )
+        if( games[i].get()->game_id == -1 )
             nbr_deleted++;
         else
             break;
@@ -826,7 +857,7 @@ bool BinDbWriteOutToFile( FILE *ofile, ProgressBar *pb )
     cprintf( "bb_sz=%d\n", bb_sz );
     for( int i=0; i<fh.nbr_games; i++ )
     {
-        GameBinary *ptr = &games[i];
+        smart_ptr<ListableGame> ptr = games[i];
         int white_offset = map_player[std::string(ptr->White())];
         int black_offset = map_player[std::string(ptr->Black())];
         int event_offset = map_event[std::string(ptr->Event())];
@@ -882,7 +913,7 @@ void ReadStrings( FILE *fin, int nbr_strings, std::vector<std::string> &strings 
         cprintf( "%s\n", strings[strings.size()-i].c_str() ); */
 }
 
-void BinDbLoadAllGames(  std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load )
+void BinDbLoadAllGames(  std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb )
 {
     int cb_idx = PackedGameBinDb::AllocateNewControlBlock();
     PackedGameBinDbControlBlock& common = PackedGameBinDb::GetControlBlock(cb_idx);
@@ -916,6 +947,8 @@ void BinDbLoadAllGames(  std::vector< smart_ptr<ListableGame> > &mega_cache, int
     int nbr_promotion_games=0;  // later
     for( int i=0; i<game_count && !kill_background_load; i++ )
     {
+        if( pb )
+            pb->Perfraction(i,game_count);
         char buf[sizeof(common.bb)];
         fread( buf, bb_sz, 1, fin );
         std::string blob(buf,bb_sz);

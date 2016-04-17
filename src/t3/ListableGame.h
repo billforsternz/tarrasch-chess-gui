@@ -12,6 +12,7 @@
 #include "thc.h"
 #include "CompressMoves.h"
 #include "CompactGame.h"
+#include "BinaryConversions.h"
 
 #define smart_ptr std::shared_ptr //std::unique_ptr
 #define make_smart_ptr(T,to,from) smart_ptr<T> to; to.reset(new T(from))
@@ -38,7 +39,6 @@ public:
     virtual void SetGameBeingEdited( uint32_t game_being_edited ) {}
     virtual uint32_t GetGameBeingEdited() { return 0; }
     virtual void *LoadIntoMemory( void *context, bool end )  {return 0;}
-	virtual int         WhiteBin() {return 0;}
     virtual const char *White() {return "";}
     virtual const char *Black() {return "";}
     virtual const char *Event() {return "";}
@@ -51,11 +51,21 @@ public:
     virtual const char *BlackElo() {return "";}
     virtual const char *Fen() {return "";}
     virtual const char *CompressedMoves() {return "";}
+	virtual int         WhiteBin() {return 0;}
+    virtual int         BlackBin() {return 0;}
+    virtual int         EventBin() {return 0;}
+    virtual int         SiteBin() {return 0;}
+    virtual int         ResultBin() {return Result2Bin(Result());}
+    virtual int         RoundBin() {return Round2Bin(Round());}
+    virtual int         DateBin() {return Date2Bin(Date());}
+    virtual int         EcoBin() {return Eco2Bin(Eco());}
+    virtual int         WhiteEloBin() {return Elo2Bin(WhiteElo());}
+    virtual int         BlackEloBin() {return Elo2Bin(BlackElo());}
     
     // High performance
     virtual Roster                  &RefRoster()          { static Roster r; return r; }
     virtual std::vector<thc::Move>  &RefMoves()           { static std::vector<thc::Move> moves; return moves; }
-    virtual const std::string &RefCompressedMoves() const       { static std::string moves; return moves; }
+    virtual const std::string &RefCompressedMoves()       { static std::string moves; return moves; }
     virtual thc::ChessPosition      &RefStartPosition()   { static thc::ChessPosition cp; return cp; }
 
     // For editing the roster
@@ -73,6 +83,7 @@ public:
 private:
     int transpo_nbr;                    // it would be nice to move this into ListableGameDb.h
 public:
+    int game_id;
     uint8_t game_attributes;            // maybe this too - at the moment this is effectively bool game_has_promotion;
     virtual void SetAttributes( const char *blob, int len )
     {

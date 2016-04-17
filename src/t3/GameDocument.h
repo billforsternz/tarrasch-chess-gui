@@ -45,7 +45,7 @@ public:
         return moves;
     }
     std::string blob_recalculated_on_request;
-    virtual std::string &RefCompressedMoves()
+    virtual const std::string &RefCompressedMoves()
     {
         blob_recalculated_on_request.clear();
         CompressMoves press;

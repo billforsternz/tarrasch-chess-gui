@@ -14,10 +14,10 @@
 class ListableGameBinDb : public ListableGame
 {
 private:
-    int game_id;
     PackedGameBinDb pack;
 
 public:
+    ListableGameBinDb() {}
     ListableGameBinDb( int cb_idx, int game_id, std::string binary_game )
         : pack( cb_idx, binary_game )
     {
@@ -66,13 +66,6 @@ public:
         GetCompactGame( pact );
         return pact.moves;
     }
-    virtual std::string &RefCompressedMoves()
-    {
-        static std::string blob;
-        blob.clear();
-        pack.Unpack(blob);
-        return blob;
-    }
     virtual thc::ChessPosition &RefStartPosition()
     {
         static CompactGame pact;
@@ -81,7 +74,6 @@ public:
     }
     
     // For now at least, the following are used for fast sorting on column headings
-	virtual int WhiteBin()			{ return pack.WhiteBin(); }
     virtual const char *White()     { return pack.White();    }
     virtual const char *Black()     { return pack.Black();    }
     virtual const char *Event()     { return pack.Event();    }
@@ -94,9 +86,21 @@ public:
     virtual const char *BlackElo()  { return pack.BlackElo(); }
     virtual const char *Fen()       { return pack.Fen();      }
     virtual const char *CompressedMoves() {return pack.Blob();  }
+	virtual int WhiteBin()			{ return pack.WhiteBin(); }
+    virtual int BlackBin()          { return pack.BlackBin(); }
+    virtual int EventBin()          { return pack.EventBin(); }
+    virtual int SiteBin()           { return pack.SiteBin(); }
+    virtual int ResultBin()         { return pack.ResultBin(); }
+    virtual int RoundBin()          { return pack.RoundBin(); }
+    virtual int DateBin()           { return pack.DateBin(); }
+    virtual int EcoBin()            { return pack.EcoBin(); }
+    virtual int WhiteEloBin()       { return pack.WhiteEloBin(); }
+    virtual int BlackEloBin()       { return pack.BlackEloBin(); }
     
     virtual bool IsDbGameOnly() { return true; }   // a horrible kludge
     virtual bool IsInMemory()   { return true; }
+    virtual const std::string &RefCompressedMoves()  {static std::string s=pack.Blob(); cprintf("WARNING: Try to eliminate this static string pattern\n"); return s;}
+                                                      // note that simply returning the const char * pack.Blob() compiles but not only doesn't work properly, it has insidious effects
 };
 
 
