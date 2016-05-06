@@ -1533,7 +1533,8 @@ bool Database::LoadAllGamesForPositionSearchBinDb( std::vector< smart_ptr<Listab
     kill_background_load = false;
     mega_cache.clear();
     cache.clear();
-    BinDbLoadAllGames( mega_cache, background_load_permill, kill_background_load );
+    BinDbLoadAllGames( false, mega_cache, background_load_permill, kill_background_load );
+    BinDbClose();
     int cache_nbr = mega_cache.size();
     cprintf( "Number of games = %d, is_pristine=%s\n", cache_nbr, is_pristine?"true":"false" );
     if( 2 < cache_nbr )

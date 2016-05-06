@@ -6,6 +6,7 @@
  ****************************************************************************/
 #ifndef BINDB_H
 #define BINDB_H
+#include <vector>
 #include "Appdefs.h"
 #include "ProgressBar.h"
 #include "BinaryConversions.h"
@@ -14,7 +15,8 @@
 bool BinDbOpen( const char *db_file );
 void BinDbClose();
 void BinDbGetDatabaseVersion( int &version );
-void BinDbLoadAllGames(  std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb=NULL  );
+void BinDbLoadAllGames( bool for_db_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb=NULL  );
+std::vector< smart_ptr<ListableGame> > &BinDbLoadAllGamesGetVector();
 
 bool bin_db_append( const char *fen, const char *event, const char *site, const char *date, const char *round,
                   const char *white, const char *black, const char *result, const char *white_elo, const char *black_elo, const char *eco,

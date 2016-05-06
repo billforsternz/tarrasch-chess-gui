@@ -89,7 +89,7 @@ static bool predicate_sorts_by_id( const smart_ptr<ListableGame> &e1, const smar
 
 static bool predicate_sorts_by_game_moves( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 )
 {
-    return e1->RefCompressedMoves() < e2->RefCompressedMoves();
+    return std::string(e1->CompressedMoves()) < std::string(e2->CompressedMoves());
 }
 
 
@@ -202,7 +202,7 @@ void Tdb2Pgn( const char *infile, const char *outfile )
 // Use 19 bits with format yyyyyyyyyymmmmddddd
 // y year, 10 bits, values are 0=unknown, 1-1000 are years 1501-2500 (so fixed offset of 1500), 1001-1023 are reserved
 // m month, 4 bits, values are 0=unknown, 1=January..12=December, 13-15 reserved
-// d day,   5 bits, values are valid, 0=unknown, 1-31 = conventional date days
+// d day,   5 bits, values are 0=unknown, 1-31 = conventional date days
 uint32_t Date2Bin( const char *date )
 {
     uint32_t dat=0;
@@ -423,6 +423,7 @@ static std::set<std::string> set_player;
 static std::set<std::string> set_site;
 static std::set<std::string> set_event;
 static std::vector< smart_ptr<ListableGame> > games;
+std::vector< smart_ptr<ListableGame> > &BinDbLoadAllGamesGetVector() { return games; }
 
 static int game_counter;
 bool bin_db_append( const char *fen, const char *event, const char *site, const char *date, const char *round,
@@ -462,7 +463,7 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
     std::string sblack(black);
     GameBinary gb
     ( 
-        id,
+        games.size(),
         sevent,
         ssite,
         swhite,
@@ -887,10 +888,6 @@ bool BinDbWriteOutToFile( FILE *ofile, ProgressBar *pb )
     return true;
 }
 
-static std::vector<std::string> players;
-static std::vector<std::string> events;
-static std::vector<std::string> sites;
-
 void ReadStrings( FILE *fin, int nbr_strings, std::vector<std::string> &strings )
 {
     for( int i=0; i<nbr_strings; i++ )
@@ -906,14 +903,9 @@ void ReadStrings( FILE *fin, int nbr_strings, std::vector<std::string> &strings 
         if( ch == EOF )
             break;    
     }
- /*   for( int i=0; i<10; i++ )
-        cprintf( "%s\n", strings[i].c_str() );
-    cprintf( "...\n" );
-    for( int i=10; i>0; i-- )
-        cprintf( "%s\n", strings[strings.size()-i].c_str() ); */
 }
 
-void BinDbLoadAllGames(  std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb )
+void BinDbLoadAllGames(  bool for_db_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb )
 {
     int cb_idx = PackedGameBinDb::AllocateNewControlBlock();
     PackedGameBinDbControlBlock& common = PackedGameBinDb::GetControlBlock(cb_idx);
@@ -961,6 +953,17 @@ void BinDbLoadAllGames(  std::vector< smart_ptr<ListableGame> > &mega_cache, int
         if( ch == EOF )
             cprintf( "Whoops\n" );
         ListableGameBinDb info( cb_idx, i, blob );
+        if( for_db_append )
+        {
+            std::string sevent(info.Event());
+            std::string ssite(info.Site());
+            std::string swhite(info.White());
+            std::string sblack(info.Black());
+            set_event.insert(sevent);
+            set_site.insert(ssite);
+            set_player.insert(swhite);
+            set_player.insert(sblack);
+        }
         make_smart_ptr( ListableGameBinDb, new_info, info );
         mega_cache.push_back( std::move(new_info) );
         background_load_permill = (i*1000) / (game_count?game_count:1);

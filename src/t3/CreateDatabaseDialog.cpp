@@ -427,12 +427,45 @@ void CreateDatabaseDialog::OnAppendDatabase()
     std::string error_msg;
     db_primitive_error_msg();   // clear error reporting mechanism
 
-    bool exists = wxFile::Exists(db_filename);
-    db_name = std::string( db_filename.c_str() );
-    if( !exists )
+    // Collect files
+    for( int i=1; i<=6; i++ )
     {
-        error_msg = "Tarrasch database file " + db_name + " doesn't exist";
+        bool exists = false;
+        std::string filename;
+        switch(i)
+        {
+            case 1: exists = wxFile::Exists(pgn_filename1);
+                    filename = std::string(pgn_filename1.c_str());  break;
+            case 2: exists = wxFile::Exists(pgn_filename2);
+                    filename = std::string(pgn_filename2.c_str());  break;
+            case 3: exists = wxFile::Exists(pgn_filename3);
+                    filename = std::string(pgn_filename3.c_str());  break;
+            case 4: exists = wxFile::Exists(pgn_filename4);
+                    filename = std::string(pgn_filename4.c_str());  break;
+            case 5: exists = wxFile::Exists(pgn_filename5);
+                    filename = std::string(pgn_filename5.c_str());  break;
+            case 6: exists = wxFile::Exists(pgn_filename6);
+                    filename = std::string(pgn_filename6.c_str());  break;
+        }
+        if( exists )
+        {
+            files[cnt++] = filename;
+        }
+    }
+    if( cnt == 0 )
+    {
+        error_msg = "No usable pgn files specified";
         ok = false;
+    }
+    if( ok )
+    {
+        bool exists = wxFile::Exists(db_filename);
+        db_name = std::string( db_filename.c_str() );
+        if( !exists )
+        {
+            error_msg = "Tarrasch database file " + db_name + " doesn't exist";
+            ok = false;
+        }
     }
     bool is_bin_db=false;
     if( ok )
@@ -451,15 +484,16 @@ void CreateDatabaseDialog::OnAppendDatabase()
     }
     if( ok && is_bin_db )
     {
-        bool dummyb;
-        int dummyi;
-        std::vector< smart_ptr<ListableGame> > mega_cache;
-        std::string title( "Appending to database, step 1 of 3");
+        bool dummyb=false;
+        int dummyi=false;
+        std::string title( "Appending to database, step 1 of 4");
         std::string desc("Reading existing database");
         ProgressBar progress_bar( title, desc, true, this );
-        BinDbLoadAllGames(  mega_cache, dummyi, dummyb, &progress_bar );
-        BinDbClose();
+        
+        std::vector< smart_ptr<ListableGame> > &mega_cache = BinDbLoadAllGamesGetVector();
         BinDbWriteClear();
+        BinDbLoadAllGames( true, mega_cache, dummyi, dummyb, &progress_bar );
+        BinDbClose();
         FILE *ofile;
         if( ok )
         {
@@ -482,7 +516,7 @@ void CreateDatabaseDialog::OnAppendDatabase()
             }
             else
             {
-                std::string title( "Creating database, step 1 of 3");
+                std::string title( "Appending to database, step 2 of 4");
                 std::string desc("Reading file #");
                 char buf[80];
                 sprintf( buf, "%d of %d", i+1, cnt );
@@ -501,14 +535,14 @@ void CreateDatabaseDialog::OnAppendDatabase()
         }
         if( ok )
         {
-            std::string title( "Creating database, step 2 of 3");
+            std::string title( "Appending to database, step 3 of 4");
             std::string desc("Duplicate Removal");
             ProgressBar progress_bar( title, desc, true, this );
             ok = BinDbDuplicateRemoval(&progress_bar);
         }
         if( ok )
         {
-            std::string title( "Creating database, step 3 of 3");
+            std::string title( "Creating database, step 4 of 4");
             std::string desc("Writing file");
             ProgressBar progress_bar( title, desc, true, this );
             ok = BinDbWriteOutToFile(ofile,&progress_bar);
@@ -535,36 +569,6 @@ void CreateDatabaseDialog::OnAppendDatabase()
     else if( ok && !is_bin_db )
     {
     
-        // Collect files
-        for( int i=1; i<=6; i++ )
-        {
-            bool exists = false;
-            std::string filename;
-            switch(i)
-            {
-                case 1: exists = wxFile::Exists(pgn_filename1);
-                        filename = std::string(pgn_filename1.c_str());  break;
-                case 2: exists = wxFile::Exists(pgn_filename2);
-                        filename = std::string(pgn_filename2.c_str());  break;
-                case 3: exists = wxFile::Exists(pgn_filename3);
-                        filename = std::string(pgn_filename3.c_str());  break;
-                case 4: exists = wxFile::Exists(pgn_filename4);
-                        filename = std::string(pgn_filename4.c_str());  break;
-                case 5: exists = wxFile::Exists(pgn_filename5);
-                        filename = std::string(pgn_filename5.c_str());  break;
-                case 6: exists = wxFile::Exists(pgn_filename6);
-                        filename = std::string(pgn_filename6.c_str());  break;
-            }
-            if( exists )
-            {
-                files[cnt++] = filename;
-            }
-        }
-        if( cnt == 0 )
-        {
-            error_msg = "No usable pgn files specified";
-            ok = false;
-        }
         if( ok )
             ok = db_primitive_open( db_name.c_str(), false );
         if( ok )
