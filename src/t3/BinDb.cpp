@@ -82,17 +82,6 @@ private:
     std::string compressed_moves;
 };
 
-static bool predicate_sorts_by_id( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 )
-{
-    return e1->game_id < e2->game_id;
-}
-
-static bool predicate_sorts_by_game_moves( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 )
-{
-    return std::string(e1->CompressedMoves()) < std::string(e2->CompressedMoves());
-}
-
-
 bool BinDbOpen( const char *db_file )
 {
     /*ListableGame g1;
@@ -657,6 +646,95 @@ static void Split( const char *in, std::vector<std::string> &out )
         out.push_back(token);
 }
 
+// Adapted (just a little) from http://www.talkativeman.com/levenshtein-distance-algorithm-string-comparison/
+static int lev_distance( const std::string source, const std::string target )
+{
+    // Step 1
+    const int n = source.length();
+    const int m = target.length();
+    if( n == 0 )
+    {
+        return m;
+    }
+    if( m == 0 )
+    {
+        return n;
+    }
+
+    // Good form to declare a TYPEDEF
+    typedef std::vector< std::vector<int> > matrix_t;
+    matrix_t matrix(n+1);
+
+    // Size the vectors in the 2nd dimension. Unfortunately C++ doesn't
+    // allow for allocation on declaration of 2nd dimension of vec of vec
+    for( int i=0; i<=n; i++ )
+    {
+        matrix[i].resize(m+1);
+    }
+
+    // Step 2
+    for( int i=0; i<=n; i++ )
+    {
+        matrix[i][0]=i;
+    }
+    for( int j=0; j<=m; j++)
+    {
+        matrix[0][j]=j;
+    }
+
+    // Step 3
+    for( int i=1; i<=n; i++ )
+    {
+        const char s_i = source[i-1];
+
+        // Step 4
+        for( int j=1; j<=m; j++ )
+        {
+            const char t_j = target[j-1];
+
+            // Step 5
+            int cost;
+            if( s_i == t_j )
+            {
+                cost = 0;
+            }
+            else
+            {
+                cost = 1;
+            }
+
+            // Step 6
+            const int above = matrix[i-1][j];
+            const int left = matrix[i][j-1];
+            const int diag = matrix[i-1][j-1];
+            #define MIN(a,b) ((a)<=(b) ? (a) : (b))
+            int temp = MIN( left+1, diag+cost );
+            int cell = MIN( above+1, temp );
+
+            // Step 6A: Cover transposition, in addition to deletion,
+            // insertion and substitution. This step is taken from:
+            // Berghel, Hal ; Roach, David : "An Extension of Ukkonen's
+            // Enhanced Dynamic Programming ASM Algorithm"
+            // (http://www.acm.org/~hlb/publications/asm/asm.html)
+            if( i>2 && j>2 )
+            {
+                int trans = matrix[i-2][j-2]+1;
+                if( source[i-2] != t_j )
+                    trans++;
+                if( s_i != target[j-2] )
+                    trans++;
+                if( cell>trans )
+                    cell=trans;
+            }
+            matrix[i][j]=cell;
+        }
+    }
+
+    // Step 7
+    return matrix[n][m];
+}
+
+
 static bool IsPlayerMatch( const char *player, std::vector<std::string> &tokens )
 {
     std::vector<std::string> tokens2;
@@ -669,9 +747,55 @@ static bool IsPlayerMatch( const char *player, std::vector<std::string> &tokens 
         {
             if( tokens[i] == tokens2[j] )
                 return true;
+            if( tokens[i].length()>5 && tokens2[j].length()>5 && lev_distance(tokens[i],tokens2[j]) < 2 )
+                return true;
         }
     }
     return false;
+}
+
+uint32_t BinDbGetGamesSize()
+{
+    return games.size();
+}
+
+void BinDbNormaliseOrder( uint32_t begin, uint32_t end )
+{
+    cprintf( "BinDbNormaliseOrder(): in\n" );
+    uint32_t dist = end-begin;
+    uint32_t step = dist/100;
+    if( step > 1000 )
+        step = 1000;
+    bool forward=false, reverse=false, neither=true;
+    int bin, prev=0;
+    uint32_t forward_cnt=0, reverse_cnt=0;
+    for( uint32_t i=begin; i<end; i+=step )
+    {
+        int bin = games[i]->DateBin();
+        if( bin > prev )
+            forward_cnt++;
+        else if( bin < prev )
+            reverse_cnt++;
+        prev = bin;
+    }
+    if( forward_cnt > reverse_cnt*5 )
+    {
+        forward = true;
+        neither = false;
+    }
+    else if( reverse_cnt > forward_cnt*5 )
+    {
+        reverse = true;
+        neither = false;
+    }
+    cprintf( "BinDbNormaliseOrder(): out step=%u, forward_cnt=%u, reverse_cnt=%u, forward=%s, reverse=%s\n", step, forward_cnt, reverse_cnt, forward?"true":"false", reverse?"true (reversing)":"false" );
+    if( reverse )
+    {
+        std::reverse( games.begin()+begin, games.begin()+end );
+        for( uint32_t i=begin; i<end; i++ )
+            games[i]->game_id = i;
+        cprintf( "reverse end\n" );
+    }
 }
 
 static bool DupDetect( smart_ptr<ListableGame> p1, std::vector<std::string> &white_tokens1, std::vector<std::string> &black_tokens1, smart_ptr<ListableGame> p2 )
@@ -687,94 +811,216 @@ static bool DupDetect( smart_ptr<ListableGame> p1, std::vector<std::string> &whi
     return dup;
 }
 
-bool BinDbDuplicateRemoval( ProgressBar *pb )
+static const uint32_t NBR_STEPS=1000;   // if this isn't 1000, then sort_scan() won't return permill
+static uint64_t predicate_count;
+static uint64_t predicate_nbr_expected;
+static std::vector< smart_ptr<ListableGame> >::iterator predicate_begin;
+static bool (*predicate_func)( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 );
+static uint32_t predicate_step;
+static int permill_initial;
+static int permill_max_so_far;
+static ProgressBar *predicate_pb; 
+
+static int sort_scan()
 {
-    pb->DrawNow();
-    std::sort( games.begin(), games.end(), predicate_sorts_by_game_moves );
-    int nbr_games = games.size();
-    bool in_dups=false;
-    int start;
-    for( int i=0; i<nbr_games-1; i++ )
+    int permill=1;  // start at 1 since there are only 999 steps in loop
+                    // so permill returned will be between 1 and 1000 inclusive
+    for( uint32_t i=1; i<NBR_STEPS; i++ )
     {
-        if( pb->Perfraction( i,nbr_games-1) )
-            return false;   // abort
-        bool more = (i+1<games.size()-1);
-        bool next_matches = (0 == strcmp(games[i]->CompressedMoves(),games[i+1]->CompressedMoves()) );
-        bool eval_dups = (in_dups && !more);
-        if( !in_dups )
+        uint32_t step = i*predicate_step;      // first value of step is predicate_step
+        uint32_t prev = step - predicate_step; // first value of prev is 0
+        bool lower = (*predicate_func)( *(predicate_begin+prev), *(predicate_begin+step) );
+        if( lower )
+            permill++;
+    }
+    return permill;
+}
+
+static void sort_before( std::vector< smart_ptr<ListableGame> >::iterator begin,
+                   std::vector< smart_ptr<ListableGame> >::iterator end,
+                   bool (*predicate)( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 ),
+                   ProgressBar *pb 
+                 )
+{
+    predicate_count = 0;
+    predicate_pb = pb;
+    predicate_func = predicate;
+    unsigned int dist = std::distance( begin, end );
+
+    // The following formula is based on experiment - std::sort() called the predicate function approx
+    //  this many times for random input - hopefully this is approx worse case since in our experiments
+    //  as far as we could tell it was actually called less if the input was patterned - including
+    //  already sorted and already reverse sorted patterns
+    predicate_nbr_expected = static_cast<uint64_t>( 7.5 * dist * log10(static_cast<float>(dist)) );
+    predicate_begin = begin;
+    predicate_step  = dist/NBR_STEPS;
+    permill_initial = sort_scan();
+    permill_max_so_far = 0;
+    cprintf( "Sorting: nbr_to_sort=%u, nbr_expected=%u, initial permill=%u\n", (unsigned int)dist,  (unsigned int)predicate_nbr_expected, (unsigned int)permill_initial );
+}
+
+static void sort_after()
+{
+    cprintf( "Sorting: nbr_expected=%u, nbr_actual=%u\n", (unsigned int)predicate_nbr_expected, (unsigned int)predicate_count );
+}
+
+static void sort_progress_probe()
+{
+    if( predicate_pb )
+    {
+        int permill;
+        #define SCAN_BASED
+        #ifdef SCAN_BASED
+        if( (1000-permill_initial) > 100 ) // scan based approach is useless if input initially nearly sorted
         {
-            if( next_matches )
-            {
-                start = i;
-                in_dups = true;
-            }
+            permill = sort_scan();
+            if( permill > permill_max_so_far )
+                permill_max_so_far = permill;
+            else
+                permill = permill_max_so_far;
+            predicate_pb->Perfraction( permill-permill_initial, (1000-permill_initial) );
         }
         else
+        #endif
         {
-            if( !next_matches )
-            {
-                in_dups = false;
-                eval_dups = true;
-            }
+            if( predicate_count>=predicate_nbr_expected || predicate_nbr_expected==0 )
+                permill = 1000;
+            else if( predicate_nbr_expected > 1000000 )
+                permill = predicate_count / (predicate_nbr_expected/1000);
+            else
+                permill = (predicate_count*1000) / predicate_nbr_expected;
+            predicate_pb->Permill( permill );
         }
+    }
+}
 
-        // For subranges with identical moves, mark dups with id -1
-        if( eval_dups )
+static bool predicate_sorts_by_id( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 )
+{
+    bool ret = e1->game_id < e2->game_id;
+    predicate_count++;
+    if( (predicate_count & 0xffff) == 0 )
+        sort_progress_probe();
+    return ret;
+}
+
+static bool predicate_sorts_by_game_moves( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 )
+{
+    bool ret = std::string(e1->CompressedMoves()) < std::string(e2->CompressedMoves());
+    predicate_count++;
+    if( (predicate_count & 0xffff) == 0 )
+        sort_progress_probe();
+    return ret;
+}
+
+
+bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
+{
+    {
+        std::string desc("Duplicate Removal - phase 1");
+        ProgressBar progress_bar( title, desc, true, window );
+        progress_bar.DrawNow();
+        sort_before( games.begin(), games.end(), predicate_sorts_by_game_moves, &progress_bar );
+        std::sort( games.begin(), games.end(), predicate_sorts_by_game_moves );
+        sort_after();
+    }
+    {
+        std::string desc("Duplicate Removal - phase 2");
+        ProgressBar progress_bar( title, desc, true, window );
+        progress_bar.DrawNow();
+        ProgressBar *pb = &progress_bar;
+        int nbr_games = games.size();
+        bool in_dups=false;
+        int start;
+        for( int i=0; i<nbr_games-1; i++ )
         {
-            int end = i+1;
-            std::sort( games.begin()+start, games.begin()+end, predicate_sorts_by_id );
-            static int trigger = 3;
-            if( false ) //end-start > 8 ) //trigger > 0 )
+            if( pb->Perfraction( i,nbr_games-1) )
+                return false;   // abort
+            bool more = (i+1<games.size()-1);
+            bool next_matches = (0 == strcmp(games[i]->CompressedMoves(),games[i+1]->CompressedMoves()) );
+            bool eval_dups = (in_dups && !more);
+            if( !in_dups )
             {
-                printf( "Eval Dups in\n" );
-                for( int idx=start; idx<end; idx++ )
+                if( next_matches )
                 {
-                    smart_ptr<ListableGame> p = games[idx];
-                    cprintf( "%d: %s-%s, %s %d ply\n", p->game_id, p->White(), p->Black(), p->Event(), strlen(p->CompressedMoves()) );
+                    start = i;
+                    in_dups = true;
+                }
+            }
+            else
+            {
+                if( !next_matches )
+                {
+                    in_dups = false;
+                    eval_dups = true;
                 }
             }
 
-            for( int idx=start; idx<end; idx++ )
+            // For subranges with identical moves, mark dups with id -1
+            if( eval_dups )
             {
-                smart_ptr<ListableGame> p = games[idx];
-                if( p->game_id != -1 )
+                int end = i+1;
+                std::sort( games.begin()+start, games.begin()+end, predicate_sorts_by_id );
+                static int trigger = 3;
+                if( false ) //end-start > 8 ) //trigger > 0 )
                 {
-                    std::vector<std::string> white_tokens;
-                    Split(p->White(),white_tokens);
-                    std::vector<std::string> black_tokens;
-                    Split(p->Black(),black_tokens);
-                    for( int j=idx+1; j<end; j++ )
+                    printf( "Eval Dups in\n" );
+                    for( int idx=start; idx<end; idx++ )
                     {
-                        smart_ptr<ListableGame> q = games[j];
-                        if( q->game_id!=-1 && DupDetect(p,white_tokens,black_tokens,q) )
-                            q->game_id = -1;    
+                        smart_ptr<ListableGame> p = games[idx];
+                        cprintf( "%d: %s-%s, %s %d ply\n", p->game_id, p->White(), p->Black(), p->Event(), strlen(p->CompressedMoves()) );
+                    }
+                }
+
+                for( int idx=start; idx<end; idx++ )
+                {
+                    smart_ptr<ListableGame> p = games[idx];
+                    if( p->game_id != -1 )
+                    {
+                        std::vector<std::string> white_tokens;
+                        Split(p->White(),white_tokens);
+                        std::vector<std::string> black_tokens;
+                        Split(p->Black(),black_tokens);
+                        for( int j=idx+1; j<end; j++ )
+                        {
+                            smart_ptr<ListableGame> q = games[j];
+                            if( q->game_id!=-1 && DupDetect(p,white_tokens,black_tokens,q) )
+                                q->game_id = -1;    
+                        }
+                    }
+                }
+
+                if( end-start>2 )//&& strlen(games[start]->CompressedMoves()) > 20 )
+                {
+                    //trigger--;
+                    cprintf( "Eval Dups out\n" );
+                    for( int idx=start; idx<end; idx++ )
+                    {
+                        smart_ptr<ListableGame> p = games[idx];
+                        cprintf( "%d: %s-%s, %s %d ply\n", p->game_id, p->White(), p->Black(), p->Event(), strlen(p->CompressedMoves()) );
                     }
                 }
             }
-
-            if( false ) //end-start > 8 ) //trigger > 0 )
-            {
-                //trigger--;
-                printf( "Eval Dups out\n" );
-                for( int idx=start; idx<end; idx++ )
-                {
-                    smart_ptr<ListableGame> p = games[idx];
-                    cprintf( "%d: %s-%s, %s %d ply\n", p->game_id, p->White(), p->Black(), p->Event(), strlen(p->CompressedMoves()) );
-                }
-            }
         }
     }
-    std::sort( games.begin(), games.end(), predicate_sorts_by_id );
-    int nbr_deleted=0;
-    for( int i=0; i<games.size(); i++ )
     {
-        if( games[i].get()->game_id == -1 )
-            nbr_deleted++;
-        else
-            break;
+        std::string desc("Duplicate Removal - phase 3");
+        ProgressBar progress_bar( title, desc, true, window );
+        progress_bar.DrawNow();
+        ProgressBar *pb = &progress_bar;
+        sort_before( games.begin(), games.end(), predicate_sorts_by_id, &progress_bar );
+        std::sort( games.begin(), games.end(), predicate_sorts_by_id );
+        sort_after();
+        int nbr_deleted=0;
+        for( int i=0; i<games.size(); i++ )
+        {
+            if( games[i].get()->game_id == -1 )
+                nbr_deleted++;
+            else
+                break;
+        }
+        cprintf( "Number of duplicates deleted: %d\n", nbr_deleted );
+        games.erase( games.begin(), games.begin()+nbr_deleted );
     }
-    cprintf( "Number of duplicates deleted: %d\n", nbr_deleted );
-    games.erase( games.begin(), games.begin()+nbr_deleted );
     return true;
 }
 

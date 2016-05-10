@@ -308,8 +308,11 @@ void CreateDatabaseDialog::OnCreateDatabase()
                 sprintf( buf, "%d of %d", i+1, cnt );
                 desc += buf;
                 ProgressBar progress_bar( title, desc, true, this, ifile );
+                uint32_t begin = BinDbGetGamesSize();
                 PgnRead *pgn = new PgnRead('B',&progress_bar);
                 bool aborted = pgn->Process(ifile);
+                uint32_t end = BinDbGetGamesSize();
+                BinDbNormaliseOrder( begin, end );
                 if( aborted )
                 {
                     error_msg = "cancel";
@@ -322,9 +325,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
         if( ok )
         {
             std::string title( "Creating database, step 2 of 3");
-            std::string desc("Duplicate Removal");
-            ProgressBar progress_bar( title, desc, true, this );
-            ok = BinDbDuplicateRemoval(&progress_bar);
+            ok = BinDbDuplicateRemoval(title,this);
         }
         if( ok )
         {
@@ -332,8 +333,13 @@ void CreateDatabaseDialog::OnCreateDatabase()
             std::string desc("Writing file");
             ProgressBar progress_bar( title, desc, true, this );
             ok = BinDbWriteOutToFile(ofile,&progress_bar);
-            fclose(ofile);
             BinDbWriteClear();
+        }
+        if( ofile )
+        {
+            wxSafeYield();
+            fclose(ofile);
+            ofile = NULL;
         }
         if( ok )
         {
@@ -536,9 +542,7 @@ void CreateDatabaseDialog::OnAppendDatabase()
         if( ok )
         {
             std::string title( "Appending to database, step 3 of 4");
-            std::string desc("Duplicate Removal");
-            ProgressBar progress_bar( title, desc, true, this );
-            ok = BinDbDuplicateRemoval(&progress_bar);
+            ok = BinDbDuplicateRemoval(title,this);
         }
         if( ok )
         {

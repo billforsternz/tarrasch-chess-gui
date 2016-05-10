@@ -95,6 +95,7 @@ public:
 //  We also optionally prepend the time - to prepend the time instantiate a DebugPrintfTime object
 //  on the stack - no need to use it
 static int dbg_printf_prepend_time=0;
+static FILE *teefile;   // private debugging log
 #define DURING_DEVELOPMENT
 #ifdef DURING_DEVELOPMENT
 static bool dbg_console_enabled = true;     // set this to false except during development
@@ -125,7 +126,11 @@ int core_printf( const char *fmt, ... )
     }
 	va_list args;
 	va_start( args, fmt );
-    ret = vprintf(fmt,args);
+    char buf[1000];
+    vsnprintf( buf, sizeof(buf)-2, fmt, args ); 
+    fputs(buf,stdout);
+    if( teefile )
+        fputs(buf,teefile);
     va_end(args);
     return ret;
 }
@@ -365,6 +370,9 @@ bool ChessApp::OnInit()
     if( dbg_console_enabled )
     {
         #ifdef THC_WINDOWS
+        #ifdef DURING_DEVELOPMENT
+        teefile = fopen( "/users/bill/documents/tarrasch/debuglog.txt", "wt" );
+        #endif
         RedirectIOToConsole();
         #endif
     }
@@ -402,6 +410,8 @@ bool ChessApp::OnInit()
 
 int ChessApp::OnExit()
 {
+    if( teefile )
+        fclose(teefile);
     cprintf( "ChessApp::OnExit(): May wait for tiny database load here...\n" );
     extern wxMutex *KillWorkerThread();
     wxMutex *ptr_mutex_tiny_database = KillWorkerThread();

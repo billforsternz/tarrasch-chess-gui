@@ -24,7 +24,9 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
 
 bool TestBinaryBlock();
 void BinDbWriteClear();
-bool BinDbDuplicateRemoval( ProgressBar *pb );
+uint32_t BinDbGetGamesSize();
+void BinDbNormaliseOrder( uint32_t begin, uint32_t end );
+bool BinDbDuplicateRemoval( std::string &title, wxWindow *window );
 bool BinDbWriteOutToFile( FILE *ofile, ProgressBar *pb=NULL );
 bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen );
 
