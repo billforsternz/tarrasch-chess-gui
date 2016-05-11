@@ -747,7 +747,10 @@ static bool IsPlayerMatch( const char *player, std::vector<std::string> &tokens 
         {
             if( tokens[i] == tokens2[j] )
                 return true;
-            if( tokens[i].length()>5 && tokens2[j].length()>5 && lev_distance(tokens[i],tokens2[j]) < 2 )
+            int dist = lev_distance(tokens[i],tokens2[j]);
+            if( tokens[i].length()>8 && tokens2[j].length()>8 && dist <= 2 )
+                return true;
+            if( tokens[i].length()>4 && tokens2[j].length()>4 && dist <= 1 )
                 return true;
         }
     }
