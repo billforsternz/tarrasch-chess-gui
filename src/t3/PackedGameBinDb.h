@@ -28,11 +28,27 @@ private:
     
 public:
     static int AllocateNewControlBlock();
+    static void AllocateUnorderedControlBlock( bool clear );
     static PackedGameBinDbControlBlock& GetControlBlock(int cb_idx);
 
     bool Empty() { return fields.size() == 0; }
     PackedGameBinDb() {}
     PackedGameBinDb( uint8_t cb_idx, std::string fields ) { this->cb_idx=cb_idx; this->fields=fields; }
+
+    // Create a PackedGameBinDb using special unordered control block 0
+    PackedGameBinDb(
+        std::string event,
+        std::string site,
+        std::string white,
+        std::string black,
+        uint32_t    date,
+        uint16_t    round,
+        uint8_t     result,
+        uint16_t    eco,
+        uint16_t    white_elo,
+        uint16_t    black_elo,
+        std::string compressed_moves
+    );
 
     void Pack( CompactGame &pact );
     void Pack( Roster &r, std::string &blob );

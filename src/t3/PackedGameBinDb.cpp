@@ -6,6 +6,7 @@
  ****************************************************************************/
 #define _CRT_SECURE_NO_DEPRECATE
 #include <vector>
+#include <map>
 #include <string>
 #include "CompressMoves.h"
 #include "BinDb.h"
@@ -14,9 +15,40 @@
 #include "ListableGameBinDb.h"
 
 std::vector<PackedGameBinDbControlBlock> bin_db_control_blocks;
+static std::map<std::string,int> unordered_players;
+static std::map<std::string,int> unordered_events;
+static std::map<std::string,int> unordered_sites;
+
+void PackedGameBinDb::AllocateUnorderedControlBlock( bool clear )
+{
+    if( clear )
+    {
+        unordered_players.clear();
+        unordered_events.clear();
+        unordered_sites.clear();
+    }
+    if( bin_db_control_blocks.size() == 0 )
+    {
+        PackedGameBinDbControlBlock cb;
+        cb.bb.Next(24);                // Event
+        cb.bb.Next(24);                // Site
+        cb.bb.Next(24);                // White
+        cb.bb.Next(24);                // Black
+        cb.bb.Next(19);                // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
+        cb.bb.Next(16);                // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), bb=board(0-1023)
+        cb.bb.Next(9);                 // ECO For now 500 codes (9 bits) (A..E)(00..99)
+        cb.bb.Next(2);                 // Result (2 bits)
+        cb.bb.Next(12);                // WhiteElo 12 bits (range 0..4095)
+        cb.bb.Next(12);                // BlackElo
+        cb.bb.Freeze();
+        bin_db_control_blocks.push_back(cb);
+    }
+}
 
 int PackedGameBinDb::AllocateNewControlBlock()
 {
+    if( bin_db_control_blocks.size() == 0 )
+        AllocateUnorderedControlBlock(true);
     PackedGameBinDbControlBlock cb;
     bin_db_control_blocks.push_back(cb);
     return bin_db_control_blocks.size() - 1;
@@ -26,6 +58,71 @@ PackedGameBinDbControlBlock& PackedGameBinDb::GetControlBlock( int cb_idx )
 {
     return bin_db_control_blocks[cb_idx];
 }
+
+// Insert a PackedGameBinDb into the special unordered control block 0
+PackedGameBinDb::PackedGameBinDb(
+    std::string event,
+    std::string site,
+    std::string white,
+    std::string black,
+    uint32_t    date,
+    uint16_t    round,
+    uint8_t     result,
+    uint16_t    eco,
+    uint16_t    white_elo,
+    uint16_t    black_elo,
+    std::string compressed_moves
+)
+{
+    PackedGameBinDbControlBlock &cb = bin_db_control_blocks[0];
+    int event_offset = cb.events.size();
+    if( 1 == unordered_events.count(event) )
+        event_offset = unordered_events[event];
+    else
+    {
+        unordered_events[event] = event_offset;
+        cb.events.push_back(event);
+    }
+    cb.bb.Write(0,event_offset);           // Event
+    int site_offset = cb.sites.size();
+    if( 1 == unordered_sites.count(site) )
+        site_offset = unordered_sites[site];
+    else
+    {
+        unordered_sites[site] = site_offset;
+        cb.sites.push_back(site);
+    }
+    cb.bb.Write(1,site_offset);            // Site
+    int white_offset = cb.players.size();
+    if( 1 == unordered_players.count(white) )
+        white_offset = unordered_players[white];
+    else
+    {
+        unordered_players[white] = white_offset;
+        cb.players.push_back(white);
+    }
+    cb.bb.Write(2,white_offset);           // White
+    int black_offset = cb.players.size();
+    if( 1 == unordered_players.count(black) )
+        black_offset = unordered_players[black];
+    else
+    {
+        unordered_players[black] = black_offset;
+        cb.players.push_back(black);
+    }
+    cb.bb.Write(3,black_offset);            // Black
+    cb.bb.Write(4,date);                    // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
+    cb.bb.Write(5,round);                   // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), bb=board(0-1023)
+    cb.bb.Write(6,eco);                     // ECO For now 500 codes (9 bits) (A..E)(00..99)
+    cb.bb.Write(7,result);                  // Result (2 bits)
+    cb.bb.Write(8,white_elo);               // WhiteElo 12 bits (range 0..4095)                                                                 
+    cb.bb.Write(9,black_elo);               // BlackElo
+    std::string fields = std::string( cb.bb.GetPtr(), cb.bb.FrozenSize() );
+    fields += compressed_moves;
+    this->cb_idx=0;
+    this->fields=fields;
+}
+
 
 #define POOL_SIZE 8 // must be power of 2
 static std::string pool[POOL_SIZE];

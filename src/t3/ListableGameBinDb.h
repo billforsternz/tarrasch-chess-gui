@@ -24,6 +24,37 @@ public:
         this->game_id = game_id;
     }
 
+    ListableGameBinDb( int game_id,
+        std::string event,
+        std::string site,
+        std::string white,
+        std::string black,
+        uint32_t    date,
+        uint16_t    round,
+        uint8_t     result,
+        uint16_t    eco,
+        uint16_t    white_elo,
+        uint16_t    black_elo,
+        std::string compressed_moves
+    )  : pack ( event,
+        site,
+        white,
+        black,
+        date,
+        round,
+        result,
+        eco,
+        white_elo,
+        black_elo,
+        compressed_moves
+    )
+    {
+        this->game_id = game_id;
+    }
+
+
+
+
     virtual int GetGameId()  { return game_id; }
 
     virtual void GetCompactGame( CompactGame &pact )

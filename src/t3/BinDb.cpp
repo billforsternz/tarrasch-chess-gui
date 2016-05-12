@@ -23,6 +23,7 @@ static FILE *bin_file;  //temp
 // GameBinary stores the game info temporarily as we build databases - make it
 //  a ListableGame so we can temporarily combine GameBinary objects in the same
 //  array as other games when we are appending to a database
+#if 0 // Use ListableGameBinDb instead
 class GameBinary : public ListableGameBinDb
 {
 public:
@@ -81,16 +82,10 @@ private:
     uint16_t    black_elo;
     std::string compressed_moves;
 };
+#endif
 
 bool BinDbOpen( const char *db_file )
 {
-    /*ListableGame g1;
-    ListableGameBinDb g2;
-    GameBinary g3;
-    g1.RefCompressedMoves();
-    g2.RefCompressedMoves();
-    g3.RefCompressedMoves();
-    predicate_sorts_by_game_moves( g2, g3 ); */
     bool is_bin_db=false;
     if( bin_file )
     {
@@ -450,7 +445,7 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
     std::string ssite(site);
     std::string swhite(white);
     std::string sblack(black);
-    GameBinary gb
+    ListableGameBinDb gb
     ( 
         games.size(),
         sevent,
@@ -469,7 +464,7 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
     set_site.insert(ssite);
     set_player.insert(swhite);
     set_player.insert(sblack);
-    make_smart_ptr( GameBinary, new_gb, gb );
+    make_smart_ptr( ListableGameBinDb, new_gb, gb );
     games.push_back( std::move(new_gb) );
     return aborted;
 }
@@ -598,6 +593,7 @@ std::map<std::string,int> map_site;
 
 void BinDbWriteClear()
 {
+    PackedGameBinDb::AllocateUnorderedControlBlock( true );
     game_counter = 0;
     set_player.clear();
     set_site.clear();
@@ -769,6 +765,8 @@ void BinDbNormaliseOrder( uint32_t begin, uint32_t end )
     uint32_t step = dist/100;
     if( step > 1000 )
         step = 1000;
+    else if( step == 0 )
+        step = 1;
     bool forward=false, reverse=false, neither=true;
     int bin, prev=0;
     uint32_t forward_cnt=0, reverse_cnt=0;
@@ -826,8 +824,12 @@ static ProgressBar *predicate_pb;
 
 static int sort_scan()
 {
+    if( predicate_step == 0 )
+        return 500;
+
     int permill=1;  // start at 1 since there are only 999 steps in loop
                     // so permill returned will be between 1 and 1000 inclusive
+    uint64_t restore_value = predicate_count;
     for( uint32_t i=1; i<NBR_STEPS; i++ )
     {
         uint32_t step = i*predicate_step;      // first value of step is predicate_step
@@ -836,6 +838,7 @@ static int sort_scan()
         if( lower )
             permill++;
     }
+    predicate_count = restore_value; // sort_scan() shouldn't affect value of predicate_count
     return permill;
 }
 
