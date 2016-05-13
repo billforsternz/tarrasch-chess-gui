@@ -1069,6 +1069,37 @@ void GameLogic::CmdDatabaseAppend()
     sz.y = (sz.y*9)/10;
     CreateDatabaseDialog dialog( objs.frame, ID_CREATE_DB_DIALOG, false ); // create_mode = false
     dialog.ShowModal();
+    if( dialog.db_created_ok )
+    {
+        int answer = wxMessageBox( "Would you like to use the new database now?", "Press Yes to set the new database as the current database",  wxYES_NO|wxCANCEL );
+        bool set_current = (answer == wxYES);
+        if( set_current )
+        {
+            static int count;
+            int temp = ++count;
+            cprintf( "CmdDatabaseCreate(): May wait for tiny database load here (%d)...\n", temp );
+            extern wxMutex s_mutex_tiny_database;
+            wxMutexLocker lock(s_mutex_tiny_database);
+            {
+                cprintf( "...CmdDatabaseCreate() if we did wait, that wait is now over (%d)\n", temp );
+                wxString previous = objs.repository->database.m_file;
+                wxString s(dialog.db_name.c_str());
+                objs.repository->database.m_file = s;
+                const char *filename = s.c_str();
+                cprintf( "File is %s\n", filename );
+                objs.db->Reopen(filename);
+                std::string error_msg;
+                bool operational = objs.db->IsOperational(error_msg);
+                if( operational )
+                    objs.repository->database.m_file = s;
+                else
+                {
+                    objs.db->Reopen(previous);
+                    wxMessageBox( error_msg.c_str(), "Database selection failed", wxOK|wxICON_ERROR );
+                }
+            }
+        }
+    }
     atom.StatusUpdate();
 }
 

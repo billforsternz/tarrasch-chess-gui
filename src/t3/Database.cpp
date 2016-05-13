@@ -94,13 +94,16 @@ wxMutex *WaitForWorkerThread()
 {   
     if( wxMUTEX_BUSY == s_mutex_tiny_database.TryLock() )
     {
-        ProgressBar progress("Initial Database Load","Loading database into memory",false);
+        int base = the_database->background_load_permill;
+        ProgressBar progress("Completing Initial Database Load","Loading database into memory",false);
         while( wxMUTEX_BUSY == s_mutex_tiny_database.TryLock() )
         {
-            progress.Permill( the_database->background_load_permill );
+            int now = the_database->background_load_permill;
+            progress.Perfraction( now-base, 1000-base );
             wxSafeYield();
         }
     }
+    wxSafeYield();
     s_mutex_tiny_database.Unlock();
     return &s_mutex_tiny_database;
 }
@@ -1534,6 +1537,9 @@ bool Database::LoadAllGamesForPositionSearchBinDb( std::vector< smart_ptr<Listab
     mega_cache.clear();
     cache.clear();
     BinDbLoadAllGames( false, mega_cache, background_load_permill, kill_background_load );
+    cprintf( "Reversing BinDb order begin\n" );
+    //std::reverse( mega_cache.begin(), mega_cache.end() ); 
+    cprintf( "Reversing BinDb order end\n" );
     BinDbClose();
     int cache_nbr = mega_cache.size();
     cprintf( "Number of games = %d, is_pristine=%s\n", cache_nbr, is_pristine?"true":"false" );

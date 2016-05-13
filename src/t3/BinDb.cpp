@@ -761,23 +761,19 @@ uint32_t BinDbGetGamesSize()
 void BinDbNormaliseOrder( uint32_t begin, uint32_t end )
 {
     cprintf( "BinDbNormaliseOrder(): in\n" );
-    uint32_t dist = end-begin;
-    uint32_t step = dist/100;
-    if( step > 1000 )
-        step = 1000;
-    else if( step == 0 )
-        step = 1;
     bool forward=false, reverse=false, neither=true;
-    int bin, prev=0;
     uint32_t forward_cnt=0, reverse_cnt=0;
-    for( uint32_t i=begin; i<end; i+=step )
+    uint32_t sz = end-begin;
+    for( int i=0; sz && i<1000; i++ )  // sample 1000 random pairs of dates
     {
-        int bin = games[i]->DateBin();
-        if( bin > prev )
-            forward_cnt++;
-        else if( bin < prev )
-            reverse_cnt++;
-        prev = bin;
+        unsigned int j = begin + (rand() % sz);
+        unsigned int k = begin + (rand() % sz);
+        int jbin = games[j]->DateBin();
+        int kbin = games[k]->DateBin();
+        if( k>j && kbin>jbin )
+            forward_cnt++;        //forward if later in the file has a later date
+        if( k>j && kbin<jbin )
+            reverse_cnt++;        //reverse if later in the file has an earlier date
     }
     if( forward_cnt > reverse_cnt*5 )
     {
@@ -789,7 +785,7 @@ void BinDbNormaliseOrder( uint32_t begin, uint32_t end )
         reverse = true;
         neither = false;
     }
-    cprintf( "BinDbNormaliseOrder(): out step=%u, forward_cnt=%u, reverse_cnt=%u, forward=%s, reverse=%s\n", step, forward_cnt, reverse_cnt, forward?"true":"false", reverse?"true (reversing)":"false" );
+    cprintf( "BinDbNormaliseOrder(): out forward_cnt=%u, reverse_cnt=%u, forward=%s, reverse=%s\n", forward_cnt, reverse_cnt, forward?"true":"false", reverse?"true (reversing)":"false" );
     if( reverse )
     {
         std::reverse( games.begin()+begin, games.begin()+end );
@@ -939,7 +935,7 @@ bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
         int start;
         for( int i=0; i<nbr_games-1; i++ )
         {
-            if( pb->Perfraction( i,nbr_games-1) )
+            if( pb->Perfraction( i,nbr_games) )
                 return false;   // abort
             bool more = (i+1<games.size()-1);
             bool next_matches = (0 == strcmp(games[i]->CompressedMoves(),games[i+1]->CompressedMoves()) );
@@ -1159,6 +1155,9 @@ void ReadStrings( FILE *fin, int nbr_strings, std::vector<std::string> &strings 
 
 void BinDbLoadAllGames(  bool for_db_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb )
 {
+    // When loading the system database, reverse order so most recent games come first 
+    bool do_reverse = !for_db_append;
+
     int cb_idx = PackedGameBinDb::AllocateNewControlBlock();
     PackedGameBinDbControlBlock& common = PackedGameBinDb::GetControlBlock(cb_idx);
     FileHeader fh;
@@ -1204,7 +1203,8 @@ void BinDbLoadAllGames(  bool for_db_append, std::vector< smart_ptr<ListableGame
         }
         if( ch == EOF )
             cprintf( "Whoops\n" );
-        ListableGameBinDb info( cb_idx, i, blob );
+        int game_id = do_reverse ? game_count-1-i : i;
+        ListableGameBinDb info( cb_idx, game_id, blob );
         if( for_db_append )
         {
             std::string sevent(info.Event());
@@ -1231,5 +1231,7 @@ void BinDbLoadAllGames(  bool for_db_append, std::vector< smart_ptr<ListableGame
             cprintf( "%d games (%d include promotion)\n", nbr_games, nbr_promotion_games );
         }
     }
+    if( do_reverse )
+        std::reverse( mega_cache.begin(), mega_cache.end() );
 }
 

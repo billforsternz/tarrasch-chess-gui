@@ -309,8 +309,8 @@ void CreateDatabaseDialog::OnCreateDatabase()
                 desc += buf;
                 ProgressBar progress_bar( title, desc, true, this, ifile );
                 uint32_t begin = BinDbGetGamesSize();
-                PgnRead *pgn = new PgnRead('B',&progress_bar);
-                bool aborted = pgn->Process(ifile);
+                PgnRead pgn('B',&progress_bar);
+                bool aborted = pgn.Process(ifile);
                 uint32_t end = BinDbGetGamesSize();
                 BinDbNormaliseOrder( begin, end );
                 if( aborted )
@@ -318,7 +318,6 @@ void CreateDatabaseDialog::OnCreateDatabase()
                     error_msg = "cancel";
                     ok = false;
                 }
-                delete pgn;
                 fclose(ifile);
             }
         }
@@ -343,6 +342,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
         }
         if( ok )
         {
+            wxSafeYield();
             AcceptAndClose();
             db_created_ok = true;
         }
@@ -385,8 +385,8 @@ void CreateDatabaseDialog::OnCreateDatabase()
                 sprintf( buf, "%d of %d", i+1, cnt );
                 desc += buf;
                 ProgressBar progress_bar( title, desc, true, this, ifile );
-                PgnRead *pgn = new PgnRead(create_tiny_db?'T':'A',&progress_bar);
-                bool aborted = pgn->Process(ifile);
+                PgnRead pgn(create_tiny_db?'T':'A',&progress_bar);
+                bool aborted = pgn.Process(ifile);
                 if( aborted )
                 {
                     error_msg = db_primitive_error_msg();
@@ -394,7 +394,6 @@ void CreateDatabaseDialog::OnCreateDatabase()
                         error_msg = "cancel";
                     ok = false;
                 }
-                delete pgn;
                 fclose(ifile);
             }
         }
@@ -528,14 +527,16 @@ void CreateDatabaseDialog::OnAppendDatabase()
                 sprintf( buf, "%d of %d", i+1, cnt );
                 desc += buf;
                 ProgressBar progress_bar( title, desc, true, this, ifile );
-                PgnRead *pgn = new PgnRead('B',&progress_bar);
-                bool aborted = pgn->Process(ifile);
+                uint32_t begin = BinDbGetGamesSize();
+                PgnRead pgn('B',&progress_bar);
+                bool aborted = pgn.Process(ifile);
+                uint32_t end = BinDbGetGamesSize();
+                BinDbNormaliseOrder( begin, end );
                 if( aborted )
                 {
                     error_msg = "cancel";
                     ok = false;
                 }
-                delete pgn;
                 fclose(ifile);
             }
         }
@@ -555,6 +556,7 @@ void CreateDatabaseDialog::OnAppendDatabase()
         }
         if( ok )
         {
+            wxSafeYield();
             AcceptAndClose();
             db_created_ok = true;
         }

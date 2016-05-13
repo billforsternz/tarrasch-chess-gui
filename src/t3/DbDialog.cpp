@@ -692,9 +692,9 @@ void DbDialog::StatsCalculate()
     {
         progress.Permill(i*1000/nbr_found_games);
         int idx                   = found_games[i].idx;
-        gc_db_displayed_games.gds.push_back(db_games[idx]);
         unsigned short offset_first = found_games[i].offset_first;
         unsigned short offset_last  = found_games[i].offset_last;
+        gc_db_displayed_games.gds.push_back(db_games[idx]);
         std::string blob = db_games[idx]->CompressedMoves();
     
         // Search for a match to this game

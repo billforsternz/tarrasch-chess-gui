@@ -111,7 +111,7 @@ public:
             fseek(ifile,0,SEEK_SET);
         }
         modulo_256=0;
-        old_permill=-1;
+        old_permill=0;
     }
 
     ~ProgressBar()
@@ -189,6 +189,8 @@ public:
     }
     bool Permill( int permill, const std::string &s="" )  // return true if abort
     {
+        if( permill<0 || permill>1000 )
+            permill = old_permill;
         bool abort = false;
         if( old_permill != permill )
         {
@@ -213,7 +215,7 @@ public:
     }
     bool Perfraction( int numerator, int denominator, const std::string &s="" )  // return true if abort
     {
-        int permill;
+        int permill=1000;
         if( numerator>=denominator || denominator==0 )
             permill = 1000;
         else if( denominator > 1000000 )
