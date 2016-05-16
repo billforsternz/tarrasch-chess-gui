@@ -313,6 +313,7 @@ GamesDialog::GamesDialog
     db_search = (cr!=NULL);
     col_last_time = 0;
     col_consecutive = 0;
+    sort_order_first = true;
     focus_idx = 0;
 
     if( cr )
@@ -1251,8 +1252,109 @@ void GamesDialog::OnEco( wxCommandEvent& WXUNUSED(event) )
     list_ctrl->RefreshItems(0,sz-1);
 }
 
-
+static const int NBR_COLUMNS=12;
+static int sort_order[NBR_COLUMNS];
+static bool sort_forward[NBR_COLUMNS];
 static GamesDialog *backdoor;
+
+static const uint32_t NBR_STEPS=1000;   // if this isn't 1000, then sort_scan() won't return permill
+static uint64_t predicate_count;
+static uint64_t predicate_nbr_expected;
+static std::vector< smart_ptr<ListableGame> >::iterator predicate_begin;
+static bool (*predicate_func)( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 );
+static uint32_t predicate_step;
+static int permill_initial;
+static int permill_max_so_far;
+static ProgressBar *predicate_pb; 
+
+static int sort_scan()
+{
+    if( predicate_step == 0 )
+        return 500;
+
+    int permill=1;  // start at 1 since there are only 999 steps in loop
+                    // so permill returned will be between 1 and 1000 inclusive
+    uint64_t restore_value = predicate_count;
+    for( uint32_t i=1; i<NBR_STEPS; i++ )
+    {
+        uint32_t step = i*predicate_step;      // first value of step is predicate_step
+        uint32_t prev = step - predicate_step; // first value of prev is 0
+        bool lower = (*predicate_func)( *(predicate_begin+prev), *(predicate_begin+step) );
+        if( lower )
+            permill++;
+    }
+    predicate_count = restore_value; // sort_scan() shouldn't affect value of predicate_count
+    return permill;
+}
+
+static void sort_before( std::vector< smart_ptr<ListableGame> >::iterator begin,
+                   std::vector< smart_ptr<ListableGame> >::iterator end,
+                   bool (*predicate)( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 ),
+                   ProgressBar *pb 
+                 )
+{
+    predicate_count = 0;
+    predicate_pb = pb;
+    predicate_func = predicate;
+    unsigned int dist = std::distance( begin, end );
+
+    // The following formula is based on experiment - std::sort() called the predicate function approx
+    //  this many times for random input - hopefully this is approx worse case since in our experiments
+    //  as far as we could tell it was actually called less if the input was patterned - including
+    //  already sorted and already reverse sorted patterns
+    predicate_nbr_expected = static_cast<uint64_t>( 7.5 * dist * log10(static_cast<float>(dist)) );
+    predicate_begin = begin;
+    predicate_step  = dist/NBR_STEPS;
+    permill_initial = sort_scan();
+    permill_max_so_far = 0;
+    cprintf( "Sorting order:" );
+    for( int i=0; i<NBR_COLUMNS; i++ )
+    {
+        if( sort_order[i] == -1 )
+        {
+            cprintf( " -1" );
+            break;
+        }
+        cprintf( " %d(%c)", sort_order[i], sort_forward[i]?'f':'b' );
+    }
+    cprintf( "\n" );
+    cprintf( "Sorting: nbr_to_sort=%u, nbr_expected=%u, initial permill=%u\n", (unsigned int)dist,  (unsigned int)predicate_nbr_expected, (unsigned int)permill_initial );
+}
+
+static void sort_after()
+{
+    cprintf( "Sorting: nbr_expected=%u, nbr_actual=%u\n", (unsigned int)predicate_nbr_expected, (unsigned int)predicate_count );
+}
+
+static void sort_progress_probe()
+{
+    if( predicate_pb )
+    {
+        int permill;
+        #define SCAN_BASED
+        #ifdef SCAN_BASED
+        if( (1000-permill_initial) > 100 ) // scan based approach is useless if input initially nearly sorted
+        {
+            permill = sort_scan();
+            if( permill > permill_max_so_far )
+                permill_max_so_far = permill;
+            else
+                permill = permill_max_so_far;
+            predicate_pb->Perfraction( permill-permill_initial, (1000-permill_initial) );
+        }
+        else
+        #endif
+        {
+            if( predicate_count>=predicate_nbr_expected || predicate_nbr_expected==0 )
+                permill = 1000;
+            else if( predicate_nbr_expected > 1000000 )
+                permill = predicate_count / (predicate_nbr_expected/1000);
+            else
+                permill = (predicate_count*1000) / predicate_nbr_expected;
+            predicate_pb->Permill( permill );
+        }
+    }
+}
 
 static bool compare( const smart_ptr<ListableGame> g1, const smart_ptr<ListableGame> g2 )
 {
@@ -1336,6 +1438,119 @@ static bool compare( const smart_ptr<ListableGame> g1, const smart_ptr<ListableG
     {
         int negative_if_lt0 = strcmp(parm1,parm2);
         lt = (negative_if_lt0 < 0);
+    }
+    return lt;
+}
+
+static bool master_predicate( const smart_ptr<ListableGame> &g1, const smart_ptr<ListableGame> &g2 )
+{
+    predicate_count++;
+    if( (predicate_count & 0xffff) == 0 )
+        sort_progress_probe();
+    bool lt=false; bool eq=true;  // Note that both of these cannot, ever, both be true
+    for( int i=0; eq && i<NBR_COLUMNS; i++ )  // tie break loop
+    {
+        int col = sort_order[i];
+        if( col == -1 )
+            break;  // No more tie breaks, eq must be true, so return lt which will be false.
+                    // Back in the day I would never return in the middle of a function but
+                    // these days I've been convinced it is a good idea. So maybe I should
+                    // just return false; ? Hmmmm. Dilemmas dilemmas but perhaps not the
+                    // most pressing issue to worry about.
+        bool forward = sort_forward[i];
+        bool use_bin=false;
+        bool use_rev_bin=false;
+        int bin1;
+        int bin2;
+        const char *parm1;
+        const char *parm2;
+        switch( col )
+        {
+            case 1:
+            {
+                parm1 = g1->White();
+                parm2 = g2->White();
+                break;
+            }
+            case 2:
+            {
+                use_rev_bin = true;
+                bin1 = g1->WhiteEloBin();
+                bin2 = g2->WhiteEloBin();
+                break;
+            }
+            case 3:
+            {
+                parm1 = g1->Black();
+                parm2 = g2->Black();
+                break;
+            }
+            case 4:
+            {
+                use_rev_bin = true;
+                bin1 = g1->BlackEloBin();
+                bin2 = g2->BlackEloBin();
+                break;
+            }
+            case 5:
+            {
+                use_rev_bin = true;
+                bin1 = g1->DateBin();
+                bin2 = g2->DateBin();
+                break;
+            }
+            case 6:
+            {
+                parm1 = objs.repository->nv.m_event_not_site ? g1->Event() : g1->Site();
+                parm2 = objs.repository->nv.m_event_not_site ? g2->Event() : g2->Site();
+                break;
+            }
+            case 7:
+            {
+                use_bin = true;
+                bin1 = g1->RoundBin();
+                bin2 = g2->RoundBin();
+                break;
+            }
+            case 8:
+            {
+                static int xform[] = {3,0,1,2};     // transform order to 1-0, 0-1, 1/2-1/2, *
+                use_bin = true;
+                bin1 = xform[g1->ResultBin()];
+                bin2 = xform[g2->ResultBin()];
+                break;
+            }
+            case 9:
+            {
+                use_bin = true;
+                bin1 = g1->EcoBin();
+                bin2 = g2->EcoBin();
+                break;
+            }
+            case 10: // Ply
+            {
+                use_bin = true;
+                bin1 = strlen(g1->CompressedMoves());
+                bin2 = strlen(g2->CompressedMoves());
+                break;
+            }
+        }
+        if( use_bin )
+        {
+            lt = forward ? (bin1 < bin2) : (bin2 < bin1);
+            eq = (bin1 == bin2);
+        }
+        else if( use_rev_bin )  // use this if we want big numbers first when you first
+        {                       //  click on the column, eg elo
+            lt = forward ? (bin2 < bin1) : (bin1 < bin2);
+            eq = (bin1 == bin2);
+        }
+        else
+        {
+            int negative_if_parm1_lt_parm2 = strcmp(parm1,parm2);
+            lt = forward ? (negative_if_parm1_lt_parm2 < 0) : (negative_if_parm1_lt_parm2 > 0);
+            eq = (negative_if_parm1_lt_parm2 == 0);
+        }
     }
     return lt;
 }
@@ -1762,6 +1977,7 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &gds )
     gds = temp;
 }
 
+#if 0 // The old way
 void GamesDialog::ColumnSort( int compare_col, std::vector< smart_ptr<ListableGame> > &displayed_games )
 {
     if( displayed_games.size() > 0 )
@@ -1794,6 +2010,91 @@ void GamesDialog::ColumnSort( int compare_col, std::vector< smart_ptr<ListableGa
         col_last_time = compare_col;
     }
 }
+
+#else // The new way
+void GamesDialog::ColumnSort( int compare_col, std::vector< smart_ptr<ListableGame> > &displayed_games )
+{
+    if( displayed_games.size() > 0 )
+    {
+        backdoor = this;
+
+        // If we sort on the same column as last time....    
+        if( compare_col == col_last_time )
+        {
+
+            // Simply reverse last order
+            sort_forward[0] = !sort_forward[0];
+        }
+        else
+        {
+
+            // Otherwise push the  previous sort critera down
+            for( int i=NBR_COLUMNS-1; i>=1; i-- )
+            {
+                sort_order[i]   = sort_order[i-1];
+                sort_forward[i] = sort_forward[i-1];
+            }
+
+            // Sort the selected column, forward first 
+            sort_order[0]   = compare_col;
+            sort_forward[0] = true;
+
+            // The first time, mark the next spot in the stack as the end
+            if( sort_order_first )
+            {
+                sort_order_first = false;
+                sort_order[1] = -1;
+            }
+
+            // Not the first time, look for a repeat instance of the current
+            //  column and stop there. Note that every column can occur once
+            //  in the stack (that's the worst case) in which case we will
+            //  stop at the end of the stack, not at the magic -1 marker
+            else
+            {
+                for( int i=1; i<NBR_COLUMNS; i++ )
+                {
+                    if( sort_order[i] == compare_col )
+                    {
+                        sort_order[i] = -1; // mark end
+                        break;
+                    }
+                }
+            }
+        }
+        if( compare_col == 11 )
+        {
+            if( sort_forward[0] )
+                MoveColCompare(displayed_games);
+            else
+                std::reverse( displayed_games.begin(), displayed_games.end() );
+        }
+        else
+        {
+            ProgressBar pb("Sorting...","column sort");
+            sort_before( displayed_games.begin(),
+                   displayed_games.end(),
+                   master_predicate,
+                   &pb 
+                 );
+            std::sort( displayed_games.begin(), displayed_games.end(), master_predicate );
+            sort_after();
+
+        }
+        nbr_games_in_list_ctrl = displayed_games.size();
+        list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
+        list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
+        int top = list_ctrl->GetTopItem();
+        int count = 1 + list_ctrl->GetCountPerPage();
+        if( count > nbr_games_in_list_ctrl )
+            count = nbr_games_in_list_ctrl;
+        for( int i=0; i<count; i++ )
+            list_ctrl->RefreshItem(top++);
+        Goto(0);
+        col_last_time = compare_col;
+    }
+}
+#endif
 
 void GamesDialog::GdvListColClick( int compare_col )
 {

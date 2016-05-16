@@ -98,7 +98,11 @@ wxMutex *WaitForWorkerThread()
         ProgressBar progress("Completing Initial Database Load","Loading database into memory",false);
         while( wxMUTEX_BUSY == s_mutex_tiny_database.TryLock() )
         {
+            //static int now_before=-1;
             int now = the_database->background_load_permill;
+            //if( now != now_before )
+            //    cprintf( "base=%d, now=%d, now-base=%d, 1000-base=%d\n", base, now, now-base, 1000-base );
+            //now_before = now;
             progress.Perfraction( now-base, 1000-base );
             wxSafeYield();
         }

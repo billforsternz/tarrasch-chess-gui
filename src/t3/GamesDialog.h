@@ -287,6 +287,7 @@ private:    //TODO - move more vars to private
     int col_last_time;
     int col_consecutive;
     int focus_idx;
+    bool sort_order_first;
 
 public:
     bool transpo_activated;

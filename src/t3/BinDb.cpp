@@ -1218,7 +1218,12 @@ void BinDbLoadAllGames(  bool for_db_append, std::vector< smart_ptr<ListableGame
         }
         make_smart_ptr( ListableGameBinDb, new_info, info );
         mega_cache.push_back( std::move(new_info) );
-        background_load_permill = (i*1000) / (game_count?game_count:1);
+        int num = i;
+        int den = game_count?game_count:1;
+        if( den > 1000000 )
+            background_load_permill = i / (den/1000);
+        else
+            background_load_permill = (i*1000) / den;
         nbr_games++;
         if(
             ((nbr_games%10000) == 0 ) /* ||

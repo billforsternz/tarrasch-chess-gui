@@ -226,7 +226,8 @@ const char *PackedGameBinDb::Black()
 const char *PackedGameBinDb::Result()
 {
     PackedGameBinDbControlBlock *cb = &bin_db_control_blocks[cb_idx];
-    static std::string sresult; 
+    std::string& sresult = pool[pool_idx++];
+    pool_idx &= (POOL_SIZE-1);
     int result = cb->bb.Read(7,&fields[0]);       // Result (2 bits)
     Bin2Result(result,sresult);
     return sresult.c_str();
