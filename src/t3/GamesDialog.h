@@ -67,8 +67,9 @@ struct MoveColCompareElement
 {
     int idx;
     int transpo;
-    std::string blob;
-    std::vector<int> counts;
+    const char *blob;
+    uint32_t tie_break;
+    uint32_t count;
 };
 
 // A GamesListCtrl is a list control within the GamesDialog, it displays a list of games to navigate through and pick from
@@ -240,7 +241,7 @@ public:
     GameDocument *GetFocusGame( int &idx );
     void DeselectOthers();
     void OnOk();
-    void MoveColCompare( std::vector< smart_ptr<ListableGame> > &gds );
+    void MoveColCompare( std::vector< smart_ptr<ListableGame> > &displayed_games );
     
     // GamesDialog member variables
 public:

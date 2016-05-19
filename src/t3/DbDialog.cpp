@@ -253,17 +253,16 @@ DbDialog::DbDialog
 // Overidden function used for smart move column compare
 bool DbDialog::MoveColCompareReadGame( MoveColCompareElement &e, int idx, const char *blob  )
 {        
-    std::string str_blob = std::string(blob);
     unsigned int sz2 = transpositions.size();
     for( unsigned int j=0; j<sz2; j++ )
     {
         PATH_TO_POSITION *ptp = &transpositions[j];
         unsigned int offset = ptp->blob.length();
-        if( 0 == memcmp( ptp->blob.c_str(), str_blob.c_str(), offset ) )
+        if( 0 == memcmp( ptp->blob.c_str(), blob, offset ) )
         {
             e.idx  = idx;
-            e.blob = str_blob.substr(offset);   // rest of game, from start position
-            e.counts.resize( e.blob.length() );
+            e.blob = blob + offset;   // rest of game, from board position
+            e.count = 0;;
             e.transpo = transpo_activated ? j+1 : 0;
             return true;
         }

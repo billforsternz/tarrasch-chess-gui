@@ -1356,92 +1356,6 @@ static void sort_progress_probe()
     }
 }
 
-static bool compare( const smart_ptr<ListableGame> g1, const smart_ptr<ListableGame> g2 )
-{
-    bool lt=false;
-    bool use_atoi=false;
-    const char *parm1;
-    const char *parm2;
-    switch( backdoor->compare_col )
-    {
-        case 1:
-        {
-            parm1 = g1->White();
-            parm2 = g2->White();
-            break;
-        }
-        case 2:
-        {
-            parm1 = g1->WhiteElo();
-            parm2 = g2->WhiteElo();
-            use_atoi = true;
-            break;
-        }
-        case 3:
-        {
-            parm1 = g1->Black();
-            parm2 = g2->Black();
-            break;
-        }
-        case 4:
-        {
-            parm1 = g1->BlackElo();
-            parm2 = g2->BlackElo();
-            use_atoi = true;
-            break;
-        }
-        case 5:
-        {
-            parm1 = g1->Date();
-            parm2 = g2->Date();
-            break;
-        }
-        case 6:
-        {
-            parm1 = objs.repository->nv.m_event_not_site ? g1->Event() : g1->Site();
-            parm2 = objs.repository->nv.m_event_not_site ? g2->Event() : g2->Site();
-            break;
-        }
-        case 7:
-        {
-            parm1 = g1->Round();
-            parm2 = g2->Round();
-            break;
-        }
-        case 8:
-        {
-            parm1 = g1->Result();
-            parm2 = g2->Result();
-            break;
-        }
-        case 9:
-        {
-            parm1 = g1->Eco();
-            parm2 = g2->Eco();
-            break;
-        }
-        case 10: // Ply
-        {
-            int int1 = g1->RefCompressedMoves().length();
-            int int2 = g2->RefCompressedMoves().length();
-            lt = int1 < int2;
-            return lt;
-        }
-    }
-    if( use_atoi )
-    {
-        int int1 = atoi(parm1);
-        int int2 = atoi(parm2);
-        lt = int1 < int2;
-    }
-    else
-    {
-        int negative_if_lt0 = strcmp(parm1,parm2);
-        lt = (negative_if_lt0 < 0);
-    }
-    return lt;
-}
-
 static bool master_predicate( const smart_ptr<ListableGame> &g1, const smart_ptr<ListableGame> &g2 )
 {
     predicate_count++;
@@ -1534,6 +1448,7 @@ static bool master_predicate( const smart_ptr<ListableGame> &g1, const smart_ptr
                 bin2 = strlen(g2->CompressedMoves());
                 break;
             }
+            // case 11: // moves - not present, use the _mc version
         }
         if( use_bin )
         {
@@ -1555,96 +1470,140 @@ static bool master_predicate( const smart_ptr<ListableGame> &g1, const smart_ptr
     return lt;
 }
 
-static bool rev_compare( const smart_ptr<ListableGame> g1, const smart_ptr<ListableGame> g2 )
+
+// Use the suffix _mc to indicate special arrangements necessary for move column sorting
+static std::vector< smart_ptr<ListableGame> >::iterator base_mc;
+
+static bool master_predicate_mc( const MoveColCompareElement &e1, const MoveColCompareElement &e2 )
 {
-    bool lt=false;
-    bool use_atoi=false;
-    const char *parm1;
-    const char *parm2;
-    switch( backdoor->compare_col )
+    smart_ptr<ListableGame> &g1 = *(base_mc+e1.idx);        
+    smart_ptr<ListableGame> &g2 = *(base_mc+e2.idx);        
+    //predicate_count++;
+    //if( (predicate_count & 0xffff) == 0 )
+    //    sort_progress_probe();
+    bool lt=false; bool eq=true;  // Note that both of these cannot, ever, both be true
+    for( int i=0; eq && i<NBR_COLUMNS; i++ )  // tie break loop
     {
-        case 1:
+        int col = sort_order[i];
+        if( col == -1 )
+            break;  // No more tie breaks, eq must be true, so return lt which will be false.
+                    // Back in the day I would never return in the middle of a function but
+                    // these days I've been convinced it is a good idea. So maybe I should
+                    // just return false; ? Hmmmm. Dilemmas dilemmas but perhaps not the
+                    // most pressing issue to worry about.
+        bool forward = sort_forward[i];
+        bool use_bin=false;
+        bool use_rev_bin=false;
+        int bin1;
+        int bin2;
+        const char *parm1;
+        const char *parm2;
+        switch( col )
         {
-            parm1 = g1->White();
-            parm2 = g2->White();
-            break;
+            case 1:
+            {
+                parm1 = g1->White();
+                parm2 = g2->White();
+                break;
+            }
+            case 2:
+            {
+                use_rev_bin = true;
+                bin1 = g1->WhiteEloBin();
+                bin2 = g2->WhiteEloBin();
+                break;
+            }
+            case 3:
+            {
+                parm1 = g1->Black();
+                parm2 = g2->Black();
+                break;
+            }
+            case 4:
+            {
+                use_rev_bin = true;
+                bin1 = g1->BlackEloBin();
+                bin2 = g2->BlackEloBin();
+                break;
+            }
+            case 5:
+            {
+                use_rev_bin = true;
+                bin1 = g1->DateBin();
+                bin2 = g2->DateBin();
+                break;
+            }
+            case 6:
+            {
+                parm1 = objs.repository->nv.m_event_not_site ? g1->Event() : g1->Site();
+                parm2 = objs.repository->nv.m_event_not_site ? g2->Event() : g2->Site();
+                break;
+            }
+            case 7:
+            {
+                use_bin = true;
+                bin1 = g1->RoundBin();
+                bin2 = g2->RoundBin();
+                break;
+            }
+            case 8:
+            {
+                static int xform[] = {3,0,1,2};     // transform order to 1-0, 0-1, 1/2-1/2, *
+                use_bin = true;
+                bin1 = xform[g1->ResultBin()];
+                bin2 = xform[g2->ResultBin()];
+                break;
+            }
+            case 9:
+            {
+                use_bin = true;
+                bin1 = g1->EcoBin();
+                bin2 = g2->EcoBin();
+                break;
+            }
+            case 10: // Ply
+            {
+                use_bin = true;
+                bin1 = strlen(g1->CompressedMoves());
+                bin2 = strlen(g2->CompressedMoves());
+                break;
+            }
+            case 11: // moves, stage 1
+            {
+                if( e1.transpo == e2.transpo )
+                {
+                    parm1 = e1.blob;
+                    parm2 = e2.blob;
+                }
+                else
+                {
+                    use_bin = true;
+                    bin1 = e1.transpo;
+                    bin2 = e2.transpo;
+                }
+                break;
+            }
         }
-        case 2:
+        if( use_bin )
         {
-            parm1 = g1->WhiteElo();
-            parm2 = g2->WhiteElo();
-            use_atoi = true;
-            break;
+            lt = forward ? (bin1 < bin2) : (bin2 < bin1);
+            eq = (bin1 == bin2);
         }
-        case 3:
+        else if( use_rev_bin )  // use this if we want big numbers first when you first
+        {                       //  click on the column, eg elo
+            lt = forward ? (bin2 < bin1) : (bin1 < bin2);
+            eq = (bin1 == bin2);
+        }
+        else
         {
-            parm1 = g1->Black();
-            parm2 = g2->Black();
-            break;
+            int negative_if_parm1_lt_parm2 = strcmp(parm1,parm2);
+            lt = forward ? (negative_if_parm1_lt_parm2 < 0) : (negative_if_parm1_lt_parm2 > 0);
+            eq = (negative_if_parm1_lt_parm2 == 0);
         }
-        case 4:
-        {
-            parm1 = g1->BlackElo();
-            parm2 = g2->BlackElo();
-            use_atoi = true;
-            break;
-        }
-        case 5:
-        {
-            parm1 = g1->Date();
-            parm2 = g2->Date();
-            break;
-        }
-        case 6:
-        {
-            parm1 = objs.repository->nv.m_event_not_site ? g1->Event() : g1->Site();
-            parm2 = objs.repository->nv.m_event_not_site ? g2->Event() : g2->Site();
-            break;
-        }
-        case 8:
-        {
-            parm1 = g1->Result();
-            parm2 = g2->Result();
-            break;
-        }
-        case 9:
-        {
-            parm1 = g1->Eco();
-            parm2 = g2->Eco();
-            break;
-        }
-        case 10:     //Ply
-        {
-            int int1 = g1->RefCompressedMoves().length();
-            int int2 = g2->RefCompressedMoves().length();
-            lt = int2 < int1;
-            return lt;
-        }
-    }
-    if( use_atoi )
-    {
-        int int1 = atoi(parm1);
-        int int2 = atoi(parm2);
-        lt = int2 < int1;
-    }
-    else
-    {
-        int negative_if_lt0 = strcmp(parm2,parm1);
-        lt = (negative_if_lt0 < 0);
     }
     return lt;
 }
 
-static bool compare_blob( const MoveColCompareElement &e1, const MoveColCompareElement &e2 )
-{
-    bool lt = false;    // lt = less than conventionally, and since the default sort order is smaller first,
-                        //   it can be read as "true if e1 comes first"
-    if( e1.transpo == e2.transpo )
-        lt = (e1.blob < e2.blob);
-    else
-        lt = (e1.transpo < e2.transpo);     // smaller transpo nbr should come first
-    return lt;
-}
 
 static bool compare_counts( const MoveColCompareElement &e1, const MoveColCompareElement &e2 )
 {
@@ -1652,145 +1611,214 @@ static bool compare_counts( const MoveColCompareElement &e1, const MoveColCompar
                         //   it can be read as "true if e1 comes first"
     if( e1.transpo != e2.transpo )
         lt = (e1.transpo < e2.transpo);     // smaller transpo nbr should come first
+    else if( e1.count == e2.count )
+        lt = (e1.tie_break < e2.tie_break);
     else
-    {
-        unsigned int len = e1.blob.length();
-        if( e2.blob.length() < len )
-            len = e2.blob.length();
-        for( unsigned int i=0; i<len; i++ )
-        {
-            if( e1.counts[i] != e2.counts[i] )
-            {
-                lt = (e1.counts[i] > e2.counts[i]);     // larger count comes first
-                return lt;
-            }
-        }
-        lt = (e1.blob.length() > e2.blob.length());     // longer length comes first
-    }
+        lt = (e1.count < e2.count);
     return lt;
 }
-
-
-/*
-   Tracking down the issue of "false friends" in move column sorting was tricky. I first
-   noticed the problem in the position after 1.e4 c5 2.b3 d6 with the giant123 database.
-   The three 7...g6 games below were incorrectly appearing before the four 7...e6 games.
-   The solution to the problem was the false_friend_detector bool array, removing the
-   few lines of code where that is created, initialised, set and tested will bring the
-   problem back.
-
-    1.e4 c5 2.b3 bug hunt> Found (idx=14, e6), Sobeck,G-Vlasak,Lu
-    1.e4 c5 2.b3 bug hunt> Found (idx=283, g6), Shanava,K-Magalashvili,Da
-    1.e4 c5 2.b3 bug hunt> Found (idx=384, g6), Boskovic, Malina-Rakic, Marija
-    1.e4 c5 2.b3 bug hunt> Found (idx=390, e6), Stuchly, Radim-Kubos, Rostislav
-    1.e4 c5 2.b3 bug hunt> Found (idx=658, e6), Galko, Agnes-Palinkas, Balazs
-    1.e4 c5 2.b3 bug hunt> Found (idx=708, g6), Miljanic, Boro-Florean, Andrei
-    1.e4 c5 2.b3 bug hunt> Found (idx=1139, e6), Hagenbeck Huebert, Hartmut-Kaeser,Udo
-*/
-
-//#define FALSE_FRIEND_BUG_HUNT
-#ifdef FALSE_FRIEND_BUG_HUNT
-static void make_test_game( std::string &blob, int argc, const char *argv[] )
-{
-    thc::ChessRules cr;
-    thc::Move mv;
-    vector<thc::Move> mvs;
-    for( int i=0; i<argc; i++ )
-    {
-        mv.NaturalInFast( &cr, argv[i] );
-        mvs.push_back(mv);
-        cr.PlayMove(mv);
-    }
-    CompressMoves press;
-    blob = press.Compress(mvs);
-}
-#endif
-
-#ifdef FALSE_FRIEND_BUG_HUNT
-static void diagnose_bug( std::string msg, std::vector<MoveColCompareElement> &inter )
-{
-    cprintf( "%s\n", msg.c_str() );
-    unsigned int sz = inter.size();
-    int nbr=0;
-    for( int i=0; i<sz; i++ )
-    {
-        MoveColCompareElement &e = inter[i];
-        bool g6 = (e.idx==283 || e.idx==384 || e.idx==708); 
-        bool e6 = (e.idx==14  || e.idx==390 || e.idx==658 || e.idx==1139);
-        if( e6 || g6 )
-        {
-            if( nbr==0 && i-1>=0 )
-            {
-                MoveColCompareElement &f = inter[i-1];
-                cprintf( "At %d,   : ", i-1 ); 
-                for( int j=0; j<10; j++ )
-                    cprintf( "%s%02x %d%s", j==0?"{":"", (j<f.counts.size() ? 0xff&f.blob[j] : 0), (j<f.counts.size() ? f.counts[j] : -1), j+1<10?",":"}\n" );
-            }
-
-            cprintf( "At %d, %s: ", i, e6?"e6":"g6" ); 
-            for( int j=0; j<10; j++ )
-                cprintf( "%s%02x %d%s", j==0?"{":"", (j<e.counts.size() ? 0xff&e.blob[j] : 0), (j<e.counts.size() ? e.counts[j] : -1), j+1<10?",":"}\n" );
-
-            if( nbr==6 && i+1<inter.size() )
-            {
-                MoveColCompareElement &f = inter[i+1];
-                cprintf( "At %d,   : ", i+1  ); 
-                for( int j=0; j<10; j++ )
-                    cprintf( "%s%02x %d%s", j==0?"{":"", (j<f.counts.size() ? 0xff&f.blob[j] : 0), (j<f.counts.size() ? f.counts[j] : -1), j+1<10?",":"}\n" );
-            }
-            nbr++;
-        }
-    }
-}
-#endif
 
 // Overridable - base classes may calculate transpo etc
 bool GamesDialog::MoveColCompareReadGame( MoveColCompareElement &e, int idx, const char *blob )
 {        
-    e.idx = idx;
-    e.blob = std::string( blob );
+    e.idx  = idx;
+    e.blob = blob;
     e.transpo = 0;
-    e.counts.resize( e.blob.length() );
+    e.tie_break = 0;
+    e.count = 0;
     return true;
 }
 
-void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &gds )
+static bool do_column( std::vector< MoveColCompareElement >::iterator begin, std::vector< MoveColCompareElement >::iterator end )
 {
-    // Temp testing
-    #ifdef FALSE_FRIEND_BUG_HUNT
-    std::string blob1, blob2;
-    const char *moves1[] = { "e4", "c5", "b3", "d6", "Bb2", "Nf6", "Bb5+", "Bd7", "Bxd7+", "Qxd7", "d3", "Nc6", "Ne2", "g6" };
-    make_test_game( blob1, 14, moves1 );
-    const char *moves2[] = { "e4", "c5", "b3", "d6", "Bb2", "Nf6", "Bb5+", "Bd7", "Bxd7+", "Qxd7", "d3", "Nc6", "Ne2", "e6" };
-    make_test_game( blob2, 14, moves2 );
-    #endif
+    bool done=true;
+    std::vector< MoveColCompareElement >::iterator rover=begin;
 
-    std::vector<MoveColCompareElement> inter;     // intermediate representation
+    // Loop through column
+    while( rover != end )
+    {
+
+        // Identify multiple possible ranges
+        //  range = series of elements with same count 
+        std::vector< MoveColCompareElement >::iterator range = rover;
+        int range_count = rover->count;
+        while( rover != end  )  // across whole column
+        {
+            if( rover->count != range_count )
+                break;
+            rover++;
+        }
+
+        // Have range begin=range, end=rover
+        //  Within range identify multiple possible clumps
+        //  clump = series of elements with same move
+        std::vector< MoveColCompareElement >::iterator range_begin = range;
+        while( range != rover )  // across whole range
+        {
+
+            std::vector< MoveColCompareElement >::iterator clump = range;
+            char prev = '\0';
+            int clump_count=0;
+            while( range != rover )  
+            {
+                char c = *range->blob;
+                if( c == '\0' )
+                {
+                    range++;
+                    break;  // range->blob never advances once we reach '\0' = end of string
+                }
+                if( prev == '\0' )
+                    prev = c;
+                else if( c != prev )
+                    break;   // don't advance range or range blob, start of new clump identified
+                clump_count++;
+                range->blob++;
+                range++;
+            }
+
+            // Clump identified - every element in clump gets count = nbr of elements in clump
+            if( clump_count > 1 )
+                done = false;       // we still have work to do
+            while( clump != range )
+            {
+                clump->count = clump_count;
+                clump++;
+            }    
+        }
+
+        // Sort the whole range        
+        std::sort( range_begin, range, compare_counts );
+    }
+    return done;
+}    
+
+
+void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displayed_games  )
+{
+    int sz = displayed_games.size();
+    if( sz < 2 )
+        return;     // no sorting possible
+
+    // Do the whole sort using an intermediate representation
+    std::vector< MoveColCompareElement> inter;     // intermediate representation
+    //std::vector< MoveColCompareElement *> inter_ptr;            // sort ptrs, it's faster
     
-    // Step 1, do a conventional string sort
-    unsigned int sz = gds.size();
+    // Copy to the intermediate representation
+    int idx=0;
+    base_mc = displayed_games.begin();
+    for( std::vector< smart_ptr<ListableGame> >::iterator it=displayed_games.begin(); it!=displayed_games.end(); idx++, it++ )
+    {
+        MoveColCompareElement e;
+        if( MoveColCompareReadGame(e,idx,(*it)->CompressedMoves())  )
+        {
+            e.tie_break = idx;
+            inter.push_back(e);
+        }
+    }
+    //for( int i=0; i<sz; i++ )
+    //    inter.push_back( &inter_values[i] );
+
+    // Step 1, do a conventional string sort on the moves of the master column
+    std::sort( inter.begin(), inter.end(), master_predicate_mc );
+
+    // Second phase is required to sort on move frequency - if moves col
+    //  is primary sort column apply second phase across whole array
+    //  otherwise apply it in fragments
+    bool whole=false;   // set true if whole array
+    int fragments=0;    // set non-zero if multiple fragments
+    for( int i=0; i<NBR_COLUMNS; i++ )
+    {
+        int col = sort_order[i];
+        if( col == -1 )
+            break;
+        if( col == 11 )
+        {
+            if( i==0 )
+                whole = true;
+            else
+                fragments = i;
+            break;
+        }
+    }
+
+    // If whole, do second phase over entire array
+    int pseudo = 1000000000;    // pseudo count to indicate ranges prior to 1st clump counts
+    if( whole )
+    {
+        for( std::vector< MoveColCompareElement>::iterator it=inter.begin(); it!=inter.end(); it++ )
+            it->count = pseudo;
+    }
+
+    // If fragments, find multiple fragments and do second phase over each one
+    else if( fragments )
+    {
+        bool event_not_site=objs.repository->nv.m_event_not_site;
+        bool in_fragment=false;
+        std::vector< MoveColCompareElement>::iterator start=inter.begin();
+        for( std::vector< MoveColCompareElement>::iterator it=inter.begin(); (it+1)!=inter.end(); it++ )
+        {
+            ListableGame &g1 = *displayed_games[it->idx];
+            ListableGame &g2 = *displayed_games[(it+1)->idx];
+            bool same = true;
+            for( int j=0; same && j<fragments; j++ )
+            {
+                int col = sort_order[j];
+                switch( col )
+                {
+                    case 0:  same = (g1.game_id == g2.game_id);                break;
+                    case 1:  same = (0 == strcmp(g1.White(),g2.White()));      break;
+                    case 2:  same = (g1.WhiteEloBin() == g2.WhiteEloBin());    break; 
+                    case 3:  same = (0 == strcmp(g1.Black(),g2.Black()));      break;
+                    case 4:  same = (g1.BlackEloBin() == g2.BlackEloBin());    break;
+                    case 5:  same = (g1.DateBin() == g2.DateBin());            break;
+                    case 6:  same = (0 == event_not_site ? strcmp(g1.Event(),g2.Event()) : strcmp(g1.Site(),g2.Site()) );  break;
+                    case 7:  same = (g1.RoundBin() == g2.RoundBin());          break;
+                    case 8:  same = (g1.ResultBin() == g2.ResultBin());        break;
+                    case 9:  same = (g1.EcoBin() == g2.EcoBin());              break;
+                    case 10: same = (strlen(g1.CompressedMoves()) == strlen(g2.CompressedMoves()) ); break;
+                }
+            }
+            if( in_fragment && !same )
+            {
+                in_fragment = false;
+                for( std::vector<MoveColCompareElement>::iterator it2=start; it2<=it; it2++ )
+                    it2->count = pseudo;
+                pseudo--;
+            }
+            else if( !in_fragment && same )
+            {
+                in_fragment = true;
+                start = it;
+            }
+        }
+    }
+
+    // Step 3 sort each column in turn using counts
+    bool done = false;
+    while(!done)
+        done = do_column( inter.begin(), inter.end() );
+    
+    // Step 4 build sorted version of games list
+    std::vector< smart_ptr<ListableGame> > temp;
     for( unsigned int i=0; i<sz; i++ )
     {
-        #ifdef FALSE_FRIEND_BUG_HUNT
-        std::string blob = blob1;
-        for( int j=0; j<2; j++ )
-        {
-            if( strlen(gds[i]->CompressedMoves())>=14 && 0==memcmp( blob.c_str(), gds[i]->CompressedMoves(), 14 )  )
-            {
-                cprintf( "1.e4 c5 2.b3 bug hunt> Found (idx=%d, %s), %s-%s\n", i, j==0?"g6":"e6", gds[i]->White(), gds[i]->Black() );
-            }
-            blob = blob2;
-        }
-        #endif
-        MoveColCompareElement e;
-        if( MoveColCompareReadGame(e,i,gds[i]->CompressedMoves())  )
-            inter.push_back(e);
+        MoveColCompareElement &e = inter[i];
+        temp.push_back( displayed_games[e.idx] );
     }
-    std::sort( inter.begin(), inter.end(), compare_blob );
-    #ifdef FALSE_FRIEND_BUG_HUNT
-    diagnose_bug( "After step 1", inter );
-    #endif
+    
+    // Step 5 replace original games list
+    displayed_games = temp;
+}
 
+
+// while work to do
+//    loop through next column
+//        for each range in column
+//              count move groups
+//              sort
+
+//bool do_next_move_column( std::vector< MoveColCompareElement >::iterator begin, std::vector< MoveColCompareElement >::iterator end )
+//{
     // Step 2, work out the nbr of moves in clumps of moves
     /*
      // Imagine that the compressed one byte codes sort in the same order as multi-char ascii move
@@ -1881,137 +1909,8 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &gds )
               broken at rows D) and G) although the move changes so this is moot
 
 */    
-    
-    sz = inter.size();
-    std::vector<bool> false_friend_detector(inter.size());
-    std::fill( false_friend_detector.begin(), false_friend_detector.end(), false );
-    bool at_least_one = true;
-    for( unsigned int j=0; at_least_one; j++ )
-    {
-        at_least_one = false;  // stop when we've passed end of all strings
-        char current='\0';
-        char current_prev_move='\0';
-        unsigned int start=0;
-        bool run_in_progress=false;
-        for( unsigned int i=0; i<sz; i++ )
-        {
-            MoveColCompareElement &e = inter[i];
-            
-            // A short game stops runs
-            if( j >= e.blob.length() )
-            {
-                if( run_in_progress )
-                {
-                    false_friend_detector[i] = true;
-                    run_in_progress = false;
-                    int count = i-start;
-                    for( int k=start; k<i; k++ )
-                    {
-                        MoveColCompareElement &f = inter[k];
-                        f.counts[j] = count;
-                    }
-                }
-                continue;
-            }
-            at_least_one = true;
-            char c = e.blob[j];
-            
-            // First time, get something to start a run
-            if( !run_in_progress )
-            {
-                run_in_progress = true;
-                current = c;
-                start = i;
-            }
-            else
-            {
-                
-                // Run can be over because of character change
-                //  or if false friend detector fires
-                if( c!=current || false_friend_detector[i] )
-                {
-                    int count = i-start;
-                    for( int k=start; k<i; k++ )
-                    {
-                        MoveColCompareElement &f = inter[k];
-                        f.counts[j] = count;
-                    }
-                    false_friend_detector[i] = true;
-                    current = c;  // start a new run
-                    start = i;
-                }
-                
-                // And/Or because we reach bottom
-                if( i+1 == sz )
-                {
-                    int count = sz - start;
-                    for( int k=start; k<sz; k++ )
-                    {
-                        MoveColCompareElement &f = inter[k];
-                        f.counts[j] = count;
-                    }
-                }
-            }
-        }
-    }
-    #ifdef FALSE_FRIEND_BUG_HUNT
-    diagnose_bug( "After step 2", inter );
-    #endif
-    
-    // Step 3 sort again using the counts
-    std::sort( inter.begin(), inter.end(), compare_counts );
-    #ifdef FALSE_FRIEND_BUG_HUNT
-    diagnose_bug( "After step 3", inter );
-    #endif
-    
-    // Step 4 build sorted version of games list
-    std::vector< smart_ptr<ListableGame> > temp;
-    sz = inter.size();
-    for( unsigned int i=0; i<sz; i++ )
-    {
-        MoveColCompareElement &e = inter[i];
-        temp.push_back( gds[e.idx] );
-    }
-    
-    // Step 5 replace original games list
-    gds = temp;
-}
 
-#if 0 // The old way
-void GamesDialog::ColumnSort( int compare_col, std::vector< smart_ptr<ListableGame> > &displayed_games )
-{
-    if( displayed_games.size() > 0 )
-    {
-        if( compare_col == col_last_time )
-            col_consecutive++;
-        else
-            col_consecutive=0;
-        this->compare_col = compare_col;
-        backdoor = this;
-        if( compare_col == 11 )
-        {
-            if( col_consecutive%2 == 0 )
-                MoveColCompare(displayed_games);
-            else
-                std::reverse( displayed_games.begin(), displayed_games.end() );
-        }
-        else
-            std::sort( displayed_games.begin(), displayed_games.end(), (col_consecutive%2==0)?compare:rev_compare );
-        nbr_games_in_list_ctrl = displayed_games.size();
-        list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
-        list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
-        int top = list_ctrl->GetTopItem();
-        int count = 1 + list_ctrl->GetCountPerPage();
-        if( count > nbr_games_in_list_ctrl )
-            count = nbr_games_in_list_ctrl;
-        for( int i=0; i<count; i++ )
-            list_ctrl->RefreshItem(top++);
-        Goto(0);
-        col_last_time = compare_col;
-    }
-}
-
-#else // The new way
+// TODO Put this at the bottom
 void GamesDialog::ColumnSort( int compare_col, std::vector< smart_ptr<ListableGame> > &displayed_games )
 {
     if( displayed_games.size() > 0 )
@@ -2062,13 +1961,25 @@ void GamesDialog::ColumnSort( int compare_col, std::vector< smart_ptr<ListableGa
                 }
             }
         }
-        if( compare_col == 11 )
+
+        
+        // We need a more elaborate algorithm if the moves column is part of the sort
+        bool use_move_col_algorithm = false;
+        for( int i=0; i<NBR_COLUMNS; i++ )
         {
-            if( sort_forward[0] )
-                MoveColCompare(displayed_games);
-            else
-                std::reverse( displayed_games.begin(), displayed_games.end() );
+            if( sort_order[i] == -1 )
+                break;
+            if( sort_order[i] == 11 )
+                use_move_col_algorithm = true;
         }
+
+        // Complicated version if move column involved
+        if( use_move_col_algorithm )
+        {
+            MoveColCompare( displayed_games );
+        }
+
+        // Simple version if move column not involved
         else
         {
             ProgressBar pb("Sorting...","column sort");
@@ -2079,7 +1990,6 @@ void GamesDialog::ColumnSort( int compare_col, std::vector< smart_ptr<ListableGa
                  );
             std::sort( displayed_games.begin(), displayed_games.end(), master_predicate );
             sort_after();
-
         }
         nbr_games_in_list_ctrl = displayed_games.size();
         list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
@@ -2094,10 +2004,10 @@ void GamesDialog::ColumnSort( int compare_col, std::vector< smart_ptr<ListableGa
         col_last_time = compare_col;
     }
 }
-#endif
 
 void GamesDialog::GdvListColClick( int compare_col )
 {
     ColumnSort( compare_col, gc->gds );
 }
+
 
