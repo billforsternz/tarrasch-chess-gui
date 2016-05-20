@@ -1570,7 +1570,7 @@ static bool master_predicate_mc( const MoveColCompareElement &e1, const MoveColC
             }
             case 11: // moves, stage 1
             {
-                if( e1.transpo == e2.transpo )
+                if( true ) //e1.transpo == e2.transpo )
                 {
                     parm1 = e1.blob;
                     parm2 = e2.blob;
@@ -1604,17 +1604,22 @@ static bool master_predicate_mc( const MoveColCompareElement &e1, const MoveColC
     return lt;
 }
 
-
+static bool moves_column_forward;
+static int  incomplete_total;
+static int  incomplete_remaining;
 static bool compare_counts( const MoveColCompareElement &e1, const MoveColCompareElement &e2 )
 {
     bool lt = false;    // lt = less than conventionally, and since the default sort order is smaller first,
                         //   it can be read as "true if e1 comes first"
-    if( e1.transpo != e2.transpo )
-        lt = (e1.transpo < e2.transpo);     // smaller transpo nbr should come first
-    else if( e1.count == e2.count )
-        lt = (e1.tie_break < e2.tie_break);
+    if( e1.count == e2.count )
+    {
+        if( e1.mv == e2.mv )
+            lt = (e1.tie_break < e2.tie_break);
+        else
+            lt = (e1.mv < e2.mv );
+    }
     else
-        lt = (e1.count < e2.count);
+        lt = moves_column_forward ? (e2.count < e1.count) : (e1.count < e2.count);
     return lt;
 }
 
@@ -1629,65 +1634,119 @@ bool GamesDialog::MoveColCompareReadGame( MoveColCompareElement &e, int idx, con
     return true;
 }
 
-static bool do_column( std::vector< MoveColCompareElement >::iterator begin, std::vector< MoveColCompareElement >::iterator end )
+//#define FALSE_FRIEND
+#define RECURSE
+
+static bool do_column( std::vector< MoveColCompareElement >::iterator begin, std::vector< MoveColCompareElement >::iterator end,
+         std::vector<bool> &false_friend_detector  )
 {
     bool done=true;
+    #if 0
+    static int dbg_col=0;
+    if( dbg_col < 3)
+    {
+        for( std::vector< MoveColCompareElement>::iterator it=begin; it!=end; it++ )
+        {
+            ListableGame &g = **(base_mc+it->idx);
+            std::string w;
+            std::string b;
+            w = std::string(g.White());
+            w = w.substr(0,3);
+            b = std::string(g.Black());
+            b = b.substr(0,3);
+            const unsigned char *moves =  (const unsigned char *)g.CompressedMoves();
+            bool match = (w=="Ald" && b=="Pom") || (w=="Pan" && b=="Pom") || (w=="Nyb" && b=="Pom") || (w=="Ald" && b=="Mey");
+            cprintf( "%s%d> %d %s-%s, [%02x %02x %02x] %02x %02x %02x %02x\n", match?" * ":"",dbg_col, it->tie_break, g.White(), g.Black(),
+                (unsigned char) it->blob[0], (unsigned char) it->blob[1], (unsigned char) it->blob[2],
+            /*  moves[0],
+                moves[1],
+                moves[2],
+                moves[3],
+                moves[4],
+                moves[5],
+                moves[6],
+                moves[7], */
+                moves[8],
+                moves[9],
+                moves[10],
+                moves[11]
+            );
+        }
+        dbg_col++;
+    }
+    #endif
+
     std::vector< MoveColCompareElement >::iterator rover=begin;
+    incomplete_remaining = 0;
 
     // Loop through column
-    while( rover != end )
+    while( rover < end )
     {
 
         // Identify multiple possible ranges
         //  range = series of elements with same count 
-        std::vector< MoveColCompareElement >::iterator range = rover;
-        int range_count = rover->count;
-        while( rover != end  )  // across whole column
-        {
-            if( rover->count != range_count )
-                break;
+        if( rover->count < 2 )
             rover++;
-        }
-
-        // Have range begin=range, end=rover
-        //  Within range identify multiple possible clumps
-        //  clump = series of elements with same move
-        std::vector< MoveColCompareElement >::iterator range_begin = range;
-        while( range != rover )  // across whole range
+        else
         {
+            std::vector< MoveColCompareElement >::iterator range = rover;
+            incomplete_remaining += range->count;   // unsorted rows
+            done = false;                           // still work to do
+            if( range->count > end-range )
+                range->count = end-range;   // shouldn't happen
+            rover += range->count;
 
-            std::vector< MoveColCompareElement >::iterator clump = range;
-            char prev = '\0';
-            int clump_count=0;
-            while( range != rover )  
+            // Have range begin=range, end=rover
+            //  Within range identify multiple possible clumps
+            //  clump = series of elements with same move
+            std::vector< MoveColCompareElement >::iterator range_begin = range;
+            while( range != rover )  // across whole range
             {
-                char c = *range->blob;
-                if( c == '\0' )
+
+                std::vector< MoveColCompareElement >::iterator clump = range;
+                char prev = '\0';
+                int clump_count=0;
+                while( range != rover )  
                 {
+                    char c = *range->blob;
+                    if( c == '\0' )
+                    {
+                        range++;
+                        break;  // range->blob never advances once we reach '\0' = end of string
+                    }
+                    if( prev == '\0' )
+                        prev = c;
+                    else if( c != prev
+                    #ifdef FALSE_FRIEND
+                                     || false_friend_detector[range-begin]
+                    #endif
+                           )
+                        break;   // don't advance range or range blob, start of new clump identified
+                    clump_count++;
+                    range->blob++;
                     range++;
-                    break;  // range->blob never advances once we reach '\0' = end of string
                 }
-                if( prev == '\0' )
-                    prev = c;
-                else if( c != prev )
-                    break;   // don't advance range or range blob, start of new clump identified
-                clump_count++;
-                range->blob++;
-                range++;
+
+                // Clump identified - every element in clump gets count = nbr of elements in clump
+                #ifdef FALSE_FRIEND
+                if( clump < end )        
+                    false_friend_detector[clump-begin] = true;
+                #endif
+                while( clump != range )
+                {
+                    clump->count = clump_count;
+                    clump->mv    = prev;
+                    clump++;
+                }    
             }
 
-            // Clump identified - every element in clump gets count = nbr of elements in clump
-            if( clump_count > 1 )
-                done = false;       // we still have work to do
-            while( clump != range )
-            {
-                clump->count = clump_count;
-                clump++;
-            }    
-        }
+            // Sort the whole range
+            std::sort( range_begin, rover, compare_counts );
 
-        // Sort the whole range        
-        std::sort( range_begin, range, compare_counts );
+            #ifdef  RECURSE
+            do_column( range_begin, rover, false_friend_detector );
+            #endif
+        }
     }
     return done;
 }    
@@ -1720,6 +1779,9 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
 
     // Step 1, do a conventional string sort on the moves of the master column
     std::sort( inter.begin(), inter.end(), master_predicate_mc );
+    idx=0;
+    for( std::vector< MoveColCompareElement >::iterator it=inter.begin(); it!=inter.end(); idx++, it++ )
+        it->tie_break = idx;
 
     // Second phase is required to sort on move frequency - if moves col
     //  is primary sort column apply second phase across whole array
@@ -1733,6 +1795,7 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
             break;
         if( col == 11 )
         {
+            moves_column_forward = sort_forward[i];
             if( i==0 )
                 whole = true;
             else
@@ -1742,11 +1805,12 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
     }
 
     // If whole, do second phase over entire array
-    int pseudo = 1000000000;    // pseudo count to indicate ranges prior to 1st clump counts
+    incomplete_total = 0;       // total rows that still need to be sorted 
     if( whole )
     {
-        for( std::vector< MoveColCompareElement>::iterator it=inter.begin(); it!=inter.end(); it++ )
-            it->count = pseudo;
+        std::vector< MoveColCompareElement>::iterator it=inter.begin();
+        it->count = sz;     // one range of size sz
+        incomplete_total = sz;
     }
 
     // If fragments, find multiple fragments and do second phase over each one
@@ -1757,6 +1821,7 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
         std::vector< MoveColCompareElement>::iterator start=inter.begin();
         for( std::vector< MoveColCompareElement>::iterator it=inter.begin(); (it+1)!=inter.end(); it++ )
         {
+            it->count = 0;  // by default no fragment
             ListableGame &g1 = *displayed_games[it->idx];
             ListableGame &g2 = *displayed_games[(it+1)->idx];
             bool same = true;
@@ -1778,25 +1843,48 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
                     case 10: same = (strlen(g1.CompressedMoves()) == strlen(g2.CompressedMoves()) ); break;
                 }
             }
-            if( in_fragment && !same )
-            {
+            bool last = ((it+1) == inter.end());
+            if( last )
+                (it+1)->count = 0;
+            if( in_fragment && !same )   // eg "abcddddefg"
+            {                            //           ^ it points to last d
                 in_fragment = false;
-                for( std::vector<MoveColCompareElement>::iterator it2=start; it2<=it; it2++ )
-                    it2->count = pseudo;
-                pseudo--;
+                int count = (it-start)+1;
+                start->count = count;
+                if( count > 1 )
+                    incomplete_total += count; 
             }
-            else if( !in_fragment && same )
-            {
+            else if( in_fragment && last )  // eg "abcddddd"
+            {                               //           ^ it points to second to last d
+                int count = (it-start)+2;
+                start->count = count;
+                if( count > 1 )
+                    incomplete_total += count; 
+            }
+            else if( !in_fragment && same )  // eg "abcdeeee"
+            {                                //         ^ it points to first e
                 in_fragment = true;
                 start = it;
+                if( last )
+                {
+                    start->count = 2;
+                    incomplete_total += 2; 
+                }
             }
         }
     }
 
     // Step 3 sort each column in turn using counts
+    std::vector<bool> false_friend_detector(sz);
+    std::fill( false_friend_detector.begin(), false_friend_detector.end(), false );
+
+    #ifdef  RECURS
+    do_column( inter.begin(), inter.end(), false_friend_detector );
+    #else
     bool done = false;
     while(!done)
-        done = do_column( inter.begin(), inter.end() );
+        done = do_column( inter.begin(), inter.end(), false_friend_detector );
+    #endif
     
     // Step 4 build sorted version of games list
     std::vector< smart_ptr<ListableGame> > temp;
@@ -1913,7 +2001,7 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
 // TODO Put this at the bottom
 void GamesDialog::ColumnSort( int compare_col, std::vector< smart_ptr<ListableGame> > &displayed_games )
 {
-    if( displayed_games.size() > 0 )
+    if( displayed_games.size() > 1 )
     {
         backdoor = this;
 
