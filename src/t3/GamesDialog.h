@@ -70,7 +70,6 @@ struct MoveColCompareElement
     const char *blob;
     uint32_t tie_break;
     uint32_t count;
-    char mv;
 };
 
 // A GamesListCtrl is a list control within the GamesDialog, it displays a list of games to navigate through and pick from

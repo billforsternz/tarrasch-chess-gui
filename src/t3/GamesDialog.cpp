@@ -1612,12 +1612,7 @@ static bool compare_counts( const MoveColCompareElement &e1, const MoveColCompar
     bool lt = false;    // lt = less than conventionally, and since the default sort order is smaller first,
                         //   it can be read as "true if e1 comes first"
     if( e1.count == e2.count )
-    {
-        if( e1.mv == e2.mv )
-            lt = (e1.tie_break < e2.tie_break);
-        else
-            lt = (e1.mv < e2.mv );
-    }
+        lt = (e1.tie_break < e2.tie_break);
     else
         lt = moves_column_forward ? (e2.count < e1.count) : (e1.count < e2.count);
     return lt;
@@ -1735,7 +1730,6 @@ static bool do_column( std::vector< MoveColCompareElement >::iterator begin, std
                 while( clump != range )
                 {
                     clump->count = clump_count;
-                    clump->mv    = prev;
                     clump++;
                 }    
             }
