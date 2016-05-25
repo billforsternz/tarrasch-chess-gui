@@ -19,6 +19,8 @@
 class AutoTimer
 {
 public:
+    static int instance_cnt;
+    static AutoTimer *instance_ptr;
     void Begin()
     {
         #ifdef THC_WINDOWS
@@ -56,11 +58,17 @@ public:
     }
     AutoTimer( const char *desc )
     {
+        if( instance_cnt == 0 )
+            instance_ptr = this;
+        instance_cnt++;
         this->desc = desc;
         Begin();
     }
     ~AutoTimer()
     {
+        instance_cnt--;
+        if( instance_cnt == 0 )
+            instance_ptr = NULL;
         double elapsed = Elapsed();
         if( desc )
             cprintf( "%s: time elapsed (ms) = %f\n", desc, elapsed );

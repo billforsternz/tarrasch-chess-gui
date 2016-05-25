@@ -1252,6 +1252,23 @@ void GamesDialog::OnEco( wxCommandEvent& WXUNUSED(event) )
     list_ctrl->RefreshItems(0,sz-1);
 }
 
+static void print_vector_int( const char *desc, std::vector<int> &v )
+{ 
+    char buf[500];
+    char *p = buf;
+    for( int i=0; i<v.size(); i++ )
+    {
+        sprintf( p, "%d ", v[i] );
+        p = strchr(p,'\0');
+        if( p>buf+400 && i+1<v.size() )
+        {
+            sprintf( p, "...(%d more)", v.size()-i-1 );
+            break;
+        }
+    }
+    cprintf( "%s [%s]\n", desc, buf );
+}
+
 static const int NBR_COLUMNS=12;
 static int sort_order[NBR_COLUMNS];
 static bool sort_forward[NBR_COLUMNS];
@@ -1260,13 +1277,27 @@ static GamesDialog *backdoor;
 static const uint32_t NBR_STEPS=1000;   // if this isn't 1000, then sort_scan() won't return permill
 static uint64_t predicate_count;
 static uint64_t predicate_nbr_expected;
-static std::vector< smart_ptr<ListableGame> >::iterator predicate_begin;
+std::vector< smart_ptr<ListableGame> > *predicate_displayed_games;
+//static std::vector< smart_ptr<ListableGame> >::iterator predicate_begin;
+//static std::vector< smart_ptr<ListableGame> >::iterator predicate_end;
 static bool (*predicate_func)( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 );
+static uint32_t predicate_dist;
+static bool no_recurs;
 static uint32_t predicate_step;
 static int permill_initial;
 static int permill_max_so_far;
 static ProgressBar *predicate_pb; 
+std::vector<int> sort_scan_vector;
 
+static void dump( const uint8_t *ptr )
+{
+    for( int i=0; i< sizeof(smart_ptr<ListableGame>); i++  )
+    {
+        cprintf( "%02x", *ptr++ );
+        if( (i+1)%4 == 0 )
+            cprintf( " " );
+    }
+}
 static int sort_scan()
 {
     if( predicate_step == 0 )
@@ -1279,11 +1310,38 @@ static int sort_scan()
     {
         uint32_t step = i*predicate_step;      // first value of step is predicate_step
         uint32_t prev = step - predicate_step; // first value of prev is 0
-        bool lower = (*predicate_func)( *(predicate_begin+prev), *(predicate_begin+step) );
+        std::vector< smart_ptr<ListableGame> >::iterator it1 = predicate_displayed_games->begin()+prev; //predicate_displayed_games.begin()+prev;
+        std::vector< smart_ptr<ListableGame> >::iterator it2 = predicate_displayed_games->begin()+step;
+        bool ok = (predicate_displayed_games->begin()<=it1 && it1<predicate_displayed_games->end() ) && (predicate_displayed_games->begin()<=it2 && it2<predicate_displayed_games->end() );
+        if( !ok )
+        {
+            cprintf( "danger danger pull up step=%u, dist=%u\n", step, predicate_dist );
+            return permill;
+        }
+        no_recurs = true;
+        bool a = ( (permill_initial==375) && ((uint32_t)predicate_count==0x01b00000) && i>150 );
+        bool b = ( (permill_initial==375) && ((uint32_t)predicate_count==0x00010000) && i>980 );
+        if( a || b )
+        {
+            const uint8_t *ptr1 = (uint8_t *)&predicate_displayed_games[prev];
+            const uint8_t *ptr2 = (uint8_t *)&predicate_displayed_games[step];
+            dump(ptr1);
+            dump(ptr2);
+            cprintf( " predicate_count=0x%08x, i in=%d", (uint32_t)predicate_count, i );
+            smart_ptr<ListableGame> &g2 = *it2;
+            cprintf( " [%d]",  g2->WhiteEloBin() );
+            cprintf( " - [%d]\n",  g2->BlackEloBin() );
+        }
+        bool lower = (*predicate_func)( *it1, *it2 );
+        if( (permill_initial==375) && ((uint32_t)predicate_count==0x01b00000) && i>150 )
+            cprintf( "i out=%d\n", i );
+        no_recurs = false;
+        //bool lower = (*predicate_func)( *(predicate_displayed_games.begin()+prev), *(predicate_displayed_games.begin()+step) );
         if( lower )
             permill++;
     }
     predicate_count = restore_value; // sort_scan() shouldn't affect value of predicate_count
+    sort_scan_vector.push_back(permill);
     return permill;
 }
 
@@ -1293,17 +1351,20 @@ static void sort_before( std::vector< smart_ptr<ListableGame> >::iterator begin,
                    ProgressBar *pb 
                  )
 {
+    sort_scan_vector.clear();
     predicate_count = 0;
     predicate_pb = pb;
     predicate_func = predicate;
     unsigned int dist = std::distance( begin, end );
+    predicate_dist = dist;
 
     // The following formula is based on experiment - std::sort() called the predicate function approx
     //  this many times for random input - hopefully this is approx worse case since in our experiments
     //  as far as we could tell it was actually called less if the input was patterned - including
     //  already sorted and already reverse sorted patterns
     predicate_nbr_expected = static_cast<uint64_t>( 7.5 * dist * log10(static_cast<float>(dist)) );
-    predicate_begin = begin;
+    //predicate_begin = begin;
+    //predicate_end   = end;
     predicate_step  = dist/NBR_STEPS;
     permill_initial = sort_scan();
     permill_max_so_far = 0;
@@ -1321,6 +1382,28 @@ static void sort_before( std::vector< smart_ptr<ListableGame> >::iterator begin,
     cprintf( "Sorting: nbr_to_sort=%u, nbr_expected=%u, initial permill=%u\n", (unsigned int)dist,  (unsigned int)predicate_nbr_expected, (unsigned int)permill_initial );
 }
 
+static void sort_before_mc( std::vector< MoveColCompareElement >::iterator begin,
+                   std::vector< MoveColCompareElement >::iterator end,
+                   ProgressBar *pb 
+                 )
+{
+    predicate_count = 0;
+    predicate_pb = pb;
+    unsigned int dist = std::distance( begin, end );
+    predicate_dist = dist;
+
+    // The following formula is based on experiment - std::sort() called the predicate function approx
+    //  this many times for random input - hopefully this is approx worse case since in our experiments
+    //  as far as we could tell it was actually called less if the input was patterned - including
+    //  already sorted and already reverse sorted patterns
+    predicate_nbr_expected = static_cast<uint64_t>( 7.5 * dist * log10(static_cast<float>(dist)) );
+    //predicate_begin = begin;
+    //predicate_end   = end;
+    permill_initial = 0;
+    permill_max_so_far = 0;
+    cprintf( "Sorting: nbr_to_sort=%u, nbr_expected=%u, initial permill=%u\n", (unsigned int)dist,  (unsigned int)predicate_nbr_expected, (unsigned int)permill_initial );
+}
+
 static void sort_after()
 {
     cprintf( "Sorting: nbr_expected=%u, nbr_actual=%u\n", (unsigned int)predicate_nbr_expected, (unsigned int)predicate_count );
@@ -1331,7 +1414,9 @@ static void sort_progress_probe()
     if( predicate_pb )
     {
         int permill;
-        #define SCAN_BASED
+        // #define SCAN_BASED - Warning the SCAN_BASED approach to sorting seems flawed/dangerous. Extensive
+        //  efforts to debug crashes during the sort only produced the conclusion that std::sort() doesn't
+        //  necessarily guarantee that the container it is sorting is valid while it is sorting it.
         #ifdef SCAN_BASED
         if( (1000-permill_initial) > 100 ) // scan based approach is useless if input initially nearly sorted
         {
@@ -1366,11 +1451,8 @@ static bool master_predicate( const smart_ptr<ListableGame> &g1, const smart_ptr
     {
         int col = sort_order[i];
         if( col == -1 )
-            break;  // No more tie breaks, eq must be true, so return lt which will be false.
-                    // Back in the day I would never return in the middle of a function but
-                    // these days I've been convinced it is a good idea. So maybe I should
-                    // just return false; ? Hmmmm. Dilemmas dilemmas but perhaps not the
-                    // most pressing issue to worry about.
+            //break;  // No more tie breaks, eq must be true, so return lt which will be false.
+            return( g1->game_id < g2->game_id );  // Use game_id as ultimate tie-breaker
         bool forward = sort_forward[i];
         bool use_bin=false;
         bool use_rev_bin=false;
@@ -1474,23 +1556,42 @@ static bool master_predicate( const smart_ptr<ListableGame> &g1, const smart_ptr
 // Use the suffix _mc to indicate special arrangements necessary for move column sorting
 static std::vector< smart_ptr<ListableGame> >::iterator base_mc;
 
+static bool predicate_experimental( const MoveColCompareElement &e1, const MoveColCompareElement &e2 )
+{
+    bool lt, eq;
+    bool forward=true;
+    if( e1.transpo == e2.transpo )
+    {
+        int negative_if_parm1_lt_parm2 = strcmp(e1.blob,e2.blob);
+        lt = forward ? (negative_if_parm1_lt_parm2 < 0) : (negative_if_parm1_lt_parm2 > 0);
+        eq = (negative_if_parm1_lt_parm2 == 0);
+    }
+    else
+    {
+        int bin1 = e1.transpo;
+        int bin2 = e2.transpo;
+        lt = forward ? (bin1 < bin2) : (bin2 < bin1);
+        eq = (bin1 == bin2);
+    }
+    if( eq )
+        lt = e1.idx < e2.idx;
+    return lt;
+}
+
 static bool master_predicate_mc( const MoveColCompareElement &e1, const MoveColCompareElement &e2 )
 {
+    predicate_count++;
+    if( (predicate_count & 0xffff) == 0 )
+        sort_progress_probe();
     smart_ptr<ListableGame> &g1 = *(base_mc+e1.idx);        
     smart_ptr<ListableGame> &g2 = *(base_mc+e2.idx);        
-    //predicate_count++;
-    //if( (predicate_count & 0xffff) == 0 )
-    //    sort_progress_probe();
     bool lt=false; bool eq=true;  // Note that both of these cannot, ever, both be true
     for( int i=0; eq && i<NBR_COLUMNS; i++ )  // tie break loop
     {
         int col = sort_order[i];
         if( col == -1 )
-            break;  // No more tie breaks, eq must be true, so return lt which will be false.
-                    // Back in the day I would never return in the middle of a function but
-                    // these days I've been convinced it is a good idea. So maybe I should
-                    // just return false; ? Hmmmm. Dilemmas dilemmas but perhaps not the
-                    // most pressing issue to worry about.
+            //break;  // No more tie breaks, eq must be true, so return lt which will be false.
+            return( g1->game_id < g2->game_id );  // Use game_id as ultimate tie-breaker
         bool forward = sort_forward[i];
         bool use_bin=false;
         bool use_rev_bin=false;
@@ -1570,7 +1671,7 @@ static bool master_predicate_mc( const MoveColCompareElement &e1, const MoveColC
             }
             case 11: // moves, stage 1
             {
-                if( true ) //e1.transpo == e2.transpo )
+                if( e1.transpo == e2.transpo )
                 {
                     parm1 = e1.blob;
                     parm2 = e2.blob;
@@ -1629,11 +1730,9 @@ bool GamesDialog::MoveColCompareReadGame( MoveColCompareElement &e, int idx, con
     return true;
 }
 
-//#define FALSE_FRIEND
-#define RECURSE
-
-static bool do_column( std::vector< MoveColCompareElement >::iterator begin, std::vector< MoveColCompareElement >::iterator end,
-         std::vector<bool> &false_friend_detector  )
+// #define RECURSE
+static int do_column_count;
+static bool do_column( std::vector< MoveColCompareElement >::iterator begin, std::vector< MoveColCompareElement >::iterator end )
 {
     bool done=true;
     #if 0
@@ -1673,7 +1772,10 @@ static bool do_column( std::vector< MoveColCompareElement >::iterator begin, std
 
     std::vector< MoveColCompareElement >::iterator rover=begin;
     incomplete_remaining = 0;
-
+    int max_clump_count = 2;    
+    cprintf( "%d> do_column() in\n", ++do_column_count );
+    //bool dbg = (do_column_count == 400 || do_column_count == 401);            
+    //int consec=0;
     // Loop through column
     while( rover < end )
     {
@@ -1681,15 +1783,22 @@ static bool do_column( std::vector< MoveColCompareElement >::iterator begin, std
         // Identify multiple possible ranges
         //  range = series of elements with same count 
         if( rover->count < 2 )
+        {
             rover++;
+            //consec++;
+        }
         else
         {
+            std::vector<int> v;
             std::vector< MoveColCompareElement >::iterator range = rover;
             incomplete_remaining += range->count;   // unsorted rows
             done = false;                           // still work to do
             if( range->count > end-range )
                 range->count = end-range;   // shouldn't happen
             rover += range->count;
+            //if( dbg )
+            //    cprintf( "consec=%d, count=%d\n", consec, range->count );
+            //consec = 0;
 
             // Have range begin=range, end=rover
             //  Within range identify multiple possible clumps
@@ -1704,6 +1813,8 @@ static bool do_column( std::vector< MoveColCompareElement >::iterator begin, std
                 while( range != rover )  
                 {
                     char c = *range->blob;
+                    //if( dbg )
+                    //    cprintf( "c=%02x prev=%02x\n", c&0xff, prev&0xff );
                     if( c == '\0' )
                     {
                         range++;
@@ -1711,37 +1822,40 @@ static bool do_column( std::vector< MoveColCompareElement >::iterator begin, std
                     }
                     if( prev == '\0' )
                         prev = c;
-                    else if( c != prev
-                    #ifdef FALSE_FRIEND
-                                     || false_friend_detector[range-begin]
-                    #endif
-                           )
+                    else if( c != prev )
                         break;   // don't advance range or range blob, start of new clump identified
                     clump_count++;
                     range->blob++;
                     range++;
+                    //if( dbg )
+                    //    cprintf( "clump_count=%d\n", clump_count );
                 }
 
                 // Clump identified - every element in clump gets count = nbr of elements in clump
-                #ifdef FALSE_FRIEND
-                if( clump < end )        
-                    false_friend_detector[clump-begin] = true;
-                #endif
+                v.push_back( clump_count );
                 while( clump != range )
                 {
                     clump->count = clump_count;
                     clump++;
-                }    
+                    //if( dbg )
+                    //    cprintf( "loop clump_count=%d\n", clump_count );
+                }
+                if( clump_count > max_clump_count )
+                    max_clump_count = clump_count;    
             }
 
             // Sort the whole range
             std::sort( range_begin, rover, compare_counts );
+            //if( dbg )
+            //    print_vector_int("",v);
 
             #ifdef  RECURSE
-            do_column( range_begin, rover, false_friend_detector );
+            do_column( range_begin, rover );
             #endif
         }
     }
+    if( max_clump_count == 2 )
+        done = true;
     return done;
 }    
 
@@ -1751,31 +1865,6 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
     int sz = displayed_games.size();
     if( sz < 2 )
         return;     // no sorting possible
-
-    // Do the whole sort using an intermediate representation
-    std::vector< MoveColCompareElement> inter;     // intermediate representation
-    //std::vector< MoveColCompareElement *> inter_ptr;            // sort ptrs, it's faster
-    
-    // Copy to the intermediate representation
-    int idx=0;
-    base_mc = displayed_games.begin();
-    for( std::vector< smart_ptr<ListableGame> >::iterator it=displayed_games.begin(); it!=displayed_games.end(); idx++, it++ )
-    {
-        MoveColCompareElement e;
-        if( MoveColCompareReadGame(e,idx,(*it)->CompressedMoves())  )
-        {
-            e.tie_break = idx;
-            inter.push_back(e);
-        }
-    }
-    //for( int i=0; i<sz; i++ )
-    //    inter.push_back( &inter_values[i] );
-
-    // Step 1, do a conventional string sort on the moves of the master column
-    std::sort( inter.begin(), inter.end(), master_predicate_mc );
-    idx=0;
-    for( std::vector< MoveColCompareElement >::iterator it=inter.begin(); it!=inter.end(); idx++, it++ )
-        it->tie_break = idx;
 
     // Second phase is required to sort on move frequency - if moves col
     //  is primary sort column apply second phase across whole array
@@ -1797,6 +1886,45 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
             break;
         }
     }
+
+    // Do the whole sort using an intermediate representation
+    AutoTimer at("MoveColCompare()");
+    DebugPrintfTime dpt;
+    cprintf( "Copy to intermediate representation in\n" );
+    std::vector< MoveColCompareElement> inter;     // intermediate representation
+    //std::vector< MoveColCompareElement *> inter_ptr;            // sort ptrs, it's faster
+    
+    // Copy to the intermediate representation
+    int idx=0;
+    base_mc = displayed_games.begin();
+    for( std::vector< smart_ptr<ListableGame> >::iterator it=displayed_games.begin(); it!=displayed_games.end(); idx++, it++ )
+    {
+        MoveColCompareElement e;
+        if( MoveColCompareReadGame(e,idx,(*it)->CompressedMoves())  )
+        {
+            e.tie_break = idx;
+            inter.push_back(e);
+        }
+    }
+    //for( int i=0; i<sz; i++ )
+    //    inter.push_back( &inter_values[i] );
+    cprintf( "Copy to intermediate representation out\n" );
+
+    // Step 1, do a conventional string sort on the moves of the master column
+    {
+        ProgressBar pb(whole?"Column Sort: Moves column requires two stages":"Column Sort: Moves column included in sort", "Requires two stages, stage 1", false );
+        sort_before_mc( inter.begin(),
+                        inter.end(),
+                        &pb 
+                );
+        cprintf( "Conventional sort in\n" );
+        std::sort( inter.begin(), inter.end(), master_predicate_mc );
+        cprintf( "Conventional sort out\n" );
+        sort_after();
+    }
+    idx=0;
+    for( std::vector< MoveColCompareElement >::iterator it=inter.begin(); it!=inter.end(); idx++, it++ )
+        it->tie_break = idx;
 
     // If whole, do second phase over entire array
     incomplete_total = 0;       // total rows that still need to be sorted 
@@ -1869,18 +1997,43 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
     }
 
     // Step 3 sort each column in turn using counts
-    std::vector<bool> false_friend_detector(sz);
-    std::fill( false_friend_detector.begin(), false_friend_detector.end(), false );
-
-    #ifdef  RECURS
-    do_column( inter.begin(), inter.end(), false_friend_detector );
+    cprintf( "Subsort on each column of moves in\n" );
+    do_column_count=0;
+    #ifdef  RECURSE
+    do_column( inter.begin(), inter.end() );
     #else
-    bool done = false;
-    while(!done)
-        done = do_column( inter.begin(), inter.end(), false_friend_detector );
+    {
+        ProgressBar pb(whole?"Column Sort: Moves column requires two stages":"Column Sort: Moves column included in sort", "Requires two stages, stage 2", false );
+        bool done = false;
+        int permill = 0;
+        while(!done)
+        {
+            done = do_column( inter.begin(), inter.end() );
+            int delta = 50;
+            if( permill < 400 )
+                delta = 50;
+            else if( permill < 650 )
+                delta = 40;
+            else if( permill < 800 )
+                delta = 30;
+            else if( permill < 880 )
+                delta = 20;
+            else if( permill < 940 )
+                delta = 10;
+            else if( permill < 970 )
+                delta = 5;
+            else if( permill < 990 )
+                delta = 1;
+            else if( permill < 999 )
+                delta = 0;
+            pb.Permill( permill += delta );
+        }
+    }
     #endif
+    cprintf( "Subsort on each column of moves out\n" );
     
     // Step 4 build sorted version of games list
+    cprintf( "Rebuild displayed games vector in\n" );
     std::vector< smart_ptr<ListableGame> > temp;
     for( unsigned int i=0; i<sz; i++ )
     {
@@ -1890,6 +2043,7 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
     
     // Step 5 replace original games list
     displayed_games = temp;
+    cprintf( "Rebuild displayed games vector out\n" );
 }
 
 
@@ -2064,7 +2218,10 @@ void GamesDialog::ColumnSort( int compare_col, std::vector< smart_ptr<ListableGa
         // Simple version if move column not involved
         else
         {
-            ProgressBar pb("Sorting...","column sort");
+            //AutoTimer at("Move column not included");
+            //DebugPrintfTime dpt;
+            ProgressBar pb("Column sort" , "Sorting...", false );
+            predicate_displayed_games = &displayed_games;
             sort_before( displayed_games.begin(),
                    displayed_games.end(),
                    master_predicate,

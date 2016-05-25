@@ -33,6 +33,7 @@
 #include "thc.h"
 #include "Rybka.h"
 #include "DebugPrintf.h"
+#include "AutoTimer.h"
 #include "Book.h"
 #include "Database.h"
 #include "Objects.h"
@@ -104,6 +105,8 @@ static bool dbg_console_enabled = false;    // set this to false except during d
 #endif
 DebugPrintfTime::DebugPrintfTime()  { dbg_printf_prepend_time++; }
 DebugPrintfTime::~DebugPrintfTime() { dbg_printf_prepend_time--; if(dbg_printf_prepend_time<0) dbg_printf_prepend_time=0; }
+int AutoTimer::instance_cnt;
+AutoTimer *AutoTimer::instance_ptr;
 
 #ifndef KILL_DEBUG_COMPLETELY
 int core_printf( const char *fmt, ... )
@@ -111,23 +114,29 @@ int core_printf( const char *fmt, ... )
     if( !dbg_console_enabled )
         return 0;
     int ret=0;
-    if( dbg_printf_prepend_time )
-    {
-        time_t rawtime;
-        struct tm * timeinfo;
-        time ( &rawtime );
-        timeinfo = localtime ( &rawtime );
-        char buf[200];
-        strcpy( buf, asctime(timeinfo) );
-        char *p = strchr(buf,'\n');
-        if( p )
-            *p = '\0';
-		printf( "%s ", buf );
-    }
 	va_list args;
 	va_start( args, fmt );
     char buf[1000];
-    vsnprintf( buf, sizeof(buf)-2, fmt, args ); 
+    char *p = buf;
+    if( dbg_printf_prepend_time )
+    {
+        AutoTimer *at = AutoTimer::instance_ptr;
+        if( at )
+        {
+            sprintf( p, "%fms ", at->Elapsed() );
+            p = strchr(buf,'\0');
+        }
+        else
+        {
+            time_t rawtime;
+            struct tm * timeinfo;
+            time ( &rawtime );
+            timeinfo = localtime ( &rawtime );
+            strcpy( p, asctime(timeinfo) );
+            p = strchr(buf,'\n');
+        }
+    }
+    vsnprintf( p, sizeof(buf)-2-(p-buf), fmt, args ); 
     fputs(buf,stdout);
     if( teefile )
         fputs(buf,teefile);

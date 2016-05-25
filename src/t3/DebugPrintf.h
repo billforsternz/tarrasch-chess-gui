@@ -9,7 +9,6 @@
 #include "wx/log.h"
 #include "Portability.h"
 
-
 // We used to use the old C double parenthesis trick to make DebugPrintf() a conditional compilation, eg;
 //  dbg_printf(("Hello world, x=%d",x));    // <- eliminated unless _DEBUG build
 // ... but now we use variadic macro feature of C++
