@@ -419,8 +419,11 @@ bool ChessApp::OnInit()
 
 int ChessApp::OnExit()
 {
-    if( teefile )
-        fclose(teefile);
+	if (teefile)
+	{
+		fclose(teefile);
+		teefile = NULL;
+	}
     cprintf( "ChessApp::OnExit(): May wait for tiny database load here...\n" );
     extern wxMutex *KillWorkerThread();
     wxMutex *ptr_mutex_tiny_database = KillWorkerThread();

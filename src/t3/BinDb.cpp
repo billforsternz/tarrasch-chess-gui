@@ -1170,8 +1170,11 @@ void BinDbLoadAllGames(  bool for_db_append, std::vector< smart_ptr<ListableGame
     int nbr_bits_site   = BitsRequired(fh.nbr_sites);   
     cprintf( "%d player bits, %d event bits, %d site bits\n", nbr_bits_player, nbr_bits_event, nbr_bits_site );
     ReadStrings( fin, fh.nbr_players, common.players );
+    cprintf( "Players ReadStrings() complete\n" );
     ReadStrings( fin, fh.nbr_events, common.events );
+    cprintf( "Events ReadStrings() complete\n" );
     ReadStrings( fin, fh.nbr_sites, common.sites );
+    cprintf( "Sites ReadStrings() complete\n" );
 
     common.bb.Next(nbr_bits_event);    // Event
     common.bb.Next(nbr_bits_site);     // Site
@@ -1226,6 +1229,9 @@ void BinDbLoadAllGames(  bool for_db_append, std::vector< smart_ptr<ListableGame
             background_load_permill = (i*1000) / den;
         nbr_games++;
         if(
+#ifdef _DEBUG
+            (nbr_games<10000 && (nbr_games%100)==0) ||
+#endif
             ((nbr_games%10000) == 0 ) /* ||
                                         (
                                         (nbr_games < 100) &&

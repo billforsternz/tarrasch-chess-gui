@@ -169,6 +169,17 @@ static void ErrorMessage( const char *filename_uci_exe, char *str )  //display d
     LocalFree(msg);
 }
 
+// This was picked up from Stackoverflow - yet another stopgap solution to various
+//  Unicode vs Ansi issues
+#if 0
+wchar_t *convertCharArrayToLPCWSTR(const char* charArray)
+{
+	wchar_t* wString = new wchar_t[4096];
+	MultiByteToWideChar(CP_ACP, 0, charArray, -1, wString, 4096);
+	return wString;
+}
+#endif
+
 //---------------------------------------------------------------------------
 Rybka::Rybka( const char *filename_uci_exe )
 {
@@ -218,8 +229,8 @@ Rybka::Rybka( const char *filename_uci_exe )
     if( !Is64BitWindows() )
     {
         DWORD program_type;
-        BOOL is_exe; 
-        is_exe = GetBinaryType( filename_uci_exe, &program_type );
+        BOOL is_exe;
+		is_exe = GetBinaryType(filename_uci_exe /*convertCharArrayToLPCWSTR(filename_uci_exe)*/, &program_type );
         if( is_exe && program_type==SCS_64BIT_BINARY )
         {
             wxString caption( "Error running UCI engine" );
@@ -371,7 +382,7 @@ void Rybka::StartThinking( bool ponder, thc::ChessPosition &pos, const char *for
     else
         strcpy( gbl_forsyth, "startpos" );
     gbl_smoves = "";
-    sprintf( gbl_go, "go%s wtime %ld btime %ld winc %ld binc %ld",
+    wxSprintf( gbl_go, "go%s wtime %ld btime %ld winc %ld binc %ld",
                          (ponder?" ponder":""), wtime_ms, btime_ms, winc_ms, binc_ms );
     bestmove_received = false;
     ponder_received = false;
@@ -391,7 +402,7 @@ void Rybka::StartThinking( bool ponder, thc::ChessPosition &pos, const char *for
     else
         strcpy( gbl_forsyth, "startpos" );
     gbl_smoves = smoves;
-    sprintf( gbl_go, "go%s wtime %ld btime %ld winc %ld binc %ld",
+    wxSprintf( gbl_go, "go%s wtime %ld btime %ld winc %ld binc %ld",
                          (ponder?" ponder":""), wtime_ms, btime_ms, winc_ms, binc_ms );
     bestmove_received = false;
     ponder_received = false;
@@ -508,7 +519,7 @@ void Rybka::Kibitz( thc::ChessPosition &pos, const char *forsyth )
         pos_kibitz = pos;
         strcpy( gbl_forsyth, "fen " );
         strcpy( gbl_forsyth+4, forsyth );
-        sprintf( gbl_go, "go infinite" );
+        wxSprintf( gbl_go, "go infinite" );
         gbl_score = 0;
         if( okay )
             NewState( "Kibitz()", SEND_KIBITZ1 );
@@ -790,7 +801,7 @@ const char *Rybka::user_hook_in()
                         if( multipv_found )
                         {
                             found_something_to_send = true;
-                            sprintf( option_buf, "setoption name MultiPV value 1" );
+                            wxSprintf( option_buf, "setoption name MultiPV value 1" );
                         }
                         break;
                     }
@@ -803,7 +814,7 @@ const char *Rybka::user_hook_in()
                                 ponder_first = false;
                                 ponder_sent  = rep->m_ponder;
                                 found_something_to_send = true;
-                                sprintf( option_buf, "setoption name Ponder value %s", rep->m_ponder?"true":"false" );
+                                wxSprintf( option_buf, "setoption name Ponder value %s", rep->m_ponder?"true":"false" );
                             }
                         }
                         break;
@@ -822,7 +833,7 @@ const char *Rybka::user_hook_in()
                                     hash = hash_min;
                                 else if( hash > hash_max )
                                     hash = hash_max;
-                                sprintf( option_buf, "setoption name Hash value %d", hash );
+                                wxSprintf( option_buf, "setoption name Hash value %d", hash );
                             }
                         }
                         break;
@@ -841,7 +852,7 @@ const char *Rybka::user_hook_in()
                                     max_cpu_cores = max_cpu_cores_min;
                                 else if( max_cpu_cores > max_cpu_cores_max )
                                     max_cpu_cores = max_cpu_cores_max;
-                                sprintf( option_buf, "setoption name %s value %d", max_cpu_cores_name, max_cpu_cores );
+                                wxSprintf( option_buf, "setoption name %s value %d", max_cpu_cores_name, max_cpu_cores );
                             }
                         }
                         break;
@@ -855,7 +866,7 @@ const char *Rybka::user_hook_in()
                             {
                                 custom1_first = false;
                                 found_something_to_send = true;
-                                sprintf( option_buf, "setoption name %s value %s", rep->m_custom1a.c_str(), rep->m_custom1b.c_str() );
+                                wxSprintf( option_buf, "setoption name %s value %s", rep->m_custom1a.c_str(), rep->m_custom1b.c_str() );
                             }
                         }
                         break;
@@ -869,7 +880,7 @@ const char *Rybka::user_hook_in()
                             {
                                 custom2_first = false;
                                 found_something_to_send = true;
-                                sprintf( option_buf, "setoption name %s value %s", rep->m_custom2a.c_str(), rep->m_custom2b.c_str() );
+                                wxSprintf( option_buf, "setoption name %s value %s", rep->m_custom2a.c_str(), rep->m_custom2b.c_str() );
                             }
                         }
                         break;
@@ -883,7 +894,7 @@ const char *Rybka::user_hook_in()
                             {
                                 custom3_first = false;
                                 found_something_to_send = true;
-                                sprintf( option_buf, "setoption name %s value %s", rep->m_custom3a.c_str(), rep->m_custom3b.c_str() );
+                                wxSprintf( option_buf, "setoption name %s value %s", rep->m_custom3a.c_str(), rep->m_custom3b.c_str() );
                             }
                         }
                         break;
@@ -897,7 +908,7 @@ const char *Rybka::user_hook_in()
                             {
                                 custom4_first = false;
                                 found_something_to_send = true;
-                                sprintf( option_buf, "setoption name %s value %s", rep->m_custom4a.c_str(), rep->m_custom4b.c_str() );
+                                wxSprintf( option_buf, "setoption name %s value %s", rep->m_custom4a.c_str(), rep->m_custom4b.c_str() );
                             }
                         }
                         break;
@@ -919,9 +930,9 @@ const char *Rybka::user_hook_in()
         case SEND_PLAY_ENGINE3:
         {
             if( gbl_smoves.Len() == 0 )
-                sprintf( buf, "position %s", gbl_forsyth );
+                wxSprintf( buf, "position %s", gbl_forsyth );
             else
-                sprintf( buf, "position %s moves%s", gbl_forsyth, gbl_smoves.c_str() );
+                wxSprintf( buf, "position %s moves%s", gbl_forsyth, gbl_smoves.c_str() );
             s = buf;
             NewState( "user_hook_in()", SEND_PLAY_ENGINE4 );
             break;
@@ -980,11 +991,11 @@ const char *Rybka::user_hook_in()
                         {
                             found_something_to_send = true;
                             if( NBR_KIBITZ_LINES <= 2 )
-                                sprintf( option_buf, "setoption name MultiPV value 2" );
+                                wxSprintf( option_buf, "setoption name MultiPV value 2" );
                             else if( NBR_KIBITZ_LINES == 3 )
-                                sprintf( option_buf, "setoption name MultiPV value 3" );
+                                wxSprintf( option_buf, "setoption name MultiPV value 3" );
                             else
-                                sprintf( option_buf, "setoption name MultiPV value 4" );
+                                wxSprintf( option_buf, "setoption name MultiPV value 4" );
                         }
                         break;
                     }
@@ -1002,7 +1013,7 @@ const char *Rybka::user_hook_in()
                                     hash = hash_min;
                                 else if( hash > hash_max )
                                     hash = hash_max;
-                                sprintf( option_buf, "setoption name Hash value %d", hash );
+                                wxSprintf( option_buf, "setoption name Hash value %d", hash );
                             }
                         }
                         break;
@@ -1021,7 +1032,7 @@ const char *Rybka::user_hook_in()
                                     max_cpu_cores = max_cpu_cores_min;
                                 else if( max_cpu_cores > max_cpu_cores_max )
                                     max_cpu_cores = max_cpu_cores_max;
-                                sprintf( option_buf, "setoption name %s value %d", max_cpu_cores_name, max_cpu_cores );
+                                wxSprintf( option_buf, "setoption name %s value %d", max_cpu_cores_name, max_cpu_cores );
                             }
                         }
                         break;
@@ -1035,7 +1046,7 @@ const char *Rybka::user_hook_in()
                             {
                                 custom1_first = false;
                                 found_something_to_send = true;
-                                sprintf( option_buf, "setoption name %s value %s", rep->m_custom1a.c_str(), rep->m_custom1b.c_str() );
+                                wxSprintf( option_buf, "setoption name %s value %s", rep->m_custom1a.c_str(), rep->m_custom1b.c_str() );
                             }
                         }
                         break;
@@ -1049,7 +1060,7 @@ const char *Rybka::user_hook_in()
                             {
                                 custom2_first = false;
                                 found_something_to_send = true;
-                                sprintf( option_buf, "setoption name %s value %s", rep->m_custom2a.c_str(), rep->m_custom2b.c_str() );
+                                wxSprintf( option_buf, "setoption name %s value %s", rep->m_custom2a.c_str(), rep->m_custom2b.c_str() );
                             }
                         }
                         break;
@@ -1063,7 +1074,7 @@ const char *Rybka::user_hook_in()
                             {
                                 custom3_first = false;
                                 found_something_to_send = true;
-                                sprintf( option_buf, "setoption name %s value %s", rep->m_custom3a.c_str(), rep->m_custom3b.c_str() );
+                                wxSprintf( option_buf, "setoption name %s value %s", rep->m_custom3a.c_str(), rep->m_custom3b.c_str() );
                             }
                         }
                         break;
@@ -1077,7 +1088,7 @@ const char *Rybka::user_hook_in()
                             {
                                 custom4_first = false;
                                 found_something_to_send = true;
-                                sprintf( option_buf, "setoption name %s value %s", rep->m_custom4a.c_str(), rep->m_custom4b.c_str() );
+                                wxSprintf( option_buf, "setoption name %s value %s", rep->m_custom4a.c_str(), rep->m_custom4b.c_str() );
                             }
                         }
                         break;
@@ -1098,7 +1109,7 @@ const char *Rybka::user_hook_in()
         }
         case SEND_KIBITZ3:
         {
-            sprintf( buf, "position %s", gbl_forsyth );
+            wxSprintf( buf, "position %s", gbl_forsyth );
             s = buf;
             NewState( "user_hook_in()", SEND_KIBITZ4 );
             break;

@@ -40,7 +40,6 @@ static bool create_mode;
 void db_primitive_build_default_database( const char *db_file_name )
 {
     bool build = true;
-    std::string error_msg;
     std::string db(db_file_name);
     std::string pgn;
     int offset = db.find(".tdb");
