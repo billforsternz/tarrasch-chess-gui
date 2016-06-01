@@ -216,7 +216,7 @@ bool DbDialog::ReadItemFromMemory( int item, CompactGame &pact )
                 std::string &this_one = transpositions[j].blob;
                 const char *p = this_one.c_str();
                 size_t len = this_one.length();
-                std::string str_blob = gc_db_displayed_games.gds[item]->RefCompressedMoves();
+                std::string str_blob( gc_db_displayed_games.gds[item]->CompressedMoves() );
                 if( str_blob.length()>=len && 0 == memcmp(p,str_blob.c_str(),len) )
                 {
                     pact.transpo_nbr = j+1;
@@ -263,7 +263,7 @@ bool DbDialog::MoveColCompareReadGame( MoveColCompareElement &e, int idx, const 
             e.idx  = idx;
             e.blob = blob + offset;   // rest of game, from board position
             e.count = 0;;
-            e.transpo = transpo_activated ? j+1 : 0;
+            e.transpo = j+1;
             return true;
         }
     }
@@ -812,6 +812,7 @@ void DbDialog::StatsCalculate()
     }
 
     // Print the transpositions in order
+    std::sort( transpositions.rbegin(), transpositions.rend() );
     cprintf( "%d transpositions\n", transpositions.size() );
     wxArrayString strings_transpos;
     for( unsigned int j=0; j<transpositions.size(); j++ )

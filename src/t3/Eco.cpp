@@ -634,9 +634,8 @@ static void eco_codes_inner()
         //cprintf( "ok=%s\n", ok?"true":"false" );
         if( ok )
         {
-            std::string s = gd.RefCompressedMoves();
-            p->compressed_moves = s;
-            //cprintf( "%s: %d moves\n", eco_codes[i].eco_code, s.length() );
+            p->compressed_moves = std::string( gd.CompressedMoves() );
+            //cprintf( "%s: %d moves\n", eco_codes[i].eco_code, p->compressed_moves.length() );
         }
     }
     thc::ChessRules cr_temp;

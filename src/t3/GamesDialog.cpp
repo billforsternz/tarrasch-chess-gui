@@ -1275,6 +1275,7 @@ static bool sort_forward[NBR_COLUMNS];
 static GamesDialog *backdoor;
 static float NLOGN_FACTOR=7.5;
 static const uint32_t NBR_STEPS=1000;   // if this isn't 1000, then sort_scan() won't return permill
+static bool predicate_transpo_activated;
 static uint64_t predicate_count;
 static uint64_t predicate_nbr_expected;
 std::vector< smart_ptr<ListableGame> > *predicate_displayed_games;
@@ -1287,7 +1288,7 @@ static uint32_t predicate_step;
 static int permill_initial;
 static int permill_max_so_far;
 static ProgressBar *predicate_pb; 
-std::vector<int> sort_scan_vector;
+//std::vector<int> sort_scan_vector;
 
 static void dump( const uint8_t *ptr )
 {
@@ -1341,7 +1342,7 @@ static int sort_scan()
             permill++;
     }
     predicate_count = restore_value; // sort_scan() shouldn't affect value of predicate_count
-    sort_scan_vector.push_back(permill);
+    //sort_scan_vector.push_back(permill);
     return permill;
 }
 
@@ -1351,7 +1352,7 @@ static void sort_before( std::vector< smart_ptr<ListableGame> >::iterator begin,
                    ProgressBar *pb 
                  )
 {
-    sort_scan_vector.clear();
+    //sort_scan_vector.clear();
     predicate_count = 0;
     predicate_pb = pb;
     predicate_func = predicate;
@@ -1568,28 +1569,6 @@ static bool master_predicate( const smart_ptr<ListableGame> &g1, const smart_ptr
 // Use the suffix _mc to indicate special arrangements necessary for move column sorting
 static std::vector< smart_ptr<ListableGame> >::iterator base_mc;
 
-static bool predicate_experimental( const MoveColCompareElement &e1, const MoveColCompareElement &e2 )
-{
-    bool lt, eq;
-    bool forward=true;
-    if( e1.transpo == e2.transpo )
-    {
-        int negative_if_parm1_lt_parm2 = strcmp(e1.blob,e2.blob);
-        lt = forward ? (negative_if_parm1_lt_parm2 < 0) : (negative_if_parm1_lt_parm2 > 0);
-        eq = (negative_if_parm1_lt_parm2 == 0);
-    }
-    else
-    {
-        int bin1 = e1.transpo;
-        int bin2 = e2.transpo;
-        lt = forward ? (bin1 < bin2) : (bin2 < bin1);
-        eq = (bin1 == bin2);
-    }
-    if( eq )
-        lt = e1.idx < e2.idx;
-    return lt;
-}
-
 static bool master_predicate_mc( const MoveColCompareElement &e1, const MoveColCompareElement &e2 )
 {
     predicate_count++;
@@ -1683,16 +1662,24 @@ static bool master_predicate_mc( const MoveColCompareElement &e1, const MoveColC
             }
             case 11: // moves, stage 1
             {
-                if( e1.transpo == e2.transpo )
+                if( !predicate_transpo_activated )
                 {
                     parm1 = e1.blob;
                     parm2 = e2.blob;
                 }
                 else
                 {
-                    use_bin = true;
-                    bin1 = e1.transpo;
-                    bin2 = e2.transpo;
+                    if( e1.transpo == e2.transpo )
+                    {
+                        parm1 = e1.blob;
+                        parm2 = e2.blob;
+                    }
+                    else
+                    {
+                        use_bin = true;
+                        bin1 = e1.transpo;
+                        bin2 = e2.transpo;
+                    }
                 }
                 break;
             }
@@ -1718,16 +1705,31 @@ static bool master_predicate_mc( const MoveColCompareElement &e1, const MoveColC
 }
 
 static bool moves_column_forward;
-static int  incomplete_total;
-static int  incomplete_remaining;
 static bool compare_counts( const MoveColCompareElement &e1, const MoveColCompareElement &e2 )
 {
     bool lt = false;    // lt = less than conventionally, and since the default sort order is smaller first,
                         //   it can be read as "true if e1 comes first"
-    if( e1.count == e2.count )
-        lt = (e1.tie_break < e2.tie_break);
+    if( true ) //!predicate_transpo_activated )
+    {
+        if( e1.count == e2.count )
+            lt = (e1.tie_break < e2.tie_break);
+        else
+            lt = moves_column_forward ? (e2.count < e1.count) : (e1.count < e2.count);
+    }
     else
-        lt = moves_column_forward ? (e2.count < e1.count) : (e1.count < e2.count);
+    {
+        if( e1.transpo == e2.transpo )
+        {
+            if( e1.count == e2.count )
+                lt = (e1.tie_break < e2.tie_break);
+            else
+                lt = moves_column_forward ? (e2.count < e1.count) : (e1.count < e2.count);
+        }
+        else
+        {
+            lt = moves_column_forward ? (e1.transpo < e2.transpo) : (e2.transpo < e1.transpo);
+        }
+    }
     return lt;
 }
 
@@ -1742,54 +1744,28 @@ bool GamesDialog::MoveColCompareReadGame( MoveColCompareElement &e, int idx, con
     return true;
 }
 
+static void DebugRange( const char *desc, std::vector< MoveColCompareElement >::iterator begin, std::vector< MoveColCompareElement >::iterator end )
+{
+    cprintf( "%s\n", desc );
+    for( std::vector< MoveColCompareElement >::iterator it=begin; it!=end; it++ )
+    {
+        std::vector< smart_ptr<ListableGame> >::iterator g = base_mc + it->idx;
+        cprintf( "count=%d tie_break=%d T%c %s-%s, [%02x %02x %02x]\n", it->count, it->tie_break, '0'+it->transpo, (*g)->White(), (*g)->Black(),
+            (unsigned char) it->blob[0], (unsigned char) it->blob[1], (unsigned char) it->blob[2] );
+    }
+}
+
 // #define RECURSE
 static int do_column_count;
 static bool do_column( std::vector< MoveColCompareElement >::iterator begin, std::vector< MoveColCompareElement >::iterator end )
 {
     bool done=true;
-    #if 0
-    static int dbg_col=0;
-    if( dbg_col < 3)
-    {
-        for( std::vector< MoveColCompareElement>::iterator it=begin; it!=end; it++ )
-        {
-            ListableGame &g = **(base_mc+it->idx);
-            std::string w;
-            std::string b;
-            w = std::string(g.White());
-            w = w.substr(0,3);
-            b = std::string(g.Black());
-            b = b.substr(0,3);
-            const unsigned char *moves =  (const unsigned char *)g.CompressedMoves();
-            bool match = (w=="Ald" && b=="Pom") || (w=="Pan" && b=="Pom") || (w=="Nyb" && b=="Pom") || (w=="Ald" && b=="Mey");
-            cprintf( "%s%d> %d %s-%s, [%02x %02x %02x] %02x %02x %02x %02x\n", match?" * ":"",dbg_col, it->tie_break, g.White(), g.Black(),
-                (unsigned char) it->blob[0], (unsigned char) it->blob[1], (unsigned char) it->blob[2],
-            /*  moves[0],
-                moves[1],
-                moves[2],
-                moves[3],
-                moves[4],
-                moves[5],
-                moves[6],
-                moves[7], */
-                moves[8],
-                moves[9],
-                moves[10],
-                moves[11]
-            );
-        }
-        dbg_col++;
-    }
-    #endif
-
     std::vector< MoveColCompareElement >::iterator rover=begin;
-    incomplete_remaining = 0;
     int max_clump_count = 2; 
     if( do_column_count<5 || (do_column_count<50 && do_column_count%10==0) ||  do_column_count%100==0 )   
         cprintf( "%d> do_column() in\n", do_column_count );
     ++do_column_count;
-    //bool dbg = (do_column_count == 400 || do_column_count == 401);            
-    //int consec=0;
+
     // Loop through column
     while( rover < end )
     {
@@ -1799,20 +1775,14 @@ static bool do_column( std::vector< MoveColCompareElement >::iterator begin, std
         if( rover->count < 2 )
         {
             rover++;
-            //consec++;
         }
         else
         {
-            //std::vector<int> v;
             std::vector< MoveColCompareElement >::iterator range = rover;
-            incomplete_remaining += range->count;   // unsorted rows
-            done = false;                           // still work to do
+            done = false;  // still work to do
             if( range->count > end-range )
                 range->count = end-range;   // shouldn't happen
             rover += range->count;
-            //if( dbg )
-            //    cprintf( "consec=%d, count=%d\n", consec, range->count );
-            //consec = 0;
 
             // Have range begin=range, end=rover
             //  Within range identify multiple possible clumps
@@ -1827,8 +1797,6 @@ static bool do_column( std::vector< MoveColCompareElement >::iterator begin, std
                 while( range != rover )  
                 {
                     char c = *range->blob;
-                    //if( dbg )
-                    //    cprintf( "c=%02x prev=%02x\n", c&0xff, prev&0xff );
                     if( c == '\0' )
                     {
                         range++;
@@ -1841,27 +1809,22 @@ static bool do_column( std::vector< MoveColCompareElement >::iterator begin, std
                     clump_count++;
                     range->blob++;
                     range++;
-                    //if( dbg )
-                    //    cprintf( "clump_count=%d\n", clump_count );
                 }
 
                 // Clump identified - every element in clump gets count = nbr of elements in clump
-                //v.push_back( clump_count );
                 while( clump != range )
                 {
                     clump->count = clump_count;
                     clump++;
-                    //if( dbg )
-                    //    cprintf( "loop clump_count=%d\n", clump_count );
                 }
                 if( clump_count > max_clump_count )
                     max_clump_count = clump_count;    
             }
 
             // Sort the whole range
+            //DebugRange( "Range in", range_begin, rover );
             std::sort( range_begin, rover, compare_counts );
-            //if( dbg )
-            //    print_vector_int("",v);
+            //DebugRange( "Range out", range_begin, rover );
 
             #ifdef  RECURSE
             do_column( range_begin, rover );
@@ -1901,6 +1864,15 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
         }
     }
 
+    // If transpo activated, use transpo part of Moves column as part of fragment identification
+    bool primary=whole; // set true if moves column is primary sort column
+                        //  (not quite same as whole because of transpo)
+    if( transpo_activated )
+    {
+        whole = false;
+        fragments++;
+    }    
+
     // Do the whole sort using an intermediate representation
     AutoTimer at("MoveColCompare()");
     DebugPrintfTime dpt;
@@ -1918,15 +1890,18 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
         {
             e.tie_break = idx;
             inter.push_back(e);
+            if( 0 == strcmp( (*it)->White(), "ZAPPA ZANZIBAR (wh)" ) )
+                cprintf( "** T%c ZAPPA ZANZIBAR (wh)", e.transpo+'0' );
         }
     }
     //for( int i=0; i<sz; i++ )
     //    inter.push_back( &inter_values[i] );
     cprintf( "Copy to intermediate representation out\n" );
+    //DebugRange( "Show Intermediate representation", inter.begin(), inter.end() );
 
     // Step 1, do a conventional string sort on the moves of the master column
     {
-        ProgressBar pb(whole?"Column Sort: Moves column requires two stages":"Column Sort: Moves column included in sort", "Requires two stages, stage 1", false );
+        ProgressBar pb(primary?"Column Sort: Moves column requires two stages":"Column Sort: Moves column included in sort", "Requires two stages, stage 1", false );
         sort_before_mc( inter.begin(),
                         inter.end(),
                         &pb 
@@ -1936,17 +1911,20 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
         cprintf( "Conventional sort out\n" );
         sort_after();
     }
-    idx=0;
+
+    // Establish tie break after conventional sort
+    idx = 0;
     for( std::vector< MoveColCompareElement >::iterator it=inter.begin(); it!=inter.end(); idx++, it++ )
+    {
         it->tie_break = idx;
+    }
+    //DebugRange( "Tie break added", inter.begin(), inter.end() );
 
     // If whole, do second phase over entire array
-    incomplete_total = 0;       // total rows that still need to be sorted 
     if( whole )
     {
         std::vector< MoveColCompareElement>::iterator it=inter.begin();
         it->count = sz;     // one range of size sz
-        incomplete_total = sz;
     }
 
     // If fragments, find multiple fragments and do second phase over each one
@@ -1977,9 +1955,10 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
                     case 8:  same = (g1.ResultBin() == g2.ResultBin());        break;
                     case 9:  same = (g1.EcoBin() == g2.EcoBin());              break;
                     case 10: same = (strlen(g1.CompressedMoves()) == strlen(g2.CompressedMoves()) ); break;
+                    case 11: same = (it->transpo == (it+1)->transpo);          break;
                 }
             }
-            bool last = ((it+1) == inter.end());
+            bool last = ((it+2) == inter.end());
             if( last )
                 (it+1)->count = 0;
             if( in_fragment && !same )   // eg "abcddddefg"
@@ -1987,25 +1966,18 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
                 in_fragment = false;
                 int count = (it-start)+1;
                 start->count = count;
-                if( count > 1 )
-                    incomplete_total += count; 
             }
             else if( in_fragment && last )  // eg "abcddddd"
             {                               //           ^ it points to second to last d
                 int count = (it-start)+2;
                 start->count = count;
-                if( count > 1 )
-                    incomplete_total += count; 
             }
             else if( !in_fragment && same )  // eg "abcdeeee"
             {                                //         ^ it points to first e
                 in_fragment = true;
                 start = it;
                 if( last )
-                {
                     start->count = 2;
-                    incomplete_total += 2; 
-                }
             }
         }
     }
@@ -2017,11 +1989,12 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
     do_column( inter.begin(), inter.end() );
     #else
     {
-        ProgressBar pb(whole?"Column Sort: Moves column requires two stages":"Column Sort: Moves column included in sort", "Requires two stages, stage 2", false );
+        ProgressBar pb(primary?"Column Sort: Moves column requires two stages":"Column Sort: Moves column included in sort", "Requires two stages, stage 2", false);//!primary );
         bool done = false;
         int permill = 0;
         for(;;) //int col=0; col<120; col++ )    // after 120 columns (i.e. plys) we surely are only tiebreaking very unlikely duplicates 
         {
+            //DebugRange( "Before do_column()", inter.begin(), inter.end() );
             done = do_column( inter.begin(), inter.end() );
             if( done )
                 break;
@@ -2044,7 +2017,31 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
                 delta = 1;
             else if( permill >= 1000 )
                 delta = 0;
-            pb.Permill( permill += delta );
+            bool abort = pb.Permill( permill += delta );
+            /* The following feature was not very useful/obvious in practice
+            if( abort )
+            {
+                int answer = wxMessageBox("Temporarily remove moves column from sort stack?","Moves column sort cancelled", wxYES_NO);
+                if( answer == wxYES )
+                {
+                    bool triggered = false;
+                    for( int i=0; i<NBR_COLUMNS-1; i++ )
+                    {
+                        if( !triggered )
+                        {
+                            int col = sort_order[i];
+                            if( col == 11 )
+                                triggered = true;
+                        }
+                        if( triggered )
+                        {
+                            sort_order[i] = sort_order[i+1];
+                            sort_forward[i] = sort_forward[i+1];
+                        }
+                    }
+                }
+                break;
+            } */
         }
     }
     #endif
@@ -2066,17 +2063,18 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
     cprintf( "Replace displayed games vector out\n" );
 }
 
-
+// This is basically how move column sorting works now
+// ---------------------------------------------------
 // while work to do
-//    loop through next column
+//    loop through next column (in this context column === ply)
 //        for each range in column
 //              count move groups
 //              sort
 
-//bool do_next_move_column( std::vector< MoveColCompareElement >::iterator begin, std::vector< MoveColCompareElement >::iterator end )
-//{
-    // Step 2, work out the nbr of moves in clumps of moves
-    /*
+// The following explains the ideas involved a little more
+// -------------------------------------------------------
+
+/*
      // Imagine that the compressed one byte codes sort in the same order as multi-char ascii move
      //  representations (they don't but the key thing is that they are deterministic - the actual order
      //  doesn't matter)
@@ -2086,87 +2084,163 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
      D)  1.d4 d5 2.c4 e6 3.Nc3
      E)  1.d4 d5 2.c4 e6 3.Nf3
      F)  1.d4 d5 2.c4 e6 3.Nf3
-     G)  1.d4 d5 2.c4 c5 3.d5
+     G)  1.d4 d5 2.c4 c5 3.e3
+
+     // At this point we establish the tie-break order - basically A->B->C->D->E->F->G
+
+     // col 1 range is whole array
+     // col 1 A) count the moves
+     // Calculate the counts in column 1 like this
+         col=1 col=2 col=3 col=4 col=5
+     A)  7 d4
+     B)  7
+     C)  7
+     D)  7    col=1 count 7 '1.d4's at offset 0 into each game
+     E)  7
+     F)  7
+     G)  7
+     // col 1 B) sort based on these counts (unchanged due to the tie-break order)
+    
+     // col 2 range is whole array (because col 1 count is uniform)
+     // col 2 A) count the moves
+         col=1 col=2 col=3 col=4 col=5
+     A)  7     3 Nf6
+     B)  7     3
+     C)  7     3
+     D)  7     4 d5    col=2 count 3 '1...Nf6's and 4 '1...d5's
+     E)  7     4
+     F)  7     4
+     G)  7     4
+
+     // col 2 B) sort based on these counts - the tie-break system again avoids disruptive
+     //  chaos (D,E,F,G move ahead of A,B,C with no internal reordering) and gives us this
+         col=1 col=2 col=3 col=4 col=5
+     D)  7     4
+     E)  7     4
+     F)  7     4
+     G)  7     4
+     A)  7     3
+     B)  7     3
+     C)  7     3
      
-     // Calculate the counts like this
-              j=0 j=1 j=2 j=3 j=4
-     i=0  A)  7
-     i=1  B)  7
-     i=2  C)  7
-     i=3  D)  7      j=0 count 7 '1.d4's at offset 0 into each game
-     i=4  E)  7
-     i=5  F)  7
-     i=6  G)  7
+     // col 3 two ranges (because two groups of col 2 counts)
+     // col 3 range 1 A) count the moves
+     // col 3 range 1 B) sort based on these counts
+         col=1 col=2 col=3 col=4 col=5
+     D)  7     4     4 c4
+     E)  7     4     4    col 3 count 4 2.c4 s
+     F)  7     4     4     then sort (sort doesn't change order as 4s all rank equally)
+     G)  7     4     4
+     A)  7     3     
+     B)  7     3     
+     C)  7     3     
+
+     // col 3 range 2 A) count the moves
+     // col 3 range 2 B) sort based on these counts
+              col=1 col=2 col=3 col=4 col=5
+     D)  7     4     
+     E)  7     4     
+     F)  7     4     
+     G)  7     4     
+     A)  7     3     3 c4
+     B)  7     3     3    col 3 count 3 2.c4 s
+     C)  7     3     3     then sort (sort doesn't change order as 3s all rank equally)
      
-              j=0 j=1 j=2 j=3 j=4
-     i=0  A)  7   3
-     i=1  B)  7   3
-     i=2  C)  7   3
-     i=3  D)  7   4    j=1 count 3 '1...Nf6's and 4 '1...d5's
-     i=4  E)  7   4
-     i=5  F)  7   4
-     i=6  G)  7   4
-     
-              j=0 j=1 j=2 j=3 j=4
-     i=0  A)  7   3   7   6   1
-     i=1  B)  7   3   7   6   2
-     i=2  C)  7   3   7   6   2     etc.
-     i=3  D)  7   4   7   6   1
-     i=4  E)  7   4   7   6   2
-     i=5  F)  7   4   7   6   2
-     i=6  G)  7   4   7   1   1
-     
-     //  Now re-sort based on these counts, bigger counts come first
-     E)  7   4   7   6   2
-     F)  7   4   7   6   2
-     D)  7   4   7   6   1
-     G)  7   4   7   1   1
-     B)  7   3   7   6   2
-     C)  7   3   7   6   2
-     A)  7   3   7   6   1
+     // col 4 two ranges (because two groups of col 3 counts)
+     // col 4 range 1 A) count the moves
+     // col 4 range 1 B) sort based on these counts (no changes as 3 e6s were ahead of 1 c5 anyway)
+         col=1 col=2 col=3 col=4 col=5
+     D)  7     4     4     3 e6
+     E)  7     4     4     3
+     F)  7     4     4     3
+     G)  7     4     4     1 c5
+     A)  7     3     3     
+     B)  7     3     3     
+     C)  7     3     3     
+
+     // col 4 range 2 A) count the moves
+     // col 4 range 2 B) sort based on these counts (no changes)
+         col=1 col=2 col=3 col=4 col=5
+     D)  7     4     4     
+     E)  7     4     4     
+     F)  7     4     4     
+     G)  7     4     4     
+     A)  7     3     3     3 e6
+     B)  7     3     3     3
+     C)  7     3     3     3
+
+     // col 5 three ranges (because three groups of col 4 counts)
+     // col 5 range 1 A) count the moves
+         col=1 col=2 col=3 col=4 col=5
+     D)  7     4     4     3     1 Nc3
+     E)  7     4     4     3     2 Nf3
+     F)  7     4     4     3     2
+     G)  7     4     4     1     
+     A)  7     3     3     3     
+     B)  7     3     3     3     
+     C)  7     3     3     3     
+
+     // col 5 range 1 B) sort based on these counts (E and F move ahead of D)
+         col=1 col=2 col=3 col=4 col=5
+     E)  7     4     4     3     2 Nf3
+     F)  7     4     4     3     2
+     D)  7     4     4     3     1 Nc3
+     G)  7     4     4     1     
+     A)  7     3     3     3     
+     B)  7     3     3     3     
+     C)  7     3     3     3     
+
+     // col 5 range 2 A) count the moves
+     // col 5 range 2 B) sort based on these counts (no change)
+         col=1 col=2 col=3 col=4 col=5
+     E)  7     4     4     3      
+     F)  7     4     4     3      
+     D)  7     4     4     3      
+     G)  7     4     4     1     1 e3
+     A)  7     3     3     3      
+     B)  7     3     3     3      
+     C)  7     3     3     3
+
+     // col 5 range 3 A) count the moves
+         col=1 col=2 col=3 col=4 col=5
+     E)  7     4     4     3      
+     F)  7     4     4     3      
+     D)  7     4     4     3      
+     G)  7     4     4     1      
+     A)  7     3     3     3     1 Nc3 
+     B)  7     3     3     3     2 Nf3
+     C)  7     3     3     3     2
+
+     // col 5 range 3 B) sort (B and C move ahead of A)
+         col=1 col=2 col=3 col=4 col=5
+     E)  7     4     4     3      
+     F)  7     4     4     3      
+     D)  7     4     4     3      
+     G)  7     4     4     1      
+     B)  7     3     3     3     2 Nf3
+     C)  7     3     3     3     2
+     A)  7     3     3     3     1 Nc3 
      
      // So final ordering is according to line popularity
      E)  1.d4 d5 2.c4 e6 3.Nf3
      F)  1.d4 d5 2.c4 e6 3.Nf3
      D)  1.d4 d5 2.c4 e6 3.Nc3
-     G)  1.d4 d5 2.c4 c5 3.d5
+     G)  1.d4 d5 2.c4 c5 3.e3
      B)  1.d4 Nf6 2.c4 e6 3.Nf3
      C)  1.d4 Nf6 2.c4 e6 3.Nf3
      A)  1.d4 Nf6 2.c4 e6 3.Nc3
 
-     Actually, experience shows we need a refinement. Look at the refined
-     initial count calculation below. The asterisked moves are "false friends",
-     they should break the vertical run from above even though they are the
-     same move as the move above them.
+     There are more ranges in each column, as each range either remains the same size
+     or is divided up as we move right. So we keep counting moves and sorting in smaller
+     ranges. All line swaps take place within these smaller ranges (so the changes become
+     less dramatic as the algorithm converges).
 
-          j=0     j=1    j=2      j=3    j=4
-     A)   1.d4,7  Nf6,3  2.c4,3   e6,3   3.Nc3,1
-     B)   1.d4,7  Nf6,3  2.c4,3   e6,3   3.Nf3,2
-     C)   1.d4,7  Nf6,3  2.c4,3   e6,3   3.Nf3,2
-     D)   1.d4,7  d5,4   2.c4*,4  e6*,3  3.Nc3,1
-     E)   1.d4,7  d5,4   2.c4*,4  e6*,3  3.Nf3,2
-     F)   1.d4,7  d5,4   2.c4*,4  e6*,3  3.Nf3,2
-     G)   1.d4,7  d5,4   2.c4*,4  c5,1   3.d5,1
-
-     Our false friend detector is very simple. Our count calculation
-     algorithm does complete columns, so j=0 then j=1, then j=2, etc. Keep an
-     array of flags, initially clear, one flag per row.
-
-     For each column, 1) set the flag for any row where a vertical run is broken
-     Also, 2) if we find the row flag was previously set, break the vertical run 
-     there even if the move is unchanged
-
-     At stage j=0, no flags previously set, no vertical runs broken.
-     At stage j=1, 1) set the flag for row D.
-     At stage j=2, 2) break the vertical run since the flag is set for row D.
-     At stage j=3, 2) break the vertical run since the flag is set for row D.
-               and 1) set the flag for row G
-     At stage j=4, 1) set the flag for row B and E, 2) vertical runs would be
-              broken at rows D) and G) although the move changes so this is moot
+     Note that even if (by some fluke) all moves at column/ply 40 (say) were identical,
+     this couldn't reverse this trend, the ranges and counts would not increase relative
+     to column 39, (they would actually remain the same).
 
 */    
 
-// TODO Put this at the bottom
 void GamesDialog::ColumnSort( int compare_col, std::vector< smart_ptr<ListableGame> > &displayed_games )
 {
     if( displayed_games.size() > 1 )
@@ -2230,6 +2304,7 @@ void GamesDialog::ColumnSort( int compare_col, std::vector< smart_ptr<ListableGa
         }
 
         // Complicated version if move column involved
+        predicate_transpo_activated = transpo_activated;
         if( use_move_col_algorithm )
         {
             MoveColCompare( displayed_games );

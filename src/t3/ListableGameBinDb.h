@@ -130,9 +130,6 @@ public:
     
     virtual bool IsDbGameOnly() { return true; }   // a horrible kludge
     virtual bool IsInMemory()   { return true; }
-    virtual const std::string &RefCompressedMoves()  {static std::string s=pack.Blob();
-                                                         cprintf("WARNING: Try to eliminate this static string pattern\n"); return s;}
-                                                      // note that simply returning the const char * pack.Blob() compiles but not only doesn't work properly, it has insidious effects
 };
 
 

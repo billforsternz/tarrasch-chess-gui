@@ -107,13 +107,6 @@ public:
         GetCompactGame( pact );
         return pact.moves;
     }
-    virtual const std::string &RefCompressedMoves()
-    {
-        static std::string blob;
-        blob.clear();
-        pack.Unpack(blob);
-        return blob;
-    }
     virtual thc::ChessPosition &RefStartPosition()
     {
         static CompactGame pact;

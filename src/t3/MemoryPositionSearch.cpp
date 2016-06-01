@@ -390,25 +390,25 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
             dsfg.offset_first=0;
             dsfg.offset_last=0;
             /* Roster r = in_memory_game_cache[i]->RefRoster();
-            cprintf( "idx=%d, white=%s[%s], black=%s[%s], blob=%s[%s]\n",
+            cprintf( "idx=%d, white=%s[%s], black=%s[%s], blob=%s\n",
                         in_memory_game_cache[i]->GetGameId(),
                         in_memory_game_cache[i]->White(),  r.white.c_str(),
                         in_memory_game_cache[i]->Black(),  r.black.c_str(),
-                        in_memory_game_cache[i]->CompressedMoves(),  in_memory_game_cache[i]->RefCompressedMoves().c_str() ); */
+                        in_memory_game_cache[i]->CompressedMoves() ); */
             bool promotion_in_game = (p->game_attributes!=0);
             bool game_found;
             #ifdef BASE_START_POINT
-            game_found = SearchGameBase( p->RefCompressedMoves() );
+            game_found = SearchGameBase( std::string(p->CompressedMoves()) );
             #endif
             #ifdef CONSERVATIVE
-            game_found = SearchGameSlowPromotionAllowed( p->RefCompressedMoves(), dsfg.offset_first, dsfg.offset_last  );
+            game_found = SearchGameSlowPromotionAllowed( std::string(p->CompressedMoves()), dsfg.offset_first, dsfg.offset_last  );
             #endif
             #ifdef NO_PROMOTIONS_FLAWED
-            game_found = SearchGameOptimisedNoPromotionAllowed( p->RefCompressedMoves(), dsfg.offset_first, dsfg.offset_last  );
+            game_found = SearchGameOptimisedNoPromotionAllowed( std::string(p->CompressedMoves()), dsfg.offset_first, dsfg.offset_last  );
             #endif
             #ifdef CORRECT_BEST_PRACTICE
             if( promotion_in_game )
-                game_found = SearchGameSlowPromotionAllowed( p->RefCompressedMoves(), dsfg.offset_first, dsfg.offset_last  );
+                game_found = SearchGameSlowPromotionAllowed( std::string(p->CompressedMoves()), dsfg.offset_first, dsfg.offset_last  );
             else
                 game_found = SearchGameOptimisedNoPromotionAllowed( p->CompressedMoves(), dsfg.offset_first, dsfg.offset_last );
             #endif

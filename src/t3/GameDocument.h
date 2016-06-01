@@ -45,7 +45,7 @@ public:
         return moves;
     }
     std::string blob_recalculated_on_request;
-    virtual const std::string &RefCompressedMoves()
+    virtual const char *CompressedMoves()
     {
         blob_recalculated_on_request.clear();
         CompressMoves press;
@@ -60,7 +60,7 @@ public:
             }
             blob_recalculated_on_request = press.Compress( moves );
         }
-        return blob_recalculated_on_request;
+        return blob_recalculated_on_request.c_str();
     }
     virtual thc::ChessPosition &RefStartPosition() { return start_position; }
 
@@ -76,7 +76,6 @@ public:
     virtual const char *WhiteElo()  { return r.white_elo.c_str(); }
     virtual const char *BlackElo()  { return r.black_elo.c_str(); }
     virtual const char *Fen()       { return r.fen.c_str();     }
-    virtual const char *CompressedMoves() {std::string temp=RefCompressedMoves(); return blob_recalculated_on_request.c_str();}
 
     
     // Copy constructor

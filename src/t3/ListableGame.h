@@ -65,7 +65,6 @@ public:
     // High performance
     virtual Roster                  &RefRoster()          { static Roster r; return r; }
     virtual std::vector<thc::Move>  &RefMoves()           { static std::vector<thc::Move> moves; return moves; }
-    virtual const std::string &RefCompressedMoves()       { static std::string moves; return moves; }
     virtual thc::ChessPosition      &RefStartPosition()   { static thc::ChessPosition cp; return cp; }
 
     // For editing the roster
