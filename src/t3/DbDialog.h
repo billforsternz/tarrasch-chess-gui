@@ -91,7 +91,7 @@ public:
     virtual void GdvButton5();
     virtual void GdvOnCancel();
     virtual void GdvNextMove( int idx );
-    virtual bool MoveColCompareReadGame( MoveColCompareElement &e, int idx, const char *blob );
+    virtual int  CalculateTranspo( const char *blob, int &transpo );
     virtual int  GetBasePositionIdx( CompactGame &pact ) { int idx; pact.FindPositionInGame( objs.db->GetPositionHash(), idx ); return idx; }
 
     // Helpers

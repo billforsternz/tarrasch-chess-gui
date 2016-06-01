@@ -251,8 +251,9 @@ DbDialog::DbDialog
 
 
 // Overidden function used for smart move column compare
-bool DbDialog::MoveColCompareReadGame( MoveColCompareElement &e, int idx, const char *blob  )
+int DbDialog::CalculateTranspo( const char *blob, int &transpo )
 {        
+    transpo = 0;
     unsigned int sz2 = transpositions.size();
     for( unsigned int j=0; j<sz2; j++ )
     {
@@ -260,14 +261,11 @@ bool DbDialog::MoveColCompareReadGame( MoveColCompareElement &e, int idx, const 
         unsigned int offset = ptp->blob.length();
         if( 0 == memcmp( ptp->blob.c_str(), blob, offset ) )
         {
-            e.idx  = idx;
-            e.blob = blob + offset;   // rest of game, from board position
-            e.count = 0;;
-            e.transpo = j+1;
-            return true;
+            transpo = j+1;
+            return offset;
         }
     }
-    return false;
+    return 0;
 }
 
 

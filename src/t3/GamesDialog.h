@@ -225,7 +225,7 @@ public:
     virtual void GdvButton4();
     virtual void GdvButton5();
     virtual void GdvNextMove( int idx );
-    virtual bool MoveColCompareReadGame( MoveColCompareElement &e, int idx, const char *blob );
+    virtual int  CalculateTranspo( const char *blob, int &transpo );
     virtual int  GetBasePositionIdx( CompactGame &pact ) { return 0; }
 
 //  void OnClose( wxCloseEvent& event );

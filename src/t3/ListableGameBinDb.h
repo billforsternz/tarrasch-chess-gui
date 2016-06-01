@@ -22,6 +22,7 @@ public:
         : pack( cb_idx, binary_game )
     {
         this->game_id = game_id;
+        SetAttributes();
     }
 
     ListableGameBinDb( int game_id,
@@ -50,9 +51,8 @@ public:
     )
     {
         this->game_id = game_id;
+        SetAttributes( compressed_moves.c_str(), compressed_moves.length() );
     }
-
-
 
 
     virtual int GetGameId()  { return game_id; }

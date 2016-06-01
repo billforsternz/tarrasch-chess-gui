@@ -1733,15 +1733,11 @@ static bool compare_counts( const MoveColCompareElement &e1, const MoveColCompar
     return lt;
 }
 
-// Overridable - base classes may calculate transpo etc
-bool GamesDialog::MoveColCompareReadGame( MoveColCompareElement &e, int idx, const char *blob )
+// Overridable - base classes may calculate transpo
+int GamesDialog::CalculateTranspo( const char *blob, int &transpo )
 {        
-    e.idx  = idx;
-    e.blob = blob;
-    e.transpo = 0;
-    e.tie_break = 0;
-    e.count = 0;
-    return true;
+    transpo = 0;
+    return 0;
 }
 
 static void DebugRange( const char *desc, std::vector< MoveColCompareElement >::iterator begin, std::vector< MoveColCompareElement >::iterator end )
@@ -1886,13 +1882,12 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
     for( std::vector< smart_ptr<ListableGame> >::iterator it=displayed_games.begin(); it!=displayed_games.end(); idx++, it++ )
     {
         MoveColCompareElement e;
-        if( MoveColCompareReadGame(e,idx,(*it)->CompressedMoves())  )
-        {
-            e.tie_break = idx;
-            inter.push_back(e);
-            if( 0 == strcmp( (*it)->White(), "ZAPPA ZANZIBAR (wh)" ) )
-                cprintf( "** T%c ZAPPA ZANZIBAR (wh)", e.transpo+'0' );
-        }
+        e.idx = idx;
+        e.tie_break = 0;
+        e.count = 0;
+        const char *blob = (*it)->CompressedMoves();
+        e.blob = blob + CalculateTranspo( blob, e.transpo );
+        inter.push_back( e );
     }
     //for( int i=0; i<sz; i++ )
     //    inter.push_back( &inter_values[i] );

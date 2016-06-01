@@ -1126,7 +1126,7 @@ void BinDbLoadAllGames(  bool for_db_append, std::vector< smart_ptr<ListableGame
     int bb_sz = common.bb.FrozenSize();
     int game_count = fh.nbr_games;
     int nbr_games=0;
-    int nbr_promotion_games=0;  // later
+    int nbr_promotion_games=0;
     for( int i=0; i<game_count && !kill_background_load; i++ )
     {
         if( pb )
@@ -1164,6 +1164,8 @@ void BinDbLoadAllGames(  bool for_db_append, std::vector< smart_ptr<ListableGame
         else
             background_load_permill = (i*1000) / den;
         nbr_games++;
+        if( info.game_attributes )
+            nbr_promotion_games++;
         if(
 #ifdef _DEBUG
             (nbr_games<10000 && (nbr_games%100)==0) ||

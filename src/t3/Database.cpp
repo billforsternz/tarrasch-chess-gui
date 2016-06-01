@@ -1487,7 +1487,6 @@ bool Database::LoadAllGamesForPositionSearchSql( std::vector< smart_ptr<Listable
                 if( game_id != idx++ )
                     is_pristine = false;
                 background_load_permill = (idx*1000) / (game_count?game_count:1);
-
                 if( info.game_attributes )
                     nbr_promotion_games++;
                 nbr_games++;
