@@ -172,7 +172,9 @@ void DbDialog::GdvOnActivate()
             wxSize sz_button = utility->GetSize();
             wxPoint pos_button = utility->GetPosition();
             //utility->SetPosition( pos_button );
-            if( objs.gl->db_clipboard )
+            moves_from_base_position.clear();   //NOSQL
+            StatsCalculate();
+        /*  NOSQL  if( objs.gl->db_clipboard )
             {
                 StatsCalculate();
             }
@@ -181,7 +183,7 @@ void DbDialog::GdvOnActivate()
                 bool ok = LoadGamesIntoMemory();
                 if( ok )
                     StatsCalculate();
-            }
+            }    */
         }
         Goto(0); // list_ctrl->SetFocus();
     }
@@ -272,6 +274,7 @@ int DbDialog::CalculateTranspo( const char *blob, int &transpo )
 bool DbDialog::LoadGamesPrompted( std::string prompt )
 {
     bool ok=true;
+/*  NOSQL  
     bool in_memory = (gc_db_displayed_games.gds.size() > 0);
     if( !in_memory )
     {
@@ -286,7 +289,7 @@ bool DbDialog::LoadGamesPrompted( std::string prompt )
         ok = LoadGamesIntoMemory();
         if( ok )
             StatsCalculate();
-    }
+    } */
     return ok;
 }
 
@@ -426,8 +429,9 @@ std::multimap<B,A> flip_and_sort_map(const std::map<A,B> &src)
 
 void DbDialog::GdvUtility()
 {
-    bool ok = LoadGamesIntoMemory();
-    if( ok )
+        moves_from_base_position.clear();   //NOSQL
+    /* NOSQL bool ok = LoadGamesIntoMemory();
+    if( ok ) */
         StatsCalculate();
 }
 
@@ -515,41 +519,19 @@ void DbDialog::GdvCheckBox( bool checked )
         //  situation where stats must be requested, unconditionally load games into
         //  memory (Calculate Stats button loads games into memory)
         gc->gds.clear();
-        LoadGamesIntoMemory();
+        /* NOSQL
+        LoadGamesIntoMemory(); */
+        moves_from_base_position.clear();   //NOSQL
     }
     StatsCalculate();
 }
 
-
+/*NOSQL
 bool DbDialog::LoadGamesIntoMemory()
 {
-    if( objs.db->IsTinyDb() )
-    {
-        moves_from_base_position.clear();
-        return true;    // StatsCalculate() will load the games into gc_db_displayed_games[]
-    }
-    AutoTimer at("Load games into memory");
-    
-    // Load all the matching games from the database
-    bool ok = objs.db->LoadAllGames( gc->gds, nbr_games_in_list_ctrl );
-    if( ok )
-    {
-        moves_from_base_position.clear();
-    
-        // No need to look for more games in database in base position
-        drill_down_set.clear();
-        uint64_t base_hash = this->cr.Hash64Calculate();
-        drill_down_set.insert(base_hash);
-        games_set.clear();
-        for( unsigned int i=0; i<gc->gds.size(); i++ )
-        {
-            int game_id = gc->gds[i]->GetGameId();
-            if( game_id )
-                games_set.insert( game_id );
-        }
-    }
-    return ok;
-}
+    moves_from_base_position.clear();
+    return true;    // StatsCalculate() will load the games into gc_db_displayed_games[]
+} */
 
 void DbDialog::CopyOrAdd( bool clear_clipboard )
 {

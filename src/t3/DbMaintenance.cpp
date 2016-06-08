@@ -181,43 +181,7 @@ void db_maintenance_compress_pgn()
         fclose(ofile);
 }
 
-void db_maintenance_create_or_append_to_database(  const char *db_filename, const char *pgn_filename )
-{
-    ifile = fopen( pgn_filename , "rt" );
-    if( !ifile )
-        cprintf( "Cannot open %s\n", pgn_filename );
-    else
-    {
-        DebugPrintfTime turn_on_time_display;
-        PgnRead *pgn = new PgnRead('A');
-        db_primitive_open( db_filename );
-        db_primitive_transaction_begin(NULL);
-        db_primitive_create_tables(true);
-        db_primitive_count_games();
-        pgn->Process(ifile);
-        cprintf( "Before db_primitive_transaction_end()\n");
-        db_primitive_transaction_end();
-        cprintf( "Before db_primitive_close()\n");
-        db_primitive_close();
-        cprintf( "After db_primitive_close()\n");
-    }
-    if( ifile )
-        fclose(ifile);
-    if( ofile )
-        fclose(ofile);
-}
-
 void db_utility_test();
-void db_maintenance_create_indexes(const char *db_filename )
-{
-    //db_utility_test();
-    db_primitive_open(db_filename);
-    db_primitive_transaction_begin(NULL);
-    db_primitive_create_indexes(true);
-    db_primitive_transaction_end();
-    db_primitive_close();
-}
-
 extern void pgn_read_hook( const char *fen, const char *white, const char *black, const char *event, const char *site, const char *result,
                                     const char *date, const char *white_elo, const char *black_elo, const char *eco, const char *round,
                                     int nbr_moves, thc::Move *moves, uint64_t *hashes  );
@@ -240,17 +204,6 @@ bool hook_gameover( char callback_code, const char *fen, const char *event, cons
 
         // Great players database
         case 'G': players_database( event, site, date, round, white, black, result, white_elo, black_elo, eco, nbr_moves, moves, hashes );  break;
-            
-        // Append
-        case 'A':
-        case 'T':   // append in tiny_db mode
-        {
-            bool signal_error;
-            db_primitive_insert_game( signal_error, callback_code=='T' /*tiny?*/, white, black, event, site, round, result, date, white_elo, black_elo, eco, nbr_moves, moves, hashes );
-            if( signal_error )
-                return true;
-            break;
-        }
             
         // Binary database append
         case 'B': bin_db_append( fen, event, site, date, round, white, black, result, white_elo, black_elo, eco, nbr_moves, moves );  break;

@@ -114,27 +114,30 @@ wxMutex *WaitForWorkerThread()
 
 Database::Database( const char *db_file )
 {
-    gbl_handle = 0;
+    Reopen( db_file );
+}
+
+Database::~Database()
+{
+}
+
+void Database::Reopen( const char *db_file )
+{
     background_load_permill = 0;
     kill_background_load = false;
-    positions_stmt = 0;
-    player_search_stmt = 0;
     player_search_stmt_bin_db = false;
     gbl_expected = 0;
     gbl_current = 0;
     gbl_count = 0;
-    is_tiny_db = false;
     is_pristine = false;
+    tiny_db.Init();
 
     // Access the database.
-    is_bin_db = BinDbOpen( db_file );
-    int retval = 0;
-    if( !is_bin_db )
-        retval = sqlite3_open( db_file, &gbl_handle );
-    is_open = (retval==0);
+    is_open = BinDbOpen( db_file );
+    is_bin_db = is_open;
     std::string nomsg;
     IsOperational( nomsg );
-    if( is_open && (is_bin_db||is_tiny_db)  )
+    if( is_open )
     {
 #define USE_BACKGROUND_THREAD
 #ifdef USE_BACKGROUND_THREAD
@@ -145,90 +148,7 @@ Database::Database( const char *db_file )
     }
     
     // If connection failed, handle returns NULL
-    dbg_printf( "DATABASE CONSTRUCTOR %s\n", retval ? "FAILED" : "SUCCESSFUL" );
-}
-
-Database::~Database()
-{
-    cprintf( "DATABASE DESTRUCTOR\n" );
-    if( positions_stmt )
-    {
-        sqlite3_finalize(positions_stmt);
-        positions_stmt = NULL;
-    }
-    while( gbl_handle )
-    {
-        int retval = sqlite3_close(gbl_handle);
-        if( retval != SQLITE_BUSY )
-        {
-            gbl_handle = NULL;
-        }
-        else
-        {
-            sqlite3_stmt *p = NULL;
-            for(;;)
-            {
-                sqlite3_stmt *temp = sqlite3_next_stmt(gbl_handle, p );
-                if( p )
-                    sqlite3_finalize(p);
-                p = temp;
-                if( p == NULL )
-                {
-                    break;
-                }
-                else
-                {
-                    cprintf( "**** LEAK\n" );
-                }
-            }
-        }
-    }
-    sqlite3_shutdown();
-}
-
-void Database::Reopen( const char *db_file )
-{
-    if( positions_stmt )
-    {
-        sqlite3_finalize(positions_stmt);
-        positions_stmt = NULL;
-    }
-    if( gbl_handle )
-    {
-        sqlite3_close(gbl_handle);
-        gbl_handle = NULL;
-    }
-    gbl_handle = 0;
-    background_load_permill = 0;
-    kill_background_load = false;
-    positions_stmt = 0;
-    player_search_stmt = 0;
-    player_search_stmt_bin_db = false;
-    gbl_expected = 0;
-    gbl_current = 0;
-    gbl_count = 0;
-    is_tiny_db = false;
-    tiny_db.Init();
-    
-    // Access the database.
-    is_bin_db = BinDbOpen( db_file );
-    int retval = 0;
-    if( !is_bin_db )
-        retval = sqlite3_open(db_file,&gbl_handle);
-    is_open = (retval==0);
-    std::string nomsg;
-    IsOperational( nomsg );
-    if( is_open && (is_bin_db||is_tiny_db)  )
-    {
-#ifdef USE_BACKGROUND_THREAD
-        LoadInBackground( this );
-#else
-        LoadAllGamesForPositionSearch( tiny_db.in_memory_game_cache );
-#endif
-    }
-    
-    // If connection failed, handle returns NULL
-    dbg_printf( "DATABASE REOPEN %s\n", retval ? "FAILED" : "SUCCESSFUL" );
+    dbg_printf( "DATABASE STARTUP %s\n", is_open ? "SUCCESSFUL" : "FAILED" );
 }
 
 
@@ -248,16 +168,11 @@ bool Database::IsOperational( std::string &error_msg )
         else
         {
             operational = true;
-            is_tiny_db = false;
-            if( version == DATABASE_VERSION_NUMBER_NORMAL )
-                ;
-            else if( version == DATABASE_VERSION_NUMBER_TINY )
-                is_tiny_db = true;
-            else if( version == DATABASE_VERSION_NUMBER_BIN_DB )
-                ;
-            else
+            if( version != DATABASE_VERSION_NUMBER_BIN_DB )
             {
-                error_msg = "The database file is not in the correct format for this version of Tarrasch";
+                char buf[200];
+                sprintf( buf, "The database file is not in the correct format for this version of Tarrasch (db version=%d)", version );                
+                error_msg = std::string(buf);
                 operational = false;
             }
         }
@@ -274,46 +189,6 @@ bool Database::GetDatabaseVersion( int &version )
     {
         BinDbGetDatabaseVersion( version );
         ok = true;
-    }
-    else
-    {
-        sqlite3_stmt *stmt;
-        int retval;
-        retval = sqlite3_prepare_v2( gbl_handle, "SELECT description,version from description", -1, &stmt, 0 );
-        if( retval )
-        {
-            cprintf("SELECT description,version FROM DB FAILED\n");
-            return false;
-        }
-    
-        // Read the number of rows fetched
-        int cols = sqlite3_column_count(stmt);
-        retval = sqlite3_step(stmt);
-        if( retval == SQLITE_ROW )
-        {
-            for( int col=0; col<cols; col++ )
-            {
-                switch(col)
-                {
-                    case 0:
-                    {
-                        const char *val = (const char*)sqlite3_column_text(stmt,col);
-                        cprintf( "Description = %s\n", val );
-                        break;
-                    }
-                    case 1:
-                    {
-                        int val = (int)sqlite3_column_int(stmt,col);
-                        cprintf( "Version integer = %d\n", val );
-                        version = val;
-                        ok = true;
-                        break;
-                    }
-                }
-            }
-        }
-        sqlite3_finalize(stmt);
-        stmt = NULL;
     }
     return ok;
 }
@@ -338,612 +213,53 @@ int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr )
 
 int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &player_name )
 {
+    extern void db_make_small_db_file();
     bool db_access_required = true;
     this->db_req = db_req;
-    if( is_bin_db )
-    {
-		std::sort( objs.db->tiny_db.in_memory_game_cache.begin(), objs.db->tiny_db.in_memory_game_cache.end(), db_req==REQ_PLAYERS ? predicate_sorts_by_player : predicate_sorts_by_game_id );
-		smart_ptr<ListableGame> p = objs.db->tiny_db.in_memory_game_cache[0];
-		cprintf( "index 0: %s\n", p->White() );
-		return tiny_db.in_memory_game_cache.size();
-    }
-    if( !gbl_handle )
+    if( !is_bin_db )
         return 0;
-    gbl_expected = -1;
-    int game_count = 0;
-    sqlite3_stmt *stmt;
-    this->player_name = player_name;
-    
-    //cr.Forsyth("r1bqk2r/ppp1bppp/2n1pn2/3p4/Q1PP4/P3PN2/1P1N1PPP/R1B1KB1R b KQkq - 0 7");
-    position_hash = cr.Hash64Calculate();
-    gbl_position = cr;
-    cache.clear();
-    stack.clear();
-    
-    // select matching rows from the table
-    char buf[1000];
-    int table_nbr;
-    int hash;
-    uint64_t temp=position_hash;
-    table_nbr = ((int)(temp>>32))&(NBR_BUCKETS-1);
-    hash = (int)(temp);
-    if( player_name.length() == 0 )
-        where_white="";
-    else
-    {
-        where_white = " WHERE games.white='";
-        where_white += player_name;
-        where_white += + "'";
-    }
-    if( player_name.length() == 0 )
-        white_and = "";
-    else
-    {
-        white_and = "games.white='";
-        white_and += player_name;
-        white_and += + "' AND ";
-    }
-    if( db_req == REQ_PLAYERS )
-    {
-        sprintf( buf, "SELECT COUNT(*) from games%s", where_white.c_str() );
-    }
-    else if( db_req == REQ_SHOW_ALL )
-    {
-        sprintf( buf, "SELECT COUNT(*) from games" );
-    }
-    else if( db_req == REQ_POSITION )
-    {
-        if( is_bin_db || is_tiny_db )
-        {
-            ProgressBar progress("Database search", "Searching...",false);
-            game_count = tiny_db.DoSearch( cr, position_hash, &progress );
-            db_access_required = false;
-        }
-        else
-        {
-            sprintf( buf, "SELECT COUNT(*) from games, positions_%d WHERE %spositions_%d.position_hash=%d AND games.game_id = positions_%d.game_id",
-                    table_nbr, white_and.c_str(), table_nbr, hash, table_nbr );
-        }
-    }
-    //sprintf( buf, "SELECT COUNT(*) from games, positions_%d WHERE games.white = 'Carlsen, Magnus'  AND positions_%d.position_hash=%d AND games.game_id = positions_%d.game_id", table_nbr, table_nbr, hash, table_nbr );
-    //    sprintf( buf, "SELECT COUNT(*) from games JOIN positions_%d ON games.game_id = positions_%d.game_id WHERE games.white = 'Carlsen, Magnus' AND positions_%d.position_hash=%d", table_nbr, table_nbr, table_nbr, hash );
-    //    sprintf( buf, "SELECT COUNT(*) from positions_%d WHERE position_hash=%d", table_nbr, hash );
-    //    sprintf( buf, "SELECT COUNT(*) from games WHERE games.white = 'Carlsen, Magnus' AND games.game_id = positions_%d.game_id AND positions_%d.position_hash=%d", table_nbr, table_nbr, hash );
-    if( db_access_required )
-    {
-        cprintf("QUERY IN: %s\n",buf);
-        int retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &stmt, 0 );
-        cprintf("QUERY OUT: %s\n",buf);
-        if( retval )
-        {
-            cprintf("SELECTING DATA FROM DB FAILED 1\n");
-            return 0;
-        }
-    
-        // Read the number of rows fetched
-        int cols = sqlite3_column_count(stmt);
-    
-        cprintf( "Get games count begin\n");
-        while(1)
-        {
-            // fetch a row's status
-            retval = sqlite3_step(stmt);
-            if(retval == SQLITE_ROW)
-            {
-                // SQLITE_ROW means fetched a row
-            
-                // sqlite3_column_text returns a const void* , typecast it to const char*
-                for( int col=0; col<cols; col++ )
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    if( col == 0 )
-                    {
-                        game_count = atoi(val);
-                        cprintf( "Game count = %d\n", game_count );
-                    }
-                }
-            }
-            else if( retval == SQLITE_DONE )
-            {
-                // All rows finished
-                sqlite3_finalize(stmt);
-                stmt = NULL;
-                break;
-            }
-            else
-            {
-                // Some error encountered
-                cprintf("SOME ERROR ENCOUNTERED\n");
-            }
-        }
-    }
-    cprintf("Get games count end\n");
-    gbl_count = game_count;
-    return game_count;
+	std::sort( objs.db->tiny_db.in_memory_game_cache.begin(), objs.db->tiny_db.in_memory_game_cache.end(), db_req==REQ_PLAYERS ? predicate_sorts_by_player : predicate_sorts_by_game_id );
+	smart_ptr<ListableGame> p = objs.db->tiny_db.in_memory_game_cache[0];
+	cprintf( "index 0: %s\n", p->White() );
+	return tiny_db.in_memory_game_cache.size();
 }
 
 
 int Database::LoadGameWithQuery( CompactGame *pact, int game_id )
 {
     pact->game_id = game_id;
-    if( is_bin_db || is_tiny_db )
-    {
-        tiny_db.in_memory_game_cache[game_id]->GetCompactGame(*pact);
+    if( !is_bin_db )
         return 0;
-    }
-    
-    // Get white player
-    char buf[1000];
-    sqlite3_stmt *stmt;    // A prepared statement for fetching from games table
-    int retval;
-    sprintf( buf, "SELECT white,black,event,site,round,result,date,white_elo,black_elo,eco,moves from games WHERE game_id=%d", game_id );
-    //cprintf("QUERY IN: %s\n",buf);
-    retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &stmt, 0 );
-    //cprintf("QUERY OUT: %s\n",buf);
-    if( retval )
-    {
-        cprintf("SELECTING DATA FROM DB FAILED\n");
-        return retval;
-    }
-    // Read the number of rows fetched
-    int cols = sqlite3_column_count(stmt);
-    retval = sqlite3_step(stmt);
-    if( retval == SQLITE_ROW )
-    {
-        for( int col=0; col<cols; col++ )
-        {
-            switch(col)
-            {
-                case 0:
-                {
-                    // sqlite3_column_text returns a const void* , typecast it to const char*
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    pact->r.white = val;
-                    break;
-                }
-                case 1:
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    pact->r.black = val;
-                    break;
-                }
-                case 2:
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    pact->r.event = val;
-                    break;
-                }
-                case 3:
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    pact->r.site = val;
-                    break;
-                }
-                case 4:
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    pact->r.round = val;
-                    break;
-                }
-                case 5:
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    pact->r.result = val;
-                    break;
-                }
-                case 6:
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    pact->r.date = val;
-                    break;
-                }
-                case 7:
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    pact->r.white_elo = val;
-                    break;
-                }
-                case 8:
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    pact->r.black_elo = val;
-                    break;
-                }
-                case 9:
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    pact->r.eco = val;
-                    break;
-                }
-                case 10:
-                {
-                    int len = sqlite3_column_bytes(stmt,col);
-                    const char *blob = (const char*)sqlite3_column_blob(stmt,col);
-                    std::string str_blob;
-                    if( len && blob )
-                    {
-                        std::string temp(blob,len);
-                        str_blob = temp;
-                    }
-                    CompressMoves press;
-                    pact->moves = press.Uncompress(str_blob);
-                    break;
-                }
-            }
-        }
-    }
-    sqlite3_finalize(stmt);
-    stmt = NULL;
+    tiny_db.in_memory_game_cache[game_id]->GetCompactGame(*pact);
     return 0;
 }
 
 int Database::GetGameCount()
 {
-    if( is_bin_db || is_tiny_db )
-		return tiny_db.in_memory_game_cache.size();
-    if( !gbl_handle )
+    if( !is_bin_db )
         return 0;
-    int game_count = 0;
-    sqlite3_stmt *stmt;
-    const char *sql = "SELECT COUNT(*) from games";
-    cprintf("QUERY IN: %s\n",sql);
-    int retval = sqlite3_prepare_v2( gbl_handle, sql, -1, &stmt, 0 );
-    cprintf("QUERY OUT: %s\n",sql);
-    if( retval )
-    {
-        cprintf("SELECTING DATA FROM DB FAILED 1\n");
-        return 0;
-    }
-    
-    // Read the number of rows fetched
-    int cols = sqlite3_column_count(stmt);
-    
-    cprintf( "Get games count begin\n");
-    while(1)
-    {
-        // fetch a row's status
-        retval = sqlite3_step(stmt);
-        if(retval == SQLITE_ROW)
-        {
-            // SQLITE_ROW means fetched a row
-            
-            // sqlite3_column_text returns a const void* , typecast it to const char*
-            for( int col=0; col<cols; col++ )
-            {
-                const char *val = (const char*)sqlite3_column_text(stmt,col);
-                if( col == 0 )
-                {
-                    game_count = atoi(val);
-                    cprintf( "Game count = %d\n", game_count );
-                }
-            }
-        }
-        else if( retval == SQLITE_DONE )
-        {
-            // All rows finished
-            sqlite3_finalize(stmt);
-            stmt = NULL;
-            break;
-        }
-        else
-        {
-            // Some error encountered
-            cprintf("SOME ERROR ENCOUNTERED\n");
-        }
-    }
-    cprintf("Get game count end\n");
-    return game_count;
+	return tiny_db.in_memory_game_cache.size();
 }
 
 static bool gbl_protect_recursion;   // FIXME
 
-
 int Database::LoadPlayerGamesWithQuery(  std::string &player_name, bool white, std::vector< smart_ptr<ListableGame> > &games )
 {
 	int nbr_before = games.size();
-    if( is_bin_db )
-    {
-        int nbr= tiny_db.in_memory_game_cache.size();
-		const char *player = player_name.c_str();
-        for( int i=0; i<nbr; i++ )
-		{
-			smart_ptr<ListableGame> p = tiny_db.in_memory_game_cache[i];
-			const char *rover = (white ? p->White() : p->Black()); 
-			if( 0 == strcmp(rover,player) )
-				games.push_back(p);
-		}
-		int nbr_after = games.size();
-		return nbr_after-nbr_before;
-	}
-	else
+    if( !is_bin_db )
+    	return -1;
+    int nbr= tiny_db.in_memory_game_cache.size();
+	const char *player = player_name.c_str();
+    for( int i=0; i<nbr; i++ )
 	{
-		int retval=-1;
-		if( !gbl_handle )
-			return -1;
-		gbl_expected = -1;
-		sqlite3_stmt *stmt;    // A prepared statement for fetching from games table
-    
-		// select matching rows from the table
-		char buf[1000];
-		sprintf( buf,
-				"SELECT games.game_id, games.white, games.black, games.event, games.site, games.round, games.result, games.date, games.white_elo, games.black_elo, games.eco, games.moves from games "
-				"WHERE games.%s='%s'",  white?"white":"black",  player_name.c_str() );
-		cprintf( "LoadPlayerGamesWithQuery(), player; QUERY IN: %s\n",buf);
-		retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &stmt, 0 );
-		cprintf( "LoadPlayerGamesWithQuery(), player; QUERY OUT: %s\n",buf);
-		if( retval )
-		{
-			cprintf("SELECTING DATA FROM DB FAILED 2\n");
-			return -1;
-		}
-    
-		// Read the game info
-		int cols = sqlite3_column_count(stmt);
-		for(;;)
-		{
-			retval = sqlite3_step(stmt);
-			if( retval == SQLITE_ROW )
-			{
-				int game_id=0;
-				Roster r;
-				std::string str_blob;
-            
-				// SQLITE_ROW means fetched a row
-            
-				// sqlite3_column_text returns a const void* , typecast it to const char*
-				for( int col=0; col<cols; col++ )
-				{
-					if( col == 0 )
-					{
-						const char *val = (const char*)sqlite3_column_text(stmt,col);
-						game_id = atoi(val);
-					}
-					else if( col == 1 )
-					{
-						const char *val = (const char*)sqlite3_column_text(stmt,col);
-						r.white = val ? std::string(val) : "Whoops";
-					}
-					else if( col == 2 )
-					{
-						const char *val = (const char*)sqlite3_column_text(stmt,col);
-						r.black = val ? std::string(val) : "Whoops";
-					}
-					else if( col == 3 )
-					{
-						const char *val = (const char*)sqlite3_column_text(stmt,col);
-						r.event = val ? std::string(val) : "Whoops";
-					}
-					else if( col == 4 )
-					{
-						const char *val = (const char*)sqlite3_column_text(stmt,col);
-						r.site = val ? std::string(val) : "Whoops";
-					}
-					else if( col == 5 )
-					{
-						const char *val = (const char*)sqlite3_column_text(stmt,col);
-						r.round = val ? std::string(val) : "Whoops";
-					}
-					else if( col == 6 )
-					{
-						const char *val = (const char*)sqlite3_column_text(stmt,col);
-						r.result = val ? std::string(val) : "*";
-					}
-					else if( col == 7 )
-					{
-						const char *val = (const char*)sqlite3_column_text(stmt,col);
-						r.date = val ? std::string(val) : "Whoops";
-					}
-					else if( col == 8 )
-					{
-						const char *val = (const char*)sqlite3_column_text(stmt,col);
-						r.white_elo = val ? std::string(val) : "Whoops";
-					}
-					else if( col == 9 )
-					{
-						const char *val = (const char*)sqlite3_column_text(stmt,col);
-						r.black_elo = val ? std::string(val) : "Whoops";
-					}
-					else if( col == 10 )
-					{
-						const char *val = (const char*)sqlite3_column_text(stmt,col);
-						r.eco = val ? std::string(val) : "Whoops";
-					}
-					else if( col == 11 )
-					{
-						int len = sqlite3_column_bytes(stmt,col);
-						const char *blob = (const char*)sqlite3_column_blob(stmt,col);
-						if( len && blob )
-						{
-							std::string temp(blob,len);
-							str_blob = temp;
-						}
-						ListableGameDb info( game_id, r, str_blob );
-						make_smart_ptr( ListableGameDb, new_info, info );
-						games.push_back( std::move(new_info) );
-					}
-				}
-			}
-			else if( retval == SQLITE_DONE )
-			{
-				// All rows finished
-				sqlite3_finalize(stmt);
-				stmt = NULL;
-				int nbr_after = games.size();
-				cprintf("LoadPlayerGamesWithQuery(): %d games loaded\n", nbr_after-nbr_before );
-				return nbr_after-nbr_before;
-			}
-			else
-			{
-				// Some error encountered
-				cprintf("SOME ERROR ENCOUNTERED\n");
-				return -1;
-			}
-		}
-	    return -1;
+		smart_ptr<ListableGame> p = tiny_db.in_memory_game_cache[i];
+		const char *rover = (white ? p->White() : p->Black()); 
+		if( 0 == strcmp(rover,player) )
+			games.push_back(p);
 	}
+	int nbr_after = games.size();
+	return nbr_after-nbr_before;
 }
-
-
-//Legacy only
-#if 0
-int Database::LoadGamesWithQuery( const thc::ChessPosition &cp, uint64_t hash, std::vector< smart_ptr<ListableGame> > &games, std::unordered_set<int> &games_set )
-{
-    int retval=-1;
-    int nbr_before = games.size();
-    sqlite3_stmt *stmt;    // A prepared statement for fetching from games table
-    wxProgressDialog progress( "Searching for extra games", "Searching for extra games", 100, NULL,
-                              wxPD_APP_MODAL+
-                              wxPD_AUTO_HIDE+
-                              wxPD_ELAPSED_TIME+
-                              wxPD_ESTIMATED_TIME );
-    
-    // select matching rows from the table
-    char buf[1000];
-    gbl_expected = -1;
-    int old_percent=0, nbr_new=0, nbr_already=0;
-    int hash32 = (int)(hash);
-    int table_nbr = (int)((hash>>32)&(NBR_BUCKETS-1));
-    sprintf( buf,
-            "SELECT games.game_id, games.white, games.black, games.event, games.site, games.round, games.result, games.date, games.white_elo, games.black_elo, games.eco, games.moves from games JOIN positions_%d ON games.game_id = positions_%d.game_id WHERE %spositions_%d.position_hash=%d",
-            table_nbr, table_nbr, white_and.c_str(), table_nbr, hash32);
-    cprintf( "LoadGamesWithQuery(), position; QUERY IN: %s\n",buf);
-    retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &stmt, 0 );
-    cprintf( "LoadGamesWithQuery(), position; QUERY OUT: %s\n",buf);
-    if( retval )
-    {
-        cprintf("SELECTING DATA FROM DB FAILED 2\n");
-        return retval;
-    }
-    
-    // Read the game info
-    int cols = sqlite3_column_count(stmt);
-    for(;;)
-    {
-        retval = sqlite3_step(stmt);
-        if( retval == SQLITE_ROW )
-        {
-            int game_id=0;
-            Roster r;
-            std::string str_blob;
-            
-            // SQLITE_ROW means fetched a row
-            
-            // sqlite3_column_text returns a const void* , typecast it to const char*
-            for( int col=0; col<cols; col++ )
-            {
-                if( col == 0 )
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    game_id = atoi(val);
-                    int count = games_set.count(game_id);
-                    bool already = (count > 0);
-                    if( already )
-                        nbr_already++;
-                    else
-                        nbr_new++;
-                    if( already )
-                        break;
-                }
-                else if( col == 1 )
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    r.white = val ? std::string(val) : "Whoops";
-                }
-                else if( col == 2 )
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    r.black = val ? std::string(val) : "Whoops";
-                }
-                else if( col == 3 )
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    r.event = val ? std::string(val) : "Whoops";
-                }
-                else if( col == 4 )
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    r.site = val ? std::string(val) : "Whoops";
-                }
-                else if( col == 5 )
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    r.round = val ? std::string(val) : "Whoops";
-                }
-                else if( col == 6 )
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    r.result = val ? std::string(val) : "*";
-                }
-                else if( col == 7 )
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    r.date = val ? std::string(val) : "Whoops";
-                }
-                else if( col == 8 )
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    r.white_elo = val ? std::string(val) : "Whoops";
-                }
-                else if( col == 9 )
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    r.black_elo = val ? std::string(val) : "Whoops";
-                }
-                else if( col == 10)
-                {
-                    const char *val = (const char*)sqlite3_column_text(stmt,col);
-                    r.eco = val ? std::string(val) : "Whoops";
-                }
-                else if( col == 11 )
-                {
-                    int len = sqlite3_column_bytes(stmt,col);
-                    //fprintf(f,"Move len = %d\n",len);
-                    const char *blob = (const char*)sqlite3_column_blob(stmt,col);
-                    if( len && blob )
-                    {
-                        std::string temp(blob,len);
-                        str_blob = temp;
-                    }
-                    ListableGameDb info( game_id, r, str_blob );
-                    make_smart_ptr( ListableGameDb, new_info, info );
-                    games.push_back( std::move(new_info) );
-                    games_set.insert( info.GetGameId() );
-                    if( nbr_new > 5 )
-                    {
-                        int estimated_total = (nbr_before * (nbr_new+nbr_already) ) / (nbr_already?nbr_already:1);
-                        int percent = (nbr_new + nbr_before * 100) / (estimated_total?estimated_total:1);
-                        if( percent < 1 )
-                            percent = 1;
-                        if( percent > 90 )
-                            percent = 90;
-                        if( percent > old_percent )
-                        {
-                            progress.Update( percent>100 ? 100 : percent );
-                            old_percent = percent;
-                        }
-                    }
-                }
-            }
-        }
-        else if( retval == SQLITE_DONE )
-        {
-            // All rows finished
-            sqlite3_finalize(stmt);
-            stmt = NULL;
-            int nbr_after = games.size();
-            cprintf("LoadGamesWithQuery(): %d extra games loaded\n", nbr_after-nbr_before );
-            break;
-        }
-        else
-        {
-            // Some error encountered
-            cprintf("SOME ERROR ENCOUNTERED\n");
-            return retval;
-        }
-    }
-    return retval;
-}
-#endif
 
 int Database::GetRow( int row, CompactGame *info )
 {
@@ -978,559 +294,24 @@ int Database::GetRow( int row, CompactGame *info )
 
 int Database::GetRowRaw( CompactGame *pact, int row )
 {
-    if( is_tiny_db && db_req != REQ_PLAYERS )
-    {
-        return 0;
-    }
     if( is_bin_db && db_req == REQ_PLAYERS )
     {
 		smart_ptr<ListableGame> p = tiny_db.in_memory_game_cache[row];
 		p->GetCompactGame(*pact);
         return 0;
     }
-    if( gbl_protect_recursion )
-    {
-        cprintf( "Didn't expect that\n");
-        return 0;
-    }
-    gbl_current = row;
-    cprintf( "Database::GetRow() IN row=%d, expected=%d,%smatch\n", row, gbl_expected, row==gbl_expected?" ":" no " );
-    int retval = -1;
-    if( !gbl_handle || row>=gbl_count )
-    {
-        return retval;
-    }
-    static int cols;
-    for(;;)
-    {
-        if( row == gbl_expected )
-        {
-            gbl_expected++;
-            for(;;)
-            {
-                // fetch a row's status
-                retval = sqlite3_step(positions_stmt);
-                if( retval == SQLITE_ROW )
-                {
-                    // SQLITE_ROW means fetched a row
-                    
-                    // sqlite3_column_text returns a const void* , typecast it to const char*
-                    for( int col=0; col<cols; col++ )
-                    {
-                        const char *val = (const char*)sqlite3_column_text(positions_stmt,col);
-                        //cprintf("%s:%s\t",sqlite3_column_name(positions_stmt,col),val);
-                        if( col == 0 )
-                        {
-                            int game_id = atoi(val);
-                            retval = LoadGameWithQuery( pact, game_id );
-                            cprintf( "Database::GetRow() SUCCESS game_id = %d\n", game_id );
-                            return retval;
-                        }
-                    }
-                }
-                else if( retval == SQLITE_DONE )
-                {
-                    // All rows finished
-                    sqlite3_finalize(positions_stmt);
-                    positions_stmt = NULL;
-                    gbl_expected = -1;
-                    cprintf( "Limit reached\n");
-                    break;
-                }
-                else
-                {
-                    // Some error encountered
-                    cprintf("SOME ERROR ENCOUNTERED\n");
-                    return retval;
-                }
-            }
-        }
-        else
-        {
-            // select matching rows from the table
-            char buf[1000];
-            gbl_expected = row;
-            // sprintf( buf, "SELECT game_id from positions WHERE position_hash=%d LIMIT %d,100", gbl_hash, row );
-//            sprintf( buf, "SELECT positions.game_id from positions JOIN games ON games.game_id = positions.game_id AND positions.position_hash=%d ORDER BY games.white LIMIT %d,100", gbl_hash, row );
-            //sprintf( buf, "SELECT positions.game_id from positions JOIN games ON games.game_id = positions.game_id AND positions.position_hash=%d LIMIT %d,100", gbl_hash, row );
-            uint64_t temp = position_hash;
-            int hash = (int)(temp);
-            int table_nbr = (int)((temp>>32)&(NBR_BUCKETS-1));
-            // sprintf( buf, "SELECT positions_%d.game_id from positions_%d JOIN games ON games.game_id = positions_%d.game_id AND positions_%d.position_hash=%d LIMIT %d,100",
-            //        table_nbr, table_nbr, table_nbr, table_nbr, hash, row );
-            if( db_req == REQ_PLAYERS )
-            {
-                sprintf( buf, 
-                        "SELECT games.game_id from games%s ORDER BY games.white ASC LIMIT %d,100", where_white.c_str(), row );
-                  //      "SELECT games.game_id from games%s ORDER BY games.rowid LIMIT %d,100", where_white.c_str(), row );
-            }
-            else if( db_req == REQ_SHOW_ALL )
-            {
-                sprintf( buf,
-//#define NO_REVERSE
-#ifdef NO_REVERSE
-                        "SELECT games.game_id from games LIMIT %d,100", row );
-#else
-                        "SELECT games.game_id from games ORDER BY games.rowid DESC LIMIT %d,100", row );
-#endif
-            }
-            else if( db_req == REQ_POSITION )
-            {
-                sprintf( buf,
-//#define NO_REVERSE
-#ifdef NO_REVERSE
-                        "SELECT games.game_id from games JOIN positions_%d ON games.game_id = positions_%d.game_id WHERE %spositions_%d.position_hash=%d LIMIT %d,100",
-#else
-                        "SELECT games.game_id from games JOIN positions_%d ON games.game_id = positions_%d.game_id WHERE %spositions_%d.position_hash=%d ORDER BY games.rowid DESC LIMIT %d,100",
-#endif
-                        table_nbr, table_nbr, white_and.c_str(), table_nbr, hash, row );
-            }
-            if( positions_stmt )
-                sqlite3_finalize(positions_stmt);
-            positions_stmt = NULL;
-            retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &positions_stmt, 0 );
-            cprintf( "Database::GetRow() START query: %s\n",buf);
-            if( retval )
-            {
-                cprintf("SELECTING DATA FROM DB FAILED 2\n");
-                return retval;
-            }
-
-            // Read the number of rows fetched
-            cols = sqlite3_column_count(positions_stmt);
-        }
-    }
 }
-
-
-bool Database::LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int nbr_games )
-{
-    if( is_tiny_db && db_req==REQ_POSITION )
-    {
-        // StatsCalculate() will load games
-        cache.clear();
-        return true;
-    }
-
-    gbl_protect_recursion = true;
-    bool ok=true;
-    sqlite3_stmt *stmt;
-    int retval=-1;
-    cache.clear();
-    
-    // select matching rows from the table
-    char buf[1000];
-    gbl_expected = -1;
-    uint64_t temp = position_hash;
-    int hash = (int)(temp);
-    int table_nbr = (int)((temp>>32)&(NBR_BUCKETS-1));
-    if( is_tiny_db && db_req==REQ_SHOW_ALL )
-    {
-        ProgressBar progress( "Loading games into memory", "Loading games", false );
-        cache.clear();
-        int nbr = tiny_db.in_memory_game_cache.size();
-        for( int i=0; i<nbr; i++ )
-        {
-            cache.push_back( tiny_db.in_memory_game_cache[i] );
-            progress.Permill( i*1000 / nbr );
-        }
-        gbl_protect_recursion = false;
-        return true;
-    }
-
-
-    ProgressBar progress( "Loading games into memory", "Loading games" );
-    if( db_req == REQ_PLAYERS )
-    {
-        sprintf( buf,
-                "SELECT games.game_id from games%s ORDER BY games.white ASC", where_white.c_str() );
-    }
-    else if( db_req == REQ_SHOW_ALL )
-    {
-        sprintf( buf,
-#if 1 //def NO_REVERSE
-                "SELECT games.game_id, games.white, games.black, games.event, games.site, games.round, games.result, games.date, games.white_elo, games.black_elo, games.eco, games.moves from games" );
-#else
-                "SELECT games.game_id, games.white, games.black, games.event, games.site, games.round, games.result, games.date, games.white_elo, games.black_elo, games.eco, games.moves from games ORDER BY games.rowid DESC" );
-#endif
-    }
-    else if( db_req == REQ_POSITION )
-    {
-        sprintf( buf,
-#if 1 //def NO_REVERSE
-                "SELECT games.game_id, games.white, games.black, games.event, games.site, games.round, games.result, games.date, games.white_elo, games.black_elo, games.eco, games.moves from games JOIN positions_%d ON games.game_id = positions_%d.game_id WHERE %spositions_%d.position_hash=%d",
-#else
-                "SELECT games.game_id, games.white, games.black, games.event, games.site, games.round, games.result, games.date, games.white_elo, games.black_elo, games.eco, games.moves from games JOIN positions_%d ON games.game_id = positions_%d.game_id WHERE %spositions_%d.position_hash=%d ORDER BY games.rowid DESC",
-#endif
-                table_nbr, table_nbr, white_and.c_str(), table_nbr, hash);
-    }
-    cprintf( "LoadAllGames() QUERY IN: %s\n",buf);
-    retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &stmt, 0 );
-    cprintf( "LoadAllGames() QUERY OUT: %s\n",buf);
-    if( retval )
-    {
-        cprintf("SELECTING DATA FROM DB FAILED 2\n");
-        ok = false;
-    }
-    
-    // Read the game info
-    if( ok )
-    {
-        int cols = sqlite3_column_count(stmt);
-        int previous_game_id = -1;
-        //int dbg_idx=0;
-        while(ok)
-        {
-            retval = sqlite3_step(stmt);
-            if( retval == SQLITE_ROW )
-            {
-                int game_id=0;
-                Roster r;
-                std::string str_blob;
-
-                // SQLITE_ROW means fetched a row
-            
-                // sqlite3_column_text returns a const void* , typecast it to const char*
-                for( int col=0; col<cols; col++ )
-                {
-                    if( col == 0 )
-                    {
-                        const char *val = (const char*)sqlite3_column_text(stmt,col);
-                        game_id = atoi(val);
-                    }
-                    else if( col == 1 )
-                    {
-                        const char *val = (const char*)sqlite3_column_text(stmt,col);
-                        r.white = val ? std::string(val) : "Whoops";
-                    }
-                    else if( col == 2 )
-                    {
-                        const char *val = (const char*)sqlite3_column_text(stmt,col);
-                        r.black = val ? std::string(val) : "Whoops";
-                    }
-                    else if( col == 3 )
-                    {
-                        const char *val = (const char*)sqlite3_column_text(stmt,col);
-                        r.event = val ? std::string(val) : "Whoops";
-                    }
-                    else if( col == 4 )
-                    {
-                        const char *val = (const char*)sqlite3_column_text(stmt,col);
-                        r.site = val ? std::string(val) : "Whoops";
-                    }
-                    else if( col == 5 )
-                    {
-                        const char *val = (const char*)sqlite3_column_text(stmt,col);
-                        r.round = val ? std::string(val) : "Whoops";
-                    }
-                    else if( col == 6 )
-                    {
-                        const char *val = (const char*)sqlite3_column_text(stmt,col);
-                        r.result = val ? std::string(val) : "*";
-                    }
-                    else if( col == 7 )
-                    {
-                        const char *val = (const char*)sqlite3_column_text(stmt,col);
-                        r.date = val ? std::string(val) : "Whoops";
-                    }
-                    else if( col == 8 )
-                    {
-                        const char *val = (const char*)sqlite3_column_text(stmt,col);
-                        r.white_elo = val ? std::string(val) : "Whoops";
-                    }
-                    else if( col == 9 )
-                    {
-                        const char *val = (const char*)sqlite3_column_text(stmt,col);
-                        r.black_elo = val ? std::string(val) : "Whoops";
-                    }
-                    else if( col == 10)
-                    {
-                        const char *val = (const char*)sqlite3_column_text(stmt,col);
-                        r.eco = val ? std::string(val) : "Whoops";
-                    }
-                    else if( col == 11 )
-                    {
-                        int len = sqlite3_column_bytes(stmt,col);
-                        //fprintf(f,"Move len = %d\n",len);
-                        const char *blob = (const char*)sqlite3_column_blob(stmt,col);
-                        if( len && blob )
-                        {
-                            std::string temp(blob,len);
-                            str_blob = temp;
-                        }
-                    }
-                }
-                //if( game_id == 3619485 )
-                //    cprintf( "game_id=%d, dbg_idx=%d\n", game_id, dbg_idx );
-                //dbg_idx++;
-                if( game_id != previous_game_id )   // TEMP bug workaround. Unfortunately if a position
-                                                    // occurs multiple times in a game (through repitition)
-                                                    // the database query returns multiple instances of the
-                                                    // game
-                {
-                    previous_game_id = game_id;
-                    ListableGameDb info( game_id, r, str_blob );
-                    make_smart_ptr( ListableGameDb, new_info, info );
-                    cache.push_back( std::move(new_info) );
-                }
-                int permill = (cache.size()*1000) / (nbr_games?nbr_games:1);
-                if( permill < 1 )
-                    permill = 1;
-                ok = !progress.Permill( permill>1000 ? 1000 : permill );
-            }
-            else if( retval == SQLITE_DONE )
-            {
-                // All rows finished
-                sqlite3_finalize(stmt);
-                stmt = NULL;
-                cprintf( "Reversing order to get newest games first\n" );
-                std::reverse( cache.begin(), cache.end() );
-                cprintf("LoadAllGames(): %u game_ids loaded\n", cache.size() );
-                break;
-            }
-            else
-            {
-                // Some error encountered
-                cprintf("SOME ERROR ENCOUNTERED\n");
-                ok = false;
-            }
-        }
-    }
-    gbl_protect_recursion = false;
-    if( !ok )
-        cache.clear();
-    return ok;
-}
-
-
 
 bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGame> > &mega_cache )
 {
     AutoTimer at("Load all games");
-    bool ok;
+    bool ok=false;
     if( is_bin_db )
         ok = LoadAllGamesForPositionSearchBinDb( mega_cache );
-    else
-        ok = LoadAllGamesForPositionSearchSql( mega_cache );
-    #ifdef TEST_SEARCH
-    int max_so_far=0;
-    for( int i=0; i<mega_cache.size(); i++ )
-    {
-        smart_ptr<ListableGame> p = mega_cache[i];
-        if( (i+1)==10 || ((i+1)%1000==0) )
-            cprintf( "Testing search, %d games\n", i+1 );
-        std::vector<thc::Move> moves = p->RefMoves();
-        thc::ChessRules cr;
-        for( int j=0; j<moves.size(); j++ )
-        {
-            thc::Move mv = moves[j];
-            cr.PlayMove(mv);
-        }
-        bool multiple=false;
-        bool found =  tiny_db.DoSearch( cr, 0, 0 );
-        if( found )
-        {
-            found = false;
-            std::vector<DoSearchFoundGame> vec = tiny_db.GetVectorGamesFound();
-            int nbr = vec.size();
-            if( nbr>1 && moves.size()>max_so_far )
-            {
-                max_so_far = moves.size();
-                multiple = true;
-            }
-            for( int j=0; j<nbr; j++ )
-            {
-                DoSearchFoundGame& dsfg = vec[j];
-                if( dsfg.idx == i )
-                    found = true;
-            }
-        }
-        if( !found || multiple )
-        {
-            std::string txt;
-            thc::ChessRules cr2;
-            for( int j=0; j<moves.size(); j++ )
-            {
-                thc::Move mv2 = moves[j];
-                std::string s = mv2.NaturalOut(&cr2);
-                char buf[20];
-                sprintf( buf, "%d.", cr2.full_move_count );
-                const char *before = buf;
-                if( !cr2.white )
-                    before = " ";
-                const char *after = "";
-                if( j+1 < moves.size() )
-                {
-                    if( ((j+1)&3) == 0 )
-                        after = "\n";
-                    else
-                        after = " ";
-                }
-                char buf2[100];
-                sprintf( buf2, "%s%s%s", before, s.c_str(), after );
-                txt += std::string(buf2);
-                cr2.PlayMove(mv2);
-            }
-            Roster r = p->RefRoster();
-            cprintf( "%s %s-%s> %s\n",
-                !found ? "Not found" : "Longest possible duplicate game to date",
-                r.white.c_str(),
-                r.black.c_str(),
-                txt.c_str()
-            );
-            FILE *out = fopen("testing-out.txt","at");
-            if( !out )
-                cprintf( "whoops?");
-            else
-            {
-                fprintf( out, "%s %s-%s> %s\n",
-                    !found ? "Not found" : "Longest possible duplicate game to date",
-                    r.white.c_str(),
-                    r.black.c_str(),
-                    txt.c_str()
-                );
-                fclose(out);
-            }
-        }
-    }
-    #endif
     return ok;
 }
 
 
-bool Database::LoadAllGamesForPositionSearchSql( std::vector< smart_ptr<ListableGame> > &mega_cache )
-{
-    is_pristine=true;     // true if game_id = idx for every idx in mega_cache[idx]
-    background_load_permill = 0;
-    kill_background_load = false;
-    int idx=0;
-    int nbr_games=0;
-    int nbr_promotion_games=0;
-    gbl_protect_recursion = true;
-    bool ok=true;
-    sqlite3_stmt *stmt;
-    int retval=-1;
-    mega_cache.clear();
-    cache.clear();
-    int game_count = GetGameCount();
-    
-    // select matching rows from the table
-    char buf[1000];
-    gbl_expected = -1;
-    sprintf( buf,
-            "SELECT games.game_id, games.white, games.black, games.event, games.site, games.round, games.result, games.date, games.white_elo, games.black_elo, games.eco, games.moves from games" );
-    cprintf( "LoadAllGames() QUERY IN: %s\n",buf);
-    retval = sqlite3_prepare_v2( gbl_handle, buf, -1, &stmt, 0 );
-    cprintf( "LoadAllGames() QUERY OUT: %s\n",buf);
-    if( retval )
-    {
-        cprintf("SELECTING DATA FROM DB FAILED 2\n");
-        ok = false;
-    }
-    
-    // Read the game info
-    if( ok )
-    {
-        //int cols = sqlite3_column_count(stmt);
-        while(ok && !kill_background_load )
-        {
-            retval = sqlite3_step(stmt);
-            if( retval == SQLITE_ROW )
-            {
-                // SQLITE_ROW means fetched a row
-                int game_id=0;
-            
-                // sqlite3_column_text returns a const void* , typecast it to const char*
-                bool promotion=false;
-                const char *val        = (const char*)sqlite3_column_text(stmt,0);
-                game_id                = atoi(val);
-                const char      *white = (const char*)sqlite3_column_text(stmt,1);
-                int              len1  = sqlite3_column_bytes(stmt,1);
-                const char      *black = (const char*)sqlite3_column_text(stmt,2);
-                int               len2 = sqlite3_column_bytes(stmt,2);
-                const char      *event = (const char*)sqlite3_column_text(stmt,3);
-                int               len3 = sqlite3_column_bytes(stmt,3);
-                const char       *site = (const char*)sqlite3_column_text(stmt,4);
-                int               len4 = sqlite3_column_bytes(stmt,4);
-                const char      *round = (const char*)sqlite3_column_text(stmt,5);
-                int               len6 = sqlite3_column_bytes(stmt,5);
-                const char     *result = (const char*)sqlite3_column_text(stmt,6);
-                int               len5 = sqlite3_column_bytes(stmt,6);
-                const char       *date = (const char*)sqlite3_column_text(stmt,7);
-                int               len7 = sqlite3_column_bytes(stmt,7);
-                const char  *white_elo = (const char*)sqlite3_column_text(stmt,8);
-                int               len9 = sqlite3_column_bytes(stmt,8);
-                const char  *black_elo = (const char*)sqlite3_column_text(stmt,9);
-                int              len10 = sqlite3_column_bytes(stmt,9);
-                const char        *eco = (const char*)sqlite3_column_text(stmt,10);
-                int               len8 = sqlite3_column_bytes(stmt,10);
-                const char *moves_blob = (const char*)sqlite3_column_text(stmt,11);
-                int              len12 = sqlite3_column_bytes(stmt,11);
-                ListableGameDb info
-                (
-                    game_id,
-                    white, len1,
-                    black, len2,
-                    event, len3,
-                    site, len4,
-                    result, len5,
-                    round, len6,
-                    date, len7,
-                    eco, len8,
-                    white_elo, len9,
-                    black_elo, len10,
-                    "", 0, //fen
-                    moves_blob, len12
-                );
-                make_smart_ptr( ListableGameDb, new_info, info );
-                mega_cache.push_back( std::move(new_info) );
-                if( game_id != idx++ )
-                    is_pristine = false;
-                background_load_permill = (idx*1000) / (game_count?game_count:1);
-                if( info.game_attributes )
-                    nbr_promotion_games++;
-                nbr_games++;
-                if(
-                   ((nbr_games%10000) == 0 ) /* ||
-                                              (
-                                              (nbr_games < 100) &&
-                                              ((nbr_games%10) == 0 )
-                                              ) */
-                   )
-                {
-                    cprintf( "%d games (%d include promotion)\n", nbr_games, nbr_promotion_games );
-                }
-
-            }
-            else if( retval == SQLITE_DONE )
-            {
-                // All rows finished
-                sqlite3_finalize(stmt);
-                stmt = NULL;
-                //cprintf( "Reversing order to get newest games first\n" );
-                //std::reverse( cache.begin(), cache.end() );
-                //cprintf("LoadAllGames(): %u game_ids loaded\n", cache.size() );
-                break;
-            }
-            else
-            {
-                // Some error encountered
-                cprintf("SOME ERROR ENCOUNTERED\n");
-                ok = false;
-            }
-        }
-    }
-    int cache_nbr = mega_cache.size();
-    cprintf( "Number of games = %d, is_pristine=%s\n", cache_nbr, is_pristine?"true":"false" );
-    if( 2 < cache_nbr )
-    {
-        smart_ptr<ListableGame> p = mega_cache[2];
-        cprintf( "White=%s Black=%s Result=%s Round=%s\n", p->White(), p->Black(), p->Result(), p->Round() );
-    }
-    cprintf( "%d games (%d include promotion)\n", nbr_games, nbr_promotion_games );
-    gbl_protect_recursion = false;
-    return ok;
-}
 
 bool Database::LoadAllGamesForPositionSearchBinDb( std::vector< smart_ptr<ListableGame> > &mega_cache )
 {
@@ -1554,15 +335,6 @@ bool Database::LoadAllGamesForPositionSearchBinDb( std::vector< smart_ptr<Listab
     return cache_nbr>0;
 }
 
-void Database::FindPlayerEnd()
-{
-    if( player_search_stmt )
-    {
-        sqlite3_finalize(player_search_stmt);
-        player_search_stmt = NULL;
-        player_search_stmt_bin_db = false;
-    }
-}
 
 // Returns row
 int Database::FindPlayer( std::string &name, std::string &current, int start_row, bool white )
@@ -1575,7 +347,7 @@ int Database::FindPlayer( std::string &name, std::string &current, int start_row
     std::transform(input.begin(), input.end(), input.begin(), ::tolower);
     std::transform(current.begin(), current.end(), current.begin(), ::tolower);
     int input_len = input.length();
-    bool search_in_progress = (player_search_stmt || player_search_stmt_bin_db);
+    bool search_in_progress = player_search_stmt_bin_db;
 
     // If continue search step
     if( search_in_progress &&
@@ -1598,16 +370,7 @@ int Database::FindPlayer( std::string &name, std::string &current, int start_row
         }
         else
         {
-            if( player_search_stmt )
-            {
-                sqlite3_finalize(player_search_stmt);
-                player_search_stmt = NULL;
-            }
-            const char *txt = white ? "SELECT games.white from games ORDER BY games.white ASC" : "SELECT games.black from games ORDER BY games.white ASC";
-            cprintf( "FindPlayer() QUERY IN: %s\n",txt);
-            retval = sqlite3_prepare_v2( gbl_handle, txt, -1, &player_search_stmt, 0 );
-            cprintf( "FindPlayer() QUERY OUT: %s\n",txt);
-            okay = !retval;
+            okay = false;
         }
     }
 
@@ -1617,10 +380,7 @@ int Database::FindPlayer( std::string &name, std::string &current, int start_row
         if( is_bin_db )
             okay = (row < tiny_db.in_memory_game_cache.size());
         else
-        {
-            retval = sqlite3_step(player_search_stmt);
-            okay = (retval == SQLITE_ROW);
-        }
+            okay = false;
         if( okay )
         {
             const char *val;
@@ -1628,47 +388,38 @@ int Database::FindPlayer( std::string &name, std::string &current, int start_row
             {
                 smart_ptr<ListableGame> p = tiny_db.in_memory_game_cache[row];
                 val = white ? p->White() : p->Black();
-            }
-            else
-            {
-                val = (const char*)sqlite3_column_text(player_search_stmt,0);
-            }
-            std::string player(val);
-            std::transform(player.begin(), player.end(), player.begin(), ::tolower);
-            int player_len = player.length();
+                std::string player(val);
+                std::transform(player.begin(), player.end(), player.begin(), ::tolower);
+                int player_len = player.length();
 
-            // If white we want to skip further games played by the same player, (since the list is sorted by white
-            //  player the user can already see those games - so go look for another player of the same name)
-            bool match;
-            if( white )
-            {
-                match = (player!=current && input_len<=player_len && player.substr(0,input_len)==input);
-            }
+                // If white we want to skip further games played by the same player, (since the list is sorted by white
+                //  player the user can already see those games - so go look for another player of the same name)
+                bool match;
+                if( white )
+                {
+                    match = (player!=current && input_len<=player_len && player.substr(0,input_len)==input);
+                }
 
-            // If black we want to find more black games played by the same player, (since the list is sorted
-            //  by white player, black games by a single player are sparsely distributed)
-            else
-            {
-                match = (input_len<=player_len && player.substr(0,input_len)==input);
+                // If black we want to find more black games played by the same player, (since the list is sorted
+                //  by white player, black games by a single player are sparsely distributed)
+                else
+                {
+                    match = (input_len<=player_len && player.substr(0,input_len)==input);
+                }
+                if( match )
+                {
+                    prev_name = name;
+                    prev_current = player;
+                    prev_white = white;
+                    prev_row = row;
+                    return row;
+                }
+                row++;
             }
-            if( match )
-            {
-                prev_name = name;
-                prev_current = player;
-                prev_white = white;
-                prev_row = row;
-                return row;
-            }
-            row++;
         }
     }
     if( is_bin_db )
         player_search_stmt_bin_db = false;
-    else
-    {
-        sqlite3_finalize(player_search_stmt);
-        player_search_stmt = NULL;
-    }
     return start_row;
 }
 
