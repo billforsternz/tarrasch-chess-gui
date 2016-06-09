@@ -66,7 +66,7 @@ public:
         long style = wxCAPTION|wxRESIZE_BORDER|wxSYSTEM_MENU|wxCLOSE_BOX
     );
 
-    virtual ~DbDialog() {}
+    virtual ~DbDialog() { objs.db->FindPlayerEnd(); }
 
     // We calculate a vector of all blobs in the games that leading to the search position
     std::vector< PATH_TO_POSITION > transpositions;
@@ -95,7 +95,7 @@ public:
     virtual int  GetBasePositionIdx( CompactGame &pact ) { int idx; pact.FindPositionInGame( objs.db->GetPositionHash(), idx ); return idx; }
 
     // Helpers
-//NOSQL    bool LoadGamesIntoMemory();
+    bool LoadGamesIntoMemory();
     bool LoadGamesPrompted( std::string prompt );
     void CopyOrAdd( bool clear_clipboard );
     void StatsCalculate();

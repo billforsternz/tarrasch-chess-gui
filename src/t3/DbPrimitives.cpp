@@ -19,161 +19,21 @@
 #include "wx/filename.h"
 #include "Appdefs.h"
 #include "thc.h"
+#include "sqlite3.h"
 #include "CompressMoves.h"
 #include "PgnRead.h"
 #include "ProgressBar.h"
 #include "DbPrimitives.h"
 #include "DebugPrintf.h"
-
-// Error reporting mechanism
-static std::string error_msg;
-std::string db_primitive_error_msg()
-{
-    std::string msg = error_msg;
-    error_msg = "";
-    return msg;
-}
-
-// Returns bool hasAlpha
-static bool sanitise( const char *in, char *out, int out_siz )
-{
-    bool hasAlpha=false;
-    int len=0;
-    while( *in && len<out_siz-3 )
-    {
-        char c = *in++;
-        if( !isascii(c) )
-            *out = '_';
-        else if( c!=' ' &&  c!='-' &&  c!='.' && c!=',' && !isalnum(c) )
-            *out = '_';
-        else
-        {
-            *out = c;
-            if( !hasAlpha && isalpha(c) )
-                hasAlpha = true;
-        }
-        out++;
-        len++;
-    }
-    *out = '\0';
-    return hasAlpha;
-}
-
-// Split out printable, 2 character or more uppercased tokens from input string
-static void Split( const char *in, std::vector<std::string> &out )
-{
-    bool in_word=true;
-    out.clear();
-    std::string token;
-    while( *in )
-    {
-        char c = *in++;
-        bool delimit = (c<=' ' || c==',' || c=='.' || c==':' || c==';');
-        if( !in_word )
-        {
-            if( !delimit )
-            {
-                in_word = true;
-                token = c;
-            }
-        }
-        else
-        {
-            if( delimit )
-            {
-                in_word = false;
-                if( token.length() > 1 )
-                    out.push_back(token);
-            }
-            else
-            {
-                if( isalpha(c) )
-                    c = toupper(c);
-                token += c;
-            }
-        }
-    }
-    if( in_word && token.length() > 1 )
-        out.push_back(token);
-}
-
-static bool IsPlayerMatch( const char *player, std::vector<std::string> &tokens )
-{
-    std::vector<std::string> tokens2;
-    Split( player, tokens2 );
-    int len=tokens.size();
-    int len2=tokens2.size();
-    for( int i=0; i<len; i++ )
-    {
-        for( int j=0; j<len2; j++ )
-        {
-            if( tokens[i] == tokens2[j] )
-                return true;
-        }
-    }
-    return false;
-}
-
-static void DateParse( const char *date, int &yyyy, int &mm, int &dd )
-{
-    int state=0;
-    int n=0, y=0, m=0, d=0;
-    while( *date && state<3 )
-    {
-        char c = *date++;
-        if( '0'<=c && c<='9' )
-            n = n*10 + c-'0';
-        else if( c=='.' || c=='-' || c==' ' || c==':' )
-        {
-            switch( state )
-            {
-                case 0: y = n;  break;
-                case 1: m = n;  break;
-                case 2: d = n;  break;
-            }
-            state++;
-            n = 0;
-        }
-        else
-            break;
-    }
-    switch( state )
-    {
-        case 0: y = n;  break;
-        case 1: m = n;  break;
-        case 2: d = n;  break;
-    }
-    yyyy = (1<=y && y<=3000) ? y : 0;
-    mm   = (1<=m && m<=12)   ? m : 0;
-    dd   = (1<=d && d<=31)   ? d : 0;
-}
-
-static bool IsDateMatch( const char *date, int yyyy, int mm, int dd )
-{
-    int y, m, d;
-    DateParse( date, y, m, d );
-    bool match = (yyyy == y);   // must match
-    if( match )
-    {
-        match = (mm==m || mm==0 || m==0);    // if month unspecified still matches 
-        if( match )
-            match = (dd==d || dd==0 || d==0);    // if day unspecified still matches
-    }
-    return match;
-}
-
-
-// REMOVING SQLITE - sql dependent code below - when we're done delete it all
-#if 0
-
-static sqlite3 *handle;
 static bool purge_bucket(int bucket_idx);
 static bool purge_buckets( bool force=false );
 #define NBR_BUCKETS 4096
 #define PURGE_QUOTA 10000
 
 // Handle for database connection
+static sqlite3 *handle;
 static int game_id;
+static std::string error_msg;
 static bool create_mode;
 
 // Build the default database if .pgn exists and .tdb doesn't
@@ -256,101 +116,14 @@ void db_primitive_build_default_database( const char *db_file_name )
     }
 }
 
-void db_make_small_db_file()
+// Error reporting mechanism
+std::string db_primitive_error_msg()
 {
-    const char *db_file;
-    sqlite3 *loc_handle;
-    int retval = sqlite3_open("C:/Users/Bill/Documents/T3Database/file-header3b.tdb",&loc_handle);
-    
-    // If connection failed, loc_handle is NULL
-    if( retval )
-    {
-        cprintf( "Database error: CONNECTION FAILED\n" );
-        return;
-    }
-    cprintf("Connection successful\n");
-    cprintf( "Create description + version table\n");
-    retval = sqlite3_exec(loc_handle,"CREATE TABLE IF NOT EXISTS description (description TEXT, version INTEGER)",0,0,0);
-    if( retval )
-    {
-        cprintf( "Database error: sqlite3_exec(CREATE description) FAILED\n" );
-        return;
-    }
-    char buf[200];
-    sprintf( buf,"INSERT INTO description VALUES('This header allows the alpha SQL based version of Tarrasch V3 to recognise (but gracefully reject) the newer custom in-memory binary database format', %d )", 
-        101 ); //DATABASE_VERSION_NUMBER_BIN_DB );
-    retval = sqlite3_exec(loc_handle,buf,0,0,0);
-    if( retval )
-    {
-        cprintf( "Database error: sqlite3_exec(INSERT description) FAILED\n" );
-        return;
-    }
-    if( loc_handle )
-    {
-        sqlite3_close(loc_handle);
-        cprintf( "Tiny db file, for use as a header, created\n" );
-    }
+    std::string msg = error_msg;
+    error_msg = "";
+    return msg;
 }
 
-int db_primitive_count_games()
-{
-    int game_count=0;
-    
-    // select matching rows from the table
-    char buf[100];
-    sqlite3_stmt *stmt;    // A prepared statement for fetching tables
-    sprintf( buf, "SELECT COUNT(*) from games" );
-    int retval = sqlite3_prepare_v2( handle, buf, -1, &stmt, 0 );
-    if( retval )
-    {
-        error_msg = "Database error: SELECT COUNT(*) from games FAILED";
-        return -1;
-    }
-
-    // Read the number of rows fetched
-    int cols = sqlite3_column_count(stmt);
-
-    cprintf( "Get games count begin\n");
-    while(1)
-    {
-        // fetch a row's status
-        retval = sqlite3_step(stmt);
-        
-        if(retval == SQLITE_ROW)
-        {
-            // SQLITE_ROW means fetched a row
-            
-            // sqlite3_column_text returns a const void* , typecast it to const char*
-            for( int col=0; col<cols; col++ )
-            {
-                const char *val = (const char*)sqlite3_column_text(stmt,col);
-                //cprintf("%s:%s\t",sqlite3_column_name(gbl_stmt,col),val);
-                if( col == 0 )
-                {
-                    //int game_id = atoi(val);
-                    //game_ids.push_back(game_id);
-                    game_count = atoi(val);
-                    cprintf( "Game count = %d\n", game_count );
-                }
-            }
-        }
-        else if( retval == SQLITE_DONE )
-        {
-            // All rows finished
-            sqlite3_finalize(stmt);
-            break;
-        }
-        else
-        {
-            // Some error encountered
-            error_msg = "Database error: Calculating games count FAILED";
-            return -1;
-        }
-    }
-    cprintf("Get games count end - %d games\n", game_count );
-    game_id = game_count;
-    return game_count;
-}
 
 // Returns bool ok
 bool db_primitive_open( const char *db_file, bool create_mode_parm )
@@ -675,6 +448,91 @@ int db_primitive_get_database_version()
     return version;
 }
 
+int db_primitive_count_games()
+{
+    int game_count=0;
+    
+    // select matching rows from the table
+    char buf[100];
+    sqlite3_stmt *stmt;    // A prepared statement for fetching tables
+    sprintf( buf, "SELECT COUNT(*) from games" );
+    int retval = sqlite3_prepare_v2( handle, buf, -1, &stmt, 0 );
+    if( retval )
+    {
+        error_msg = "Database error: SELECT COUNT(*) from games FAILED";
+        return -1;
+    }
+
+    // Read the number of rows fetched
+    int cols = sqlite3_column_count(stmt);
+
+    cprintf( "Get games count begin\n");
+    while(1)
+    {
+        // fetch a row's status
+        retval = sqlite3_step(stmt);
+        
+        if(retval == SQLITE_ROW)
+        {
+            // SQLITE_ROW means fetched a row
+            
+            // sqlite3_column_text returns a const void* , typecast it to const char*
+            for( int col=0; col<cols; col++ )
+            {
+                const char *val = (const char*)sqlite3_column_text(stmt,col);
+                //cprintf("%s:%s\t",sqlite3_column_name(gbl_stmt,col),val);
+                if( col == 0 )
+                {
+                    //int game_id = atoi(val);
+                    //game_ids.push_back(game_id);
+                    game_count = atoi(val);
+                    cprintf( "Game count = %d\n", game_count );
+                }
+            }
+        }
+        else if( retval == SQLITE_DONE )
+        {
+            // All rows finished
+            sqlite3_finalize(stmt);
+            break;
+        }
+        else
+        {
+            // Some error encountered
+            error_msg = "Database error: Calculating games count FAILED";
+            return -1;
+        }
+    }
+    cprintf("Get games count end - %d games\n", game_count );
+    game_id = game_count;
+    return game_count;
+}
+
+
+// Returns bool hasAlpha
+static bool sanitise( const char *in, char *out, int out_siz )
+{
+    bool hasAlpha=false;
+    int len=0;
+    while( *in && len<out_siz-3 )
+    {
+        char c = *in++;
+        if( !isascii(c) )
+            *out = '_';
+        else if( c!=' ' &&  c!='-' &&  c!='.' && c!=',' && !isalnum(c) )
+            *out = '_';
+        else
+        {
+            *out = c;
+            if( !hasAlpha && isalpha(c) )
+                hasAlpha = true;
+        }
+        out++;
+        len++;
+    }
+    *out = '\0';
+    return hasAlpha;
+}
 
 bool db_primitive_flush()
 {
@@ -745,6 +603,109 @@ static bool purge_bucket( int bucket_idx )
         bucket->clear();
     }
     return true;
+}
+
+// Split out printable, 2 character or more uppercased tokens from input string
+static void Split( const char *in, std::vector<std::string> &out )
+{
+    bool in_word=true;
+    out.clear();
+    std::string token;
+    while( *in )
+    {
+        char c = *in++;
+        bool delimit = (c<=' ' || c==',' || c=='.' || c==':' || c==';');
+        if( !in_word )
+        {
+            if( !delimit )
+            {
+                in_word = true;
+                token = c;
+            }
+        }
+        else
+        {
+            if( delimit )
+            {
+                in_word = false;
+                if( token.length() > 1 )
+                    out.push_back(token);
+            }
+            else
+            {
+                if( isalpha(c) )
+                    c = toupper(c);
+                token += c;
+            }
+        }
+    }
+    if( in_word && token.length() > 1 )
+        out.push_back(token);
+}
+
+static bool IsPlayerMatch( const char *player, std::vector<std::string> &tokens )
+{
+    std::vector<std::string> tokens2;
+    Split( player, tokens2 );
+    int len=tokens.size();
+    int len2=tokens2.size();
+    for( int i=0; i<len; i++ )
+    {
+        for( int j=0; j<len2; j++ )
+        {
+            if( tokens[i] == tokens2[j] )
+                return true;
+        }
+    }
+    return false;
+}
+
+static void DateParse( const char *date, int &yyyy, int &mm, int &dd )
+{
+    int state=0;
+    int n=0, y=0, m=0, d=0;
+    while( *date && state<3 )
+    {
+        char c = *date++;
+        if( '0'<=c && c<='9' )
+            n = n*10 + c-'0';
+        else if( c=='.' || c=='-' || c==' ' || c==':' )
+        {
+            switch( state )
+            {
+                case 0: y = n;  break;
+                case 1: m = n;  break;
+                case 2: d = n;  break;
+            }
+            state++;
+            n = 0;
+        }
+        else
+            break;
+    }
+    switch( state )
+    {
+        case 0: y = n;  break;
+        case 1: m = n;  break;
+        case 2: d = n;  break;
+    }
+    yyyy = (1<=y && y<=3000) ? y : 0;
+    mm   = (1<=m && m<=12)   ? m : 0;
+    dd   = (1<=d && d<=31)   ? d : 0;
+}
+
+static bool IsDateMatch( const char *date, int yyyy, int mm, int dd )
+{
+    int y, m, d;
+    DateParse( date, y, m, d );
+    bool match = (yyyy == y);   // must match
+    if( match )
+    {
+        match = (mm==m || mm==0 || m==0);    // if month unspecified still matches 
+        if( match )
+            match = (dd==d || dd==0 || d==0);    // if day unspecified still matches
+    }
+    return match;
 }
 
 // Return true if this game already in database
@@ -1178,10 +1139,6 @@ bool db_primitive_insert_game( bool &signal_error, bool create_tiny_db, const ch
     game_id++;
     return true;    // inserted, no error
 }
-
-#endif
-
-
 
 
 

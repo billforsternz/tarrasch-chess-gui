@@ -276,84 +276,151 @@ void CreateDatabaseDialog::OnCreateDatabase()
         error_msg = "No usable pgn files specified";
         ok = false;
     }
-    // TODO DatabaseClear();
-    BinDbWriteClear();
-    FILE *ofile;
-    if( ok )
+    if( create_tiny_db )
     {
-        ofile = fopen( db_name.c_str(), "wb" );
-        if( !ofile )
+        // TODO DatabaseClear();
+        BinDbWriteClear();
+        FILE *ofile;
+        if( ok )
         {
-            error_msg = "Cannot open ";
-            error_msg += db_name;
-            ok = false;
+            ofile = fopen( db_name.c_str(), "wb" );
+            if( !ofile )
+            {
+                error_msg = "Cannot open ";
+                error_msg += db_name;
+                ok = false;
+            }
         }
-    }
-    for( int i=0; ok && i<cnt; i++ )
-    {
-        FILE *ifile = fopen( files[i].c_str(), "rt" );
-        if( !ifile )
+        for( int i=0; ok && i<cnt; i++ )
         {
-            error_msg = "Cannot open ";
-            error_msg += files[i];
-            ok = false;
+            FILE *ifile = fopen( files[i].c_str(), "rt" );
+            if( !ifile )
+            {
+                error_msg = "Cannot open ";
+                error_msg += files[i];
+                ok = false;
+            }
+            else
+            {
+                std::string title( "Creating database, step 1 of 3");
+                std::string desc("Reading file #");
+                char buf[80];
+                sprintf( buf, "%d of %d", i+1, cnt );
+                desc += buf;
+                ProgressBar progress_bar( title, desc, true, this, ifile );
+                uint32_t begin = BinDbGetGamesSize();
+                PgnRead pgn('B',&progress_bar);
+                bool aborted = pgn.Process(ifile);
+                uint32_t end = BinDbGetGamesSize();
+                BinDbNormaliseOrder( begin, end );
+                if( aborted )
+                {
+                    error_msg = "cancel";
+                    ok = false;
+                }
+                fclose(ifile);
+            }
+        }
+        if( ok )
+        {
+            std::string title( "Creating database, step 2 of 3");
+            ok = BinDbDuplicateRemoval(title,this);
+        }
+        if( ok )
+        {
+            std::string title( "Creating database, step 3 of 3");
+            std::string desc("Writing file");
+            ProgressBar progress_bar( title, desc, true, this );
+            ok = BinDbWriteOutToFile(ofile,&progress_bar);
+            BinDbWriteClear();
+        }
+        if( ofile )
+        {
+            wxSafeYield();
+            fclose(ofile);
+            ofile = NULL;
+        }
+        if( ok )
+        {
+            wxSafeYield();
+            AcceptAndClose();
+            db_created_ok = true;
         }
         else
         {
-            std::string title( "Creating database, step 1 of 3");
-            std::string desc("Reading file #");
-            char buf[80];
-            sprintf( buf, "%d of %d", i+1, cnt );
-            desc += buf;
-            ProgressBar progress_bar( title, desc, true, this, ifile );
-            uint32_t begin = BinDbGetGamesSize();
-            PgnRead pgn('B',&progress_bar);
-            bool aborted = pgn.Process(ifile);
-            uint32_t end = BinDbGetGamesSize();
-            BinDbNormaliseOrder( begin, end );
-            if( aborted )
-            {
-                error_msg = "cancel";
-                ok = false;
-            }
-            fclose(ifile);
+            if( error_msg == "" )
+                error_msg = db_primitive_error_msg();
+            if( error_msg == "cancel" )
+                error_msg = "Database creation cancelled";
+            wxMessageBox( error_msg.c_str(), "Database creation failed", wxOK|wxICON_ERROR );
+            db_primitive_close();
+            unlink(db_filename.c_str());
         }
-    }
-    if( ok )
-    {
-        std::string title( "Creating database, step 2 of 3");
-        ok = BinDbDuplicateRemoval(title,this);
-    }
-    if( ok )
-    {
-        std::string title( "Creating database, step 3 of 3");
-        std::string desc("Writing file");
-        ProgressBar progress_bar( title, desc, true, this );
-        ok = BinDbWriteOutToFile(ofile,&progress_bar);
-        BinDbWriteClear();
-    }
-    if( ofile )
-    {
-        wxSafeYield();
-        fclose(ofile);
-        ofile = NULL;
-    }
-    if( ok )
-    {
-        wxSafeYield();
-        AcceptAndClose();
-        db_created_ok = true;
+        // TODO DatabaseReload();
     }
     else
     {
-        if( error_msg == "" )
-            error_msg = db_primitive_error_msg();
-        if( error_msg == "cancel" )
-            error_msg = "Database creation cancelled";
-        wxMessageBox( error_msg.c_str(), "Database creation failed", wxOK|wxICON_ERROR );
-        unlink(db_filename.c_str());
+        if( ok )
+            ok = db_primitive_open( db_name.c_str(), true );
+        if( ok )
+            ok = db_primitive_transaction_begin(this);
+        if( ok )
+            ok = db_primitive_create_tables(create_tiny_db);
+        if( ok )
+            ok = (db_primitive_count_games()>=0); // to set game_id to zero
+        for( int i=0; ok && i<cnt; i++ )
+        {
+            FILE *ifile = fopen( files[i].c_str(), "rt" );
+            if( !ifile )
+            {
+                error_msg = "Cannot open ";
+                error_msg += files[i];
+                ok = false;
+            }
+            else
+            {
+                std::string title( create_tiny_db?"Creating database, step 2 of 3":"Creating database, step 2 of 4");
+                std::string desc("Reading file #");
+                char buf[80];
+                sprintf( buf, "%d of %d", i+1, cnt );
+                desc += buf;
+                ProgressBar progress_bar( title, desc, true, this, ifile );
+                PgnRead pgn(create_tiny_db?'T':'A',&progress_bar);
+                bool aborted = pgn.Process(ifile);
+                if( aborted )
+                {
+                    error_msg = db_primitive_error_msg();
+                    if( error_msg == "" )
+                        error_msg = "cancel";
+                    ok = false;
+                }
+                fclose(ifile);
+            }
+        }
+        if( ok )
+            ok = db_primitive_flush();
+        if( ok )
+            ok = db_primitive_transaction_end();
+        if( ok )
+            ok = db_primitive_create_indexes( create_tiny_db );
+        if( ok )
+            db_primitive_close();
+        if( ok )
+        {
+            AcceptAndClose();
+            db_created_ok = true;
+        }
+        else
+        {
+            if( error_msg == "" )
+                error_msg = db_primitive_error_msg();
+            if( error_msg == "cancel" )
+                error_msg = "Database creation cancelled";
+            wxMessageBox( error_msg.c_str(), "Database creation failed", wxOK|wxICON_ERROR );
+            db_primitive_close();
+            unlink(db_filename.c_str());
+        }
     }
-    // TODO DatabaseReload();
 }
 
 // Append       TODO - make sure we don't append to the running database!
@@ -500,9 +567,73 @@ void CreateDatabaseDialog::OnAppendDatabase()
             if( error_msg == "cancel" )
                 error_msg = "Database creation cancelled";
             wxMessageBox( error_msg.c_str(), "Database creation failed", wxOK|wxICON_ERROR );
+            db_primitive_close();
             unlink(db_filename.c_str());
         }
         // TODO DatabaseReload();
+    }
+    else if( ok && !is_bin_db )
+    {
+    
+        if( ok )
+            ok = db_primitive_open( db_name.c_str(), false );
+        if( ok )
+            ok = db_primitive_transaction_begin(this);
+        if( ok )
+            ok = (db_primitive_count_games()>=0);
+        bool create_tiny_db=false;
+        if( ok )
+        {
+            int version = db_primitive_get_database_version();
+            ok = (version>0);
+            create_tiny_db = (version==2);
+        }    
+        for( int i=0; ok && i<cnt; i++ )
+        {
+            FILE *ifile = fopen( files[i].c_str(), "rt" );
+            if( !ifile )
+            {
+                error_msg = "Cannot open ";
+                error_msg += files[i];
+                ok = false;
+            }
+            else
+            {
+                std::string title( create_tiny_db?"Adding games to database":"Adding games to database, step 1 of 2");
+                std::string desc("Reading file #");
+                char buf[80];
+                sprintf( buf, "%d of %d", i+1, cnt );
+                desc += buf;
+                ProgressBar progress_bar( title, desc, true, this, ifile );
+                PgnRead *pgn = new PgnRead(create_tiny_db?'T':'A',&progress_bar);
+                bool aborted = pgn->Process(ifile);
+                if( aborted )
+                {
+                    error_msg = "cancel";
+                    ok = false;
+                }
+                delete pgn;
+                fclose(ifile);
+            }
+        }
+        if( ok )
+            ok = db_primitive_flush();
+        if( ok )
+            ok = db_primitive_transaction_end();
+        if( ok )
+            db_primitive_close();
+        if( ok )
+            AcceptAndClose();
+        else
+        {
+            if( error_msg == "" )
+                error_msg = db_primitive_error_msg();
+            if( error_msg == "cancel" )
+                error_msg = "Adding games to database cancelled";
+            wxMessageBox( error_msg.c_str(), "Appending to database failed", wxOK|wxICON_ERROR );
+            db_primitive_close();
+            // NO! unlink(db_filename.c_str());
+        }
     }
 }
 

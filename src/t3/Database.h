@@ -12,6 +12,7 @@
 #include <map>
 #include <list>
 #include <unordered_set>
+#include "sqlite3.h"
 #include "thc.h"
 #include "GameDocument.h"
 #include "MemoryPositionSearch.h"
@@ -31,18 +32,21 @@ public:
     void Reopen( const char *db_file );
     bool IsOperational( std::string &error_msg );
     bool GetDatabaseVersion( int &version );
-    bool IsTinyDb() { return is_bin_db; }
+    bool IsTinyDb() { return is_tiny_db || is_bin_db; }
     int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr );
     int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &player_name );
     int GetGameCount();
     int GetRow( int row, CompactGame *info );
     int GetRowRaw( CompactGame *info, int row );
+    bool LoadAllGames( std::vector< smart_ptr<ListableGame> > &cache, int nbr_games );
     bool LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGame> > &mega_cache );
     bool LoadAllGamesForPositionSearchBinDb( std::vector< smart_ptr<ListableGame> > &mega_cache );
+    bool LoadAllGamesForPositionSearchSql( std::vector< smart_ptr<ListableGame> > &mega_cache );
     bool TestNextRow();
     bool TestPrevRow();
     int GetCurrent();
     int  FindPlayer( std::string &name, std::string &current, int start_row, bool white );
+    void FindPlayerEnd();
     int LoadGameWithQuery( CompactGame *info, int game_id );
     //int LoadGamesWithQuery( const thc::ChessPosition &cp, uint64_t hash, std::vector< smart_ptr<ListableGame> > &games, std::unordered_set<int> &games_set );
     int LoadPlayerGamesWithQuery( std::string &player_name, bool white, std::vector< smart_ptr<ListableGame> > &games );
@@ -54,7 +58,17 @@ private:
     DB_REQ db_req;
     bool is_open;
     bool is_bin_db;
+    bool is_tiny_db;
     bool is_pristine;
+
+    // Create a handle for database connection, create a pointer to sqlite3
+    sqlite3 *gbl_handle;
+    
+    // A prepared statement for fetching from positions table
+    sqlite3_stmt *positions_stmt;
+    
+    // A prepared statement for player search
+    sqlite3_stmt *player_search_stmt;
     bool player_search_stmt_bin_db;
 
     // Whereabouts we are in the virtual list control
