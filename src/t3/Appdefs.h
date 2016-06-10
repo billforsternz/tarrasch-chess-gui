@@ -9,7 +9,7 @@
 
 #include "wx/wx.h"
 
-#define MASTER_VERSION "V3 Development - supports bindb with compatibility header and SQL files"
+#define MASTER_VERSION "V3 Development - No longer supports SQL"
 #define DEFAULT_ENGINE "stockfish 7 32bit.exe"
 #define DEFAULT_ENGINE_64 "stockfish 7 x64.exe"
 #define DATABASE_VERSION_NUMBER_NORMAL 1
