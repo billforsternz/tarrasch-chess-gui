@@ -19,7 +19,7 @@
 
 enum DB_REQ
 {
-    REQ_POSITION, REQ_SHOW_ALL, REQ_PLAYERS
+    REQ_POSITION, REQ_SHOW_ALL, REQ_PLAYERS, REQ_PATTERN
 };
 
 
@@ -31,14 +31,12 @@ public:
     void Reopen( const char *db_file );
     bool IsOperational( std::string &error_msg );
     bool GetDatabaseVersion( int &version );
-    bool IsTinyDb() { return is_bin_db; }
     int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr );
     int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &player_name );
     int GetGameCount();
     int GetRow( int row, CompactGame *info );
     int GetRowRaw( CompactGame *info, int row );
     bool LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGame> > &mega_cache );
-    bool LoadAllGamesForPositionSearchBinDb( std::vector< smart_ptr<ListableGame> > &mega_cache );
     bool TestNextRow();
     bool TestPrevRow();
     int GetCurrent();
@@ -53,7 +51,7 @@ public:
 private:
     DB_REQ db_req;
     bool is_open;
-    bool is_bin_db;
+    bool is_bin_db; //TODO - get rid of this because since NOSQL db is alway bin_b
     bool is_pristine;
     bool player_search_stmt_bin_db;
 
@@ -64,8 +62,6 @@ private:
     int gbl_current;
     
     // Misc
-    std::map<int,CompactGame>  cache;
-    std::list<int>              stack;
     std::string player_name;
     std::string where_white;
     std::string white_and;

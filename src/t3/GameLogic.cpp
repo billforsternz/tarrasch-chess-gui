@@ -31,6 +31,7 @@
 #include "Log.h"
 #include "Repository.h"
 #include "PositionDialog.h"
+#include "PatternDialog.h"
 #include "GameDetailsDialog.h"
 #include "GamePrefixDialog.h"
 #include "CentralWorkSaver.h"
@@ -919,6 +920,24 @@ void GameLogic::CmdDatabaseSearch()
         CmdDatabase( cr, REQ_POSITION );
 }
 
+void GameLogic::CmdDatabasePattern()
+{
+    bool do_search=false;
+    thc::ChessRules cr;
+    {
+        PatternDialog dialog( objs.frame );
+        if( wxID_OK == dialog.ShowModal() )
+        {
+            cr = dialog.m_pos;
+            do_search = true;
+        }
+    }
+    if( do_search )
+    {
+        CmdDatabase( cr, REQ_PATTERN );
+    }
+}
+
 void GameLogic::CmdDatabaseShowAll()
 {
     thc::ChessRules cr;
@@ -1102,6 +1121,7 @@ void GameLogic::CmdDatabaseAppend()
     }
     atom.StatusUpdate();
 }
+
 
 void GameLogic::CmdGamesSession()
 {

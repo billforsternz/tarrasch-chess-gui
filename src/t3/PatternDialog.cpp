@@ -1,5 +1,5 @@
 /****************************************************************************
- * Custom dialog - Set up position on board
+ * Custom dialog - Set up pattern on board
  *  Author:  Bill Forster
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
@@ -17,44 +17,45 @@
 #include "BoardSetupControl.h"
 #include "Book.h"
 #include "Repository.h"
-#include "PositionDialog.h"
+#include "PositionDialog.h" //temp
+#include "PatternDialog.h"
 using namespace std;
 using namespace thc;
 
-// PositionDialog type definition
-IMPLEMENT_CLASS( PositionDialog, wxDialog )
+// PatternDialog type definition
+IMPLEMENT_CLASS( PatternDialog, wxDialog )
 
-// PositionDialog event table definition
-BEGIN_EVENT_TABLE( PositionDialog, wxDialog )
-    EVT_BUTTON( ID_POSITION_960,PositionDialog::OnChess960Click )
-    EVT_BUTTON( ID_POSITION_CLEAR,PositionDialog::OnClearClick )
-    EVT_BUTTON( ID_POSITION_CURRENT, PositionDialog::OnCurrentClick )
-    EVT_BUTTON( ID_POSITION_RESET, PositionDialog::OnResetClick )
-    EVT_BUTTON( wxID_HELP, PositionDialog::OnHelpClick )
-    EVT_BUTTON( wxID_OK, PositionDialog::OnOkClick )
-    EVT_BUTTON( ID_APPLY,         PositionDialog::OnApplyClick )
-    EVT_SPINCTRL( ID_MOVE_COUNT, PositionDialog::OnSpin )
-    EVT_SPINCTRL( ID_HALF_COUNT, PositionDialog::OnSpin )
-    EVT_RADIOBUTTON( ID_WHITE_TO_MOVE, PositionDialog::OnRadio )
-    EVT_RADIOBUTTON( ID_BLACK_TO_MOVE, PositionDialog::OnRadio )
-    EVT_CHECKBOX   ( ID_WHITE_OO,      PositionDialog::OnCheckBox )
-    EVT_CHECKBOX   ( ID_WHITE_OOO,     PositionDialog::OnCheckBox )
-    EVT_CHECKBOX   ( ID_BLACK_OO,      PositionDialog::OnCheckBox )
-    EVT_CHECKBOX   ( ID_BLACK_OOO,     PositionDialog::OnCheckBox )
-    EVT_COMBOBOX   ( ID_EN_PASSANT,    PositionDialog::OnComboBox )
-    EVT_COMBOBOX   ( ID_PREDEFINED,    PositionDialog::OnPredefined )
+// PatternDialog event table definition
+BEGIN_EVENT_TABLE( PatternDialog, wxDialog )
+    EVT_BUTTON( ID_POSITION_960,PatternDialog::OnChess960Click )
+    EVT_BUTTON( ID_PATTERN_CLEAR,PatternDialog::OnClearClick )
+    EVT_BUTTON( ID_PATTERN_CURRENT, PatternDialog::OnCurrentClick )
+    EVT_BUTTON( ID_PATTERN_RESET, PatternDialog::OnResetClick )
+    EVT_BUTTON( wxID_HELP, PatternDialog::OnHelpClick )
+    EVT_BUTTON( wxID_OK, PatternDialog::OnOkClick )
+    EVT_BUTTON( ID_APPLY,         PatternDialog::OnApplyClick )
+    EVT_SPINCTRL( ID_MOVE_COUNT, PatternDialog::OnSpin )
+    EVT_SPINCTRL( ID_HALF_COUNT, PatternDialog::OnSpin )
+    EVT_RADIOBUTTON( ID_WHITE_TO_MOVE, PatternDialog::OnRadio )
+    EVT_RADIOBUTTON( ID_BLACK_TO_MOVE, PatternDialog::OnRadio )
+    EVT_CHECKBOX   ( ID_WHITE_OO,      PatternDialog::OnCheckBox )
+    EVT_CHECKBOX   ( ID_WHITE_OOO,     PatternDialog::OnCheckBox )
+    EVT_CHECKBOX   ( ID_BLACK_OO,      PatternDialog::OnCheckBox )
+    EVT_CHECKBOX   ( ID_BLACK_OOO,     PatternDialog::OnCheckBox )
+    EVT_COMBOBOX   ( ID_EN_PASSANT,    PatternDialog::OnComboBox )
+    EVT_COMBOBOX   ( ID_PREDEFINED,    PatternDialog::OnPredefined )
 END_EVENT_TABLE()
 
-// PositionDialog constructors
-static PositionDialog *singleton;   // for VeryUglyTemporaryCallback();
-PositionDialog::PositionDialog()
+// PatternDialog constructors
+static PatternDialog *singleton;   // for VeryUglyTemporaryCallback();
+PatternDialog::PatternDialog()
 {
     singleton = this;
     bsc = NULL;
     Init();
 }
 
-PositionDialog::PositionDialog
+PatternDialog::PatternDialog
 (
     wxWindow* parent,
     wxWindowID id, const wxString& caption,
@@ -67,17 +68,12 @@ PositionDialog::PositionDialog
     Create(parent, id, caption, pos, size, style);
 }
 
-PositionDialog::~PositionDialog()
-{
-    singleton = NULL;
-}
-
 // Initialisation
-void PositionDialog::Init()
+void PatternDialog::Init()
 {
     singleton = this;
     thc::ChessPosition tmp;
-    m_pos = tmp;                        // init position
+    m_pos = tmp;                        // init pattern
     memset( m_pos.squares, ' ', 64 );   // .. but with blank board
     m_pos.wking  = false;               // .. and no castling
     m_pos.wqueen = false;
@@ -87,7 +83,7 @@ void PositionDialog::Init()
 }
 
 
-void PositionDialog::Pos2Fen( const thc::ChessPosition& pos, wxString& fen )
+void PatternDialog::Pos2Fen( const thc::ChessPosition& pos, wxString& fen )
 {
     const char *src=pos.squares;
     char buf[128];
@@ -198,7 +194,7 @@ void PositionDialog::Pos2Fen( const thc::ChessPosition& pos, wxString& fen )
 }
 
 // Control update
-void PositionDialog::WriteToControls()
+void PatternDialog::WriteToControls()
 {
     bsc->SetPosition( m_pos.squares );
     white_oo->SetValue( m_pos.wking_allowed() );
@@ -221,7 +217,7 @@ void PositionDialog::WriteToControls()
 }
 
 // Dialog create
-bool PositionDialog::Create( wxWindow* parent,
+bool PatternDialog::Create( wxWindow* parent,
   wxWindowID id, const wxString& caption,
   const wxPoint& pos, const wxSize& size, long style )
 {
@@ -250,8 +246,8 @@ bool PositionDialog::Create( wxWindow* parent,
     return okay;
 }
 
-// Control creation for PositionDialog
-void PositionDialog::CreateControls()
+// Control creation for PatternDialog
+void PatternDialog::CreateControls()
 {    
 
     // A top-level sizer
@@ -264,23 +260,23 @@ void PositionDialog::CreateControls()
 /*
     // A friendly message
     wxStaticText* descr = new wxStaticText( this, wxID_STATIC,
-        wxT(" Enter position graphically or using FEN notation"), wxDefaultPosition, wxDefaultSize, 0 );
+        wxT(" Enter pattern graphically or using FEN notation"), wxDefaultPosition, wxDefaultSize, 0 );
     box_sizer->Add(descr, 0, wxALIGN_LEFT|wxALL, 5);
 
     // Spacer
     box_sizer->Add(5, 5, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
 */
-    // Predefined positions
-    wxBoxSizer* predefined_positions_sizer  = new wxBoxSizer(wxHORIZONTAL);
-    wxStaticText* predefined_positions_label = new wxStaticText ( this, wxID_STATIC,
-        wxT("Training position:"), wxDefaultPosition, wxDefaultSize, 0 );
+    // Predefined patterns
+    wxBoxSizer* predefined_patterns_sizer  = new wxBoxSizer(wxHORIZONTAL);
+    wxStaticText* predefined_patterns_label = new wxStaticText ( this, wxID_STATIC,
+        wxT("Training pattern:"), wxDefaultPosition, wxDefaultSize, 0 );
     //#define NBR_OF_PREDEFINED 3
     //wxString pos_array[NBR_OF_PREDEFINED];
     //pos_array[0] = "";
     //pos_array[1] = "Mate bare king with king and queen";
     //pos_array[2] = "Mate bare king with king and rook";
 
-    // Get predefined positions from book, Return bool error
+    // Get predefined patterns from book, Return bool error
     int nbr = 0;
     bool error = true;
     if( objs.repository->book.m_enabled )
@@ -291,7 +287,7 @@ void PositionDialog::CreateControls()
     if( !error && nbr>1 )
     {
         labels[0] =  "-- Cancel --";
-        combo_label.sprintf( "-- Load one of %d training positions from the book --", nbr-1 );
+        combo_label.sprintf( "-- Load one of %d training patterns from the book --", nbr-1 );
     }
     else
     {
@@ -314,10 +310,10 @@ void PositionDialog::CreateControls()
         labels.Add( "Intermediate: Winning with extra piece, middlegame" );
         fens.  Add( "rnb1kb1r|pp1ppppp|2p2n2|6q1|3P4|2N1P3|PPP2PPP|R2QKBNR w KQkq - 0 1" );
 
-        labels.Add( "Intermediate: Lucena Position" );
+        labels.Add( "Intermediate: Lucena Pattern" );
         fens.  Add( "6K1|4k1P1|8|8|8|8|5R2|6r1 w - - 0 1" );
 
-        labels.Add( "Intermediate: Philidor Position" );
+        labels.Add( "Intermediate: Philidor Pattern" );
         fens.  Add( "2R5|8|8|8|4pk2|8|r7|4K3 w - - 0 1" );
 
         labels.Add( "Intermediate: K+Q versus K+P (R pawn on 7th); draw" );
@@ -334,17 +330,17 @@ void PositionDialog::CreateControls()
 
         labels.Add( "Advanced: Converting extra pawn, endgame" );
         fens.  Add( "8|pppr1kpp|8|8|8|5P2|PPP1RKPP|8 w - - 0 1" );
-        combo_label.sprintf( "-- Load one of %d predefined positions --", (int)labels.GetCount()-1 );
+        combo_label.sprintf( "-- Load one of %d predefined patterns --", (int)labels.GetCount()-1 );
     }
 
-    predefined_positions_ctrl = new wxComboBox( this, ID_PREDEFINED,
+    predefined_patterns_ctrl = new wxComboBox( this, ID_PREDEFINED,
         combo_label, wxDefaultPosition,
         wxSize(wxDefaultCoord, wxDefaultCoord), labels, wxCB_DROPDOWN ); //wxCB_READONLY );
-    predefined_positions_ctrl->SetValue(combo_label);
-    predefined_positions_sizer->Add(predefined_positions_label, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
-    predefined_positions_sizer->Add(10, 5, 1, wxALL, 0);
-    predefined_positions_sizer->Add(predefined_positions_ctrl,  0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
-    box_sizer->Add(predefined_positions_sizer, 0, wxALIGN_LEFT|wxALL, 5);
+    predefined_patterns_ctrl->SetValue(combo_label);
+    predefined_patterns_sizer->Add(predefined_patterns_label, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
+    predefined_patterns_sizer->Add(10, 5, 1, wxALL, 0);
+    predefined_patterns_sizer->Add(predefined_patterns_ctrl,  0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
+    box_sizer->Add(predefined_patterns_sizer, 0, wxALIGN_LEFT|wxALL, 5);
 
     // The board setup bitmap
     bsc = new BoardSetupControl(this);
@@ -466,17 +462,17 @@ void PositionDialog::CreateControls()
     wxBoxSizer* buttons_box = new wxBoxSizer(wxVERTICAL);
 
     // The Initial button
-    wxButton* reset = new wxButton( this, ID_POSITION_RESET, wxT("&Initial"),
+    wxButton* reset = new wxButton( this, ID_PATTERN_RESET, wxT("&Initial"),
         wxDefaultPosition, wxDefaultSize, 0 );
     buttons_box->Add( reset, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     // The Current button
-    wxButton* current = new wxButton( this, ID_POSITION_CURRENT, wxT("&Current"),
+    wxButton* current = new wxButton( this, ID_PATTERN_CURRENT, wxT("&Current"),
         wxDefaultPosition, wxDefaultSize, 0 );
     buttons_box->Add( current, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     // The Clear button
-    wxButton* clear = new wxButton( this, ID_POSITION_CLEAR, wxT("&Clear"),
+    wxButton* clear = new wxButton( this, ID_PATTERN_CLEAR, wxT("&Clear"),
         wxDefaultPosition, wxDefaultSize, 0 );
     buttons_box->Add( clear, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
@@ -550,7 +546,7 @@ void PositionDialog::CreateControls()
 
 /*    wxSize sz=box4->GetSize();
     box4->SetSize(sz.x,sz.y/2);
-    wxPoint pt = apply->GetPosition();
+    wxPoint pt = apply->GetPattern();
     pt.x += 150;
     apply->SetPosition(pt); */
 
@@ -564,29 +560,29 @@ void PositionDialog::CreateControls()
 }
 
 // Set the validators for the dialog controls
-void PositionDialog::SetDialogValidators()
+void PatternDialog::SetDialogValidators()
 {
     FindWindow(ID_FEN)           -> SetValidator( wxTextValidator(wxFILTER_ASCII, &fen));
 }
 
 // Sets the help text for the dialog controls
-void PositionDialog::SetDialogHelp()
+void PatternDialog::SetDialogHelp()
 {
-    wxString fen_help  = wxT("A FEN format position specification");
+    wxString fen_help  = wxT("A FEN format pattern specification");
     FindWindow(ID_FEN)->SetHelpText(fen_help);
     FindWindow(ID_FEN)->SetToolTip(fen_help);
-    wxString initial_help = "Set the standard chess initial position";
-    FindWindow(ID_POSITION_RESET)->SetHelpText(initial_help);
-    FindWindow(ID_POSITION_RESET)->SetToolTip(initial_help);
+    wxString initial_help = "Set the standard chess initial pattern";
+    FindWindow(ID_PATTERN_RESET)->SetHelpText(initial_help);
+    FindWindow(ID_PATTERN_RESET)->SetToolTip(initial_help);
     wxString clear_help = "Clear the board";
-    FindWindow(ID_POSITION_CLEAR)->SetHelpText(clear_help);
-    FindWindow(ID_POSITION_CLEAR)->SetToolTip(clear_help);
-    wxString chess_960_help = "Create shuffle chess position (note: \"Shuffle\" not \"Chess960\" since Tarrasch doesn't understand Chess960 castling)";
+    FindWindow(ID_PATTERN_CLEAR)->SetHelpText(clear_help);
+    FindWindow(ID_PATTERN_CLEAR)->SetToolTip(clear_help);
+    wxString chess_960_help = "Create shuffle chess pattern (note: \"Shuffle\" not \"Chess960\" since Tarrasch doesn't understand Chess960 castling)";
     FindWindow(ID_POSITION_960)->SetHelpText(chess_960_help);
     FindWindow(ID_POSITION_960)->SetToolTip(chess_960_help);
-    wxString current_help = "Copy from the current main board position";
-    FindWindow(ID_POSITION_CURRENT)->SetHelpText(current_help);
-    FindWindow(ID_POSITION_CURRENT)->SetToolTip(current_help);
+    wxString current_help = "Copy from the current main board pattern";
+    FindWindow(ID_PATTERN_CURRENT)->SetHelpText(current_help);
+    FindWindow(ID_PATTERN_CURRENT)->SetToolTip(current_help);
     wxString apply_help = "Apply the fen string (useful after hand editing)";
     FindWindow(ID_APPLY)->SetHelpText(apply_help);
     FindWindow(ID_APPLY)->SetToolTip(apply_help);
@@ -608,7 +604,7 @@ void PositionDialog::SetDialogHelp()
     wxString black_help = "Set if black to move";
     FindWindow(ID_BLACK_TO_MOVE)->SetHelpText(black_help);
     FindWindow(ID_BLACK_TO_MOVE)->SetToolTip(black_help);
-    wxString move_count_help = "Numeric label for a move made in this position. E.g. if next move will be 23... Nd5, set this to 23";
+    wxString move_count_help = "Numeric label for a move made in this pattern. E.g. if next move will be 23... Nd5, set this to 23";
     FindWindow(ID_MOVE_COUNT)->SetHelpText(move_count_help);
     FindWindow(ID_MOVE_COUNT)->SetToolTip(move_count_help);
     wxString half_clock_help = "Half moves made since last capture or pawn move, a draw can be claimed when the count gets to 100";
@@ -619,8 +615,8 @@ void PositionDialog::SetDialogHelp()
     FindWindow(ID_EN_PASSANT)->SetToolTip(ep_help);
 }
 
-// wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_POSITION_RESET
-void PositionDialog::OnResetClick( wxCommandEvent& WXUNUSED(event) )
+// wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_PATTERN_RESET
+void PatternDialog::OnResetClick( wxCommandEvent& WXUNUSED(event) )
 {
     thc::ChessPosition tmp;
     m_pos = tmp;
@@ -628,16 +624,16 @@ void PositionDialog::OnResetClick( wxCommandEvent& WXUNUSED(event) )
     WriteToControls();
 }
 
-// wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_POSITION_CURRENT
-void PositionDialog::OnCurrentClick( wxCommandEvent& WXUNUSED(event) )
+// wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_PATTERN_CURRENT
+void PatternDialog::OnCurrentClick( wxCommandEvent& WXUNUSED(event) )
 {
     m_pos = objs.gl->gd.master_position;
     Pos2Fen( m_pos, fen );
     WriteToControls();
 }
 
-// wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_POSITION_CLEAR
-void PositionDialog::OnClearClick( wxCommandEvent& WXUNUSED(event) )
+// wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_PATTERN_CLEAR
+void PatternDialog::OnClearClick( wxCommandEvent& WXUNUSED(event) )
 {
     thc::ChessPosition tmp;
     m_pos = tmp;
@@ -651,7 +647,7 @@ void PositionDialog::OnClearClick( wxCommandEvent& WXUNUSED(event) )
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_POSITION_960
-void PositionDialog::OnChess960Click( wxCommandEvent& WXUNUSED(event) )
+void PatternDialog::OnChess960Click( wxCommandEvent& WXUNUSED(event) )
 {
     thc::ChessPosition tmp;
     memset( tmp.squares, ' ', 8 );
@@ -758,7 +754,7 @@ void PositionDialog::OnChess960Click( wxCommandEvent& WXUNUSED(event) )
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_APPLY
-void PositionDialog::OnApplyClick( wxCommandEvent& WXUNUSED(event) )
+void PatternDialog::OnApplyClick( wxCommandEvent& WXUNUSED(event) )
 {
     thc::ChessRules cr;
     bool legal=true;
@@ -774,7 +770,7 @@ void PositionDialog::OnApplyClick( wxCommandEvent& WXUNUSED(event) )
     {
         legal = cr.IsLegal(reason);
         if( !legal )
-            IllegalPositionDialog( "FEN Specifies Illegal Position", cr,reason);
+            IllegalPatternDialog( "FEN Specifies Illegal Pattern", cr,reason);
     }
     if( legal )
     {
@@ -785,7 +781,7 @@ void PositionDialog::OnApplyClick( wxCommandEvent& WXUNUSED(event) )
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_HELP
-void PositionDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
+void PatternDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
 {
     // Normally we would wish to display proper online help.
     // For this example, we're just using a message box.
@@ -794,16 +790,16 @@ void PositionDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
      */
 
     wxString helpText =
-      wxT("Use this panel to specify a new position\n");
+      wxT("Use this panel to specify a new pattern\n");
 
     wxMessageBox(helpText,
-      wxT("Position Dialog Help"),
+      wxT("Pattern Dialog Help"),
       wxOK|wxICON_INFORMATION, this);
 }
 
-void PositionDialog::IllegalPositionDialog( const char *caption, thc::ChessRules &cr, ILLEGAL_REASON reason )
+void PatternDialog::IllegalPatternDialog( const char *caption, thc::ChessRules &cr, ILLEGAL_REASON reason )
 {
-    wxString msg = "Reason(s) the position is illegal;        \n";
+    wxString msg = "Reason(s) the pattern is illegal;        \n";
     if( reason & IR_PAWN_POSITION )
         msg += " Pawn(s) are on the first or last rank\n";
     if( reason & IR_NOT_ONE_KING_EACH )
@@ -828,7 +824,7 @@ void PositionDialog::IllegalPositionDialog( const char *caption, thc::ChessRules
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_OK
-void PositionDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
+void PatternDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
 {
     bool err=false;
     if( bsc )
@@ -839,7 +835,7 @@ void PositionDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
         if( !cr.IsLegal(reason) )
         {
             err = true;
-            IllegalPositionDialog("Illegal Position", cr,reason);
+            IllegalPatternDialog("Illegal Pattern", cr,reason);
         }
         else
         {
@@ -853,30 +849,30 @@ void PositionDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
         AcceptAndClose();
 }
 
-void PositionDialog::OnSpin( wxSpinEvent& WXUNUSED(event) )
+void PatternDialog::OnSpin( wxSpinEvent& WXUNUSED(event) )
 {
     ModifyFen();
 }
 
-void PositionDialog::OnCheckBox( wxCommandEvent& WXUNUSED(event) )
+void PatternDialog::OnCheckBox( wxCommandEvent& WXUNUSED(event) )
 {
     ModifyFen();
 }
 
-void PositionDialog::OnRadio( wxCommandEvent& WXUNUSED(event) )
+void PatternDialog::OnRadio( wxCommandEvent& WXUNUSED(event) )
 {
     ModifyFen();
 }
 
-void PositionDialog::OnComboBox( wxCommandEvent& WXUNUSED(event) )
+void PatternDialog::OnComboBox( wxCommandEvent& WXUNUSED(event) )
 {
     ModifyFen();
 }
 
-void PositionDialog::OnPredefined( wxCommandEvent& WXUNUSED(event) )
+void PatternDialog::OnPredefined( wxCommandEvent& WXUNUSED(event) )
 {
     bool found=false;
-    wxString txt = this->predefined_positions_ctrl->GetValue();
+    wxString txt = this->predefined_patterns_ctrl->GetValue();
     // char piece=' ';
     for( unsigned int i=1; !found && i<labels.GetCount(); i++ )
     {
@@ -895,17 +891,18 @@ void PositionDialog::OnPredefined( wxCommandEvent& WXUNUSED(event) )
         }
     }
     if( !found )
-        predefined_positions_ctrl->SetValue(combo_label);
+        predefined_patterns_ctrl->SetValue(combo_label);
     ok_button->SetFocus();
 }
 
 // Later - learn how to do this by sending an event to parent instead
+#if 0
 void VeryUglyTemporaryCallback()
 {
-    PositionDialog *ptr = singleton;
-    if( ptr )
-        ptr->ModifyFen();
+    PatternDialog *ptr = singleton;
+    ptr->ModifyFen();
 }
+#endif
 
 static bool Castling( char squares[64], char KkQq )
 {
@@ -920,7 +917,7 @@ static bool Castling( char squares[64], char KkQq )
     }
     return ret;
 }
-void PositionDialog::ModifyFen()
+void PatternDialog::ModifyFen()
 {
     if( Castling(bsc->squares,'q') && !Castling(m_pos.squares,'q') )
         this->black_ooo->SetValue(true);

@@ -87,6 +87,7 @@ public:
     void CmdDatabaseSelect();
     void CmdDatabaseCreate();
     void CmdDatabaseAppend();
+    void CmdDatabasePattern();
 
     void CmdDatabase( thc::ChessRules &cr, DB_REQ db_req );
     void CmdNextGame();

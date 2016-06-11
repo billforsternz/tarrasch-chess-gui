@@ -111,32 +111,8 @@ wxSizer *DbDialog::GdvAddExtraControls()
     wxStaticText* spacer1 = new wxStaticText( this, wxID_ANY, wxT(""),
                                      wxDefaultPosition, wxDefaultSize, 0 );
     vsiz_panel_button1->Add(spacer1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    
-    /*radio_ctrl = new wxRadioButton( this,  ID_DB_RADIO,
-     wxT("&Radio"), wxDefaultPosition, wxDefaultSize,  wxRB_GROUP );
-     vsiz_panel_buttons->Add(radio_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-     radio_ctrl->SetValue( false ); */
- 
-#if 0
-    wxString combo_array[9];
-    combo_array[0] = "Equals";
-    combo_array[1] = "Starts with";
-    combo_array[2] = "Ends with";
-    combo_ctrl = new wxComboBox ( this, ID_DB_COMBO,
-                                 "None", wxDefaultPosition,
-                                 wxSize(50, wxDefaultCoord), 3, combo_array, wxCB_READONLY );
-    vsiz_panel_buttons->Add(combo_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    wxString combo;
-    combo = "None";
-    combo_ctrl->SetValue(combo);
-    wxSize sz3=combo_ctrl->GetSize();
-    combo_ctrl->SetSize((sz3.x*118)/32,sz3.y);      // temp temp
-#endif
     return vsiz_panel_button1;   
 }
-
-#define LOAD_INTO_MEMORY_THRESHOLD 2000
-#define QUERY_LOAD_INTO_MEMORY_THRESHOLD 10000
 
 void DbDialog::GdvOnActivate()
 {
@@ -150,7 +126,7 @@ void DbDialog::GdvOnActivate()
         ok_button->Update();
         ok_button->Refresh();
 
-        if( db_req == REQ_PLAYERS )
+        if( db_req==REQ_PLAYERS || db_req==REQ_PATTERN )
         {
             notebook->Hide();
         }
@@ -174,22 +150,10 @@ void DbDialog::GdvOnActivate()
             //utility->SetPosition( pos_button );
             moves_from_base_position.clear();   //NOSQL
             StatsCalculate();
-        /*  NOSQL  if( objs.gl->db_clipboard )
-            {
-                StatsCalculate();
-            }
-            else if( objs.db->IsTinyDb() || nbr_games_in_list_ctrl <= LOAD_INTO_MEMORY_THRESHOLD )
-            {
-                bool ok = LoadGamesIntoMemory();
-                if( ok )
-                    StatsCalculate();
-            }    */
         }
         Goto(0); // list_ctrl->SetFocus();
     }
 }
-
-
 
 // Read game information from games or database
 void DbDialog::GdvReadItem( int item, CompactGame &pact )
@@ -270,39 +234,11 @@ int DbDialog::CalculateTranspo( const char *blob, int &transpo )
     return 0;
 }
 
-
-bool DbDialog::LoadGamesPrompted( std::string prompt )
-{
-    bool ok=true;
-/*  NOSQL  
-    bool in_memory = (gc_db_displayed_games.gds.size() > 0);
-    if( !in_memory )
-    {
-        if( nbr_games_in_list_ctrl >= QUERY_LOAD_INTO_MEMORY_THRESHOLD )
-        {
-            wxString msg( prompt.c_str() );
-            int answer = wxMessageBox( msg, "Press Yes to load games",  wxYES_NO|wxCANCEL, this );
-            bool load_games = (answer == wxYES);
-            if( !load_games )
-                return false;
-        }
-        ok = LoadGamesIntoMemory();
-        if( ok )
-            StatsCalculate();
-    } */
-    return ok;
-}
-
 void DbDialog::GdvListColClick( int compare_col )
 {
-    if( objs.db->IsTinyDb() && db_req==REQ_PLAYERS )
+    if( db_req == REQ_PLAYERS )
         return; // not supported
-    if( LoadGamesPrompted
-        ("This column sort requires loading a large number of games into memory, is that okay?")
-      )
-    {
-        ColumnSort( compare_col, gc_db_displayed_games.gds );  
-    }
+    ColumnSort( compare_col, gc_db_displayed_games.gds );  
 }
 
 void DbDialog::GdvSearch()
@@ -326,26 +262,20 @@ void DbDialog::GdvSearch()
 
 void DbDialog::GdvSaveAllToAFile()
 {
-    if( LoadGamesPrompted
-          ("Saving these games to a file requires loading a large number of games into memory, is that okay?")
-      )
+    wxFileDialog fd( objs.frame, "Save all listed games to a new .pgn file", "", "", "*.pgn", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
+    wxString dir = objs.repository->nv.m_doc_dir;
+    fd.SetDirectory(dir);
+    int answer = fd.ShowModal();
+    if( answer == wxID_OK )
     {
-        wxFileDialog fd( objs.frame, "Save all listed games to a new .pgn file", "", "", "*.pgn", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
-        wxString dir = objs.repository->nv.m_doc_dir;
-        fd.SetDirectory(dir);
-        int answer = fd.ShowModal();
-        if( answer == wxID_OK )
-        {
-            wxString dir;
-            wxFileName::SplitPath( fd.GetPath(), &dir, NULL, NULL );
-            objs.repository->nv.m_doc_dir = dir;
-            wxString wx_filename = fd.GetPath();
-            std::string filename( wx_filename.c_str() );
-            gc_db_displayed_games.FileSaveAllAsAFile( filename );
-        }
+        wxString dir;
+        wxFileName::SplitPath( fd.GetPath(), &dir, NULL, NULL );
+        objs.repository->nv.m_doc_dir = dir;
+        wxString wx_filename = fd.GetPath();
+        std::string filename( wx_filename.c_str() );
+        gc_db_displayed_games.FileSaveAllAsAFile( filename );
     }
 }
-
 
 void DbDialog::GdvOnCancel()
 {
@@ -429,10 +359,8 @@ std::multimap<B,A> flip_and_sort_map(const std::map<A,B> &src)
 
 void DbDialog::GdvUtility()
 {
-        moves_from_base_position.clear();   //NOSQL
-    /* NOSQL bool ok = LoadGamesIntoMemory();
-    if( ok ) */
-        StatsCalculate();
+    moves_from_base_position.clear();   //NOSQL
+    StatsCalculate();
 }
 
 void DbDialog::GdvButton1()
@@ -519,19 +447,10 @@ void DbDialog::GdvCheckBox( bool checked )
         //  situation where stats must be requested, unconditionally load games into
         //  memory (Calculate Stats button loads games into memory)
         gc->gds.clear();
-        /* NOSQL
-        LoadGamesIntoMemory(); */
         moves_from_base_position.clear();   //NOSQL
     }
     StatsCalculate();
 }
-
-/*NOSQL
-bool DbDialog::LoadGamesIntoMemory()
-{
-    moves_from_base_position.clear();
-    return true;    // StatsCalculate() will load the games into gc_db_displayed_games[]
-} */
 
 void DbDialog::CopyOrAdd( bool clear_clipboard )
 {
@@ -630,7 +549,7 @@ void DbDialog::StatsCalculate()
     bool do_partial_search = true;
     if( objs.gl->db_clipboard )
         source = &objs.gl->gc_clipboard.gds;
-    else if( objs.db->IsTinyDb() )
+    else
     {
         mps = &objs.db->tiny_db;
         do_partial_search = false;
@@ -747,8 +666,6 @@ void DbDialog::StatsCalculate()
             std::sort( transpositions.rbegin(), transpositions.rend() );
         }
     }
-
-
 
     // Sort the stats according to number of games
     std::multimap< MOVE_STATS,  char > dst = flip_and_sort_map(stats);
@@ -870,7 +787,6 @@ void DbDialog::StatsCalculate()
     Goto(0);
 }
 
-
 // One of the moves in move stats is clicked
 void DbDialog::GdvNextMove( int idx )
 {
@@ -911,4 +827,3 @@ void DbDialog::GdvNextMove( int idx )
     StatsCalculate();
 #endif
 }
-
