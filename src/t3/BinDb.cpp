@@ -19,7 +19,6 @@
 #include "BinDb.h"
 
 static FILE *bin_file;  //temp
-static int is_bin_db_version;   //temp
 
 // The 1200 byte compatibility header - Prepended to a BinDb formatted database file
 //  It makes such a file partially compatible to the original versions of TarraschDb
@@ -115,9 +114,11 @@ static uint8_t compatibility_header[] =
 
 #define COMPATIBILITY_HEADER_SIZE 1200  // = 0x4b0
 
-bool BinDbOpen( const char *db_file )
+// Return bool ok
+bool BinDbOpen( const char *db_file, int &version )
 {
-    bool is_bin_db=false;
+    bool ok=false;
+    version=0;
     if( bin_file )
     {
         fclose( bin_file );
@@ -136,14 +137,14 @@ bool BinDbOpen( const char *db_file )
         {
             if( 0 == memcmp(&buf[0x100], "TDB format", 10) )  // is this the compatibility header ?
             {
-                is_bin_db = true;
-                is_bin_db_version = buf[COMPATIBILITY_HEADER_SIZE-1];
+                ok = true;
+                version = buf[COMPATIBILITY_HEADER_SIZE-1];
             } 
         }
-        if( !is_bin_db )
+        if( !ok )
             fclose(bin_file);
     }
-    return is_bin_db;
+    return ok;
 }
 
 void BinDbClose()
@@ -153,11 +154,6 @@ void BinDbClose()
         fclose(bin_file);
         bin_file = NULL;
     }
-}
-
-void BinDbGetDatabaseVersion( int &version )
-{
-    version = is_bin_db_version;
 }
 
 void Test()

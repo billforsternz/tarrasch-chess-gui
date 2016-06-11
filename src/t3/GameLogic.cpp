@@ -672,28 +672,14 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
 
 bool GameLogic::CmdUpdateNextGame()
 {
-    if( false )
-    {
-        return objs.db->TestNextRow();
-    }
-    else
-    {
-        size_t nbr = gc_pgn.gds.size();
-        return( gc_pgn.gds.size()>1 && file_game_idx!=-1 && 0<=file_game_idx+1 && file_game_idx+1<nbr );
-    }
+    size_t nbr = gc_pgn.gds.size();
+    return( gc_pgn.gds.size()>1 && file_game_idx!=-1 && 0<=file_game_idx+1 && file_game_idx+1<nbr );
 }
 
 bool GameLogic::CmdUpdatePreviousGame()
 {
-    if( false )
-    {
-        return objs.db->TestPrevRow();
-    }
-    else
-    {
-        size_t nbr = gc_pgn.gds.size();
-        return( gc_pgn.gds.size()>1 && file_game_idx!=-1 && 0<=file_game_idx-1 && file_game_idx-1<nbr );
-    }
+    size_t nbr = gc_pgn.gds.size();
+    return( gc_pgn.gds.size()>1 && file_game_idx!=-1 && 0<=file_game_idx-1 && file_game_idx-1<nbr );
 }
 
 void GameLogic::NextGamePreviousGame( int idx )

@@ -405,22 +405,22 @@ void CreateDatabaseDialog::OnAppendDatabase()
             ok = false;
         }
     }
-    bool is_bin_db=false;
     if( ok )
     {
-        is_bin_db = BinDbOpen( db_filename.c_str() );
-    }
-    if( ok && is_bin_db )
-    {
         int version;
-        BinDbGetDatabaseVersion( version );
-        if( version != DATABASE_VERSION_NUMBER_BIN_DB )
+        ok = BinDbOpen( db_filename.c_str(), version );
+        if( !ok )
+            error_msg = "Cannot open  " + db_name;
+        else
         {
-            error_msg = "Tarrasch database file " + db_name + " is incompatible with this version of Tarrasch";
-            ok = false;
+            if( version != DATABASE_VERSION_NUMBER_BIN_DB )
+            {
+                error_msg = "Tarrasch database file " + db_name + " is incompatible with this version of Tarrasch";
+                ok = false;
+            }
         }
     }
-    if( ok && is_bin_db )
+    if( ok )
     {
         bool dummyb=false;
         int dummyi=false;

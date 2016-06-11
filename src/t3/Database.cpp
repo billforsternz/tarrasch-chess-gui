@@ -37,8 +37,6 @@
 //  renamed as such
 //
 
-#define NBR_BUCKETS 4096
-
 // Use a worker thread to load tiny database games
 class WorkerThread : public wxThread
 {
@@ -117,38 +115,22 @@ Database::Database( const char *db_file )
     Reopen( db_file );
 }
 
-Database::~Database()
-{
-}
-
 void Database::Reopen( const char *db_file )
 {
     background_load_permill = 0;
     kill_background_load = false;
-    player_search_stmt_bin_db = false;
-    gbl_expected = 0;
-    gbl_current = 0;
-    gbl_count = 0;
-    is_pristine = false;
+    player_search_in_progress = false;
     tiny_db.Init();
 
     // Access the database.
-    is_open = BinDbOpen( db_file );
-    is_bin_db = is_open;
+    is_open = BinDbOpen( db_file, database_version );
     std::string nomsg;
     IsOperational( nomsg );
     if( is_open )
-    {
-#define USE_BACKGROUND_THREAD
-#ifdef USE_BACKGROUND_THREAD
         LoadInBackground( this );
-#else
-        LoadAllGamesForPositionSearch( tiny_db.in_memory_game_cache );
-#endif
-    }
     
     // If connection failed, handle returns NULL
-    dbg_printf( "DATABASE STARTUP %s\n", is_open ? "SUCCESSFUL" : "FAILED" );
+    cprintf( "DATABASE STARTUP %s\n", is_open ? "SUCCESSFUL" : "FAILED" );
 }
 
 
@@ -161,36 +143,16 @@ bool Database::IsOperational( std::string &error_msg )
         error_msg = "Could not open database";
     else
     {
-        int version;
-        bool ok = GetDatabaseVersion( version );
-        if( !ok )
-            error_msg = "Could not read version number from database";
-        else
+        operational = true;
+        if( database_version != DATABASE_VERSION_NUMBER_BIN_DB )
         {
-            operational = true;
-            if( version != DATABASE_VERSION_NUMBER_BIN_DB )
-            {
-                char buf[200];
-                sprintf( buf, "The database file is not in the correct format for this version of Tarrasch (db version=%d)", version );                
-                error_msg = std::string(buf);
-                operational = false;
-            }
+            char buf[200];
+            sprintf( buf, "The database file is not in the correct format for this version of Tarrasch (db version=%d)", database_version );                
+            error_msg = std::string(buf);
+            operational = false;
         }
     }
     return operational;
-}
-
-// Return bool okay
-bool Database::GetDatabaseVersion( int &version )
-{
-    bool ok=false;
-    version = 0;
-    if( is_bin_db )
-    {
-        BinDbGetDatabaseVersion( version );
-        ok = true;
-    }
-    return ok;
 }
 
 bool predicate_sorts_by_player( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 )
@@ -213,25 +175,10 @@ int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr )
 
 int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &player_name )
 {
-    extern void db_make_small_db_file();
-    bool db_access_required = true;
     this->db_req = db_req;
 	std::sort( objs.db->tiny_db.in_memory_game_cache.begin(), objs.db->tiny_db.in_memory_game_cache.end(), db_req==REQ_PLAYERS ? predicate_sorts_by_player : predicate_sorts_by_game_id );
 	smart_ptr<ListableGame> p = objs.db->tiny_db.in_memory_game_cache[0];
 	cprintf( "index 0: %s\n", p->White() );
-	return tiny_db.in_memory_game_cache.size();
-}
-
-
-int Database::LoadGameWithQuery( CompactGame *pact, int game_id )
-{
-    pact->game_id = game_id;
-    tiny_db.in_memory_game_cache[game_id]->GetCompactGame(*pact);
-    return 0;
-}
-
-int Database::GetGameCount()
-{
 	return tiny_db.in_memory_game_cache.size();
 }
 
@@ -270,17 +217,16 @@ int Database::GetRowRaw( CompactGame *pact, int row )
 bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGame> > &mega_cache )
 {
     AutoTimer at("Load all games");
-    is_pristine = true;
     background_load_permill = 0;
     kill_background_load = false;
     mega_cache.clear();
     BinDbLoadAllGames( false, mega_cache, background_load_permill, kill_background_load );
-    cprintf( "Reversing BinDb order begin\n" );
+    //cprintf( "Reversing BinDb order begin\n" );
     //std::reverse( mega_cache.begin(), mega_cache.end() ); 
-    cprintf( "Reversing BinDb order end\n" );
+    //cprintf( "Reversing BinDb order end\n" );
     BinDbClose();
     int cache_nbr = mega_cache.size();
-    cprintf( "Number of games = %d, is_pristine=%s\n", cache_nbr, is_pristine?"true":"false" );
+    cprintf( "Number of games = %d\n", cache_nbr );
     if( 2 < cache_nbr )
     {
         smart_ptr<ListableGame> p = mega_cache[2];
@@ -295,15 +241,13 @@ int Database::FindPlayer( std::string &name, std::string &current, int start_row
     bool okay = true;
     int retval = -1;                               
     int row = 0;
-    gbl_expected = -1;
     std::string input(name);
     std::transform(input.begin(), input.end(), input.begin(), ::tolower);
     std::transform(current.begin(), current.end(), current.begin(), ::tolower);
     int input_len = input.length();
-    bool search_in_progress = player_search_stmt_bin_db;
 
     // If continue search step
-    if( search_in_progress &&
+    if( player_search_in_progress &&
         prev_name == name &&
         prev_current == current &&
         prev_white == white &&
@@ -316,67 +260,45 @@ int Database::FindPlayer( std::string &name, std::string &current, int start_row
     // Else start search
     else
     {
-        player_search_stmt_bin_db = true;
-        okay = true;
+        player_search_in_progress = true;
     }
 
     // Loop looking for matches
-    while( okay )
+    while( row < tiny_db.in_memory_game_cache.size() ) 
     {
-        okay = (row < tiny_db.in_memory_game_cache.size());
-        if( okay )
+        const char *val;
+        smart_ptr<ListableGame> p = tiny_db.in_memory_game_cache[row];
+        val = white ? p->White() : p->Black();
+        std::string player(val);
+        std::transform(player.begin(), player.end(), player.begin(), ::tolower);
+        int player_len = player.length();
+
+        // If white we want to skip further games played by the same player, (since the list is sorted by white
+        //  player the user can already see those games - so go look for another player of the same name)
+        bool match;
+        if( white )
         {
-            const char *val;
-            smart_ptr<ListableGame> p = tiny_db.in_memory_game_cache[row];
-            val = white ? p->White() : p->Black();
-            std::string player(val);
-            std::transform(player.begin(), player.end(), player.begin(), ::tolower);
-            int player_len = player.length();
-
-            // If white we want to skip further games played by the same player, (since the list is sorted by white
-            //  player the user can already see those games - so go look for another player of the same name)
-            bool match;
-            if( white )
-            {
-                match = (player!=current && input_len<=player_len && player.substr(0,input_len)==input);
-            }
-
-            // If black we want to find more black games played by the same player, (since the list is sorted
-            //  by white player, black games by a single player are sparsely distributed)
-            else
-            {
-                match = (input_len<=player_len && player.substr(0,input_len)==input);
-            }
-            if( match )
-            {
-                prev_name = name;
-                prev_current = player;
-                prev_white = white;
-                prev_row = row;
-                return row;
-            }
-            row++;
+            match = (player!=current && input_len<=player_len && player.substr(0,input_len)==input);
         }
+
+        // If black we want to find more black games played by the same player, (since the list is sorted
+        //  by white player, black games by a single player are sparsely distributed)
+        else
+        {
+            match = (input_len<=player_len && player.substr(0,input_len)==input);
+        }
+        if( match )
+        {
+            prev_name = name;
+            prev_current = player;
+            prev_white = white;
+            prev_row = row;
+            return row;
+        }
+        row++;
     }
-    player_search_stmt_bin_db = false;
+    player_search_in_progress = false;
     return start_row;
 }
 
-// Returns row
-bool Database::TestNextRow()
-{
-    int next = gbl_current+1;
-    return( gbl_count>0 && 0<=next && next<gbl_count );
-}
 
-
-bool Database::TestPrevRow()
-{
-    int next = gbl_current-1;
-    return( gbl_count>0 && 0<=next && next<gbl_count );
-}
-
-int Database::GetCurrent()
-{
-    return gbl_current;
-}

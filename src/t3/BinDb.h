@@ -12,9 +12,8 @@
 #include "BinaryConversions.h"
 #include "ListableGame.h"
 
-bool BinDbOpen( const char *db_file );
+bool BinDbOpen( const char *db_file, int &version );
 void BinDbClose();
-void BinDbGetDatabaseVersion( int &version );
 void BinDbLoadAllGames( bool for_db_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb=NULL  );
 std::vector< smart_ptr<ListableGame> > &BinDbLoadAllGamesGetVector();
 
