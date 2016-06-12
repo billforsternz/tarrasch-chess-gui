@@ -235,11 +235,8 @@ public:
     // Return true if a game has been selected
     bool LoadGameTwo(  GameDocument &gd );
     void LoadGameOne( int idx, int focus_offset=0 );
-    
  
     // Helpers
-    GameDocument *GetFocusGame( int &idx );
-    void DeselectOthers();
     void OnOk();
     void MoveColCompare( std::vector< smart_ptr<ListableGame> > &displayed_games );
     
@@ -266,8 +263,6 @@ protected:
     
     wxNotebook  *notebook;
     int          selected_game;
-    void         SyncCacheOrderBefore();
-    void         SyncCacheOrderAfter();
     void         CopyOrAdd( bool clear_clipboard );
 
     // Data members
@@ -279,7 +274,6 @@ protected:
     wxTextCtrl *text_ctrl;
     wxListBox *list_ctrl_stats;
     wxListBox *list_ctrl_transpo;
-    wxButton *utility;
     MiniBoard *mini_board;
     bool activated_at_least_once;
 

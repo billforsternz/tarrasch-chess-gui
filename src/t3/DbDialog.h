@@ -65,12 +65,11 @@ public:
         const wxSize& size = wxDefaultSize,
         long style = wxCAPTION|wxRESIZE_BORDER|wxSYSTEM_MENU|wxCLOSE_BOX
     );
-
     virtual ~DbDialog() {}
 
     // We calculate a vector of all blobs in the games that leading to the search position
     std::vector< PATH_TO_POSITION > transpositions;
-    bool ReadItemFromMemory( int item, CompactGame &info );
+    bool ReadGameFromSearchResults( int item, CompactGame &info );
     void MoveColCompare();
 
     // Overrides - Gdv = Games Dialog Override
@@ -82,7 +81,6 @@ public:
     virtual void GdvHelpClick();
     virtual void GdvCheckBox( bool checked );
     virtual void GdvCheckBox2( bool checked );
-    virtual void GdvUtility();
     virtual void GdvSearch();
     virtual void GdvButton1();
     virtual void GdvButton2();
@@ -97,18 +95,11 @@ public:
     // Helpers
     void CopyOrAdd( bool clear_clipboard );
     void StatsCalculate();
-    GameDocument *GetFocusGame( int &idx );
-    void DeselectOthers();
-    int          selected_game;
-    void         SyncCacheOrderBefore();
-    void         SyncCacheOrderAfter();
 
     // Data members
 private:
     std::map< char, MOVE_STATS > stats; // map each compressed move in the position to move stats
     bool white_player_search;
-    std::unordered_set<int>   games_set;    // game_ids for all games in memory
-    std::unordered_set<uint64_t> drill_down_set;  // positions already encountered drilling down
     std::vector<thc::Move> moves_in_this_position;
     std::vector<thc::Move> moves_from_base_position;
     GamesCache gc_db_displayed_games;

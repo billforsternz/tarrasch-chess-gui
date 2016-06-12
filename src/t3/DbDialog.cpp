@@ -32,7 +32,27 @@
 
 using namespace std;
 
+// DbDialog constructors
+DbDialog::DbDialog
+(
+    wxWindow    *parent,
+    thc::ChessRules *cr,
+    GamesCache  *gc,
+    GamesCache  *gc_clipboard,
+    DB_REQ      db_req,
+    wxWindowID  id,
+    const wxPoint& pos,
+    const wxSize& size,
+    long style
+ ) : GamesDialog( parent, cr, gc, gc_clipboard, id, pos, size )
+{
+    this->db_req = db_req;
+    activated_at_least_once = false;
+    transpo_activated = false;
+    white_player_search = true;
+}
 
+// Games Dialog Override - Add extra controls
 wxSizer *DbDialog::GdvAddExtraControls()
 {
     // Stats list box
@@ -114,59 +134,47 @@ wxSizer *DbDialog::GdvAddExtraControls()
     return vsiz_panel_button1;   
 }
 
+// Games Dialog Override - One time activation
 void DbDialog::GdvOnActivate()
 {
     if( !activated_at_least_once )
     {
         activated_at_least_once = true;
-        wxPoint pos = ok_button->GetPosition();
-        wxSize  sz  = ok_button->GetSize();
-        pos.x += 3*(sz.x);
-        ok_button->SetPosition( pos );
-        ok_button->Update();
-        ok_button->Refresh();
 
+        // Remove stats panel when that feature is unavailable
         if( db_req==REQ_PLAYERS || db_req==REQ_PATTERN )
         {
             notebook->Hide();
         }
+
+        // Else calculate stats
         else
         {
-            wxPoint pos2 = notebook->GetPosition();
-            wxSize  sz2  = notebook->GetSize();
-            wxSize  sz3  = ok_button->GetSize();
-            pos2.x += (sz2.x/2);        
-            pos2.y += (sz2.y/2);        
-            pos2.x -= (sz3.x/2);        
-            pos2.y -= (sz3.y/2);        
-            //pos_button.x += (sz_panel.x/2 - sz_button.x/2);
-            //pos_button.y += (sz_panel.y/2 - sz_button.y/2);
-            utility = new wxButton ( this, ID_DB_UTILITY, wxT("Calculate Stats"),
-                                    pos2, wxDefaultSize, 0 );
-            utility->Raise();
-            wxSize sz_panel  = notebook->GetSize();
-            wxSize sz_button = utility->GetSize();
-            wxPoint pos_button = utility->GetPosition();
-            //utility->SetPosition( pos_button );
-            moves_from_base_position.clear();   //NOSQL
-            StatsCalculate();
+            StatsCalculate();                                 
         }
         Goto(0); // list_ctrl->SetFocus();
     }
 }
 
-// Read game information from games or database
+// Games Dialog Override - Read a game into list control
 void DbDialog::GdvReadItem( int item, CompactGame &pact )
 {
-    bool in_memory = ReadItemFromMemory( item, pact );
+    // Two mechanisms supported
+
+    // Mechanism 1) Dialog presents selected games
+    bool in_memory = ReadGameFromSearchResults( item, pact );
     if( !in_memory )
     {
+
+        // Mechanism 2) Fallback when no filtering - dialog presents all database games
         objs.db->GetRow( item, &pact );
         pact.transpo_nbr = 0;
     }
 }
 
-bool DbDialog::ReadItemFromMemory( int item, CompactGame &pact )
+// Read game from search results - such games are stored in the displayed
+//  games cache
+bool DbDialog::ReadGameFromSearchResults( int item, CompactGame &pact )
 {
     bool in_memory = false;
     pact.transpo_nbr = 0;
@@ -194,28 +202,6 @@ bool DbDialog::ReadItemFromMemory( int item, CompactGame &pact )
     return in_memory;
 }
 
-// DbDialog constructors
-DbDialog::DbDialog
-(
-    wxWindow    *parent,
-    thc::ChessRules *cr,
-    GamesCache  *gc,
-    GamesCache  *gc_clipboard,
-    DB_REQ      db_req,
-    wxWindowID  id,
-    const wxPoint& pos,
-    const wxSize& size,
-    long style
- ) : GamesDialog( parent, cr, gc, gc_clipboard, id, pos, size )
-{
-    this->db_req = db_req;
-    activated_at_least_once = false;
-    transpo_activated = false;
-    white_player_search = true;
-    utility = NULL;
-}
-
-
 // Overidden function used for smart move column compare
 int DbDialog::CalculateTranspo( const char *blob, int &transpo )
 {        
@@ -234,6 +220,7 @@ int DbDialog::CalculateTranspo( const char *blob, int &transpo )
     return 0;
 }
 
+// Games Dialog Override - List column clicked
 void DbDialog::GdvListColClick( int compare_col )
 {
     if( db_req == REQ_PLAYERS )
@@ -241,6 +228,7 @@ void DbDialog::GdvListColClick( int compare_col )
     ColumnSort( compare_col, gc_db_displayed_games.gds );  
 }
 
+// Games Dialog Override - Search feature
 void DbDialog::GdvSearch()
 {
     if( text_ctrl )
@@ -260,6 +248,7 @@ void DbDialog::GdvSearch()
 }
 
 
+// Games Dialog Override - Save all to a .pgn file
 void DbDialog::GdvSaveAllToAFile()
 {
     wxFileDialog fd( objs.frame, "Save all listed games to a new .pgn file", "", "", "*.pgn", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
@@ -277,20 +266,14 @@ void DbDialog::GdvSaveAllToAFile()
     }
 }
 
+// Games Dialog Override - Cancel
 void DbDialog::GdvOnCancel()
 {
+    // Todo - check whether this does anything (useful)
     gc->PrepareForResumePreviousWindow( list_ctrl->GetTopItem() );
-    int sz=gc->gds.size();
- /* for( int i=0; i<sz; i++ )
-    {
-        smart_ptr<ListableGame> smp = gc->gds[i];
-        bool selected = (wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED)) ? true : false;
-        smp->SetSelected(selected);
-        bool focused  =  (wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED)  ) ? true : false;
-        smp->SetFocused(focused);
-    } */
 }
 
+// Games Dialog Override - Help
 void DbDialog::GdvHelpClick()
 {
     // Normally we would wish to display proper online help.
@@ -340,40 +323,20 @@ void DbDialog::GdvHelpClick()
     wxOK|wxICON_INFORMATION, NULL );
 }
 
-
-// Sorting map<std::string,MOV_STATS> by MOVE_STATS instead of std::string requires this flipping procedure
-template<typename A, typename B>
-std::pair<B,A> flip_pair(const std::pair<A,B> &p)
-{
-    return std::pair<B,A>(p.second, p.first);
-}
-
-template<typename A, typename B>
-std::multimap<B,A> flip_and_sort_map(const std::map<A,B> &src)
-{
-    std::multimap<B,A> dst;
-    std::transform(src.begin(), src.end(), std::inserter(dst, dst.begin()),
-                   flip_pair<A,B>);
-    return dst;
-}
-
-void DbDialog::GdvUtility()
-{
-    moves_from_base_position.clear();   //NOSQL
-    StatsCalculate();
-}
-
+// ID_BUTTON_1 is Clear Clipboard
 void DbDialog::GdvButton1()
 {
     objs.gl->gc_clipboard.gds.clear();
     Goto( track->focus_idx );
 }
 
+// ID_BUTTON_2 is Add to Clipboard
 void DbDialog::GdvButton2()
 {
     CopyOrAdd( false );
 }
 
+// ID_BUTTON_3 is Add All Player's White Games
 void DbDialog::GdvButton3()
 {
     std::string player_name = white_player_search ? track->info.r.white : track->info.r.black;
@@ -387,6 +350,7 @@ void DbDialog::GdvButton3()
     Goto( track->focus_idx );
 }
 
+// ID_BUTTON_4 is Add All Player's Black Games
 void DbDialog::GdvButton4()
 {
     std::string player_name = white_player_search ? track->info.r.white : track->info.r.black;
@@ -400,7 +364,7 @@ void DbDialog::GdvButton4()
     Goto( track->focus_idx );
 }
 
-// UseGame feature
+//  ID_BUTTON_5 is Use Game feature
 void DbDialog::GdvButton5()
 {
     objs.gl->gd.UseGame( cr_base, moves_from_base_position, track->info );
@@ -408,6 +372,8 @@ void DbDialog::GdvButton5()
     AcceptAndClose();
 }
 
+
+// ID_DB_CHECKBOX2 is White player
 void DbDialog::GdvCheckBox2( bool checked )
 {
     white_player_search = checked;
@@ -426,6 +392,7 @@ void DbDialog::GdvCheckBox2( bool checked )
     }
 }
 
+// ID_DB_CHECKBOX is Clipboard as temp database
 void DbDialog::GdvCheckBox( bool checked )
 {
     objs.gl->db_clipboard = checked;
@@ -434,7 +401,6 @@ void DbDialog::GdvCheckBox( bool checked )
     this->cr = cr_base;
     moves_from_base_position.clear();
     gc_db_displayed_games.gds.clear();
-    drill_down_set.clear();
     if( objs.gl->db_clipboard )
     {
         nbr_games_in_list_ctrl = gc_clipboard->gds.size();
@@ -452,6 +418,11 @@ void DbDialog::GdvCheckBox( bool checked )
     StatsCalculate();
 }
 
+// Copy to clipboard if clear_clipboard is true
+// Add to clipboard if clear_clipboard is false
+//
+//   (note that in DbDialog we only Add actually)
+//
 void DbDialog::CopyOrAdd( bool clear_clipboard )
 {
     int idx_focus = -1;
@@ -508,7 +479,23 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
     dbg_printf( "%d games copied\n", nbr_copied );
 }
 
+// Sorting map<std::string,MOV_STATS> by MOVE_STATS instead of std::string requires this flipping procedure
+template<typename A, typename B>
+std::pair<B,A> flip_pair(const std::pair<A,B> &p)
+{
+    return std::pair<B,A>(p.second, p.first);
+}
 
+template<typename A, typename B>
+std::multimap<B,A> flip_and_sort_map(const std::map<A,B> &src)
+{
+    std::multimap<B,A> dst;
+    std::transform(src.begin(), src.end(), std::inserter(dst, dst.begin()),
+                   flip_pair<A,B>);
+    return dst;
+}
+
+// Heart and sole of DbDialog() - do the search and calculate the stats
 void DbDialog::StatsCalculate()
 {
     int total_white_wins = 0;
@@ -768,8 +755,6 @@ void DbDialog::StatsCalculate()
 
     if( !list_ctrl_stats )
     {
-        if( utility )
-            utility->Hide();
         wxSize sz4 = mini_board->GetSize();
         sz4.x = (sz4.x*13)/10;
         sz4.y = (sz4.y*10)/10;
@@ -787,7 +772,9 @@ void DbDialog::StatsCalculate()
     Goto(0);
 }
 
-// One of the moves in move stats is clicked
+// Games Dialog Override - Next move listbox
+//  One of the moves in the ID_DB_LISTBOX_STATS listboax is clicked
+//  No real need for this to be overridable - it only occurs in this leaf class
 void DbDialog::GdvNextMove( int idx )
 {
     dirty = true;
@@ -808,18 +795,10 @@ void DbDialog::GdvNextMove( int idx )
         cr_to_match.PlayMove(mv);
     }
     uint64_t hash = cr_to_match.Hash64Calculate();
-    if( drill_down_set.count(hash) > 0 )
-    {
-        cprintf( "Already seen this position\n" );
-    }
-    else
-    {
-        title_ctrl->SetLabel( "Searching for extra games through transposition...." );
-        title_ctrl->Refresh();
-        title_ctrl->Update();
-        //title_ctrl->MacDoRedraw(0);
-    }
-
+    title_ctrl->SetLabel( "Searching ...." );
+    title_ctrl->Refresh();
+    title_ctrl->Update();
+    //title_ctrl->MacDoRedraw(0);
     wxSafeYield();
 #ifdef THC_MAC
     CallAfter( &DbDialog::StatsCalculate );

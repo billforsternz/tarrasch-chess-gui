@@ -198,13 +198,7 @@ int Database::LoadPlayerGamesWithQuery(  std::string &player_name, bool white, s
 	return nbr_after-nbr_before;
 }
 
-int Database::GetRow( int row, CompactGame *info )
-{
-    int ret = GetRowRaw( info, row );
-    return ret;
-}
-
-int Database::GetRowRaw( CompactGame *pact, int row )
+int Database::GetRow( int row, CompactGame *pact )
 {
     if( db_req==REQ_PLAYERS || db_req==REQ_PATTERN )
     {

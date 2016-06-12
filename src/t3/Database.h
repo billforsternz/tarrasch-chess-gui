@@ -31,8 +31,7 @@ public:
     bool IsOperational( std::string &error_msg );
     int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr );
     int SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &player_name );
-    int GetRow( int row, CompactGame *info );
-    int GetRowRaw( CompactGame *info, int row );
+    int GetRow( int row, CompactGame *pact );
     bool LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGame> > &mega_cache );
     int  FindPlayer( std::string &name, std::string &current, int start_row, bool white );
     int LoadPlayerGamesWithQuery( std::string &player_name, bool white, std::vector< smart_ptr<ListableGame> > &games );
