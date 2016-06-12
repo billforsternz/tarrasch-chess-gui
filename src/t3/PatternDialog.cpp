@@ -831,13 +831,13 @@ void PatternDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
     {
         strcpy( m_pos.squares, bsc->squares );
         thc::ChessRules cr = m_pos;
-        ILLEGAL_REASON reason;
+    /*    ILLEGAL_REASON reason;
         if( !cr.IsLegal(reason) )
         {
             err = true;
             IllegalPatternDialog("Illegal Pattern", cr,reason);
         }
-        else
+        else */
         {
             char forsyth[128];
             strcpy( forsyth, cr.ForsythPublish().c_str() );

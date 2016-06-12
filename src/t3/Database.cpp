@@ -200,11 +200,8 @@ int Database::LoadPlayerGamesWithQuery(  std::string &player_name, bool white, s
 
 int Database::GetRow( int row, CompactGame *pact )
 {
-    if( db_req==REQ_PLAYERS || db_req==REQ_PATTERN )
-    {
-		smart_ptr<ListableGame> p = tiny_db.in_memory_game_cache[row];
-		p->GetCompactGame(*pact);
-    }
+	smart_ptr<ListableGame> p = tiny_db.in_memory_game_cache[row];
+	p->GetCompactGame(*pact);
     return 0;
 }
 

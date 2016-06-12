@@ -90,11 +90,12 @@ public:
     virtual void GdvOnCancel();
     virtual void GdvNextMove( int idx );
     virtual int  CalculateTranspo( const char *blob, int &transpo );
-    virtual int  GetBasePositionIdx( CompactGame &pact ) { int idx; pact.FindPositionInGame( objs.db->GetPositionHash(), idx ); return idx; }
+    virtual int  GetBasePositionIdx( CompactGame &pact );
 
     // Helpers
     void CopyOrAdd( bool clear_clipboard );
     void StatsCalculate();
+    void PatternSearch();
 
     // Data members
 private:

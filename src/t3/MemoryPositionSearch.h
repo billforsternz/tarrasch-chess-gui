@@ -63,6 +63,14 @@ struct MpsSlow
     uint64_t slow_black_home_mask;
     uint64_t slow_black_home_pawns;
     char     slow_target_squares[64];
+    uint64_t slow_rank8_mask;
+    uint64_t slow_rank7_mask;
+    uint64_t slow_rank6_mask;
+    uint64_t slow_rank5_mask;
+    uint64_t slow_rank4_mask;
+    uint64_t slow_rank3_mask;
+    uint64_t slow_rank2_mask;
+    uint64_t slow_rank1_mask;
 };
 
 // This part is used for fast re-initiation at the start of each game
@@ -142,6 +150,8 @@ public:
     bool SearchGameBase( std::string &moves_in );   // the original version
     bool SearchGameOptimisedNoPromotionAllowed( const char *moves_in, unsigned short &offset_first, unsigned short &offset_last  );    // much faster
     bool SearchGameSlowPromotionAllowed(  const std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last  );          // semi fast
+    bool PatternSearchGameOptimisedNoPromotionAllowed( const char *moves_in, unsigned short &offset_first, unsigned short &offset_last  );    // much faster
+    bool PatternSearchGameSlowPromotionAllowed(  const std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last  );          // semi fast
     int  GetNbrGamesFound() { return games_found.size(); }
     std::vector< smart_ptr<ListableGame> > *search_source;
     std::vector< smart_ptr<ListableGame> >  &GetVectorSourceGames()   { return *search_source; }
@@ -201,6 +211,8 @@ public:
     }
     int  DoSearch( const thc::ChessPosition &cp, uint64_t position_hash, ProgressBar *progress );
     int  DoSearch( const thc::ChessPosition &cp, uint64_t position_hash, ProgressBar *progress, std::vector< smart_ptr<ListableGame> > *source );
+    int  DoPatternSearch( const thc::ChessPosition &cp, ProgressBar *progress );
+    int  DoPatternSearch( const thc::ChessPosition &cp, ProgressBar *progress, std::vector< smart_ptr<ListableGame> > *source );
     bool IsThisSearchPosition( const thc::ChessPosition &cp )
         { return search_position_set && cp==search_position; }
 

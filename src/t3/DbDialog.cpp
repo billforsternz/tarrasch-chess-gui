@@ -145,6 +145,10 @@ void DbDialog::GdvOnActivate()
         if( db_req==REQ_PLAYERS || db_req==REQ_PATTERN )
         {
             notebook->Hide();
+            if( db_req == REQ_PATTERN )
+            {
+                PatternSearch();
+            }
         }
 
         // Else calculate stats
@@ -200,6 +204,25 @@ bool DbDialog::ReadGameFromSearchResults( int item, CompactGame &pact )
         }
     }
     return in_memory;
+}
+
+// Overidden function used to set initial position when navigating game
+int DbDialog::GetBasePositionIdx( CompactGame &pact )
+{ 
+    int idx = 0;
+    if( db_req != REQ_PATTERN )
+        pact.FindPositionInGame( objs.db->GetPositionHash(), idx );
+    else
+    {
+        CompressMoves press;
+        std::string moves = press.Compress( pact.moves );
+        unsigned short offset1;
+        unsigned short offset2;
+        bool found = objs.db->tiny_db.PatternSearchGameSlowPromotionAllowed( moves, offset1, offset2 );
+        if( found )
+            idx = offset1;
+    }
+    return idx;
 }
 
 // Overidden function used for smart move column compare
@@ -413,7 +436,6 @@ void DbDialog::GdvCheckBox( bool checked )
         //  situation where stats must be requested, unconditionally load games into
         //  memory (Calculate Stats button loads games into memory)
         gc->gds.clear();
-        moves_from_base_position.clear();   //NOSQL
     }
     StatsCalculate();
 }
@@ -477,6 +499,41 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
         Goto( 0<=idx_focus && idx_focus<nbr ? idx_focus : 0 );
     }
     dbg_printf( "%d games copied\n", nbr_copied );
+}
+
+// Games Dialog Override - Next move listbox
+//  One of the moves in the ID_DB_LISTBOX_STATS listbox is clicked
+//  No real need for this to be overridable - it only occurs in this leaf class
+void DbDialog::GdvNextMove( int idx )
+{
+    dirty = true;
+    if( idx==0 && moves_from_base_position.size()>0 )
+    {
+        moves_from_base_position.pop_back();  // Undo last move
+    }
+    else
+    {
+        thc::Move this_one = moves_in_this_position[idx];
+        moves_from_base_position.push_back(this_one);
+    }
+    
+    thc::ChessRules cr_to_match = this->cr;
+    for( int i=0; i<moves_from_base_position.size(); i++ )
+    {
+        thc::Move mv = moves_from_base_position[i];
+        cr_to_match.PlayMove(mv);
+    }
+    uint64_t hash = cr_to_match.Hash64Calculate();
+    title_ctrl->SetLabel( "Searching ...." );
+    title_ctrl->Refresh();
+    title_ctrl->Update();
+    //title_ctrl->MacDoRedraw(0);
+    wxSafeYield();
+#ifdef THC_MAC
+    CallAfter( &DbDialog::StatsCalculate );
+#else
+    StatsCalculate();
+#endif
 }
 
 // Sorting map<std::string,MOV_STATS> by MOVE_STATS instead of std::string requires this flipping procedure
@@ -772,37 +829,95 @@ void DbDialog::StatsCalculate()
     Goto(0);
 }
 
-// Games Dialog Override - Next move listbox
-//  One of the moves in the ID_DB_LISTBOX_STATS listboax is clicked
-//  No real need for this to be overridable - it only occurs in this leaf class
-void DbDialog::GdvNextMove( int idx )
+
+// Search for patterns
+void DbDialog::PatternSearch()
 {
-    dirty = true;
-    if( idx==0 && moves_from_base_position.size()>0 )
+    gc_db_displayed_games.gds.clear();
+    cprintf( "Remove focus %d\n", track->focus_idx );
+    list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_FOCUSED );
+    list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_SELECTED );
+    thc::ChessRules cr_to_match = this->cr;
+
+    // hash to match
+    CompressMoves press_to_match(cr_to_match);
+    objs.db->gbl_position = cr_to_match;
+    MemoryPositionSearch partial;
+    MemoryPositionSearch *mps = &partial;
+    std::vector< smart_ptr<ListableGame> > *source = &gc->gds;
+    bool do_partial_search = true;
+    if( objs.gl->db_clipboard )
+        source = &objs.gl->gc_clipboard.gds;
+    else
     {
-        moves_from_base_position.pop_back();  // Undo last move
+        mps = &objs.db->tiny_db;
+        do_partial_search = false;
+    }
+    int game_count = 0;
+
+    // The fast MemoryPositionSearch facility was developed to scan all the games in a tiny database,
+    //  but once it was available it made sense to apply it to searching for positions in any game
+    //  list, in particular games from a disk based (i.e. not tiny) database and the clipboard. These
+    //  latter types of search we are calling 'partial' search because they aren't of an entire, (albeit
+    //  tiny) in memory database
+    if( do_partial_search )
+    {
+
+        // The promotion attribute is only set automatically for the tiny database games (at the moment)
+        for( int i=0; i<source->size(); i++ )
+            (*source)[i]->SetAttributes();
+        ProgressBar progress2(objs.gl->db_clipboard ? "Searching" : "Checking for transpositions", "Searching",false);
+        game_count = mps->DoPatternSearch(cr_to_match,&progress2,source);
     }
     else
     {
-        thc::Move this_one = moves_in_this_position[idx];
-        moves_from_base_position.push_back(this_one);
+        bool search_needed = !mps->IsThisSearchPosition(cr_to_match);
+        cprintf( "search_needed = %s\n", search_needed?"true":"false" );
+        if( search_needed )
+        {
+            ProgressBar progress2("Checking for transpositions", "Searching for extra games",false);
+            game_count = mps->DoPatternSearch(cr_to_match,&progress2);
+        }
     }
     
-    thc::ChessRules cr_to_match = this->cr;
-    for( int i=0; i<moves_from_base_position.size(); i++ )
+    std::vector< smart_ptr<ListableGame> >  &db_games    = mps->GetVectorSourceGames();
+    std::vector<DoSearchFoundGame>          &found_games = mps->GetVectorGamesFound();
+    int nbr_found_games = found_games.size();
+    
+    for( unsigned int i=0; i<nbr_found_games; i++ )
     {
-        thc::Move mv = moves_from_base_position[i];
-        cr_to_match.PlayMove(mv);
+        int idx                     = found_games[i].idx;
+        unsigned short offset_first = found_games[i].offset_first;
+        unsigned short offset_last  = found_games[i].offset_last;
+        gc_db_displayed_games.gds.push_back(db_games[idx]);
     }
-    uint64_t hash = cr_to_match.Hash64Calculate();
-    title_ctrl->SetLabel( "Searching ...." );
-    title_ctrl->Refresh();
-    title_ctrl->Update();
-    //title_ctrl->MacDoRedraw(0);
-    wxSafeYield();
-#ifdef THC_MAC
-    CallAfter( &DbDialog::StatsCalculate );
-#else
-    StatsCalculate();
-#endif
+        
+    nbr_games_in_list_ctrl = gc_db_displayed_games.gds.size();
+    dirty = true;
+    list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
+    list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
+    char buf[1000];
+    int total_games  = nbr_games_in_list_ctrl;
+/*    int total_draws_plus_no_result = total_games - total_white_wins - total_black_wins;
+    double percent_score=0.0;
+    if( total_games )
+        percent_score= ((1.0*total_white_wins + 0.5*total_draws_plus_no_result) * 100.0) / total_games;
+    sprintf( buf, "%d %s, white scores %.1f%% +%d -%d =%d",
+            total_games,
+            total_games==1 ? "game" : "games",
+            percent_score,
+            total_white_wins, total_black_wins, total_draws ); */
+    sprintf( buf, "%d %s",
+            total_games,
+            total_games==1 ? "game" : "games" );
+    title_ctrl->SetLabel( buf );
+
+    int top = list_ctrl->GetTopItem();
+    int count = 1 + list_ctrl->GetCountPerPage();
+    if( count > nbr_games_in_list_ctrl )
+        count = nbr_games_in_list_ctrl;
+    for( int i=0; i<count; i++ )
+        list_ctrl->RefreshItem(top++);
+    Goto(0);
 }
+
