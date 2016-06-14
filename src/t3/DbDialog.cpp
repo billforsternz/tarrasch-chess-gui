@@ -207,20 +207,25 @@ bool DbDialog::ReadGameFromSearchResults( int item, CompactGame &pact )
 }
 
 // Overidden function used to set initial position when navigating game
-int DbDialog::GetBasePositionIdx( CompactGame &pact )
+int DbDialog::GetBasePositionIdx( CompactGame &pact, bool receiving_focus )
 { 
     int idx = 0;
-    if( db_req != REQ_PATTERN )
-        pact.FindPositionInGame( objs.db->GetPositionHash(), idx );
+    if( db_req == REQ_PATTERN )
+    {
+        if( receiving_focus )
+        {
+            CompressMoves press;
+            std::string moves = press.Compress( pact.moves );
+            unsigned short offset1;
+            unsigned short offset2;
+            bool found = objs.db->tiny_db.PatternSearchGameSlowPromotionAllowed( pm, moves, offset1, offset2 );
+            if( found )
+                idx = offset1;
+        }
+    }
     else
     {
-        CompressMoves press;
-        std::string moves = press.Compress( pact.moves );
-        unsigned short offset1;
-        unsigned short offset2;
-        bool found = objs.db->tiny_db.PatternSearchGameSlowPromotionAllowed( moves, offset1, offset2 );
-        if( found )
-            idx = offset1;
+        pact.FindPositionInGame( objs.db->GetPositionHash(), idx );
     }
     return idx;
 }
@@ -860,6 +865,7 @@ void DbDialog::PatternSearch()
     //  list, in particular games from a disk based (i.e. not tiny) database and the clipboard. These
     //  latter types of search we are calling 'partial' search because they aren't of an entire, (albeit
     //  tiny) in memory database
+    pm.cp = cr_to_match;
     if( do_partial_search )
     {
 
@@ -867,7 +873,7 @@ void DbDialog::PatternSearch()
         for( int i=0; i<source->size(); i++ )
             (*source)[i]->SetAttributes();
         ProgressBar progress2(objs.gl->db_clipboard ? "Searching" : "Checking for transpositions", "Searching",false);
-        game_count = mps->DoPatternSearch(cr_to_match,&progress2,source);
+        game_count = mps->DoPatternSearch(pm,&progress2,source);
     }
     else
     {
@@ -876,7 +882,7 @@ void DbDialog::PatternSearch()
         if( search_needed )
         {
             ProgressBar progress2("Checking for transpositions", "Searching for extra games",false);
-            game_count = mps->DoPatternSearch(cr_to_match,&progress2);
+            game_count = mps->DoPatternSearch(pm,&progress2);
         }
     }
     

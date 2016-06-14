@@ -226,7 +226,7 @@ public:
     virtual void GdvButton5();
     virtual void GdvNextMove( int idx );
     virtual int  CalculateTranspo( const char *blob, int &transpo );
-    virtual int  GetBasePositionIdx( CompactGame &pact ) { return 0; }
+    virtual int  GetBasePositionIdx( CompactGame &pact, bool receiving_focus ) { return 0; }
 
 //  void OnClose( wxCloseEvent& event );
 //  void SaveColumns();

@@ -98,7 +98,7 @@ void GamesListCtrl::ReceiveFocus( int focus_idx )
         track->focus_idx = focus_idx;
         parent->ReadItemWithSingleLineCache( focus_idx, track->info );
 
-        int offset = parent->GetBasePositionIdx( track->info );
+        int offset = parent->GetBasePositionIdx( track->info, true );
         initial_focus_offset = track->focus_offset = offset;
         if( mini_board )
         {
@@ -227,7 +227,7 @@ wxString GamesListCtrl::OnGetItemText( long item, long column) const
             }
             else
             {
-                int idx = parent->GetBasePositionIdx( info );
+                int idx = parent->GetBasePositionIdx( info, false );
                 move_txt = CalculateMoveTxt( info, idx );
                 move_txt = buf + move_txt;
             }

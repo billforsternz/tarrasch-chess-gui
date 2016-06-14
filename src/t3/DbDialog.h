@@ -17,6 +17,7 @@
 #include "MiniBoard.h"
 #include "CompressMoves.h"
 #include "ListableGameDb.h"
+#include "PatternMatch.h"
 #include "Database.h"
 #include "PgnDialog.h"
 #include "GamesDialog.h"
@@ -90,7 +91,7 @@ public:
     virtual void GdvOnCancel();
     virtual void GdvNextMove( int idx );
     virtual int  CalculateTranspo( const char *blob, int &transpo );
-    virtual int  GetBasePositionIdx( CompactGame &pact );
+    virtual int  GetBasePositionIdx( CompactGame &pact, bool receiving_focus );
 
     // Helpers
     void CopyOrAdd( bool clear_clipboard );
@@ -104,6 +105,7 @@ private:
     std::vector<thc::Move> moves_in_this_position;
     std::vector<thc::Move> moves_from_base_position;
     GamesCache gc_db_displayed_games;
+    PatternMatch pm;
 };
 
 #endif    // DB_DIALOG_H

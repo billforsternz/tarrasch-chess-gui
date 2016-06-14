@@ -95,13 +95,6 @@
 #define N_HI                8     // CODE_KNIGHT encodes 8 vectors for each of 2 knights (HI and LO)
 #define N_LO                0
 
-static inline bool is_dark( int sq )
-{
-    bool dark = (!(sq&8) &&  (sq&1))    // eg (a8,b8,c8...h8) && (b8|d8|f8|h8) odd rank + odd file
-             || ( (sq&8) && !(sq&1));   // eg (a7,b7,c7...h7) && (a7|c7|e7|g7) even rank + even file
-    return dark;
-}
-
 // Pawns for each side are assigned logical numbers from 0 to nbr_pawns-1
 //  The ordering of the numbers is determined by consulting this table...
 static int pawn_ordering[64] =
@@ -433,15 +426,15 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
     return games_found.size();
 }
 
-int  MemoryPositionSearch::DoPatternSearch( const thc::ChessPosition &cp, ProgressBar *progress )
+int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progress )
 {
-    return DoPatternSearch(cp,progress,&in_memory_game_cache);
+    return DoPatternSearch(pm,progress,&in_memory_game_cache);
 }
 
-int  MemoryPositionSearch::DoPatternSearch( const thc::ChessPosition &cp, ProgressBar *progress, std::vector< smart_ptr<ListableGame> > *source )
+int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progress, std::vector< smart_ptr<ListableGame> > *source )
 {
     games_found.clear();
-    search_position = cp;
+    search_position = pm.cp;
     search_position_set = true;
     search_source = source;
 
@@ -464,7 +457,7 @@ int  MemoryPositionSearch::DoPatternSearch( const thc::ChessPosition &cp, Progre
     mq.black_queen_target = 0;
     for( int i=0; i<64; i++ )
     {
-        char piece = cp.squares[i];
+        char piece = pm.cp.squares[i];
         ms.slow_target_squares[i] = piece;     // no transform of B->D or b->d
         switch(piece)
         {
@@ -552,7 +545,7 @@ int  MemoryPositionSearch::DoPatternSearch( const thc::ChessPosition &cp, Progre
             }
             default:
             {
-                piece = 0;
+                piece = '.';
             }
         }
 
@@ -601,31 +594,8 @@ int  MemoryPositionSearch::DoPatternSearch( const thc::ChessPosition &cp, Progre
     }
 
     // Set up the pattern mask
-    for( int i=0, k=0; i<8; i++ )
-    {
-        switch( i )
-        {
-            case 0: mask = reinterpret_cast<char *>(&ms.slow_rank8_mask);  break;
-            case 1: mask = reinterpret_cast<char *>(&ms.slow_rank7_mask);  break;
-            case 2: mask = reinterpret_cast<char *>(&ms.slow_rank6_mask);  break;
-            case 3: mask = reinterpret_cast<char *>(&ms.slow_rank5_mask);  break;
-            case 4: mask = reinterpret_cast<char *>(&ms.slow_rank4_mask);  break;
-            case 5: mask = reinterpret_cast<char *>(&ms.slow_rank3_mask);  break;
-            case 6: mask = reinterpret_cast<char *>(&ms.slow_rank2_mask);  break;
-            case 7: mask = reinterpret_cast<char *>(&ms.slow_rank1_mask);  break;
-        }
-        for( int j=0; j<8; j++ )
-        {
-            mask[j] = 0;
-            char c = ms.slow_target_squares[k];
-            bool empty = (c =='.' || c==' ');
-            if( empty )
-                ms.slow_target_squares[k] = 0;
-            k++;
-            if( !empty )
-                mask[j] = '\x7f';
-        }
-    }
+    pm.Prime(&msi.cr);
+    pm.PrimeMaterialBalance();
 
     mq.rank3_target = *mq.rank3_target_ptr;
     mq.rank4_target = *mq.rank4_target_ptr;
@@ -649,7 +619,7 @@ int  MemoryPositionSearch::DoPatternSearch( const thc::ChessPosition &cp, Progre
             bool promotion_in_game = (p->game_attributes!=0);
             bool game_found;
             //if( promotion_in_game )
-                game_found = PatternSearchGameSlowPromotionAllowed( std::string(p->CompressedMoves()), dsfg.offset_first, dsfg.offset_last  );
+                game_found = PatternSearchGameSlowPromotionAllowed( pm, std::string(p->CompressedMoves()), dsfg.offset_first, dsfg.offset_last  );
             //else
             //    game_found = PatternSearchGameOptimisedNoPromotionAllowed( p->CompressedMoves(), dsfg.offset_first, dsfg.offset_last );
             if( game_found )
@@ -2733,7 +2703,7 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( const std::string &mo
     return false;
 }
 
-bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( const std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last )          // semi fast
+bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( PatternMatch &pm, const std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last )          // semi fast
 {
     bool target_white = search_position.white;  // searching for position with white to move?
     int black_count=16;
@@ -2742,7 +2712,10 @@ bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( const std::str
     int white_pawn_count=8;
     SlowGameInit();
     int len = moves_in.size();
-    if(
+    //bool match = pm.Test();
+    bool match = pm.TestMaterialBalance( &msi.sides[0], &msi.sides[1] );
+    if( match )
+ /* if(
         //(msi.cr.white == target_white) && 
         (*ms.slow_rank3_ptr&ms.slow_rank3_mask) == *ms.slow_rank3_target_ptr &&
         (*ms.slow_rank4_ptr&ms.slow_rank4_mask) == *ms.slow_rank4_target_ptr &&
@@ -2752,7 +2725,7 @@ bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( const std::str
         (*ms.slow_rank8_ptr&ms.slow_rank8_mask) == *ms.slow_rank8_target_ptr &&
         (*ms.slow_rank1_ptr&ms.slow_rank1_mask) == *ms.slow_rank1_target_ptr &&
         (*ms.slow_rank2_ptr&ms.slow_rank2_mask) == *ms.slow_rank2_target_ptr
-    )
+    )  */
     {
         offset_last = offset_first = 0;    // later - separate offset_first and offset_last
         return true;
@@ -2778,7 +2751,10 @@ bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( const std::str
         }
         char mover = msi.cr.squares[mv.src];
         msi.cr.PlayMove(mv);
-        if( 
+        //match = pm.Test();
+        match = pm.TestMaterialBalance( &msi.sides[0], &msi.sides[1] );
+        if( match )
+     /* if( 
             //(msi.cr.white == target_white) && 
             (*ms.slow_rank3_ptr&ms.slow_rank3_mask) == *ms.slow_rank3_target_ptr &&
             (*ms.slow_rank4_ptr&ms.slow_rank4_mask) == *ms.slow_rank4_target_ptr &&
@@ -2788,7 +2764,7 @@ bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( const std::str
             (*ms.slow_rank8_ptr&ms.slow_rank8_mask) == *ms.slow_rank8_target_ptr &&
             (*ms.slow_rank1_ptr&ms.slow_rank1_mask) == *ms.slow_rank1_target_ptr &&
             (*ms.slow_rank2_ptr&ms.slow_rank2_mask) == *ms.slow_rank2_target_ptr
-        )
+        ) */
         {
             offset_last = offset_first = (i+1);    // later - separate offset_first and offset_last
             return true;

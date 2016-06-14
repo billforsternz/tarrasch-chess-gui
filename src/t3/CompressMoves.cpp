@@ -164,13 +164,6 @@ void CompressMovesDiagEnd()
 #define N_HI                8     // CODE_KNIGHT encodes 8 vectors for each of 2 knights (HI and LO)
 #define N_LO                0
 
-static inline bool is_dark( int sq )
-{
-    bool dark = (!(sq&8) &&  (sq&1))    // eg (a8,b8,c8...h8) && (b8|d8|f8|h8) odd rank + odd file
-             || ( (sq&8) && !(sq&1));   // eg (a7,b7,c7...h7) && (a7|c7|e7|g7) even rank + even file
-    return dark;
-}
-
 // Pawns for each side are assigned logical numbers from 0 to nbr_pawns-1
 //  The ordering of the numbers is determined by consulting this table...
 static int pawn_ordering[64] =

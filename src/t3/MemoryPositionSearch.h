@@ -14,26 +14,8 @@
 #include "thc.h"
 #include "ProgressBar.h"
 #include "ListableGame.h"
-
-// Same as Side in CompressMoves
-struct MpsSide
-{
-    bool white;
-    bool fast_mode;
-    int rooks[2];       // locations of each dynamic piece
-    int knights[2];     //
-    int queens[2];      //
-    int pawns[8];
-    int bishop_dark;
-    int bishop_light;
-    int king;
-    int nbr_pawns;      // 0-8
-    int nbr_rooks;      // 0,1 or 2
-    int nbr_knights;    // 0,1 or 2
-    int nbr_queens;     // 0,1 or 2
-    int nbr_light_bishops;  // 0 or 1
-    int nbr_dark_bishops;   // 0 or 1
-};
+#include "MemoryPositionSearchSide.h"
+#include "PatternMatch.h"
 
 // For standard algorithm, works for any game
 struct MpsSlow
@@ -151,7 +133,7 @@ public:
     bool SearchGameOptimisedNoPromotionAllowed( const char *moves_in, unsigned short &offset_first, unsigned short &offset_last  );    // much faster
     bool SearchGameSlowPromotionAllowed(  const std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last  );          // semi fast
     bool PatternSearchGameOptimisedNoPromotionAllowed( const char *moves_in, unsigned short &offset_first, unsigned short &offset_last  );    // much faster
-    bool PatternSearchGameSlowPromotionAllowed(  const std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last  );          // semi fast
+    bool PatternSearchGameSlowPromotionAllowed( PatternMatch &pm, const std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last  );          // semi fast
     int  GetNbrGamesFound() { return games_found.size(); }
     std::vector< smart_ptr<ListableGame> > *search_source;
     std::vector< smart_ptr<ListableGame> >  &GetVectorSourceGames()   { return *search_source; }
@@ -211,8 +193,8 @@ public:
     }
     int  DoSearch( const thc::ChessPosition &cp, uint64_t position_hash, ProgressBar *progress );
     int  DoSearch( const thc::ChessPosition &cp, uint64_t position_hash, ProgressBar *progress, std::vector< smart_ptr<ListableGame> > *source );
-    int  DoPatternSearch( const thc::ChessPosition &cp, ProgressBar *progress );
-    int  DoPatternSearch( const thc::ChessPosition &cp, ProgressBar *progress, std::vector< smart_ptr<ListableGame> > *source );
+    int  DoPatternSearch( PatternMatch &pm, ProgressBar *progress );
+    int  DoPatternSearch( PatternMatch &pm, ProgressBar *progress, std::vector< smart_ptr<ListableGame> > *source );
     bool IsThisSearchPosition( const thc::ChessPosition &cp )
         { return search_position_set && cp==search_position; }
 
