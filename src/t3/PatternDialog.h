@@ -8,16 +8,26 @@
 #define PATTERN_DIALOG_H
 #include "wx/spinctrl.h"
 #include "thc.h"
+#include "PatternMatch.h"
 #include "SuspendEngine.h"
 class BoardSetupControl;
 
 // Control identifiers
 enum
 {
-    ID_PATTERN_DIALOG    = 10000,
-    ID_PATTERN_RESET     = 10001,
-    ID_PATTERN_CLEAR     = 10002,
-    ID_PATTERN_CURRENT   = 10003
+    ID_PATTERN_DIALOG                   = 10000,
+    ID_PATTERN_RESET                    = 10001,
+    ID_PATTERN_CLEAR                    = 10002,
+    ID_PATTERN_CURRENT                  = 10003,
+    ID_PATTERN_MOVE_COUNT               = 10004,
+    ID_PATTERN_WHITE_TO_MOVE            = 10005,
+    ID_PATTERN_BLACK_TO_MOVE            = 10006,
+    ID_PATTERN_EITHER_TO_MOVE           = 10007,
+    ID_PATTERN_INC_REFLECTION           = 10008,
+    ID_PATTERN_INC_REVERSE              = 10009,
+    ID_PATTERN_ALLOW_MORE               = 10010,
+    ID_PATTERN_PAWNS_SAME_FILES         = 10011,
+    ID_PATTERN_BISHOPS_SAME_COLOUR      = 10012
 };
 
 // PatternDialog class declaration
@@ -87,24 +97,23 @@ public:
     void OnSpin( wxSpinEvent& event );
     void OnRadio( wxCommandEvent& event );
     void OnCheckBox( wxCommandEvent& event );
-    void OnComboBox( wxCommandEvent& event );
-    void OnPredefined( wxCommandEvent& event );
-    void ModifyFen();
-    void IllegalPatternDialog( const char *caption, thc::ChessRules &cr, thc::ILLEGAL_REASON reason );
 
     // PatternDialog member variables
 
     // Data members
-    thc::ChessPosition  m_pos;
+    PatternParameters      parm;
+    thc::ChessPosition     m_pos;
 private:
-    wxString     fen;
+    wxString        fen;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
-    wxCheckBox*     white_ooo;
-    wxCheckBox*     white_oo;
-    wxCheckBox*     black_ooo;
-    wxCheckBox*     black_oo;
+    wxCheckBox*     inc_reverse;
+    wxCheckBox*     inc_reflection;
+    wxCheckBox*     pawns_same_files;
+    wxCheckBox*     bishops_same_colour;
+    wxCheckBox*     allow_more;
     wxRadioButton*  white_to_move;
     wxRadioButton*  black_to_move;
+    wxRadioButton*  either_to_move;
     wxSpinCtrl*     move_count_ctrl;
     wxSpinCtrl*     half_count_ctrl;
     wxComboBox*     en_passant_ctrl;

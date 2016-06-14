@@ -434,7 +434,7 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
 int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progress, std::vector< smart_ptr<ListableGame> > *source )
 {
     games_found.clear();
-    search_position = pm.cp;
+    search_position = pm.search_criteria.cp;
     search_position_set = true;
     search_source = source;
 
@@ -457,7 +457,7 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
     mq.black_queen_target = 0;
     for( int i=0; i<64; i++ )
     {
-        char piece = pm.cp.squares[i];
+        char piece = pm.search_criteria.cp.squares[i];
         ms.slow_target_squares[i] = piece;     // no transform of B->D or b->d
         switch(piece)
         {

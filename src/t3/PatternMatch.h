@@ -9,6 +9,29 @@
 #include "thc.h"
 #include "MemoryPositionSearchSide.h"
 
+struct PatternParameters
+{
+    // Type of search (pattern or material balance)
+    bool material_balance;
+
+    // Input positon
+    thc::ChessPosition cp;
+
+    // common
+    bool include_reflections;
+    bool include_reverse_colours;
+    bool allow_more_pieces;
+
+    // pattern
+    bool either_to_move;
+    bool white_to_move;
+
+    // material balance
+    bool pawns_must_be_on_same_files;
+    bool bishops_must_be_same_colour;
+    int  number_of_ply;
+ };
+
 // Mask information for matching to a particular fixed target position
 struct PatternMatchMask
 {
@@ -35,6 +58,25 @@ struct PatternMatchMask
 class PatternMatch
 {    
 
+public:
+    // Constructor
+    PatternMatch();
+
+    // Prepare for series of calls to Test()
+    void Prime( const thc::ChessPosition *p );
+
+    // Test against criteria
+    bool Test();
+
+    // Prepare for series of calls to TestMaterialBalance()
+    void PrimeMaterialBalance();
+
+    // Test against criteria
+    bool TestMaterialBalance( MpsSide *ws, MpsSide *bs );
+
+    // What to search for
+    PatternParameters search_criteria;
+
 private:
     // Working positions
     PatternMatchMask pmm_n;    // normal
@@ -54,40 +96,6 @@ private:
     MpsSide white;
     MpsSide black;
 
-public:
-    // Constructor
-    PatternMatch();
-
-    // Prepare for series of calls to Test()
-    void Prime( const thc::ChessPosition *p );
-
-    // Test against criteria
-    bool Test();
-
-    // Prepare for series of calls to TestMaterialBalance()
-    void PrimeMaterialBalance();
-
-    // Test against criteria
-    bool TestMaterialBalance( MpsSide *ws, MpsSide *bs );
-
-    // Input positon
-    thc::ChessPosition cp;
-     
-    bool material_balance;
-
-    // common
-    bool include_reflections;
-    bool include_reverse_colours;
-    bool allow_more_pieces;
-
-    // pattern
-    bool either_to_move;
-    bool white_to_move;
-
-    // material balance
-    bool pawns_must_be_on_same_files;
-    bool bishops_must_be_same_colour;
-    int  number_of_ply;
 };
 
 #endif    // PATTERN_MATCH_H

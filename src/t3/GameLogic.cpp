@@ -914,7 +914,25 @@ void GameLogic::CmdDatabasePattern()
         PatternDialog dialog( objs.frame );
         if( wxID_OK == dialog.ShowModal() )
         {
-            cr = dialog.m_pos;
+            cr = dialog.parm.cp;
+            do_search = true;
+        }
+    }
+    if( do_search )
+    {
+        CmdDatabase( cr, REQ_PATTERN );
+    }
+}
+
+void GameLogic::CmdDatabaseMaterial()
+{
+    bool do_search=false;
+    thc::ChessRules cr;
+    {
+        PatternDialog dialog( objs.frame );
+        if( wxID_OK == dialog.ShowModal() )
+        {
+            cr = dialog.parm.cp;
             do_search = true;
         }
     }

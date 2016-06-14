@@ -43,16 +43,16 @@ void PatternMatch::Prime( const thc::ChessPosition *p )
     };
 
     for( int i=0; i<64; i++ )
-        pmm_n.cp.squares[i] = cp.squares[i];
+        pmm_n.cp.squares[i] = search_criteria.cp.squares[i];
     std::string s = pmm_n.cp.ToDebugStr();
     cprintf( "Normal %s\n", s.c_str() );
     for( int i=0; i<64; i++ )
-        pmm_m.cp.squares[reflect[i]] = cp.squares[i];
+        pmm_m.cp.squares[reflect[i]] = search_criteria.cp.squares[i];
     s = pmm_m.cp.ToDebugStr();
     cprintf( "Mirror %s\n", s.c_str() );
     for( int i=0; i<64; i++ )
     {
-        char c = cp.squares[i];
+        char c = search_criteria.cp.squares[i];
         if( isalpha(c) && isupper(c) )
             c = tolower(c);
         else if( isalpha(c) && islower(c) )
@@ -194,7 +194,7 @@ void PatternMatch::PrimeMaterialBalance()
     for( int i=0; i<64; i++ )
     {
         thc::Square sq = traverse_order[i];
-        char c = cp.squares[sq];
+        char c = search_criteria.cp.squares[sq];
         switch(c)
         {
             case 'P':   if(white.nbr_pawns<8)

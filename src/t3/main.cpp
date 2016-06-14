@@ -280,6 +280,8 @@ public:
         void OnUpdateDatabaseAppend(wxUpdateUIEvent &);
     void OnDatabasePattern(wxCommandEvent &);
         void OnUpdateDatabasePattern(wxUpdateUIEvent &);
+    void OnDatabaseMaterial(wxCommandEvent &);
+        void OnUpdateDatabaseMaterial(wxUpdateUIEvent &);
     void OnTraining   (wxCommandEvent &);
         void OnUpdateTraining(wxUpdateUIEvent &);
     void OnGeneral    (wxCommandEvent &);
@@ -605,6 +607,8 @@ BEGIN_EVENT_TABLE(ChessFrame, wxFrame)
         EVT_UPDATE_UI (ID_DATABASE_APPEND,              ChessFrame::OnUpdateDatabaseAppend)
     EVT_MENU (ID_DATABASE_PATTERN,                  ChessFrame::OnDatabasePattern)
         EVT_UPDATE_UI (ID_DATABASE_PATTERN,             ChessFrame::OnUpdateDatabasePattern)
+    EVT_MENU (ID_DATABASE_MATERIAL,                 ChessFrame::OnDatabaseMaterial)
+        EVT_UPDATE_UI (ID_DATABASE_MATERIAL,            ChessFrame::OnUpdateDatabaseMaterial)
     EVT_MENU (ID_DATABASE_MAINTENANCE,              ChessFrame::OnDatabaseMaintenance)
         EVT_UPDATE_UI (ID_DATABASE_MAINTENANCE,          ChessFrame::OnUpdateDatabaseMaintenance)
 
@@ -709,6 +713,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     wxMenu *menu_database = new wxMenu;
     menu_database->Append (ID_DATABASE_SEARCH,              _T("Position search"));
     menu_database->Append (ID_DATABASE_PATTERN,             _T("Pattern search"));
+    menu_database->Append (ID_DATABASE_MATERIAL,            _T("Material balance search"));
     menu_database->Append (ID_DATABASE_SHOW_ALL,            _T("Show all games"));
     menu_database->Append (ID_DATABASE_PLAYERS,             _T("Show all ordered by player"));
     menu_database->Append (ID_DATABASE_SELECT,              _T("Select current database"));
@@ -1763,6 +1768,11 @@ void ChessFrame::OnDatabasePattern(wxCommandEvent &)
     objs.gl->CmdDatabasePattern();
 }
 
+void ChessFrame::OnDatabaseMaterial(wxCommandEvent &)
+{
+    objs.gl->CmdDatabaseMaterial();
+}
+
 void ChessFrame::OnUpdateDatabaseSearch(wxUpdateUIEvent &)
 {
 }
@@ -1788,6 +1798,10 @@ void ChessFrame::OnUpdateDatabaseAppend(wxUpdateUIEvent &)
 }
 
 void ChessFrame::OnUpdateDatabasePattern(wxUpdateUIEvent &)
+{
+}
+
+void ChessFrame::OnUpdateDatabaseMaterial(wxUpdateUIEvent &)
 {
 }
 

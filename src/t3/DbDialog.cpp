@@ -865,7 +865,7 @@ void DbDialog::PatternSearch()
     //  list, in particular games from a disk based (i.e. not tiny) database and the clipboard. These
     //  latter types of search we are calling 'partial' search because they aren't of an entire, (albeit
     //  tiny) in memory database
-    pm.cp = cr_to_match;
+    pm.search_criteria.cp = cr_to_match;
     if( do_partial_search )
     {
 
