@@ -157,12 +157,12 @@ void PatternDialog::CreateControls()
     {
         move_count_sizer  = new wxBoxSizer(wxHORIZONTAL);
         wxStaticText* move_count_label = new wxStaticText ( this, wxID_STATIC,
-            wxT("Move count"), wxDefaultPosition, wxDefaultSize, 0 );
+            wxT("Balance must persist for at least this many half moves"), wxDefaultPosition, wxDefaultSize, 0 );
         move_count_ctrl = new wxSpinCtrl ( this, ID_PATTERN_MOVE_COUNT,
             wxEmptyString, wxDefaultPosition, wxSize(50, wxDefaultCoord), //wxDefaultSize, 
             wxSP_ARROW_KEYS, parm->number_of_ply, 500, 1 );
         move_count_sizer->Add(move_count_label, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
-        move_count_sizer->Add(92, 5, 1, wxALL, 0);
+        move_count_sizer->Add( 10, 5, 1, wxALL, 0);
         move_count_sizer->Add(move_count_ctrl,  0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     }
    

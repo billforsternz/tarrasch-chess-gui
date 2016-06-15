@@ -2765,10 +2765,10 @@ bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( PatternMatch &
             offset_last = offset_first = (i+1);    // later - separate offset_first and offset_last
             return true;
         }
-        if( mover=='P' && 48<=mv.src && mv.src<56 && !SLOW_WHITE_HOME_ROW_TEST )
-            return false;
-        if( mover=='p' && 8<=mv.src && mv.src<16 && !SLOW_BLACK_HOME_ROW_TEST )
-            return false;
+        //if( mover=='P' && 48<=mv.src && mv.src<56 ) && !SLOW_WHITE_HOME_ROW_TEST )
+        //    return false;
+        //if( mover=='p' && 8<=mv.src && mv.src<16 ) && !SLOW_BLACK_HOME_ROW_TEST )
+        //    return false;
         if( isalpha(mv.capture) )
         {
             if( islower(mv.capture) )
@@ -2784,8 +2784,8 @@ bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( PatternMatch &
                                          //  doesn't cause errors
                     if( black_pawn_count < ms.black_pawn_count_target )
                         return false;
-                    if(  8<=mv.dst && mv.dst<16 && !SLOW_BLACK_HOME_ROW_TEST )
-                        return false;
+                    //if(  8<=mv.dst && mv.dst<16 ) && !SLOW_BLACK_HOME_ROW_TEST )
+                    //    return false;
             
                 }
             }
@@ -2802,8 +2802,8 @@ bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( PatternMatch &
                                          //  doesn't cause errors
                     if( white_pawn_count < ms.white_pawn_count_target )
                         return false;            
-                    if( 48<=mv.dst && mv.dst<56 && !SLOW_WHITE_HOME_ROW_TEST )
-                        return false;
+                    //if( 48<=mv.dst && mv.dst<56 ) && !SLOW_WHITE_HOME_ROW_TEST )
+                    //    return false;
                 }
             }
         }

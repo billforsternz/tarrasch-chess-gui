@@ -145,7 +145,7 @@ bool PatternMatch::TestPattern()
             case 2: pmm = &pmm_r;   break;
             case 3: pmm = &pmm_rm;  break;
         }
-        if( max==3 && i==1 )
+        if( max==3 && i==1 )    // max==3 means do i==0 and i==2
             continue;
         bool match = 
         //(msi.cr.white == target_white) && 
@@ -210,7 +210,9 @@ void PatternMatch::PrimeMaterialBalance()
             case 'R':   white.nbr_rooks++;      break;
             case 'N':   white.nbr_knights++;    break;
             case 'B':   if( !is_dark((int)sq) )
-                            white.nbr_light_bishops++;    break;
+                            white.nbr_light_bishops++;
+                        else
+                            white.nbr_dark_bishops++;    break;
             case 'Q':   white.nbr_queens++;     break;
             case 'p':   if(black.nbr_pawns<8)
                             black.pawns[ black.nbr_pawns++ ] = (int)sq;
@@ -218,7 +220,9 @@ void PatternMatch::PrimeMaterialBalance()
             case 'r':   black.nbr_rooks++;      break;
             case 'n':   black.nbr_knights++;    break;
             case 'b':   if( !is_dark((int)sq) )
-                            black.nbr_light_bishops++;    break;
+                            black.nbr_light_bishops++;
+                        else
+                            black.nbr_dark_bishops++;    break;
             case 'q':   black.nbr_queens++;     break;
         }
     }    
@@ -232,24 +236,57 @@ bool PatternMatch::TestMaterialBalance( MpsSide *ws, MpsSide *bs )
         ws->nbr_rooks   == white.nbr_rooks  &&
         ws->nbr_knights == white.nbr_knights &&
         ws->nbr_light_bishops == white.nbr_light_bishops &&
+        ws->nbr_dark_bishops == white.nbr_dark_bishops &&
         ws->nbr_queens  == white.nbr_queens  &&
         bs->nbr_pawns   == black.nbr_pawns  &&
         bs->nbr_rooks   == black.nbr_rooks  &&
         bs->nbr_knights == black.nbr_knights &&
         bs->nbr_light_bishops == black.nbr_light_bishops &&
+        bs->nbr_dark_bishops == black.nbr_dark_bishops &&
         bs->nbr_queens  == black.nbr_queens
     );
-    if( match )
+    if( match && search_criteria.pawns_must_be_on_same_files )
     {
         for( int i=0; i<white.nbr_pawns; i++ )
         {
             if( (ws->pawns[i]&7) != (white.pawns[i]&7) )
-                return false;
+                match = false;
         }
         for( int i=0; i<black.nbr_pawns; i++ )
         {
             if( (bs->pawns[i]&7) != (black.pawns[i]&7) )
-                return false;
+                match = false;
+        }
+    }
+    if( !match && search_criteria.include_reverse_colours )
+    {
+        match =
+        ( 
+            bs->nbr_pawns   == white.nbr_pawns  &&
+            bs->nbr_rooks   == white.nbr_rooks  &&
+            bs->nbr_knights == white.nbr_knights &&
+            bs->nbr_light_bishops == white.nbr_light_bishops &&
+            bs->nbr_dark_bishops == white.nbr_dark_bishops &&
+            bs->nbr_queens  == white.nbr_queens  &&
+            ws->nbr_pawns   == black.nbr_pawns  &&
+            ws->nbr_rooks   == black.nbr_rooks  &&
+            ws->nbr_knights == black.nbr_knights &&
+            ws->nbr_light_bishops == black.nbr_light_bishops &&
+            ws->nbr_dark_bishops == black.nbr_dark_bishops &&
+            ws->nbr_queens  == black.nbr_queens
+        );
+        if( match && search_criteria.pawns_must_be_on_same_files )
+        {
+            for( int i=0; i<white.nbr_pawns; i++ )
+            {
+                if( (bs->pawns[i]&7) != (white.pawns[white.nbr_pawns-i-1]&7) )
+                    return false;
+            }
+            for( int i=0; i<black.nbr_pawns; i++ )
+            {
+                if( (ws->pawns[i]&7) != (black.pawns[black.nbr_pawns-i-1]&7) )
+                    return false;
+            }
         }
     }
     return match;
