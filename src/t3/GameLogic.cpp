@@ -908,37 +908,47 @@ void GameLogic::CmdDatabaseSearch()
 
 void GameLogic::CmdDatabasePattern()
 {
-    bool do_search=false;
     thc::ChessRules cr;
-    {
-        PatternDialog dialog( objs.frame );
+    std::string title_txt;
+    gd.GetSummary( cr, title_txt );
+    pp_persist.OneTimeInit(false,cr);
+    PatternParameters parm = pp_persist;
+    bool do_search = false;
+    {   // scope controls when dialog closes
+        PatternDialog dialog( &parm, objs.frame, "Search database for games where pieces reached this position" );
         if( wxID_OK == dialog.ShowModal() )
         {
-            cr = dialog.parm.cp;
+            pp_persist = parm;
+            cr = parm.cp;
             do_search = true;
         }
     }
     if( do_search )
     {
-        CmdDatabase( cr, REQ_PATTERN );
+        CmdDatabase( cr, REQ_PATTERN, &parm );
     }
 }
 
 void GameLogic::CmdDatabaseMaterial()
 {
-    bool do_search=false;
     thc::ChessRules cr;
+    std::string title_txt;
+    gd.GetSummary( cr, title_txt );
+    pp_persist_material_balance.OneTimeInit(true,cr);
+    PatternParameters parm = pp_persist_material_balance;
+    bool do_search = false;
     {
-        PatternDialog dialog( objs.frame );
+        PatternDialog dialog( &parm, objs.frame, "Search database for games which reached this material balance" );
         if( wxID_OK == dialog.ShowModal() )
         {
-            cr = dialog.parm.cp;
+            pp_persist_material_balance = parm;
+            cr = parm.cp;
             do_search = true;
         }
     }
     if( do_search )
     {
-        CmdDatabase( cr, REQ_PATTERN );
+        CmdDatabase( cr, REQ_PATTERN, &parm );
     }
 }
 
@@ -956,7 +966,7 @@ void GameLogic::CmdDatabasePlayers()
     CmdDatabase( cr, REQ_PLAYERS );
 }
 
-void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req )
+void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req, PatternParameters *parm )
 {
     static int count;
     int temp = ++count;
@@ -985,7 +995,7 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req )
             wxSize sz = objs.frame->GetSize();
             sz.x = (sz.x*9)/10;
             sz.y = (sz.y*9)/10;
-            DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard, db_req, ID_GAMES_DIALOG_DATABASE, pt, sz );   // GamesDialog instance
+            DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard, db_req, parm, ID_GAMES_DIALOG_DATABASE, pt, sz );   // GamesDialog instance
             if( dialog.ShowModalOk("Database games") )
             {
                 objs.log->SaveGame(&gd,editing_log);

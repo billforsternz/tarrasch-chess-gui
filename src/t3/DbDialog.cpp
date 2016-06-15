@@ -40,6 +40,7 @@ DbDialog::DbDialog
     GamesCache  *gc,
     GamesCache  *gc_clipboard,
     DB_REQ      db_req,
+    PatternParameters *parm,
     wxWindowID  id,
     const wxPoint& pos,
     const wxSize& size,
@@ -47,6 +48,8 @@ DbDialog::DbDialog
  ) : GamesDialog( parent, cr, gc, gc_clipboard, id, pos, size )
 {
     this->db_req = db_req;
+    if( db_req==REQ_PATTERN  && parm )
+        this->pm.search_criteria = *parm;
     activated_at_least_once = false;
     transpo_activated = false;
     white_player_search = true;
@@ -842,11 +845,8 @@ void DbDialog::PatternSearch()
     cprintf( "Remove focus %d\n", track->focus_idx );
     list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_FOCUSED );
     list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_SELECTED );
-    thc::ChessRules cr_to_match = this->cr;
 
     // hash to match
-    CompressMoves press_to_match(cr_to_match);
-    objs.db->gbl_position = cr_to_match;
     MemoryPositionSearch partial;
     MemoryPositionSearch *mps = &partial;
     std::vector< smart_ptr<ListableGame> > *source = &gc->gds;
@@ -865,25 +865,19 @@ void DbDialog::PatternSearch()
     //  list, in particular games from a disk based (i.e. not tiny) database and the clipboard. These
     //  latter types of search we are calling 'partial' search because they aren't of an entire, (albeit
     //  tiny) in memory database
-    pm.search_criteria.cp = cr_to_match;
     if( do_partial_search )
     {
 
         // The promotion attribute is only set automatically for the tiny database games (at the moment)
         for( int i=0; i<source->size(); i++ )
             (*source)[i]->SetAttributes();
-        ProgressBar progress2(objs.gl->db_clipboard ? "Searching" : "Checking for transpositions", "Searching",false);
+        ProgressBar progress2(objs.gl->db_clipboard ? "Searching" : "Searching", "Searching",false);
         game_count = mps->DoPatternSearch(pm,&progress2,source);
     }
     else
     {
-        bool search_needed = !mps->IsThisSearchPosition(cr_to_match);
-        cprintf( "search_needed = %s\n", search_needed?"true":"false" );
-        if( search_needed )
-        {
-            ProgressBar progress2("Checking for transpositions", "Searching for extra games",false);
-            game_count = mps->DoPatternSearch(pm,&progress2);
-        }
+        ProgressBar progress2("Searching", "Searching",false);
+        game_count = mps->DoPatternSearch(pm,&progress2);
     }
     
     std::vector< smart_ptr<ListableGame> >  &db_games    = mps->GetVectorSourceGames();

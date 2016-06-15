@@ -38,32 +38,22 @@ class PatternDialog: public wxDialog
 
 public:
 
-    // Constructors
-    PatternDialog( );
-    PatternDialog( wxWindow* parent,
+    // Constructor
+    PatternDialog( PatternParameters *parm, wxWindow* parent, const wxString& caption,
       wxWindowID id = ID_PATTERN_DIALOG,
-      const wxString& caption = wxT("Pattern setup"),
       const wxPoint& pos = wxDefaultPosition,
       const wxSize& size = wxDefaultSize,
       long style = wxCAPTION|wxRESIZE_BORDER|wxSYSTEM_MENU|wxCLOSE_BOX );
 
-    // Member initialisation
-    void Init();
-    void Pos2Fen( const thc::ChessPosition& pos, wxString& fen );
-
     // Creation
-    bool Create( wxWindow* parent,
+    bool Create( wxWindow* parent, const wxString& caption,
       wxWindowID id = ID_PATTERN_DIALOG,
-      const wxString& caption = wxT("Pattern setup"),
       const wxPoint& pos = wxDefaultPosition,
       const wxSize& size = wxDefaultSize,
       long style = wxCAPTION|wxRESIZE_BORDER|wxSYSTEM_MENU|wxCLOSE_BOX );
 
     // Creates the controls and sizers
     void CreateControls();
-
-    // Sets the validators for the dialog controls
-    void SetDialogValidators();
 
     // Sets the help text for the dialog controls
     void SetDialogHelp();
@@ -82,26 +72,14 @@ public:
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_PATTERN_CLEAR
     void OnClearClick( wxCommandEvent& event );
 
-    // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_POSITION_960
-    void OnChess960Click( wxCommandEvent& event );
-
-   // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_APPLY
-    void OnApplyClick( wxCommandEvent& event );
-
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_HELP
     void OnHelpClick( wxCommandEvent& event );
 
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_OK
     void OnOkClick( wxCommandEvent& event );
 
-    void OnSpin( wxSpinEvent& event );
-    void OnRadio( wxCommandEvent& event );
-    void OnCheckBox( wxCommandEvent& event );
-
-    // PatternDialog member variables
-
     // Data members
-    PatternParameters      parm;
+    PatternParameters      *parm;
     thc::ChessPosition     m_pos;
 private:
     wxString        fen;
@@ -115,16 +93,18 @@ private:
     wxRadioButton*  black_to_move;
     wxRadioButton*  either_to_move;
     wxSpinCtrl*     move_count_ctrl;
-    wxSpinCtrl*     half_count_ctrl;
-    wxComboBox*     en_passant_ctrl;
-    wxComboBox*     predefined_patterns_ctrl;
     wxButton*       ok_button;
-    wxTextCtrl*     fen_ctrl;
     BoardSetupControl *bsc;
-    wxString        combo_label;
-    wxArrayString   labels;
-    wxArrayString   fens;
-    void WriteToControls();
+
+    // pattern
+    bool b_either;
+    bool b_white;
+    bool b_black;
+
+    // material balance
+    bool b_pawns;
+    bool b_bishops;
+    bool b_ply;
 };
 
 #endif    // PATTERN_DIALOG_H

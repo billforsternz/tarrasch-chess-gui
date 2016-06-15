@@ -15,7 +15,7 @@ PatternMatch::PatternMatch()
 }
 
 // Prepare for series of calls to Test()
-void PatternMatch::Prime( const thc::ChessPosition *p )
+void PatternMatch::PrimePattern( const thc::ChessPosition *rover )
 {
 
     static int reflect[] =
@@ -67,14 +67,14 @@ void PatternMatch::Prime( const thc::ChessPosition *p )
     cprintf( "Colours reversed and mirror %s\n", s.c_str() );
 
     // Set up rank pointers to the position to be tested
-    rank8_ptr = reinterpret_cast<const uint64_t *>(&p->squares[0]);
-    rank7_ptr = reinterpret_cast<const uint64_t *>(&p->squares[8]);
-    rank6_ptr = reinterpret_cast<const uint64_t *>(&p->squares[16]);
-    rank5_ptr = reinterpret_cast<const uint64_t *>(&p->squares[24]);
-    rank4_ptr = reinterpret_cast<const uint64_t *>(&p->squares[32]);
-    rank3_ptr = reinterpret_cast<const uint64_t *>(&p->squares[40]);
-    rank2_ptr = reinterpret_cast<const uint64_t *>(&p->squares[48]);
-    rank1_ptr = reinterpret_cast<const uint64_t *>(&p->squares[56]);
+    rank8_ptr = reinterpret_cast<const uint64_t *>(&rover->squares[0]);
+    rank7_ptr = reinterpret_cast<const uint64_t *>(&rover->squares[8]);
+    rank6_ptr = reinterpret_cast<const uint64_t *>(&rover->squares[16]);
+    rank5_ptr = reinterpret_cast<const uint64_t *>(&rover->squares[24]);
+    rank4_ptr = reinterpret_cast<const uint64_t *>(&rover->squares[32]);
+    rank3_ptr = reinterpret_cast<const uint64_t *>(&rover->squares[40]);
+    rank2_ptr = reinterpret_cast<const uint64_t *>(&rover->squares[48]);
+    rank1_ptr = reinterpret_cast<const uint64_t *>(&rover->squares[56]);
 
     for( int i=0; i<4; i++ )
     {
@@ -128,9 +128,14 @@ void PatternMatch::Prime( const thc::ChessPosition *p )
 }
 
 // Test against criteria
-bool PatternMatch::Test()
+bool PatternMatch::TestPattern()
 {
-    for( int i=0; i<4; i++ )
+    int max;
+    if( search_criteria.include_reflections )
+        max = search_criteria.include_reverse_colours ? 4 : 2;
+    else
+        max = search_criteria.include_reverse_colours ? 3 : 1;
+    for( int i=0; i<max; i++ )
     {
         PatternMatchMask *pmm;
         switch(i)
@@ -140,6 +145,8 @@ bool PatternMatch::Test()
             case 2: pmm = &pmm_r;   break;
             case 3: pmm = &pmm_rm;  break;
         }
+        if( max==3 && i==1 )
+            continue;
         bool match = 
         //(msi.cr.white == target_white) && 
         (*rank3_ptr & pmm->rank3_mask) == *pmm->rank3_target_ptr &&

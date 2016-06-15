@@ -11,6 +11,8 @@
 
 struct PatternParameters
 {
+    bool initialised;
+
     // Type of search (pattern or material balance)
     bool material_balance;
 
@@ -30,6 +32,25 @@ struct PatternParameters
     bool pawns_must_be_on_same_files;
     bool bishops_must_be_same_colour;
     int  number_of_ply;
+
+    PatternParameters() { initialised = false; }
+    void OneTimeInit( bool material_balance, thc::ChessPosition &cp )
+    {
+        if( !initialised )
+        {
+            initialised = true;
+            this->cp = cp;
+            this->material_balance = material_balance;
+            include_reflections = false;
+            include_reverse_colours = false;
+            allow_more_pieces = false;
+            either_to_move = false;
+            white_to_move = true;
+            pawns_must_be_on_same_files = false;
+            bishops_must_be_same_colour = false;
+            number_of_ply = 1;
+        }
+    }
  };
 
 // Mask information for matching to a particular fixed target position
@@ -62,11 +83,32 @@ public:
     // Constructor
     PatternMatch();
 
+    // What to search for
+    PatternParameters search_criteria;
+
+    // Outer interface
+    void Prime( const thc::ChessPosition *rover )
+    {
+        if( search_criteria.material_balance )
+            return PrimeMaterialBalance();
+        else
+            return PrimePattern(rover);
+    }
+    bool Test( MpsSide *ws, MpsSide *bs )
+    {
+        if( search_criteria.material_balance )
+            return TestMaterialBalance( ws, bs );
+        else
+            return TestPattern();
+    }
+
+private:
+
     // Prepare for series of calls to Test()
-    void Prime( const thc::ChessPosition *p );
+    void PrimePattern( const thc::ChessPosition *rover );
 
     // Test against criteria
-    bool Test();
+    bool TestPattern();
 
     // Prepare for series of calls to TestMaterialBalance()
     void PrimeMaterialBalance();
@@ -74,10 +116,6 @@ public:
     // Test against criteria
     bool TestMaterialBalance( MpsSide *ws, MpsSide *bs );
 
-    // What to search for
-    PatternParameters search_criteria;
-
-private:
     // Working positions
     PatternMatchMask pmm_n;    // normal
     PatternMatchMask pmm_m;    // mirror image

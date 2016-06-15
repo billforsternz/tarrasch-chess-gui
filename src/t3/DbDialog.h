@@ -61,6 +61,7 @@ public:
         GamesCache  *gc,
         GamesCache  *gc_clipboard,
         DB_REQ      db_req,
+        PatternParameters *parm,
         wxWindowID  id,
         const wxPoint& pos = wxDefaultPosition,
         const wxSize& size = wxDefaultSize,

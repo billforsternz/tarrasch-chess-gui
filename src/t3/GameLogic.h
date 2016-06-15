@@ -90,7 +90,7 @@ public:
     void CmdDatabasePattern();
     void CmdDatabaseMaterial();
 
-    void CmdDatabase( thc::ChessRules &cr, DB_REQ db_req );
+    void CmdDatabase( thc::ChessRules &cr, DB_REQ db_req, PatternParameters *parm=NULL );
     void CmdNextGame();
     void CmdPreviousGame();
     void NextGamePreviousGame( int idx );
@@ -193,6 +193,8 @@ private:
     bool under_our_program_control;
     char engine_name[40];
     thc::ChessPosition      initial_position;
+    PatternParameters       pp_persist;
+    PatternParameters       pp_persist_material_balance;
     wxString reply_to;
     int     human_millisecs_time_start;
     int     engine_millisecs_time_start;

@@ -595,8 +595,6 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
 
     // Set up the pattern mask
     pm.Prime(&msi.cr);
-    pm.PrimeMaterialBalance();
-
     mq.rank3_target = *mq.rank3_target_ptr;
     mq.rank4_target = *mq.rank4_target_ptr;
     mq.rank5_target = *mq.rank5_target_ptr;
@@ -2712,8 +2710,7 @@ bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( PatternMatch &
     int white_pawn_count=8;
     SlowGameInit();
     int len = moves_in.size();
-    //bool match = pm.Test();
-    bool match = pm.TestMaterialBalance( &msi.sides[0], &msi.sides[1] );
+    bool match = pm.Test( &msi.sides[0], &msi.sides[1] );
     if( match )
  /* if(
         //(msi.cr.white == target_white) && 
@@ -2751,8 +2748,7 @@ bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( PatternMatch &
         }
         char mover = msi.cr.squares[mv.src];
         msi.cr.PlayMove(mv);
-        //match = pm.Test();
-        match = pm.TestMaterialBalance( &msi.sides[0], &msi.sides[1] );
+        match = pm.Test( &msi.sides[0], &msi.sides[1] );
         if( match )
      /* if( 
             //(msi.cr.white == target_white) && 
