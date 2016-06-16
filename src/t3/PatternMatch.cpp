@@ -43,11 +43,26 @@ void PatternMatch::PrimePattern( const thc::ChessPosition *rover )
     };
 
     for( int i=0; i<64; i++ )
-        pmm_n.cp.squares[i] = search_criteria.cp.squares[i];
+    {
+        char c = search_criteria.cp.squares[i];
+        if( c=='B' )
+            c = is_dark(i) ? 'D' : 'B';
+        else if( c=='b' )
+            c = is_dark(i) ? 'd' : 'b';
+        pmm_n.cp.squares[i] = c;
+    }
     std::string s = pmm_n.cp.ToDebugStr();
     cprintf( "Normal %s\n", s.c_str() );
     for( int i=0; i<64; i++ )
-        pmm_m.cp.squares[reflect[i]] = search_criteria.cp.squares[i];
+    {
+        char c = search_criteria.cp.squares[i];
+        int j = reflect[i];
+        if( c=='B' )
+            c = is_dark(j) ? 'D' : 'B';
+        else if( c=='b' )
+            c = is_dark(j) ? 'd' : 'b';
+        pmm_m.cp.squares[j] = c;
+    }
     s = pmm_m.cp.ToDebugStr();
     cprintf( "Mirror %s\n", s.c_str() );
     for( int i=0; i<64; i++ )
@@ -57,12 +72,25 @@ void PatternMatch::PrimePattern( const thc::ChessPosition *rover )
             c = tolower(c);
         else if( isalpha(c) && islower(c) )
             c = toupper(c);
-        pmm_r.cp.squares[reverse[i]] = c;
+        int j = reverse[i];
+        if( c=='B' )
+            c = is_dark(j) ? 'D' : 'B';
+        else if( c=='b' )
+            c = is_dark(j) ? 'd' : 'b';
+        pmm_r.cp.squares[j] = c;
     }
     s = pmm_r.cp.ToDebugStr();
     cprintf( "Colours reversed %s\n", s.c_str() );
     for( int i=0; i<64; i++ )
-        pmm_rm.cp.squares[reflect[i]] = pmm_r.cp.squares[i];
+    {
+        char c = pmm_r.cp.squares[i];
+        int j = reflect[i];
+        if( c=='B' || c=='D' )
+            c = is_dark(j) ? 'D' : 'B';
+        else if( c=='b' || c=='d' )
+            c = is_dark(j) ? 'd' : 'b';
+        pmm_rm.cp.squares[j] = c;
+    }
     s = pmm_rm.cp.ToDebugStr();
     cprintf( "Colours reversed and mirror %s\n", s.c_str() );
 

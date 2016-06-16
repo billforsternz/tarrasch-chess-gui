@@ -620,7 +620,7 @@ void DbDialog::StatsCalculate()
         for( int i=0; i<source->size(); i++ )
             (*source)[i]->SetAttributes();
         ProgressBar progress2(objs.gl->db_clipboard ? "Searching" : "Checking for transpositions", "Searching",false);
-        game_count = mps->DoSearch(cr_to_match,gbl_hash,&progress2,source);
+        game_count = mps->DoSearch(cr_to_match,&progress2,source);
     }
     else
     {
@@ -629,7 +629,7 @@ void DbDialog::StatsCalculate()
         if( search_needed )
         {
             ProgressBar progress2("Checking for transpositions", "Searching for extra games",false);
-            game_count = mps->DoSearch(cr_to_match,gbl_hash,&progress2);
+            game_count = mps->DoSearch(cr_to_match,&progress2);
         }
     }
     

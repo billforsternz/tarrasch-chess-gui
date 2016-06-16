@@ -86,14 +86,14 @@ public:
     // What to search for
     PatternParameters search_criteria;
 
-    // Outer interface
+    // Set up for search
     void Prime( const thc::ChessPosition *rover )
     {
-        if( search_criteria.material_balance )
-            return PrimeMaterialBalance();
-        else
-            return PrimePattern(rover);
+        PrimePattern( rover );
+        PrimeMaterialBalance();
     }
+
+    // Test for pattern
     bool Test( MpsSide *ws, MpsSide *bs )
     {
         if( search_criteria.material_balance )
@@ -104,16 +104,12 @@ public:
 
 private:
 
-    // Prepare for series of calls to Test()
+    // Prime
     void PrimePattern( const thc::ChessPosition *rover );
-
-    // Test against criteria
-    bool TestPattern();
-
-    // Prepare for series of calls to TestMaterialBalance()
     void PrimeMaterialBalance();
 
     // Test against criteria
+    bool TestPattern();
     bool TestMaterialBalance( MpsSide *ws, MpsSide *bs );
 
     // Working positions

@@ -15,7 +15,6 @@
 #include "MemoryPositionSearch.h"
 #include "CompressMoves.h"  //temp testing
 
-
 // Note that much of this code duplicates the algorithms implemented
 // in class CompressMoves - This is because we want to play through games
 // encoded by CompressMoves extremely quickly - which precludes us using
@@ -95,6 +94,73 @@
 #define N_HI                8     // CODE_KNIGHT encodes 8 vectors for each of 2 knights (HI and LO)
 #define N_LO                0
 
+// We are moving towards '.' instead of ' ', but we can't rely on that until
+//  thc.h uses '.' exclusively. So for now we still use space
+#define STILL_USING_SPACE
+#ifdef  STILL_USING_SPACE
+    #define EMPTY_CHARACTER ' '
+    #define START_POSITION "rnbqkdnrpppppppp                                PPPPPPPPRNDQKBNR"  // note used of 'd'/'D' for dark squared bishop
+#else
+    #define EMPTY_CHARACTER '.'
+    #define START_POSITION "rnbqkdnrpppppppp................................PPPPPPPPRNDQKBNR"
+#endif
+
+
+void MemoryPositionSearch::Init()
+{
+    in_memory_game_cache.clear();
+    search_position_set=false;
+    search_source = &in_memory_game_cache;
+    thc::ChessPosition *cp = static_cast<thc::ChessPosition *>(&msi.cr);
+    cp->Init();
+    msi.cr.squares[ thc::c1 ] = 'D';     // Impose the distinct dark squared bishop = 'd'/'D' convention over the top
+    msi.cr.squares[ thc::f8 ] = 'd';
+    MpsSide      sides[2];
+    sides[0].white=true;
+    sides[0].fast_mode=false;
+    sides[1].white=false;
+    sides[1].fast_mode=false;
+    TryFastMode( &sides[0]);
+    TryFastMode( &sides[1]);
+    mqi_init.side_white = sides[0];
+    mqi_init.side_black = sides[1];
+    msi.sides[0] = sides[0];
+    msi.sides[1] = sides[0];
+    memcpy( mqi_init.squares, START_POSITION, 64 );
+    mq.rank8_ptr = reinterpret_cast<uint64_t*>(&mqi.squares[ 0]);
+    mq.rank7_ptr = reinterpret_cast<uint64_t*>(&mqi.squares[ 8]);
+    mq.rank6_ptr = reinterpret_cast<uint64_t*>(&mqi.squares[16]);
+    mq.rank5_ptr = reinterpret_cast<uint64_t*>(&mqi.squares[24]);
+    mq.rank4_ptr = reinterpret_cast<uint64_t*>(&mqi.squares[32]);
+    mq.rank3_ptr = reinterpret_cast<uint64_t*>(&mqi.squares[40]);
+    mq.rank2_ptr = reinterpret_cast<uint64_t*>(&mqi.squares[48]);
+    mq.rank1_ptr = reinterpret_cast<uint64_t*>(&mqi.squares[56]);
+    mq.rank8_target_ptr = reinterpret_cast<uint64_t*>(&mq.target_squares[ 0]);
+    mq.rank7_target_ptr = reinterpret_cast<uint64_t*>(&mq.target_squares[ 8]);
+    mq.rank6_target_ptr = reinterpret_cast<uint64_t*>(&mq.target_squares[16]);
+    mq.rank5_target_ptr = reinterpret_cast<uint64_t*>(&mq.target_squares[24]);
+    mq.rank4_target_ptr = reinterpret_cast<uint64_t*>(&mq.target_squares[32]);
+    mq.rank3_target_ptr = reinterpret_cast<uint64_t*>(&mq.target_squares[40]);
+    mq.rank2_target_ptr = reinterpret_cast<uint64_t*>(&mq.target_squares[48]);
+    mq.rank1_target_ptr = reinterpret_cast<uint64_t*>(&mq.target_squares[56]);
+    ms.slow_rank8_ptr = reinterpret_cast<uint64_t*>(&msi.cr.squares[ 0]);
+    ms.slow_rank7_ptr = reinterpret_cast<uint64_t*>(&msi.cr.squares[ 8]);
+    ms.slow_rank6_ptr = reinterpret_cast<uint64_t*>(&msi.cr.squares[16]);
+    ms.slow_rank5_ptr = reinterpret_cast<uint64_t*>(&msi.cr.squares[24]);
+    ms.slow_rank4_ptr = reinterpret_cast<uint64_t*>(&msi.cr.squares[32]);
+    ms.slow_rank3_ptr = reinterpret_cast<uint64_t*>(&msi.cr.squares[40]);
+    ms.slow_rank2_ptr = reinterpret_cast<uint64_t*>(&msi.cr.squares[48]);
+    ms.slow_rank1_ptr = reinterpret_cast<uint64_t*>(&msi.cr.squares[56]);
+    ms.slow_rank8_target_ptr = reinterpret_cast<uint64_t*>(&ms.slow_target_squares[ 0]);
+    ms.slow_rank7_target_ptr = reinterpret_cast<uint64_t*>(&ms.slow_target_squares[ 8]);
+    ms.slow_rank6_target_ptr = reinterpret_cast<uint64_t*>(&ms.slow_target_squares[16]);
+    ms.slow_rank5_target_ptr = reinterpret_cast<uint64_t*>(&ms.slow_target_squares[24]);
+    ms.slow_rank4_target_ptr = reinterpret_cast<uint64_t*>(&ms.slow_target_squares[32]);
+    ms.slow_rank3_target_ptr = reinterpret_cast<uint64_t*>(&ms.slow_target_squares[40]);
+    ms.slow_rank2_target_ptr = reinterpret_cast<uint64_t*>(&ms.slow_target_squares[48]);
+    ms.slow_rank1_target_ptr = reinterpret_cast<uint64_t*>(&ms.slow_target_squares[56]);
+}
+
 // Pawns for each side are assigned logical numbers from 0 to nbr_pawns-1
 //  The ordering of the numbers is determined by consulting this table...
 static int pawn_ordering[64] =
@@ -162,24 +228,21 @@ bool MemoryPositionSearch::TryFastMode( MpsSide *side )
             else
                 okay = false;
         }
+        else if( msi.cr.squares[i] == (side->white?'D':'d') )
+        {
+            side->bishop_dark = i;
+            if( side->nbr_dark_bishops < 1 )
+                side->nbr_dark_bishops++;
+            else
+                okay = false;
+        }
         else if( msi.cr.squares[i] == (side->white?'B':'b') )
         {
-            if( is_dark(i) )
-            {
-                side->bishop_dark = i;
-                if( side->nbr_dark_bishops < 1 )
-                    side->nbr_dark_bishops++;
-                else
-                    okay = false;
-            }
+            side->bishop_light = i;
+            if( side->nbr_light_bishops < 1 )
+                side->nbr_light_bishops++;
             else
-            {
-                side->bishop_light = i;
-                if( side->nbr_light_bishops < 1 )
-                    side->nbr_light_bishops++;
-                else
-                    okay = false;
-            }
+                okay = false;
         }
         else if( msi.cr.squares[i] == (side->white?'Q':'q') )
         {
@@ -199,12 +262,12 @@ bool MemoryPositionSearch::TryFastMode( MpsSide *side )
     return okay;
 }
 
-int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t position_hash, ProgressBar *progress )
+int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, ProgressBar *progress )
 {
-    return DoSearch(cp,position_hash,progress,&in_memory_game_cache);
+    return DoSearch(cp,progress,&in_memory_game_cache);
 }
 
-int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t position_hash, ProgressBar *progress, std::vector< smart_ptr<ListableGame> > *source )
+int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, ProgressBar *progress, std::vector< smart_ptr<ListableGame> > *source )
 {
     games_found.clear();
     search_position = cp;
@@ -212,6 +275,7 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
     search_source = source;
 
     // Set up counts of total pieces, and individual pieces in the target position
+    ms.total_count_target = 64;     // reverse count non-pieces from 64
     ms.black_count_target = 0;
     ms.black_pawn_count_target = 0;
     ms.white_count_target = 0;
@@ -231,7 +295,6 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
     for( int i=0; i<64; i++ )
     {
         char piece = cp.squares[i];
-        ms.slow_target_squares[i] = piece;     // no transform of B->D or b->d
         switch(piece)
         {
             case 'P':
@@ -318,11 +381,14 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
             }
             default:
             {
-                piece = '.';
+                piece = ' ';
+                ms.total_count_target--;
+                break;
             }
         }
 
         // Also set up a target position, with the refinement that D/d is a dark bishop B/b is a light bishop
+        ms.slow_target_squares[i] = piece;
         mq.target_squares[i] = piece;
     }
 
@@ -366,7 +432,6 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
         }
     }
 
-    hash_target = position_hash;
     mq.rank3_target = *mq.rank3_target_ptr;
     mq.rank4_target = *mq.rank4_target_ptr;
     mq.rank5_target = *mq.rank5_target_ptr;
@@ -380,7 +445,6 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
         AutoTimer at("Search time");
 
         // Leave only one defined
-        //#define BASE_START_POINT
         //#define CONSERVATIVE
         //#define NO_PROMOTIONS_FLAWED
         #define CORRECT_BEST_PRACTICE
@@ -400,9 +464,6 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, uint64_t posi
                         in_memory_game_cache[i]->CompressedMoves() ); */
             bool promotion_in_game = (p->game_attributes!=0);
             bool game_found;
-            #ifdef BASE_START_POINT
-            game_found = SearchGameBase( std::string(p->CompressedMoves()) );
-            #endif
             #ifdef CONSERVATIVE
             game_found = SearchGameSlowPromotionAllowed( std::string(p->CompressedMoves()), dsfg.offset_first, dsfg.offset_last  );
             #endif
@@ -439,6 +500,7 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
     search_source = source;
 
     // Set up counts of total pieces, and individual pieces in the target position
+    ms.total_count_target = 64;     // reverse count non-pieces from 64
     ms.black_count_target = 0;
     ms.black_pawn_count_target = 0;
     ms.white_count_target = 0;
@@ -458,7 +520,6 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
     for( int i=0; i<64; i++ )
     {
         char piece = pm.search_criteria.cp.squares[i];
-        ms.slow_target_squares[i] = piece;     // no transform of B->D or b->d
         switch(piece)
         {
             case 'P':
@@ -545,13 +606,17 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
             }
             default:
             {
-                piece = '.';
+                piece = ' ';
+                ms.total_count_target--;
+                break;
             }
         }
 
         // Also set up a target position, with the refinement that D/d is a dark bishop B/b is a light bishop
         mq.target_squares[i] = piece;
+        ms.slow_target_squares[i] = piece;
     }
+    cprintf( "total_count_target=%d\n", ms.total_count_target );
 
     // Set up white_home_mask and white_home_pawns to support the following logic;
     //  bool home_pawns_still_in_place = ((white_home_mask&*mq.rank2_ptr) == white_home_pawns );
@@ -629,41 +694,6 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
         }    
     }                         
     return games_found.size();
-}
-
-bool MemoryPositionSearch::SearchGameBase( std::string &moves_in )
-{
-    Init();
-    SlowGameInit();
-    uint64_t hash = hash_initial;
-    int len = moves_in.size();
-    if( hash == hash_target )
-        return true;
-    for( int i=0; i<len; i++ )
-    {
-        MpsSide *side  = msi.cr.white ? &msi.sides[0] : &msi.sides[1];
-        MpsSide *other = msi.cr.white ? &msi.sides[1] : &msi.sides[0];
-        char code = moves_in[i];
-        thc::Move mv;
-        if( side->fast_mode )
-        {
-            mv = UncompressFastMode(code,side,other);
-        }
-        else if( TryFastMode(side) )
-        {
-            mv = UncompressFastMode(code,side,other);
-        }
-        else
-        {
-            mv = UncompressSlowMode(code);
-            other->fast_mode = false;   // force other side to reset and retry
-        }
-        hash = msi.cr.Hash64Update(hash,mv);
-        if( hash == hash_target )
-            return true;
-        msi.cr.PlayMove(mv);
-    }
-    return false;
 }
 
 thc::Move MemoryPositionSearch::UncompressSlowMode( char code )
@@ -1026,12 +1056,14 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
                 other->nbr_rooks--;
                 break;
             }
+            case 'd':
+            {
+                other->nbr_dark_bishops--;
+                break;
+            }
             case 'b':
             {
-                if( is_dark(capture_location) )
-                    other->nbr_dark_bishops--;
-                else
-                    other->nbr_light_bishops--;
+                other->nbr_light_bishops--;
                 break;
             }
             case 'q':
@@ -1079,66 +1111,9 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
 {
     unsigned short offset=0;
     bool target_white = search_position.white;  // searching for position with white to move?
-/*  CompressMoves press;
-    std::vector<thc::Move> moves = press.Uncompress( moves_in );
-    thc::ChessRules cr;
-    for( int j=0; j<moves.size(); j++ )
-    {
-        thc::Move mv = moves[j];
-        std::string s = mv.NaturalOut(&cr);
-        char buf[20];
-        sprintf( buf, "%d.", cr.full_move_count );
-        const char *before = buf;
-        if( !cr.white )
-            before = " ";
-        const char *after = "";
-        if( j+1 < moves.size() )
-        {
-            if( ((j+1)&3) == 0 )
-                after = "\n";
-            else
-                after = " ";
-        }
-        cprintf( "%s%s%s", before, s.c_str(), after );
-        cr.PlayMove(mv);
-    } */
     QuickGameInit();
-    //int i=0, len=moves_in.size();
-    //#define PRINT_POSITIONS
-    #ifndef PRINT_POSITIONS
     for(;;)
     {
-    #else
-    for(;;)
-    {
-        static int debug_trigger=0, debug_count=0;
-        #define    debug_low_threshold  90
-        #define    debug_high_threshold 110
-        if( debug_trigger == 0 )
-        {
-            debug_count++;
-            if( debug_count > debug_low_threshold )
-                debug_trigger = 1;
-        }
-        else if( debug_trigger == 1 )
-        {
-            debug_count++;
-            if( debug_count > debug_high_threshold )
-                debug_trigger = 2;
-        }
-        if( debug_trigger == 1 )
-        {
-            char rank[9];
-            rank[8] = '\0';
-            cprintf( "\n");
-            for( int k=0; k<8; k++ )
-            {
-                memcpy( rank, &mqi.squares[k*8], 8 );
-                cprintf( "%s\n", rank );
-            }
-        }
-    #endif
-
         // Check for match before every move
         if(
             target_white && 
@@ -1173,7 +1148,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
         int src=0;
         int dst=0;
         int hi_nibble = code&0xf0;
-        char captured='.';
+        char captured=EMPTY_CHARACTER;
         switch( hi_nibble )
         {
             case CODE_KING:
@@ -1200,7 +1175,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                         mqi.side_white.rooks[rook_offset] = src+1;                   // that rook ends up 1 square right of king
                         // note that there is no way the rooks ordering can swap during castling
                         mqi.squares[src+1] = 'R';    //f1
-                        mqi.squares[src+3] = '.';    //h1
+                        mqi.squares[src+3] = EMPTY_CHARACTER;    //h1
                         break;
                     }
                     case K_Q_CASTLING:
@@ -1210,14 +1185,14 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                         mqi.side_white.rooks[rook_offset] = src-1;                   // that rook ends up 1 square left of king
                         // note that there is no way the rooks ordering can swap during castling
                         mqi.squares[src-1] = 'R';    //d1
-                        mqi.squares[src-4] = '.';    //a1
+                        mqi.squares[src-4] = EMPTY_CHARACTER;    //a1
                         break;
                     }
                 }
                 mqi.side_white.king = dst = src+delta;
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'K';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 break;
             }
             
@@ -1237,7 +1212,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                 mqi.side_white.rooks[rook_offset] = dst;
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'R';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
 
                 // swap ?
                 if( mqi.side_white.nbr_rooks==2 && mqi.side_white.rooks[0]>mqi.side_white.rooks[1] )
@@ -1259,7 +1234,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                     dst = src - 7*file_delta;   // eg src=h8(7), dst=a1(56), file_delta=7  -> 7*7 =49
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'D';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 mqi.side_white.bishop_dark = dst;
                 break;
             }
@@ -1274,7 +1249,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                     dst = src - 7*file_delta;   // eg src=g8(6), dst=a2(48), file_delta=6  -> 7*6 =42
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'B';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 mqi.side_white.bishop_light = dst;
                 break;
             }
@@ -1288,7 +1263,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                     dst = (src&0x38) | (code&7);        // same rank as src, file from code
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'Q';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 mqi.side_white.queens[0] = dst;
                 break;
             }
@@ -1303,7 +1278,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                     dst = src - 7*file_delta;   // eg src=h8(7), dst=a1(56), file_delta=7  -> 7*7 =49
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'Q';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 mqi.side_white.queens[0] = dst;
                 break;
             }
@@ -1329,7 +1304,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                 dst = src+delta;
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'N';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 mqi.side_white.knights[knight_offset] = dst;
 
                 // swap ?
@@ -1360,7 +1335,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                         delta = -16;
                         dst = src+delta;
                         mqi.squares[dst] = 'P';
-                        mqi.squares[src] = '.';
+                        mqi.squares[src] = EMPTY_CHARACTER;
                         mqi.side_white.pawns[pawn_offset] = dst;
                         if( !((*mq.rank2_ptr & white_home_mask) == white_home_pawns) ) //WHITE_HOME_ROW_TEST )
                             return false;
@@ -1371,7 +1346,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                         delta = -8;
                         dst = src+delta;
                         mqi.squares[dst] = 'P';
-                        mqi.squares[src] = '.';
+                        mqi.squares[src] = EMPTY_CHARACTER;
                         mqi.side_white.pawns[pawn_offset] = dst;
                         if( 48<=src && src<56 && !WHITE_HOME_ROW_TEST )
                             return false;
@@ -1383,12 +1358,12 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                         dst = src+delta;
                         captured = mqi.squares[dst];
                         mqi.squares[dst] = 'P';
-                        mqi.squares[src] = '.';
+                        mqi.squares[src] = EMPTY_CHARACTER;
                         mqi.side_white.pawns[pawn_offset] = dst;
-                        if( captured == '.' )
+                        if( captured == EMPTY_CHARACTER )
                         {
                             captured = 'p';     // en-passant
-                            mqi.squares[dst=src-1] = '.';
+                            mqi.squares[dst=src-1] = EMPTY_CHARACTER;
                         }
                         else if( 48<=src && src<56 && !WHITE_HOME_ROW_TEST )
                             return false;
@@ -1409,12 +1384,12 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                         dst = src+delta;
                         captured = mqi.squares[dst];
                         mqi.squares[dst] = 'P';
-                        mqi.squares[src] = '.';
+                        mqi.squares[src] = EMPTY_CHARACTER;
                         mqi.side_white.pawns[pawn_offset] = dst;
-                        if( captured == '.' )
+                        if( captured == EMPTY_CHARACTER )
                         {
                             captured = 'p';     // en-passant
-                            mqi.squares[dst=src+1] = '.';
+                            mqi.squares[dst=src+1] = EMPTY_CHARACTER;
                         }
                         else if( 48<=src && src<56 && !WHITE_HOME_ROW_TEST )    // en-passant capture can't be from home row
                             return false;
@@ -1433,7 +1408,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
         }   // end switch all pieces
 
         // White captures black
-        if( captured != '.' )
+        if( captured != EMPTY_CHARACTER )
         {
             switch( captured )
             {
@@ -1493,32 +1468,6 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
             }
         }
 
-        #ifdef PRINT_POSITIONS
-        if( debug_trigger == 0 )
-        {
-            debug_count++;
-            if( debug_count > debug_low_threshold )
-                debug_trigger = 1;
-        }
-        else if( debug_trigger == 1 )
-        {
-            debug_count++;
-            if( debug_count > debug_high_threshold )
-                debug_trigger = 2;
-        }
-        if( debug_trigger == 1 )
-        {
-            char rank[9];
-            rank[8] = '\0';
-            cprintf( "\n");
-            for( int k=0; k<8; k++ )
-            {
-                memcpy( rank, &mqi.squares[k*8], 8 );
-                cprintf( "%s\n", rank );
-            }
-        }
-        #endif
-
         if( 
             !target_white && 
             #if 1
@@ -1552,7 +1501,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
         src=0;
         dst=0;
         hi_nibble = code&0xf0;
-        captured='.';
+        captured=EMPTY_CHARACTER;
         switch( hi_nibble )
         {
             case CODE_KING:
@@ -1578,7 +1527,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                         mqi.side_black.rooks[rook_offset] = src+1;                   // that rook ends up 1 square right of king
                         // note that there is no way the rooks ordering can swap during castling
                         mqi.squares[src+1] = 'r';    //f8
-                        mqi.squares[src+3] = '.';    //h8
+                        mqi.squares[src+3] = EMPTY_CHARACTER;    //h8
                         break;
                     }
                     case K_Q_CASTLING:
@@ -1588,14 +1537,14 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                         mqi.side_black.rooks[rook_offset] = src-1;                   // that rook ends up 1 square left of king
                         // note that there is no way the rooks ordering can swap during castling
                         mqi.squares[src-1] = 'r';    //d8
-                        mqi.squares[src-4] = '.';    //a8
+                        mqi.squares[src-4] = EMPTY_CHARACTER;    //a8
                         break;
                     }
                 }
                 mqi.side_black.king = dst = src+delta;
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'k';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 break;
             }
             
@@ -1615,7 +1564,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                 mqi.side_black.rooks[rook_offset] = dst;
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'r';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
 
                 // swap ?
                 if( mqi.side_black.nbr_rooks==2 && mqi.side_black.rooks[0]>mqi.side_black.rooks[1] )
@@ -1637,7 +1586,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                     dst = src - 7*file_delta;   // eg src=h8(7), dst=a1(56), file_delta=7  -> 7*7 =49
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'd';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 mqi.side_black.bishop_dark = dst;
                 break;
             }
@@ -1652,7 +1601,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                     dst = src - 7*file_delta;   // eg src=g8(6), dst=a2(48), file_delta=6  -> 7*6 =42
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'b';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 mqi.side_black.bishop_light = dst;
                 break;
             }
@@ -1666,7 +1615,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                     dst = (src&0x38) | (code&7);        // same rank as src, file from code
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'q';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 mqi.side_black.queens[0] = dst;
                 break;
             }
@@ -1681,7 +1630,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                     dst = src - 7*file_delta;   // eg src=h8(7), dst=a1(56), file_delta=7  -> 7*7 =49
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'q';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 mqi.side_black.queens[0] = dst;
                 break;
             }
@@ -1707,7 +1656,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                 dst = src+delta;
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'n';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 mqi.side_black.knights[knight_offset] = dst;
 
                 // swap ?
@@ -1738,7 +1687,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                         delta = 16;
                         dst = src+delta;
                         mqi.squares[dst] = 'p';
-                        mqi.squares[src] = '.';
+                        mqi.squares[src] = EMPTY_CHARACTER;
                         mqi.side_black.pawns[pawn_offset] = dst;
                         if( !BLACK_HOME_ROW_TEST )
                             return false;
@@ -1749,7 +1698,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                         delta = 8;
                         dst = src+delta;
                         mqi.squares[dst] = 'p';
-                        mqi.squares[src] = '.';
+                        mqi.squares[src] = EMPTY_CHARACTER;
                         mqi.side_black.pawns[pawn_offset] = dst;
                         if( 8<=src && src<6 && !BLACK_HOME_ROW_TEST )
                             return false;
@@ -1761,12 +1710,12 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                         dst = src+delta;
                         captured = mqi.squares[dst];
                         mqi.squares[dst] = 'p';
-                        mqi.squares[src] = '.';
+                        mqi.squares[src] = EMPTY_CHARACTER;
                         mqi.side_black.pawns[pawn_offset] = dst;
-                        if( captured == '.' )
+                        if( captured == EMPTY_CHARACTER )
                         {
                             captured = 'P';     // en-passant
-                            mqi.squares[dst=src+1] = '.';
+                            mqi.squares[dst=src+1] = EMPTY_CHARACTER;
                         }
                         else if( 8<=src && src<16 && !BLACK_HOME_ROW_TEST )
                             return false;
@@ -1787,12 +1736,12 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                         dst = src+delta;
                         captured = mqi.squares[dst];
                         mqi.squares[dst] = 'p';
-                        mqi.squares[src] = '.';
+                        mqi.squares[src] = EMPTY_CHARACTER;
                         mqi.side_black.pawns[pawn_offset] = dst;
-                        if( captured == '.' )
+                        if( captured == EMPTY_CHARACTER )
                         {
                             captured = 'P';     // en-passant
-                            mqi.squares[dst=src-1] = '.';
+                            mqi.squares[dst=src-1] = EMPTY_CHARACTER;
                         }
                         else if( 8<=src && src<16 && !BLACK_HOME_ROW_TEST )    // en-passant capture can't be from home row
                             return false;
@@ -1811,7 +1760,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
         }   // end switch all pieces
 
         // Black captures white
-        if( captured != '.' )
+        if( captured != EMPTY_CHARACTER )
         {
             switch( captured )
             {
@@ -1870,8 +1819,6 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                 }
             }
         }
-
-
     }
     return false;
 }
@@ -1918,7 +1865,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
         int src=0;
         int dst=0;
         int hi_nibble = code&0xf0;
-        char captured='.';
+        char captured=EMPTY_CHARACTER;
         switch( hi_nibble )
         {
             case CODE_KING:
@@ -1945,7 +1892,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                         mqi.side_white.rooks[rook_offset] = src+1;                   // that rook ends up 1 square right of king
                         // note that there is no way the rooks ordering can swap during castling
                         mqi.squares[src+1] = 'R';    //f1
-                        mqi.squares[src+3] = '.';    //h1
+                        mqi.squares[src+3] = EMPTY_CHARACTER;    //h1
                         break;
                     }
                     case K_Q_CASTLING:
@@ -1955,14 +1902,14 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                         mqi.side_white.rooks[rook_offset] = src-1;                   // that rook ends up 1 square left of king
                         // note that there is no way the rooks ordering can swap during castling
                         mqi.squares[src-1] = 'R';    //d1
-                        mqi.squares[src-4] = '.';    //a1
+                        mqi.squares[src-4] = EMPTY_CHARACTER;    //a1
                         break;
                     }
                 }
                 mqi.side_white.king = dst = src+delta;
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'K';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 break;
             }
             
@@ -1982,7 +1929,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                 mqi.side_white.rooks[rook_offset] = dst;
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'R';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
 
                 // swap ?
                 if( mqi.side_white.nbr_rooks==2 && mqi.side_white.rooks[0]>mqi.side_white.rooks[1] )
@@ -2004,7 +1951,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                     dst = src - 7*file_delta;   // eg src=h8(7), dst=a1(56), file_delta=7  -> 7*7 =49
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'D';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 mqi.side_white.bishop_dark = dst;
                 break;
             }
@@ -2019,7 +1966,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                     dst = src - 7*file_delta;   // eg src=g8(6), dst=a2(48), file_delta=6  -> 7*6 =42
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'B';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 mqi.side_white.bishop_light = dst;
                 break;
             }
@@ -2033,7 +1980,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                     dst = (src&0x38) | (code&7);        // same rank as src, file from code
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'Q';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 mqi.side_white.queens[0] = dst;
                 break;
             }
@@ -2048,7 +1995,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                     dst = src - 7*file_delta;   // eg src=h8(7), dst=a1(56), file_delta=7  -> 7*7 =49
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'Q';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 mqi.side_white.queens[0] = dst;
                 break;
             }
@@ -2074,7 +2021,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                 dst = src+delta;
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'N';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 mqi.side_white.knights[knight_offset] = dst;
 
                 // swap ?
@@ -2105,7 +2052,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                         delta = -16;
                         dst = src+delta;
                         mqi.squares[dst] = 'P';
-                        mqi.squares[src] = '.';
+                        mqi.squares[src] = EMPTY_CHARACTER;
                         mqi.side_white.pawns[pawn_offset] = dst;
                         if( !((*mq.rank2_ptr & white_home_mask) == white_home_pawns) ) //WHITE_HOME_ROW_TEST )
                             return false;
@@ -2116,7 +2063,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                         delta = -8;
                         dst = src+delta;
                         mqi.squares[dst] = 'P';
-                        mqi.squares[src] = '.';
+                        mqi.squares[src] = EMPTY_CHARACTER;
                         mqi.side_white.pawns[pawn_offset] = dst;
                         if( 48<=src && src<56 && !WHITE_HOME_ROW_TEST )
                             return false;
@@ -2128,12 +2075,12 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                         dst = src+delta;
                         captured = mqi.squares[dst];
                         mqi.squares[dst] = 'P';
-                        mqi.squares[src] = '.';
+                        mqi.squares[src] = EMPTY_CHARACTER;
                         mqi.side_white.pawns[pawn_offset] = dst;
-                        if( captured == '.' )
+                        if( captured == EMPTY_CHARACTER )
                         {
                             captured = 'p';     // en-passant
-                            mqi.squares[dst=src-1] = '.';
+                            mqi.squares[dst=src-1] = EMPTY_CHARACTER;
                         }
                         else if( 48<=src && src<56 && !WHITE_HOME_ROW_TEST )
                             return false;
@@ -2154,12 +2101,12 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                         dst = src+delta;
                         captured = mqi.squares[dst];
                         mqi.squares[dst] = 'P';
-                        mqi.squares[src] = '.';
+                        mqi.squares[src] = EMPTY_CHARACTER;
                         mqi.side_white.pawns[pawn_offset] = dst;
-                        if( captured == '.' )
+                        if( captured == EMPTY_CHARACTER )
                         {
                             captured = 'p';     // en-passant
-                            mqi.squares[dst=src+1] = '.';
+                            mqi.squares[dst=src+1] = EMPTY_CHARACTER;
                         }
                         else if( 48<=src && src<56 && !WHITE_HOME_ROW_TEST )    // en-passant capture can't be from home row
                             return false;
@@ -2178,7 +2125,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
         }   // end switch all pieces
 
         // White captures black
-        if( captured != '.' )
+        if( captured != EMPTY_CHARACTER )
         {
             switch( captured )
             {
@@ -2271,7 +2218,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
         src=0;
         dst=0;
         hi_nibble = code&0xf0;
-        captured='.';
+        captured=EMPTY_CHARACTER;
         switch( hi_nibble )
         {
             case CODE_KING:
@@ -2297,7 +2244,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                         mqi.side_black.rooks[rook_offset] = src+1;                   // that rook ends up 1 square right of king
                         // note that there is no way the rooks ordering can swap during castling
                         mqi.squares[src+1] = 'r';    //f8
-                        mqi.squares[src+3] = '.';    //h8
+                        mqi.squares[src+3] = EMPTY_CHARACTER;    //h8
                         break;
                     }
                     case K_Q_CASTLING:
@@ -2307,14 +2254,14 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                         mqi.side_black.rooks[rook_offset] = src-1;                   // that rook ends up 1 square left of king
                         // note that there is no way the rooks ordering can swap during castling
                         mqi.squares[src-1] = 'r';    //d8
-                        mqi.squares[src-4] = '.';    //a8
+                        mqi.squares[src-4] = EMPTY_CHARACTER;    //a8
                         break;
                     }
                 }
                 mqi.side_black.king = dst = src+delta;
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'k';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 break;
             }
             
@@ -2334,7 +2281,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                 mqi.side_black.rooks[rook_offset] = dst;
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'r';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
 
                 // swap ?
                 if( mqi.side_black.nbr_rooks==2 && mqi.side_black.rooks[0]>mqi.side_black.rooks[1] )
@@ -2356,7 +2303,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                     dst = src - 7*file_delta;   // eg src=h8(7), dst=a1(56), file_delta=7  -> 7*7 =49
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'd';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 mqi.side_black.bishop_dark = dst;
                 break;
             }
@@ -2371,7 +2318,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                     dst = src - 7*file_delta;   // eg src=g8(6), dst=a2(48), file_delta=6  -> 7*6 =42
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'b';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 mqi.side_black.bishop_light = dst;
                 break;
             }
@@ -2385,7 +2332,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                     dst = (src&0x38) | (code&7);        // same rank as src, file from code
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'q';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 mqi.side_black.queens[0] = dst;
                 break;
             }
@@ -2400,7 +2347,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                     dst = src - 7*file_delta;   // eg src=h8(7), dst=a1(56), file_delta=7  -> 7*7 =49
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'q';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 mqi.side_black.queens[0] = dst;
                 break;
             }
@@ -2426,7 +2373,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                 dst = src+delta;
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'n';
-                mqi.squares[src] = '.';
+                mqi.squares[src] = EMPTY_CHARACTER;
                 mqi.side_black.knights[knight_offset] = dst;
 
                 // swap ?
@@ -2457,7 +2404,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                         delta = 16;
                         dst = src+delta;
                         mqi.squares[dst] = 'p';
-                        mqi.squares[src] = '.';
+                        mqi.squares[src] = EMPTY_CHARACTER;
                         mqi.side_black.pawns[pawn_offset] = dst;
                         if( !BLACK_HOME_ROW_TEST )
                             return false;
@@ -2468,7 +2415,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                         delta = 8;
                         dst = src+delta;
                         mqi.squares[dst] = 'p';
-                        mqi.squares[src] = '.';
+                        mqi.squares[src] = EMPTY_CHARACTER;
                         mqi.side_black.pawns[pawn_offset] = dst;
                         if( 8<=src && src<6 && !BLACK_HOME_ROW_TEST )
                             return false;
@@ -2480,12 +2427,12 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                         dst = src+delta;
                         captured = mqi.squares[dst];
                         mqi.squares[dst] = 'p';
-                        mqi.squares[src] = '.';
+                        mqi.squares[src] = EMPTY_CHARACTER;
                         mqi.side_black.pawns[pawn_offset] = dst;
-                        if( captured == '.' )
+                        if( captured == EMPTY_CHARACTER )
                         {
                             captured = 'P';     // en-passant
-                            mqi.squares[dst=src+1] = '.';
+                            mqi.squares[dst=src+1] = EMPTY_CHARACTER;
                         }
                         else if( 8<=src && src<16 && !BLACK_HOME_ROW_TEST )
                             return false;
@@ -2506,12 +2453,12 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                         dst = src+delta;
                         captured = mqi.squares[dst];
                         mqi.squares[dst] = 'p';
-                        mqi.squares[src] = '.';
+                        mqi.squares[src] = EMPTY_CHARACTER;
                         mqi.side_black.pawns[pawn_offset] = dst;
-                        if( captured == '.' )
+                        if( captured == EMPTY_CHARACTER )
                         {
                             captured = 'P';     // en-passant
-                            mqi.squares[dst=src-1] = '.';
+                            mqi.squares[dst=src-1] = EMPTY_CHARACTER;
                         }
                         else if( 8<=src && src<16 && !BLACK_HOME_ROW_TEST )    // en-passant capture can't be from home row
                             return false;
@@ -2530,7 +2477,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
         }   // end switch all pieces
 
         // Black captures white
-        if( captured != '.' )
+        if( captured != EMPTY_CHARACTER )
         {
             switch( captured )
             {
@@ -2589,8 +2536,6 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( const c
                 }
             }
         }
-
-
     }
     return false;
 }
@@ -2640,6 +2585,18 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( const std::string &mo
         }
         char mover = msi.cr.squares[mv.src];
         msi.cr.PlayMove(mv);
+        if( mv.special == thc::SPECIAL_PROMOTION_BISHOP ) // Impose the distinct dark squared bishop = 'd'/'D' convention over the top
+        {
+            if( is_dark(mv.dst) )
+            {
+                char c = msi.cr.squares[mv.dst];
+                if( c == 'B' )
+                    c = 'D';
+                else if( c == 'b' )
+                    c = 'd';
+                msi.cr.squares[mv.dst] = c;
+            }
+        }
         if( 
             (msi.cr.white == target_white) && 
             *ms.slow_rank3_ptr == *ms.slow_rank3_target_ptr &&
@@ -2704,25 +2661,11 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( const std::string &mo
 bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( PatternMatch &pm, const std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last )          // semi fast
 {
     bool target_white = search_position.white;  // searching for position with white to move?
-    int black_count=16;
-    int black_pawn_count=8;
-    int white_count=16;
-    int white_pawn_count=8;
+    int total_count=32;
     SlowGameInit();
     int len = moves_in.size();
     bool match = pm.Test( &msi.sides[0], &msi.sides[1] );
     if( match )
- /* if(
-        //(msi.cr.white == target_white) && 
-        (*ms.slow_rank3_ptr&ms.slow_rank3_mask) == *ms.slow_rank3_target_ptr &&
-        (*ms.slow_rank4_ptr&ms.slow_rank4_mask) == *ms.slow_rank4_target_ptr &&
-        (*ms.slow_rank5_ptr&ms.slow_rank5_mask) == *ms.slow_rank5_target_ptr &&
-        (*ms.slow_rank6_ptr&ms.slow_rank6_mask) == *ms.slow_rank6_target_ptr &&
-        (*ms.slow_rank7_ptr&ms.slow_rank7_mask) == *ms.slow_rank7_target_ptr &&
-        (*ms.slow_rank8_ptr&ms.slow_rank8_mask) == *ms.slow_rank8_target_ptr &&
-        (*ms.slow_rank1_ptr&ms.slow_rank1_mask) == *ms.slow_rank1_target_ptr &&
-        (*ms.slow_rank2_ptr&ms.slow_rank2_mask) == *ms.slow_rank2_target_ptr
-    )  */
     {
         offset_last = offset_first = 0;    // later - separate offset_first and offset_last
         return true;
@@ -2748,64 +2691,29 @@ bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( PatternMatch &
         }
         char mover = msi.cr.squares[mv.src];
         msi.cr.PlayMove(mv);
+        if( mv.special == thc::SPECIAL_PROMOTION_BISHOP ) // Impose the distinct dark squared bishop = 'd'/'D' convention over the top
+        {
+            if( is_dark(mv.dst) )
+            {
+                char c = msi.cr.squares[mv.dst];
+                if( c == 'B' )
+                    c = 'D';
+                else if( c == 'b' )
+                    c = 'd';
+                msi.cr.squares[mv.dst] = c;
+            }
+        }
         match = pm.Test( &msi.sides[0], &msi.sides[1] );
         if( match )
-     /* if( 
-            //(msi.cr.white == target_white) && 
-            (*ms.slow_rank3_ptr&ms.slow_rank3_mask) == *ms.slow_rank3_target_ptr &&
-            (*ms.slow_rank4_ptr&ms.slow_rank4_mask) == *ms.slow_rank4_target_ptr &&
-            (*ms.slow_rank5_ptr&ms.slow_rank5_mask) == *ms.slow_rank5_target_ptr &&
-            (*ms.slow_rank6_ptr&ms.slow_rank6_mask) == *ms.slow_rank6_target_ptr &&
-            (*ms.slow_rank7_ptr&ms.slow_rank7_mask) == *ms.slow_rank7_target_ptr &&
-            (*ms.slow_rank8_ptr&ms.slow_rank8_mask) == *ms.slow_rank8_target_ptr &&
-            (*ms.slow_rank1_ptr&ms.slow_rank1_mask) == *ms.slow_rank1_target_ptr &&
-            (*ms.slow_rank2_ptr&ms.slow_rank2_mask) == *ms.slow_rank2_target_ptr
-        ) */
         {
             offset_last = offset_first = (i+1);    // later - separate offset_first and offset_last
             return true;
         }
-        //if( mover=='P' && 48<=mv.src && mv.src<56 ) && !SLOW_WHITE_HOME_ROW_TEST )
-        //    return false;
-        //if( mover=='p' && 8<=mv.src && mv.src<16 ) && !SLOW_BLACK_HOME_ROW_TEST )
-        //    return false;
         if( isalpha(mv.capture) )
         {
-            if( islower(mv.capture) )
-            {
-                black_count--;
-                if( black_count < ms.black_count_target )
-                    return false;            
-                if( mv.capture == 'p' )
-                {
-                    black_pawn_count--;  // pawns can also disappear at promotion time
-                                         //  disregarding that means we sometimes
-                                         //  continue searching unnecessarily but
-                                         //  doesn't cause errors
-                    if( black_pawn_count < ms.black_pawn_count_target )
-                        return false;
-                    //if(  8<=mv.dst && mv.dst<16 ) && !SLOW_BLACK_HOME_ROW_TEST )
-                    //    return false;
-            
-                }
-            }
-            else
-            {
-                white_count--;
-                if( white_count < ms.white_count_target )
-                    return false;            
-                if( mv.capture == 'P' )
-                {
-                    white_pawn_count--;  // pawns can also disappear at promotion time
-                                         //  disregarding that means we sometimes
-                                         //  continue searching unnecessarily but
-                                         //  doesn't cause errors
-                    if( white_pawn_count < ms.white_pawn_count_target )
-                        return false;            
-                    //if( 48<=mv.dst && mv.dst<56 ) && !SLOW_WHITE_HOME_ROW_TEST )
-                    //    return false;
-                }
-            }
+            total_count--;
+            if( total_count < ms.total_count_target )
+                return false;            
         }
     }
     return false;
