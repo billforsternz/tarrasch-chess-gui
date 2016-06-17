@@ -409,16 +409,15 @@ void CreateDatabaseDialog::OnAppendDatabase()
     {
         int version;
         ok = BinDbOpen( db_filename.c_str(), version );
-        if( !ok )
-            error_msg = "Cannot open  " + db_name;
-        else
+        if( version!=0 && version!=DATABASE_VERSION_NUMBER_BIN_DB )
         {
-            if( version != DATABASE_VERSION_NUMBER_BIN_DB )
-            {
-                error_msg = "Tarrasch database file " + db_name + " is incompatible with this version of Tarrasch";
-                ok = false;
-            }
+            error_msg = "Tarrasch database file " + db_name + " is incompatible with this version of Tarrasch";
+            if( ok )
+                BinDbClose();
+            ok = false;
         }
+        else if( !ok )
+            error_msg = "Cannot open  " + db_name;
     }
     if( ok )
     {

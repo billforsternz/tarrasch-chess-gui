@@ -123,14 +123,15 @@ void Database::Reopen( const char *db_file )
     tiny_db.Init();
 
     // Access the database.
+    cprintf( "Database startup %s\n", db_file );
     is_open = BinDbOpen( db_file, database_version );
     std::string nomsg;
-    IsOperational( nomsg );
+    is_open = IsOperational( nomsg );
     if( is_open )
         LoadInBackground( this );
     
     // If connection failed, handle returns NULL
-    cprintf( "DATABASE STARTUP %s\n", is_open ? "SUCCESSFUL" : "FAILED" );
+    cprintf( "Startup %s\n", is_open ? "SUCCESSFUL" : "FAILED" );
 }
 
 
@@ -139,18 +140,21 @@ bool Database::IsOperational( std::string &error_msg )
 {
     bool operational = false;
     error_msg = "";
-    if( !is_open )
+    if( database_version !=0 && database_version!=DATABASE_VERSION_NUMBER_BIN_DB )
+    {
+        char buf[200];
+        sprintf( buf, "The database file is not in the correct format for this version of Tarrasch (db version=%d)", database_version );                
+        error_msg = std::string(buf);
+    }
+    else if( !is_open )
         error_msg = "Could not open database";
     else
-    {
         operational = true;
-        if( database_version != DATABASE_VERSION_NUMBER_BIN_DB )
-        {
-            char buf[200];
-            sprintf( buf, "The database file is not in the correct format for this version of Tarrasch (db version=%d)", database_version );                
-            error_msg = std::string(buf);
-            operational = false;
-        }
+    if( !operational )
+    {
+        if( is_open )
+            BinDbClose();
+        is_open = false;
     }
     return operational;
 }

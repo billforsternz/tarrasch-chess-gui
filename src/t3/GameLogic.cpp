@@ -1033,7 +1033,6 @@ void GameLogic::CmdDatabaseSelect()
             cprintf( "...CmdDatabaseSelect() if we did wait, that wait is now over (%d)\n", temp );
             wxString s = fd.GetPath();
             wxString previous = objs.repository->database.m_file;
-            objs.repository->database.m_file = s;
             const char *filename = s.c_str();
             cprintf( "File is %s\n", filename );
             objs.db->Reopen(filename);

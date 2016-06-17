@@ -258,35 +258,125 @@ void PatternMatch::PrimeMaterialBalance()
 
 bool PatternMatch::TestMaterialBalance( MpsSide *ws, MpsSide *bs )
 {
-    bool match =
-    ( 
-        ws->nbr_pawns   == white.nbr_pawns  &&
-        ws->nbr_rooks   == white.nbr_rooks  &&
-        ws->nbr_knights == white.nbr_knights &&
-        ws->nbr_light_bishops == white.nbr_light_bishops &&
-        ws->nbr_dark_bishops == white.nbr_dark_bishops &&
-        ws->nbr_queens  == white.nbr_queens  &&
-        bs->nbr_pawns   == black.nbr_pawns  &&
-        bs->nbr_rooks   == black.nbr_rooks  &&
-        bs->nbr_knights == black.nbr_knights &&
-        bs->nbr_light_bishops == black.nbr_light_bishops &&
-        bs->nbr_dark_bishops == black.nbr_dark_bishops &&
-        bs->nbr_queens  == black.nbr_queens
-    );
-    if( match && search_criteria.pawns_must_be_on_same_files )
+    bool match;
+    if( search_criteria.allow_more_pieces )
     {
-        for( int i=0; i<white.nbr_pawns; i++ )
+        if( search_criteria.bishops_must_be_same_colour )
         {
-            if( (ws->pawns[i]&7) != (white.pawns[i]&7) )
-                match = false;
+            match =
+            ( 
+                ws->nbr_pawns   >= white.nbr_pawns  &&
+                ws->nbr_rooks   >= white.nbr_rooks  &&
+                ws->nbr_knights >= white.nbr_knights &&
+                ws->nbr_light_bishops >= white.nbr_light_bishops &&
+                ws->nbr_dark_bishops >= white.nbr_dark_bishops &&
+                ws->nbr_queens  >= white.nbr_queens  &&
+                bs->nbr_pawns   >= black.nbr_pawns  &&
+                bs->nbr_rooks   >= black.nbr_rooks  &&
+                bs->nbr_knights >= black.nbr_knights &&
+                bs->nbr_light_bishops >= black.nbr_light_bishops &&
+                bs->nbr_dark_bishops >= black.nbr_dark_bishops &&
+                bs->nbr_queens  >= black.nbr_queens
+            );
         }
-        for( int i=0; i<black.nbr_pawns; i++ )
+        else
         {
-            if( (bs->pawns[i]&7) != (black.pawns[i]&7) )
-                match = false;
+            match =
+            ( 
+                ws->nbr_pawns   >= white.nbr_pawns  &&
+                ws->nbr_rooks   >= white.nbr_rooks  &&
+                ws->nbr_knights >= white.nbr_knights &&
+                (ws->nbr_light_bishops +
+                 ws->nbr_dark_bishops)
+                                     >=
+                                  (white.nbr_light_bishops +
+                                   white.nbr_dark_bishops) &&
+                ws->nbr_queens  >= white.nbr_queens  &&
+                bs->nbr_pawns   >= black.nbr_pawns  &&
+                bs->nbr_rooks   >= black.nbr_rooks  &&
+                bs->nbr_knights >= black.nbr_knights &&
+                (bs->nbr_light_bishops +
+                 bs->nbr_dark_bishops)
+                                     >=
+                                  (black.nbr_light_bishops +
+                                   black.nbr_dark_bishops) &&
+                bs->nbr_queens  >= black.nbr_queens
+            );
+        }
+        if( match && search_criteria.pawns_must_be_on_same_files )
+        {
+            for( int i=0; i<white.nbr_pawns; i++ )
+            {
+                if( (ws->pawns[i]&7) != (white.pawns[i]&7) )
+                    match = false;
+            }
+            for( int i=0; i<black.nbr_pawns; i++ )
+            {
+                if( (bs->pawns[i]&7) != (black.pawns[i]&7) )
+                    match = false;
+            }
         }
     }
-    if( !match && search_criteria.include_reverse_colours )
+    else
+    {
+        if( search_criteria.bishops_must_be_same_colour )
+        {
+            match =
+            ( 
+                ws->nbr_pawns   == white.nbr_pawns  &&
+                ws->nbr_rooks   == white.nbr_rooks  &&
+                ws->nbr_knights == white.nbr_knights &&
+                ws->nbr_light_bishops == white.nbr_light_bishops &&
+                ws->nbr_dark_bishops == white.nbr_dark_bishops &&
+                ws->nbr_queens  == white.nbr_queens  &&
+                bs->nbr_pawns   == black.nbr_pawns  &&
+                bs->nbr_rooks   == black.nbr_rooks  &&
+                bs->nbr_knights == black.nbr_knights &&
+                bs->nbr_light_bishops == black.nbr_light_bishops &&
+                bs->nbr_dark_bishops == black.nbr_dark_bishops &&
+                bs->nbr_queens  == black.nbr_queens
+            );
+        }
+        else
+        {
+            match =
+            ( 
+                ws->nbr_pawns   == white.nbr_pawns  &&
+                ws->nbr_rooks   == white.nbr_rooks  &&
+                ws->nbr_knights == white.nbr_knights &&
+                (ws->nbr_light_bishops +
+                 ws->nbr_dark_bishops)
+                                     ==
+                                  (white.nbr_light_bishops +
+                                   white.nbr_dark_bishops) &&
+                ws->nbr_queens  == white.nbr_queens  &&
+                bs->nbr_pawns   == black.nbr_pawns  &&
+                bs->nbr_rooks   == black.nbr_rooks  &&
+                bs->nbr_knights == black.nbr_knights &&
+                (bs->nbr_light_bishops +
+                 bs->nbr_dark_bishops)
+                                     ==
+                                  (black.nbr_light_bishops +
+                                   black.nbr_dark_bishops) &&
+                bs->nbr_queens  == black.nbr_queens
+            );
+        }
+        if( match && search_criteria.pawns_must_be_on_same_files )
+        {
+            for( int i=0; i<white.nbr_pawns; i++ )
+            {
+                if( (ws->pawns[i]&7) != (white.pawns[i]&7) )
+                    match = false;
+            }
+            for( int i=0; i<black.nbr_pawns; i++ )
+            {
+                if( (bs->pawns[i]&7) != (black.pawns[i]&7) )
+                    match = false;
+            }
+        }
+
+    }
+/*  if( !match && search_criteria.include_reverse_colours )
     {
         match =
         ( 
@@ -316,6 +406,6 @@ bool PatternMatch::TestMaterialBalance( MpsSide *ws, MpsSide *bs )
                     return false;
             }
         }
-    }
+    } */
     return match;
 }

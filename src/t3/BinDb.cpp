@@ -113,6 +113,7 @@ static uint8_t compatibility_header[] =
 };
 
 #define COMPATIBILITY_HEADER_SIZE 1200  // = 0x4b0
+static uint32_t compatibility_header_size=COMPATIBILITY_HEADER_SIZE;
 
 // Return bool ok
 bool BinDbOpen( const char *db_file, int &version )
@@ -138,8 +139,15 @@ bool BinDbOpen( const char *db_file, int &version )
             if( 0 == memcmp(&buf[0x100], "TDB format", 10) )  // is this the compatibility header ?
             {
                 ok = true;
-                version = buf[COMPATIBILITY_HEADER_SIZE-1];
+                compatibility_header_size = *( reinterpret_cast<uint32_t *>(&buf[0x0f0]) );
+                if( compatibility_header_size<0x10b || compatibility_header_size>COMPATIBILITY_HEADER_SIZE )    // a little future-proofing, support possible
+                    compatibility_header_size = COMPATIBILITY_HEADER_SIZE;                                      //  smaller compatibility header size
+                version = buf[compatibility_header_size-1];
             } 
+            else if( 0 == memcmp(&buf[0], "SQLite format 3", 15) )  // is it an earlier Tarrasch DB SQL based format ?
+            {
+                version = DATABASE_VERSION_NUMBER_NORMAL;
+            }
         }
         if( !ok )
             fclose(bin_file);
@@ -1200,7 +1208,7 @@ void BinDbLoadAllGames(  bool for_db_append, std::vector< smart_ptr<ListableGame
     PackedGameBinDbControlBlock& common = PackedGameBinDb::GetControlBlock(cb_idx);
     FileHeader fh;
     FILE *fin = bin_file;       // later allow this to be closed!
-    fseek(fin,COMPATIBILITY_HEADER_SIZE,SEEK_SET);   // skip over compatibility header
+    fseek(fin,compatibility_header_size,SEEK_SET);   // skip over compatibility header
     fread( &fh, sizeof(fh), 1, fin );
     cprintf( "%d games, %d players, %d events, %d sites\n", fh.nbr_games, fh.nbr_players, fh.nbr_events, fh.nbr_sites );
     int nbr_bits_player = BitsRequired(fh.nbr_players);

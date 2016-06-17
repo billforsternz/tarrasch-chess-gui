@@ -132,7 +132,7 @@ public:
     bool TryFastMode( MpsSide *side );
     bool SearchGameOptimisedNoPromotionAllowed( const char *moves_in, unsigned short &offset_first, unsigned short &offset_last  );    // much faster
     bool SearchGameSlowPromotionAllowed(  const std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last  );          // semi fast
-    bool PatternSearchGameOptimisedNoPromotionAllowed( const char *moves_in, unsigned short &offset_first, unsigned short &offset_last  );    // much faster
+    bool PatternSearchGameOptimisedNoPromotionAllowed( PatternMatch &pm, const char *moves_in, unsigned short &offset_first, unsigned short &offset_last  );    // much faster
     bool PatternSearchGameSlowPromotionAllowed( PatternMatch &pm, const std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last  );          // semi fast
     int  GetNbrGamesFound() { return games_found.size(); }
     std::vector< smart_ptr<ListableGame> > *search_source;
