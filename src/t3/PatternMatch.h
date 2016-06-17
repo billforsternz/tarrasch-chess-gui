@@ -73,6 +73,8 @@ struct PatternMatchMask
     const uint64_t *rank1_target_ptr;
     uint64_t        rank1_mask;
     thc::ChessPosition cp;
+    MpsSide         side_w;
+    MpsSide         side_b;
 };
 
 // PatternDialog class declaration
@@ -93,11 +95,14 @@ public:
         PrimeMaterialBalance();
     }
 
+    // Start of game
+    void NewGame() { in_a_row=0; }
+
     // Test for pattern
-    bool Test( MpsSide *ws, MpsSide *bs )
+    bool Test( MpsSide *ws, MpsSide *bs, const char *squares )
     {
         if( search_criteria.material_balance )
-            return TestMaterialBalance( ws, bs );
+            return TestMaterialBalance( ws, bs, squares );
         else
             return TestPattern();
     }
@@ -107,10 +112,12 @@ private:
     // Prime
     void PrimePattern( const thc::ChessPosition *rover );
     void PrimeMaterialBalance();
+    void InitSide( MpsSide *side, bool white, const char *squares );
 
     // Test against criteria
     bool TestPattern();
-    bool TestMaterialBalance( MpsSide *ws, MpsSide *bs );
+    bool TestMaterialBalance( MpsSide *ws, MpsSide *bs, const char *squares );
+    bool TestMaterialBalanceInner( MpsSide *ws, MpsSide *bs, const char *squares );
 
     // Working positions
     PatternMatchMask pmm_n;    // normal
@@ -127,9 +134,9 @@ private:
     const uint64_t *rank2_ptr;
     const uint64_t *rank1_ptr;
 
-    MpsSide white;
-    MpsSide black;
-
+    // Reflection and Reversal loop controller
+    int reflect_and_reverse;
+    int in_a_row;
 };
 
 #endif    // PATTERN_MATCH_H

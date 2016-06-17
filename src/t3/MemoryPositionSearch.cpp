@@ -681,10 +681,11 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
             dsfg.offset_last=0;
             bool promotion_in_game = (p->game_attributes!=0);
             bool game_found;
-            //if( promotion_in_game )
+            pm.NewGame();
+            if( promotion_in_game )
                 game_found = PatternSearchGameSlowPromotionAllowed( pm, std::string(p->CompressedMoves()), dsfg.offset_first, dsfg.offset_last  );
-            //else
-            //    game_found = PatternSearchGameOptimisedNoPromotionAllowed( pm, p->CompressedMoves(), dsfg.offset_first, dsfg.offset_last );
+            else
+                game_found = PatternSearchGameOptimisedNoPromotionAllowed( pm, p->CompressedMoves(), dsfg.offset_first, dsfg.offset_last );
             if( game_found )
             {
                 games_found.push_back( dsfg );
@@ -1832,7 +1833,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
     {
 
         // Check for match before every move
-        bool match = pm.Test( &mqi.side_white, &mqi.side_black );
+        bool match = pm.Test( &mqi.side_white, &mqi.side_black, NULL );
         if( match )
         {
             offset_last = offset_first = offset;    // later - separate offset_first and offset_last
@@ -2148,7 +2149,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
                 }
             }
         }
-        match = pm.Test( &mqi.side_white, &mqi.side_black );
+        match = pm.Test( &mqi.side_white, &mqi.side_black, NULL );
         if( match )
         {
             offset_last = offset_first = offset;    // later - separate offset_first and offset_last
@@ -2591,7 +2592,7 @@ bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( PatternMatch &
     int total_count=32;
     SlowGameInit();
     int len = moves_in.size();
-    bool match = pm.Test( &msi.sides[0], &msi.sides[1] );
+    bool match = pm.Test( &msi.sides[0], &msi.sides[1], NULL );
     if( match )
     {
         offset_last = offset_first = 0;    // later - separate offset_first and offset_last
@@ -2630,7 +2631,7 @@ bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( PatternMatch &
                 msi.cr.squares[mv.dst] = c;
             }
         }
-        match = pm.Test( &msi.sides[0], &msi.sides[1] );
+        match = pm.Test( &msi.sides[0], &msi.sides[1], msi.cr.squares );
         if( match )
         {
             offset_last = offset_first = (i+1);    // later - separate offset_first and offset_last
