@@ -49,7 +49,7 @@ DbDialog::DbDialog
 {
     this->db_req = db_req;
     if( db_req==REQ_PATTERN  && parm )
-        this->pm.search_criteria = *parm;
+        this->pm.parm = *parm;
     activated_at_least_once = false;
     transpo_activated = false;
     white_player_search = true;

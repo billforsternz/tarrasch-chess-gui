@@ -278,7 +278,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
     }
     // TODO DatabaseClear();
     BinDbWriteClear();
-    FILE *ofile;
+    FILE *ofile=NULL;
     if( ok )
     {
         ofile = fopen( db_name.c_str(), "wb" );

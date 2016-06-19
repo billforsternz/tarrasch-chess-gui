@@ -22,16 +22,39 @@ struct PatternParameters
     // common
     bool include_reflections;
     bool include_reverse_colours;
-    bool allow_more_pieces;
 
     // pattern
     bool either_to_move;
     bool white_to_move;
+    bool allow_more_pieces;
 
     // material balance
     bool pawns_must_be_on_same_files;
     bool bishops_must_be_same_colour;
     int  number_of_ply;
+    bool more_pieces_wq;
+    bool more_pieces_wr;
+    bool more_pieces_wb;
+    bool more_pieces_wn;
+    bool more_pieces_wp;
+    bool more_pieces_bq;
+    bool more_pieces_br;
+    bool more_pieces_bb;
+    bool more_pieces_bn;
+    bool more_pieces_bp;
+    bool lockdown_wk;
+    bool lockdown_wq;
+    bool lockdown_wr;
+    bool lockdown_wb;
+    bool lockdown_wn;
+    bool lockdown_wp;
+    bool lockdown_bk;
+    bool lockdown_bq;
+    bool lockdown_br;
+    bool lockdown_bb;
+    bool lockdown_bn;
+    bool lockdown_bp;
+    bool lockdown_any;
 
     PatternParameters() { initialised = false; }
     void OneTimeInit( bool material_balance, thc::ChessPosition &cp )
@@ -49,12 +72,35 @@ struct PatternParameters
             pawns_must_be_on_same_files = false;
             bishops_must_be_same_colour = false;
             number_of_ply = 1;
+            more_pieces_wq = false;
+            more_pieces_wr = false;
+            more_pieces_wb = false;
+            more_pieces_wn = false;
+            more_pieces_wp = false;
+            more_pieces_bq = false;
+            more_pieces_br = false;
+            more_pieces_bb = false;
+            more_pieces_bn = false;
+            more_pieces_bp = false;
+            lockdown_wk = false;
+            lockdown_wq = false;
+            lockdown_wr = false;
+            lockdown_wb = false;
+            lockdown_wn = false;
+            lockdown_wp = false;
+            lockdown_bk = false;
+            lockdown_bq = false;
+            lockdown_br = false;
+            lockdown_bb = false;
+            lockdown_bn = false;
+            lockdown_bp = false;
+            lockdown_any= false;
         }
     }
  };
 
 // Mask information for matching to a particular fixed target position
-struct PatternMatchMask
+struct PatternMatchTarget
 {
     const uint64_t *rank8_target_ptr;
     uint64_t        rank8_mask;
@@ -75,6 +121,7 @@ struct PatternMatchMask
     thc::ChessPosition cp;
     MpsSide         side_w;
     MpsSide         side_b;
+    PatternParameters parm;
 };
 
 // PatternDialog class declaration
@@ -86,7 +133,7 @@ public:
     PatternMatch();
 
     // What to search for
-    PatternParameters search_criteria;
+    PatternParameters parm;
 
     // Set up for search
     void Prime( const thc::ChessPosition *rover )
@@ -99,12 +146,12 @@ public:
     void NewGame() { in_a_row=0; }
 
     // Test for pattern
-    bool Test( MpsSide *ws, MpsSide *bs, const char *squares )
+    bool Test( MpsSide *ws, MpsSide *bs, bool white, const char *squares_rover, bool may_need_to_rebuild_side )
     {
-        if( search_criteria.material_balance )
-            return TestMaterialBalance( ws, bs, squares );
+        if( parm.material_balance )
+            return TestMaterialBalance( ws, bs, squares_rover, may_need_to_rebuild_side );
         else
-            return TestPattern();
+            return TestPattern( white, squares_rover );
     }
 
 private:
@@ -112,18 +159,18 @@ private:
     // Prime
     void PrimePattern( const thc::ChessPosition *rover );
     void PrimeMaterialBalance();
-    void InitSide( MpsSide *side, bool white, const char *squares );
+    void InitSide( MpsSide *side, bool white, const char *squares_rover );
 
     // Test against criteria
-    bool TestPattern();
-    bool TestMaterialBalance( MpsSide *ws, MpsSide *bs, const char *squares );
-    bool TestMaterialBalanceInner( MpsSide *ws, MpsSide *bs, const char *squares );
+    bool TestPattern( bool white, const char *squares_rover );
+    bool TestMaterialBalance( MpsSide *ws, MpsSide *bs, const char *squares_rover, bool may_need_to_rebuild_side );
+    bool TestMaterialBalanceInner( MpsSide *ws, MpsSide *bs, const char *squares_rover, bool may_need_to_rebuild_side );
 
     // Working positions
-    PatternMatchMask pmm_n;    // normal
-    PatternMatchMask pmm_m;    // mirror image
-    PatternMatchMask pmm_r;    // reverse colours
-    PatternMatchMask pmm_rm;   // reverse colours mirror image
+    PatternMatchTarget target_n;    // normal
+    PatternMatchTarget target_m;    // mirror image
+    PatternMatchTarget target_r;    // reverse colours
+    PatternMatchTarget target_rm;   // reverse colours mirror image
 
     const uint64_t *rank8_ptr;
     const uint64_t *rank7_ptr;

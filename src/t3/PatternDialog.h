@@ -15,19 +15,41 @@ class BoardSetupControl;
 // Control identifiers
 enum
 {
-    ID_PATTERN_DIALOG                   = 10000,
-    ID_PATTERN_RESET                    = 10001,
-    ID_PATTERN_CLEAR                    = 10002,
-    ID_PATTERN_CURRENT                  = 10003,
-    ID_PATTERN_MOVE_COUNT               = 10004,
-    ID_PATTERN_WHITE_TO_MOVE            = 10005,
-    ID_PATTERN_BLACK_TO_MOVE            = 10006,
-    ID_PATTERN_EITHER_TO_MOVE           = 10007,
-    ID_PATTERN_INC_REFLECTION           = 10008,
-    ID_PATTERN_INC_REVERSE              = 10009,
-    ID_PATTERN_ALLOW_MORE               = 10010,
-    ID_PATTERN_PAWNS_SAME_FILES         = 10011,
-    ID_PATTERN_BISHOPS_SAME_COLOUR      = 10012
+    ID_PATTERN_DIALOG  = 10000,
+    ID_PATTERN_RESET,
+    ID_PATTERN_CLEAR,
+    ID_PATTERN_CURRENT,
+    ID_PATTERN_MOVE_COUNT,
+    ID_PATTERN_WHITE_TO_MOVE,
+    ID_PATTERN_BLACK_TO_MOVE,
+    ID_PATTERN_EITHER_TO_MOVE,
+    ID_PATTERN_INC_REFLECTION,
+    ID_PATTERN_INC_REVERSE,
+    ID_PATTERN_ALLOW_MORE,
+    ID_PATTERN_PAWNS_SAME_FILES,
+    ID_PATTERN_BISHOPS_SAME_COLOUR,
+    ID_PATTERN_LOCKDOWN_WK,
+    ID_PATTERN_LOCKDOWN_WQ,
+    ID_PATTERN_LOCKDOWN_WR,
+    ID_PATTERN_LOCKDOWN_WB,
+    ID_PATTERN_LOCKDOWN_WN,
+    ID_PATTERN_LOCKDOWN_WP,
+    ID_PATTERN_LOCKDOWN_BK,
+    ID_PATTERN_LOCKDOWN_BQ,
+    ID_PATTERN_LOCKDOWN_BR,
+    ID_PATTERN_LOCKDOWN_BB,
+    ID_PATTERN_LOCKDOWN_BN,
+    ID_PATTERN_LOCKDOWN_BP,
+    ID_PATTERN_MORE_PIECES_WQ,
+    ID_PATTERN_MORE_PIECES_WR,
+    ID_PATTERN_MORE_PIECES_WB,
+    ID_PATTERN_MORE_PIECES_WN,
+    ID_PATTERN_MORE_PIECES_WP,
+    ID_PATTERN_MORE_PIECES_BQ,
+    ID_PATTERN_MORE_PIECES_BR,
+    ID_PATTERN_MORE_PIECES_BB,
+    ID_PATTERN_MORE_PIECES_BN,
+    ID_PATTERN_MORE_PIECES_BP
 };
 
 // PatternDialog class declaration
@@ -89,6 +111,28 @@ private:
     wxCheckBox*     pawns_same_files;
     wxCheckBox*     bishops_same_colour;
     wxCheckBox*     allow_more;
+    wxCheckBox*     lockdown_wk;
+    wxCheckBox*     lockdown_wq;
+    wxCheckBox*     lockdown_wr;
+    wxCheckBox*     lockdown_wb;
+    wxCheckBox*     lockdown_wn;
+    wxCheckBox*     lockdown_wp;
+    wxCheckBox*     lockdown_bk;
+    wxCheckBox*     lockdown_bq;
+    wxCheckBox*     lockdown_br;
+    wxCheckBox*     lockdown_bb;
+    wxCheckBox*     lockdown_bn;
+    wxCheckBox*     lockdown_bp;
+    wxCheckBox*     more_pieces_wq;
+    wxCheckBox*     more_pieces_wr;
+    wxCheckBox*     more_pieces_wb;
+    wxCheckBox*     more_pieces_wn;
+    wxCheckBox*     more_pieces_wp;
+    wxCheckBox*     more_pieces_bq;
+    wxCheckBox*     more_pieces_br;
+    wxCheckBox*     more_pieces_bb;
+    wxCheckBox*     more_pieces_bn;
+    wxCheckBox*     more_pieces_bp;
     wxRadioButton*  white_to_move;
     wxRadioButton*  black_to_move;
     wxRadioButton*  either_to_move;
@@ -100,8 +144,10 @@ private:
     bool b_either;
     bool b_white;
     bool b_black;
+    bool b_allow_more;
 
     // material balance
+    bool b_piece_map;
     bool b_pawns;
     bool b_bishops;
     bool b_ply;

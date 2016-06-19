@@ -492,10 +492,12 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
     return DoPatternSearch(pm,progress,&in_memory_game_cache);
 }
 
+//static bool debug_trigger;
+
 int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progress, std::vector< smart_ptr<ListableGame> > *source )
 {
     games_found.clear();
-    search_position = pm.search_criteria.cp;
+    search_position = pm.parm.cp;
     search_position_set = true;
     search_source = source;
 
@@ -519,7 +521,7 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
     mq.black_queen_target = 0;
     for( int i=0; i<64; i++ )
     {
-        char piece = pm.search_criteria.cp.squares[i];
+        char piece = pm.parm.cp.squares[i];
         switch(piece)
         {
             case 'P':
@@ -674,6 +676,8 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
         for( int i=0; i<nbr; i++ )
         {
             smart_ptr<ListableGame> p = (*source)[i];
+            //if( 0 == strcmp(p->White(),"Gu, Xiaobing") &&  0 == strcmp(p->Black(),"Ryjanova, Julia")  )
+            //    debug_trigger = true;
             DoSearchFoundGame dsfg;
             dsfg.idx = i;
             dsfg.game_id = p->GetGameId();
@@ -699,16 +703,26 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
 
 thc::Move MemoryPositionSearch::UncompressSlowMode( char code )
 {
+    // Horrible kludge necessitated by our 'd'/'D' = dark bishops stuff
+    thc::ChessRules temp = msi.cr;
+    for( int i=0; i<64; i++ )
+    {
+        char c = msi.cr.squares[i];
+        if( c=='d' )
+            temp.squares[i] = 'b';
+        if( c=='D' )
+            temp.squares[i] = 'B';
+    }
 
     // Support algorithm ALLOW_CASTLING_EVEN_AFTER_KING_AND_ROOK_MOVES
-    msi.cr.wking = 1;
-    msi.cr.wqueen = 1;
-    msi.cr.bking = 1;
-    msi.cr.bqueen = 1;
+    temp.wking = 1;
+    temp.wqueen = 1;
+    temp.bking = 1;
+    temp.bqueen = 1;
     
     // Generate a list of all legal moves, in string form, sorted
     std::vector<thc::Move> moves;
-    msi.cr.GenLegalMoveList( moves );
+    temp.GenLegalMoveList( moves );
     std::vector<std::string> moves_alpha;
     
     // Coding scheme relies on 254 valid codes 0x02-0xff and one error code 0x01,
@@ -728,7 +742,7 @@ thc::Move MemoryPositionSearch::UncompressSlowMode( char code )
         idx = 0;    // all errors resolve to this - take first move from list
     std::string the_move = moves_alpha[idx];
     thc::Move mv;
-    mv.TerseIn( &msi.cr, the_move.c_str() );
+    mv.TerseIn( &temp, the_move.c_str() );
     return mv;
 }
 
@@ -1833,9 +1847,27 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
     {
 
         // Check for match before every move
-        bool match = pm.Test( &mqi.side_white, &mqi.side_black, NULL );
+        /*if( debug_trigger )
+        {
+            char buf[9];
+            buf[8] = '\0';
+            cprintf( "before\n" );
+            for( int i=0; i<64; i+=8 )
+            {
+                memcpy(buf,&mqi.squares[i],8);
+                for( int k=0; k<8; k++ )
+                    if( buf[k] == ' ' ) buf[k]='.';
+                cprintf( "%s\n", buf );
+            }
+        } */
+        bool match = pm.Test( &mqi.side_white, &mqi.side_black, true, mqi.squares, false );
         if( match )
         {
+            /*if( debug_trigger )
+            {
+                cprintf( "Match!\n" );
+                debug_trigger = false;
+            } */
             offset_last = offset_first = offset;    // later - separate offset_first and offset_last
             return true;
         }
@@ -2149,9 +2181,27 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
                 }
             }
         }
-        match = pm.Test( &mqi.side_white, &mqi.side_black, NULL );
+        /*if( debug_trigger )
+        {
+            char buf[9];
+            buf[8] = '\0';
+            cprintf( "before\n" );
+            for( int i=0; i<64; i+=8 )
+            {
+                memcpy(buf,&mqi.squares[i],8);
+                for( int k=0; k<8; k++ )
+                    if( buf[k] == ' ' ) buf[k]='.';
+                cprintf( "%s\n", buf );
+            }
+        } */
+        match = pm.Test( &mqi.side_white, &mqi.side_black, false, mqi.squares, false );
         if( match )
         {
+            /*if( debug_trigger )
+            {
+                cprintf( "Match!\n" );
+                debug_trigger = false;
+            } */
             offset_last = offset_first = offset;    // later - separate offset_first and offset_last
             return true;
         }
@@ -2512,6 +2562,7 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( const std::string &mo
             other->fast_mode = false;   // force other side to reset and retry
         }
         char mover = msi.cr.squares[mv.src];
+        //std::string mvs = mv.NaturalOut(&msi.cr);
         msi.cr.PlayMove(mv);
         if( mv.special == thc::SPECIAL_PROMOTION_BISHOP ) // Impose the distinct dark squared bishop = 'd'/'D' convention over the top
         {
@@ -2525,6 +2576,8 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( const std::string &mo
                 msi.cr.squares[mv.dst] = c;
             }
         }
+        //std::string s = msi.cr.ToDebugStr();
+        //cprintf( "After %s\n%s\n", mvs.c_str(), s.c_str() );
         if( 
             (msi.cr.white == target_white) && 
             *ms.slow_rank3_ptr == *ms.slow_rank3_target_ptr &&
@@ -2592,7 +2645,7 @@ bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( PatternMatch &
     int total_count=32;
     SlowGameInit();
     int len = moves_in.size();
-    bool match = pm.Test( &msi.sides[0], &msi.sides[1], NULL );
+    bool match = pm.Test( &msi.sides[0], &msi.sides[1], msi.cr.white, msi.cr.squares, false );
     if( match )
     {
         offset_last = offset_first = 0;    // later - separate offset_first and offset_last
@@ -2631,7 +2684,7 @@ bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( PatternMatch &
                 msi.cr.squares[mv.dst] = c;
             }
         }
-        match = pm.Test( &msi.sides[0], &msi.sides[1], msi.cr.squares );
+        match = pm.Test( &msi.sides[0], &msi.sides[1], msi.cr.white, msi.cr.squares, true );
         if( match )
         {
             offset_last = offset_first = (i+1);    // later - separate offset_first and offset_last

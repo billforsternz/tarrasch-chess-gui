@@ -49,8 +49,10 @@ PatternDialog::PatternDialog
     b_either = !parm->material_balance;
     b_white  = !parm->material_balance;
     b_black  = !parm->material_balance;
+    b_allow_more = !parm->material_balance;
 
     // material balance
+    b_piece_map = parm->material_balance;
     b_pawns   = parm->material_balance;
     b_bishops = parm->material_balance;
     b_ply     = parm->material_balance;
@@ -123,9 +125,12 @@ void PatternDialog::CreateControls()
     inc_reverse = new wxCheckBox( this, ID_PATTERN_INC_REVERSE,
        wxT("&Include reversed colours"), wxDefaultPosition, wxDefaultSize, 0 );
     inc_reverse->SetValue( parm->include_reverse_colours );
-    allow_more = new wxCheckBox( this, ID_PATTERN_ALLOW_MORE,
-       wxT("&Allow more pieces"), wxDefaultPosition, wxDefaultSize, 0 );
-    allow_more->SetValue( parm->allow_more_pieces );
+    if( b_allow_more )
+    {
+        allow_more = new wxCheckBox( this, ID_PATTERN_ALLOW_MORE,
+           wxT("&Allow more pieces"), wxDefaultPosition, wxDefaultSize, 0 );
+        allow_more->SetValue( parm->allow_more_pieces );
+    }
     if( b_pawns )
     {
         pawns_same_files = new wxCheckBox( this, ID_PATTERN_PAWNS_SAME_FILES,
@@ -157,7 +162,7 @@ void PatternDialog::CreateControls()
     {
         move_count_sizer  = new wxBoxSizer(wxHORIZONTAL);
         wxStaticText* move_count_label = new wxStaticText ( this, wxID_STATIC,
-            wxT("Balance must persist for at least this many half moves"), wxDefaultPosition, wxDefaultSize, 0 );
+            wxT("Balance must persist for at\nleast this many half moves"), wxDefaultPosition, wxDefaultSize, 0 );
         move_count_ctrl = new wxSpinCtrl ( this, ID_PATTERN_MOVE_COUNT,
             wxEmptyString, wxDefaultPosition, wxSize(50, wxDefaultCoord), //wxDefaultSize, 
             wxSP_ARROW_KEYS, parm->number_of_ply, 500, 1 );
@@ -170,8 +175,11 @@ void PatternDialog::CreateControls()
         wxALIGN_CENTER_VERTICAL|wxALL, 5);
     castling_box->Add( inc_reverse, 0,
         wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    castling_box->Add( allow_more, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    if( b_allow_more )
+    {
+        castling_box->Add( allow_more, 0,
+            wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    }
     if( b_pawns )
     {
         castling_box->Add( pawns_same_files, 0,
@@ -231,10 +239,146 @@ void PatternDialog::CreateControls()
     horiz_board->Add( bsc, 1, wxALIGN_LEFT|wxALL|wxFIXED_MINSIZE, 5 );
     horiz_board->Add( buttons_box, 0, wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 5);
 
+
+    if( b_piece_map )
+    {
+        wxStaticBox *lockdown = new wxStaticBox(this, wxID_ANY, "&Optionally lockdown some piece positions" );
+        wxSizer     *lockdown_vert  = new wxStaticBoxSizer(lockdown, wxVERTICAL );   
+        wxStaticBox *lockdown1 = new wxStaticBox(this, wxID_ANY, "&White" );
+        wxStaticBox *lockdown2 = new wxStaticBox(this, wxID_ANY, "&Black" );
+        wxSizer     *lockdown_horiz1 = new wxStaticBoxSizer(lockdown1,wxHORIZONTAL);
+        wxSizer     *lockdown_horiz2 = new wxStaticBoxSizer(lockdown2,wxHORIZONTAL);
+        lockdown_vert->Add( lockdown_horiz1,  0, wxALIGN_LEFT |wxRIGHT, 50 );
+        lockdown_vert->Add( lockdown_horiz2,  0, wxALIGN_LEFT |wxLEFT|wxRIGHT|wxTOP, 0 );
+        lockdown_wk = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_WK,
+           "K", wxDefaultPosition, wxDefaultSize, 0 );
+        lockdown_wk->SetValue( parm->lockdown_wk );
+        lockdown_wq = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_WQ,
+           "Q", wxDefaultPosition, wxDefaultSize, 0 );
+        lockdown_wq->SetValue( parm->lockdown_wq );
+        lockdown_wr = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_WR,
+           "R", wxDefaultPosition, wxDefaultSize, 0 );
+        lockdown_wr->SetValue( parm->lockdown_wr );
+        lockdown_wb = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_WB,
+           "B", wxDefaultPosition, wxDefaultSize, 0 );
+        lockdown_wb->SetValue( parm->lockdown_wb );
+        lockdown_wn = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_WN,
+           "N", wxDefaultPosition, wxDefaultSize, 0 );
+        lockdown_wn->SetValue( parm->lockdown_wn );
+        lockdown_wp = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_WP,
+           "P", wxDefaultPosition, wxDefaultSize, 0 );
+        lockdown_wp->SetValue( parm->lockdown_wp );
+        lockdown_horiz1->Add( lockdown_wk, 0,
+            wxALIGN_CENTER_VERTICAL|wxLEFT, 15);
+        lockdown_horiz1->Add( lockdown_wq, 0,
+            wxALIGN_CENTER_VERTICAL,0);
+        lockdown_horiz1->Add( lockdown_wr, 0,
+            wxALIGN_CENTER_VERTICAL,0);
+        lockdown_horiz1->Add( lockdown_wb, 0,
+            wxALIGN_CENTER_VERTICAL,0);
+        lockdown_horiz1->Add( lockdown_wn, 0,
+            wxALIGN_CENTER_VERTICAL,0);
+        lockdown_horiz1->Add( lockdown_wp, 0,
+            wxALIGN_CENTER_VERTICAL,0);
+        lockdown_bk = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_BK,
+           "K", wxDefaultPosition, wxDefaultSize, 0 );
+        lockdown_bk->SetValue( parm->lockdown_bk );
+        lockdown_bq = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_BQ,
+           "Q", wxDefaultPosition, wxDefaultSize, 0 );
+        lockdown_bq->SetValue( parm->lockdown_bq );
+        lockdown_br = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_BR,
+           "R", wxDefaultPosition, wxDefaultSize, 0 );
+        lockdown_br->SetValue( parm->lockdown_br );
+        lockdown_bb = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_BB,
+           "B", wxDefaultPosition, wxDefaultSize, 0 );
+        lockdown_bb->SetValue( parm->lockdown_bb );
+        lockdown_bn = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_BN,
+           "N", wxDefaultPosition, wxDefaultSize, 0 );
+        lockdown_bn->SetValue( parm->lockdown_bn );
+        lockdown_bp = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_BP,
+           "P", wxDefaultPosition, wxDefaultSize, 0 );
+        lockdown_bp->SetValue( parm->lockdown_bp );
+    /*  lockdown_horiz2->Add( lockdown_bk, 0,
+            wxALIGN_CENTER_VERTICAL|wxALL, 5); */
+        lockdown_horiz2->Add( lockdown_bk, 0,
+            wxALIGN_CENTER_VERTICAL|wxLEFT, 15);
+        lockdown_horiz2->Add( lockdown_bq, 0,
+            wxALIGN_CENTER_VERTICAL,0);
+        lockdown_horiz2->Add( lockdown_br, 0,
+            wxALIGN_CENTER_VERTICAL,0);
+        lockdown_horiz2->Add( lockdown_bb, 0,
+            wxALIGN_CENTER_VERTICAL,0);
+        lockdown_horiz2->Add( lockdown_bn, 0,
+            wxALIGN_CENTER_VERTICAL,0);
+        lockdown_horiz2->Add( lockdown_bp, 0,
+            wxALIGN_CENTER_VERTICAL,0);
+
+        wxStaticBox *more_pieces = new wxStaticBox(this, wxID_ANY, "&Optionally allow some extra material" );
+        wxSizer     *more_pieces_vert  = new wxStaticBoxSizer(more_pieces, wxVERTICAL );   
+        wxStaticBox *more_pieces1 = new wxStaticBox(this, wxID_ANY, "&White" );
+        wxStaticBox *more_pieces2 = new wxStaticBox(this, wxID_ANY, "&Black" );
+        wxSizer     *more_pieces_horiz1 = new wxStaticBoxSizer(more_pieces1,wxHORIZONTAL);
+        wxSizer     *more_pieces_horiz2 = new wxStaticBoxSizer(more_pieces2,wxHORIZONTAL);
+        more_pieces_vert->Add( more_pieces_horiz1,  0, wxALIGN_LEFT |wxLEFT|wxRIGHT|wxTOP, 0 );
+        more_pieces_vert->Add( more_pieces_horiz2,  0, wxALIGN_LEFT |wxLEFT|wxRIGHT|wxTOP, 0 );
+        more_pieces_wq = new wxCheckBox( this, ID_PATTERN_MORE_PIECES_WQ,
+           "Q", wxDefaultPosition, wxDefaultSize, 0 );
+        more_pieces_wq->SetValue( parm->more_pieces_wq );
+        more_pieces_wr = new wxCheckBox( this, ID_PATTERN_MORE_PIECES_WR,
+           "R", wxDefaultPosition, wxDefaultSize, 0 );
+        more_pieces_wr->SetValue( parm->more_pieces_wr );
+        more_pieces_wb = new wxCheckBox( this, ID_PATTERN_MORE_PIECES_WB,
+           "B", wxDefaultPosition, wxDefaultSize, 0 );
+        more_pieces_wb->SetValue( parm->more_pieces_wb );
+        more_pieces_wn = new wxCheckBox( this, ID_PATTERN_MORE_PIECES_WN,
+           "N", wxDefaultPosition, wxDefaultSize, 0 );
+        more_pieces_wn->SetValue( parm->more_pieces_wn );
+        more_pieces_wp = new wxCheckBox( this, ID_PATTERN_MORE_PIECES_WP,
+           "P", wxDefaultPosition, wxDefaultSize, 0 );
+        more_pieces_wp->SetValue( parm->more_pieces_wp );
+        more_pieces_horiz1->Add( more_pieces_wq, 0,
+            wxALIGN_CENTER_VERTICAL|wxLEFT, 15);
+        more_pieces_horiz1->Add( more_pieces_wr, 0,
+            wxALIGN_CENTER_VERTICAL,0);
+        more_pieces_horiz1->Add( more_pieces_wb, 0,
+            wxALIGN_CENTER_VERTICAL,0);
+        more_pieces_horiz1->Add( more_pieces_wn, 0,
+            wxALIGN_CENTER_VERTICAL,0);
+        more_pieces_horiz1->Add( more_pieces_wp, 0,
+            wxALIGN_CENTER_VERTICAL,0);
+        more_pieces_bq = new wxCheckBox( this, ID_PATTERN_MORE_PIECES_BQ,
+           "Q", wxDefaultPosition, wxDefaultSize, 0 );
+        more_pieces_bq->SetValue( parm->more_pieces_bq );
+        more_pieces_br = new wxCheckBox( this, ID_PATTERN_MORE_PIECES_BR,
+           "R", wxDefaultPosition, wxDefaultSize, 0 );
+        more_pieces_br->SetValue( parm->more_pieces_br );
+        more_pieces_bb = new wxCheckBox( this, ID_PATTERN_MORE_PIECES_BB,
+           "B", wxDefaultPosition, wxDefaultSize, 0 );
+        more_pieces_bb->SetValue( parm->more_pieces_bb );
+        more_pieces_bn = new wxCheckBox( this, ID_PATTERN_MORE_PIECES_BN,
+           "N", wxDefaultPosition, wxDefaultSize, 0 );
+        more_pieces_bn->SetValue( parm->more_pieces_bn );
+        more_pieces_bp = new wxCheckBox( this, ID_PATTERN_MORE_PIECES_BP,
+           "P", wxDefaultPosition, wxDefaultSize, 0 );
+        more_pieces_bp->SetValue( parm->more_pieces_bp );
+        more_pieces_horiz2->Add( more_pieces_bq, 0,
+            wxALIGN_CENTER_VERTICAL|wxLEFT, 15);
+        more_pieces_horiz2->Add( more_pieces_br, 0,
+            wxALIGN_CENTER_VERTICAL,0);
+        more_pieces_horiz2->Add( more_pieces_bb, 0,
+            wxALIGN_CENTER_VERTICAL,0);
+        more_pieces_horiz2->Add( more_pieces_bn, 0,
+            wxALIGN_CENTER_VERTICAL,0);
+        more_pieces_horiz2->Add( more_pieces_bp, 0,
+            wxALIGN_CENTER_VERTICAL,0);
+        wxBoxSizer* vert_extra  = new wxBoxSizer(wxVERTICAL);
+        vert_extra->Add(lockdown_vert,  1, wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 5);
+        vert_extra->Add(more_pieces_vert,  1, wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 5);
+        horiz_extra->Add( vert_extra,  0, wxALIGN_LEFT |wxLEFT|wxRIGHT|wxTOP, 0 );
+    }
     if( b_white )
         horiz_extra->Add(who_box,       1, wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxTOP  */), 5);
     horiz_extra->Add(castling_box,  1, wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 5);
-
     box_sizer->Add( horiz_board,  0, wxALIGN_LEFT |wxALL, 5 );
     box_sizer->Add( horiz_extra,  0, wxALIGN_LEFT |wxLEFT|wxRIGHT|wxTOP, 5 );
 
@@ -262,8 +406,11 @@ void PatternDialog::SetDialogHelp()
     wxString help3 = "Set to allow extra pieces - unless set pattern search is effectively position search";
     if( parm->material_balance )
         help3 = "Set to allow extra pieces - only useful for patterns with extra promoted pieces - eg two queens";
-    FindWindow(ID_PATTERN_ALLOW_MORE)->SetHelpText(help3);
-    FindWindow(ID_PATTERN_ALLOW_MORE)->SetToolTip(help3);
+    if( b_allow_more )
+    {
+        FindWindow(ID_PATTERN_ALLOW_MORE)->SetHelpText(help3);
+        FindWindow(ID_PATTERN_ALLOW_MORE)->SetToolTip(help3);
+    }
     if( b_pawns )
     {
         wxString help4 = "Set to specify that games only match if pawns are on the same files as the search pattern";
@@ -347,7 +494,45 @@ void PatternDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
         strcpy( parm->cp.squares, bsc->squares );
         parm->include_reverse_colours       = inc_reverse->GetValue();
         parm->include_reflections           = inc_reflection->GetValue();
-        parm->allow_more_pieces             = allow_more->GetValue();
+        if( b_piece_map )
+        {
+            parm->lockdown_wk    = lockdown_wk->GetValue();
+            parm->lockdown_wq    = lockdown_wq->GetValue();
+            parm->lockdown_wr    = lockdown_wr->GetValue();
+            parm->lockdown_wb    = lockdown_wb->GetValue();
+            parm->lockdown_wn    = lockdown_wn->GetValue();
+            parm->lockdown_wp    = lockdown_wp->GetValue();
+            parm->lockdown_bk    = lockdown_bk->GetValue();
+            parm->lockdown_bq    = lockdown_bq->GetValue();
+            parm->lockdown_br    = lockdown_br->GetValue();
+            parm->lockdown_bb    = lockdown_bb->GetValue();
+            parm->lockdown_bn    = lockdown_bn->GetValue();
+            parm->lockdown_bp    = lockdown_bp->GetValue();
+            parm->lockdown_any   = parm->lockdown_wk ||
+                                   parm->lockdown_wq ||
+                                   parm->lockdown_wr ||
+                                   parm->lockdown_wb ||
+                                   parm->lockdown_wn ||
+                                   parm->lockdown_wp ||
+                                   parm->lockdown_bk ||
+                                   parm->lockdown_bq ||
+                                   parm->lockdown_br ||
+                                   parm->lockdown_bb ||
+                                   parm->lockdown_bn ||
+                                   parm->lockdown_bp;
+            parm->more_pieces_wq = more_pieces_wq->GetValue();
+            parm->more_pieces_wr = more_pieces_wr->GetValue();
+            parm->more_pieces_wb = more_pieces_wb->GetValue();
+            parm->more_pieces_wn = more_pieces_wn->GetValue();
+            parm->more_pieces_wp = more_pieces_wp->GetValue();
+            parm->more_pieces_bq = more_pieces_bq->GetValue();
+            parm->more_pieces_br = more_pieces_br->GetValue();
+            parm->more_pieces_bb = more_pieces_bb->GetValue();
+            parm->more_pieces_bn = more_pieces_bn->GetValue();
+            parm->more_pieces_bp = more_pieces_bp->GetValue();
+        }
+        if( b_allow_more )
+            parm->allow_more_pieces             = allow_more->GetValue();
         if( b_pawns )
             parm->pawns_must_be_on_same_files   = pawns_same_files->GetValue();
         if( b_bishops )
