@@ -376,6 +376,8 @@ bool PatternMatch::TestMaterialBalance( MpsSide *ws, MpsSide *bs, const char *sq
         in_a_row++;
         if( in_a_row < parm.number_of_ply )
             match = false;
+        else
+            in_a_row = 0;
     }
     return match;
 }
