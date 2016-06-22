@@ -45,6 +45,7 @@ BoardSetupControl::BoardSetupControl
     bs = NULL;
     movements = 0;
     long_clearing_click = false;
+    memset( lockdown, 0, sizeof(lockdown) );
     wxClientDC dc(parent);
 //    dc.SetFont(*wxNORMAL_FONT);
 //    wxSize  size( max_w, n*max_h );
@@ -143,6 +144,7 @@ void BoardSetupControl::SetState( const char *action, State new_state )
 extern void VeryUglyTemporaryCallback();
 void BoardSetupControl::UpdateBoard()
 {
+    bs->SetLockdown(lockdown);
     bs->SetPosition(squares);
     bs->Draw();
     VeryUglyTemporaryCallback();
@@ -419,6 +421,28 @@ void BoardSetupControl::OnMouseLeftDown( wxMouseEvent& event )
 }
 
 
+void BoardSetupControl::OnMouseRightDown( wxMouseEvent& event )
+{
+    wxPoint point = event.GetPosition();
+    char piece='\0', file='\0', rank='\0';
+    bool hit = bs->HitTest( point, piece, file, rank );
+    if( hit )
+    {
+        cprintf( "hit; x=%d, y=%d -> piece=%c, file=%c, rank=%c\n",
+                point.x, point.y,
+                piece?piece:'?',
+                file?file:'?',
+                rank?rank:'?' );
+        int col = file-'a';     // file='a' -> col=0
+        int row = 7-(rank-'1'); // rank='8' -> row=0
+        int offset = row*8 + col;
+        lockdown[offset] = !lockdown[offset];
+        cprintf( "Square %c%c is %s\n", file, rank, lockdown[offset]?"locked down":"not locked down" );
+        UpdateBoard();
+    }
+}
+
+
 void BoardSetupControl::OnPaint( wxPaintEvent& WXUNUSED(event) )
 {
     wxPaintDC dc(this);
@@ -495,6 +519,7 @@ BEGIN_EVENT_TABLE(BoardSetupControl, wxControl)
 //    EVT_MOUSE_EVENTS(BoardSetupControl::OnMouseEvent)
     EVT_LEFT_UP (BoardSetupControl::OnMouseLeftUp)
     EVT_LEFT_DOWN (BoardSetupControl::OnMouseLeftDown)
+    EVT_RIGHT_DOWN (BoardSetupControl::OnMouseRightDown)
     EVT_MOTION (BoardSetupControl::OnMouseMove)
     EVT_ERASE_BACKGROUND(BoardSetupControl::OnEraseBackground)
     EVT_TIMER( TIMER_ID, BoardSetupControl::OnTimeout)

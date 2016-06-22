@@ -24,6 +24,9 @@ public:
 	// Setup a position	on the graphic board
 	void SetPosition( const char *position_ascii );
 
+	// Setup highlight flags
+	void SetLockdown( const bool *lockdown ) { memcpy(this->lockdown,lockdown,sizeof(this->lockdown)); }
+
 	// Draw the graphic board
     void Draw();
 
@@ -57,10 +60,20 @@ private:
 	byte         *buf_board;
 	byte         *buf_box;
 	unsigned long width_bytes, height, width, xborder, yborder, density;
+    unsigned long lockdown_y_lo1;
+    unsigned long lockdown_y_lo2;
+    unsigned long lockdown_y_hi2;
+    unsigned long lockdown_y_hi1;
+    unsigned long lockdown_x_lo1;
+    unsigned long lockdown_x_lo2;
+	unsigned long lockdown_x_hi2;
+    unsigned long lockdown_x_hi1;
+
 	bool		 normal_orientation;
 	char		 highlight_file1, highlight_rank1;
 	char		 highlight_file2, highlight_rank2;
     char         _position_ascii[100];
+    bool         lockdown[64];
 
 	// Helpers
 	unsigned long   Offset( char file, char rank );

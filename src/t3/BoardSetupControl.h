@@ -17,8 +17,11 @@ public:
                   wxWindowID id = wxID_ANY,
                   const wxPoint& point = wxDefaultPosition );
     ~BoardSetupControl();
-    void SetPosition( const char *squares ) { if(bs) {strcpy(this->squares,squares); bs->SetPosition(squares); bs->Draw(); } }
+    void SetPosition( const char *squares ) { if(bs) {strcpy(this->squares,squares);
+                                                            bs->SetLockdown(lockdown);
+                                                            bs->SetPosition(squares);   bs->Draw(); } }
     char         squares[65];
+    bool         lockdown[64];
     void ClearCustomCursor();
 
 private:
@@ -47,6 +50,7 @@ private:
     void OnMouseMove( wxMouseEvent& event );
     void OnMouseLeftUp( wxMouseEvent &event );
     void OnMouseLeftDown( wxMouseEvent &event );
+    void OnMouseRightDown( wxMouseEvent &event );
     void OnPaint(wxPaintEvent& WXUNUSED(evt));
     void OnEraseBackground(wxEraseEvent& WXUNUSED(evt));
     void OnSize(wxSizeEvent& WXUNUSED(evt));

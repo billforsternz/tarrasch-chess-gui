@@ -67,7 +67,7 @@ void PatternMatch::PrimePattern( const thc::ChessPosition *rover )
     parm_r.more_pieces_bb = parm.more_pieces_wb;
     parm_r.more_pieces_bn = parm.more_pieces_wn;
     parm_r.more_pieces_bp = parm.more_pieces_wp;
-    parm_r.lockdown_wk    = parm.lockdown_bk;
+/*    parm_r.lockdown_wk    = parm.lockdown_bk;
     parm_r.lockdown_wq    = parm.lockdown_bq;
     parm_r.lockdown_wr    = parm.lockdown_br;
     parm_r.lockdown_wb    = parm.lockdown_bb;
@@ -78,7 +78,7 @@ void PatternMatch::PrimePattern( const thc::ChessPosition *rover )
     parm_r.lockdown_br    = parm.lockdown_wr;
     parm_r.lockdown_bb    = parm.lockdown_wb;
     parm_r.lockdown_bn    = parm.lockdown_wn;
-    parm_r.lockdown_bp    = parm.lockdown_wp;
+    parm_r.lockdown_bp    = parm.lockdown_wp; */
     target_r.parm  = parm_r;
     target_rm.parm = parm_r;
 
@@ -201,24 +201,9 @@ void PatternMatch::PrimePattern( const thc::ChessPosition *rover )
                 {
                     mask[k] = 0;
                     char c = target->cp.squares[idx];
-                    switch( c )
-                    {
-                        default:  c = '\0';                                 break;
-                        case 'K': c = target->parm.lockdown_wk ? c : '\0';  break;
-                        case 'Q': c = target->parm.lockdown_wq ? c : '\0';  break;
-                        case 'R': c = target->parm.lockdown_wr ? c : '\0';  break;
-                        case 'D':
-                        case 'B': c = target->parm.lockdown_wb ? c : '\0';  break;
-                        case 'N': c = target->parm.lockdown_wn ? c : '\0';  break;
-                        case 'P': c = target->parm.lockdown_wp ? c : '\0';  break;
-                        case 'k': c = target->parm.lockdown_bk ? c : '\0';  break;
-                        case 'q': c = target->parm.lockdown_bq ? c : '\0';  break;
-                        case 'r': c = target->parm.lockdown_br ? c : '\0';  break;
-                        case 'd':
-                        case 'b': c = target->parm.lockdown_bb ? c : '\0';  break;
-                        case 'n': c = target->parm.lockdown_bn ? c : '\0';  break;
-                        case 'p': c = target->parm.lockdown_bp ? c : '\0';  break;
-                    }
+                    bool lockdown_f = parm.lockdown[idx];
+                    if( !lockdown_f )
+                        c = '\0';
                     target->cp.squares[idx] = c;
                     idx++;
                     if( c != '\0' )
@@ -401,9 +386,9 @@ bool PatternMatch::TestMaterialBalanceInner( MpsSide *ws, MpsSide *bs, const cha
         }
         if( reflect_and_reverse==3 && test==1 )    // reflect_and_reverse==3 means do i==0 and i==2
             continue;
-        if( !parm.lockdown_any )
-            match = true;
-        else
+        //if( !parm.lockdown_any )
+        //    match = true;
+        //else
         {
             match = 
             (*reinterpret_cast<const uint64_t *>(&squares_rover[40]) & target->rank3_mask) == *target->rank3_target_ptr &&

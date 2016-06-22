@@ -148,6 +148,7 @@ BoardSetup::BoardSetup( wxBitmap *bitmap, wxWindow *parent, int XBORDER, int YBO
     this->parent  = parent;
     this->XBORDER = XBORDER;
     this->YBORDER = YBORDER;
+    memset( lockdown, 0, sizeof(lockdown) );
 
 	// Orientation
 	normal_orientation = true;
@@ -197,6 +198,17 @@ BoardSetup::BoardSetup( wxBitmap *bitmap, wxWindow *parent, int XBORDER, int YBO
 	xborder	     = XBORDER * density; //@@(width_bytes%8) / 2;
 	yborder	     = YBORDER;  //@@(height%8) / 2;
 
+    unsigned long thickness = SQUARE_HEIGHT/16;
+    unsigned long indent    = thickness;
+    lockdown_y_lo1 = indent;
+    lockdown_y_lo2 = lockdown_y_lo1 + thickness;
+    lockdown_y_hi2 = SQUARE_HEIGHT - indent;
+    lockdown_y_hi1 = lockdown_y_hi2 - thickness;
+    lockdown_x_lo1 = indent;
+    lockdown_x_lo2 = lockdown_x_lo1 + thickness;
+	lockdown_x_hi2 = (width_bytes-2*xborder)/(8*density) - indent;
+    lockdown_x_hi1 = lockdown_x_hi2 - thickness;
+
 	// Allocate an image of the board
 	buf_board = new byte[width_bytes*height];
     memset( buf_board, 0, width_bytes*height);
@@ -236,7 +248,7 @@ BoardSetup::BoardSetup( wxBitmap *bitmap, wxWindow *parent, int XBORDER, int YBO
 	//	"rnbqnrk "		 "rnbqkbnr"
 	//	"ppppppbp"		 "pp      "
 	//	"    N p "		 "        "
-	//	"   qk   "		 "   qk   "
+	//	" @ qk   "		 " @ qk   "
 	//	"  PQK   "		 "   QK   "
 	//	"  N     "		 "**      "
 	//	"PP   PPP"		 "PP      "
@@ -244,6 +256,7 @@ BoardSetup::BoardSetup( wxBitmap *bitmap, wxWindow *parent, int XBORDER, int YBO
 	//
 	// Store these pieces from the board to their fixed
 	//  positions in the 'box'
+    Get( 'b','5', 'b','5' );    // a special blue square, for highlights
 	Get( 'h','1', 'h','1' );
 	Get( 'g','1', 'g','1' );
 	Get( 'f','1', 'f','1' );
@@ -533,23 +546,44 @@ void BoardSetup::Get( char src_file, char src_rank, char dst_file, char dst_rank
 // Put a piece from box onto board
 void BoardSetup::Put( char src_file, char src_rank, char dst_file, char dst_rank )
 {
+    int col = dst_file-'a';     // file='a' -> col=0
+    int row = 7-(dst_rank-'1'); // rank='8' -> row=0
+    int offset = row*8 + col;
+    bool lockdown_f = lockdown[offset];
+    if( lockdown_f )
+        cprintf( "Square %c%c locked down\n", dst_file, dst_rank );
+
     //dbg_printf("%c%c\n", dst_file, dst_rank );
 	if( density != 4 )
 	{
 
 		// 16 bit (and other) graphics code
 		unsigned int i, j, k;
-		byte *src, *dst;
+		byte *src, *src_blue, *dst;
 		for( i=0; i < SQUARE_HEIGHT; i++ )
 		{
 			src			  =
 				(byte *)(buf_box   + Offset(src_file,src_rank) + i*width_bytes);
+			src_blue     =
+				(byte *)(buf_box   + Offset('b','5')           + i*width_bytes);
 			dst			  =
 				(byte *)(buf_board + Offset(dst_file,dst_rank) + i*width_bytes);
 			for( j=0; j < (width_bytes-2*xborder)/(8*density); j++ )
             {
+                bool yhit =         (lockdown_y_lo1<=i && i<lockdown_y_lo2) ||
+                                    (lockdown_y_hi1<=i && i<lockdown_y_hi2);
+                bool xhit =         (lockdown_x_lo1<=j && j<lockdown_x_lo2) ||
+                                    (lockdown_x_hi1<=j && j<lockdown_x_hi2);
+                bool yrange =       (lockdown_y_lo1<=i && i<lockdown_y_hi2);
+                bool xrange =       (lockdown_x_lo1<=j && j<lockdown_x_hi2);
+                bool blue =         lockdown_f && ((xhit && yrange) || (yhit && xrange));
                 for( k=0; k<density; k++ )
-			        *dst++ = *src++;
+                {
+			        uint8_t dat = blue ? *src_blue : dat = *src;
+       	            *dst++ = dat;
+                    src++;
+                    src_blue++;
+                }
             }
 		}
 	}
@@ -558,15 +592,29 @@ void BoardSetup::Put( char src_file, char src_rank, char dst_file, char dst_rank
 
 		// 32 bit graphics code
 		unsigned int i, j;
-		uint32_t *src, *dst;
+		uint32_t *src, *src_blue, *dst;
 		for( i=0; i < SQUARE_HEIGHT; i++ )
 		{
 			src			  =
 				(uint32_t *)(buf_box   + Offset(src_file,src_rank) + i*width_bytes);
+			src_blue      =
+				(uint32_t *)(buf_box   + Offset('b','5')           + i*width_bytes);
 			dst			  =
 				(uint32_t *)(buf_board + Offset(dst_file,dst_rank) + i*width_bytes);
 			for( j=0; j < (width_bytes-2*xborder)/32; j++ )
-			    *dst++ = *src++;
+            {
+                bool yhit =         (lockdown_y_lo1<=i && i<lockdown_y_lo2) ||
+                                    (lockdown_y_hi1<=i && i<lockdown_y_hi2);
+                bool xhit =         (lockdown_x_lo1<=j && j<lockdown_x_lo2) ||
+                                    (lockdown_x_hi1<=j && j<lockdown_x_hi2);
+                bool yrange =       (lockdown_y_lo1<=i && i<lockdown_y_hi2);
+                bool xrange =       (lockdown_x_lo1<=j && j<lockdown_x_hi2);
+                bool blue =         lockdown_f && ((xhit && yrange) || (yhit && xrange));
+			    uint32_t dat = blue? *src_blue : *src;
+			    *dst++ = dat;
+                src++;
+                src_blue++;
+            }
 		}
 	}
 }

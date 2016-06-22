@@ -19,6 +19,9 @@ struct PatternParameters
     // Input positon
     thc::ChessPosition cp;
 
+    // Lockdown flags
+    bool lockdown[64];
+
     // common
     bool include_reflections;
     bool include_reverse_colours;

@@ -242,9 +242,10 @@ void PatternDialog::CreateControls()
 
     if( b_piece_map )
     {
-        wxStaticBox *lockdown = new wxStaticBox(this, wxID_ANY, "&Optionally lockdown some piece positions" );
-        wxSizer     *lockdown_vert  = new wxStaticBoxSizer(lockdown, wxVERTICAL );   
-        wxStaticBox *lockdown1 = new wxStaticBox(this, wxID_ANY, "&White" );
+        wxStaticBox *lockdown = new wxStaticBox(this, wxID_ANY, "&Optionally right click to lockdown squares" );
+        wxSizer     *lockdown_vert  = new wxStaticBoxSizer(lockdown, wxHORIZONTAL );
+        wxStaticText *lockdown_text = new wxStaticText(this, wxID_ANY, "Currently there are no locked down squares" );   
+   /*   wxStaticBox *lockdown1 = new wxStaticBox(this, wxID_ANY, "&White" );
         wxStaticBox *lockdown2 = new wxStaticBox(this, wxID_ANY, "&Black" );
         wxSizer     *lockdown_horiz1 = new wxStaticBoxSizer(lockdown1,wxHORIZONTAL);
         wxSizer     *lockdown_horiz2 = new wxStaticBoxSizer(lockdown2,wxHORIZONTAL);
@@ -298,8 +299,6 @@ void PatternDialog::CreateControls()
         lockdown_bp = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_BP,
            "P", wxDefaultPosition, wxDefaultSize, 0 );
         lockdown_bp->SetValue( parm->lockdown_bp );
-    /*  lockdown_horiz2->Add( lockdown_bk, 0,
-            wxALIGN_CENTER_VERTICAL|wxALL, 5); */
         lockdown_horiz2->Add( lockdown_bk, 0,
             wxALIGN_CENTER_VERTICAL|wxLEFT, 15);
         lockdown_horiz2->Add( lockdown_bq, 0,
@@ -311,7 +310,7 @@ void PatternDialog::CreateControls()
         lockdown_horiz2->Add( lockdown_bn, 0,
             wxALIGN_CENTER_VERTICAL,0);
         lockdown_horiz2->Add( lockdown_bp, 0,
-            wxALIGN_CENTER_VERTICAL,0);
+            wxALIGN_CENTER_VERTICAL,0);             */
 
         wxStaticBox *more_pieces = new wxStaticBox(this, wxID_ANY, "&Optionally allow some extra material" );
         wxSizer     *more_pieces_vert  = new wxStaticBoxSizer(more_pieces, wxVERTICAL );   
@@ -319,7 +318,7 @@ void PatternDialog::CreateControls()
         wxStaticBox *more_pieces2 = new wxStaticBox(this, wxID_ANY, "&Black" );
         wxSizer     *more_pieces_horiz1 = new wxStaticBoxSizer(more_pieces1,wxHORIZONTAL);
         wxSizer     *more_pieces_horiz2 = new wxStaticBoxSizer(more_pieces2,wxHORIZONTAL);
-        more_pieces_vert->Add( more_pieces_horiz1,  0, wxALIGN_LEFT |wxLEFT|wxRIGHT|wxTOP, 0 );
+        more_pieces_vert->Add( more_pieces_horiz1,  0, wxALIGN_LEFT |wxRIGHT, 30  );
         more_pieces_vert->Add( more_pieces_horiz2,  0, wxALIGN_LEFT |wxLEFT|wxRIGHT|wxTOP, 0 );
         more_pieces_wq = new wxCheckBox( this, ID_PATTERN_MORE_PIECES_WQ,
            "Q", wxDefaultPosition, wxDefaultSize, 0 );
@@ -371,9 +370,10 @@ void PatternDialog::CreateControls()
             wxALIGN_CENTER_VERTICAL,0);
         more_pieces_horiz2->Add( more_pieces_bp, 0,
             wxALIGN_CENTER_VERTICAL,0);
+        lockdown_vert->Add( lockdown_text,  0, wxALIGN_LEFT |wxLEFT|wxTOP, 15 );
         wxBoxSizer* vert_extra  = new wxBoxSizer(wxVERTICAL);
-        vert_extra->Add(lockdown_vert,  1, wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 5);
         vert_extra->Add(more_pieces_vert,  1, wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 5);
+        vert_extra->Add(lockdown_vert,  1, wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 5);
         horiz_extra->Add( vert_extra,  0, wxALIGN_LEFT |wxLEFT|wxRIGHT|wxTOP, 0 );
     }
     if( b_white )
@@ -492,11 +492,12 @@ void PatternDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
     if( bsc )
     {
         strcpy( parm->cp.squares, bsc->squares );
+        memcpy( parm->lockdown, bsc->lockdown, sizeof(parm->lockdown) );
         parm->include_reverse_colours       = inc_reverse->GetValue();
         parm->include_reflections           = inc_reflection->GetValue();
         if( b_piece_map )
         {
-            parm->lockdown_wk    = lockdown_wk->GetValue();
+        /*  parm->lockdown_wk    = lockdown_wk->GetValue();
             parm->lockdown_wq    = lockdown_wq->GetValue();
             parm->lockdown_wr    = lockdown_wr->GetValue();
             parm->lockdown_wb    = lockdown_wb->GetValue();
@@ -519,7 +520,7 @@ void PatternDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
                                    parm->lockdown_br ||
                                    parm->lockdown_bb ||
                                    parm->lockdown_bn ||
-                                   parm->lockdown_bp;
+                                   parm->lockdown_bp; */
             parm->more_pieces_wq = more_pieces_wq->GetValue();
             parm->more_pieces_wr = more_pieces_wr->GetValue();
             parm->more_pieces_wb = more_pieces_wb->GetValue();
