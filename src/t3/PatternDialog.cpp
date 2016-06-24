@@ -34,6 +34,7 @@ BEGIN_EVENT_TABLE( PatternDialog, wxDialog )
 END_EVENT_TABLE()
 
 // Constructor
+static PatternDialog *singleton;   // for DatabaseSearchVeryUglyTemporaryCallback();
 PatternDialog::PatternDialog
 (
     PatternParameters *parm, wxWindow* parent,
@@ -42,8 +43,11 @@ PatternDialog::PatternDialog
     const wxPoint& pos, const wxSize& size, long style
 )
 {
+    singleton = this;
     bsc = NULL;
     this->parm = parm;
+    support_lockdown = (id==ID_MATERIAL_BALANCE_DIALOG);
+    offset_persist = 0;
 
     // pattern
     b_either = !parm->material_balance;
@@ -102,7 +106,7 @@ void PatternDialog::CreateControls()
     top_sizer->Add(box_sizer, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
 
     // The board setup bitmap
-    bsc = new BoardSetupControl(this);
+    bsc = new BoardSetupControl(false,support_lockdown,this);
     bsc->SetPosition( parm->cp.squares );
 
     // Intermediate sizers
@@ -166,9 +170,9 @@ void PatternDialog::CreateControls()
         move_count_ctrl = new wxSpinCtrl ( this, ID_PATTERN_MOVE_COUNT,
             wxEmptyString, wxDefaultPosition, wxSize(50, wxDefaultCoord), //wxDefaultSize, 
             wxSP_ARROW_KEYS, parm->number_of_ply, 500, 1 );
-        move_count_sizer->Add(move_count_label, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
+        move_count_sizer->Add(move_count_label, 0, wxBOTTOM|wxALIGN_CENTER_VERTICAL, 10);
         move_count_sizer->Add( 10, 5, 1, wxALL, 0);
-        move_count_sizer->Add(move_count_ctrl,  0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
+        move_count_sizer->Add(move_count_ctrl,  0, wxBOTTOM|wxALIGN_CENTER_VERTICAL, 10);
     }
    
     castling_box->Add( inc_reflection, 0,
@@ -244,7 +248,7 @@ void PatternDialog::CreateControls()
     {
         wxStaticBox *lockdown = new wxStaticBox(this, wxID_ANY, "&Optionally right click to lockdown squares" );
         wxSizer     *lockdown_vert  = new wxStaticBoxSizer(lockdown, wxHORIZONTAL );
-        wxStaticText *lockdown_text = new wxStaticText(this, wxID_ANY, "Currently there are no locked down squares" );   
+        lockdown_text = new wxStaticText(this, wxID_ANY, "Currently there are no locked down squares" );   
    /*   wxStaticBox *lockdown1 = new wxStaticBox(this, wxID_ANY, "&White" );
         wxStaticBox *lockdown2 = new wxStaticBox(this, wxID_ANY, "&Black" );
         wxSizer     *lockdown_horiz1 = new wxStaticBoxSizer(lockdown1,wxHORIZONTAL);
@@ -370,7 +374,7 @@ void PatternDialog::CreateControls()
             wxALIGN_CENTER_VERTICAL,0);
         more_pieces_horiz2->Add( more_pieces_bp, 0,
             wxALIGN_CENTER_VERTICAL,0);
-        lockdown_vert->Add( lockdown_text,  0, wxALIGN_LEFT |wxLEFT|wxTOP, 15 );
+        lockdown_vert->Add( lockdown_text,  0, wxALIGN_LEFT |wxLEFT|wxTOP, 12 );
         wxBoxSizer* vert_extra  = new wxBoxSizer(wxVERTICAL);
         vert_extra->Add(more_pieces_vert,  1, wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 5);
         vert_extra->Add(lockdown_vert,  1, wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 5);
@@ -550,4 +554,68 @@ void PatternDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
     if( !err )
         AcceptAndClose();
 }
+
+// Later - learn how to do this by sending an event to parent instead
+void DatabaseSearchVeryUglyTemporaryCallback( int offset )
+{
+    PatternDialog *ptr = singleton;
+    if( ptr )
+        ptr->ModifyLockdown( offset );
+}
+
+void PatternDialog::ModifyLockdown( int offset )
+{
+    int count=0;
+    if( offset == -1 )
+        offset = offset_persist;
+    for( int i=0; i<64; i++ )
+    {
+        if( bsc->lockdown[i] )
+            count++;
+    }
+    char buf[1000];
+    if( count == 0 )
+        sprintf( buf, "There are no locked down squares" );
+    else
+    {
+        if( offset<0 || offset>63 || !bsc->lockdown[offset] )
+        {
+            for( int i=0; i<64; i++ )
+            {
+                if( bsc->lockdown[i] )
+                {
+                    offset = i;
+                }
+            }
+        }
+        int file = offset&7;
+        int rank = 7 - ((offset>>3)&7);
+        char c = bsc->squares[offset];
+        const char *s="empty";
+        switch( c )
+        {
+            case 'K': s = "a white king";     break;
+            case 'Q': s = "a white queen";    break;
+            case 'R': s = "a white rook";     break;
+            case 'B': s = "a white bishop";   break;
+            case 'N': s = "a white knight";   break;
+            case 'P': s = "a white pawn";     break;
+            case 'k': s = "a black king";     break;
+            case 'q': s = "a black queen";    break;
+            case 'r': s = "a black rook";     break;
+            case 'b': s = "a black bishop";   break;
+            case 'n': s = "a black knight";   break;
+            case 'p': s = "a black pawn";     break;
+        } 
+        char buf2[200];
+        if( count-1 > 0 )
+            sprintf( buf2, " (and %d other%s...)", count-1, (count-1)>1?"s":"" );
+        else
+            sprintf( buf2, "" );
+        sprintf( buf, "There %s %d locked down square%s\n %c%c must be %s%s", count>1?"are":"is", count, count>1?"s":"", 'a'+file, '1'+rank, s, buf2 );
+    }
+    offset_persist = offset;
+    lockdown_text->SetLabel( wxString(buf) );   
+}
+
 

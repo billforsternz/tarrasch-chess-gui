@@ -15,7 +15,9 @@ class BoardSetupControl;
 // Control identifiers
 enum
 {
-    ID_PATTERN_DIALOG  = 10000,
+    //ID_POSITION_DIALOG = 10000,
+    ID_PATTERN_DIALOG  = 10001,
+    ID_MATERIAL_BALANCE_DIALOG,
     ID_PATTERN_RESET,
     ID_PATTERN_CLEAR,
     ID_PATTERN_CURRENT,
@@ -100,12 +102,15 @@ public:
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_OK
     void OnOkClick( wxCommandEvent& event );
 
+    void ModifyLockdown( int offset );
+
     // Data members
     PatternParameters      *parm;
     thc::ChessPosition     m_pos;
 private:
     wxString        fen;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
+    wxStaticText*   lockdown_text;
     wxCheckBox*     inc_reverse;
     wxCheckBox*     inc_reflection;
     wxCheckBox*     pawns_same_files;
@@ -139,6 +144,8 @@ private:
     wxSpinCtrl*     move_count_ctrl;
     wxButton*       ok_button;
     BoardSetupControl *bsc;
+    bool            support_lockdown;
+    int             offset_persist;
 
     // pattern
     bool b_either;

@@ -13,7 +13,10 @@
 class BoardSetupControl : public wxControl
 {
 public:
-    BoardSetupControl( wxWindow* parent,
+    BoardSetupControl(
+                  bool position_setup,    // either position setup (true) or database search (false)
+                  bool support_lockdown,
+                  wxWindow* parent,
                   wxWindowID id = wxID_ANY,
                   const wxPoint& point = wxDefaultPosition );
     ~BoardSetupControl();
@@ -33,6 +36,8 @@ private:
     int          wait_offset;
     unsigned int movements;
     bool         long_clearing_click;
+    bool         support_lockdown;
+    bool         position_setup;
     enum State
     {
         UP_IDLE,

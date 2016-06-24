@@ -915,7 +915,7 @@ void GameLogic::CmdDatabasePattern()
     PatternParameters parm = pp_persist;
     bool do_search = false;
     {   // scope controls when dialog closes
-        PatternDialog dialog( &parm, objs.frame, "Search database for games where pieces reached this position" );
+        PatternDialog dialog( &parm, objs.frame, "Search database for games where pieces reached this position", ID_PATTERN_DIALOG );
         if( wxID_OK == dialog.ShowModal() )
         {
             pp_persist = parm;
@@ -938,7 +938,7 @@ void GameLogic::CmdDatabaseMaterial()
     PatternParameters parm = pp_persist_material_balance;
     bool do_search = false;
     {
-        PatternDialog dialog( &parm, objs.frame, "Search database for games which reached this material balance" );
+        PatternDialog dialog( &parm, objs.frame, "Search database for games which reached this material balance", ID_MATERIAL_BALANCE_DIALOG );
         if( wxID_OK == dialog.ShowModal() )
         {
             pp_persist_material_balance = parm;

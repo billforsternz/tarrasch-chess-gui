@@ -23,6 +23,8 @@ using namespace thc;
 
 BoardSetupControl::BoardSetupControl
 (
+    bool position_setup,    // either position setup (true) or database search (false)
+    bool support_lockdown,
     wxWindow* parent,
     wxWindowID     id, //= wxID_ANY,
     const wxPoint &point //= wxDefaultPosition
@@ -45,6 +47,8 @@ BoardSetupControl::BoardSetupControl
     bs = NULL;
     movements = 0;
     long_clearing_click = false;
+    this->support_lockdown = support_lockdown;
+    this->position_setup = position_setup;
     memset( lockdown, 0, sizeof(lockdown) );
     wxClientDC dc(parent);
 //    dc.SetFont(*wxNORMAL_FONT);
@@ -141,13 +145,17 @@ void BoardSetupControl::SetState( const char *action, State new_state )
 
 
 // Later - learn how to do this by sending an event to parent instead
-extern void VeryUglyTemporaryCallback();
+extern void PositionSetupVeryUglyTemporaryCallback();
+extern void DatabaseSearchVeryUglyTemporaryCallback( int offset );
 void BoardSetupControl::UpdateBoard()
 {
     bs->SetLockdown(lockdown);
     bs->SetPosition(squares);
     bs->Draw();
-    VeryUglyTemporaryCallback();
+    if( position_setup )
+        PositionSetupVeryUglyTemporaryCallback();
+    else if( support_lockdown )
+        DatabaseSearchVeryUglyTemporaryCallback(-1);
 }
 
 void BoardSetupControl::OnMouseMove( wxMouseEvent& event )
@@ -424,21 +432,25 @@ void BoardSetupControl::OnMouseLeftDown( wxMouseEvent& event )
 void BoardSetupControl::OnMouseRightDown( wxMouseEvent& event )
 {
     wxPoint point = event.GetPosition();
-    char piece='\0', file='\0', rank='\0';
-    bool hit = bs->HitTest( point, piece, file, rank );
-    if( hit )
+    if( support_lockdown )
     {
-        cprintf( "hit; x=%d, y=%d -> piece=%c, file=%c, rank=%c\n",
-                point.x, point.y,
-                piece?piece:'?',
-                file?file:'?',
-                rank?rank:'?' );
-        int col = file-'a';     // file='a' -> col=0
-        int row = 7-(rank-'1'); // rank='8' -> row=0
-        int offset = row*8 + col;
-        lockdown[offset] = !lockdown[offset];
-        cprintf( "Square %c%c is %s\n", file, rank, lockdown[offset]?"locked down":"not locked down" );
-        UpdateBoard();
+        char piece='\0', file='\0', rank='\0';
+        bool hit = bs->HitTest( point, piece, file, rank );
+        if( hit )
+        {
+            cprintf( "hit; x=%d, y=%d -> piece=%c, file=%c, rank=%c\n",
+                    point.x, point.y,
+                    piece?piece:'?',
+                    file?file:'?',
+                    rank?rank:'?' );
+            int col = file-'a';     // file='a' -> col=0
+            int row = 7-(rank-'1'); // rank='8' -> row=0
+            int offset = row*8 + col;
+            lockdown[offset] = !lockdown[offset];
+            cprintf( "Square %c%c is %s\n", file, rank, lockdown[offset]?"locked down":"not locked down" );
+            UpdateBoard();
+            DatabaseSearchVeryUglyTemporaryCallback( offset );
+        }
     }
 }
 

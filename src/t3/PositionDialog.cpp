@@ -46,7 +46,7 @@ BEGIN_EVENT_TABLE( PositionDialog, wxDialog )
 END_EVENT_TABLE()
 
 // PositionDialog constructors
-static PositionDialog *singleton;   // for VeryUglyTemporaryCallback();
+static PositionDialog *singleton;   // for PositionSetupVeryUglyTemporaryCallback();
 PositionDialog::PositionDialog()
 {
     singleton = this;
@@ -347,7 +347,7 @@ void PositionDialog::CreateControls()
     box_sizer->Add(predefined_positions_sizer, 0, wxALIGN_LEFT|wxALL, 5);
 
     // The board setup bitmap
-    bsc = new BoardSetupControl(this);
+    bsc = new BoardSetupControl(true,false,this);
     bsc->SetPosition( m_pos.squares );
 //    box_sizer->Add( bsc, 0, wxALIGN_LEFT|wxALL|wxFIXED_MINSIZE, 0 );
 
@@ -900,7 +900,7 @@ void PositionDialog::OnPredefined( wxCommandEvent& WXUNUSED(event) )
 }
 
 // Later - learn how to do this by sending an event to parent instead
-void VeryUglyTemporaryCallback()
+void PositionSetupVeryUglyTemporaryCallback()
 {
     PositionDialog *ptr = singleton;
     if( ptr )

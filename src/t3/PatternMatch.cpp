@@ -92,6 +92,7 @@ void PatternMatch::PrimePattern( const thc::ChessPosition *rover )
         else if( c=='b' )
             c = is_dark(i) ? 'd' : 'b';
         target_n.cp.squares[i] = c;
+        target_n.parm.lockdown[i] = parm.lockdown[i];
     }
     std::string s = target_n.cp.ToDebugStr();
     cprintf( "Normal %s\n", s.c_str() );
@@ -107,6 +108,7 @@ void PatternMatch::PrimePattern( const thc::ChessPosition *rover )
         else if( c=='b' )
             c = is_dark(j) ? 'd' : 'b';
         target_m.cp.squares[j] = c;
+        target_m.parm.lockdown[j] = parm.lockdown[i];
     }
     s = target_m.cp.ToDebugStr();
     cprintf( "Mirror %s\n", s.c_str() );
@@ -126,6 +128,7 @@ void PatternMatch::PrimePattern( const thc::ChessPosition *rover )
         else if( c=='b' )
             c = is_dark(j) ? 'd' : 'b';
         target_r.cp.squares[j] = c;
+        target_r.parm.lockdown[j] = parm.lockdown[i];
     }
     s = target_r.cp.ToDebugStr();
     cprintf( "Colours reversed %s\n", s.c_str() );
@@ -141,6 +144,7 @@ void PatternMatch::PrimePattern( const thc::ChessPosition *rover )
         else if( c=='b' || c=='d' )
             c = is_dark(j) ? 'd' : 'b';
         target_rm.cp.squares[j] = c;
+        target_rm.parm.lockdown[j] = target_r.parm.lockdown[i];
     }
     s = target_rm.cp.ToDebugStr();
     cprintf( "Colours reversed and mirror %s\n", s.c_str() );
@@ -201,7 +205,7 @@ void PatternMatch::PrimePattern( const thc::ChessPosition *rover )
                 {
                     mask[k] = 0;
                     char c = target->cp.squares[idx];
-                    bool lockdown_f = parm.lockdown[idx];
+                    bool lockdown_f = target->parm.lockdown[idx];
                     if( !lockdown_f )
                         c = '\0';
                     target->cp.squares[idx] = c;

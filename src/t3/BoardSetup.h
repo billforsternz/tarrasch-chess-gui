@@ -74,6 +74,7 @@ private:
 	char		 highlight_file2, highlight_rank2;
     char         _position_ascii[100];
     bool         lockdown[64];
+    bool         support_lockdown;
 
 	// Helpers
 	unsigned long   Offset( char file, char rank );
