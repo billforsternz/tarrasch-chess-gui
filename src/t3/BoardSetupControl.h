@@ -20,10 +20,18 @@ public:
                   wxWindowID id = wxID_ANY,
                   const wxPoint& point = wxDefaultPosition );
     ~BoardSetupControl();
-    void SetPosition( const char *squares ) { if(bs) {strcpy(this->squares,squares);
-                                                            bs->SetLockdown(lockdown);
-                                                            bs->SetPosition(squares);   bs->Draw(); } }
-    char         squares[65];
+    void Set( const thc::ChessPosition &cp, const bool *lockdown=0 )
+    {
+        this->cp = cp;
+        if( lockdown )
+            memcpy(this->lockdown,lockdown,64);
+        if( bs )
+        {
+            bs->Set(cp,lockdown);
+            bs->Draw();
+        }
+    }
+    thc::ChessPosition cp;
     bool         lockdown[64];
     void ClearCustomCursor();
 

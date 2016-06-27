@@ -76,13 +76,15 @@ PositionDialog::~PositionDialog()
 void PositionDialog::Init()
 {
     singleton = this;
+/*  // if we want to start with a clear board - this is how we do it
     thc::ChessPosition tmp;
     m_pos = tmp;                        // init position
     memset( m_pos.squares, ' ', 64 );   // .. but with blank board
     m_pos.wking  = false;               // .. and no castling
     m_pos.wqueen = false;
     m_pos.bking  = false;
-    m_pos.bqueen = false;
+    m_pos.bqueen = false; */
+    m_pos = objs.gl->gd.master_position;
     Pos2Fen( m_pos, fen );
 }
 
@@ -200,7 +202,7 @@ void PositionDialog::Pos2Fen( const thc::ChessPosition& pos, wxString& fen )
 // Control update
 void PositionDialog::WriteToControls()
 {
-    bsc->SetPosition( m_pos.squares );
+    bsc->Set( m_pos );
     white_oo->SetValue( m_pos.wking_allowed() );
     white_ooo->SetValue( m_pos.wqueen_allowed() );
     black_oo->SetValue( m_pos.bking_allowed() );
@@ -348,10 +350,7 @@ void PositionDialog::CreateControls()
 
     // The board setup bitmap
     bsc = new BoardSetupControl(true,false,this);
-    bsc->SetPosition( m_pos.squares );
-//    box_sizer->Add( bsc, 0, wxALIGN_LEFT|wxALL|wxFIXED_MINSIZE, 0 );
-
-///
+    bsc->Set( m_pos );
 
     // Intermediate sizers
     wxBoxSizer* horiz_board = new wxBoxSizer(wxHORIZONTAL);
@@ -387,7 +386,7 @@ void PositionDialog::CreateControls()
     // Move count
     wxBoxSizer* move_count_sizer  = new wxBoxSizer(wxHORIZONTAL);
     wxStaticText* move_count_label = new wxStaticText ( this, wxID_STATIC,
-        wxT("&thc::Move count"), wxDefaultPosition, wxDefaultSize, 0 );
+        wxT("&Move count"), wxDefaultPosition, wxDefaultSize, 0 );
     move_count_ctrl = new wxSpinCtrl ( this, ID_MOVE_COUNT,
         wxEmptyString, wxDefaultPosition, wxSize(50, wxDefaultCoord), //wxDefaultSize, 
         wxSP_ARROW_KEYS, m_pos.full_move_count, 500, 1 );
@@ -560,7 +559,7 @@ void PositionDialog::CreateControls()
         wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
     box_sizer->Add(line, 0, wxGROW|wxALL, 5);
 */
-    current->SetFocus();
+    clear->SetFocus();
 }
 
 // Set the validators for the dialog controls
@@ -833,7 +832,6 @@ void PositionDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
     bool err=false;
     if( bsc )
     {
-        strcpy( m_pos.squares, bsc->squares );
         thc::ChessRules cr = m_pos;
         ILLEGAL_REASON reason;
         if( !cr.IsLegal(reason) )
@@ -907,45 +905,45 @@ void PositionSetupVeryUglyTemporaryCallback()
         ptr->ModifyFen();
 }
 
-static bool Castling( char squares[64], char KkQq )
+static bool Castling( const thc::ChessPosition &cp, char KkQq )
 {
     bool ret=false;
     switch( KkQq )
     {
         default:  ret = false;
-        case 'q': ret = (squares[0]=='r' &&  squares[4]=='k');   break;
-        case 'k': ret = (squares[7]=='r' &&  squares[4]=='k');   break;
-        case 'Q': ret = (squares[56]=='R' && squares[60]=='K');  break;
-        case 'K': ret = (squares[63]=='R' && squares[60]=='K');  break;
+        case 'q': ret = (cp.squares[0]=='r' &&  cp.squares[4]=='k');   break;
+        case 'k': ret = (cp.squares[7]=='r' &&  cp.squares[4]=='k');   break;
+        case 'Q': ret = (cp.squares[56]=='R' && cp.squares[60]=='K');  break;
+        case 'K': ret = (cp.squares[63]=='R' && cp.squares[60]=='K');  break;
     }
     return ret;
 }
 void PositionDialog::ModifyFen()
 {
-    if( Castling(bsc->squares,'q') && !Castling(m_pos.squares,'q') )
+    if( Castling(bsc->cp,'q') && !Castling(m_pos,'q') )
         this->black_ooo->SetValue(true);
-    else if( !Castling(bsc->squares,'q') && Castling(m_pos.squares,'q') )
+    else if( !Castling(bsc->cp,'q') && Castling(m_pos,'q') )
         this->black_ooo->SetValue(false);
-    if( Castling(bsc->squares,'k') && !Castling(m_pos.squares,'k') )
+    if( Castling(bsc->cp,'k') && !Castling(m_pos,'k') )
         this->black_oo->SetValue(true);
-    else if( !Castling(bsc->squares,'k') && Castling(m_pos.squares,'k') )
+    else if( !Castling(bsc->cp,'k') && Castling(m_pos,'k') )
         this->black_oo->SetValue(false);
-    if( Castling(bsc->squares,'Q') && !Castling(m_pos.squares,'Q') )
+    if( Castling(bsc->cp,'Q') && !Castling(m_pos,'Q') )
         this->white_ooo->SetValue(true);
-    else if( !Castling(bsc->squares,'Q') && Castling(m_pos.squares,'Q') )
+    else if( !Castling(bsc->cp,'Q') && Castling(m_pos,'Q') )
         this->white_ooo->SetValue(false);
-    if( Castling(bsc->squares,'K') && !Castling(m_pos.squares,'K') )
+    if( Castling(bsc->cp,'K') && !Castling(m_pos,'K') )
         this->white_oo->SetValue(true);
-    else if( !Castling(bsc->squares,'K') && Castling(m_pos.squares,'K') )
+    else if( !Castling(bsc->cp,'K') && Castling(m_pos,'K') )
         this->white_oo->SetValue(false);
-    strcpy( m_pos.squares, bsc->squares );
-    if( !Castling(m_pos.squares,'q') )
+    m_pos = bsc->cp;
+    if( !Castling(m_pos,'q') )
         this->black_ooo->SetValue(false);
-    if( !Castling(m_pos.squares,'k') )
+    if( !Castling(m_pos,'k') )
         this->black_oo->SetValue(false);
-    if( !Castling(m_pos.squares,'Q') )
+    if( !Castling(m_pos,'Q') )
         this->white_ooo->SetValue(false);
-    if( !Castling(m_pos.squares,'K') )
+    if( !Castling(m_pos,'K') )
         this->white_oo->SetValue(false);
     m_pos.wqueen = this->white_ooo->GetValue();
     m_pos.wking  = this->white_oo->GetValue();

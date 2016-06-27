@@ -12,6 +12,8 @@
 #include "Appdefs.h"
 #include "thc.h"
 #include "DebugPrintf.h"
+#include "Canvas.h"
+#include "Objects.h"
 #include "BoardSetup.h"
 #include "BoardSetupControl.h"
 #include "bitmaps/board_setup_bitmap.xpm"
@@ -84,7 +86,9 @@ BoardSetupControl::BoardSetupControl
     #endif
         wxSize  size( chess_bmp.GetWidth(), chess_bmp.GetHeight() );
         SetSize( size );
-        bs = new BoardSetup( &chess_bmp, this, 46, 11 );  // Note XBORDER, YBORDER now passed as parameters
+        bool normal_orientation = objs.canvas->GetNormalOrientation();
+        cprintf( "Normal orientation = %s\n", normal_orientation?"true":"false" );
+        bs = new BoardSetup( &chess_bmp, this, 46, 11, normal_orientation );  // Note XBORDER, YBORDER now passed as parameters
     }
 }
 
@@ -149,8 +153,7 @@ extern void PositionSetupVeryUglyTemporaryCallback();
 extern void DatabaseSearchVeryUglyTemporaryCallback( int offset );
 void BoardSetupControl::UpdateBoard()
 {
-    bs->SetLockdown(lockdown);
-    bs->SetPosition(squares);
+    bs->Set(cp,lockdown);
     bs->Draw();
     if( position_setup )
         PositionSetupVeryUglyTemporaryCallback();
@@ -243,17 +246,17 @@ void BoardSetupControl::OnTimeout( wxTimerEvent& WXUNUSED(event) )
     if( state == DOWN_CURSOR_WAIT )
     {
         SetState( "timeout", DOWN_CURSOR_DRAG );
-        if( squares[wait_offset] == cursor )
+        if( cp.squares[wait_offset] == cursor )
         {
             long_clearing_click = true;
             movements = 0;
         }
         else
         {
-            cursor = squares[wait_offset];
+            cursor = cp.squares[wait_offset];
             SetCustomCursor( cursor );
         }
-        squares[wait_offset] = ' ';
+        cp.squares[wait_offset] = ' ';
         UpdateBoard();
     }
     else if( state == UP_CURSOR_SIDE_WAIT )
@@ -305,26 +308,26 @@ void BoardSetupControl::OnMouseLeftUp( wxMouseEvent& event )
                 if( offset != wait_offset )
                 {
                     // Quick drag
-                    squares[offset] = cursor;
-                    squares[wait_offset] = ' ';
+                    cp.squares[offset] = cursor;
+                    cp.squares[wait_offset] = ' ';
                 }
                 else
                 {
                     // Quick click
-                    if( cursor == squares[wait_offset] )
+                    if( cursor == cp.squares[wait_offset] )
                     {
-                        squares[wait_offset] = ' ';
+                        cp.squares[wait_offset] = ' ';
                         dbg_printf( "Quick click clear\n" );
                     }
                     else
                     {
-                        squares[wait_offset] = cursor;
+                        cp.squares[wait_offset] = cursor;
                         dbg_printf( "Quick click set\n" );
                     }
                 }
             }
             else
-                squares[wait_offset] = ' '; // clear waiting square
+                cp.squares[wait_offset] = ' '; // clear waiting square
             UpdateBoard();
             dbg_printf( "Quick click end\n" );
             break;
@@ -342,7 +345,7 @@ void BoardSetupControl::OnMouseLeftUp( wxMouseEvent& event )
                       //  moved the cursor after clearing it  
                 else
                 {
-                    squares[offset] = cursor;
+                    cp.squares[offset] = cursor;
                     UpdateBoard();
                 }
             }
@@ -409,10 +412,10 @@ void BoardSetupControl::OnMouseLeftDown( wxMouseEvent& event )
                     int col = file-'a';     // file='a' -> col=0
                     int row = 7-(rank-'1'); // rank='8' -> row=0
                     int offset = row*8 + col;
-                    if( squares[offset] == ' ' )
+                    if( cp.squares[offset] == ' ' )
                     {
                         SetState( "down", DOWN_CURSOR_IDLE );
-                        squares[offset] = cursor;
+                        cp.squares[offset] = cursor;
                         UpdateBoard();
                     }
                     else

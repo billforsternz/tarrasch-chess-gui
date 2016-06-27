@@ -104,7 +104,7 @@ void GamesListCtrl::ReceiveFocus( int focus_idx )
         {
             std::string previous_move;
             CalculateMoveTxt( previous_move );
-            mini_board->SetPosition( track->updated_position.squares );
+            mini_board->Set( track->updated_position );
             std::string desc = track->info.Description();
             if( previous_move.length() > 0 )
             {
@@ -275,7 +275,7 @@ void GamesListCtrl::OnChar( wxKeyEvent &event )
         {
             std::string previous_move;
             CalculateMoveTxt( previous_move );
-            mini_board->SetPosition( track->updated_position.squares );
+            mini_board->Set( track->updated_position );
             std::string desc = track->info.Description();
             if( previous_move.length() > 0 )
             {
@@ -548,7 +548,7 @@ void GamesDialog::CreateControls()
     track->focus_idx = -1;
     track->focus_offset = 0;
     list_ctrl->track = track;
-    mini_board->SetPosition( cr.squares );
+    mini_board->Set( cr );
 
     hsiz_panel->Add( mini_board, 1, wxALIGN_LEFT|wxTOP|wxRIGHT|wxBOTTOM|wxFIXED_MINSIZE, 5 );
 

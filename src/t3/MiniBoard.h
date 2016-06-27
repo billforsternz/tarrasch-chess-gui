@@ -17,8 +17,8 @@ public:
                       wxWindowID id = wxID_ANY,
                       const wxPoint& point = wxDefaultPosition );
     ~MiniBoard();
-    void SetPosition( const char *squares ) { if(bs) {strcpy(this->squares,squares); bs->SetPosition(squares); bs->Draw(); } }
-    char         squares[65];
+    void Set( const thc::ChessPosition &cp ) { if(bs) {this->cp=cp; bs->Set(cp); bs->Draw();} }
+    thc::ChessPosition cp;
     
 private:
     wxBitmap     chess_bmp;

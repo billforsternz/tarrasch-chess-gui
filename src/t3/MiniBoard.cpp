@@ -41,7 +41,7 @@ MiniBoard::~MiniBoard()
 
 void MiniBoard::UpdateBoard()
 {
-    bs->SetPosition(squares);
+    bs->Set(cp);
     bs->Draw();
 }
 

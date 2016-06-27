@@ -107,7 +107,7 @@ void PatternDialog::CreateControls()
 
     // The board setup bitmap
     bsc = new BoardSetupControl(false,support_lockdown,this);
-    bsc->SetPosition( parm->cp.squares );
+    bsc->Set( parm->cp, parm->lockdown );
 
     // Intermediate sizers
     wxBoxSizer* horiz_board = new wxBoxSizer(wxHORIZONTAL);
@@ -322,7 +322,7 @@ void PatternDialog::CreateControls()
         wxStaticBox *more_pieces2 = new wxStaticBox(this, wxID_ANY, "&Black" );
         wxSizer     *more_pieces_horiz1 = new wxStaticBoxSizer(more_pieces1,wxHORIZONTAL);
         wxSizer     *more_pieces_horiz2 = new wxStaticBoxSizer(more_pieces2,wxHORIZONTAL);
-        more_pieces_vert->Add( more_pieces_horiz1,  0, wxALIGN_LEFT |wxRIGHT, 30  );
+        more_pieces_vert->Add( more_pieces_horiz1,  0, wxALIGN_LEFT |wxRIGHT, 80 /*spacer*/  );
         more_pieces_vert->Add( more_pieces_horiz2,  0, wxALIGN_LEFT |wxLEFT|wxRIGHT|wxTOP, 0 );
         more_pieces_wq = new wxCheckBox( this, ID_PATTERN_MORE_PIECES_WQ,
            "Q", wxDefaultPosition, wxDefaultSize, 0 );
@@ -385,8 +385,8 @@ void PatternDialog::CreateControls()
     horiz_extra->Add(castling_box,  1, wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 5);
     box_sizer->Add( horiz_board,  0, wxALIGN_LEFT |wxALL, 5 );
     box_sizer->Add( horiz_extra,  0, wxALIGN_LEFT |wxLEFT|wxRIGHT|wxTOP, 5 );
-
-    current->SetFocus();
+    ModifyLockdown( -1 );
+    clear->SetFocus();
 }
 
 // Sets the help text for the dialog controls
@@ -452,14 +452,14 @@ void PatternDialog::OnResetClick( wxCommandEvent& WXUNUSED(event) )
 {
     thc::ChessPosition tmp;
     parm->cp = tmp;
-    bsc->SetPosition( parm->cp.squares );
+    bsc->Set( parm->cp );
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_PATTERN_CURRENT
 void PatternDialog::OnCurrentClick( wxCommandEvent& WXUNUSED(event) )
 {
     parm->cp = objs.gl->gd.master_position;
-    bsc->SetPosition( parm->cp.squares );
+    bsc->Set( parm->cp );
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_PATTERN_CLEAR
@@ -468,7 +468,7 @@ void PatternDialog::OnClearClick( wxCommandEvent& WXUNUSED(event) )
     thc::ChessPosition tmp;
     parm->cp = tmp;
     memset( parm->cp.squares, ' ', 64 );
-    bsc->SetPosition( parm->cp.squares );
+    bsc->Set( parm->cp );
 }
 
 
@@ -495,7 +495,7 @@ void PatternDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
     bool err=false;
     if( bsc )
     {
-        strcpy( parm->cp.squares, bsc->squares );
+        parm->cp = bsc->cp;
         memcpy( parm->lockdown, bsc->lockdown, sizeof(parm->lockdown) );
         parm->include_reverse_colours       = inc_reverse->GetValue();
         parm->include_reflections           = inc_reflection->GetValue();
@@ -590,7 +590,7 @@ void PatternDialog::ModifyLockdown( int offset )
         }
         int file = offset&7;
         int rank = 7 - ((offset>>3)&7);
-        char c = bsc->squares[offset];
+        char c = bsc->cp.squares[offset];
         const char *s="empty";
         switch( c )
         {
