@@ -9,6 +9,16 @@
 #include "thc.h"
 #include "MemoryPositionSearchSide.h"
 
+struct PATTERN_STATS
+{
+    int nbr_games;
+    int nbr_reversed_games;
+    int white_wins;
+    int black_wins;
+    int draws;
+    PATTERN_STATS() {nbr_games=0; nbr_reversed_games=0; white_wins=0; black_wins=0; draws=0;}
+};
+
 struct PatternParameters
 {
     bool initialised;
@@ -124,12 +134,12 @@ public:
     void NewGame() { in_a_row=0; }
 
     // Test for pattern
-    bool Test( MpsSide *ws, MpsSide *bs, bool white, const char *squares_rover, bool may_need_to_rebuild_side )
+    bool Test( bool &reverse, MpsSide *ws, MpsSide *bs, bool white, const char *squares_rover, bool may_need_to_rebuild_side )
     {
         if( parm.material_balance )
-            return TestMaterialBalance( ws, bs, squares_rover, may_need_to_rebuild_side );
+            return TestMaterialBalance( reverse, ws, bs, squares_rover, may_need_to_rebuild_side );
         else
-            return TestPattern( white, squares_rover );
+            return TestPattern( reverse, white, squares_rover );
     }
 
 private:
@@ -140,9 +150,9 @@ private:
     void InitSide( MpsSide *side, bool white, const char *squares_rover );
 
     // Test against criteria
-    bool TestPattern( bool white, const char *squares_rover );
-    bool TestMaterialBalance( MpsSide *ws, MpsSide *bs, const char *squares_rover, bool may_need_to_rebuild_side );
-    bool TestMaterialBalanceInner( MpsSide *ws, MpsSide *bs, const char *squares_rover, bool may_need_to_rebuild_side );
+    bool TestPattern( bool &reverse, bool white, const char *squares_rover );
+    bool TestMaterialBalance( bool &reverse, MpsSide *ws, MpsSide *bs, const char *squares_rover, bool may_need_to_rebuild_side );
+    bool TestMaterialBalanceInner( bool &reverse, MpsSide *ws, MpsSide *bs, const char *squares_rover, bool may_need_to_rebuild_side );
 
     // Working positions
     PatternMatchTarget target_n;    // normal

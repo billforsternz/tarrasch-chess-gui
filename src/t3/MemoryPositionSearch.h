@@ -132,16 +132,16 @@ public:
     bool TryFastMode( MpsSide *side );
     bool SearchGameOptimisedNoPromotionAllowed( const char *moves_in, unsigned short &offset_first, unsigned short &offset_last  );    // much faster
     bool SearchGameSlowPromotionAllowed(  const std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last  );          // semi fast
-    bool PatternSearchGameOptimisedNoPromotionAllowed( PatternMatch &pm, const char *moves_in, unsigned short &offset_first, unsigned short &offset_last  );    // much faster
-    bool PatternSearchGameSlowPromotionAllowed( PatternMatch &pm, const std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last  );          // semi fast
+    bool PatternSearchGameOptimisedNoPromotionAllowed( PatternMatch &pm, bool &reverse, const char *moves_in, unsigned short &offset_first, unsigned short &offset_last  );    // much faster
+    bool PatternSearchGameSlowPromotionAllowed( PatternMatch &pm, bool &reverse, const std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last  );          // semi fast
     int  GetNbrGamesFound() { return games_found.size(); }
     std::vector< smart_ptr<ListableGame> > *search_source;
     std::vector< smart_ptr<ListableGame> >  &GetVectorSourceGames()   { return *search_source; }
     std::vector<DoSearchFoundGame>          &GetVectorGamesFound() { return games_found; }
     int  DoSearch( const thc::ChessPosition &cp, ProgressBar *progress );
     int  DoSearch( const thc::ChessPosition &cp, ProgressBar *progress, std::vector< smart_ptr<ListableGame> > *source );
-    int  DoPatternSearch( PatternMatch &pm, ProgressBar *progress );
-    int  DoPatternSearch( PatternMatch &pm, ProgressBar *progress, std::vector< smart_ptr<ListableGame> > *source );
+    int  DoPatternSearch( PatternMatch &pm, ProgressBar *progress, PATTERN_STATS &stats );
+    int  DoPatternSearch( PatternMatch &pm, ProgressBar *progress, PATTERN_STATS &stats, std::vector< smart_ptr<ListableGame> > *source );
     bool IsThisSearchPosition( const thc::ChessPosition &cp )
         { return search_position_set && cp==search_position; }
 

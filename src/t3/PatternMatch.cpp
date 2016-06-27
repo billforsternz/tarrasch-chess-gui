@@ -239,7 +239,7 @@ void PatternMatch::PrimePattern( const thc::ChessPosition *rover )
 }
 
 // Test against criteria
-bool PatternMatch::TestPattern( bool white, const char *squares_rover )
+bool PatternMatch::TestPattern( bool &reverse, bool white, const char *squares_rover )
 {
     //static bool debug;
     bool match=false;
@@ -248,10 +248,10 @@ bool PatternMatch::TestPattern( bool white, const char *squares_rover )
         PatternMatchTarget *target;
         switch(i)
         {
-            case 0: target = &target_n;   break;
-            case 1: target = &target_m;   break;
-            case 2: target = &target_r;   break;
-            case 3: target = &target_rm;  break;
+            case 0: target = &target_n;   reverse=false; break;
+            case 1: target = &target_m;   reverse=false; break;
+            case 2: target = &target_r;   reverse=true;  break;
+            case 3: target = &target_rm;  reverse=true;  break;
         }
         if( reflect_and_reverse==3 && i==1 )    // reflect_and_reverse==3 means do i==0 and i==2
             continue;
@@ -376,9 +376,9 @@ void PatternMatch::InitSide( MpsSide *side, bool white, const char *squares_rove
     }
 }
 
-bool PatternMatch::TestMaterialBalance( MpsSide *ws, MpsSide *bs, const char *squares_rover, bool may_need_to_rebuild_side )
+bool PatternMatch::TestMaterialBalance( bool &reverse, MpsSide *ws, MpsSide *bs, const char *squares_rover, bool may_need_to_rebuild_side )
 {
-    bool match = TestMaterialBalanceInner(ws,bs,squares_rover,may_need_to_rebuild_side);
+    bool match = TestMaterialBalanceInner(reverse,ws,bs,squares_rover,may_need_to_rebuild_side);
     if( !match )
         in_a_row = 0;
     else
@@ -392,7 +392,7 @@ bool PatternMatch::TestMaterialBalance( MpsSide *ws, MpsSide *bs, const char *sq
     return match;
 }
 
-bool PatternMatch::TestMaterialBalanceInner( MpsSide *ws, MpsSide *bs, const char *squares_rover, bool may_need_to_rebuild_side )
+bool PatternMatch::TestMaterialBalanceInner( bool &reverse, MpsSide *ws, MpsSide *bs, const char *squares_rover, bool may_need_to_rebuild_side )
 {
     bool match=false;
     if( may_need_to_rebuild_side && !ws->fast_mode  )
@@ -404,10 +404,10 @@ bool PatternMatch::TestMaterialBalanceInner( MpsSide *ws, MpsSide *bs, const cha
         PatternMatchTarget *target;
         switch(test)
         {
-            case 0: target = &target_n;   break;
-            case 1: target = &target_m;   break;
-            case 2: target = &target_r;   break;
-            case 3: target = &target_rm;  break;
+            case 0: target = &target_n;   reverse=false; break;
+            case 1: target = &target_m;   reverse=false; break;
+            case 2: target = &target_r;   reverse=true;  break;
+            case 3: target = &target_rm;  reverse=true;  break;
         }
         if( reflect_and_reverse==3 && test==1 )    // reflect_and_reverse==3 means do i==0 and i==2
             continue;

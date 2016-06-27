@@ -221,7 +221,8 @@ int DbDialog::GetBasePositionIdx( CompactGame &pact, bool receiving_focus )
             std::string moves = press.Compress( pact.moves );
             unsigned short offset1;
             unsigned short offset2;
-            bool found = objs.db->tiny_db.PatternSearchGameSlowPromotionAllowed( pm, moves, offset1, offset2 );
+            bool reverse;
+            bool found = objs.db->tiny_db.PatternSearchGameSlowPromotionAllowed( pm, reverse, moves, offset1, offset2 );
             if( found )
                 idx = offset1;
         }
@@ -865,6 +866,7 @@ void DbDialog::PatternSearch()
     //  list, in particular games from a disk based (i.e. not tiny) database and the clipboard. These
     //  latter types of search we are calling 'partial' search because they aren't of an entire, (albeit
     //  tiny) in memory database
+    PATTERN_STATS stats;
     if( do_partial_search )
     {
 
@@ -872,12 +874,12 @@ void DbDialog::PatternSearch()
         for( int i=0; i<source->size(); i++ )
             (*source)[i]->SetAttributes();
         ProgressBar progress2(objs.gl->db_clipboard ? "Searching" : "Searching", "Searching",false);
-        game_count = mps->DoPatternSearch(pm,&progress2,source);
+        game_count = mps->DoPatternSearch(pm,&progress2,stats,source);
     }
     else
     {
         ProgressBar progress2("Searching", "Searching",false);
-        game_count = mps->DoPatternSearch(pm,&progress2);
+        game_count = mps->DoPatternSearch(pm,&progress2,stats);
     }
     
     std::vector< smart_ptr<ListableGame> >  &db_games    = mps->GetVectorSourceGames();
@@ -897,21 +899,29 @@ void DbDialog::PatternSearch()
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
     list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
     char buf[1000];
-    int total_games  = nbr_games_in_list_ctrl;
-/*    int total_draws_plus_no_result = total_games - total_white_wins - total_black_wins;
+    char base[1000];
+    int total_games  = stats.nbr_games;
+    int total_draws_plus_no_result = total_games - stats.white_wins - stats.black_wins;
     double percent_score=0.0;
     if( total_games )
-        percent_score= ((1.0*total_white_wins + 0.5*total_draws_plus_no_result) * 100.0) / total_games;
-    sprintf( buf, "%d %s, white scores %.1f%% +%d -%d =%d",
+        percent_score= ((1.0*stats.white_wins + 0.5*total_draws_plus_no_result) * 100.0) / total_games;
+    sprintf( base, "%d %s, white scores %.1f%% +%d -%d =%d",
             total_games,
             total_games==1 ? "game" : "games",
             percent_score,
-            total_white_wins, total_black_wins, total_draws ); */
-    sprintf( buf, "%d %s",
-            total_games,
-            total_games==1 ? "game" : "games" );
+            stats.white_wins, stats.black_wins, stats.draws );
+    if( !pm.parm.include_reverse_colours )
+    {
+        sprintf( buf, "%s", base );
+    }
+    else
+    {
+        if( stats.nbr_reversed_games == 0 )
+            sprintf( buf, "%s (stats adjusted for reverse colour games, but none found)", base );
+        else
+            sprintf( buf, "%s (stats adjusted for %d reverse colour game%s)", base, stats.nbr_reversed_games, stats.nbr_reversed_games>1 ? "s": "" );
+    }
     title_ctrl->SetLabel( buf );
-
     int top = list_ctrl->GetTopItem();
     int count = 1 + list_ctrl->GetCountPerPage();
     if( count > nbr_games_in_list_ctrl )

@@ -489,14 +489,14 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, ProgressBar *
     return games_found.size();
 }
 
-int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progress )
+int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progress, PATTERN_STATS &stats )
 {
-    return DoPatternSearch(pm,progress,&in_memory_game_cache);
+    return DoPatternSearch(pm,progress,stats,&in_memory_game_cache);
 }
 
 //static bool debug_trigger;
 
-int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progress, std::vector< smart_ptr<ListableGame> > *source )
+int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progress, PATTERN_STATS &stats, std::vector< smart_ptr<ListableGame> > *source )
 {
     games_found.clear();
     search_position = pm.parm.cp;
@@ -688,14 +688,34 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
             dsfg.offset_first=0;
             dsfg.offset_last=0;
             bool promotion_in_game = (p->game_attributes!=0);
-            bool game_found;
+            bool game_found, reverse;
             pm.NewGame();
             if( promotion_in_game )
-                game_found = PatternSearchGameSlowPromotionAllowed( pm, std::string(p->CompressedMoves()), dsfg.offset_first, dsfg.offset_last  );
+                game_found = PatternSearchGameSlowPromotionAllowed( pm, reverse, std::string(p->CompressedMoves()), dsfg.offset_first, dsfg.offset_last  );
             else
-                game_found = PatternSearchGameOptimisedNoPromotionAllowed( pm, p->CompressedMoves(), dsfg.offset_first, dsfg.offset_last );
+                game_found = PatternSearchGameOptimisedNoPromotionAllowed( pm, reverse, p->CompressedMoves(), dsfg.offset_first, dsfg.offset_last );
             if( game_found )
             {
+                stats.nbr_games++;
+                if( reverse )
+                {
+                    stats.nbr_reversed_games++;
+                    if( 0 == strcmp(p->Result(),"1-0") )
+                        stats.black_wins++;
+                    else if( 0 == strcmp(p->Result(),"0-1") )
+                        stats.white_wins++;
+                    else
+                        stats.draws++;
+                }
+                else
+                {
+                    if( 0 == strcmp(p->Result(),"1-0") )
+                        stats.white_wins++;
+                    else if( 0 == strcmp(p->Result(),"0-1") )
+                        stats.black_wins++;
+                    else
+                        stats.draws++;
+                }
                 games_found.push_back( dsfg );
             }
             if( (i&0xff)==0 && progress )
@@ -1842,7 +1862,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
     return false;
 }
 
-bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( PatternMatch &pm, const char *moves_in, unsigned short &offset_first, unsigned short &offset_last )
+bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( PatternMatch &pm, bool &reverse, const char *moves_in, unsigned short &offset_first, unsigned short &offset_last )
 {
     unsigned short offset=0;
     bool target_white = search_position.white;  // searching for position with white to move?
@@ -1865,7 +1885,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
                 cprintf( "%s\n", buf );
             }
         } */
-        bool match = pm.Test( &mqi.side_white, &mqi.side_black, true, mqi.squares, false );
+        bool match = pm.Test( reverse, &mqi.side_white, &mqi.side_black, true, mqi.squares, false );
         if( match )
         {
             /*if( debug_trigger )
@@ -2205,7 +2225,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
                 cprintf( "%s\n", buf );
             }
         } */
-        match = pm.Test( &mqi.side_white, &mqi.side_black, false, mqi.squares, false );
+        match = pm.Test( reverse, &mqi.side_white, &mqi.side_black, false, mqi.squares, false );
         if( match )
         {
             /*if( debug_trigger )
@@ -2655,13 +2675,13 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( const std::string &mo
     return false;
 }
 
-bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( PatternMatch &pm, const std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last )          // semi fast
+bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( PatternMatch &pm, bool &reverse, const std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last )          // semi fast
 {
     bool target_white = search_position.white;  // searching for position with white to move?
     int total_count=30;     // 32 - 2 kings
     SlowGameInit();
     int len = moves_in.size();
-    bool match = pm.Test( &msi.sides[0], &msi.sides[1], msi.cr.white, msi.cr.squares, false );
+    bool match = pm.Test( reverse, &msi.sides[0], &msi.sides[1], msi.cr.white, msi.cr.squares, false );
     if( match )
     {
         offset_last = offset_first = 0;    // later - separate offset_first and offset_last
@@ -2700,7 +2720,7 @@ bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( PatternMatch &
                 msi.cr.squares[mv.dst] = c;
             }
         }
-        match = pm.Test( &msi.sides[0], &msi.sides[1], msi.cr.white, msi.cr.squares, true );
+        match = pm.Test( reverse, &msi.sides[0], &msi.sides[1], msi.cr.white, msi.cr.squares, true );
         if( match )
         {
             offset_last = offset_first = (i+1);    // later - separate offset_first and offset_last
