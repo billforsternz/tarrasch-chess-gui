@@ -241,6 +241,7 @@ void PatternMatch::PrimePattern( const thc::ChessPosition *rover )
 // Test against criteria
 bool PatternMatch::TestPattern( bool white, const char *squares_rover )
 {
+    //static bool debug;
     bool match=false;
     for( int i=0; !match && i<reflect_and_reverse; i++ )
     {
@@ -254,7 +255,7 @@ bool PatternMatch::TestPattern( bool white, const char *squares_rover )
         }
         if( reflect_and_reverse==3 && i==1 )    // reflect_and_reverse==3 means do i==0 and i==2
             continue;
-        bool match = target->parm.either_to_move || (white==target->parm.white_to_move);
+        match = target->parm.either_to_move || (white==target->parm.white_to_move);
         if( match )
         {
             match = 
@@ -267,6 +268,26 @@ bool PatternMatch::TestPattern( bool white, const char *squares_rover )
             (*reinterpret_cast<const uint64_t *>(&squares_rover[56]) & target->rank1_mask) == *target->rank1_target_ptr &&
             (*reinterpret_cast<const uint64_t *>(&squares_rover[48]) & target->rank2_mask) == *target->rank2_target_ptr;
         }
+    /*  if( !debug )
+        {
+            debug = true;
+            bool rank3 = (*reinterpret_cast<const uint64_t *>(&squares_rover[40]) & target->rank3_mask) == *target->rank3_target_ptr;
+            bool rank4 = (*reinterpret_cast<const uint64_t *>(&squares_rover[32]) & target->rank4_mask) == *target->rank4_target_ptr;
+            bool rank5 = (*reinterpret_cast<const uint64_t *>(&squares_rover[24]) & target->rank5_mask) == *target->rank5_target_ptr;
+            bool rank6 = (*reinterpret_cast<const uint64_t *>(&squares_rover[16]) & target->rank6_mask) == *target->rank6_target_ptr;
+            bool rank7 = (*reinterpret_cast<const uint64_t *>(&squares_rover[8] ) & target->rank7_mask) == *target->rank7_target_ptr;
+            bool rank8 = (*reinterpret_cast<const uint64_t *>(&squares_rover[0] ) & target->rank8_mask) == *target->rank8_target_ptr;
+            bool rank1 = (*reinterpret_cast<const uint64_t *>(&squares_rover[56]) & target->rank1_mask) == *target->rank1_target_ptr;
+            bool rank2 = (*reinterpret_cast<const uint64_t *>(&squares_rover[48]) & target->rank2_mask) == *target->rank2_target_ptr;
+            cprintf( "rank3=%s\n", rank3?"true":"false" );
+            cprintf( "rank4=%s\n", rank4?"true":"false" );
+            cprintf( "rank5=%s\n", rank5?"true":"false" );
+            cprintf( "rank6=%s\n", rank6?"true":"false" );
+            cprintf( "rank7=%s\n", rank7?"true":"false" );
+            cprintf( "rank8=%s\n", rank8?"true":"false" );
+            cprintf( "rank1=%s\n", rank1?"true":"false" );
+            cprintf( "rank2=%s\n", rank2?"true":"false" );
+        } */
     }
     return match;    
 }

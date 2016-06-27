@@ -336,6 +336,7 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, ProgressBar *
             }
             case 'K':
             {
+                ms.total_count_target--;  // kings don't count for this target
                 break;
             }
             case 'p':
@@ -377,6 +378,7 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, ProgressBar *
             }
             case 'k':
             {
+                ms.total_count_target--;  // kings don't count for this target
                 break;
             }
             default:
@@ -563,6 +565,7 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
             }
             case 'K':
             {
+                ms.total_count_target--;  // kings don't count for this target
                 break;
             }
             case 'p':
@@ -604,6 +607,7 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
             }
             case 'k':
             {
+                ms.total_count_target--;  // kings don't count for this target
                 break;
             }
             default:
@@ -1843,6 +1847,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
     unsigned short offset=0;
     bool target_white = search_position.white;  // searching for position with white to move?
     QuickGameInit();
+    int total_count=30;     // 32 - 2 kings
     for(;;)
     {
 
@@ -1871,6 +1876,11 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
             offset_last = offset_first = offset;    // later - separate offset_first and offset_last
             return true;
         }
+        #define SIMPLE_PATTERN_COUNT_OPTIMISATION
+        #ifdef SIMPLE_PATTERN_COUNT_OPTIMISATION
+        if( total_count < ms.total_count_target )
+            return false;            
+        #endif
 
         // White move
         char code = *moves_in++;
@@ -2132,6 +2142,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
         // White captures black
         if( captured != EMPTY_CHARACTER )
         {
+            total_count--;
             switch( captured )
             {
                 case 'p':
@@ -2205,6 +2216,10 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
             offset_last = offset_first = offset;    // later - separate offset_first and offset_last
             return true;
         }
+        #ifdef SIMPLE_PATTERN_COUNT_OPTIMISATION
+        if( total_count < ms.total_count_target )
+            return false;            
+        #endif
 
         // Black move
         code = *moves_in++;
@@ -2465,6 +2480,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
         // Black captures white
         if( captured != EMPTY_CHARACTER )
         {
+            total_count--;
             switch( captured )
             {
                 case 'P':
@@ -2642,7 +2658,7 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( const std::string &mo
 bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( PatternMatch &pm, const std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last )          // semi fast
 {
     bool target_white = search_position.white;  // searching for position with white to move?
-    int total_count=32;
+    int total_count=30;     // 32 - 2 kings
     SlowGameInit();
     int len = moves_in.size();
     bool match = pm.Test( &msi.sides[0], &msi.sides[1], msi.cr.white, msi.cr.squares, false );
@@ -2690,12 +2706,14 @@ bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( PatternMatch &
             offset_last = offset_first = (i+1);    // later - separate offset_first and offset_last
             return true;
         }
+        #ifdef SIMPLE_PATTERN_COUNT_OPTIMISATION
         if( isalpha(mv.capture) )
         {
             total_count--;
             if( total_count < ms.total_count_target )
                 return false;            
         }
+        #endif
     }
     return false;
 }

@@ -116,18 +116,6 @@ private:
     wxCheckBox*     pawns_same_files;
     wxCheckBox*     bishops_same_colour;
     wxCheckBox*     allow_more;
-    wxCheckBox*     lockdown_wk;
-    wxCheckBox*     lockdown_wq;
-    wxCheckBox*     lockdown_wr;
-    wxCheckBox*     lockdown_wb;
-    wxCheckBox*     lockdown_wn;
-    wxCheckBox*     lockdown_wp;
-    wxCheckBox*     lockdown_bk;
-    wxCheckBox*     lockdown_bq;
-    wxCheckBox*     lockdown_br;
-    wxCheckBox*     lockdown_bb;
-    wxCheckBox*     lockdown_bn;
-    wxCheckBox*     lockdown_bp;
     wxCheckBox*     more_pieces_wq;
     wxCheckBox*     more_pieces_wr;
     wxCheckBox*     more_pieces_wb;

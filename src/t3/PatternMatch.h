@@ -45,19 +45,6 @@ struct PatternParameters
     bool more_pieces_bb;
     bool more_pieces_bn;
     bool more_pieces_bp;
-    bool lockdown_wk;
-    bool lockdown_wq;
-    bool lockdown_wr;
-    bool lockdown_wb;
-    bool lockdown_wn;
-    bool lockdown_wp;
-    bool lockdown_bk;
-    bool lockdown_bq;
-    bool lockdown_br;
-    bool lockdown_bb;
-    bool lockdown_bn;
-    bool lockdown_bp;
-    bool lockdown_any;
 
     PatternParameters() { initialised = false; }
     void OneTimeInit( bool material_balance, thc::ChessPosition &cp )
@@ -85,19 +72,7 @@ struct PatternParameters
             more_pieces_bb = false;
             more_pieces_bn = false;
             more_pieces_bp = false;
-            lockdown_wk = false;
-            lockdown_wq = false;
-            lockdown_wr = false;
-            lockdown_wb = false;
-            lockdown_wn = false;
-            lockdown_wp = false;
-            lockdown_bk = false;
-            lockdown_bq = false;
-            lockdown_br = false;
-            lockdown_bb = false;
-            lockdown_bn = false;
-            lockdown_bp = false;
-            lockdown_any= false;
+            memset(lockdown,0,sizeof(lockdown));
         }
     }
  };

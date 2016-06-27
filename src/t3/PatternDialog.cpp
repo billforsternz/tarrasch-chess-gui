@@ -249,73 +249,6 @@ void PatternDialog::CreateControls()
         wxStaticBox *lockdown = new wxStaticBox(this, wxID_ANY, "&Optionally right click to lockdown squares" );
         wxSizer     *lockdown_vert  = new wxStaticBoxSizer(lockdown, wxHORIZONTAL );
         lockdown_text = new wxStaticText(this, wxID_ANY, "Currently there are no locked down squares" );   
-   /*   wxStaticBox *lockdown1 = new wxStaticBox(this, wxID_ANY, "&White" );
-        wxStaticBox *lockdown2 = new wxStaticBox(this, wxID_ANY, "&Black" );
-        wxSizer     *lockdown_horiz1 = new wxStaticBoxSizer(lockdown1,wxHORIZONTAL);
-        wxSizer     *lockdown_horiz2 = new wxStaticBoxSizer(lockdown2,wxHORIZONTAL);
-        lockdown_vert->Add( lockdown_horiz1,  0, wxALIGN_LEFT |wxRIGHT, 50 );
-        lockdown_vert->Add( lockdown_horiz2,  0, wxALIGN_LEFT |wxLEFT|wxRIGHT|wxTOP, 0 );
-        lockdown_wk = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_WK,
-           "K", wxDefaultPosition, wxDefaultSize, 0 );
-        lockdown_wk->SetValue( parm->lockdown_wk );
-        lockdown_wq = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_WQ,
-           "Q", wxDefaultPosition, wxDefaultSize, 0 );
-        lockdown_wq->SetValue( parm->lockdown_wq );
-        lockdown_wr = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_WR,
-           "R", wxDefaultPosition, wxDefaultSize, 0 );
-        lockdown_wr->SetValue( parm->lockdown_wr );
-        lockdown_wb = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_WB,
-           "B", wxDefaultPosition, wxDefaultSize, 0 );
-        lockdown_wb->SetValue( parm->lockdown_wb );
-        lockdown_wn = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_WN,
-           "N", wxDefaultPosition, wxDefaultSize, 0 );
-        lockdown_wn->SetValue( parm->lockdown_wn );
-        lockdown_wp = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_WP,
-           "P", wxDefaultPosition, wxDefaultSize, 0 );
-        lockdown_wp->SetValue( parm->lockdown_wp );
-        lockdown_horiz1->Add( lockdown_wk, 0,
-            wxALIGN_CENTER_VERTICAL|wxLEFT, 15);
-        lockdown_horiz1->Add( lockdown_wq, 0,
-            wxALIGN_CENTER_VERTICAL,0);
-        lockdown_horiz1->Add( lockdown_wr, 0,
-            wxALIGN_CENTER_VERTICAL,0);
-        lockdown_horiz1->Add( lockdown_wb, 0,
-            wxALIGN_CENTER_VERTICAL,0);
-        lockdown_horiz1->Add( lockdown_wn, 0,
-            wxALIGN_CENTER_VERTICAL,0);
-        lockdown_horiz1->Add( lockdown_wp, 0,
-            wxALIGN_CENTER_VERTICAL,0);
-        lockdown_bk = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_BK,
-           "K", wxDefaultPosition, wxDefaultSize, 0 );
-        lockdown_bk->SetValue( parm->lockdown_bk );
-        lockdown_bq = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_BQ,
-           "Q", wxDefaultPosition, wxDefaultSize, 0 );
-        lockdown_bq->SetValue( parm->lockdown_bq );
-        lockdown_br = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_BR,
-           "R", wxDefaultPosition, wxDefaultSize, 0 );
-        lockdown_br->SetValue( parm->lockdown_br );
-        lockdown_bb = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_BB,
-           "B", wxDefaultPosition, wxDefaultSize, 0 );
-        lockdown_bb->SetValue( parm->lockdown_bb );
-        lockdown_bn = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_BN,
-           "N", wxDefaultPosition, wxDefaultSize, 0 );
-        lockdown_bn->SetValue( parm->lockdown_bn );
-        lockdown_bp = new wxCheckBox( this, ID_PATTERN_LOCKDOWN_BP,
-           "P", wxDefaultPosition, wxDefaultSize, 0 );
-        lockdown_bp->SetValue( parm->lockdown_bp );
-        lockdown_horiz2->Add( lockdown_bk, 0,
-            wxALIGN_CENTER_VERTICAL|wxLEFT, 15);
-        lockdown_horiz2->Add( lockdown_bq, 0,
-            wxALIGN_CENTER_VERTICAL,0);
-        lockdown_horiz2->Add( lockdown_br, 0,
-            wxALIGN_CENTER_VERTICAL,0);
-        lockdown_horiz2->Add( lockdown_bb, 0,
-            wxALIGN_CENTER_VERTICAL,0);
-        lockdown_horiz2->Add( lockdown_bn, 0,
-            wxALIGN_CENTER_VERTICAL,0);
-        lockdown_horiz2->Add( lockdown_bp, 0,
-            wxALIGN_CENTER_VERTICAL,0);             */
-
         wxStaticBox *more_pieces = new wxStaticBox(this, wxID_ANY, "&Optionally allow some extra material" );
         wxSizer     *more_pieces_vert  = new wxStaticBoxSizer(more_pieces, wxVERTICAL );   
         wxStaticBox *more_pieces1 = new wxStaticBox(this, wxID_ANY, "&White" );
@@ -385,7 +318,8 @@ void PatternDialog::CreateControls()
     horiz_extra->Add(castling_box,  1, wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 5);
     box_sizer->Add( horiz_board,  0, wxALIGN_LEFT |wxALL, 5 );
     box_sizer->Add( horiz_extra,  0, wxALIGN_LEFT |wxLEFT|wxRIGHT|wxTOP, 5 );
-    ModifyLockdown( -1 );
+    if( b_piece_map )
+        ModifyLockdown( -1 );
     clear->SetFocus();
 }
 
@@ -501,30 +435,6 @@ void PatternDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
         parm->include_reflections           = inc_reflection->GetValue();
         if( b_piece_map )
         {
-        /*  parm->lockdown_wk    = lockdown_wk->GetValue();
-            parm->lockdown_wq    = lockdown_wq->GetValue();
-            parm->lockdown_wr    = lockdown_wr->GetValue();
-            parm->lockdown_wb    = lockdown_wb->GetValue();
-            parm->lockdown_wn    = lockdown_wn->GetValue();
-            parm->lockdown_wp    = lockdown_wp->GetValue();
-            parm->lockdown_bk    = lockdown_bk->GetValue();
-            parm->lockdown_bq    = lockdown_bq->GetValue();
-            parm->lockdown_br    = lockdown_br->GetValue();
-            parm->lockdown_bb    = lockdown_bb->GetValue();
-            parm->lockdown_bn    = lockdown_bn->GetValue();
-            parm->lockdown_bp    = lockdown_bp->GetValue();
-            parm->lockdown_any   = parm->lockdown_wk ||
-                                   parm->lockdown_wq ||
-                                   parm->lockdown_wr ||
-                                   parm->lockdown_wb ||
-                                   parm->lockdown_wn ||
-                                   parm->lockdown_wp ||
-                                   parm->lockdown_bk ||
-                                   parm->lockdown_bq ||
-                                   parm->lockdown_br ||
-                                   parm->lockdown_bb ||
-                                   parm->lockdown_bn ||
-                                   parm->lockdown_bp; */
             parm->more_pieces_wq = more_pieces_wq->GetValue();
             parm->more_pieces_wr = more_pieces_wr->GetValue();
             parm->more_pieces_wb = more_pieces_wb->GetValue();
