@@ -19,6 +19,7 @@
 #include "DbMaintenance.h"
 #include "DbPrimitives.h"
 #include "BinDb.h"
+#include "LegacyDb.h"
 #include "CreateDatabaseDialog.h"
 
 // CreateDatabaseDialog type definition
@@ -405,11 +406,11 @@ void CreateDatabaseDialog::OnAppendDatabase()
             ok = false;
         }
     }
+    int version;
     if( ok )
     {
-        int version;
         ok = BinDbOpen( db_filename.c_str(), version );
-        if( version!=0 && version!=DATABASE_VERSION_NUMBER_BIN_DB )
+        if( version==0 || version>DATABASE_VERSION_NUMBER_BIN_DB )
         {
             error_msg = "Tarrasch database file " + db_name + " is incompatible with this version of Tarrasch";
             if( ok )
@@ -429,8 +430,16 @@ void CreateDatabaseDialog::OnAppendDatabase()
         
         std::vector< smart_ptr<ListableGame> > &mega_cache = BinDbLoadAllGamesGetVector();
         BinDbWriteClear();
-        BinDbLoadAllGames( true, mega_cache, dummyi, dummyb, &progress_bar );
-        BinDbClose();
+        if( version < DATABASE_VERSION_NUMBER_BIN_DB )
+        {
+            BinDbClose();
+            LegacyDbLoadAllGames( db_filename.c_str(), true, mega_cache, dummyi, dummyb, &progress_bar );
+        }
+        else
+        {
+            BinDbLoadAllGames( true, mega_cache, dummyi, dummyb, &progress_bar );
+            BinDbClose();
+        }
         FILE *ofile;
         if( ok )
         {

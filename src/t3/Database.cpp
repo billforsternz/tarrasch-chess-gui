@@ -19,6 +19,7 @@
 #include "ProgressBar.h"
 #include "DbPrimitives.h"
 #include "BinDb.h"
+#include "LegacyDb.h"
 #include "Database.h"
 #include "Repository.h"
 #if !wxUSE_THREADS
@@ -124,6 +125,7 @@ void Database::Reopen( const char *db_file )
 
     // Access the database.
     cprintf( "Database startup %s\n", db_file );
+    db_filename = std::string(db_file);
     is_open = BinDbOpen( db_file, database_version );
     std::string nomsg;
     is_open = IsOperational( nomsg );
@@ -140,7 +142,7 @@ bool Database::IsOperational( std::string &error_msg )
 {
     bool operational = false;
     error_msg = "";
-    if( database_version !=0 && database_version!=DATABASE_VERSION_NUMBER_BIN_DB )
+    if( database_version==0 || database_version>DATABASE_VERSION_NUMBER_BIN_DB )
     {
         char buf[200];
         sprintf( buf, "The database file is not in the correct format for this version of Tarrasch (db version=%d)", database_version );                
@@ -215,11 +217,19 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGam
     background_load_permill = 0;
     kill_background_load = false;
     mega_cache.clear();
-    BinDbLoadAllGames( false, mega_cache, background_load_permill, kill_background_load );
+    if( database_version < DATABASE_VERSION_NUMBER_BIN_DB )
+    {
+        BinDbClose();
+        LegacyDbLoadAllGames( db_filename.c_str(), false, mega_cache, background_load_permill, kill_background_load );
+    }
+    else
+    {
+        BinDbLoadAllGames( false, mega_cache, background_load_permill, kill_background_load );
+        BinDbClose();
+    }
     //cprintf( "Reversing BinDb order begin\n" );
     //std::reverse( mega_cache.begin(), mega_cache.end() ); 
     //cprintf( "Reversing BinDb order end\n" );
-    BinDbClose();
     int cache_nbr = mega_cache.size();
     cprintf( "Number of games = %d\n", cache_nbr );
     if( 2 < cache_nbr )

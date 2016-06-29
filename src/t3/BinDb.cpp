@@ -18,7 +18,7 @@
 #include "ListableGameBinDb.h"
 #include "BinDb.h"
 
-static FILE *bin_file;  //temp
+static FILE         *bin_file;      //temp
 
 // The 1200 byte compatibility header - Prepended to a BinDb formatted database file
 //  It makes such a file partially compatible to the original versions of TarraschDb
@@ -146,6 +146,7 @@ bool BinDbOpen( const char *db_file, int &version )
             } 
             else if( 0 == memcmp(&buf[0], "SQLite format 3", 15) )  // is it an earlier Tarrasch DB SQL based format ?
             {
+                ok = true;  // supported via LegacyDb functions
                 version = DATABASE_VERSION_NUMBER_NORMAL;
             }
         }

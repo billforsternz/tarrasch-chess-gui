@@ -40,6 +40,7 @@ public:
     bool kill_background_load;
   
 private:
+    std::string db_filename;
     DB_REQ db_req;
     bool is_open;
     int  database_version;
