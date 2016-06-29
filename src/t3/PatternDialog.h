@@ -27,7 +27,7 @@ enum
     ID_PATTERN_EITHER_TO_MOVE,
     ID_PATTERN_INC_REFLECTION,
     ID_PATTERN_INC_REVERSE,
-    ID_PATTERN_ALLOW_MORE,
+    ID_PATTERN_DONT_ALLOW_MORE,
     ID_PATTERN_PAWNS_SAME_FILES,
     ID_PATTERN_BISHOPS_SAME_COLOUR,
     ID_PATTERN_LOCKDOWN_WK,
@@ -115,7 +115,7 @@ private:
     wxCheckBox*     inc_reflection;
     wxCheckBox*     pawns_same_files;
     wxCheckBox*     bishops_same_colour;
-    wxCheckBox*     allow_more;
+    wxCheckBox*     dont_allow_more;
     wxCheckBox*     more_pieces_wq;
     wxCheckBox*     more_pieces_wr;
     wxCheckBox*     more_pieces_wb;
@@ -139,7 +139,7 @@ private:
     bool b_either;
     bool b_white;
     bool b_black;
-    bool b_allow_more;
+    bool b_dont_allow_more;
 
     // material balance
     bool b_piece_map;

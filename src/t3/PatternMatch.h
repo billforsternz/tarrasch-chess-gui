@@ -39,7 +39,7 @@ struct PatternParameters
     // pattern
     bool either_to_move;
     bool white_to_move;
-    bool allow_more_pieces;
+    bool dont_allow_more_pieces;
 
     // material balance
     bool pawns_must_be_on_same_files;
@@ -66,7 +66,7 @@ struct PatternParameters
             this->material_balance = material_balance;
             include_reflections = false;
             include_reverse_colours = false;
-            allow_more_pieces = material_balance?false:true;
+            dont_allow_more_pieces = material_balance?false:true;
             either_to_move = false;
             white_to_move = true;
             pawns_must_be_on_same_files = false;

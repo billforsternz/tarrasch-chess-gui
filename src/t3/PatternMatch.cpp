@@ -215,7 +215,7 @@ void PatternMatch::PrimePattern( const thc::ChessPosition *rover )
                 }
                 else
                 {
-                    if( !target->parm.allow_more_pieces )
+                    if( target->parm.dont_allow_more_pieces )
                     {
                         mask[k] = '\x7f';   // so effectively (*rank & *mask) == *target
                                             //  will mean *rank == *target i.e. rover==target

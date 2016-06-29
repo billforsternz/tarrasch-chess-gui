@@ -53,7 +53,7 @@ PatternDialog::PatternDialog
     b_either = !parm->material_balance;
     b_white  = !parm->material_balance;
     b_black  = !parm->material_balance;
-    b_allow_more = !parm->material_balance;
+    b_dont_allow_more = !parm->material_balance;
 
     // material balance
     b_piece_map = parm->material_balance;
@@ -129,11 +129,11 @@ void PatternDialog::CreateControls()
     inc_reverse = new wxCheckBox( this, ID_PATTERN_INC_REVERSE,
        wxT("&Include reversed colours"), wxDefaultPosition, wxDefaultSize, 0 );
     inc_reverse->SetValue( parm->include_reverse_colours );
-    if( b_allow_more )
+    if( b_dont_allow_more )
     {
-        allow_more = new wxCheckBox( this, ID_PATTERN_ALLOW_MORE,
-           wxT("&Allow more pieces"), wxDefaultPosition, wxDefaultSize, 0 );
-        allow_more->SetValue( parm->allow_more_pieces );
+        dont_allow_more = new wxCheckBox( this, ID_PATTERN_DONT_ALLOW_MORE,
+           wxT("&Don't allow more pieces"), wxDefaultPosition, wxDefaultSize, 0 );
+        dont_allow_more->SetValue( parm->dont_allow_more_pieces );
     }
     if( b_pawns )
     {
@@ -169,7 +169,7 @@ void PatternDialog::CreateControls()
             wxT("Balance must persist for at\nleast this many half moves"), wxDefaultPosition, wxDefaultSize, 0 );
         move_count_ctrl = new wxSpinCtrl ( this, ID_PATTERN_MOVE_COUNT,
             wxEmptyString, wxDefaultPosition, wxSize(50, wxDefaultCoord), //wxDefaultSize, 
-            wxSP_ARROW_KEYS, parm->number_of_ply, 500, 1 );
+            wxSP_ARROW_KEYS, 1, 500, parm->number_of_ply );
         move_count_sizer->Add(move_count_label, 0, wxBOTTOM|wxALIGN_CENTER_VERTICAL, 10);
         move_count_sizer->Add( 10, 5, 1, wxALL, 0);
         move_count_sizer->Add(move_count_ctrl,  0, wxBOTTOM|wxALIGN_CENTER_VERTICAL, 10);
@@ -179,9 +179,9 @@ void PatternDialog::CreateControls()
         wxALIGN_CENTER_VERTICAL|wxALL, 5);
     castling_box->Add( inc_reverse, 0,
         wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    if( b_allow_more )
+    if( b_dont_allow_more )
     {
-        castling_box->Add( allow_more, 0,
+        castling_box->Add( dont_allow_more, 0,
             wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
     if( b_pawns )
@@ -246,7 +246,7 @@ void PatternDialog::CreateControls()
 
     if( b_piece_map )
     {
-        wxStaticBox *lockdown = new wxStaticBox(this, wxID_ANY, "&Optionally right click to lockdown squares" );
+        wxStaticBox *lockdown = new wxStaticBox(this, wxID_ANY, "&Optionally right click to lock down squares" );
         wxSizer     *lockdown_vert  = new wxStaticBoxSizer(lockdown, wxHORIZONTAL );
         lockdown_text = new wxStaticText(this, wxID_ANY, "Currently there are no locked down squares" );   
         wxStaticBox *more_pieces = new wxStaticBox(this, wxID_ANY, "&Optionally allow some extra material" );
@@ -320,7 +320,7 @@ void PatternDialog::CreateControls()
     box_sizer->Add( horiz_extra,  0, wxALIGN_LEFT |wxLEFT|wxRIGHT|wxTOP, 5 );
     if( b_piece_map )
         ModifyLockdown( -1 );
-    clear->SetFocus();
+    ok_button->SetFocus();
 }
 
 // Sets the help text for the dialog controls
@@ -341,13 +341,11 @@ void PatternDialog::SetDialogHelp()
     wxString help2 = "Set to include reversed colours form of this pattern in search";
     FindWindow(ID_PATTERN_INC_REVERSE)->SetHelpText(help2);
     FindWindow(ID_PATTERN_INC_REVERSE)->SetToolTip(help2);
-    wxString help3 = "Set to allow extra pieces - unless set pattern search is effectively position search";
-    if( parm->material_balance )
-        help3 = "Set to allow extra pieces - only useful for patterns with extra promoted pieces - eg two queens";
-    if( b_allow_more )
+    wxString help3 = "Set to forbid extra pieces - setting this makes pattern search the same as position search (with extra options - eg reversed colours)";
+    if( b_dont_allow_more )
     {
-        FindWindow(ID_PATTERN_ALLOW_MORE)->SetHelpText(help3);
-        FindWindow(ID_PATTERN_ALLOW_MORE)->SetToolTip(help3);
+        FindWindow(ID_PATTERN_DONT_ALLOW_MORE)->SetHelpText(help3);
+        FindWindow(ID_PATTERN_DONT_ALLOW_MORE)->SetToolTip(help3);
     }
     if( b_pawns )
     {
@@ -387,6 +385,10 @@ void PatternDialog::OnResetClick( wxCommandEvent& WXUNUSED(event) )
     thc::ChessPosition tmp;
     parm->cp = tmp;
     bsc->Set( parm->cp );
+    memset( parm->lockdown, 0, 64 );
+    bsc->Set( parm->cp, parm->lockdown );
+    if( b_piece_map )
+        ModifyLockdown( -1 );
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_PATTERN_CURRENT
@@ -394,6 +396,13 @@ void PatternDialog::OnCurrentClick( wxCommandEvent& WXUNUSED(event) )
 {
     parm->cp = objs.gl->gd.master_position;
     bsc->Set( parm->cp );
+    memset( parm->lockdown, 0, 64 );
+    bsc->Set( parm->cp, parm->lockdown );
+    if( b_piece_map )
+    {
+        cprintf( "ModifyLockdown(-1);\n" );
+        ModifyLockdown( -1 );
+    }
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_PATTERN_CLEAR
@@ -402,7 +411,13 @@ void PatternDialog::OnClearClick( wxCommandEvent& WXUNUSED(event) )
     thc::ChessPosition tmp;
     parm->cp = tmp;
     memset( parm->cp.squares, ' ', 64 );
-    bsc->Set( parm->cp );
+    memset( parm->lockdown, 0, 64 );
+    bsc->Set( parm->cp, parm->lockdown );
+    if( b_piece_map )
+    {
+        cprintf( "ModifyLockdown(-1);\n" );
+        ModifyLockdown( -1 );
+    }
 }
 
 
@@ -415,8 +430,10 @@ void PatternDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
     wxGetApp().GetHelpController().DisplaySection(wxT("Personal record dialog"));
      */
 
-    wxString helpText =
-      wxT("Use this panel to specify a new pattern\n");
+    wxString helpText(
+      parm->material_balance ?
+      "Use this panel to search the database for games where a specified material balance occurs at some point\n" :
+      "Use this panel to search the database for games where a specified pattern (arrangement of some pieces) occurs at some point\n");
 
     wxMessageBox(helpText,
       wxT("Pattern Dialog Help"),
@@ -446,8 +463,8 @@ void PatternDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
             parm->more_pieces_bn = more_pieces_bn->GetValue();
             parm->more_pieces_bp = more_pieces_bp->GetValue();
         }
-        if( b_allow_more )
-            parm->allow_more_pieces             = allow_more->GetValue();
+        if( b_dont_allow_more )
+            parm->dont_allow_more_pieces             = dont_allow_more->GetValue();
         if( b_pawns )
             parm->pawns_must_be_on_same_files   = pawns_same_files->GetValue();
         if( b_bishops )
