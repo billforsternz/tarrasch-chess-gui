@@ -15,7 +15,7 @@
 #include "CompressMoves.h"
 #include "PgnRead.h"
 #include "CompactGame.h"
-#include "ListableGameDb.h"
+#include "ListableGameBinDb.h"
 #include "LegacyDb.h"
 
 // Handle for database connection
@@ -122,7 +122,10 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
             ok = false;
         }
     }
-    
+
+    if(ok)
+        PackedGameBinDb::AllocateUnorderedControlBlock( true );
+            
     // Read the game info
     while( ok && !kill_background_load )
     {
@@ -158,31 +161,42 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
             int               len8 = sqlite3_column_bytes(stmt,10);
             const char *moves_blob = (const char*)sqlite3_column_text(stmt,11);
             int              len12 = sqlite3_column_bytes(stmt,11);
-            ListableGameDb info
-            (
-                game_id,
-                white, len1,
-                black, len2,
-                event, len3,
-                site, len4,
-                result, len5,
-                round, len6,
-                date, len7,
-                eco, len8,
-                white_elo, len9,
-                black_elo, len10,
-                "", 0, //fen
-                moves_blob, len12
+            std::string swhite(white, len1);
+            std::string sblack(black, len2);
+            std::string sevent(event, len3);
+            std::string ssite(site, len4);
+            //    result, len5,
+            //    round, len6,
+            //    date, len7,
+            //    eco, len8,
+            //    white_elo, len9,
+            //    black_elo, len10,
+            //    "", 0, //fen
+            //    moves_blob, len12
+            ListableGameBinDb gb
+            ( 
+                mega_cache.size(),
+                sevent,
+                ssite,
+                swhite,
+                sblack,
+                Date2Bin(date),
+                Round2Bin(round),
+                Result2Bin(result),
+                Eco2Bin(eco),
+                Elo2Bin(white_elo),
+                Elo2Bin(black_elo),
+                moves_blob
             );
-            make_smart_ptr( ListableGameDb, new_info, info );
-            mega_cache.push_back( std::move(new_info) );
+            make_smart_ptr( ListableGameBinDb, new_gb, gb );
+            mega_cache.push_back( std::move(new_gb) );
             int num = idx;
             int den = game_count?game_count:1;
             if( den > 1000000 )
                 background_load_permill = num / (den/1000);
             else
                 background_load_permill = (num*1000) / den;
-            if( info.game_attributes )
+            if( gb.game_attributes )
                 nbr_promotion_games++;
             nbr_games++;
             if(
@@ -229,3 +243,7 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
     }
     return ok;
 }
+
+
+
+
