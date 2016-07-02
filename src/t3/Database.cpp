@@ -220,11 +220,13 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGam
     if( database_version < DATABASE_VERSION_NUMBER_BIN_DB )
     {
         BinDbClose();
-        LegacyDbLoadAllGames( db_filename.c_str(), false, mega_cache, background_load_permill, kill_background_load );
+        bool ok;
+        LegacyDbLoadAllGames( ok, db_filename.c_str(), false, mega_cache, background_load_permill, kill_background_load );
     }
     else
     {
         BinDbLoadAllGames( false, mega_cache, background_load_permill, kill_background_load );
+        std::reverse( mega_cache.begin(), mega_cache.end() );
         BinDbClose();
     }
     //cprintf( "Reversing BinDb order begin\n" );

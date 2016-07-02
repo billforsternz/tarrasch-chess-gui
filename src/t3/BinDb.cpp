@@ -449,13 +449,18 @@ void Bin2Elo( uint32_t bin, std::string &elo )
     elo = buf;
 }
 
-static std::set<std::string> set_player;
-static std::set<std::string> set_site;
-static std::set<std::string> set_event;
+static uint8_t bin_db_append_cb_idx;
 static std::vector< smart_ptr<ListableGame> > games;
 std::vector< smart_ptr<ListableGame> > &BinDbLoadAllGamesGetVector() { return games; }
-
 static int game_counter;
+
+void BinDbReadBegin( uint8_t cb_idx )
+{
+    bin_db_append_cb_idx = cb_idx;
+    game_counter = 0;
+    games.clear();
+}
+
 bool bin_db_append( const char *fen, const char *event, const char *site, const char *date, const char *round,
                   const char *white, const char *black, const char *result, const char *white_elo, const char *black_elo, const char *eco,
                   int nbr_moves, thc::Move *moves )
@@ -492,7 +497,8 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
     std::string swhite(white);
     std::string sblack(black);
     ListableGameBinDb gb
-    ( 
+    (
+        bin_db_append_cb_idx, 
         games.size(),
         sevent,
         ssite,
@@ -506,10 +512,6 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
         elo_b,
         compressed_moves
     );
-    set_event.insert(sevent);
-    set_site.insert(ssite);
-    set_player.insert(swhite);
-    set_player.insert(sblack);
     make_smart_ptr( ListableGameBinDb, new_gb, gb );
     games.push_back( std::move(new_gb) );
     return aborted;
@@ -631,23 +633,6 @@ int BitsRequired( int max )
     else if( max < 0x800000 )
         n = 23;
     return n;
-}
-
-std::map<std::string,int> map_player;
-std::map<std::string,int> map_event;
-std::map<std::string,int> map_site;
-
-void BinDbWriteClear()
-{
-    PackedGameBinDb::AllocateUnorderedControlBlock( true );
-    game_counter = 0;
-    set_player.clear();
-    set_site.clear();
-    set_event.clear();
-    games.clear();
-    map_player.clear();
-    map_event.clear();
-    map_site.clear();
 }
 
 // Split out printable, 2 character or more uppercased tokens from input string
@@ -1076,6 +1061,22 @@ bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
 // Return bool okay
 bool BinDbWriteOutToFile( FILE *ofile, ProgressBar *pb )
 {
+    std::set<std::string> set_player;
+    std::set<std::string> set_site;
+    std::set<std::string> set_event;
+    uint8_t cb_idx = bin_db_append_cb_idx;
+    std::vector<std::string> &players = bin_db_control_blocks[cb_idx].players;
+    for( std::vector<std::string>::iterator iter = players.begin(); iter != players.end(); iter++ )
+        set_player.insert(*iter);
+    std::vector<std::string> &events = bin_db_control_blocks[cb_idx].events;
+    for( std::vector<std::string>::iterator iter = events.begin(); iter != events.end(); iter++ )
+        set_event.insert(*iter);
+    std::vector<std::string> &sites = bin_db_control_blocks[cb_idx].sites;
+    for( std::vector<std::string>::iterator iter = sites.begin(); iter != sites.end(); iter++ )
+        set_site.insert(*iter);
+    std::map<std::string,int> map_player;
+    std::map<std::string,int> map_event;
+    std::map<std::string,int> map_site;
     fwrite( &compatibility_header, sizeof(compatibility_header), 1, ofile );
     std::set<std::string>::iterator it = set_player.begin();
     FileHeader fh;
@@ -1200,12 +1201,13 @@ void ReadStrings( FILE *fin, int nbr_strings, std::vector<std::string> &strings 
     }
 }
 
-void BinDbLoadAllGames(  bool for_db_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb )
+uint8_t BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb )
 {
     // When loading the system database, reverse order so most recent games come first 
-    bool do_reverse = !for_db_append;
+    bool do_reverse = !for_append;
 
-    int cb_idx = PackedGameBinDb::AllocateNewControlBlock();
+    uint8_t cb_idx = PackedGameBinDb::AllocateNewControlBlock();
+    BinDbReadBegin( cb_idx );
     PackedGameBinDbControlBlock& common = PackedGameBinDb::GetControlBlock(cb_idx);
     FileHeader fh;
     FILE *fin = bin_file;       // later allow this to be closed!
@@ -1255,17 +1257,6 @@ void BinDbLoadAllGames(  bool for_db_append, std::vector< smart_ptr<ListableGame
             cprintf( "Whoops\n" );
         int game_id = do_reverse ? game_count-1-i : i;
         ListableGameBinDb info( cb_idx, game_id, blob );
-        if( for_db_append )
-        {
-            std::string sevent(info.Event());
-            std::string ssite(info.Site());
-            std::string swhite(info.White());
-            std::string sblack(info.Black());
-            set_event.insert(sevent);
-            set_site.insert(ssite);
-            set_player.insert(swhite);
-            set_player.insert(sblack);
-        }
         make_smart_ptr( ListableGameBinDb, new_info, info );
         mega_cache.push_back( std::move(new_info) );
         int num = i;
@@ -1293,5 +1284,6 @@ void BinDbLoadAllGames(  bool for_db_append, std::vector< smart_ptr<ListableGame
     }
     if( do_reverse )
         std::reverse( mega_cache.begin(), mega_cache.end() );
+    return cb_idx;
 }
 

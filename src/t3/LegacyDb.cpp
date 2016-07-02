@@ -16,17 +16,17 @@
 #include "PgnRead.h"
 #include "CompactGame.h"
 #include "ListableGameBinDb.h"
+#include "BinDb.h"
 #include "LegacyDb.h"
 
 // Handle for database connection
 static sqlite3 *gbl_handle;
 
 // Returns bool okay
-bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb )
+bool LegacyDbLoadAllGames(  bool &ok, const char *db_file, bool for_db_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb )
 {
-    bool ok = true;
+    ok = true;
     mega_cache.clear();
-    cprintf( "LegacyDbLoadAllGames() db=%s\n", db_file );
 
     // Try to create the database. If it doesnt exist, it would be created
     //  pass a pointer to the pointer to sqlite3, in short sqlite3**
@@ -41,7 +41,6 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
 
     background_load_permill = 0;
     kill_background_load = false;
-    int idx=0;
     int cols=0;
     int nbr_games=0;
     int nbr_promotion_games=0;
@@ -123,8 +122,24 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
         }
     }
 
-    if(ok)
-        PackedGameBinDb::AllocateUnorderedControlBlock( true );
+    uint8_t cb_idx;
+    if( ok )
+    {
+        cb_idx = PackedGameBinDb::AllocateNewControlBlock();
+        BinDbReadBegin( cb_idx );
+        PackedGameBinDbControlBlock& cb = PackedGameBinDb::GetControlBlock(cb_idx);
+        cb.bb.Next(24);   // Event
+        cb.bb.Next(24);   // Site
+        cb.bb.Next(24);   // White
+        cb.bb.Next(24);   // Black
+        cb.bb.Next(19);   // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
+        cb.bb.Next(16);   // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), common.bb=board(0-1023)
+        cb.bb.Next(9);    // ECO For now 500 codes (9 bits) (A..E)(00..99)
+        cb.bb.Next(2);    // Result (2 bits)
+        cb.bb.Next(12);   // WhiteElo 12 bits (range 0..4095)
+        cb.bb.Next(12);   // BlackElo
+        cb.bb.Freeze();
+    }
             
     // Read the game info
     while( ok && !kill_background_load )
@@ -175,6 +190,7 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
             //    moves_blob, len12
             ListableGameBinDb gb
             ( 
+                cb_idx,
                 mega_cache.size(),
                 sevent,
                 ssite,
@@ -190,7 +206,8 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
             );
             make_smart_ptr( ListableGameBinDb, new_gb, gb );
             mega_cache.push_back( std::move(new_gb) );
-            int num = idx;
+            nbr_games++;
+            int num = nbr_games;
             int den = game_count?game_count:1;
             if( den > 1000000 )
                 background_load_permill = num / (den/1000);
@@ -198,7 +215,8 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
                 background_load_permill = (num*1000) / den;
             if( gb.game_attributes )
                 nbr_promotion_games++;
-            nbr_games++;
+            if( pb )
+                pb->Perfraction(nbr_games,game_count);
             if(
                 ((nbr_games%10000) == 0 ) /* ||
                                             (
@@ -229,6 +247,10 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
         }
     }
     int cache_nbr = mega_cache.size();
+    for( int i=0; i<cache_nbr; i++ )
+    {
+        smart_ptr<ListableGame> p = mega_cache[i];
+    }
     cprintf( "Number of games = %d\n", cache_nbr );
     if( 2 < cache_nbr )
     {
@@ -241,7 +263,7 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
         sqlite3_close(gbl_handle);
         gbl_handle = 0;
     }
-    return ok;
+    return cb_idx;
 }
 
 

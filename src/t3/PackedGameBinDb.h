@@ -7,6 +7,8 @@
 #ifndef PACKED_GAME_BIN_DB_H
 #define PACKED_GAME_BIN_DB_H
 
+#include <vector>
+#include <map>
 #include "CompactGame.h"
 #include "BinaryBlock.h"
 
@@ -16,6 +18,9 @@ struct PackedGameBinDbControlBlock
     std::vector<std::string> players;
     std::vector<std::string> events;
     std::vector<std::string> sites;
+    std::map<std::string,int> map_players;
+    std::map<std::string,int> map_events;
+    std::map<std::string,int> map_sites;
 };
 
 extern std::vector<PackedGameBinDbControlBlock> bin_db_control_blocks;
@@ -28,15 +33,17 @@ private:
     
 public:
     static int AllocateNewControlBlock();
-    static void AllocateUnorderedControlBlock( bool clear );
     static PackedGameBinDbControlBlock& GetControlBlock(int cb_idx);
 
     bool Empty() { return fields.size() == 0; }
     PackedGameBinDb() {}
+
+    // Create a PackedGameBinDb from binary data read from a .tdb file
     PackedGameBinDb( uint8_t cb_idx, std::string fields ) { this->cb_idx=cb_idx; this->fields=fields; }
 
-    // Create a PackedGameBinDb using special unordered control block 0
+    // Create a PackedGameBinDb from game data
     PackedGameBinDb(
+        uint8_t     cb_idx,
         std::string event,
         std::string site,
         std::string white,

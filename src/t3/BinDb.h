@@ -14,7 +14,7 @@
 
 bool BinDbOpen( const char *db_file, int &version );
 void BinDbClose();
-void BinDbLoadAllGames( bool for_db_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb=NULL  );
+uint8_t BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb=NULL  );
 std::vector< smart_ptr<ListableGame> > &BinDbLoadAllGamesGetVector();
 
 bool bin_db_append( const char *fen, const char *event, const char *site, const char *date, const char *round,
@@ -22,7 +22,7 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
                   int nbr_moves, thc::Move *moves );
 
 bool TestBinaryBlock();
-void BinDbWriteClear();
+void BinDbReadBegin( uint8_t cb_idx );
 uint32_t BinDbGetGamesSize();
 void BinDbNormaliseOrder( uint32_t begin, uint32_t end );
 bool BinDbDuplicateRemoval( std::string &title, wxWindow *window );

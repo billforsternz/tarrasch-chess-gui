@@ -25,7 +25,9 @@ public:
         SetAttributes();
     }
 
-    ListableGameBinDb( int game_id,
+    ListableGameBinDb( 
+        uint8_t cb_idx,
+        int game_id,
         std::string event,
         std::string site,
         std::string white,
@@ -37,7 +39,9 @@ public:
         uint16_t    white_elo,
         uint16_t    black_elo,
         std::string compressed_moves
-    )  : pack ( event,
+    )  : pack (
+        cb_idx,
+        event,
         site,
         white,
         black,
@@ -53,7 +57,6 @@ public:
         this->game_id = game_id;
         SetAttributes( compressed_moves.c_str(), compressed_moves.length() );
     }
-
 
     virtual int GetGameId()  { return game_id; }
 
