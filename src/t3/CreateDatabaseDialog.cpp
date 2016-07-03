@@ -282,21 +282,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
     FILE *ofile=NULL;
     if( ok )
     {
-        uint8_t cb_idx = PackedGameBinDb::AllocateNewControlBlock();
-        BinDbReadBegin( cb_idx );
-        PackedGameBinDbControlBlock& cb = PackedGameBinDb::GetControlBlock(cb_idx);
-        cb.bb.Next(24);   // Event
-        cb.bb.Next(24);   // Site
-        cb.bb.Next(24);   // White
-        cb.bb.Next(24);   // Black
-        cb.bb.Next(19);   // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
-        cb.bb.Next(16);   // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), common.bb=board(0-1023)
-        cb.bb.Next(9);    // ECO For now 500 codes (9 bits) (A..E)(00..99)
-        cb.bb.Next(2);    // Result (2 bits)
-        cb.bb.Next(12);   // WhiteElo 12 bits (range 0..4095)
-        cb.bb.Next(12);   // BlackElo
-        cb.bb.Freeze();
-
+        BinDbReadBegin( true );
         ofile = fopen( db_name.c_str(), "wb" );
         if( !ofile )
         {
@@ -447,12 +433,11 @@ void CreateDatabaseDialog::OnAppendDatabase()
         if( version < DATABASE_VERSION_NUMBER_BIN_DB )
         {
             BinDbClose();
-            bool ok;
-            cb_idx = LegacyDbLoadAllGames( ok, db_filename.c_str(), true, mega_cache, dummyi, dummyb, &progress_bar );
+            ok = LegacyDbLoadAllGames( db_filename.c_str(), true, mega_cache, dummyi, dummyb, &progress_bar );
         }
         else
         {
-            cb_idx = BinDbLoadAllGames( true, mega_cache, dummyi, dummyb, &progress_bar );
+            BinDbLoadAllGames( true, mega_cache, dummyi, dummyb, &progress_bar );
             BinDbClose();
         }
         FILE *ofile;

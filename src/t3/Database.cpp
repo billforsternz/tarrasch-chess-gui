@@ -220,8 +220,7 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGam
     if( database_version < DATABASE_VERSION_NUMBER_BIN_DB )
     {
         BinDbClose();
-        bool ok;
-        LegacyDbLoadAllGames( ok, db_filename.c_str(), false, mega_cache, background_load_permill, kill_background_load );
+        LegacyDbLoadAllGames( db_filename.c_str(), false, mega_cache, background_load_permill, kill_background_load );
     }
     else
     {

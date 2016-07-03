@@ -12,7 +12,6 @@
 #include "BinaryConversions.h"
 #include "ListableGame.h"
 
-bool LegacyDbLoadAllGames( bool &ok, const char *filename, bool for_db_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb=NULL  );
-std::vector< smart_ptr<ListableGame> > &BinDbLoadAllGamesGetVector();
+bool LegacyDbLoadAllGames( const char *filename, bool for_db_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb=NULL  );
 
 #endif  // LEGACYDB_H

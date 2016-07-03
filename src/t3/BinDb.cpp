@@ -454,11 +454,29 @@ static std::vector< smart_ptr<ListableGame> > games;
 std::vector< smart_ptr<ListableGame> > &BinDbLoadAllGamesGetVector() { return games; }
 static int game_counter;
 
-void BinDbReadBegin( uint8_t cb_idx )
+// Start reading BinDb game data
+uint8_t BinDbReadBegin( bool use_packed_control_block )
 {
-    bin_db_append_cb_idx = cb_idx;
     game_counter = 0;
     games.clear();
+    uint8_t cb_idx = PackedGameBinDb::AllocateNewControlBlock();
+    bin_db_append_cb_idx = cb_idx;
+    if( use_packed_control_block )
+    {
+        PackedGameBinDbControlBlock& cb = PackedGameBinDb::GetControlBlock(cb_idx);
+        cb.bb.Next(24);   // Event
+        cb.bb.Next(24);   // Site
+        cb.bb.Next(24);   // White
+        cb.bb.Next(24);   // Black
+        cb.bb.Next(19);   // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
+        cb.bb.Next(16);   // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), bb=board(0-1023)
+        cb.bb.Next(9);    // ECO For now 500 codes (9 bits) (A..E)(00..99)
+        cb.bb.Next(2);    // Result (2 bits)
+        cb.bb.Next(12);   // WhiteElo 12 bits (range 0..4095)
+        cb.bb.Next(12);   // BlackElo
+        cb.bb.Freeze();
+    }
+    return cb_idx;
 }
 
 bool bin_db_append( const char *fen, const char *event, const char *site, const char *date, const char *round,
@@ -1201,14 +1219,13 @@ void ReadStrings( FILE *fin, int nbr_strings, std::vector<std::string> &strings 
     }
 }
 
-uint8_t BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb )
+void BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb )
 {
     // When loading the system database, reverse order so most recent games come first 
     bool do_reverse = !for_append;
 
-    uint8_t cb_idx = PackedGameBinDb::AllocateNewControlBlock();
-    BinDbReadBegin( cb_idx );
-    PackedGameBinDbControlBlock& common = PackedGameBinDb::GetControlBlock(cb_idx);
+    uint8_t cb_idx = BinDbReadBegin( false );
+    PackedGameBinDbControlBlock& cb = PackedGameBinDb::GetControlBlock(cb_idx);
     FileHeader fh;
     FILE *fin = bin_file;       // later allow this to be closed!
     fseek(fin,compatibility_header_size,SEEK_SET);   // skip over compatibility header
@@ -1218,25 +1235,25 @@ uint8_t BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame>
     int nbr_bits_event  = BitsRequired(fh.nbr_events);  
     int nbr_bits_site   = BitsRequired(fh.nbr_sites);   
     cprintf( "%d player bits, %d event bits, %d site bits\n", nbr_bits_player, nbr_bits_event, nbr_bits_site );
-    ReadStrings( fin, fh.nbr_players, common.players );
+    ReadStrings( fin, fh.nbr_players, cb.players );
     cprintf( "Players ReadStrings() complete\n" );
-    ReadStrings( fin, fh.nbr_events, common.events );
+    ReadStrings( fin, fh.nbr_events, cb.events );
     cprintf( "Events ReadStrings() complete\n" );
-    ReadStrings( fin, fh.nbr_sites, common.sites );
+    ReadStrings( fin, fh.nbr_sites, cb.sites );
     cprintf( "Sites ReadStrings() complete\n" );
 
-    common.bb.Next(nbr_bits_event);    // Event
-    common.bb.Next(nbr_bits_site);     // Site
-    common.bb.Next(nbr_bits_player);   // White
-    common.bb.Next(nbr_bits_player);   // Black
-    common.bb.Next(19);                // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
-    common.bb.Next(16);                // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), common.bb=board(0-1023)
-    common.bb.Next(9);                 // ECO For now 500 codes (9 bits) (A..E)(00..99)
-    common.bb.Next(2);                 // Result (2 bits)
-    common.bb.Next(12);                // WhiteElo 12 bits (range 0..4095)
-    common.bb.Next(12);                // BlackElo
-    common.bb.Freeze();
-    int bb_sz = common.bb.FrozenSize();
+    cb.bb.Next(nbr_bits_event);    // Event
+    cb.bb.Next(nbr_bits_site);     // Site
+    cb.bb.Next(nbr_bits_player);   // White
+    cb.bb.Next(nbr_bits_player);   // Black
+    cb.bb.Next(19);                // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
+    cb.bb.Next(16);                // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), cb.bb=board(0-1023)
+    cb.bb.Next(9);                 // ECO For now 500 codes (9 bits) (A..E)(00..99)
+    cb.bb.Next(2);                 // Result (2 bits)
+    cb.bb.Next(12);                // WhiteElo 12 bits (range 0..4095)
+    cb.bb.Next(12);                // BlackElo
+    cb.bb.Freeze();
+    int bb_sz = cb.bb.FrozenSize();
     int game_count = fh.nbr_games;
     int nbr_games=0;
     int nbr_promotion_games=0;
@@ -1244,7 +1261,7 @@ uint8_t BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame>
     {
         if( pb )
             pb->Perfraction(i,game_count);
-        char buf[sizeof(common.bb)];
+        char buf[sizeof(cb.bb)];
         fread( buf, bb_sz, 1, fin );
         std::string blob(buf,bb_sz);
         int ch = fgetc(fin);
@@ -1284,6 +1301,5 @@ uint8_t BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame>
     }
     if( do_reverse )
         std::reverse( mega_cache.begin(), mega_cache.end() );
-    return cb_idx;
 }
 

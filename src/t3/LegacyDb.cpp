@@ -23,9 +23,9 @@
 static sqlite3 *gbl_handle;
 
 // Returns bool okay
-bool LegacyDbLoadAllGames(  bool &ok, const char *db_file, bool for_db_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb )
+bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb )
 {
-    ok = true;
+    bool ok = true;
     mega_cache.clear();
 
     // Try to create the database. If it doesnt exist, it would be created
@@ -124,22 +124,7 @@ bool LegacyDbLoadAllGames(  bool &ok, const char *db_file, bool for_db_append, s
 
     uint8_t cb_idx;
     if( ok )
-    {
-        cb_idx = PackedGameBinDb::AllocateNewControlBlock();
-        BinDbReadBegin( cb_idx );
-        PackedGameBinDbControlBlock& cb = PackedGameBinDb::GetControlBlock(cb_idx);
-        cb.bb.Next(24);   // Event
-        cb.bb.Next(24);   // Site
-        cb.bb.Next(24);   // White
-        cb.bb.Next(24);   // Black
-        cb.bb.Next(19);   // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
-        cb.bb.Next(16);   // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), common.bb=board(0-1023)
-        cb.bb.Next(9);    // ECO For now 500 codes (9 bits) (A..E)(00..99)
-        cb.bb.Next(2);    // Result (2 bits)
-        cb.bb.Next(12);   // WhiteElo 12 bits (range 0..4095)
-        cb.bb.Next(12);   // BlackElo
-        cb.bb.Freeze();
-    }
+        cb_idx = BinDbReadBegin( true );
             
     // Read the game info
     while( ok && !kill_background_load )
@@ -263,7 +248,7 @@ bool LegacyDbLoadAllGames(  bool &ok, const char *db_file, bool for_db_append, s
         sqlite3_close(gbl_handle);
         gbl_handle = 0;
     }
-    return cb_idx;
+    return ok;
 }
 
 
