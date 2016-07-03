@@ -55,6 +55,13 @@ DbDialog::DbDialog
     white_player_search = true;
 }
 
+void DbDialog::GdvEnumerateGames()
+{
+    int nbr_games = gc_db_displayed_games.gds.size();
+    for( int i=0; i<nbr_games; i++ )
+        gc_db_displayed_games.gds[i]->game_id = i;
+}
+
 // Games Dialog Override - Add extra controls
 wxSizer *DbDialog::GdvAddExtraControls()
 {

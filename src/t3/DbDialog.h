@@ -76,6 +76,7 @@ public:
 
     // Overrides - Gdv = Games Dialog Override
     virtual void GdvOnActivate();
+    virtual void GdvEnumerateGames();
     virtual wxSizer *GdvAddExtraControls();
     virtual void GdvReadItem( int item, CompactGame &info );
     virtual void GdvListColClick( int compare_col );

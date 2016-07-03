@@ -615,6 +615,9 @@ void GamesDialog::CreateControls()
     // Overridden by specialised classes
     GdvAddExtraControls();
 
+    // Overridden by specialised classes
+    GdvEnumerateGames();
+
     // Select site/or event
     wxRadioButton *site_button = new wxRadioButton( this, ID_SITE_EVENT,
        wxT("&Site"), wxDefaultPosition, wxDefaultSize,  wxRB_GROUP );
@@ -1475,6 +1478,13 @@ static bool master_predicate( const smart_ptr<ListableGame> &g1, const smart_ptr
         const char *parm2;
         switch( col )
         {
+            case 0:
+            {
+                use_bin = true;
+                bin1 = g1->game_id;
+                bin2 = g2->game_id;
+                break;
+            }
             case 1:
             {
                 parm1 = g1->White();

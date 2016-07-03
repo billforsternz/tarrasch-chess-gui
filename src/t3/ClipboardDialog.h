@@ -30,7 +30,7 @@ public:
     // Overrides
     virtual wxSizer *GdvAddExtraControls();
     virtual void GdvCheckBox( bool checked );
-
+    virtual void GdvEnumerateGames();
 };
 
 

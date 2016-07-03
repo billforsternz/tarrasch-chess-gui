@@ -37,4 +37,7 @@ void ClipboardDialog::GdvCheckBox( bool checked )
     objs.gl->db_clipboard = checked;
 }
 
+void ClipboardDialog::GdvEnumerateGames()
+{
+}
 

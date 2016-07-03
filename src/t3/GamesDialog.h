@@ -206,6 +206,7 @@ public:
 
     // Overrides - Gdv = Games Dialog Override
     virtual void GdvOnActivate();
+    virtual void GdvEnumerateGames()    {}
     virtual wxSizer *GdvAddExtraControls() { return NULL; }
     virtual void GdvGetButtonGridDimensions( int &row1, int &col1, int &row2, int &col2 ) { row1=8; col1=2; row2=0; col2=0; }
     bool dirty;

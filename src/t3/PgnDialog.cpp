@@ -26,6 +26,10 @@
 #include <algorithm>
 using namespace std;
 
+void PgnDialog::GdvEnumerateGames()
+{
+}
+
 
 wxSizer *PgnDialog::GdvAddExtraControls()
 {
