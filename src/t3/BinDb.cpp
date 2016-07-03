@@ -537,7 +537,7 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
 
 struct FileHeader
 {
-    int reserved;       // This used to be called version, but was not used
+    int hdr_len;       // This was first version, then reserved, now is a future compatibility feature
     int nbr_players;
     int nbr_events;
     int nbr_sites;
@@ -1098,6 +1098,7 @@ bool BinDbWriteOutToFile( FILE *ofile, ProgressBar *pb )
     fwrite( &compatibility_header, sizeof(compatibility_header), 1, ofile );
     std::set<std::string>::iterator it = set_player.begin();
     FileHeader fh;
+    fh.hdr_len     = sizeof(FileHeader);
     fh.nbr_players = std::distance( set_player.begin(), set_player.end() );
     fh.nbr_events  = std::distance( set_event.begin(),  set_event.end() );
     fh.nbr_sites   = std::distance( set_site.begin(),   set_site.end() );
@@ -1233,8 +1234,13 @@ void BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > 
     cprintf( "%d games, %d players, %d events, %d sites\n", fh.nbr_games, fh.nbr_players, fh.nbr_events, fh.nbr_sites );
     int nbr_bits_player = BitsRequired(fh.nbr_players);
     int nbr_bits_event  = BitsRequired(fh.nbr_events);  
-    int nbr_bits_site   = BitsRequired(fh.nbr_sites);   
+    int nbr_bits_site   = BitsRequired(fh.nbr_sites);
     cprintf( "%d player bits, %d event bits, %d site bits\n", nbr_bits_player, nbr_bits_event, nbr_bits_site );
+    int hdr_len = fh.hdr_len;   // future compatibility feature - if FileHeader gets longer so will fh.hdr_len
+    if( hdr_len < sizeof(FileHeader) )
+        hdr_len = sizeof(FileHeader);  
+    if( hdr_len != sizeof(FileHeader) )
+        fseek(fin,compatibility_header_size+hdr_len,SEEK_SET);  // if necessary skip over unknown extensions to header
     ReadStrings( fin, fh.nbr_players, cb.players );
     cprintf( "Players ReadStrings() complete\n" );
     ReadStrings( fin, fh.nbr_events, cb.events );

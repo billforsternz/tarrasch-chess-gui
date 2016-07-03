@@ -26,6 +26,7 @@ static sqlite3 *gbl_handle;
 bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb )
 {
     bool ok = true;
+    bool do_reverse=for_db_append;
     mega_cache.clear();
 
     // Try to create the database. If it doesnt exist, it would be created
@@ -138,7 +139,7 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
             // sqlite3_column_text returns a const void* , typecast it to const char*
             bool promotion=false;
             const char *val        = (const char*)sqlite3_column_text(stmt,0);
-            game_id                = atoi(val);
+            //game_id                = atoi(val);
             const char      *white = (const char*)sqlite3_column_text(stmt,1);
             int              len1  = sqlite3_column_bytes(stmt,1);
             const char      *black = (const char*)sqlite3_column_text(stmt,2);
@@ -173,10 +174,12 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
             //    black_elo, len10,
             //    "", 0, //fen
             //    moves_blob, len12
+            int idx=mega_cache.size();
+            game_id = do_reverse ? game_count-1-idx : idx;
             ListableGameBinDb gb
             ( 
                 cb_idx,
-                mega_cache.size(),
+                game_id,
                 sevent,
                 ssite,
                 swhite,
@@ -232,10 +235,6 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
         }
     }
     int cache_nbr = mega_cache.size();
-    for( int i=0; i<cache_nbr; i++ )
-    {
-        smart_ptr<ListableGame> p = mega_cache[i];
-    }
     cprintf( "Number of games = %d\n", cache_nbr );
     if( 2 < cache_nbr )
     {
@@ -248,6 +247,8 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
         sqlite3_close(gbl_handle);
         gbl_handle = 0;
     }
+    if( do_reverse )
+        std::reverse( mega_cache.begin(), mega_cache.end() );
     return ok;
 }
 
