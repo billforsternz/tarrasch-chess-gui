@@ -92,8 +92,8 @@ static int window_id_positions_54[NBR_OF_WIDS][4] =
     {10+XDELTA,468+YDELTA,674,37},         // box
     {20+XDELTA,478+YDELTA,286,22},         // status
     {10,425,116,19},                       // book_moves
-    {512+XDELTA,460,68,28},                // wclock
-    {584+XDELTA,460,68,28},                // bclock
+    {512+XDELTA,466,68,28},                // wclock
+    {584+XDELTA,466,68,28},                // bclock
     {472+XDELTA,5+YDELTA,202,434},         // moves          + 3
     {394+XDELTA,478+YDELTA,0,0},           // button
     {10+XDELTA,530,570,99},                // kibitz

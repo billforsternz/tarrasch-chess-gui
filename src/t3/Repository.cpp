@@ -111,6 +111,7 @@ Repository::Repository( bool use_defaults )
         config->Read("BlackIncrement",        &clock.m_black_increment  );
         ReadBool    ("BlackVisible",           clock.m_black_visible    );
     //  ReadBool    ("BlackRunning",           clock.m_black_running    );
+        ReadBool    ("FixedPeriodMode",        clock.m_fixed_period_mode );
 
         // Log
         config->Read("LogFile",              &log.m_file                );
@@ -201,6 +202,7 @@ Repository::~Repository()
     config->Write("EngineIncrement",      clock.m_engine_increment        );
     config->Write("EngineVisible",        (int)clock.m_engine_visible     );
     config->Write("EngineRunning",        (int)clock.m_engine_running     );
+    config->Write("FixedPeriodMode",      (int)clock.m_fixed_period_mode  );
 
 //  config->Write("WhiteTime",            clock.m_white_time              );
 //  config->Write("WhiteIncrement",       clock.m_white_increment         );

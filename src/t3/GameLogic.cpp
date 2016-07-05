@@ -428,7 +428,7 @@ void GameLogic::CmdSwapSides()
         wxString temp                   = objs.repository->player.m_black;
         objs.repository->player.m_black = objs.repository->player.m_white;
         objs.repository->player.m_white = temp;
-        chess_clock.Swap();
+        chess_clock.Swap( glc.human_is_white, cr.white );
         LabelPlayers();
         if( last_move )
         {
@@ -1906,17 +1906,23 @@ void GameLogic::OnIdle()
             case SLIDING:       
             case THINKING:
             {
-                glc.Set( white ? RESULT_WHITE_LOSE_TIME : RESULT_BLACK_LOSE_TIME );
-                NewState( GAMEOVER );
-                if( gd.AreWeInMain() )
+                bool computer_to_play = (state==PONDERING||state==THINKING);
+                if( computer_to_play && chess_clock.fixed_period_mode )
+                    CmdMoveNow();
+                else
                 {
-                    gd.r.result = (white ? "0-1" : "1-0");
-                    gd.Rebuild();
-                    unsigned long pos = gd.gv.FindEnd();
-                    atom.Redisplay( pos );
+                    glc.Set( white ? RESULT_WHITE_LOSE_TIME : RESULT_BLACK_LOSE_TIME );
+                    NewState( GAMEOVER );
+                    if( gd.AreWeInMain() )
+                    {
+                        gd.r.result = (white ? "0-1" : "1-0");
+                        gd.Rebuild();
+                        unsigned long pos = gd.gv.FindEnd();
+                        atom.Redisplay( pos );
+                    }
+                    atom.Undo();
+                    atom.StatusUpdate();
                 }
-                atom.Undo();
-                atom.StatusUpdate();
                 break;
             }
         }
@@ -3357,6 +3363,13 @@ GAME_STATE GameLogic::StartThinking( const thc::Move *human_move )
         winc_ms = increment*1000;
         chess_clock.black.GetClock( time, increment, running, visible );
         binc_ms = increment*1000;
+        if( chess_clock.fixed_period_mode )
+        {
+            btime_ms  = 10000000;
+            wtime_ms  = 10000000;
+            binc_ms   = 100000;
+            winc_ms   = 100000;
+        }
 
         // If book move
         if( book_move.Valid() )

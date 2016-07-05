@@ -34,7 +34,8 @@ enum
     ID_BLACK_RUNNING        = 10016,
     ID_BLACK_TIME           = 10017,
     ID_BLACK_SECS           = 10018,
-    ID_BLACK_INCREMENT      = 10019
+    ID_BLACK_INCREMENT      = 10019,
+    ID_FIXED_PERIOD_MODE    = 10020
 };
 
 // ClockDialog class declaration
@@ -84,12 +85,18 @@ public:
 
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_HELP
     void OnHelpClick( wxCommandEvent& event );
-
-    // ClockDialog member variables
+    void OnFixedPeriodMode( wxCommandEvent& event );
 
     // Data members
     ClockConfig dat;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
+
+private:
+    wxCheckBox* human_visible_checkbox;
+    wxCheckBox* human_running_checkbox;
+    wxCheckBox* engine_visible_checkbox;
+    wxCheckBox* engine_running_checkbox;
+    wxCheckBox* fixed_period_mode;
 };
 
 #endif    // CLOCK_DIALOG_H

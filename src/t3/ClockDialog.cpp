@@ -20,6 +20,7 @@ BEGIN_EVENT_TABLE( ClockDialog, wxDialog )
  // EVT_UPDATE_UI( ID_VOTE, ClockDialog::OnVoteUpdate )
     EVT_BUTTON( ID_CLOCK_RESET, ClockDialog::OnResetClick )
     EVT_BUTTON( wxID_HELP, ClockDialog::OnHelpClick )
+    EVT_CHECKBOX( ID_FIXED_PERIOD_MODE,  ClockDialog::OnFixedPeriodMode )
 END_EVENT_TABLE()
 
 // ClockDialog constructors
@@ -223,16 +224,16 @@ void ClockDialog::CreateControls()
         wxSP_ARROW_KEYS, 0, 120, 30 );
     small_sizer3->Add(increment_ctrl3, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-    wxCheckBox* visible_box3 = new wxCheckBox( this, ID_HUMAN_VISIBLE,
+    human_visible_checkbox = new wxCheckBox( this, ID_HUMAN_VISIBLE,
        wxT("&Visible"), wxDefaultPosition, wxDefaultSize, 0 );
-    visible_box3->SetValue( dat.m_human_visible );
-    small_sizer3->Add( visible_box3, 0,
+    human_visible_checkbox->SetValue( dat.m_human_visible );
+    small_sizer3->Add( human_visible_checkbox, 0,
         wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-    wxCheckBox* running_box3 = new wxCheckBox( this, ID_HUMAN_RUNNING,
+    human_running_checkbox = new wxCheckBox( this, ID_HUMAN_RUNNING,
        wxT("&Running"), wxDefaultPosition, wxDefaultSize, 0 );
-    running_box3->SetValue( dat.m_human_running );
-    small_sizer3->Add( running_box3, 0,
+    human_running_checkbox->SetValue( dat.m_human_running );
+    small_sizer3->Add( human_running_checkbox, 0,
         wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     horiz_sizer2->Add(small_sizer3, 1, wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 10);
@@ -247,7 +248,7 @@ void ClockDialog::CreateControls()
     // A spin control for time
     wxSpinCtrl* time_ctrl4 = new wxSpinCtrl ( this, ID_ENGINE_TIME,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
-        wxSP_ARROW_KEYS, 1, 120, 90 );
+        wxSP_ARROW_KEYS, 0, 120, 90 );
     small_sizer4->Add(time_ctrl4, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     // Label for increment
@@ -261,21 +262,34 @@ void ClockDialog::CreateControls()
         wxSP_ARROW_KEYS, 0, 120, 30 );
     small_sizer4->Add(increment_ctrl4, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-    wxCheckBox* visible_box4 = new wxCheckBox( this, ID_ENGINE_VISIBLE,
+    engine_visible_checkbox = new wxCheckBox( this, ID_ENGINE_VISIBLE,
        wxT("&Visible"), wxDefaultPosition, wxDefaultSize, 0 );
-    visible_box4->SetValue( dat.m_engine_visible );
-    small_sizer4->Add( visible_box4, 0,
+    engine_visible_checkbox->SetValue( dat.m_engine_visible );
+    small_sizer4->Add( engine_visible_checkbox, 0,
         wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-    wxCheckBox* running_box4 = new wxCheckBox( this, ID_ENGINE_RUNNING,
+    engine_running_checkbox = new wxCheckBox( this, ID_ENGINE_RUNNING,
        wxT("&Running"), wxDefaultPosition, wxDefaultSize, 0 );
-    running_box4->SetValue( dat.m_engine_running );
-    small_sizer4->Add( running_box4, 0,
+    engine_running_checkbox->SetValue( dat.m_engine_running );
+    small_sizer4->Add( engine_running_checkbox, 0,
         wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     horiz_sizer2->Add(small_sizer4, 1, wxALIGN_RIGHT|wxGROW | (wxALL/* & ~wxLEFT */), 10);
     //box_sizer->Add(small_sizer2, 1, wxGROW | (wxALL/* & ~wxLEFT */), 10);
     box_sizer->Add(horiz_sizer2, 1, wxGROW | (wxALL/* & ~wxLEFT */), 10);
+
+    // An intermediate sizer
+    wxBoxSizer* horiz_sizer3 = new wxBoxSizer(wxHORIZONTAL);
+    wxStaticBox *box5 = new wxStaticBox(this, wxID_ANY, "Fixed period mode" );
+    wxSizer     *small_sizer5 = new wxStaticBoxSizer(box5, wxVERTICAL);
+
+    fixed_period_mode = new wxCheckBox( this, ID_FIXED_PERIOD_MODE,
+       wxT("Engine gets fixed time per move, human not timed"), wxDefaultPosition, wxDefaultSize, 0 );
+    fixed_period_mode->SetValue( dat.m_fixed_period_mode );
+    small_sizer5->Add( fixed_period_mode, 0,
+        /*wxALIGN_CENTER_VERTICAL|*/wxALL, 5);
+    horiz_sizer3->Add(small_sizer5, 1, wxALIGN_RIGHT/*|wxGROW */| (wxALL/* & ~wxLEFT */), 10);
+    box_sizer->Add(horiz_sizer3, 0, wxGROW |  (wxALL/* & ~wxLEFT */), 10);
 
     // A dividing line before the OK and Cancel buttons
     wxStaticLine* line = new wxStaticLine ( this, wxID_STATIC,
@@ -376,6 +390,8 @@ void ClockDialog::SetDialogValidators()
         wxGenericValidator(& dat.m_engine_visible));
     FindWindow(ID_ENGINE_RUNNING)->SetValidator(
         wxGenericValidator(& dat.m_engine_running));
+    FindWindow(ID_FIXED_PERIOD_MODE)->SetValidator(
+        wxGenericValidator(& dat.m_fixed_period_mode));
 }
 
 // Sets the help text for the dialog controls
@@ -385,6 +401,7 @@ void ClockDialog::SetDialogHelp()
     wxString increment_help = wxT("Enter the increment in seconds.");
     wxString visible_help   = wxT("Check this if the clock is visible.");
     wxString running_help   = wxT("Check this if the clock is running.");
+    wxString fixed_period_mode_help   = wxT("Check this to make the engine move after a fixed time interval. Adjust time interval using engine time(mins) and increment(secs)");
 
     FindWindow(ID_WHITE_TIME)->SetHelpText(time_help);
     FindWindow(ID_WHITE_TIME)->SetToolTip(time_help);
@@ -433,6 +450,9 @@ void ClockDialog::SetDialogHelp()
 
     FindWindow(ID_ENGINE_RUNNING)->SetHelpText(running_help);
     FindWindow(ID_ENGINE_RUNNING)->SetToolTip(running_help);
+
+    FindWindow(ID_FIXED_PERIOD_MODE)->SetHelpText(fixed_period_mode_help);
+    FindWindow(ID_FIXED_PERIOD_MODE)->SetToolTip(fixed_period_mode_help);
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_CLOCK_RESET
@@ -452,19 +472,42 @@ void ClockDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
      */
 
     wxString helpText =
-      wxT("Specify how you want the on screen clocks to work.\n\n")
-      wxT("You can make instantaneously effective changes to\n")
-      wxT("the clock settings. One application of that feature\n")
-      wxT("is to start the clocks running in the opening\n")
-      wxT("position and use the program as a combined\n")
-      wxT("electronic board and clock for a normal chess game\n")
-      wxT("with a friend.\n\n")
-      wxT("You can also change how the clocks are setup\n")
-      wxT("each time a new human versus engine game starts.\n\n")
-      wxT("A shortcut to this dialog is available; simply\n")
+      wxT("Specify how you want the on screen clocks to work.")
+      wxT("\n\n")
+      wxT("You can make instantaneously effective changes to ")
+      wxT("the clock settings. One application of that feature ")
+      wxT("is to start the clocks running in the opening ")
+      wxT("position and use the program as a combined ")
+      wxT("electronic board and clock for a normal chess game ")
+      wxT("with a friend.")
+      wxT("\n\n")
+      wxT("You can also change how the clocks are setup ")
+      wxT("each time a new human versus engine game starts. A ")
+      wxT("fixed period mode option is now available. This specifies a mode where the human is ")
+      wxT("not timed and the engine receives a fixed amount of time per ")
+      wxT("move. Specify the number of seconds the engine gets in this ")
+      wxT("mode with the engine time (minutes, probably zero is best!) and engine increment (seconds) parameters.")
+      wxT("\n\n")
+      wxT("A shortcut to this dialog is available; simply ")
       wxT("click on the clocks.\n");
 
     wxMessageBox(helpText,
       wxT("Chess Clock Dialog Help"),
       wxOK|wxICON_INFORMATION, this);
+}
+
+void ClockDialog::OnFixedPeriodMode( wxCommandEvent& WXUNUSED(event) )
+{
+    bool fpm = fixed_period_mode->GetValue();
+    if( fpm )
+    {
+        dat.m_human_running  = false;
+        dat.m_human_visible  = false;
+        dat.m_engine_running = true;
+        dat.m_engine_visible = true;
+        human_running_checkbox->SetValue( dat.m_human_running );
+        human_visible_checkbox->SetValue( dat.m_human_visible );
+        engine_running_checkbox->SetValue( dat.m_engine_running );
+        engine_visible_checkbox->SetValue( dat.m_engine_visible );
+    }
 }

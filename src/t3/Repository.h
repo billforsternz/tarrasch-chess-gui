@@ -86,6 +86,7 @@ struct ClockConfig
     int         m_black_increment;
     bool        m_black_visible;
     bool        m_black_running;
+    bool        m_fixed_period_mode;
     ClockConfig()
     {
         m_human_time          = 25;
@@ -106,6 +107,7 @@ struct ClockConfig
         m_black_increment     = 30;
         m_black_visible       = false;
         m_black_running       = false;
+        m_fixed_period_mode   = false;
     }
 };
 
