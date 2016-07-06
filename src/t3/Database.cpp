@@ -161,28 +161,17 @@ bool Database::IsOperational( std::string &error_msg )
     return operational;
 }
 
-bool predicate_sorts_by_player( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 )
-{
-	return e1->WhiteBin() < e2->WhiteBin();
-}
-
-bool predicate_sorts_by_game_id( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 )
-{
-	return e1->GetGameId() < e2->GetGameId();
-}
-
-
 int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr )
 {
     std::string empty;
     return SetDbPosition( db_req, cr, empty );
 }
 
-
 int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &player_name )
 {
     this->db_req = db_req;
-	std::sort( objs.db->tiny_db.in_memory_game_cache.begin(), objs.db->tiny_db.in_memory_game_cache.end(), db_req==REQ_PLAYERS ? predicate_sorts_by_player : predicate_sorts_by_game_id );
+    extern void BinDbDatabaseInitialSort( std::vector< smart_ptr<ListableGame> > &games, bool sort_by_player_name );
+    BinDbDatabaseInitialSort( objs.db->tiny_db.in_memory_game_cache, db_req == REQ_PLAYERS );
 	smart_ptr<ListableGame> p = objs.db->tiny_db.in_memory_game_cache[0];
 	cprintf( "index 0: %s\n", p->White() );
 	return tiny_db.in_memory_game_cache.size();

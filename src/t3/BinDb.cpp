@@ -963,6 +963,33 @@ static bool predicate_sorts_by_game_moves( const smart_ptr<ListableGame> &e1, co
     return ret;
 }
 
+static bool predicate_sorts_by_player( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 )
+{
+	bool ret = e1->WhiteBin() < e2->WhiteBin();
+    predicate_count++;
+    if( (predicate_count & 0xffff) == 0 )
+        sort_progress_probe();
+    return ret;
+}
+
+static bool predicate_sorts_by_game_id( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 )
+{
+	bool ret = e1->GetGameId() < e2->GetGameId();
+    predicate_count++;
+    if( (predicate_count & 0xffff) == 0 )
+        sort_progress_probe();
+    return ret;
+}
+
+void BinDbDatabaseInitialSort( std::vector< smart_ptr<ListableGame> > &games, bool sort_by_player_name )
+{
+        std::string desc(sort_by_player_name?"Sorting by player name":"Initial sort");
+        ProgressBar progress_bar( "Sorting", desc, true );
+        //progress_bar.DrawNow();
+        sort_before( games.begin(), games.end(), sort_by_player_name ? predicate_sorts_by_player : predicate_sorts_by_game_id, &progress_bar );
+    	std::sort( games.begin(), games.end(), sort_by_player_name ? predicate_sorts_by_player : predicate_sorts_by_game_id );
+        sort_after();
+}
 
 bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
 {

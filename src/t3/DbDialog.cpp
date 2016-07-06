@@ -176,11 +176,13 @@ void DbDialog::GdvReadItem( int item, CompactGame &pact )
     // Two mechanisms supported
 
     // Mechanism 1) Dialog presents selected games
+    //  This mechanism kicks in after position/pattern/material balance searches
     bool in_memory = ReadGameFromSearchResults( item, pact );
     if( !in_memory )
     {
 
         // Mechanism 2) Fallback when no filtering - dialog presents all database games
+        //  This mechanism kicks in after REQ_PLAYERS
         objs.db->GetRow( item, &pact );
         pact.transpo_nbr = 0;
     }
