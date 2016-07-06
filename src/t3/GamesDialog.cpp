@@ -432,7 +432,7 @@ void GamesDialog::CreateControls()
         list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
     }
 
-    list_ctrl->InsertColumn( 0, " "  ); // id==ID_PGN_DIALOG_FILE?"#":" "  );
+    list_ctrl->InsertColumn( 0, "#"  ); // id==ID_PGN_DIALOG_FILE?"#":" "  );
     list_ctrl->InsertColumn( 1, "White"    );
     list_ctrl->InsertColumn( 2, "Elo"      );
     list_ctrl->InsertColumn( 3, "Black"    );
@@ -479,7 +479,7 @@ void GamesDialog::CreateControls()
     else // else set some sensible defaults
     {
         int x   = (sz.x*98)/100;
-        objs.repository->nv.m_col0 = cols[0] =   1*x/142;    // "Game #"
+        objs.repository->nv.m_col0 = cols[0] =  3*x/190;     // "#"
         objs.repository->nv.m_col1 = cols[1] =  16*x/142;    // "White" 
         objs.repository->nv.m_col2 = cols[2] =   5*x/142;    // "Elo W"
         objs.repository->nv.m_col3 = cols[3] =  16*x/142;    // "Black" 
@@ -489,7 +489,7 @@ void GamesDialog::CreateControls()
         objs.repository->nv.m_col7 = cols[7] =   6*x/142;    // "Round" 
         objs.repository->nv.m_col8 = cols[8] =   7*x/142;    // "Result"
         objs.repository->nv.m_col9 = cols[9] =   5*x/142;    // "ECO"   
-        objs.repository->nv.m_col10= cols[10]=  54*x/142;    // "Moves"
+        objs.repository->nv.m_col10= cols[10]=  54*x/142-2;  // "Moves"
         objs.repository->nv.m_col11 = cols[11] = 5*x/142;    // "Ply"   
     }
     cprintf( "cols[0] = %d\n", cols[0] );

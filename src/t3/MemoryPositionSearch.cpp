@@ -453,6 +453,9 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, ProgressBar *
         for( int i=0; i<nbr; i++ )
         {
             smart_ptr<ListableGame> p = (*source)[i];
+            const char *fen = p->Fen();
+            if( fen && *fen )
+                continue;   // a partial game in the clipboard
             DoSearchFoundGame dsfg;
             dsfg.idx = i;
             dsfg.game_id = p->GetGameId();
@@ -483,7 +486,7 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, ProgressBar *
                 games_found.push_back( dsfg );
             }
             if( (i&0xff)==0 && progress )
-                progress->Permill( i*1000 / nbr );
+                progress->Perfraction( i, nbr );
         }    
     }                         
     return games_found.size();

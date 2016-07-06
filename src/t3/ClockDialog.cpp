@@ -246,14 +246,14 @@ void ClockDialog::CreateControls()
     small_sizer4->Add(time_label4, 0, wxALIGN_LEFT|wxALL, 5);
 
     // A spin control for time
-    wxSpinCtrl* time_ctrl4 = new wxSpinCtrl ( this, ID_ENGINE_TIME,
+    time_ctrl4 = new wxSpinCtrl ( this, ID_ENGINE_TIME,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 0, 120, 90 );
     small_sizer4->Add(time_ctrl4, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     // Label for increment
-    wxStaticText* increment_label4 = new wxStaticText ( this, wxID_STATIC,
-        wxT("&Increment (seconds):"), wxDefaultPosition, wxDefaultSize, 0 );
+    increment_label4 = new wxStaticText ( this, wxID_STATIC,
+        dat.m_fixed_period_mode ? "Time (seconds):" : "Increment (seconds):", wxDefaultPosition, wxDefaultSize, 0 );
     small_sizer4->Add(increment_label4, 0, wxALIGN_LEFT|wxALL, 5);
 
     // A spin control for increment
@@ -499,8 +499,12 @@ void ClockDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
 void ClockDialog::OnFixedPeriodMode( wxCommandEvent& WXUNUSED(event) )
 {
     bool fpm = fixed_period_mode->GetValue();
-    if( fpm )
+    if( !fpm )
+        increment_label4->SetLabel( "Increment (seconds):" );
+    else
     {
+        increment_label4->SetLabel( "Time (seconds):" );
+        time_ctrl4->SetValue(0);    // by default
         dat.m_human_running  = false;
         dat.m_human_visible  = false;
         dat.m_engine_running = true;

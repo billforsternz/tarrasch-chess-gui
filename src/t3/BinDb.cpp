@@ -513,7 +513,11 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
     std::string sevent(event);
     std::string ssite(site);
     std::string swhite(white);
+    if( swhite.length()>5 && swhite.substr(swhite.length()-5)==" (wh)" )
+        swhite = swhite.substr( 0, swhite.length()-5 );
     std::string sblack(black);
+    if( sblack.length()>5 && sblack.substr(sblack.length()-5)==" (bl)" )
+        sblack = sblack.substr( 0, sblack.length()-5 );
     ListableGameBinDb gb
     (
         bin_db_append_cb_idx, 

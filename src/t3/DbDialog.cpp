@@ -629,7 +629,7 @@ void DbDialog::StatsCalculate()
         // The promotion attribute is only set automatically for the tiny database games (at the moment)
         for( int i=0; i<source->size(); i++ )
             (*source)[i]->SetAttributes();
-        ProgressBar progress2(objs.gl->db_clipboard ? "Searching" : "Checking for transpositions", "Searching",false);
+        ProgressBar progress2("Searching Clipboard", "Searching",false);
         game_count = mps->DoSearch(cr_to_match,&progress2,source);
     }
     else
@@ -638,7 +638,7 @@ void DbDialog::StatsCalculate()
         cprintf( "search_needed = %s\n", search_needed?"true":"false" );
         if( search_needed )
         {
-            ProgressBar progress2("Checking for transpositions", "Searching for extra games",false);
+            ProgressBar progress2("Searching Database", "Searching",false);
             game_count = mps->DoSearch(cr_to_match,&progress2);
         }
     }
@@ -812,7 +812,8 @@ void DbDialog::StatsCalculate()
     double percent_score=0.0;
     if( total_games )
         percent_score= ((1.0*total_white_wins + 0.5*total_draws_plus_no_result) * 100.0) / total_games;
-    sprintf( buf, "%d %s, white scores %.1f%% +%d -%d =%d",
+    sprintf( buf, "%s%d %s, white scores %.1f%% +%d -%d =%d",
+            objs.gl->db_clipboard ? "Clipboard search: " : "",
             total_games,
             total_games==1 ? "game" : "games",
             percent_score,

@@ -97,6 +97,8 @@ private:
     wxCheckBox* engine_visible_checkbox;
     wxCheckBox* engine_running_checkbox;
     wxCheckBox* fixed_period_mode;
+    wxStaticText* increment_label4;
+    wxSpinCtrl* time_ctrl4;
 };
 
 #endif    // CLOCK_DIALOG_H

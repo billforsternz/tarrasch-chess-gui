@@ -519,7 +519,9 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
     ProgressBar pb( "Saving file", "Saving file" );
     for( int i=0; i<gds_nbr; i++ )
     {
-        pb.Permill( (i*1000L) / (gds_nbr?gds_nbr:1) );
+        bool abort = pb.Perfraction( i, gds_nbr );
+        if( abort )
+            break;
         ListableGame *mptr = gds[i].get();
         long game_len = 0;
         //#define FORCE_REGENERATE_ALL_GAMES  // used this for regenerating/repairing a big .pgn
