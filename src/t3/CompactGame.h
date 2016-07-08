@@ -23,7 +23,7 @@ public:
     std::vector< thc::Move > moves;
     
     // temp stuff hopefully
-    int game_id;
+    uint32_t game_id;
     int transpo_nbr;
     
     std::string Description();

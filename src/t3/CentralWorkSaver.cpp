@@ -117,6 +117,7 @@ void CentralWorkSaver::AddGameToFile()
                                     // not getting to log or session later (not satisfactory I know - too many flags)
     int nbr = gc->gds.size();
     gd->game_nbr = nbr + 1;
+    gd->game_id = GameIdAllocateBottom(1);
     make_smart_ptr( GameDocument, new_smart_ptr, *gd );  // smart_ptr event: document->cache
     gc->gds.push_back( std::move(new_smart_ptr) );
     objs.gl->file_game_idx = gc->gds.size()-1;

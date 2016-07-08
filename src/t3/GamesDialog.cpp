@@ -97,8 +97,9 @@ void GamesListCtrl::ReceiveFocus( int focus_idx )
     {
         track->focus_idx = focus_idx;
         parent->ReadItemWithSingleLineCache( focus_idx, track->info );
-
         int offset = parent->GetBasePositionIdx( track->info, true );
+        if( browse_map.count(track->info.game_id) > 0 )
+            offset = browse_map[track->info.game_id];
         initial_focus_offset = track->focus_offset = offset;
         if( mini_board )
         {
@@ -228,6 +229,8 @@ wxString GamesListCtrl::OnGetItemText( long item, long column) const
             else
             {
                 int idx = parent->GetBasePositionIdx( info, false );
+                if( browse_map.count(info.game_id) > 0 )
+                    idx = browse_map.at(info.game_id);  // browse_map[info.game_id] doesn't compile because [] operator is not const if it is on lhs!
                 move_txt = CalculateMoveTxt( info, idx );
                 move_txt = buf + move_txt;
             }
@@ -271,6 +274,7 @@ void GamesListCtrl::OnChar( wxKeyEvent &event )
     if( update )
     {
         RefreshItem(track->focus_idx);
+        browse_map[track->info.game_id] = track->focus_offset;
         if( mini_board )
         {
             std::string previous_move;
@@ -311,7 +315,7 @@ GamesDialog::GamesDialog
     this->gc = gc;
     this->gc_clipboard = gc_clipboard;
     db_search = (cr!=NULL);
-    col_last_time = 0;
+    col_last_time = -1;
     col_consecutive = 0;
     sort_order_first = true;
     focus_idx = 0;
@@ -1174,6 +1178,7 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
             gd.game_nbr = 0;
             gd.modified = true;
             gc->file_irrevocably_modified = true;
+            gd.game_id = GameIdAllocateBottom(1);
             make_smart_ptr( GameDocument, new_doc, gd );
             gc->gds.insert( iter, std::move(new_doc) );
             sz++;
@@ -1472,8 +1477,8 @@ static bool master_predicate( const smart_ptr<ListableGame> &g1, const smart_ptr
         bool forward = sort_forward[i];
         bool use_bin=false;
         bool use_rev_bin=false;
-        int bin1;
-        int bin2;
+        uint32_t bin1;
+        uint32_t bin2;
         const char *parm1;
         const char *parm2;
         switch( col )
@@ -2248,8 +2253,12 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
 
 void GamesDialog::ColumnSort( int compare_col, std::vector< smart_ptr<ListableGame> > &displayed_games )
 {
-    if( displayed_games.size() > 1 )
+    uint32_t sz = displayed_games.size();
+    uint32_t game_id_restore = GAME_ID_SENTINEL;    // no game should match this
+    if( sz > 1 )
     {
+        if( 0<=track->focus_idx && track->focus_idx<sz )
+            game_id_restore = displayed_games[ track->focus_idx]->game_id;
         backdoor = this;
 
         // If we sort on the same column as last time....    
@@ -2276,8 +2285,15 @@ void GamesDialog::ColumnSort( int compare_col, std::vector< smart_ptr<ListableGa
             // The first time, mark the next spot in the stack as the end
             if( sort_order_first )
             {
+                cprintf( "sort_order_first\n" );
                 sort_order_first = false;
                 sort_order[1] = -1;
+                if( compare_col == 0 )  // initially games are ordered by game_id == column 0
+                                        //  reverse sort only if this is first sort request
+                {
+                    sort_forward[0] = false;
+                    cprintf( "start with reverse sort\n" );
+                }
             }
 
             // Not the first time, look for a repeat instance of the current
@@ -2339,7 +2355,18 @@ void GamesDialog::ColumnSort( int compare_col, std::vector< smart_ptr<ListableGa
             count = nbr_games_in_list_ctrl;
         for( int i=0; i<count; i++ )
             list_ctrl->RefreshItem(top++);
-        Goto(0);
+
+        // Put cursor on same game as before sort
+        uint32_t cursor=0;
+        for( uint32_t i=0; i<sz; i++ )
+        {
+            if( displayed_games[i]->game_id == game_id_restore )
+            {
+                cursor = i;
+                break;
+            }
+        }
+        Goto(cursor);
         col_last_time = compare_col;
     }
 }

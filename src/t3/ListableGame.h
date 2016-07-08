@@ -17,12 +17,16 @@
 #define smart_ptr std::shared_ptr //std::unique_ptr
 #define make_smart_ptr(T,to,from) smart_ptr<T> to; to.reset(new T(from))
 
+#define GAME_ID_SENTINEL 0xffffffff // otherwise unused
+uint32_t GameIdAllocateTop( uint32_t count );
+uint32_t GameIdAllocateBottom( uint32_t count );
+
 class ListableGame
 {
 public:
     ListableGame() { /*transpo_nbr=0;*/ game_attributes=0; }
     virtual ~ListableGame() {}
-    virtual int GetGameId() { return 0; }
+    virtual uint32_t GetGameId() { return 0; }
     virtual bool IsDbGameOnly() { return false; }                   // a horrible kludge
     virtual GameDocument *GetGameDocumentPtr()  {
         cprintf("FIXME DANGER WILL ROBINSON 3\n");  return NULL; }
@@ -77,11 +81,12 @@ public:
         pact.moves = RefMoves();
         pact.start_position = RefStartPosition();
         pact.transpo_nbr = 0;
+        pact.game_id = game_id;
     }
     
 public:
-    int game_id;
-    uint8_t game_attributes;            // maybe this too - at the moment this is effectively bool game_has_promotion;
+    uint32_t game_id;
+    uint8_t  game_attributes;            // at the moment this is effectively bool game_has_promotion;
     virtual void SetAttributes( const char *blob, int len )
     {
         game_attributes = static_cast<uint8_t>(false);

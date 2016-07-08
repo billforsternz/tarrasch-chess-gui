@@ -98,6 +98,9 @@ public:
     
 protected:
     virtual wxString OnGetItemText( long item, long column) const;
+
+private:
+    std::map< uint32_t, int > browse_map;   // lookup offset into all games browsed in current session, by uint32_t game_id
 };
 
 

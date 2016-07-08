@@ -116,7 +116,7 @@ struct MpsQuickInit
 struct DoSearchFoundGame
 {
     int idx;            // index into memory db
-    int game_id;
+    uint32_t game_id;
     unsigned short offset_first;
     unsigned short offset_last;
 };

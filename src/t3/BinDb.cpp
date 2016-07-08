@@ -18,6 +18,31 @@
 #include "ListableGameBinDb.h"
 #include "BinDb.h"
 
+static uint32_t game_id_bottom = 0;
+static uint32_t game_id_top    = GAME_ID_SENTINEL-1;
+uint32_t GameIdAllocateBottom( uint32_t count )
+{
+    if( game_id_bottom+count >= game_id_top )
+    {
+        game_id_bottom = 0;
+        game_id_top    = GAME_ID_SENTINEL-1;
+    }
+    uint32_t temp = game_id_bottom;
+    game_id_bottom += count;
+    return temp;
+}
+
+uint32_t GameIdAllocateTop( uint32_t count )
+{
+    if( game_id_top-count <= game_id_bottom )
+    {
+        game_id_bottom = 0;
+        game_id_top    = GAME_ID_SENTINEL-1;
+    }
+    game_id_top -= count;
+    return game_id_top;
+}
+
 static FILE         *bin_file;      //temp
 
 // The 1200 byte compatibility header - Prepended to a BinDb formatted database file
@@ -841,9 +866,10 @@ void BinDbNormaliseOrder( uint32_t begin, uint32_t end )
     cprintf( "BinDbNormaliseOrder(): out forward_cnt=%u, reverse_cnt=%u, forward=%s, reverse=%s\n", forward_cnt, reverse_cnt, forward?"true":"false", reverse?"true (reversing)":"false" );
     if( reverse )
     {
+        uint32_t base = games[begin]->game_id;
         std::reverse( games.begin()+begin, games.begin()+end );
         for( uint32_t i=begin; i<end; i++ )
-            games[i]->game_id = i;
+            games[i]->game_id = base+i;
         cprintf( "reverse end\n" );
     }
 }
@@ -924,7 +950,7 @@ static void sort_progress_probe()
     if( predicate_pb )
     {
         int permill;
-        #define SCAN_BASED
+        //#define SCAN_BASED
         #ifdef SCAN_BASED
         if( (1000-permill_initial) > 100 ) // scan based approach is useless if input initially nearly sorted
         {
@@ -987,12 +1013,47 @@ static bool predicate_sorts_by_game_id( const smart_ptr<ListableGame> &e1, const
 
 void BinDbDatabaseInitialSort( std::vector< smart_ptr<ListableGame> > &games, bool sort_by_player_name )
 {
-        std::string desc(sort_by_player_name?"Sorting by player name":"Initial sort");
-        ProgressBar progress_bar( "Sorting", desc, true );
-        //progress_bar.DrawNow();
-        sort_before( games.begin(), games.end(), sort_by_player_name ? predicate_sorts_by_player : predicate_sorts_by_game_id, &progress_bar );
-    	std::sort( games.begin(), games.end(), sort_by_player_name ? predicate_sorts_by_player : predicate_sorts_by_game_id );
-        sort_after();
+
+    // Usually the database is sorted according to game_id - bail out quickly if no need to sort
+    if( !sort_by_player_name )
+    {
+        bool sorted=true;
+        uint32_t prev=0;
+        for( uint32_t i=0; sorted && i<games.size(); i++ )
+        {
+            uint32_t id = games[i]->game_id;
+            if( id < prev )
+                sorted = false;
+            prev = id;
+        }
+        if( sorted )
+        {
+            cprintf( "Already sorted\n" );
+            return;
+        }
+    }
+    cprintf( "Not already sorted\n" );
+
+    std::string desc(sort_by_player_name?"Sorting by player name":"Initial sort");
+    ProgressBar progress_bar( "Sorting", desc, true );
+    //progress_bar.DrawNow();
+    uint32_t id0 = games[0]->game_id;
+    uint32_t id1 = games[1]->game_id;
+    uint32_t id2 = games[2]->game_id;
+    uint32_t id_end2 = games[games.size()-3]->game_id;
+    uint32_t id_end1 = games[games.size()-2]->game_id;
+    uint32_t id_end0 = games[games.size()-1]->game_id;
+    cprintf( "before [0x%08x,0x%08x,0x%08x...0x%08x,0x%08x,0x%08x]\n",id0,id1,id2,id_end2,id_end1,id_end0);
+    sort_before( games.begin(), games.end(), sort_by_player_name ? predicate_sorts_by_player : predicate_sorts_by_game_id, &progress_bar );
+    std::sort( games.begin(), games.end(), sort_by_player_name ? predicate_sorts_by_player : predicate_sorts_by_game_id );
+    sort_after();
+    id0 = games[0]->game_id;
+    id1 = games[1]->game_id;
+    id2 = games[2]->game_id;
+    id_end2 = games[games.size()-3]->game_id;
+    id_end1 = games[games.size()-2]->game_id;
+    id_end0 = games[games.size()-1]->game_id;
+    cprintf( "after [0x%08x,0x%08x,0x%08x...0x%08x,0x%08x,0x%08x]\n",id0,id1,id2,id_end2,id_end1,id_end0);
 }
 
 bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
@@ -1056,7 +1117,7 @@ bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
                 for( int idx=start; idx<end; idx++ )
                 {
                     smart_ptr<ListableGame> p = games[idx];
-                    if( p->game_id != -1 )
+                    if( p->game_id != GAME_ID_SENTINEL )
                     {
                         std::vector<std::string> white_tokens;
                         Split(p->White(),white_tokens);
@@ -1065,8 +1126,8 @@ bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
                         for( int j=idx+1; j<end; j++ )
                         {
                             smart_ptr<ListableGame> q = games[j];
-                            if( q->game_id!=-1 && DupDetect(p,white_tokens,black_tokens,q) )
-                                q->game_id = -1;    
+                            if( q->game_id!=GAME_ID_SENTINEL && DupDetect(p,white_tokens,black_tokens,q) )
+                                q->game_id = GAME_ID_SENTINEL;    
                         }
                     }
                 }
@@ -1291,10 +1352,11 @@ void BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > 
     cb.bb.Next(12);                // BlackElo
     cb.bb.Freeze();
     int bb_sz = cb.bb.FrozenSize();
-    int game_count = fh.nbr_games;
-    int nbr_games=0;
-    int nbr_promotion_games=0;
-    for( int i=0; i<game_count && !kill_background_load; i++ )
+    uint32_t game_count = fh.nbr_games;
+    uint32_t nbr_games=0;
+    uint32_t nbr_promotion_games=0;
+    uint32_t base = GameIdAllocateTop(game_count);
+    for( uint32_t i=0; i<game_count && !kill_background_load; i++ )
     {
         if( pb )
             pb->Perfraction(i,game_count);
@@ -1309,7 +1371,8 @@ void BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > 
         }
         if( ch == EOF )
             cprintf( "Whoops\n" );
-        int game_id = do_reverse ? game_count-1-i : i;
+        uint32_t game_id = base;
+        game_id += (do_reverse ? game_count-1-i : i);
         ListableGameBinDb info( cb_idx, game_id, blob );
         make_smart_ptr( ListableGameBinDb, new_info, info );
         mega_cache.push_back( std::move(new_info) );

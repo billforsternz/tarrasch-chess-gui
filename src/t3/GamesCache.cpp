@@ -49,7 +49,6 @@ bool GamesCache::Load(std::string &filename )
     FILE *pgn_file = objs.gl->pf.OpenRead( filename, pgn_handle );
     if( pgn_file )
     {
-        gds.clear();
         loaded = Load(pgn_file);
         if( loaded )
             pgn_filename = filename;
@@ -221,6 +220,7 @@ bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen )
 bool GamesCache::Load( FILE *pgn_file )
 {
     cprintf( "GamesCache::Load() begin\n" );
+    gds.clear();
     int game_count=0;
     gc_fixme = this;
     file_irrevocably_modified = false;
@@ -228,6 +228,11 @@ bool GamesCache::Load( FILE *pgn_file )
     std::string str;
     long fposn = ftell(pgn_file);
     char buf[2048];
+    std::string title("Reading file");
+    std::string desc("Reading file");
+    bool abortable=false;
+    wxWindow *parent=NULL;
+    ProgressBar pb( title, desc, abortable, parent, pgn_file );
     bool done = PgnStateMachine( NULL, typ,  buf, sizeof(buf) );
     while( !done )
     {
@@ -241,6 +246,13 @@ bool GamesCache::Load( FILE *pgn_file )
                 fposn = ftell(pgn_file);
             game_count++;
         }
+        pb.ProgressFile();
+    }
+    uint32_t game_id = GameIdAllocateBottom( gds.size() );
+    for( std::vector<smart_ptr<ListableGame>>::iterator iter = gds.begin();
+         iter != gds.end(); iter++ )
+    {
+        (*iter)->game_id = game_id++;
     }
     cprintf( "GamesCache::Load() end count = %d\n", game_count );
     return true;
@@ -447,6 +459,7 @@ bool GamesCache::FileCreate( std::string &filename, GameDocument &gd )
     gds.clear();
     gd.in_memory = true;
     gd.pgn_handle = 0;
+    gd.game_id = GameIdAllocateBottom(1);
     make_smart_ptr( GameDocument, new_doc, gd );
     gds.push_back( std::move(new_doc) );
     FILE *pgn_out = objs.gl->pf.OpenCreate( filename, pgn_handle );

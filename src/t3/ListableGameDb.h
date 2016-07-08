@@ -14,17 +14,17 @@
 class ListableGameDb : public ListableGame
 {
 private:
-    int game_id;
+    uint32_t game_id;
     PackedGame pack;
 
 public:
-    ListableGameDb( int game_id, Roster &r, std::string str_blob )
+    ListableGameDb( uint32_t game_id, Roster &r, std::string str_blob )
     {
         this->game_id = game_id;
         pack.Pack( r, str_blob );
     }
 
-    ListableGameDb( int game_id, CompactGame &pact )
+    ListableGameDb( uint32_t game_id, CompactGame &pact )
     {
         this->game_id = game_id;
         pack.Pack( pact );
@@ -65,11 +65,12 @@ public:
         SetAttributes(moves_blob,len12);
     }
 
-    virtual int GetGameId()  { return game_id; }
+    virtual uint32_t GetGameId()  { return game_id; }
 
     virtual void GetCompactGame( CompactGame &pact )
     {
         pack.Unpack(pact);
+        pact.game_id = game_id;
     }
     
 	virtual GameDocument  *GetGameDocumentPtr()

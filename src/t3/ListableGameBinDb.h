@@ -18,7 +18,7 @@ private:
 
 public:
     ListableGameBinDb() {}
-    ListableGameBinDb( int cb_idx, int game_id, std::string binary_game )
+    ListableGameBinDb( int cb_idx, uint32_t game_id, std::string binary_game )
         : pack( cb_idx, binary_game )
     {
         this->game_id = game_id;
@@ -27,7 +27,7 @@ public:
 
     ListableGameBinDb( 
         uint8_t cb_idx,
-        int game_id,
+        uint32_t game_id,
         std::string event,
         std::string site,
         std::string white,
@@ -58,11 +58,12 @@ public:
         SetAttributes( compressed_moves.c_str(), compressed_moves.length() );
     }
 
-    virtual int GetGameId()  { return game_id; }
+    virtual uint32_t GetGameId()  { return game_id; }
 
     virtual void GetCompactGame( CompactGame &pact )
     {
         pack.Unpack(pact);
+        pact.game_id = game_id;
     }
     
 	virtual GameDocument  *GetGameDocumentPtr()

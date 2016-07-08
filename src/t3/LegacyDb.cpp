@@ -123,9 +123,13 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
         }
     }
 
-    uint8_t cb_idx;
+    uint8_t   cb_idx;
+    uint32_t  base;
     if( ok )
+    {
         cb_idx = BinDbReadBegin( true );
+        base   = GameIdAllocateTop( game_count );
+    }
             
     // Read the game info
     while( ok && !kill_background_load )
@@ -134,8 +138,6 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
         if( retval == SQLITE_ROW )
         {
             // SQLITE_ROW means fetched a row
-            int game_id=0;
-            
             // sqlite3_column_text returns a const void* , typecast it to const char*
             bool promotion=false;
             const char *val        = (const char*)sqlite3_column_text(stmt,0);
@@ -174,8 +176,9 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
             //    black_elo, len10,
             //    "", 0, //fen
             //    moves_blob, len12
-            int idx=mega_cache.size();
-            game_id = do_reverse ? game_count-1-idx : idx;
+            uint32_t idx=mega_cache.size();
+            uint32_t game_id = base;
+            game_id += (do_reverse ? game_count-1-idx : idx);
             ListableGameBinDb gb
             ( 
                 cb_idx,
@@ -251,7 +254,5 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
         std::reverse( mega_cache.begin(), mega_cache.end() );
     return ok;
 }
-
-
 
 

@@ -42,6 +42,7 @@ public:
         if( pack.Empty() )
             LoadIntoMemory( NULL, true );
         pack.Unpack(pact);
+        pact.game_id = game_id;
     }
 
     // For editing the roster
