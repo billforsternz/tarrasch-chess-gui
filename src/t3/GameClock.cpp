@@ -31,6 +31,7 @@ GameClock::~GameClock()
 void GameClock::Repository2Clocks()
 {
     ClockConfig *rep = &objs.repository->clock;
+    fixed_period_mode = rep->m_fixed_period_mode;
     int secs = rep->m_white_time*60 + (fixed_period_mode ? rep->m_white_increment : 0);
     if( secs <= 0 )
         secs = 1;
@@ -71,8 +72,8 @@ void GameClock::NewHumanEngineGame( bool human_is_white, bool white_to_move )
         rep->m_white_increment = rep->m_human_increment;
         rep->m_white_visible   = rep->m_human_visible;
         rep->m_white_running   = rep->m_human_running;
-        rep->m_black_time      = rep->m_engine_time;
-        rep->m_black_increment = rep->m_engine_increment;
+        rep->m_black_time      = fixed_period_mode ? rep->m_engine_fixed_minutes : rep->m_engine_time;
+        rep->m_black_increment = fixed_period_mode ? rep->m_engine_fixed_seconds : rep->m_engine_increment;
         rep->m_black_visible   = rep->m_engine_visible;
         rep->m_black_running   = rep->m_engine_running;
     }
@@ -82,8 +83,8 @@ void GameClock::NewHumanEngineGame( bool human_is_white, bool white_to_move )
         rep->m_black_increment = rep->m_human_increment;
         rep->m_black_visible   = rep->m_human_visible;
         rep->m_black_running   = rep->m_human_running;
-        rep->m_white_time      = rep->m_engine_time;
-        rep->m_white_increment = rep->m_engine_increment;
+        rep->m_white_time      = fixed_period_mode ? rep->m_engine_fixed_minutes : rep->m_engine_time;
+        rep->m_white_increment = fixed_period_mode ? rep->m_engine_fixed_seconds : rep->m_engine_increment;
         rep->m_white_visible   = rep->m_engine_visible;
         rep->m_white_running   = rep->m_engine_running;
     }

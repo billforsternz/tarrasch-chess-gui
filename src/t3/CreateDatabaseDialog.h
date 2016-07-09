@@ -26,7 +26,7 @@ enum
     ID_CREATE_DB_PICKER4         = 10007,
     ID_CREATE_DB_PICKER5         = 10008,
     ID_CREATE_DB_PICKER6         = 10009,
-    ID_CREATE_TINY_DB            = 10010
+    ID_CREATE_ELO_CUTOFF         = 10010
 };
 
 // CreateDatabaseDialog class declaration

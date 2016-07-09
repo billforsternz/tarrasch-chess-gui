@@ -74,6 +74,8 @@ struct ClockConfig
     bool        m_human_running;
     int         m_engine_time;
     int         m_engine_increment;
+    int         m_engine_fixed_minutes;
+    int         m_engine_fixed_seconds;
     bool        m_engine_visible;
     bool        m_engine_running;
     int         m_white_time;
@@ -87,6 +89,8 @@ struct ClockConfig
     bool        m_black_visible;
     bool        m_black_running;
     bool        m_fixed_period_mode;
+    int         m_engine_minutes;
+    int         m_engine_seconds;
     ClockConfig()
     {
         m_human_time          = 25;
@@ -95,6 +99,8 @@ struct ClockConfig
         m_human_running       = true;
         m_engine_time         = 3;
         m_engine_increment    = 1;
+        m_engine_fixed_minutes= 0;
+        m_engine_fixed_seconds= 5;
         m_engine_visible      = true;
         m_engine_running      = true; 
         m_white_time          = 90;
@@ -108,6 +114,8 @@ struct ClockConfig
         m_black_visible       = false;
         m_black_running       = false;
         m_fixed_period_mode   = false;
+        m_engine_minutes      = 3;  // Clock Dialog edits these, m_fixed_period_mode determines
+        m_engine_seconds      = 1;  //  whether they represent m_engine_time or m_engine_fixed_minutes etc.
     }
 };
 
@@ -176,9 +184,11 @@ struct TrainingConfig
 struct DatabaseConfig
 {
     wxString    m_file;
+    int         m_elo_cutoff;
     DatabaseConfig()
     {
-        m_file = "default.tdb";
+        m_file = "kingbase-lite-2016-03.tdb";
+        m_elo_cutoff = 2000;
     }
 };
 

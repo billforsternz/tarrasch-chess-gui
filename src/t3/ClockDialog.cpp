@@ -9,7 +9,7 @@
 #include "wx/valtext.h"
 #include "wx/valgen.h"
 #include "Appdefs.h"
-
+#include "DebugPrintf.h"
 #include "ClockDialog.h"
 
 // ClockDialog type definition
@@ -24,15 +24,11 @@ BEGIN_EVENT_TABLE( ClockDialog, wxDialog )
 END_EVENT_TABLE()
 
 // ClockDialog constructors
-ClockDialog::ClockDialog()
-{
-    Init();
-}
-
-ClockDialog::ClockDialog( wxWindow* parent,
+ClockDialog::ClockDialog( ClockConfig &dat, wxWindow* parent,
   wxWindowID id, const wxString& caption,
   const wxPoint& pos, const wxSize& size, long style )
 {
+    this->dat = dat;
     Init();
     Create(parent, id, caption, pos, size, style);
 }
@@ -252,12 +248,13 @@ void ClockDialog::CreateControls()
     small_sizer4->Add(time_ctrl4, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     // Label for increment
+    cprintf( "dat.m_fixed_period_mode = %s\n", dat.m_fixed_period_mode ? "true" : "false" );
     increment_label4 = new wxStaticText ( this, wxID_STATIC,
         dat.m_fixed_period_mode ? "Time (seconds):" : "Increment (seconds):", wxDefaultPosition, wxDefaultSize, 0 );
     small_sizer4->Add(increment_label4, 0, wxALIGN_LEFT|wxALL, 5);
 
     // A spin control for increment
-    wxSpinCtrl* increment_ctrl4 = new wxSpinCtrl ( this, ID_ENGINE_INCREMENT,
+    increment_ctrl4 = new wxSpinCtrl ( this, ID_ENGINE_INCREMENT,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 0, 120, 30 );
     small_sizer4->Add(increment_ctrl4, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
@@ -383,9 +380,9 @@ void ClockDialog::SetDialogValidators()
     FindWindow(ID_HUMAN_RUNNING)->SetValidator(
         wxGenericValidator(& dat.m_human_running));
     FindWindow(ID_ENGINE_TIME)->SetValidator(
-        wxGenericValidator(& dat.m_engine_time));
+        wxGenericValidator(& dat.m_engine_minutes));
     FindWindow(ID_ENGINE_INCREMENT)->SetValidator(
-        wxGenericValidator(& dat.m_engine_increment));
+        wxGenericValidator(& dat.m_engine_seconds));
     FindWindow(ID_ENGINE_VISIBLE)->SetValidator(
         wxGenericValidator(& dat.m_engine_visible));
     FindWindow(ID_ENGINE_RUNNING)->SetValidator(
@@ -499,16 +496,21 @@ void ClockDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
 void ClockDialog::OnFixedPeriodMode( wxCommandEvent& WXUNUSED(event) )
 {
     bool fpm = fixed_period_mode->GetValue();
-    if( !fpm )
-        increment_label4->SetLabel( "Increment (seconds):" );
-    else
+    dat.m_engine_minutes = fpm ? dat.m_engine_fixed_minutes : dat.m_engine_time;
+    dat.m_engine_seconds = fpm ? dat.m_engine_fixed_seconds : dat.m_engine_increment;
+    time_ctrl4->SetValue(dat.m_engine_minutes);
+    increment_ctrl4->SetValue(dat.m_engine_seconds);
+    if( fpm )
     {
         increment_label4->SetLabel( "Time (seconds):" );
-        time_ctrl4->SetValue(0);    // by default
-        dat.m_human_running  = false;
-        dat.m_human_visible  = false;
-        dat.m_engine_running = true;
-        dat.m_engine_visible = true;
+        human_running_checkbox->SetValue( false );
+        human_visible_checkbox->SetValue( false );
+        engine_running_checkbox->SetValue( true );
+        engine_visible_checkbox->SetValue( true );
+    }
+    else
+    {
+        increment_label4->SetLabel( "Increment (seconds):" );
         human_running_checkbox->SetValue( dat.m_human_running );
         human_visible_checkbox->SetValue( dat.m_human_visible );
         engine_running_checkbox->SetValue( dat.m_engine_running );

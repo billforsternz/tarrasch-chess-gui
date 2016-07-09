@@ -163,6 +163,9 @@ private:
                                   wxRect hover );
     bool CheckPopup( thc::Move &move );
 
+    // Is human playing engine ?
+    bool InHumanEngineGame( bool &human_is_white );
+
     // Make move on board, returns true if gameover
     bool MakeMove( thc::Move move, GAME_RESULT &result );
 

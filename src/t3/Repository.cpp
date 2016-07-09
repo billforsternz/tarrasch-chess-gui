@@ -100,6 +100,8 @@ Repository::Repository( bool use_defaults )
         ReadBool    ("HumanRunning",           clock.m_human_running    );
         config->Read("EngineTime",            &clock.m_engine_time      );
         config->Read("EngineIncrement",       &clock.m_engine_increment );
+        config->Read("EngineFixedMinutes",    &clock.m_engine_fixed_minutes );
+        config->Read("EngineFixedSeconds",    &clock.m_engine_fixed_seconds );
         ReadBool    ("EngineVisible",          clock.m_engine_visible   );
         ReadBool    ("EngineRunning",          clock.m_engine_running   );
 
@@ -112,6 +114,7 @@ Repository::Repository( bool use_defaults )
         ReadBool    ("BlackVisible",           clock.m_black_visible    );
     //  ReadBool    ("BlackRunning",           clock.m_black_running    );
         ReadBool    ("FixedPeriodMode",        clock.m_fixed_period_mode );
+        cprintf( "clock.m_fixed_period_mode=%s\n",clock.m_fixed_period_mode?"true":"false");
 
         // Log
         config->Read("LogFile",              &log.m_file                );
@@ -141,6 +144,7 @@ Repository::Repository( bool use_defaults )
 
         // Database
         config->Read("DatabaseFile",          &database.m_file          );
+        config->Read("DatabaseEloCutoff",     &database.m_elo_cutoff    );
         
         // General
         config->Read("GeneralNotationLanguage",          &general.m_notation_language );
@@ -200,6 +204,8 @@ Repository::~Repository()
     config->Write("HumanRunning",         (int)clock.m_human_running      );
     config->Write("EngineTime",           clock.m_engine_time             );
     config->Write("EngineIncrement",      clock.m_engine_increment        );
+    config->Write("EngineFixedMinutes",   clock.m_engine_fixed_minutes    );
+    config->Write("EngineFixedSeconds",   clock.m_engine_fixed_seconds    );
     config->Write("EngineVisible",        (int)clock.m_engine_visible     );
     config->Write("EngineRunning",        (int)clock.m_engine_running     );
     config->Write("FixedPeriodMode",      (int)clock.m_fixed_period_mode  );
@@ -257,6 +263,7 @@ Repository::~Repository()
 
     // Database
     config->Write("DatabaseFile",       database.m_file          );
+    config->Write("DatabaseEloCutoff",  database.m_elo_cutoff    );
     
     // Engine
     config->Write("EngineExeFile",      engine.m_file   );

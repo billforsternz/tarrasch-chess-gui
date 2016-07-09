@@ -47,8 +47,7 @@ class ClockDialog: public wxDialog
 public:
 
     // Constructors
-    ClockDialog( );
-    ClockDialog( wxWindow* parent,
+    ClockDialog( ClockConfig &dat, wxWindow* parent,
       wxWindowID id = ID_CLOCK_DIALOG,
       const wxString& caption = wxT("Clock Settings"),
       const wxPoint& pos = wxDefaultPosition,
@@ -99,6 +98,7 @@ private:
     wxCheckBox* fixed_period_mode;
     wxStaticText* increment_label4;
     wxSpinCtrl* time_ctrl4;
+    wxSpinCtrl* increment_ctrl4;
 };
 
 #endif    // CLOCK_DIALOG_H

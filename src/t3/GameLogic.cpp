@@ -1568,9 +1568,11 @@ void GameLogic::CmdBlackResigns()
 void GameLogic::CmdClocks()
 {
     Atomic begin;
-    ClockDialog dialog( objs.frame );
+    ClockDialog dialog( objs.repository->clock, objs.frame );
     objs.gl->chess_clock.Clocks2Repository();
-    dialog.dat = objs.repository->clock;
+    cprintf( "clock.m_fixed_period_mode=%s\n",dialog.dat.m_fixed_period_mode?"true":"false");
+    dialog.dat.m_engine_minutes = dialog.dat.m_fixed_period_mode ? dialog.dat.m_engine_fixed_minutes : dialog.dat.m_engine_time     ;
+    dialog.dat.m_engine_seconds = dialog.dat.m_fixed_period_mode ? dialog.dat.m_engine_fixed_seconds : dialog.dat.m_engine_increment;
     chess_clock.PauseBegin();
     int ret = dialog.ShowModal();
     chess_clock.PauseEnd();
@@ -1580,6 +1582,16 @@ void GameLogic::CmdClocks()
             dialog.dat.m_white_secs = 1;
         if( dialog.dat.m_black_time==0 && dialog.dat.m_black_secs==0 )
             dialog.dat.m_black_secs = 1;
+        if( dialog.dat.m_fixed_period_mode )
+        {
+            dialog.dat.m_engine_fixed_minutes = dialog.dat.m_engine_minutes;
+            dialog.dat.m_engine_fixed_seconds = dialog.dat.m_engine_seconds;
+        }
+        else
+        {
+            dialog.dat.m_engine_time       = dialog.dat.m_engine_minutes;
+            dialog.dat.m_engine_increment  = dialog.dat.m_engine_seconds;
+        }
         objs.repository->clock = dialog.dat;
         objs.gl->chess_clock.Repository2Clocks();
         objs.gl->chess_clock.GameStart( gd.master_position.WhiteToPlay() );
@@ -2985,6 +2997,27 @@ bool GameLogic::CheckPopup( thc::Move &move )
         }
     }
     return done;
+}
+
+bool GameLogic::InHumanEngineGame( bool &human_is_white )
+{
+    bool ingame=false;
+    human_is_white = glc.human_is_white;
+    switch( state )
+    {
+        case RESET:                             break;
+        case GAMEOVER:                          break;
+        case PONDERING:         ingame = true;  break;
+        case HUMAN:             ingame = true;  break;
+        case MANUAL:                            break;
+        case SLIDING:           ingame = true;  break;
+        case SLIDING_MANUAL:                    break;
+        case THINKING:          ingame = true;  break;
+        case POPUP:             ingame = true;  break;
+        case POPUP_MANUAL:                      break;
+        case FAKE_BOOK_DELAY:   ingame = true;  break;
+    }
+    return ingame;
 }
 
 bool GameLogic::MakeMove( thc::Move move, GAME_RESULT &result )

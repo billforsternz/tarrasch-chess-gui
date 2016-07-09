@@ -36,7 +36,7 @@ EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER_DB, CreateDatabaseDialog::OnDbFilePi
 EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER1,   CreateDatabaseDialog::OnPgnFile1Picked )
 EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER2,   CreateDatabaseDialog::OnPgnFile2Picked )
 EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER3,   CreateDatabaseDialog::OnPgnFile3Picked )
-EVT_CHECKBOX(           ID_CREATE_TINY_DB,      CreateDatabaseDialog::OnCreateTinyDb )
+//EVT_CHECKBOX(           ID_CREATE_TINY_DB,      CreateDatabaseDialog::OnCreateTinyDb )
 END_EVENT_TABLE()
 
 CreateDatabaseDialog::CreateDatabaseDialog(
@@ -168,13 +168,25 @@ void CreateDatabaseDialog::CreateControls()
                                                         wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST ); //|wxFLP_CHANGE_DIR );
         box_sizer->Add(picker6, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
 
+        #if 0
         wxCheckBox* tiny_db_box = new wxCheckBox( this, ID_CREATE_TINY_DB, // moving towards always using this
                 wxT("&Create compact database"), wxDefaultPosition, wxDefaultSize, 0 );
         tiny_db_box->SetValue( create_tiny_db );
         box_sizer->Add( tiny_db_box, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
+        #endif
     }
 
-    
+    // Label for elo cutoff
+    wxStaticText* elo_cutoff_label = new wxStaticText ( this, wxID_STATIC,
+        wxT("Elo cutoff (if Elo values present, at least one player must meet this threshold)"), wxDefaultPosition, wxDefaultSize, 0 );
+    box_sizer->Add(elo_cutoff_label, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+    // A spin control for the elo cutoff
+    wxSpinCtrl* elo_cutoff_spin = new wxSpinCtrl ( this, ID_CREATE_ELO_CUTOFF,
+        wxEmptyString, wxDefaultPosition, wxSize(60, -1),
+        wxSP_ARROW_KEYS, 0, 4000, 2000 );
+    box_sizer->Add(elo_cutoff_spin, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
     // A dividing line before the OK and Cancel buttons
     wxStaticLine* line2 = new wxStaticLine ( this, wxID_STATIC,
                                            wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
