@@ -60,7 +60,7 @@ bool GameDetailsDialog::Create( wxWindow* parent,
     bool okay=true;
 
     // We have to set extra styles before creating the dialog
-    SetExtraStyle( wxWS_EX_BLOCK_EVENTS|wxDIALOG_EX_CONTEXTHELP );
+    SetExtraStyle( wxWS_EX_BLOCK_EVENTS/*|wxDIALOG_EX_CONTEXTHELP*/ );
     if( !wxDialog::Create( parent, id, caption, pos, size, style ) )
         okay = false;
     else

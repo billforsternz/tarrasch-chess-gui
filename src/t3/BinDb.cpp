@@ -504,6 +504,9 @@ uint8_t BinDbReadBegin( bool use_packed_control_block )
     return cb_idx;
 }
 
+//TODO fix sad global variable
+int gbl_elo_cutoff=2000;
+
 bool bin_db_append( const char *fen, const char *event, const char *site, const char *date, const char *round,
                   const char *white, const char *black, const char *result, const char *white_elo, const char *black_elo, const char *eco,
                   int nbr_moves, thc::Move *moves )
@@ -518,7 +521,7 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
         return false;           // not inserted, not error
     int elo_w = Elo2Bin(white_elo);
     int elo_b = Elo2Bin(black_elo);
-    if( 0<elo_w && elo_w<2000 && 0<elo_b && elo_b<2000 )
+    if( 0<elo_w && elo_w<gbl_elo_cutoff && 0<elo_b && elo_b<gbl_elo_cutoff )
         // if any elo information, need at least one good player
         return false;   // not inserted, not error
     const char *s =  white;

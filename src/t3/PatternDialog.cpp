@@ -72,7 +72,7 @@ bool PatternDialog::Create( wxWindow* parent,
     bool okay=true;
 
     // We have to set extra styles before creating the dialog
-    SetExtraStyle( wxWS_EX_BLOCK_EVENTS|wxDIALOG_EX_CONTEXTHELP );
+    SetExtraStyle( wxWS_EX_BLOCK_EVENTS/*|wxDIALOG_EX_CONTEXTHELP*/ );
     if( !wxDialog::Create( parent, id, caption, pos, size, style ) )
         okay = false;
     else
@@ -238,6 +238,11 @@ void PatternDialog::CreateControls()
     wxButton* cancel = new wxButton ( this, wxID_CANCEL,
         wxT("&Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
     buttons_box->Add( cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+    // The Help button
+    wxButton* help = new wxButton( this, wxID_HELP, wxT("&Help"),
+        wxDefaultPosition, wxDefaultSize, 0 );
+    buttons_box->Add( help, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     //box_sizer->Add( buttons_box, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
     horiz_board->Add( bsc, 1, wxALIGN_LEFT|wxALL|wxFIXED_MINSIZE, 5 );
@@ -432,9 +437,19 @@ void PatternDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
 
     wxString helpText(
       parm->material_balance ?
-      "Use this panel to search the database for games where a specified material balance occurs at some point\n" :
-      "Use this panel to search the database for games where a specified pattern (arrangement of some pieces) occurs at some point\n");
-
+      "Use this panel to search the database for games where a specified material balance occurs at some point. "
+      "Put the pieces you want on the board, and the search will locate games where only those pieces remained "
+      "on the board at a certain point in the game."
+      "\n\n"
+      "To make the search (much) more flexible you can refine the search in various ways. "
+      "For example, if you put a dark squared bishop on the board, you can insist the search only finds positions with a dark squared bishop (but by "
+      "default any bishop will do)."
+     :
+      "Use this panel to search the database for games where a specified pattern (arrangement of some pieces) occurs at some point. "
+      "Put the pieces you want on the board, and the search will locate games where those pieces occupied those squares. "
+      "The material balance search is also available, and is more flexible (but also more complicated). To make the material balance "
+      "search more like the pattern search, lock down the position of pieces you care about with right clicks." 
+     );
     wxMessageBox(helpText,
       wxT("Pattern Dialog Help"),
       wxOK|wxICON_INFORMATION, this);

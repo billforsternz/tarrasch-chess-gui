@@ -337,9 +337,6 @@ void DbDialog::GdvHelpClick()
     "to copy games from one player to the clipboard. To make this easy, buttons "
     "are provided to add a player's games to the clipboard."
     "\n\n"
-    "You can sort on any column including the moves column. Sorting on the moves "
-    "column shows the most popular lines of play first."
-    "\n\n"
     :
     "Use this panel to navigate the current database. Use Load Game to "
     "load a game into a new tab and Use Game to add the game as a variation "

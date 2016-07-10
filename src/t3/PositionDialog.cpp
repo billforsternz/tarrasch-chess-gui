@@ -230,7 +230,7 @@ bool PositionDialog::Create( wxWindow* parent,
     bool okay=true;
 
     // We have to set extra styles before creating the dialog
-    SetExtraStyle( wxWS_EX_BLOCK_EVENTS|wxDIALOG_EX_CONTEXTHELP );
+    SetExtraStyle( wxWS_EX_BLOCK_EVENTS/*|wxDIALOG_EX_CONTEXTHELP*/ );
     if( !wxDialog::Create( parent, id, caption, pos, size, style ) )
         okay = false;
     else
@@ -496,9 +496,9 @@ void PositionDialog::CreateControls()
     buttons_box->Add( cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     // The Help button
-/*  wxButton* help = new wxButton( this, wxID_HELP, wxT("&Help"),
+    wxButton* help = new wxButton( this, wxID_HELP, wxT("&Help"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    buttons_box->Add( help, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5); */
+    buttons_box->Add( help, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     //box_sizer->Add( buttons_box, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
     horiz_board->Add( bsc, 1, wxALIGN_LEFT|wxALL|wxFIXED_MINSIZE, 5 );
@@ -793,8 +793,10 @@ void PositionDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
      */
 
     wxString helpText =
-      wxT("Use this panel to specify a new position\n");
-
+      wxT("Use this panel to specify a new position. ")
+      wxT("Note that the orientation of the board is the same as the main ")
+      wxT("program board. So it is now possible to set up a position from ")
+      wxT("Black's point of view (flip the main board first).");
     wxMessageBox(helpText,
       wxT("Position Dialog Help"),
       wxOK|wxICON_INFORMATION, this);

@@ -14,6 +14,7 @@
 #include "DebugPrintf.h"
 #include "Portability.h"
 #include "Appdefs.h"
+#include "Repository.h"
 #include "PgnRead.h"
 #include "ProgressBar.h"
 #include "DbMaintenance.h"
@@ -36,7 +37,6 @@ EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER_DB, CreateDatabaseDialog::OnDbFilePi
 EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER1,   CreateDatabaseDialog::OnPgnFile1Picked )
 EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER2,   CreateDatabaseDialog::OnPgnFile2Picked )
 EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER3,   CreateDatabaseDialog::OnPgnFile3Picked )
-//EVT_CHECKBOX(           ID_CREATE_TINY_DB,      CreateDatabaseDialog::OnCreateTinyDb )
 END_EVENT_TABLE()
 
 CreateDatabaseDialog::CreateDatabaseDialog(
@@ -44,7 +44,6 @@ CreateDatabaseDialog::CreateDatabaseDialog(
                            wxWindowID id, bool create_mode,
                            const wxPoint& pos, const wxSize& size, long style )
 {
-    create_tiny_db = true;
     db_created_ok = false;
     this->create_mode = create_mode;
     Create(parent, id, create_mode?"Create Database":"Add Games to Database", pos, size, style);
@@ -58,7 +57,7 @@ bool CreateDatabaseDialog::Create( wxWindow* parent,
     bool okay=true;
     
     // We have to set extra styles before creating the dialog
-    SetExtraStyle( wxWS_EX_BLOCK_EVENTS|wxDIALOG_EX_CONTEXTHELP );
+    SetExtraStyle( wxWS_EX_BLOCK_EVENTS/*|wxDIALOG_EX_CONTEXTHELP*/ );
     if( !wxDialog::Create( parent, id, caption, pos, size, style ) )
         okay = false;
     else
@@ -100,12 +99,6 @@ void CreateDatabaseDialog::CreateControls()
            :
            "To add games to an existing database, select the database and one or\n"
            "more .pgn files with the additional games to go into the database.\n"
-           "\n"
-           "Note that processing each .pgn file is slower here than during database\n"
-           "creation. Unless you are adding comparatively small files to a\n"
-           "comparatively large database, consider recreating the database from\n"
-           "scratch, it may be faster (this is why database creation allows more\n"
-           ".pgn files to be selected).\n"
            , wxDefaultPosition, wxDefaultSize, 0 );
     box_sizer->Add(descr, 0, wxALIGN_LEFT|wxALL, 5);
     
@@ -167,13 +160,6 @@ void CreateDatabaseDialog::CreateControls()
                                                         "*.pgn", wxDefaultPosition, wxDefaultSize,
                                                         wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST ); //|wxFLP_CHANGE_DIR );
         box_sizer->Add(picker6, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
-
-        #if 0
-        wxCheckBox* tiny_db_box = new wxCheckBox( this, ID_CREATE_TINY_DB, // moving towards always using this
-                wxT("&Create compact database"), wxDefaultPosition, wxDefaultSize, 0 );
-        tiny_db_box->SetValue( create_tiny_db );
-        box_sizer->Add( tiny_db_box, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
-        #endif
     }
 
     // Label for elo cutoff
@@ -182,9 +168,10 @@ void CreateDatabaseDialog::CreateControls()
     box_sizer->Add(elo_cutoff_label, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     // A spin control for the elo cutoff
-    wxSpinCtrl* elo_cutoff_spin = new wxSpinCtrl ( this, ID_CREATE_ELO_CUTOFF,
+    elo_cutoff_spin = new wxSpinCtrl ( this, ID_CREATE_ELO_CUTOFF,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 0, 4000, 2000 );
+    elo_cutoff_spin->SetValue( objs.repository->database.m_elo_cutoff );
     box_sizer->Add(elo_cutoff_spin, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     // A dividing line before the OK and Cancel buttons
@@ -227,17 +214,15 @@ void CreateDatabaseDialog::SetDialogHelp()
 // wxID_OK handler
 void CreateDatabaseDialog::OnOk( wxCommandEvent& WXUNUSED(event) )
 {
+    int elo_cutoff = elo_cutoff_spin->GetValue();
+    extern int gbl_elo_cutoff;
+    gbl_elo_cutoff = elo_cutoff;
+    objs.repository->database.m_elo_cutoff = elo_cutoff;
     if( create_mode )
         OnCreateDatabase();
     else
         OnAppendDatabase();
 }
-
-void CreateDatabaseDialog::OnCreateTinyDb( wxCommandEvent& event )
-{
-    create_tiny_db = event.IsChecked();
-}
-
 
 // Create
 void CreateDatabaseDialog::OnCreateDatabase()
@@ -369,7 +354,6 @@ void CreateDatabaseDialog::OnCreateDatabase()
     // TODO DatabaseReload();
 }
 
-// Append       TODO - make sure we don't append to the running database!
 void CreateDatabaseDialog::OnAppendDatabase()
 {
     bool ok=true;
@@ -558,8 +542,24 @@ void CreateDatabaseDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
      */
     
     wxString helpText =
-    wxT("Add help text later.\n"); 
+    wxT("Tarrasch database files (.tdb files) are compact game collections. ")
+    wxT("At the moment only complete games are supported (i.e. no game fragments). ")
+    wxT("Similarly no comments or variations are supported at this time. ")
+    wxT("Tarrasch uses one database file at a time (the current database). ")
+    wxT("Tarrasch can search the current database quickly and efficiently ")
+    wxT("for any position or for piece patterns or material balances. ")
+    wxT("Tarrasch databases are created from .pgn files.")
+    wxT("\n\n")
+    wxT("The only way Tarrasch databases can be modified (at this time) is by ")
+    wxT("appending more games to them with the Append to database command. ")
+    wxT("Tarrasch automatically rejects duplicate games and games played by ")
+    wxT("players with insufficiently high Elo ratings. ")
+    wxT("Since most historical games don't have rating information, games with ")
+    wxT("no rating information at all are not rejected. ")
+    wxT("For best results, create databases with older .pgn files first, and ")
+    wxT("append newer games as you collect them. ")
+    wxT("Tarrasch will try to present most recent games first." );
     wxMessageBox(helpText,
-                 wxT("Maintenance dialog help"),
+                 wxT("Create database / Append to database help"),
                  wxOK|wxICON_INFORMATION, this);
 }

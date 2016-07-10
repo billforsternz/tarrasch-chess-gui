@@ -95,6 +95,7 @@ public:
     bool db_created_ok;
     std::string db_name;
     bool create_tiny_db;
+    wxSpinCtrl* elo_cutoff_spin;
 };
 
 #endif    // CREATE_DATABASE_DIALOG_H
