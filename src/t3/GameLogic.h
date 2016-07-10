@@ -53,6 +53,7 @@ public:
     void PutBackDocument();
     void IndicateNoCurrentDocument();
     void GameRedisplayPlayersResult();
+    bool InHumanEngineGame( bool &human_is_white );
 
 	// Idle routine
 	void OnIdle();
@@ -162,9 +163,6 @@ private:
                                   POPUP_MODE popup_mode,
                                   wxRect hover );
     bool CheckPopup( thc::Move &move );
-
-    // Is human playing engine ?
-    bool InHumanEngineGame( bool &human_is_white );
 
     // Make move on board, returns true if gameover
     bool MakeMove( thc::Move move, GAME_RESULT &result );

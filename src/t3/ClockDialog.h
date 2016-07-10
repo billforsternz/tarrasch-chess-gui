@@ -99,6 +99,16 @@ private:
     wxStaticText* increment_label4;
     wxSpinCtrl* time_ctrl4;
     wxSpinCtrl* increment_ctrl4;
+    wxSpinCtrl* time_ctrl;      // white
+    wxSpinCtrl* secs_ctrl;      // white
+    wxSpinCtrl* increment_ctrl; // white
+    wxSpinCtrl* time_ctrl2;     // black
+    wxSpinCtrl* secs_ctrl2;     // black
+    wxSpinCtrl* increment_ctrl2;// black
+    wxCheckBox* visible_box;    // white
+    wxCheckBox* running_box;    // white
+    wxCheckBox* visible_box2;   // black
+    wxCheckBox* running_box2;   // black
 };
 
 #endif    // CLOCK_DIALOG_H

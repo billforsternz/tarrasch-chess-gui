@@ -10,6 +10,7 @@
 #include "wx/valgen.h"
 #include "Appdefs.h"
 #include "DebugPrintf.h"
+#include "GameLogic.h"
 #include "ClockDialog.h"
 
 // ClockDialog type definition
@@ -109,11 +110,11 @@ void ClockDialog::CreateControls()
 
     // Two spin controls for time
     wxBoxSizer* time_sizer1 = new wxBoxSizer(wxHORIZONTAL);
-    wxSpinCtrl* time_ctrl = new wxSpinCtrl ( this, ID_WHITE_TIME,
+    time_ctrl = new wxSpinCtrl ( this, ID_WHITE_TIME,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 0, 120, 90 );
     time_sizer1->Add(time_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    wxSpinCtrl* secs_ctrl = new wxSpinCtrl ( this, ID_WHITE_SECS,
+    secs_ctrl = new wxSpinCtrl ( this, ID_WHITE_SECS,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 0, 59, 0 );
     time_sizer1->Add(secs_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
@@ -125,18 +126,18 @@ void ClockDialog::CreateControls()
     small_sizer->Add(increment_label, 0, wxALIGN_LEFT|wxALL, 5);
 
     // A spin control for increment
-    wxSpinCtrl* increment_ctrl = new wxSpinCtrl ( this, ID_WHITE_INCREMENT,
+    increment_ctrl = new wxSpinCtrl ( this, ID_WHITE_INCREMENT,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 0, 120, 30 );
     small_sizer->Add(increment_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-    wxCheckBox* visible_box = new wxCheckBox( this, ID_WHITE_VISIBLE,
+    visible_box = new wxCheckBox( this, ID_WHITE_VISIBLE,
        wxT("&Visible"), wxDefaultPosition, wxDefaultSize, 0 );
     visible_box->SetValue( dat.m_white_visible );
     small_sizer->Add( visible_box, 0,
         wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-    wxCheckBox* running_box = new wxCheckBox( this, ID_WHITE_RUNNING,
+    running_box = new wxCheckBox( this, ID_WHITE_RUNNING,
        wxT("&Running"), wxDefaultPosition, wxDefaultSize, 0 );
     running_box->SetValue( dat.m_white_running );
     small_sizer->Add( running_box, 0,
@@ -153,11 +154,11 @@ void ClockDialog::CreateControls()
 
     // Two spin controls for time
     wxBoxSizer* time_sizer2 = new wxBoxSizer(wxHORIZONTAL);
-    wxSpinCtrl* time_ctrl2 = new wxSpinCtrl ( this, ID_BLACK_TIME,
+    time_ctrl2 = new wxSpinCtrl ( this, ID_BLACK_TIME,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 0, 120, 90 );
     time_sizer2->Add(time_ctrl2, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    wxSpinCtrl* secs_ctrl2 = new wxSpinCtrl ( this, ID_BLACK_SECS,
+    secs_ctrl2 = new wxSpinCtrl ( this, ID_BLACK_SECS,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 0, 59, 0 );
     time_sizer2->Add(secs_ctrl2, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
@@ -169,18 +170,18 @@ void ClockDialog::CreateControls()
     small_sizer2->Add(increment_label2, 0, wxALIGN_LEFT|wxALL, 5);
 
     // A spin control for increment
-    wxSpinCtrl* increment_ctrl2 = new wxSpinCtrl ( this, ID_BLACK_INCREMENT,
+    increment_ctrl2 = new wxSpinCtrl ( this, ID_BLACK_INCREMENT,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 0, 120, 30 );
     small_sizer2->Add(increment_ctrl2, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-    wxCheckBox* visible_box2 = new wxCheckBox( this, ID_BLACK_VISIBLE,
+    visible_box2 = new wxCheckBox( this, ID_BLACK_VISIBLE,
        wxT("&Visible"), wxDefaultPosition, wxDefaultSize, 0 );
     visible_box2->SetValue( dat.m_black_visible );
     small_sizer2->Add( visible_box2, 0,
         wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-    wxCheckBox* running_box2 = new wxCheckBox( this, ID_BLACK_RUNNING,
+    running_box2 = new wxCheckBox( this, ID_BLACK_RUNNING,
        wxT("&Running"), wxDefaultPosition, wxDefaultSize, 0 );
     running_box2->SetValue( dat.m_black_running );
     small_sizer2->Add( running_box2, 0,
@@ -244,7 +245,8 @@ void ClockDialog::CreateControls()
     // A spin control for time
     time_ctrl4 = new wxSpinCtrl ( this, ID_ENGINE_TIME,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
-        wxSP_ARROW_KEYS, 0, 120, 90 );
+        wxSP_ARROW_KEYS, dat.m_fixed_period_mode?0:1, 120, 90 );
+        // engine minutes can (usually is) 0 in fixed period mode, but 1 minute is min otherwise
     small_sizer4->Add(time_ctrl4, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     // Label for increment
@@ -398,7 +400,7 @@ void ClockDialog::SetDialogHelp()
     wxString increment_help = wxT("Enter the increment in seconds.");
     wxString visible_help   = wxT("Check this if the clock is visible.");
     wxString running_help   = wxT("Check this if the clock is running.");
-    wxString fixed_period_mode_help   = wxT("Check this to make the engine move after a fixed time interval. Adjust time interval using engine time(mins) and increment(secs)");
+    wxString fixed_period_mode_help   = wxT("Check this to make the engine move after a fixed time interval");
 
     FindWindow(ID_WHITE_TIME)->SetHelpText(time_help);
     FindWindow(ID_WHITE_TIME)->SetToolTip(time_help);
@@ -482,8 +484,7 @@ void ClockDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
       wxT("each time a new human versus engine game starts. A ")
       wxT("fixed period mode option is now available. This specifies a mode where the human is ")
       wxT("not timed and the engine receives a fixed amount of time per ")
-      wxT("move. Specify the number of seconds the engine gets in this ")
-      wxT("mode with the engine time (minutes, probably zero is best!) and engine increment (seconds) parameters.")
+      wxT("move.")
       wxT("\n\n")
       wxT("A shortcut to this dialog is available; simply ")
       wxT("click on the clocks.\n");
@@ -495,14 +496,17 @@ void ClockDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
 
 void ClockDialog::OnFixedPeriodMode( wxCommandEvent& WXUNUSED(event) )
 {
+    bool human_is_white;
+    bool in_game = objs.gl->InHumanEngineGame( human_is_white );
     bool fpm = fixed_period_mode->GetValue();
     dat.m_engine_minutes = fpm ? dat.m_engine_fixed_minutes : dat.m_engine_time;
     dat.m_engine_seconds = fpm ? dat.m_engine_fixed_seconds : dat.m_engine_increment;
+    time_ctrl4->SetMin(fpm?0:1);    // engine minutes can (usually is) 0 in fixed period mode, but 1 minute is min otherwise
     time_ctrl4->SetValue(dat.m_engine_minutes);
     increment_ctrl4->SetValue(dat.m_engine_seconds);
+    increment_label4->SetLabel( fpm ? "Time (seconds):" : "Increment (seconds):" );
     if( fpm )
     {
-        increment_label4->SetLabel( "Time (seconds):" );
         human_running_checkbox->SetValue( false );
         human_visible_checkbox->SetValue( false );
         engine_running_checkbox->SetValue( true );
@@ -510,10 +514,45 @@ void ClockDialog::OnFixedPeriodMode( wxCommandEvent& WXUNUSED(event) )
     }
     else
     {
-        increment_label4->SetLabel( "Increment (seconds):" );
-        human_running_checkbox->SetValue( dat.m_human_running );
-        human_visible_checkbox->SetValue( dat.m_human_visible );
-        engine_running_checkbox->SetValue( dat.m_engine_running );
-        engine_visible_checkbox->SetValue( dat.m_engine_visible );
+        human_running_checkbox->SetValue( true );
+        human_visible_checkbox->SetValue( true );
+        engine_running_checkbox->SetValue( true );
+        engine_visible_checkbox->SetValue( true );
+    }
+    if( in_game )
+    {
+        wxSpinCtrl* now_human_minutes    = human_is_white ? time_ctrl  : time_ctrl2;
+        wxSpinCtrl* now_engine_minutes   = human_is_white ? time_ctrl2 : time_ctrl;
+        wxSpinCtrl* now_human_seconds    = human_is_white ? secs_ctrl  : secs_ctrl2;
+        wxSpinCtrl* now_engine_seconds   = human_is_white ? secs_ctrl2 : secs_ctrl;
+        wxSpinCtrl* now_human_increment  = human_is_white ? increment_ctrl  : increment_ctrl2;
+        wxSpinCtrl* now_engine_increment = human_is_white ? increment_ctrl2 : increment_ctrl;
+        wxCheckBox* now_human_visible    = human_is_white ? visible_box : visible_box2;
+        wxCheckBox* now_engine_visible   = human_is_white ? visible_box2: visible_box;
+        wxCheckBox* now_human_running    = human_is_white ? running_box : running_box2;
+        wxCheckBox* now_engine_running   = human_is_white ? running_box2: running_box;
+        if( fpm )
+        {
+            now_human_running   ->SetValue( false );
+            now_human_visible   ->SetValue( false );
+            now_engine_running  ->SetValue( true );
+            now_engine_visible  ->SetValue( true );
+            now_engine_minutes  ->SetValue( dat.m_engine_fixed_minutes );  
+            now_engine_seconds  ->SetValue( dat.m_engine_fixed_seconds );  
+            now_engine_increment->SetValue( 0 );
+        }
+        else
+        {
+            now_human_minutes   ->SetValue( dat.m_human_time  ); 
+            now_engine_minutes  ->SetValue( dat.m_engine_time );  
+            now_human_seconds   ->SetValue( 0 );  
+            now_engine_seconds  ->SetValue( 0 );  
+            now_human_increment ->SetValue( dat.m_human_increment  );
+            now_engine_increment->SetValue( dat.m_engine_increment );
+            now_human_running   ->SetValue( true );
+            now_human_visible   ->SetValue( true );
+            now_engine_running  ->SetValue( true );
+            now_engine_visible  ->SetValue( true );
+        }
     }
 }

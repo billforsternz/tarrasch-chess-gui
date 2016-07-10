@@ -32,13 +32,13 @@ void GameClock::Repository2Clocks()
 {
     ClockConfig *rep = &objs.repository->clock;
     fixed_period_mode = rep->m_fixed_period_mode;
-    int secs = rep->m_white_time*60 + (fixed_period_mode ? rep->m_white_increment : 0);
+    int secs = rep->m_white_time*60 + rep->m_white_secs;
     if( secs <= 0 )
         secs = 1;
     white.SetClock( secs, rep->m_white_increment,
                           rep->m_white_running,
                           rep->m_white_visible );
-    secs = rep->m_black_time*60 + (fixed_period_mode ? rep->m_black_increment : 0);
+    secs = rep->m_black_time*60 + rep->m_black_secs;
     if( secs <= 0 )
         secs = 1;
     black.SetClock( secs, rep->m_black_increment,
@@ -73,7 +73,8 @@ void GameClock::NewHumanEngineGame( bool human_is_white, bool white_to_move )
         rep->m_white_visible   = rep->m_human_visible;
         rep->m_white_running   = rep->m_human_running;
         rep->m_black_time      = fixed_period_mode ? rep->m_engine_fixed_minutes : rep->m_engine_time;
-        rep->m_black_increment = fixed_period_mode ? rep->m_engine_fixed_seconds : rep->m_engine_increment;
+        rep->m_black_secs      = fixed_period_mode ? rep->m_engine_fixed_seconds : 0;
+        rep->m_black_increment = fixed_period_mode ? 0 : rep->m_engine_increment;
         rep->m_black_visible   = rep->m_engine_visible;
         rep->m_black_running   = rep->m_engine_running;
     }
@@ -84,12 +85,11 @@ void GameClock::NewHumanEngineGame( bool human_is_white, bool white_to_move )
         rep->m_black_visible   = rep->m_human_visible;
         rep->m_black_running   = rep->m_human_running;
         rep->m_white_time      = fixed_period_mode ? rep->m_engine_fixed_minutes : rep->m_engine_time;
-        rep->m_white_increment = fixed_period_mode ? rep->m_engine_fixed_seconds : rep->m_engine_increment;
+        rep->m_white_secs      = fixed_period_mode ? rep->m_engine_fixed_seconds : 0;
+        rep->m_white_increment = fixed_period_mode ? 0 : rep->m_engine_increment;
         rep->m_white_visible   = rep->m_engine_visible;
         rep->m_white_running   = rep->m_engine_running;
     }
-    rep->m_white_secs = 0;
-    rep->m_black_secs = 0;
     Repository2Clocks();
     GameStart( white_to_move );
 }
@@ -139,18 +139,21 @@ void GameClock::GetTimes( int &white_millisecs_time, int &black_millisecs_time )
 void GameClock::Swap( bool human_is_white, bool white_to_move )
 {
     ClockConfig *rep = &objs.repository->clock;
-    int temp1       = rep->m_white_time;
-    int temp2       = rep->m_white_increment;
-    bool temp3      = rep->m_white_visible;
-    bool temp4      = rep->m_white_running;
+    int  temp1      = rep->m_white_time;
+    int  temp2      = rep->m_white_secs;
+    int  temp3      = rep->m_white_increment;
+    bool temp4      = rep->m_white_visible;
+    bool temp5      = rep->m_white_running;
     rep->m_white_time      = rep->m_black_time;
+    rep->m_white_secs      = rep->m_black_secs;
     rep->m_white_increment = rep->m_black_increment;
     rep->m_white_visible   = rep->m_black_visible;
     rep->m_white_running   = rep->m_black_running;
     rep->m_black_time      = temp1;
-    rep->m_black_increment = temp2;
-    rep->m_black_visible   = temp3;
-    rep->m_black_running   = temp4;
+    rep->m_black_secs      = temp2;
+    rep->m_black_increment = temp3;
+    rep->m_black_visible   = temp4;
+    rep->m_black_running   = temp5;
 
     int time_w, time_b;
     int increment_w, increment_b;

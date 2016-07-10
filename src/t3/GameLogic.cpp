@@ -1568,11 +1568,11 @@ void GameLogic::CmdBlackResigns()
 void GameLogic::CmdClocks()
 {
     Atomic begin;
-    ClockDialog dialog( objs.repository->clock, objs.frame );
     objs.gl->chess_clock.Clocks2Repository();
-    cprintf( "clock.m_fixed_period_mode=%s\n",dialog.dat.m_fixed_period_mode?"true":"false");
-    dialog.dat.m_engine_minutes = dialog.dat.m_fixed_period_mode ? dialog.dat.m_engine_fixed_minutes : dialog.dat.m_engine_time     ;
-    dialog.dat.m_engine_seconds = dialog.dat.m_fixed_period_mode ? dialog.dat.m_engine_fixed_seconds : dialog.dat.m_engine_increment;
+    ClockConfig cfg = objs.repository->clock;
+    cfg.m_engine_minutes = cfg.m_fixed_period_mode ? cfg.m_engine_fixed_minutes : cfg.m_engine_time;
+    cfg.m_engine_seconds = cfg.m_fixed_period_mode ? cfg.m_engine_fixed_seconds : cfg.m_engine_increment;
+    ClockDialog dialog( cfg, objs.frame );
     chess_clock.PauseBegin();
     int ret = dialog.ShowModal();
     chess_clock.PauseEnd();
@@ -1589,8 +1589,8 @@ void GameLogic::CmdClocks()
         }
         else
         {
-            dialog.dat.m_engine_time       = dialog.dat.m_engine_minutes;
-            dialog.dat.m_engine_increment  = dialog.dat.m_engine_seconds;
+            dialog.dat.m_engine_time          = dialog.dat.m_engine_minutes;
+            dialog.dat.m_engine_increment     = dialog.dat.m_engine_seconds;
         }
         objs.repository->clock = dialog.dat;
         objs.gl->chess_clock.Repository2Clocks();
