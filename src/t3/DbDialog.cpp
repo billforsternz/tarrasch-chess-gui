@@ -354,7 +354,9 @@ void DbDialog::GdvHelpClick()
     " by player menu to search for players."
     "\n\n"
     "You can sort on any column including the moves column. Sorting on the moves "
-    "column shows the most popular lines of play first."
+    "column shows the most popular lines of play first. "
+    "The first column (column '#') is provided only to allow "
+    "a sort on initial order (for restoring or reversing the initial order)."
     "\n\n";
     wxMessageBox(helpText,
     wxT("Database Dialog Help"),

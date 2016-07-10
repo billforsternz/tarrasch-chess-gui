@@ -161,6 +161,9 @@ void PgnDialog::GdvHelpClick()
     "development and should be treated as an extra-for-experts. There is a file "
     "named web.zip in your TarraschDb installation directory with supplementary files "
     "and instructions for the keen and well motivated."
+    "\n\n"
+    "You can sort on any column. The first column (column '#') is provided only to allow "
+    "a sort on initial order (for restoring or reversing the initial order)."
     "\n\n";
     wxMessageBox(helpText,
     wxT("Database Dialog Help"),
@@ -191,12 +194,15 @@ void PgnDialog::GdvListColClick( int compare_col )
 {
     local_cache.clear();
     stack.clear();
+    bool cancelled = false;
 
     // Load all games into memory
     int nbr = gc->gds.size();
     int old_percent = -1;
     void *context=0;
-    bool end=false;
+    bool end = false;
+    if( compare_col == 0 )
+        end = true; // we don't need to load into memory for column 0
     for( int i=0; !end && i<nbr; i++ )
     {
         
@@ -223,14 +229,18 @@ void PgnDialog::GdvListColClick( int compare_col )
                 {
                     old_percent = percent;
                     if( !progress.Update( percent>100 ? 100 : percent ) )
+                    {
                         end = true;
+                        cancelled = true;
+                    }
                 }
                 context = gc->gds[i]->LoadIntoMemory( context, end );   // never exit without an end=true call
                                                                         //  prevents resource leaks
             }
         }
     }
-    GamesDialog::GdvListColClick( compare_col );
+    if( !cancelled )
+        GamesDialog::GdvListColClick( compare_col );
 }
 
 bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx )

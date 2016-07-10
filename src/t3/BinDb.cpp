@@ -1036,7 +1036,6 @@ void BinDbDatabaseInitialSort( std::vector< smart_ptr<ListableGame> > &games, bo
         }
     }
     cprintf( "Not already sorted\n" );
-
     std::string desc(sort_by_player_name?"Sorting by player name":"Initial sort");
     ProgressBar progress_bar( "Sorting", desc, true );
     //progress_bar.DrawNow();

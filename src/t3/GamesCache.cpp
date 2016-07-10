@@ -228,8 +228,8 @@ bool GamesCache::Load( FILE *pgn_file )
     std::string str;
     long fposn = ftell(pgn_file);
     char buf[2048];
-    std::string title("Reading file");
-    std::string desc("Reading file");
+    std::string title("Scanning .pgn file for games");
+    std::string desc("Reading .pgn file");
     bool abortable=false;
     wxWindow *parent=NULL;
     ProgressBar pb( title, desc, abortable, parent, pgn_file );

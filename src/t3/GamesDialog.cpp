@@ -2288,12 +2288,6 @@ void GamesDialog::ColumnSort( int compare_col, std::vector< smart_ptr<ListableGa
                 cprintf( "sort_order_first\n" );
                 sort_order_first = false;
                 sort_order[1] = -1;
-                if( compare_col == 0 )  // initially games are ordered by game_id == column 0
-                                        //  reverse sort only if this is first sort request
-                {
-                    sort_forward[0] = false;
-                    cprintf( "start with reverse sort\n" );
-                }
             }
 
             // Not the first time, look for a repeat instance of the current
@@ -2313,6 +2307,46 @@ void GamesDialog::ColumnSort( int compare_col, std::vector< smart_ptr<ListableGa
             }
         }
 
+        // Special handling for column 0
+        //  If already completely forward sorted, we definitely want to reverse sort (for example we start with a column 0 sort
+        //   on an otherwise undisturbed database dialog which will start forward sorted)
+        //  Similarly if already completely reverse sorted, we definitely want to forward sort
+        if( compare_col == 0 )
+        {
+            bool already_forward=true;
+            bool already_reverse=false;
+            uint32_t prev=0;
+            for( uint32_t i=0; already_forward && i<displayed_games.size(); i++ )
+            {
+                uint32_t id = displayed_games[i]->game_id;
+                if( id < prev )
+                    already_forward = false;
+                prev = id;
+            }
+            if( !already_forward )
+            {
+                already_reverse=true;
+                prev=0xffffffff;
+                for( uint32_t i=0; already_reverse && i<displayed_games.size(); i++ )
+                {
+                    uint32_t id = displayed_games[i]->game_id;
+                    if( id > prev )
+                        already_reverse = false;
+                    prev = id;
+                }
+            }
+            if( already_forward )
+            {
+                cprintf( "Already forward sorted, so reversing\n" );
+                sort_forward[0] = false;
+            }
+            else if( already_reverse )
+            {
+                cprintf( "Already reverse sorted, so forwarding\n" );
+                sort_forward[0] = true;
+            }
+            // else don't meddle
+        }
         
         // We need a more elaborate algorithm if the moves column is part of the sort
         bool use_move_col_algorithm = false;
