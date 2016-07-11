@@ -379,8 +379,8 @@ void Repository::SetDirectories()
 #endif
 
     // Hopefully one time only, copy (actually move) original default.tdb
-    wxString exe_db = exe_dir + "/default.tdb";
-    wxString doc_db = doc_dir + "/default.tdb";
+    wxString exe_db = exe_dir + "/" + DEFAULT_DATABASE;
+    wxString doc_db = doc_dir + "/" + DEFAULT_DATABASE;
     wxFileName fn_exe_db(exe_db);
     wxFileName fn_doc_db(doc_db);
     bool doc_exist = fn_doc_db.FileExists();

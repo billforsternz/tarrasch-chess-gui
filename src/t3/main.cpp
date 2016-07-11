@@ -936,7 +936,7 @@ void ChessFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
         "Visit the publisher's website www.triplehappy.com for Tarrasch "
         "Chess GUI news and updates."
     );
-    wxMessageBox(msg, "About the Tarrasch Chess GUI V3 " MASTER_VERSION, wxOK|wxICON_INFORMATION|wxCENTRE, this);
+    wxMessageBox(msg, "About the Tarrasch Chess GUI " MASTER_VERSION, wxOK|wxICON_INFORMATION|wxCENTRE, this);
 }
 
 /*
@@ -1029,7 +1029,7 @@ void ChessFrame::OnCredits(wxCommandEvent& WXUNUSED(event))
         "\n\n"
         "Thanks to Yusuke Kamiyamane for some of the toolbar icons."
         "\n\n"
-        "Thanks to Pierre Havard for KingBase and Mark Crowther for TWIC which "
+        "Thanks to Ed Schröder for Millionbase and Pierre Havard for KingBase. Also to Mark Crowther for TWIC which "
         "is the basis of all modern chess database curation."
         "\n\n"
         "Thanks to the engine authors who provided explicit permission to "
@@ -1045,7 +1045,7 @@ void ChessFrame::OnCredits(wxCommandEvent& WXUNUSED(event))
         "the setup program."
         "\n\n"
         "Thanks to Julian Smart, Vadim Zeitlin and the wxWidgets community "
-        " for the GUI library."
+        "for the GUI library."
         "\n\n"
         "Dedicated to the memory of John Victor Forster 1949-2001. We "
         "miss him every day."

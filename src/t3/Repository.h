@@ -187,7 +187,7 @@ struct DatabaseConfig
     int         m_elo_cutoff;
     DatabaseConfig()
     {
-        m_file = "kingbase-lite-2016-03.tdb";
+        m_file = DEFAULT_DATABASE;
         m_elo_cutoff = 2000;
     }
 };
