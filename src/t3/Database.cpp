@@ -172,9 +172,13 @@ int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &pl
     this->db_req = db_req;
     extern void BinDbDatabaseInitialSort( std::vector< smart_ptr<ListableGame> > &games, bool sort_by_player_name );
     BinDbDatabaseInitialSort( objs.db->tiny_db.in_memory_game_cache, db_req == REQ_PLAYERS );
-	smart_ptr<ListableGame> p = objs.db->tiny_db.in_memory_game_cache[0];
-	cprintf( "index 0: %s\n", p->White() );
-	return tiny_db.in_memory_game_cache.size();
+	int nbr = tiny_db.in_memory_game_cache.size();
+    if( nbr )
+    {
+	    smart_ptr<ListableGame> p = objs.db->tiny_db.in_memory_game_cache[0];
+	    cprintf( "index 0: %s\n", p->White() );
+    }
+	return nbr;
 }
 
 int Database::LoadPlayerGamesWithQuery(  std::string &player_name, bool white, std::vector< smart_ptr<ListableGame> > &games )

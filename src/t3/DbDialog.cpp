@@ -19,6 +19,7 @@
 #include "GamePrefixDialog.h"
 #include "GameLogic.h"
 #include "Objects.h"
+#include "Lang.h"
 #include "PgnFiles.h"
 #include "MiniBoard.h"
 #include "DbDialog.h"
@@ -591,6 +592,7 @@ void DbDialog::StatsCalculate()
         if( i+1 == moves_from_base_position.size() )
         {
             std::string s = mv.NaturalOut(&cr_to_match);
+            LangOut(s);
             if( !cr_to_match.white )
                 s = "..." + s;
             go_back_string = "Go back (undo " + s + ")";
@@ -755,6 +757,7 @@ void DbDialog::StatsCalculate()
         }
         moves_in_this_position.push_back(mv);
         std::string s = mv.NaturalOut(&cr_to_match);
+        LangOut(s);
         if( !cr_to_match.white )
             s = "..." + s;
         char buf[200];
@@ -790,7 +793,9 @@ void DbDialog::StatsCalculate()
                 sprintf( buf, "%d.", cr.full_move_count );
                 txt += buf;
             }
-            txt += mv.NaturalOut(&cr);
+            std::string s = mv.NaturalOut(&cr);
+            LangOut(s);
+            txt += s;
             txt += " ";
             cr.PlayMove(mv);
         }

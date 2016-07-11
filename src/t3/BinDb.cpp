@@ -512,7 +512,6 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
                   int nbr_moves, thc::Move *moves )
 {
     bool aborted = false;
-    int id = game_counter;
     if( (++game_counter % 10000) == 0 )
         cprintf( "%d games read from input .pgn so far\n", game_counter );
     if( fen )
@@ -1014,6 +1013,22 @@ static bool predicate_sorts_by_game_id( const smart_ptr<ListableGame> &e1, const
     return ret;
 }
 
+void BinDbShowDebugOrder( const std::vector< smart_ptr<ListableGame> > &gms, const char *msg )
+{
+    if( gms.size() < 7 )
+        cprintf( "%s [too short to show]\n",msg);
+    else
+    {
+        uint32_t id0 = gms[0]->game_id;
+        uint32_t id1 = gms[1]->game_id;
+        uint32_t id2 = gms[2]->game_id;
+        uint32_t id_end2 = gms[gms.size()-3]->game_id;
+        uint32_t id_end1 = gms[gms.size()-2]->game_id;
+        uint32_t id_end0 = gms[gms.size()-1]->game_id;
+        cprintf( "%s [0x%08x,0x%08x,0x%08x...0x%08x,0x%08x,0x%08x]\n",msg, id0,id1,id2,id_end2,id_end1,id_end0);
+    }
+}
+
 void BinDbDatabaseInitialSort( std::vector< smart_ptr<ListableGame> > &games, bool sort_by_player_name )
 {
 
@@ -1039,43 +1054,34 @@ void BinDbDatabaseInitialSort( std::vector< smart_ptr<ListableGame> > &games, bo
     std::string desc(sort_by_player_name?"Sorting by player name":"Initial sort");
     ProgressBar progress_bar( "Sorting", desc, true );
     //progress_bar.DrawNow();
-    uint32_t id0 = games[0]->game_id;
-    uint32_t id1 = games[1]->game_id;
-    uint32_t id2 = games[2]->game_id;
-    uint32_t id_end2 = games[games.size()-3]->game_id;
-    uint32_t id_end1 = games[games.size()-2]->game_id;
-    uint32_t id_end0 = games[games.size()-1]->game_id;
-    cprintf( "before [0x%08x,0x%08x,0x%08x...0x%08x,0x%08x,0x%08x]\n",id0,id1,id2,id_end2,id_end1,id_end0);
+    BinDbShowDebugOrder( games, "Initial sort before");
     sort_before( games.begin(), games.end(), sort_by_player_name ? predicate_sorts_by_player : predicate_sorts_by_game_id, &progress_bar );
     std::sort( games.begin(), games.end(), sort_by_player_name ? predicate_sorts_by_player : predicate_sorts_by_game_id );
     sort_after();
-    id0 = games[0]->game_id;
-    id1 = games[1]->game_id;
-    id2 = games[2]->game_id;
-    id_end2 = games[games.size()-3]->game_id;
-    id_end1 = games[games.size()-2]->game_id;
-    id_end0 = games[games.size()-1]->game_id;
-    cprintf( "after [0x%08x,0x%08x,0x%08x...0x%08x,0x%08x,0x%08x]\n",id0,id1,id2,id_end2,id_end1,id_end0);
+    BinDbShowDebugOrder( games, "Initial sort after");
 }
 
 bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
 {
     {
+        BinDbShowDebugOrder( games, "Duplicate Removal - phase 1 before");
         std::string desc("Duplicate Removal - phase 1");
         ProgressBar progress_bar( title, desc, true, window );
         progress_bar.DrawNow();
         sort_before( games.begin(), games.end(), predicate_sorts_by_game_moves, &progress_bar );
         std::sort( games.begin(), games.end(), predicate_sorts_by_game_moves );
         sort_after();
+        BinDbShowDebugOrder( games, "Duplicate Removal - phase 1 after");
     }
     {
+        BinDbShowDebugOrder( games, "Duplicate Removal - phase 2 before");
         std::string desc("Duplicate Removal - phase 2");
         ProgressBar progress_bar( title, desc, true, window );
         progress_bar.DrawNow();
         ProgressBar *pb = &progress_bar;
         int nbr_games = games.size();
         bool in_dups=false;
-        int start;
+        int start=0;
         for( int i=0; i<nbr_games-1; i++ )
         {
             if( pb->Perfraction( i,nbr_games) )
@@ -1100,7 +1106,7 @@ bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
                 }
             }
 
-            // For subranges with identical moves, mark dups with id -1
+            // For subranges with identical moves, mark dups with id = GAME_ID_SENTINEL
             if( eval_dups )
             {
                 int end = i+1;
@@ -1108,7 +1114,7 @@ bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
                 static int trigger = 3;
                 if( false ) //end-start > 8 ) //trigger > 0 )
                 {
-                    printf( "Eval Dups in\n" );
+                    cprintf( "Eval Dups in\n" );
                     for( int idx=start; idx<end; idx++ )
                     {
                         smart_ptr<ListableGame> p = games[idx];
@@ -1146,25 +1152,30 @@ bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
                 }
             }
         }
+        BinDbShowDebugOrder( games, "Duplicate Removal - phase 2 after");
     }
     {
+        BinDbShowDebugOrder( games, "Duplicate Removal - phase 3 before");
         std::string desc("Duplicate Removal - phase 3");
         ProgressBar progress_bar( title, desc, true, window );
-        progress_bar.DrawNow();
-        ProgressBar *pb = &progress_bar;
+        //progress_bar.DrawNow();
         sort_before( games.begin(), games.end(), predicate_sorts_by_id, &progress_bar );
         std::sort( games.begin(), games.end(), predicate_sorts_by_id );
         sort_after();
+
+        // Games to be deleted are at the end - with id GAME_ID_SENTINEL
         int nbr_deleted=0;
-        for( int i=0; i<games.size(); i++ )
+        for( int i=games.size()-1; i>=0; i-- )
         {
-            if( games[i].get()->game_id == -1 )
+            if( games[i]->game_id == GAME_ID_SENTINEL )
                 nbr_deleted++;
             else
                 break;
         }
         cprintf( "Number of duplicates deleted: %d\n", nbr_deleted );
-        games.erase( games.begin(), games.begin()+nbr_deleted );
+        if( nbr_deleted )
+            games.erase( games.end()-nbr_deleted, games.end() );
+        BinDbShowDebugOrder( games, "Duplicate Removal - phase 3 after");
     }
     return true;
 }
@@ -1381,9 +1392,9 @@ void BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > 
         int num = i;
         int den = game_count?game_count:1;
         if( den > 1000000 )
-            background_load_permill = i / (den/1000);
+            background_load_permill = num / (den/1000);
         else
-            background_load_permill = (i*1000) / den;
+            background_load_permill = (num*1000) / den;
         nbr_games++;
         if( info.game_attributes )
             nbr_promotion_games++;

@@ -1017,7 +1017,7 @@ static int candidate( bool &warning, const char *name )
     char surname[1000];
     int i=0;
     const char *q = name;
-    char c;
+    char c='\0';
     while( *q )
     {
         c = *q;

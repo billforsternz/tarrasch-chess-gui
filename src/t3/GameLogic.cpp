@@ -1052,13 +1052,16 @@ void GameLogic::CmdDatabaseSelect()
 void GameLogic::CmdDatabaseCreate()
 {
     Atomic begin;
-    wxPoint pt(0,0);
-    wxSize sz = objs.frame->GetSize();
-    sz.x = (sz.x*9)/10;
-    sz.y = (sz.y*9)/10;
-    CreateDatabaseDialog dialog( objs.frame, ID_CREATE_DB_DIALOG, true ); // create_mode = true
-    dialog.ShowModal();
-    if( dialog.db_created_ok )
+    wxString db_name;
+    bool ok=false;
+    {
+        CreateDatabaseDialog dialog( objs.frame, ID_CREATE_DB_DIALOG, true ); // create_mode = true
+        dialog.ShowModal();
+        ok = dialog.db_created_ok;
+        wxString s(dialog.db_name.c_str());
+        db_name = s;
+    }
+    if( ok )
     {
         int answer = wxMessageBox( "Would you like to use the new database now?", "Press Yes to set the new database as the current database",  wxYES_NO|wxCANCEL );
         bool set_current = (answer == wxYES);
@@ -1072,15 +1075,13 @@ void GameLogic::CmdDatabaseCreate()
             {
                 cprintf( "...CmdDatabaseCreate() if we did wait, that wait is now over (%d)\n", temp );
                 wxString previous = objs.repository->database.m_file;
-                wxString s(dialog.db_name.c_str());
-                objs.repository->database.m_file = s;
-                const char *filename = s.c_str();
+                const char *filename = db_name.c_str();
                 cprintf( "File is %s\n", filename );
                 objs.db->Reopen(filename);
                 std::string error_msg;
                 bool operational = objs.db->IsOperational(error_msg);
                 if( operational )
-                    objs.repository->database.m_file = s;
+                    objs.repository->database.m_file = db_name;
                 else
                 {
                     objs.db->Reopen(previous);
@@ -1095,13 +1096,16 @@ void GameLogic::CmdDatabaseCreate()
 void GameLogic::CmdDatabaseAppend()
 {
     Atomic begin;
-    wxPoint pt(0,0);
-    wxSize sz = objs.frame->GetSize();
-    sz.x = (sz.x*9)/10;
-    sz.y = (sz.y*9)/10;
-    CreateDatabaseDialog dialog( objs.frame, ID_CREATE_DB_DIALOG, false ); // create_mode = false
-    dialog.ShowModal();
-    if( dialog.db_created_ok )
+    bool ok=false;
+    wxString db_name;
+    {
+        CreateDatabaseDialog dialog( objs.frame, ID_CREATE_DB_DIALOG, false ); // create_mode = false
+        dialog.ShowModal();
+        ok = dialog.db_created_ok;
+        wxString s(dialog.db_name.c_str());
+        db_name = s;
+    }
+    if( ok )
     {
         int answer = wxMessageBox( "Would you like to use the new database now?", "Press Yes to set the new database as the current database",  wxYES_NO|wxCANCEL );
         bool set_current = (answer == wxYES);
@@ -1115,15 +1119,13 @@ void GameLogic::CmdDatabaseAppend()
             {
                 cprintf( "...CmdDatabaseCreate() if we did wait, that wait is now over (%d)\n", temp );
                 wxString previous = objs.repository->database.m_file;
-                wxString s(dialog.db_name.c_str());
-                objs.repository->database.m_file = s;
-                const char *filename = s.c_str();
+                const char *filename = db_name.c_str();
                 cprintf( "File is %s\n", filename );
                 objs.db->Reopen(filename);
                 std::string error_msg;
                 bool operational = objs.db->IsOperational(error_msg);
                 if( operational )
-                    objs.repository->database.m_file = s;
+                    objs.repository->database.m_file = db_name;
                 else
                 {
                     objs.db->Reopen(previous);

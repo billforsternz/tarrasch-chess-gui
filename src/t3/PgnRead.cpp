@@ -1003,7 +1003,8 @@ void PgnRead::Header( char *buf )
                 }
                 else
                 {
-                    while( *s && isascii(*s) && (isalnum(*s) || *s=='.' || *s==' ' || *s=='-' || *s=='/') )
+                    while( *s && isascii(*s) && (isalnum(*s) || *s=='.' || *s==' ' || *s=='-' || *s=='\'' || *s=='/') )
+                    //while( *s && isascii(*s) && (isalnum(*s) || *s=='.' || *s==' ' || *s=='-' || *s=='/') )
                         s++;
                 }
                 *s = '\0';

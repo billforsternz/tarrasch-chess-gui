@@ -785,7 +785,7 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
         {
             special = thc::SPECIAL_KING_MOVE;
             src = side->king;
-            int delta;
+            int delta=0;
             switch( code&0x0f )     // 0, 1, 2
             {                       // 8, 9, 10
                                     // 16,17,18
@@ -912,7 +912,7 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
         {
             int knight_offset = ((code&N_HI) ? 1 : 0 );;
             src = side->knights[knight_offset];
-            int delta;
+            int delta=0;
             switch(code&7)          // 0, 1, 2, 3
             {                       // 8, 9, 10,11
                                     // 16,17,18,19
@@ -996,7 +996,7 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
             src = side->pawns[pawn_offset];
             bool reordering_possible = false;
             bool white = msi.cr.white;
-            int delta;
+            int delta=0;
             switch( code&0x0f )
             {
                 case P_DOUBLE:      special = white ? thc::SPECIAL_WPAWN_2SQUARES : thc::SPECIAL_BPAWN_2SQUARES;
@@ -1196,7 +1196,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
             case CODE_KING:
             {
                 src = mqi.side_white.king;
-                int delta;
+                int delta=0;
                 switch( code&0x0f )     // 0, 1, 2
                 {                       // 8, 9, 10
                                         // 16,17,18
@@ -1329,7 +1329,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
             {
                 int knight_offset = ((code&N_HI) ? 1 : 0 );
                 src = mqi.side_white.knights[knight_offset];
-                int delta;
+                int delta=0;
                 switch(code&7)          // 0, 1, 2, 3
                 {                       // 8, 9, 10,11
                                         // 16,17,18,19
@@ -1549,7 +1549,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
             case CODE_KING:
             {
                 src = mqi.side_black.king;
-                int delta;
+                int delta=0;
                 switch( code&0x0f )     // 0, 1, 2
                 {                       // 8, 9, 10
                                         // 16,17,18
@@ -1681,7 +1681,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
             {
                 int knight_offset = ((code&N_HI) ? 1 : 0 );
                 src = mqi.side_black.knights[knight_offset];
-                int delta;
+                int delta=0;
                 switch(code&7)          // 0, 1, 2, 3
                 {                       // 8, 9, 10,11
                                         // 16,17,18,19
@@ -1917,7 +1917,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
             case CODE_KING:
             {
                 src = mqi.side_white.king;
-                int delta;
+                int delta=0;
                 switch( code&0x0f )     // 0, 1, 2
                 {                       // 8, 9, 10
                                         // 16,17,18
@@ -2050,7 +2050,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
             {
                 int knight_offset = ((code&N_HI) ? 1 : 0 );
                 src = mqi.side_white.knights[knight_offset];
-                int delta;
+                int delta=0;
                 switch(code&7)          // 0, 1, 2, 3
                 {                       // 8, 9, 10,11
                                         // 16,17,18,19
@@ -2256,7 +2256,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
             case CODE_KING:
             {
                 src = mqi.side_black.king;
-                int delta;
+                int delta=0;
                 switch( code&0x0f )     // 0, 1, 2
                 {                       // 8, 9, 10
                                         // 16,17,18
@@ -2388,7 +2388,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
             {
                 int knight_offset = ((code&N_HI) ? 1 : 0 );
                 src = mqi.side_black.knights[knight_offset];
-                int delta;
+                int delta=0;
                 switch(code&7)          // 0, 1, 2, 3
                 {                       // 8, 9, 10,11
                                         // 16,17,18,19

@@ -27,6 +27,7 @@
 #include "PgnFiles.h"
 #include "MiniBoard.h"
 #include "DbDialog.h"
+#include "Lang.h"
 #include "GamesDialog.h"
 #include "Database.h"
 #include <iostream>
@@ -152,6 +153,7 @@ std::string GamesListCtrl::CalculateMoveTxt( std::string &previous_move, Compact
             bool prev_move = (i+1 == focus_offset);
             bool first_move = (i == focus_offset);
             std::string s = mv.NaturalOut(&cr);
+            LangOut(s);
             if( cr.white || prev_move || first_move )
             {
                 if( first_move )

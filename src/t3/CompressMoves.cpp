@@ -855,7 +855,7 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other 
         {
             special = thc::SPECIAL_KING_MOVE;
             src = side->king;
-            int delta;
+            int delta=0;
             switch( code&0x0f )     // 0, 1, 2
             {                       // 8, 9, 10
                                     // 16,17,18
@@ -982,7 +982,7 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other 
         {
             int knight_offset = ((code&N_HI) ? 1 : 0 );
             src = side->knights[knight_offset];
-            int delta;
+            int delta=0;
             switch(code&7)          // 0, 1, 2, 3
             {                       // 8, 9, 10,11
                                     // 16,17,18,19
@@ -1066,7 +1066,7 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other 
             src = side->pawns[pawn_offset];
             bool reordering_possible = false;
             bool white = cr.white;
-            int delta;
+            int delta=0;
             switch( code&0x0f )
             {
                 case P_DOUBLE:      special = white ? thc::SPECIAL_WPAWN_2SQUARES : thc::SPECIAL_BPAWN_2SQUARES;

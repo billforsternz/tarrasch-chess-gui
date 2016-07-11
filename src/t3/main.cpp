@@ -97,7 +97,7 @@ public:
 //  on the stack - no need to use it
 static int dbg_printf_prepend_time=0;
 static FILE *teefile;   // private debugging log
-#define DURING_DEVELOPMENT
+//#define DURING_DEVELOPMENT
 #ifdef DURING_DEVELOPMENT
 static bool dbg_console_enabled = true;     // set this to false except during development
 #else
@@ -410,7 +410,7 @@ bool ChessApp::OnInit()
     else if( disp_height < 800 )
         win_point = wxPoint(20, 0);
     #endif
-    ChessFrame *frame = new ChessFrame (_T("Tarrasch Chess GUI V3 -- DEMO VERSION USE CAUTIOUSLY"),
+    ChessFrame *frame = new ChessFrame (_T("Tarrasch Chess GUI V3 -- Beta version use cautiously"),
                                   win_point, win_size );
     objs.frame = frame;
     frame->Show (true);
