@@ -891,6 +891,7 @@
       <ProgramDataBaseFileName>vc_msw\Tarrasch.pdb</ProgramDataBaseFileName>
       <WarningLevel>Level4</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AssemblerOutput>NoListing</AssemblerOutput>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>__WXMSW__;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1014,6 +1015,7 @@
     <ClInclude Include="src\t3\Atom.h" />
     <ClInclude Include="src\t3\AutoTimer.h" />
     <ClInclude Include="src\t3\BinaryBlock.h" />
+    <ClInclude Include="src\t3\BinaryConversions.h" />
     <ClInclude Include="src\t3\BinDb.h" />
     <ClInclude Include="src\t3\BoardBitmap.h" />
     <ClInclude Include="src\t3\BoardBitmap40.h" />
@@ -1056,6 +1058,7 @@
     <ClInclude Include="src\t3\GraphicBoard.h" />
     <ClInclude Include="src\t3\kibitzq.h" />
     <ClInclude Include="src\t3\Lang.h" />
+    <ClInclude Include="src\t3\LegacyDb.h" />
     <ClInclude Include="src\t3\ListableGame.h" />
     <ClInclude Include="src\t3\ListableGameBinDb.h" />
     <ClInclude Include="src\t3\ListableGameDb.h" />
@@ -1064,12 +1067,15 @@
     <ClInclude Include="src\t3\LogDialog.h" />
     <ClInclude Include="src\t3\MaintenanceDialog.h" />
     <ClInclude Include="src\t3\MemoryPositionSearch.h" />
+    <ClInclude Include="src\t3\MemoryPositionSearchSide.h" />
     <ClInclude Include="src\t3\MiniBoard.h" />
     <ClInclude Include="src\t3\MoveTree.h" />
     <ClInclude Include="src\t3\NavigationKey.h" />
     <ClInclude Include="src\t3\Objects.h" />
     <ClInclude Include="src\t3\PackedGame.h" />
     <ClInclude Include="src\t3\PackedGameBinDb.h" />
+    <ClInclude Include="src\t3\PatternDialog.h" />
+    <ClInclude Include="src\t3\PatternMatch.h" />
     <ClInclude Include="src\t3\PgnDialog.h" />
     <ClInclude Include="src\t3\PgnFiles.h" />
     <ClInclude Include="src\t3\PgnRead.h" />
@@ -1128,6 +1134,7 @@
     <ClCompile Include="src\t3\GeneralDialog.cpp" />
     <ClCompile Include="src\t3\GraphicBoard.cpp" />
     <ClCompile Include="src\t3\Lang.cpp" />
+    <ClCompile Include="src\t3\LegacyDb.cpp" />
     <ClCompile Include="src\t3\Log.cpp" />
     <ClCompile Include="src\t3\LogDialog.cpp" />
     <ClCompile Include="src\t3\MacRybka.cpp" />
@@ -1138,6 +1145,8 @@
     <ClCompile Include="src\t3\MoveTree.cpp" />
     <ClCompile Include="src\t3\PackedGame.cpp" />
     <ClCompile Include="src\t3\PackedGameBinDb.cpp" />
+    <ClCompile Include="src\t3\PatternDialog.cpp" />
+    <ClCompile Include="src\t3\PatternMatch.cpp" />
     <ClCompile Include="src\t3\PgnDialog.cpp" />
     <ClCompile Include="src\t3\PgnFiles.cpp" />
     <ClCompile Include="src\t3\PgnRead.cpp" />
