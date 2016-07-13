@@ -89,6 +89,7 @@ BoardSetupControl::BoardSetupControl
         bool normal_orientation = objs.canvas->GetNormalOrientation();
         cprintf( "Normal orientation = %s\n", normal_orientation?"true":"false" );
         bs = new BoardSetup( &chess_bmp, this, 46, 11, normal_orientation );  // Note XBORDER, YBORDER now passed as parameters
+        SetCustomCursor( normal_orientation?'P':'p' );
     }
 }
 

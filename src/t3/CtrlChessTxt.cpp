@@ -50,6 +50,7 @@ CtrlChessTxt::CtrlChessTxt
     temp.SetPointSize(temp.GetPointSize() + 2);
     this->font_large  = temp;
     SetLargeFont( large_font ); // SetFont(*wxNORMAL_FONT);
+    //GetBuffer().SetFloatingLayoutMode(false); attempt to speed up
 }
 
 void CtrlChessTxt::SetGameDocument( GameDocument *gd )
