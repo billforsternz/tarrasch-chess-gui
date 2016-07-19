@@ -361,20 +361,23 @@ void PgnRead::GameParse( std::string &str )
                 {
                     if( ch=='.' || ch==' ' || ch=='\t' || ch=='\n' )
                     {
-                        buf[len] = '\0';
-                        len = 0;
-                        if( TestResult(buf) )
-                            state = NORMAL_EXIT;
-                        else if( (move_number=atoi(buf)) > 0 )
+                        if( len > 0 ) // only once we have some digits
                         {
-                            state = POST_MOVE_NUMBER;
-                            if( ch == '.' )
-                                push_back = ch;
-                        }
-                        else
-                        {
-                            Error( "Bad move number" );
-                            state = ERROR_STATE;
+                            buf[len] = '\0';
+                            len = 0;
+                            if( TestResult(buf) )
+                                state = NORMAL_EXIT;
+                            else if( (move_number=atoi(buf)) > 0 )
+                            {
+                                state = POST_MOVE_NUMBER;
+                                if( ch == '.' )
+                                    push_back = ch;
+                            }
+                            else
+                            {
+                                Error( "Bad move number" );
+                                state = ERROR_STATE;
+                            }
                         }
                     }
                     else
