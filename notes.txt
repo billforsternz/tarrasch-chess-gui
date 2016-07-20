@@ -1,3 +1,138 @@
+3/7/2016
+
+#Fixed/Done
+Show all ordered by player - initial slow sort is a worry
+Bug: Sort on # column  crashes
+Support reserved=hdr length, 0==8
+Add stuff from other branches
+    including fix for Junior (actually already had this)
+    bell on engine move (actually already had this)
+    'fixed period mode' a new human v comp timer
+Get rid of misleading "searching for extra games" text
+Set fixed period mode sets time minutes to 0
+Add fix whereby (white) etc is deleted as a suffix
+Add #
+Make sure searching incomplete games in clipboard handled gracefully
+    Bug add game from database search dialog to clipboard and check clipboard search
+    -stack corruption near partial after StatsCalculate - unplanned re-entrancy?
+    (possibly fixed by above change - observed memory corruption in search due to
+    running moves from a game with FEN without applying FEN)
+Clipboard search shows "clipboard search" in results
+game_id sensibly initialised - database and pgn/user games don't overlap
+browse_map cache of positions in each game by game_id.
+Identify current game after sort by game_id  to replace Goto(0)
+Fix ECO bug (actually - cannot reproduce)
+Change sort on column0 behaviour - if forward and already forward - do reverse. If reverse and already
+reversed do forward.
+Remove compressed database checkbox - replace with elo level plus (ignore
+ or both players or one player) plus include if no elos
+On create .ini file set default db to largest/latest (actually just specify a specific .tdb - not default.tdb
+Better dialog box help
+Separate fixed_period_mode times stored in .ini
+
+
+#For Beta
+
+#Postpone for now
+Dynamic US spelling (basically because of color)
+Add Pro-Dao
+Delete variation menu command
+Do database create and append on top of existing database
+Bug: First game of 2015-summer-g.pgn not processed
+Allocate control block frees unused blocks
+Append adds extra blank line
+6 engine parms instead of 4
+pgn column sorting - prompt to load (except col 0), handle cancelling differently
+add stat for how many transpos pulled in when drilling down
+
+16/6/2016
+Search will choke on game fragments (i.e. games with fens) from the clipboard
+
+27/5/2016
+Setting up WxWidgets 3.1 VS2015
+C/C++ Preprocessor WXUSINGDLL
+C/C++ Additional include directories C:\wxWidgets-3.1.0\include
+C/C++ Code generation Runtime Library Mult-threaded (Debug) DLL
+Linker General Additional Library Directories C:\wxWidgets-3.1.0\lib\vc140_dll
+Linker Input Additional Dependencies wxmsw31u_richtext.lib;wxmsw31u_adv.lib;wxmsw31u_html.lib;wxbase31u_xml.lib;wxmsw31u_core.lib;wxbase31u.lib;wxtiffd.lib;wxjpegd.lib;wxpngd.lib;wxzlibd.lib;wxregexd.lib;wxexpatd.lib
+24/5/2016 Crash analysis
+In sort_scan()
+
+$LL121@sort_scan:
+  00040	8b 3d 00 00 00
+	00		 mov	 edi, DWORD PTR _predicate_step
+$LN4@sort_scan:
+
+; 1297 :     {
+; 1298 :         uint32_t step = i*predicate_step;      // first value of step is predicate_step
+; 1299 :         uint32_t prev = step - predicate_step; // first value of prev is 0
+; 1300 :         bool lower = (*predicate_func)( *(predicate_begin+prev), *(predicate_begin+step) );
+
+  00046	8b 0d 00 00 00
+	00		 mov	 ecx, DWORD PTR _predicate_begin
+  0004c	8b c7		 mov	 eax, edi
+  0004e	0f af c6	 imul	 eax, esi
+  00051	8d 14 c1	 lea	 edx, DWORD PTR [ecx+eax*8]
+  00054	2b c7		 sub	 eax, edi
+  00056	8d 04 c1	 lea	 eax, DWORD PTR [ecx+eax*8]
+  00059	52		 push	 edx
+  0005a	50		 push	 eax
+  0005b	ff 15 00 00 00
+	00		 call	 DWORD PTR _predicate_func
+  00061	83 c4 08	 add	 esp, 8
+
+0088C2F0   mov         edi,dword ptr ds:[0B78DB4h]
+0088C2F6   mov         ecx,dword ptr ds:[0B78E68h]
+0088C2FC   mov         eax,edi
+0088C2FE   imul        eax,esi
+0088C301   lea         edx,[ecx+eax*8]
+0088C304   sub         eax,edi
+0088C306   lea         eax,[ecx+eax*8]
+0088C309   push        edx
+0088C30A   push        eax
+0088C30B   call        dword ptr ds:[0B78DECh]      <----- Crash in called master_predicate()
+0088C311   add         esp,8                        <----- Stack indicates returning here
+
+
+In master_predicate()
+; 1423 :             }
+; 1424 :             case 4:
+; 1425 :             {
+; 1426 :                 use_rev_bin = true;
+; 1427 :                 bin1 = g1->BlackEloBin();
+
+  00106	8b 0b		 mov	 ecx, DWORD PTR [ebx]
+  00108	8b 11		 mov	 edx, DWORD PTR [ecx]
+  0010a	8b 82 98 00 00
+	00		 mov	 eax, DWORD PTR [edx+152]
+  00110	ff d0		 call	 eax
+0088D326   mov         ecx,dword ptr [ebx]
+0088D328   mov         edx,dword ptr [ecx]
+0088D32A   mov         eax,dword ptr [edx+98h]
+0088D330   call        eax
+
+
+; 1428 :                 bin2 = g2->BlackEloBin();
+
+  00112	8b 0f		 mov	 ecx, DWORD PTR [edi]
+  00114	8b 11		 mov	 edx, DWORD PTR [ecx]
+  00116	8b f0		 mov	 esi, eax
+  00118	8b 82 98 00 00
+	00		 mov	 eax, DWORD PTR [edx+152]
+0088D332   mov         ecx,dword ptr [edi]
+0088D334   mov         edx,dword ptr [ecx]               <---- Access violation here
+0088D336   mov         esi,eax                           ;; indicates parameter g2 invalid      
+0088D338   mov         eax,dword ptr [edx+98h]                 
+0088D33E   jmp         0088D2F3
+0088D340   mov         ecx,dword ptr [ebx]
+0088D342   mov         edx,dword ptr [ecx]
+0088D344   mov         eax,dword ptr [edx+8Ch]
+0088D34A   call        eax
+
+
+Old Tarrasch Chess GUI - kibitzq.h has only one form of Put(), a problem fix that only exists in
+V2.03b-Orphan-xxx I think.
+
 kingbase-2015-11
 864651 games in  
 864560 games out without smart dup detection need matching date
