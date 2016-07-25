@@ -39,7 +39,7 @@ CtrlChessTxt::CtrlChessTxt
     wxWindowID     id, //= wxID_ANY,
     const wxPoint &point,
     const wxSize &size
-)  : wxRichTextCtrl( parent, id, "", point, size,   wxRE_MULTILINE+wxRE_READONLY )
+)  : wxRichTextCtrl( parent, id, "", point, size,  wxWANTS_CHARS+wxRE_MULTILINE+wxRE_READONLY )
 
 {
     gl = 0;
@@ -628,7 +628,103 @@ void CtrlChessTxt::OnKeyUp(wxKeyEvent& event)
 
 void CtrlChessTxt::OnKeyDown(wxKeyEvent& event)
 {
-    event.Skip();
+    Atomic begin(false);
+    NAVIGATION_KEY nk=NK_NULL;
+    bool done=false;
+    bool request_post_key_update = false;
+    bool shift=false;
+    long pos1, pos2;
+    GetSelection( &pos1, &pos2 );
+    bool is_selection = (pos1!=pos2);
+    bool is_selection_in_comment = gd->IsSelectionInComment(this);
+    if( event.GetModifiers() & wxMOD_SHIFT )
+        shift = true;
+    long keycode = event.GetKeyCode();
+    {
+        switch ( keycode )
+        {
+            case WXK_NUMPAD_DELETE: // fall-thru
+            case WXK_DELETE:
+            {
+                if( !shift )
+                {
+                    if( is_selection_in_comment )
+                    {
+                        gd->DeleteSelection(this);
+                        done = true;
+                    }
+                    else if( is_selection )
+                        done = true;
+                    else
+                    {
+                        done = gd->CommentEdit(this,WXK_DELETE);
+                        nk=NK_DELETE;
+                    }
+                }
+                break;
+            }
+            case WXK_PAGEUP:                nk=NK_PGUP;     break;
+            case WXK_PAGEDOWN:              nk=NK_PGDOWN;   break;
+            case WXK_HOME:                  nk=NK_HOME;     break;
+            case WXK_END:                   nk=NK_END;      break;
+            case WXK_NUMPAD_LEFT:           nk=NK_LEFT;     break;
+            case WXK_NUMPAD_UP:             nk=NK_UP;       break;
+            case WXK_NUMPAD_RIGHT:          nk=NK_RIGHT;    break;
+            case WXK_NUMPAD_DOWN:           nk=NK_DOWN;     break;
+            case WXK_NUMPAD_HOME:           nk=NK_HOME;     break;
+            case WXK_NUMPAD_PAGEUP:         nk=NK_PGUP;     break;
+            case WXK_NUMPAD_PAGEDOWN:       nk=NK_PGDOWN;   break;
+            case WXK_NUMPAD_END:            nk=NK_END;      break;
+            case WXK_LEFT:
+            {
+                if(!shift)
+                    done = gd->CommentEdit(this,WXK_LEFT);
+                nk=NK_LEFT;
+                break;
+            }
+            case WXK_RIGHT:
+            {
+                if( !shift )
+                    done = gd->CommentEdit(this,WXK_RIGHT);
+                nk=NK_RIGHT;
+                break;
+            }
+            case WXK_UP:
+            {
+                bool in_comment = gd->IsInComment(this);
+                if( !shift && !in_comment )
+                    nk=NK_UP;
+                else if( in_comment )
+                    request_post_key_update = true;
+                break;
+            }
+            case WXK_DOWN:
+            {
+                bool in_comment = gd->IsInComment(this);
+                if( !shift && !in_comment )
+                    nk=NK_DOWN;
+                else if( in_comment )
+                    request_post_key_update = true;
+                break;
+            }
+        }
+    }
+    if( !shift && !done && nk!=NK_NULL )
+    {
+        if( nk == NK_DELETE )
+            gd->DeleteRestOfVariation();
+        else
+            NavigationKey(nk);
+    }
+    else if( !done )
+    {
+        event.Skip();   //continue to process event
+        if( request_post_key_update )
+        {
+            wxCommandEvent eventCustom(wxEVT_MY_CUSTOM_COMMAND);
+            wxPostEvent(this, eventCustom);
+        }
+    }
 }
 
 void CtrlChessTxt::OnAnnotNag1( int nag1 )

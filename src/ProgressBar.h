@@ -52,7 +52,8 @@ public:
                     permill = (int)( file_offset / (file_len/1000L) );
                 if( permill != old_permill )
                 {
-                    progress.SetFocus();
+                    if( progress.CanAcceptFocus() )
+                        progress.SetFocus();
                     bool abort = !progress.Update( permill>1000 ? 1000 : permill );
                     if( abort )
                         return true;
@@ -74,7 +75,8 @@ public:
         if( old_permill != permill )
         {
             wxString wxmsg( s.c_str() );
-            progress.SetFocus();
+            if( progress.CanAcceptFocus() )
+                progress.SetFocus();
             abort = !progress.Update( permill>1000 ? 1000 : permill, wxmsg );
             old_permill = permill;
         }
@@ -161,7 +163,8 @@ public:
                     }
                     else if( progress )
                     {
-                        progress->SetFocus();
+                        if( progress->CanAcceptFocus() )
+                            progress->SetFocus();
                         bool abort = !progress->Update( permill>1000 ? 1000 : permill );
                         if( abort )
                             return true;
@@ -203,10 +206,11 @@ public:
                                     (abortable ? wxPD_CAN_ABORT : 0)+
                                     wxPD_ESTIMATED_TIME );
             }
-            else if( progress )
+            else if( progress  )
             {
                 wxString wxmsg( s.c_str() );
-                progress->SetFocus();
+                if( progress->CanAcceptFocus() )
+                    progress->SetFocus();
                 abort = !progress->Update( permill>1000 ? 1000 : permill, wxmsg );
                 old_permill = permill;
             }

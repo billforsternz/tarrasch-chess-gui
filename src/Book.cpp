@@ -218,7 +218,8 @@ bool Book::Process( FILE *infile, wxProgressDialog &progress )
                 percent = (int)( file_offset / (file_len/100L) );
             if( percent != old_percent )
             {
-                progress.SetFocus();
+                if( progress.CanAcceptFocus() )
+                    progress.SetFocus();
                 if( !progress.Update( percent>100 ? 100 : percent ) )
                 {
                     aborted = true;
@@ -1015,11 +1016,11 @@ bool Book::Compile( wxString &error_msg, wxString &compile_msg, wxString &pgn_fi
                 wxString label = predefined_labels[i];
                 ui = label.Len();
                 fwrite( &ui, sizeof(ui), 1, outfile );
-                fwrite( label.c_str(), label.Len(), 1, outfile );
+                fwrite( (const char *)label.c_str(), label.Len(), 1, outfile );   //!@#$
                 wxString fen = predefined_fens[i];
                 ui = fen.Len();
                 fwrite( &ui, sizeof(ui), 1, outfile );
-                fwrite( fen.c_str(), fen.Len(), 1, outfile );
+                fwrite( (const char *)fen.c_str(), fen.Len(), 1, outfile );       //!@#$
             }
             thc::ChessRules cr2;
             for( int i=0; i<BOOK_HASH_NBR; i++ )

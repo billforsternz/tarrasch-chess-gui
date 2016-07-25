@@ -95,7 +95,7 @@ static int window_id_positions_54[NBR_OF_WIDS][4] =
     {512+XDELTA,466,68,28},                // wclock
     {584+XDELTA,466,68,28},                // bclock
     {472+XDELTA,5+YDELTA,202,434},         // moves          + 3
-    {394+XDELTA,478+YDELTA,0,0},           // button
+    {394+XDELTA,482/*478*/+YDELTA,0,0},           // button
     {10+XDELTA,530,570,99},                // kibitz
     {590+XDELTA,550,60,20},                // kibitz_button1
     {590+XDELTA,580,60,20}                 // kibitz_button2
@@ -491,6 +491,18 @@ Canvas::Canvas
     button2 = new wxButton( this, ID_BUTTON2, "Setup Position", wxPoint(x,y), wxDefaultSize );
     button3 = new wxButton( this, ID_BUTTON3, "Play as White",  wxPoint(x,y), wxDefaultSize );
     button4 = new wxButton( this, ID_BUTTON4, "Play as Black",  wxPoint(x,y), wxDefaultSize );
+    wxSize button_sz = button1->GetSize();
+    button_sz.y -= 4;
+    button1->SetSize( button_sz );
+    button_sz = button2->GetSize();
+    button_sz.y -= 4;
+    button2->SetSize( button_sz );
+    button_sz = button3->GetSize();
+    button_sz.y -= 4;
+    button3->SetSize( button_sz );
+    button_sz = button4->GetSize();
+    button_sz.y -= 4;
+    button4->SetSize( button_sz );
 
     // Create Kibitz box
     wxPoint kpos;
@@ -772,7 +784,6 @@ void Canvas::AdjustPosition( bool have_players )
             case 3: button = button4;  break;
         }
         r = button->GetRect();
-        r.y = y;
         button->SetSize(r);
     }
 
@@ -939,7 +950,8 @@ void Canvas::BookUpdate( bool suppress )
             txt = "1 book move";
         else
             txt.Printf( "%d book moves", n );
-        dbg_printf( "Book moves updated: %s\n", txt.c_str() );
+        const char *s = txt.c_str();
+        cprintf( "Book moves updated: %s\n", s );
         book_moves->Show(true);
         book_moves->SetTxt(txt);
     }

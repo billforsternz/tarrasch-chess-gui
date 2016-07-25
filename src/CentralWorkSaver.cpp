@@ -218,7 +218,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                         wxFileName::SplitPath( fd.GetPath(), &dir, NULL, NULL );
                         objs.repository->nv.m_doc_dir = dir;
                         wxString wx_filename = fd.GetPath();
-                        std::string filename( wx_filename.c_str() );
+                        std::string filename( (const char *)wx_filename.c_str() );    //!@#$
                         if( !::wxFileExists(wx_filename ) )
                         {
                             if( fm == FILE_EXISTS_GAME_NEW )
@@ -308,7 +308,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                     objs.repository->nv.m_doc_dir = dir;
                     gd->game_nbr = 0;
                     wxString wx_filename = fd.GetPath();
-                    std::string filename( wx_filename.c_str() );
+                    std::string filename( (const char *)wx_filename.c_str() );  //!@#$
 
                     // If it's a new file, create with single game
                     if( !::wxFileExists( wx_filename ) )
@@ -502,7 +502,7 @@ bool CentralWorkSaver::FileSaveGameAs()
         std::string body;
         gd->ToFileTxtGameBody( body );
         FILE *file = NULL;
-        file = fopen( wx_filename.c_str(), append ? "ab" : "wb" );
+        file = fopen( (const char *)wx_filename.c_str(), append ? "ab" : "wb" );    //!@#$
         if( file )
         {
             fseek(file,0,SEEK_END);
