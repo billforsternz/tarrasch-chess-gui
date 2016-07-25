@@ -2,7 +2,7 @@
  * Simple language support (for notation only)
  *  Author:  Bill Forster
  *  License: MIT license. Full text of license is in associated file LICENSE
- *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
+ *  Copyright 2010-2016, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
 #define _CRT_SECURE_NO_DEPRECATE
 #include "Lang.h"
