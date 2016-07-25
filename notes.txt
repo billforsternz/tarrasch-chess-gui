@@ -34,6 +34,8 @@ Separate fixed_period_mode times stored in .ini
 #For Beta
 
 #Postpone for now
+Idea: in database next move pane asterisk moves that mimic the current game.
+First line of help is bold for some reason (wx31)
 Dynamic US spelling (basically because of color)
 Add Pro-Dao
 Delete variation menu command
