@@ -2,7 +2,7 @@
  * Run UCI chess engine, eg Rybka
  *  Author:  Bill Forster
  *  Licence: See licencing information in thc::ChessPosition.cpp
- *  Copyright 2010, Triple Happy Ltd.  All rights reserved.
+ *  Copyright 2010-2016, Triple Happy Ltd.  All rights reserved.
  ****************************************************************************/
 #include <stdio.h>
 #include "Portability.h"
