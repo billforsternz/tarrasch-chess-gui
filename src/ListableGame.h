@@ -20,6 +20,7 @@
 #define GAME_ID_SENTINEL 0xffffffff // otherwise unused
 uint32_t GameIdAllocateTop( uint32_t count );
 uint32_t GameIdAllocateBottom( uint32_t count );
+#define UNUSED(x)
 
 class ListableGame
 {
@@ -31,18 +32,18 @@ public:
     virtual GameDocument *GetGameDocumentPtr()  {
         cprintf("FIXME DANGER WILL ROBINSON 3\n");  return NULL; }
     virtual long GetFposn() { return 0; }
-    virtual void SetFposn(long posn) {}
-    virtual bool GetPgnHandle( int &pgn_handle ) { return false; }
-    virtual void SetPgnHandle( int pgn_handle )  {}
+    virtual void SetFposn( long UNUSED(posn) ) {}
+    virtual bool GetPgnHandle( int &UNUSED(pgn_handle) ) { return false; }
+    virtual void SetPgnHandle( int UNUSED(pgn_handle) )  {}
     virtual bool IsInMemory()        { return false; }
     virtual bool IsModified()        { return false; }
-    virtual void SetSelected( bool selected ) {}
-    virtual void SetFocused( bool focused ) {}
+    virtual void SetSelected( bool UNUSED(selected) ) {}
+    virtual void SetFocused( bool UNUSED(focused) ) {}
     virtual bool GetSelected() { return false; }
     virtual bool GetFocused() { return false; }
-    virtual void SetGameBeingEdited( uint32_t game_being_edited ) {}
+    virtual void SetGameBeingEdited( uint32_t UNUSED(game_being_edited) ) {}
     virtual uint32_t GetGameBeingEdited() { return 0; }
-    virtual void *LoadIntoMemory( void *context, bool end )  {return 0;}
+    virtual void *LoadIntoMemory( void *UNUSED(context), bool UNUSED(end) )  {return 0;}
     virtual const char *White() {return "";}
     virtual const char *Black() {return "";}
     virtual const char *Event() {return "";}
@@ -72,7 +73,7 @@ public:
     virtual thc::ChessPosition      &RefStartPosition()   { static thc::ChessPosition cp; return cp; }
 
     // For editing the roster
-    virtual void SetRoster( Roster &r ) {}
+    virtual void SetRoster( Roster &UNUSED(r) ) {}
     
     // Easy to use
     virtual void GetCompactGame( CompactGame &pact )

@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "wx/wx.h"
 //#include "wx/dcbuffer.h"
 #include "Objects.h"
@@ -45,11 +44,11 @@ CtrlBox::CtrlBox
 }
 
 // Write the text
-void CtrlBox::SetTxt( const wxString &txt, bool redraw )
+void CtrlBox::SetTxt( const wxString &txt_, bool redraw )
 {
-    if( this->txt != txt )
+    if( this->txt != txt_ )
     {
-        this->txt = txt;
+        this->txt = txt_;
         if( redraw )
         {
             Refresh(true);
@@ -69,7 +68,7 @@ void CtrlBox::OnPaint( wxPaintEvent& WXUNUSED(event) )
     //if( w<r.width && h<r.height )
     {
         dc.DrawText( txt, (r.width-w)/2, (r.height-h)/2 );
-        dbg_printf( "CtrlBox::OnPaint(%s)", (const char *)txt.c_str() );
+        dbg_printf( "CtrlBox::OnPaint(%s)", (const char*)txt.c_str() );
     }
 }
 

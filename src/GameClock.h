@@ -18,7 +18,7 @@ public:
     void Clocks2Repository();
     void NewHumanEngineGame( bool human_is_white, bool white_to_move );
     void GameStart( bool white_to_move );
-    void Swap( bool human_is_white, bool white_to_move );
+    void Swap( bool human_is_white );
     void SetStaticTimes( int white_millisecs_time, int black_millisecs_time );
     void SetStaticTimes( int white_millisecs_time, bool white_visible, int black_millisecs_time, bool black_visible );
     void SetTimes( int white_millisecs_time, int black_millisecs_time );

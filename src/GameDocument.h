@@ -37,7 +37,7 @@ public:
         static std::vector<thc::Move> moves;
         moves.clear();
         std::vector<MoveTree> &variation = tree.variations[0];
-        for( int i=0; i<variation.size(); i++ )
+        for( unsigned int i=0; i<variation.size(); i++ )
         {
             thc::Move mv = variation[i].game_move.move;
             moves.push_back(mv);
@@ -53,7 +53,7 @@ public:
         {
             std::vector<thc::Move> moves;
             std::vector<MoveTree> &variation = tree.variations[0];
-            for( int i=0; i<variation.size(); i++ )
+            for( unsigned int i=0; i<variation.size(); i++ )
             {
                 thc::Move mv = variation[i].game_move.move;
                 moves.push_back(mv);
@@ -129,7 +129,7 @@ public:
 
     // Overrides
     virtual bool IsModified() { return (game_prefix_edited || game_details_edited || modified); }
-    virtual void SetGameBeingEdited( uint32_t game_being_edited ) { this->game_being_edited = game_being_edited; }
+    virtual void SetGameBeingEdited( uint32_t game_being_edited_ ) { this->game_being_edited = game_being_edited_; }
     virtual uint32_t GetGameBeingEdited() { return game_being_edited; }
     
  

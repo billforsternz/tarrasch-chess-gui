@@ -89,7 +89,7 @@ PackedGameBinDb::PackedGameBinDb(
     std::string fields2 = std::string( cb.bb.GetPtr(), cb.bb.FrozenSize() );
     fields2 += compressed_moves;
     this->cb_idx=cb_idx;
-    this->fields=fields2;
+    this->fields=fields;
 }
 
 

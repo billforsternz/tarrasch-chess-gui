@@ -136,7 +136,7 @@ void GameClock::GetTimes( int &white_millisecs_time, int &black_millisecs_time )
     black_millisecs_time = black.millisecs_time;
 }
 
-void GameClock::Swap( bool human_is_white, bool white_to_move )
+void GameClock::Swap( bool human_is_white )
 {
     ClockConfig *rep = &objs.repository->clock;
     int  temp1      = rep->m_white_time;

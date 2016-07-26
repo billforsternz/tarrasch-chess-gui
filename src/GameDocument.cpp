@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "Appdefs.h"
 #include "Canvas.h"
 #include "Repository.h"
@@ -33,7 +32,7 @@ GameDocument::GameDocument()
     Init(initial_position);
 }
 
-void GameDocument::Init( const thc::ChessPosition &start_position )
+void GameDocument::Init( const thc::ChessPosition &start_position_ )
 {
     non_zero_start_pos = 0;
     game_details_edited = false;
@@ -56,13 +55,13 @@ void GameDocument::Init( const thc::ChessPosition &start_position )
     r.eco       = "";
     r.white_elo = "";
     r.black_elo = "";
-    this->start_position = start_position;
+    this->start_position = start_position_;
     fposn1 = 0;
     fposn2 = 0;
     fposn3 = 0;
     moves_txt = "";
     prefix_txt = "";
-    this->master_position = start_position;
+    this->master_position = start_position_;
     tree.Init( this->start_position );
     Rebuild();
 }
@@ -86,7 +85,7 @@ void GameDocument::FleshOutMoves()
 {
     std::string str;
     ToFileTxtGameBody( str );
-    int idx = str.find_first_of("\r\n");
+    size_t idx = str.find_first_of("\r\n");
     if( idx != std::string::npos )
         str = str.substr(0,idx);
     moves_txt = str;
@@ -332,7 +331,7 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
     int nag_value=0;
     PSTATE old_state, save_state=BETWEEN_MOVES;
     char ch, push_back='\0';
-    int str_idx=0;
+    unsigned int str_idx=0;
     bool was_empty = false;
     nbr_converted = 0;
     MoveTree *add_error_comment_here = NULL;
@@ -746,18 +745,18 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
                         }
 
                         // Support '?', '!!' etc as text rather than only as NAG codes        
-                        int nag_value = NagAlternative(move_str.c_str());
-                        if( 1<=nag_value && nag_value<=9 && (*pvar).size() != 0 )
+                        int nag_value2 = NagAlternative(move_str.c_str());
+                        if( 1<=nag_value2 && nag_value2<=9 && (*pvar).size() != 0 )
                         {
                             MoveTree *plast_move = &(*pvar)[ imove==-1 ? (*pvar).size()-1 : imove ];
-                            plast_move->game_move.nag_value1 = nag_value;
+                            plast_move->game_move.nag_value1 = nag_value2;
                             prefix = "";
                             nbr_converted++;    // so just a lone ! for example counts
                         }
-                        else if( 10<=nag_value && nag_value<=21 && (*pvar).size() != 0 )
+                        else if( 10<=nag_value2 && nag_value2<=21 && (*pvar).size() != 0 )
                         {
                             MoveTree *plast_move = &(*pvar)[ imove==-1 ? (*pvar).size()-1 : imove ];
-                            plast_move->game_move.nag_value2 = nag_value;
+                            plast_move->game_move.nag_value2 = nag_value2;
                             prefix = "";
                             nbr_converted++;    // so just a lone += for example counts
                         }
@@ -770,7 +769,8 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
                     else if( was_in_move )
                     {
                         bool adding_from_middle_to_end_bug = false;
-                        if( imove!=-1 && imove!=(*pvar).size()-1 )
+                        int sz = (*pvar).size();
+                        if( imove!=-1 && imove!=sz-1 )
                             adding_from_middle_to_end_bug = true;
                         if( adding_from_middle_to_end_bug )
                             okay = false;
@@ -915,10 +915,10 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
 void GameDocument::LoadFromMoveList( std::vector<thc::Move> &moves, int move_idx )
 {
     thc::ChessRules cr;
-    thc::ChessPosition start_position;
-    tree.Init( start_position );
+    thc::ChessPosition start_position_;
+    tree.Init( start_position_ );
     VARIATION *pvar = &tree.variations[0];
-    for( int i=0; i<moves.size(); i++ )
+    for( size_t i=0; i<moves.size(); i++ )
     {
         MoveTree node;
         node.game_move.move = moves[i];
@@ -936,10 +936,11 @@ void GameDocument::SetNonZeroStartPosition( int main_line_idx )
 {
     VARIATION &variation = tree.variations[0];
     gbl_plast_move = NULL;
-    if( variation.size() > 0 )
+    int sz = variation.size();
+    if( sz > 0 )
     {
-        gbl_plast_move = &(variation)[variation.size()-1];
-        if(  0<main_line_idx &&  main_line_idx <= variation.size() )
+        gbl_plast_move = &(variation)[sz-1];
+        if(  0<main_line_idx &&  main_line_idx<=sz )
         {
             unsigned long pos = gv.GetMoveOffset( &variation[main_line_idx-1] );
             non_zero_start_pos = pos;
@@ -970,9 +971,10 @@ MoveTree *GameDocument::MakeMove( GAME_MOVE game_move, bool allow_overwrite )
     if( parent )
     {
         VARIATION &variation = parent->variations[ivar];
+        int sz = variation.size();
 
         // If making a move from before start in existing main line
-        bool special_case = (at_move0 && parent==&tree && variation.size()>0 );
+        bool special_case = (at_move0 && parent==&tree && sz>0 );
 
         // Get into position
         for( int i=0; i<imove; i++ )
@@ -1018,12 +1020,12 @@ MoveTree *GameDocument::MakeMove( GAME_MOVE game_move, bool allow_overwrite )
         }            
 
         // New variation    
-        else if( variation.size() > imove+1 )
+        else if( sz > imove+1 )
         {
             bool last_move_of_main_line = false;
-            if( parent==&tree && variation.size()>1 )
+            if( parent==&tree && sz>1 )
             {
-                if( imove == variation.size()-2 )
+                if( imove == sz-2 )
                     last_move_of_main_line = true;  // make a new variation at last move, even if it's the same
                                                     //  move, so you can create a variation indicating rest of game
             }
@@ -1049,10 +1051,10 @@ MoveTree *GameDocument::MakeMove( GAME_MOVE game_move, bool allow_overwrite )
         }            
 
         // Append
-        else if( variation.size() <= imove+1 )
+        else if( sz <= imove+1 )
         {
             MoveTree node;
-            if( game_move.flag_ingame && variation.size()>0 && !variation[variation.size()-1].game_move.flag_ingame  )
+            if( game_move.flag_ingame && sz>0 && !variation[sz-1].game_move.flag_ingame  )
             {
                 game_move.pre_comment =  objs.repository->player.m_white;
                 game_move.pre_comment += "-";
@@ -1069,8 +1071,8 @@ MoveTree *GameDocument::MakeMove( GAME_MOVE game_move, bool allow_overwrite )
         }
         Rebuild();
         gl->atom.Undo();
-        unsigned long pos = gv.GetMoveOffset( move_played );
-        gl->atom.Display( pos );
+        unsigned long pos2 = gv.GetMoveOffset( move_played );
+        gl->atom.Display( pos2 );
     }
     return move_played;
 }    
@@ -1195,32 +1197,33 @@ MoveTree *GameDocument::KibitzCaptureStart( const char *engine_name, const char 
         parent = &tree;
         at_move0 = true;
     }
-    VARIATION &variation = parent->variations[ivar];
+    VARIATION &variation2 = parent->variations[ivar];
     for( int i=0; i<imove; i++ )
-        cr.PlayMove( variation[i].game_move.move );
+        cr.PlayMove( variation2[i].game_move.move );
     if( !at_move0 )
-        cr.PlayMove( variation[imove].game_move.move );
+        cr.PlayMove( variation2[imove].game_move.move );
     if( cr == master_position )
     {
         VARIATION &variation = parent->variations[ivar];
+        int sz = variation.size();
         if( at_move0 && parent!= &tree )
             ;
-        else if( !at_move0 && variation.size()==imove+1 )
+        else if( !at_move0 && sz==imove+1 )
         {
             use_repeat_one_move=true;
-            repeat_one_move = variation[variation.size()-1].game_move;
+            repeat_one_move = variation[sz-1].game_move;
         }
 
         // Create new variation
         VARIATION new_variation;
-        for( int i=0; i<var.size(); i++ )
+        for( size_t i=0; i<var.size(); i++ )
         {
             MoveTree node;
             node.game_move.move = var[i];
             if( i == 0 )
             {
                 std::string tmp = txt;
-                int idx = tmp.find_first_of(')');
+                size_t idx = tmp.find_first_of(')');
                 if( idx != std::string::npos )
                     tmp = tmp.substr(0,idx+1);
                 std::string s(engine_name);
@@ -1238,7 +1241,8 @@ MoveTree *GameDocument::KibitzCaptureStart( const char *engine_name, const char 
         }
      
         // New variation for parent
-        if( at_move0 ) 
+        sz = variation.size();
+        if( at_move0 )
         {
             if( parent == &tree )
             {
@@ -1261,7 +1265,7 @@ MoveTree *GameDocument::KibitzCaptureStart( const char *engine_name, const char 
         }
 
         // New variation    
-        else if( variation.size() > imove+1 )
+        else if( sz > imove+1 )
         {
             MoveTree &existing_node = variation[imove+1];
             insertion_point = &existing_node;
@@ -1333,19 +1337,19 @@ void GameDocument::KibitzCapture( MoveTree *node, const char *txt, std::vector<t
             mt.game_move =  repeat_one_move;
             new_variation.push_back(mt);
         }
-        for( int i=0; i<var.size(); i++ )
+        for( size_t i=0; i<var.size(); i++ )
         {
-            MoveTree node;
-            node.game_move.move = var[i];
+            MoveTree node2;
+            node2.game_move.move = var[i];
             if( i == 0 )
             {
                 std::string tmp = txt;
-                int idx = tmp.find_first_of(')');
+                size_t idx = tmp.find_first_of(')');
                 if( idx != std::string::npos )
                     tmp = tmp.substr(0,idx+1);
-                node.game_move.pre_comment = tmp;
+                node2.game_move.pre_comment = tmp;
             }
-            new_variation.push_back(node);
+            new_variation.push_back(node2);
         }
 
         unsigned long pos = GetInsertionPoint();
@@ -1404,7 +1408,6 @@ void GameDocument::PromoteRestToVariation()
 bool GameDocument::PromotePaste( std::string &str )
 {
     unsigned long pos = GetInsertionPoint();
-    thc::ChessRules cr;
     std::string title;
     MoveTree save=tree;
     bool changes = false;
@@ -1426,10 +1429,10 @@ bool GameDocument::PromotePaste( std::string &str )
         tree = save;
         Rebuild();
         {
-            thc::ChessRules cr = *tree.root;
-            VARIATION &variation = tree.variations[0];
+            thc::ChessRules cr2 = *tree.root;
+            VARIATION &variation2 = tree.variations[0];
             Rebuild();
-            PgnParse( false, nbr_converted_b, str, cr, &variation, false );
+            PgnParse( false, nbr_converted_b, str, cr2, &variation2, false );
         }
         if( nbr_converted_b > 0 )
             candidate_b = tree;
@@ -1482,12 +1485,12 @@ void GameDocument::PromoteToVariation( unsigned long offset_within_comment )
         int nbr_converted_b = 0;
 
         // Scenario a, use current language
-        thc::ChessRules cr = *tree.root;
+        thc::ChessRules cr2 = *tree.root;
         std::string str = tree.game_move.comment.substr(offset_within_comment);
         tree.game_move.comment = tree.game_move.comment.substr(0,offset_within_comment);
-        VARIATION &variation = tree.variations[0];
+        VARIATION &variation2 = tree.variations[0];
         Rebuild();
-        PgnParse( false, nbr_converted_a, str, cr, &variation, true );
+        PgnParse( false, nbr_converted_a, str, cr2, &variation2, true );
         if( nbr_converted_a > 0 )
         {
             candidate_a = tree;
@@ -1498,12 +1501,12 @@ void GameDocument::PromoteToVariation( unsigned long offset_within_comment )
         tree = save;
         Rebuild();
         {
-            thc::ChessRules cr = *tree.root;
-            std::string str = tree.game_move.comment.substr(offset_within_comment);
+            thc::ChessRules cr3 = *tree.root;
+            std::string str3 = tree.game_move.comment.substr(offset_within_comment);
             tree.game_move.comment = tree.game_move.comment.substr(0,offset_within_comment);
-            VARIATION &variation = tree.variations[0];
+            VARIATION &variation3 = tree.variations[0];
             Rebuild();
-            PgnParse( false, nbr_converted_b, str, cr, &variation, false );
+            PgnParse( false, nbr_converted_b, str3, cr3, &variation3, false );
         }
         if( nbr_converted_b > 0 )
         {
@@ -1701,14 +1704,15 @@ void GameDocument::DemoteToComment()
     MoveTree *found = Locate( pos, cr, title, at_move0 );
     if( found )
     {
-        thc::ChessRules cr;
+        thc::ChessRules cr2;
         int ivar;
         int imove;
-        MoveTree *parent = tree.Parent( found, cr, ivar, imove );
+        MoveTree *parent = tree.Parent( found, cr2, ivar, imove );
         if( parent )
         {
             VARIATION &variation = parent->variations[ivar];
-            if( imove+1 < variation.size()+at_move0?1:0 )
+            int sz = variation.size();
+            if( imove+1 < sz+at_move0?1:0 )
             {
                 std::string str;
                 if( at_move0 )
@@ -1765,21 +1769,19 @@ void GameDocument::DemoteToComment()
 
 void GameDocument::UseGame( const thc::ChessPosition &cp, const std::vector<thc::Move> &moves_from_base_position, CompactGame &pact )
 {
-    unsigned long offset_within_comment=0;
     unsigned long pos = GetInsertionPoint();
     unsigned long pos_restore = pos;
     thc::ChessRules cr;
     std::string title;
     bool at_move0;
     MoveTree save=tree;
-    bool no_changes=false;
 
     MoveTree *found = Locate( pos, cr, title, at_move0 );
     bool have_moves = HaveMoves();
     if( !have_moves || (found && cr==cp) )
     {
         cprintf( "Step 1 okay\n" );
-        for( int i=0; i<moves_from_base_position.size(); i++ )
+        for( size_t i=0; i<moves_from_base_position.size(); i++ )
         {
             thc::Move mv = moves_from_base_position[i];
             cr.PlayMove(mv);
@@ -1791,7 +1793,7 @@ void GameDocument::UseGame( const thc::ChessPosition &cp, const std::vector<thc:
             position_found = true;
         else
         {
-            for( int i=0; i<pact.moves.size(); i++ )
+            for( size_t i=0; i<pact.moves.size(); i++ )
             {
                 thc::Move mv = pact.moves[i];
                 cr2.PlayMove(mv);
@@ -1825,7 +1827,7 @@ void GameDocument::UseGame( const thc::ChessPosition &cp, const std::vector<thc:
             if( !have_moves )
             {
                 VARIATION &variation = tree.variations[0];
-                for( int j=0; j<combined.size(); j++ )
+                for( size_t j=0; j<combined.size(); j++ )
                 {
                     MoveTree m;
                     if( j == 0 )
@@ -1851,7 +1853,7 @@ void GameDocument::UseGame( const thc::ChessPosition &cp, const std::vector<thc:
                 cprintf( "Parent found, ivar=%d, imove=%d\n", ivar, imove );
                 VARIATION &variation = parent->variations[ivar];
                 int nbr_common_moves=0;
-                for( int j=imove+1, k=0; j<variation.size() && k<combined.size(); j++, k++ )
+                for( size_t j=imove+1, k=0; j<variation.size() && k<combined.size(); j++, k++ )
                 {
                     MoveTree m = variation[j];
                     if( m.game_move.move == combined[k] )
@@ -1868,7 +1870,7 @@ void GameDocument::UseGame( const thc::ChessPosition &cp, const std::vector<thc:
                     MoveTree &branch_point = *(variation.begin() + offset_last_common_move);
                     branch_point.game_move.comment += description;
                     branch_point.game_move.comment += " continued";
-                    for( int j=nbr_common_moves; j<combined.size(); j++ )
+                    for( size_t j=nbr_common_moves; j<combined.size(); j++ )
                     {
                         MoveTree m;
                         thc::Move mv = combined[j];
@@ -1882,7 +1884,7 @@ void GameDocument::UseGame( const thc::ChessPosition &cp, const std::vector<thc:
                     MoveTree &branch_point = *(variation.begin() + offset_last_common_move + 1);
                     std::vector<MoveTree> sub_variation;
                     bool first=true;
-                    for( int j=nbr_common_moves; j<combined.size(); j++ )
+                    for( size_t j=nbr_common_moves; j<combined.size(); j++ )
                     {
                         MoveTree m;
                         m.game_move.move = combined[j];
@@ -1916,14 +1918,15 @@ void GameDocument::DeleteRestOfVariation()
     MoveTree *found = Locate( pos, cr, title, at_move0 );
     if( found )
     {
-        thc::ChessRules cr;
+        thc::ChessRules cr2;
         int ivar;
         int imove;
-        MoveTree *parent = tree.Parent( found, cr, ivar, imove );
+        MoveTree *parent = tree.Parent( found, cr2, ivar, imove );
         if( parent )
         {
             VARIATION &variation = parent->variations[ivar];
-            if( imove+1 < variation.size()+at_move0?1:0 )
+            int sz = variation.size();
+            if( imove+1 < sz+at_move0?1:0 )
             {
                 std::string str;
                 if( at_move0 )
@@ -1950,11 +1953,11 @@ void GameDocument::DeleteRestOfVariation()
 }
 
 // A start position, a vector of moves, leading to a final position    
-void GameDocument::GetSummary( thc::ChessPosition &start_position, std::vector<GAME_MOVE> &game_moves, thc::ChessPosition &end_pos )
+void GameDocument::GetSummary( thc::ChessPosition &start_position_, std::vector<GAME_MOVE> &game_moves, thc::ChessPosition &end_pos )
 {
     unsigned long pos = GetInsertionPoint();
-    start_position = this->start_position;
-    end_pos = start_position;
+    start_position_ = this->start_position;
+    end_pos = start_position_;
     std::string title;
     bool at_move0=false;
     thc::ChessRules cr;

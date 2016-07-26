@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include <time.h> // time_t
 #include <stdio.h>
 #include "wx/wx.h"
@@ -30,7 +29,7 @@ using namespace std;
 
 bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen );
 
-
+#if 0
 static bool operator < (const smart_ptr<GameDocument>& left,
                         const smart_ptr<GameDocument>& right)
 {
@@ -38,7 +37,7 @@ static bool operator < (const smart_ptr<GameDocument>& left,
     cprintf( "operator <; left->r.white=%s, right->r.white=%s, result=%s\n", left->r.white.c_str(),  right->r.white.c_str(), result?"true":"false" );
     return result;
 }
-
+#endif
 
 
 bool GamesCache::Load(std::string &filename )
@@ -261,7 +260,7 @@ bool GamesCache::Load( FILE *pgn_file )
 static CompactGame *phook;
 void pgn_read_hook( const char *fen, const char *white, const char *black, const char *event, const char *site, const char *result,
                                     const char *date, const char *white_elo, const char *black_elo, const char *eco, const char *round,
-                                    int nbr_moves, thc::Move *moves, uint64_t *hashes  )
+                                    int nbr_moves, thc::Move *moves, uint64_t *UNUSED(hashes)  )
 {
     phook->r.fen       = fen ? std::string(fen) : "";
     phook->r.white     = std::string(white);
@@ -418,29 +417,29 @@ bool GamesCache::Tagline( GameDocument &gd,  const char *s )
         {
             is_header = true;
             val_end = s;
-            string tag(tag_begin,tag_end-tag_begin);
+            string stag(tag_begin,tag_end-tag_begin);
             string val(val_begin,val_end-val_begin);
-            if( tag == "White" )
+            if( stag == "White" )
                 gd.r.white = val;
-            if( tag == "Black" )
+            if( stag == "Black" )
                 gd.r.black = val;
-            if( tag == "Event" )
+            if( stag == "Event" )
                 gd.r.event = val;
-            if( tag == "Site" )
+            if( stag == "Site" )
                 gd.r.site = val;
-            if( tag == "Date" )
+            if( stag == "Date" )
                 gd.r.date = val;
-            if( tag == "Round" )
+            if( stag == "Round" )
                 gd.r.round = val;
-            if( tag == "Result" )
+            if( stag == "Result" )
                 gd.r.result = val;
-            if( tag == "ECO" )
+            if( stag == "ECO" )
                 gd.r.eco = val;
-            if( tag == "WhiteElo" )
+            if( stag == "WhiteElo" )
                 gd.r.white_elo = val;
-            if( tag == "BlackElo" )
+            if( stag == "BlackElo" )
                 gd.r.black_elo = val;
-            if( tag == "FEN" )
+            if( stag == "FEN" )
             {
                 gd.r.fen = val;
                 gd.start_position.Forsyth(val.c_str());
@@ -502,9 +501,11 @@ void GamesCache::FileSaveAs( std::string &filename, GamesCache *gc_clipboard )
 }
 
 // Save the current game to a file
+#if 0
 void GamesCache::FileSaveGameAs( std::string &filename, GamesCache *gc_clipboard )
 {
 }
+#endif
 
 // Save all as a new file
 void GamesCache::FileSaveAllAsAFile( std::string &filename )
@@ -521,7 +522,7 @@ void GamesCache::FileSaveAllAsAFile( std::string &filename )
 
 
 // Save common
-void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pgn_out )
+void GamesCache::FileSaveInner( GamesCache *UNUSED(gc_clipboard), FILE *UNUSED(pgn_in), FILE *pgn_out )
 {
     char *buf;
     int buflen=100;
@@ -551,20 +552,20 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
             {
                 if( pgn_handle == pgn_handle2 )
                     mptr->SetFposn( write_posn );
-                FILE *pgn_in = objs.gl->pf.ReopenRead ( pgn_handle2 );
-                if( pgn_in )
+                FILE *pgn_in2 = objs.gl->pf.ReopenRead ( pgn_handle2 );
+                if( pgn_in2 )
                 {
-                    fseek( pgn_in, fposn, SEEK_SET );
-                    char buf[2048];
+                    fseek( pgn_in2, fposn, SEEK_SET );
+                    char buf2[2048];
                     int typ;
-                    bool done = PgnStateMachine( NULL, typ,  buf, sizeof(buf) );
+                    bool done = PgnStateMachine( NULL, typ,  buf2, sizeof(buf2) );
                     while( !done )
                     {
-                        done = PgnStateMachine( pgn_in, typ,  buf, sizeof(buf) );
+                        done = PgnStateMachine( pgn_in2, typ,  buf2, sizeof(buf2) );
                         if( !done )
                         {
-                            fputs( buf, pgn_out );
-                            game_len += strlen(buf);
+                            fputs( buf2, pgn_out );
+                            game_len += strlen(buf2);
                             if( typ == 'G' )
                                 break;
                         }
@@ -702,7 +703,7 @@ void GamesCache::FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pg
 }
 
 
-void GamesCache::Debug( const char *intro_message )
+void GamesCache::Debug( const char *UNUSED(intro_message) )
 {
 }
 
@@ -719,7 +720,7 @@ static void PgnNameCommaGroom( std::string &name )
             std::string surname = name.substr( first_space+1 );
             std::string forname = name.substr( 0, first_space );
             std::string lower_surname;
-            for( int i=0; i<surname.length(); i++ )
+            for( size_t i=0; i<surname.length(); i++ )
             {
                 int c = surname[i];
                 if( isalpha(c) && isupper(c) )
@@ -740,7 +741,7 @@ static void PgnNameCommaGroom( std::string &name )
     }
 }
 
-void GamesCache::Eco(  GamesCache *gc_clipboard )
+void GamesCache::Eco(  GamesCache *UNUSED(gc_clipboard) )
 {
     int gds_nbr = gds.size();
     ProgressBar pb( "Recalculating ECO codes", "Recalculating ECO codes" );
@@ -844,9 +845,9 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
     int answer = fd.ShowModal();
     if( answer == wxID_OK)
     {
-        wxString dir;
-        wxFileName::SplitPath( fd.GetPath(), &dir, NULL, NULL );
-        objs.repository->nv.m_doc_dir = dir;
+        wxString dir2;
+        wxFileName::SplitPath( fd.GetPath(), &dir2, NULL, NULL );
+        objs.repository->nv.m_doc_dir = dir2;
         wxString wx_filename = fd.GetPath();
         FILE *md_out = fopen( wx_filename.c_str(), "wb" );
         if( md_out )
@@ -1015,12 +1016,12 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
                             }
                         }
                     }
-                    int len = s.length();
-                    if( len > 0 )
+                    int len2 = s.length();
+                    if( len2 > 0 )
                     {
                         if( i != 0 )    // blank line needed before all but first prefix
                             fwrite( "\n", 1, 1, md_out);
-                        fwrite( s.c_str(), 1, len, md_out);
+                        fwrite( s.c_str(), 1, len2, md_out);
                         fwrite( "\n", 1, 1, md_out);
                     }
                     if( !skip_game )
@@ -1065,17 +1066,17 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
                                 long fposn2 = gd.fposn2;
                                 long end    = gd.fposn3;
                                 fseek(pgn_in,fposn2,SEEK_SET);
-                                long len = end-fposn2;
-                                char *buf = new char [len];
-                                if( len == (long)fread(buf,1,len,pgn_in) )
+                                long len3 = end-fposn2;
+                                char *buf = new char [len3];
+                                if( len3 == (long)fread(buf,1,len3,pgn_in) )
                                 {
-                                    std::string s(buf,len);
+                                    std::string s2(buf,len3);
                                     thc::ChessRules cr;
                                     int nbr_converted;
-                                    gd.PgnParse(true,nbr_converted,s,cr,NULL);
-                                    gd.ToPublishTxtGameBody( s, diagram_base, mv_base, neg_base, publish_options );
+                                    gd.PgnParse(true,nbr_converted,s2,cr,NULL);
+                                    gd.ToPublishTxtGameBody( s2, diagram_base, mv_base, neg_base, publish_options );
                                     objs.gl->atom.NotUndoAble();
-                                    fwrite(s.c_str(),1,s.length(),md_out);
+                                    fwrite(s2.c_str(),1,s2.length(),md_out);
                                 }
                                 delete[] buf;
                             }

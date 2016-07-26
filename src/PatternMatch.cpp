@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2016, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "thc.h"
 #include "DebugPrintf.h"
 #include "PatternMatch.h"
@@ -164,6 +163,7 @@ void PatternMatch::PrimePattern( const thc::ChessPosition *rover )
         PatternMatchTarget *target;
         switch(i)
         {
+            default:
             case 0: target = &target_n;   break;
             case 1: target = &target_m;   break;
             case 2: target = &target_r;   break;
@@ -190,6 +190,7 @@ void PatternMatch::PrimePattern( const thc::ChessPosition *rover )
             char *mask;
             switch( j )
             {
+                default:
                 case 0: mask = reinterpret_cast<char *>(&target->rank8_mask);  break;
                 case 1: mask = reinterpret_cast<char *>(&target->rank7_mask);  break;
                 case 2: mask = reinterpret_cast<char *>(&target->rank6_mask);  break;
@@ -248,6 +249,7 @@ bool PatternMatch::TestPattern( bool &reverse, bool white, const char *squares_r
         PatternMatchTarget *target;
         switch(i)
         {
+            default:
             case 0: target = &target_n;   reverse=false; break;
             case 1: target = &target_m;   reverse=false; break;
             case 2: target = &target_r;   reverse=true;  break;
@@ -404,6 +406,7 @@ bool PatternMatch::TestMaterialBalanceInner( bool &reverse, MpsSide *ws, MpsSide
         PatternMatchTarget *target;
         switch(test)
         {
+            default:
             case 0: target = &target_n;   reverse=false; break;
             case 1: target = &target_m;   reverse=false; break;
             case 2: target = &target_r;   reverse=true;  break;

@@ -65,31 +65,31 @@ public:
     {
         return frozen_size;
     }
-    void Write( int idx, uint32_t dat )
+    void Write( int idx_, uint32_t dat )
     {
-        uint32_t *p = reinterpret_cast<uint32_t *>(&buf[offset[idx]]);
+        uint32_t *p = reinterpret_cast<uint32_t *>(&buf[offset[idx_]]);
         uint32_t raw = *p;
-        uint32_t msk = mask[idx];
-        msk = msk << shift[idx];
-        dat = dat << shift[idx];
+        uint32_t msk = mask[idx_];
+        msk = msk << shift[idx_];
+        dat = dat << shift[idx_];
         raw = raw & (~msk);
         raw = raw | dat;
         *p = raw;
     }    
-    uint32_t Read( int idx )
+    uint32_t Read( int idx_ )
     {
-        uint32_t *p = reinterpret_cast<uint32_t *>(&buf[offset[idx]]);
+        uint32_t *p = reinterpret_cast<uint32_t *>(&buf[offset[idx_]]);
         uint32_t raw = *p;
-        raw = raw >> (shift[idx]);
-        uint32_t dat = raw & mask[idx];
+        raw = raw >> (shift[idx_]);
+        uint32_t dat = raw & mask[idx_];
         return dat;
     }    
-    uint32_t Read( int idx, const char *location )
+    uint32_t Read( int idx_, const char *location )
     {
-        const uint32_t *p = reinterpret_cast<const uint32_t *>(&location[offset[idx]]);
+        const uint32_t *p = reinterpret_cast<const uint32_t *>(&location[offset[idx_]]);
         uint32_t raw = *p;
-        raw = raw >> (shift[idx]);
-        uint32_t dat = raw & mask[idx];
+        raw = raw >> (shift[idx_]);
+        uint32_t dat = raw & mask[idx_];
         return dat;
     }    
 };

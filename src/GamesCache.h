@@ -28,7 +28,7 @@ public:
     bool FileCreate( std::string &filename, GameDocument &gd );
     void FileSave( GamesCache *gc_clipboard );
     void FileSaveAs( std::string &filename, GamesCache *gc_clipboard );
-    void FileSaveGameAs( std::string &filename, GamesCache *gc_clipboard );
+    //void FileSaveGameAs( std::string &filename, GamesCache *gc_clipboard );
     void FileSaveAllAsAFile( std::string &filename );
     void FileSaveInner( GamesCache *gc_clipboard, FILE *pgn_in, FILE *pgn_out );
     void Publish( GamesCache *gc_clipboard );
@@ -39,13 +39,13 @@ public:
     {
         resume_previous_window=false;
     }
-    void PrepareForResumePreviousWindow( int top_item )
+    void PrepareForResumePreviousWindow( int top_item_ )
     {
-        resume_previous_window=true; this->top_item = top_item;
+        resume_previous_window=true; this->top_item = top_item_;
     }
-    bool IsResumingPreviousWindow( int &top_item )
+    bool IsResumingPreviousWindow( int &top_item_ )
     {
-        top_item=this->top_item; return resume_previous_window; 
+        top_item_=this->top_item; return resume_previous_window; 
     }
 
     // Helpers

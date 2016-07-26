@@ -5,7 +5,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "Portability.h"
 #ifdef THC_WINDOWS
 #include <windows.h>    // Windows headers for RedirectIoToConsole()
@@ -97,7 +96,7 @@ public:
 //  on the stack - no need to use it
 static int dbg_printf_prepend_time=0;
 static FILE *teefile;   // private debugging log
-#define DURING_DEVELOPMENT
+//#define DURING_DEVELOPMENT
 #ifdef DURING_DEVELOPMENT
 static bool dbg_console_enabled = true;     // set this to false except during development
 #else
@@ -150,33 +149,53 @@ int core_printf( const char *fmt, ... )
 static const WORD MAX_CONSOLE_LINES = 500;      // maximum mumber of lines the output console should have
 void RedirectIOToConsole()
 {
-    int hConHandle;
-    long lStdHandle;
     CONSOLE_SCREEN_BUFFER_INFO coninfo;
-    FILE *fp;
 
     // allocate a console for this app
     AllocConsole();
 
-    // set the screen buffer to be big enough to let us scroll text
-    HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
-    GetConsoleScreenBufferInfo( handle , &coninfo);
+	// set the screen buffer to be big enough to let us scroll text
+	HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+	GetConsoleScreenBufferInfo(handle, &coninfo);
 
-    coninfo.dwSize.Y = MAX_CONSOLE_LINES;
-    SetConsoleScreenBufferSize( handle, coninfo.dwSize);
+	coninfo.dwSize.Y = MAX_CONSOLE_LINES;
+	SetConsoleScreenBufferSize(handle, coninfo.dwSize);
 
-    int height = 60;
-    int width = 80;
+	int height = 60;
+	int width = 80;
 
-    _SMALL_RECT rect;
-    rect.Top = 0;
-    rect.Left = 0;
-    rect.Bottom = height - 1;
-    rect.Right = width - 1;
+	_SMALL_RECT rect;
+	rect.Top = 0;
+	rect.Left = 0;
+	rect.Bottom = height - 1;
+	rect.Right = width - 1;
 
-    SetConsoleWindowInfo( handle, TRUE, &rect);            // Set Window Size
+	SetConsoleWindowInfo(handle, TRUE, &rect);            // Set Window Size
+
+#if 1
+	// Redirect the CRT standard input, output, and error handles to the console
+	freopen("CONIN$", "r", stdin);
+	freopen("CONOUT$", "w", stdout);
+	freopen("CONOUT$", "w", stderr);
+
+	//Clear the error state for each of the C++ standard stream objects. We need to do this, as
+	//attempts to access the standard streams before they refer to a valid target will cause the
+	//iostream objects to enter an error state. In versions of Visual Studio after 2005, this seems
+	//to always occur during startup regardless of whether anything has been read from or written to
+	//the console or not.
+	std::wcout.clear();
+	std::cout.clear();
+	std::wcerr.clear();
+	std::cerr.clear();
+	std::wcin.clear();
+	std::cin.clear();
+#else
+
 
     // redirect unbuffered STDOUT to the console
+    int hConHandle;
+    long lStdHandle;
+    FILE *fp;
     lStdHandle = (long)GetStdHandle(STD_OUTPUT_HANDLE);
     hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
     fp = _fdopen( hConHandle, "w" );
@@ -184,6 +203,7 @@ void RedirectIOToConsole()
     setvbuf( stdout, NULL, _IONBF, 0 );
 
     // redirect unbuffered STDIN to the console
+	/*
     lStdHandle = (long)GetStdHandle(STD_INPUT_HANDLE);
     hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
     fp = _fdopen( hConHandle, "r" );
@@ -199,7 +219,8 @@ void RedirectIOToConsole()
 
     // make cout, wcout, cin, wcin, wcerr, cerr, wclog and clog
     // point to console as well
-    ios::sync_with_stdio();
+    ios::sync_with_stdio(); */
+#endif
 }
 #endif
 
@@ -1076,7 +1097,7 @@ void CustomLog( const char *txt )
 }
 #endif
 
-void ChessFrame::OnMove( wxMoveEvent &event )
+void ChessFrame::OnMove( wxMoveEvent &WXUNUSED(event) )
 {
     if( objs.canvas )
         objs.canvas->OnMove();
@@ -1858,7 +1879,7 @@ void ChessFrame::OnGeneral(wxCommandEvent &)
     SetFocusOnList();
 }
 
-void ChessFrame::RefreshLanguageFont( const char *from, bool before_large_font, bool before_no_italics,
+void ChessFrame::RefreshLanguageFont( const char *UNUSED(from), bool before_large_font, bool before_no_italics,
                                       const char *to,   bool after_large_font,  bool after_no_italics )
 {
     if( after_large_font != before_large_font )

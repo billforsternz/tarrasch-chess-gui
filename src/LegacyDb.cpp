@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2016, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include <vector>
 #include <set>
 #include <map>
@@ -45,7 +44,7 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
     int cols=0;
     int nbr_games=0;
     int nbr_promotion_games=0;
-    sqlite3_stmt *stmt;
+    sqlite3_stmt *stmt=NULL;
     mega_cache.clear();
 
     // Calculate number of games
@@ -123,8 +122,8 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
         }
     }
 
-    uint8_t   cb_idx;
-    uint32_t  base;
+    uint8_t   cb_idx=0;
+    uint32_t  base=0;
     if( ok )
     {
         cb_idx = BinDbReadBegin( true );
@@ -139,8 +138,7 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
         {
             // SQLITE_ROW means fetched a row
             // sqlite3_column_text returns a const void* , typecast it to const char*
-            bool promotion=false;
-            const char *val        = (const char*)sqlite3_column_text(stmt,0);
+            //const char *val        = (const char*)sqlite3_column_text(stmt,0);
             //game_id                = atoi(val);
             const char      *white = (const char*)sqlite3_column_text(stmt,1);
             int              len1  = sqlite3_column_bytes(stmt,1);
@@ -151,19 +149,19 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
             const char       *site = (const char*)sqlite3_column_text(stmt,4);
             int               len4 = sqlite3_column_bytes(stmt,4);
             const char      *round = (const char*)sqlite3_column_text(stmt,5);
-            int               len6 = sqlite3_column_bytes(stmt,5);
+            //int               len6 = sqlite3_column_bytes(stmt,5);
             const char     *result = (const char*)sqlite3_column_text(stmt,6);
-            int               len5 = sqlite3_column_bytes(stmt,6);
+            //int               len5 = sqlite3_column_bytes(stmt,6);
             const char       *date = (const char*)sqlite3_column_text(stmt,7);
-            int               len7 = sqlite3_column_bytes(stmt,7);
+            //int               len7 = sqlite3_column_bytes(stmt,7);
             const char  *white_elo = (const char*)sqlite3_column_text(stmt,8);
-            int               len9 = sqlite3_column_bytes(stmt,8);
+            //int               len9 = sqlite3_column_bytes(stmt,8);
             const char  *black_elo = (const char*)sqlite3_column_text(stmt,9);
-            int              len10 = sqlite3_column_bytes(stmt,9);
+            //int              len10 = sqlite3_column_bytes(stmt,9);
             const char        *eco = (const char*)sqlite3_column_text(stmt,10);
-            int               len8 = sqlite3_column_bytes(stmt,10);
+            //int               len8 = sqlite3_column_bytes(stmt,10);
             const char *moves_blob = (const char*)sqlite3_column_text(stmt,11);
-            int              len12 = sqlite3_column_bytes(stmt,11);
+            //int              len12 = sqlite3_column_bytes(stmt,11);
             std::string swhite(white, len1);
             std::string sblack(black, len2);
             std::string sevent(event, len3);

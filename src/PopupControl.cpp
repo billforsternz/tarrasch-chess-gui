@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "wx/wx.h"
 #include "Appdefs.h"
 #include "GameLogic.h"
@@ -94,18 +93,18 @@ void PopupControl::OnMouseMove( wxMouseEvent& event )
     bool in_region=false;
     wxSize size = GetClientSize();
     //int height = size.y / count;
-    wxPoint point = event.GetPosition();
-    dbg_printf( "popup; point.x=%d, point.y=%d\n", point.x, point.y );
-    if( popup_mode==BOOK_HOVER && 0<=point.x && point.x<hover.width && (0-hover.height)<=point.y && point.y<0 )
+    wxPoint point_ = event.GetPosition();
+    dbg_printf( "popup; point.x=%d, point.y=%d\n", point_.x, point_.y );
+    if( popup_mode==BOOK_HOVER && 0<=point_.x && point_.x<hover.width && (0-hover.height)<=point_.y && point_.y<0 )
     {
         in_region = true;
         dbg_printf( "In region 1\n" );
     }
-    if( 0<=point.x && point.x<size.x && 0<=point.y && point.y<size.y )
+    if( 0<=point_.x && point_.x<size.x && 0<=point_.y && point_.y<size.y )
     {
         in_region = true;
         dbg_printf( "In region 2\n" );
-        int new_sel = point.y/height;
+        int new_sel = point_.y/height;
         if( upside_down )
             new_sel = count-1-new_sel;  // 0->count-1, count-1->0
         if( new_sel!=sel && new_sel<count )

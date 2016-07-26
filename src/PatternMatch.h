@@ -57,16 +57,16 @@ struct PatternParameters
     bool more_pieces_bp;
 
     PatternParameters() { initialised = false; }
-    void OneTimeInit( bool material_balance, thc::ChessPosition &cp )
+    void OneTimeInit( bool material_balance_, thc::ChessPosition &cp_ )
     {
         if( !initialised )
         {
             initialised = true;
-            this->cp = cp;
-            this->material_balance = material_balance;
+            this->cp = cp_;
+            this->material_balance = material_balance_;
             include_reflections = false;
             include_reverse_colours = false;
-            dont_allow_more_pieces = material_balance?false:true;
+            dont_allow_more_pieces = material_balance_?false:true;
             either_to_move = false;
             white_to_move = true;
             pawns_must_be_on_same_files = false;

@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include <stdio.h>
 #include <map>
 #include "thc.h"
@@ -552,6 +551,7 @@ static void eco_begin()
     }
 }
 
+#if 0
 static void eco_regen()
 {
     eco_begin();
@@ -566,7 +566,7 @@ static void eco_regen()
         std::vector<thc::Move> v = press.Uncompress(blob);
         thc::ChessRules cr;
         std::string txt;
-        for( int j=0; j<v.size(); j++ )
+        for( size_t j=0; j<v.size(); j++ )
         {
             thc::Move mv = v[j];
             char buf[100];
@@ -583,8 +583,9 @@ static void eco_regen()
     if( ofile )
         fclose( ofile );
 }
+#endif
 
-
+#if 0
 static void eco_test()
 {
     eco_begin();
@@ -604,6 +605,7 @@ static void eco_test()
     }
     cprintf( "%d failures\n", failures );
 }
+#endif
 
 const char *eco_ref( const char *eco_in )
 {
@@ -648,7 +650,7 @@ static void eco_codes_inner()
         #if 1 
         thc::ChessRules cr;
         uint64_t hash = hash_base;
-        for( int j=0; j<v.size(); j++ )
+        for( size_t j=0; j<v.size(); j++ )
         {
             thc::Move mv = v[j];
             hash = cr.Hash64Update(hash, mv );
@@ -677,7 +679,7 @@ const char *eco_calculate( const std::vector<thc::Move> &moves )
     int best_so_far=0;
     thc::ChessRules cr;
     uint64_t hash = cr.Hash64Calculate();
-    for( int i=0; i<30 && i<moves.size(); i++ )
+    for( size_t i=0; i<30 && i<moves.size(); i++ )
     {
         thc::Move mv = moves[i];
         hash = cr.Hash64Update( hash, mv );

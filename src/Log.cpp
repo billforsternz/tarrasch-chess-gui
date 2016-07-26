@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include <stdio.h>
 #include "GameDocument.h"
 #include "GameLogic.h"
@@ -27,15 +26,15 @@ void Log::SaveGame( GameDocument *gd, bool editing_log )
     {
         gd->FleshOutDate();
         gd->FleshOutMoves();
-        std::string head;
-        gd->ToFileTxtGameDetails( head );
-        std::string body;
-        gd->ToFileTxtGameBody( body );
-        bool diff = (head!=this->head || body!=this->body);
+        std::string head2;
+        gd->ToFileTxtGameDetails( head2 );
+        std::string body2;
+        gd->ToFileTxtGameBody( body2 );
+        bool diff = (head2!=this->head || body2!=this->body);
         if( diff )
         {
-            this->head = head;
-            this->body = body;
+            this->head = head2;
+            this->body = body2;
             FILE *file = NULL;
             std::string log_filename( objs.repository->log.m_file.c_str() );
             time_t filetime_before = 0;
@@ -50,10 +49,10 @@ void Log::SaveGame( GameDocument *gd, bool editing_log )
                 std::string filename( objs.repository->log.m_file.c_str() );
                 fseek(file,0,SEEK_END);
                 long filelen_before = ftell(file);
-                fwrite( head.c_str(), 1, head.length(), file );
-                fwrite( body.c_str(), 1, body.length(), file );
+                fwrite( head2.c_str(), 1, head2.length(), file );
+                fwrite( body2.c_str(), 1, body2.length(), file );
                 fclose( file );
-                objs.gl->pf.UpdateKnownFile( log_filename, filetime_before, filelen_before, head.length()+body.length() );
+                objs.gl->pf.UpdateKnownFile( log_filename, filetime_before, filelen_before, head2.length()+body2.length() );
             }
         }
     }

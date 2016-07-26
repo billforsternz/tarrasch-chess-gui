@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include <stdlib.h>
 #include <time.h>
 #include "wx/wx.h"
@@ -24,40 +23,40 @@ GameClockHalf::~GameClockHalf()
 
 
 // Set the clock parameters
-void GameClockHalf::SetClock( int time, int increment, bool running, bool visible )
+void GameClockHalf::SetClock( int time, int increment, bool running_, bool visible_ )
 {
     bool temp = ticking;
     if( temp )
         Stop(false);
     this->millisecs_time      = time      * 1000;
     this->millisecs_increment = increment * 1000;
-    this->running             = running;
-    this->visible             = visible;
+    this->running             = running_;
+    this->visible             = visible_;
     if( temp )
         Start();
 }
 
 // Set the clock parameters
-void GameClockHalf::SetClock( int millisecs_time )
+void GameClockHalf::SetClock( int millisecs_time_ )
 {
     bool temp = ticking;
     if( temp )
         Stop(false);
-    this->millisecs_time = millisecs_time;
+    this->millisecs_time = millisecs_time_;
     if( temp )
         Start();
 }
 
 // Get the clock parameters
-void GameClockHalf::GetClock( int &time, int &increment, bool &running, bool &visible )
+void GameClockHalf::GetClock( int &time, int &increment, bool &running_, bool &visible_ )
 {
     bool temp = ticking;
     if( temp )
         Stop(false);
     time      = this->millisecs_time/1000;
     increment = this->millisecs_increment/1000;
-    running   = this->running;             
-    visible   = this->visible;
+    running_  = this->running;             
+    visible_  = this->visible;
     if( temp )
         Start();
 }

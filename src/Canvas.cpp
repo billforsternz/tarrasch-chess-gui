@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "wx/wx.h"
 #include "wx/button.h"
 #include "wx/notebook.h"
@@ -564,9 +563,9 @@ Canvas::Canvas
         kibitz_ctrl->SetSize( ksiz );
         int calculated_y = kpos.y + ksiz.y + 4; // + 4 = safety margin
         int actual_y = client_siz.y;
-        wxSize sz = parent->GetSize();
-        sz.y += (calculated_y-actual_y);
-        parent->SetSize(sz);
+        wxSize sz_ = parent->GetSize();
+        sz_.y += (calculated_y-actual_y);
+        parent->SetSize(sz_);
     }    
 
     // Create kibitz buttons
@@ -640,12 +639,12 @@ Canvas::Canvas
             objs.repository->nv.m_y+objs.repository->nv.m_h <= disp_height
           )
         {
-            wxPoint pos( objs.repository->nv.m_x, objs.repository->nv.m_y );
-            wxSize  sz ( objs.repository->nv.m_w, objs.repository->nv.m_h );
-            if( sz.x < parent_sz_base.x )
-                sz.x = parent_sz_base.x;  // minimum startup width
-            parent->SetPosition(parent_pos = pos);
-            parent->SetSize    (parent_sz  = sz);
+            wxPoint pos_( objs.repository->nv.m_x, objs.repository->nv.m_y );
+            wxSize  sz_ ( objs.repository->nv.m_w, objs.repository->nv.m_h );
+            if( sz_.x < parent_sz_base.x )
+                sz_.x = parent_sz_base.x;  // minimum startup width
+            parent->SetPosition(parent_pos = pos_);
+            parent->SetSize    (parent_sz  = sz_);
         }
     }
     objs.repository->nv.m_x = parent_pos.x;
@@ -722,7 +721,7 @@ void Canvas::OnMove()
     }
 }
 
-void Canvas::OnSize( wxSizeEvent &event )
+void Canvas::OnSize( wxSizeEvent &WXUNUSED(event) )
 {
     if( resize_ready )
     {

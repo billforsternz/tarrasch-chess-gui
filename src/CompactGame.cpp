@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2015, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "GameDocument.h"
 
 std::string CompactGame::Description()
@@ -80,7 +79,7 @@ void CompactGame::Upscale( GameDocument &gd )
     std::vector<MoveTree> &variation = gd.tree.variations[0];
     variation.clear();
     MoveTree m;
-    for( int i=0; i<moves.size(); i++ )
+    for( size_t i=0; i<moves.size(); i++ )
     {
         m.game_move.move = moves[i];
         variation.push_back(m);
@@ -95,7 +94,7 @@ void CompactGame::Downscale( GameDocument &gd )
 	start_position = gd.start_position;
     std::vector<MoveTree> &variation = gd.tree.variations[0];
     moves.clear();
-    for( int i=0; i<variation.size(); i++ )
+    for( size_t i=0; i<variation.size(); i++ )
     {
         thc::Move mv = variation[i].game_move.move;
         moves.push_back(mv);

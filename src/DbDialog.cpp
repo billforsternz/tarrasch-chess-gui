@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "wx/wx.h"
 #include "wx/valtext.h"
 #include "wx/valgen.h"
@@ -44,8 +43,7 @@ DbDialog::DbDialog
     PatternParameters *parm,
     wxWindowID  id,
     const wxPoint& pos,
-    const wxSize& size,
-    long style
+    const wxSize& size
  ) : GamesDialog( parent, cr, gc, gc_clipboard, id, pos, size )
 {
     this->db_req = db_req;
@@ -263,11 +261,11 @@ int DbDialog::CalculateTranspo( const char *blob, int &transpo )
 }
 
 // Games Dialog Override - List column clicked
-void DbDialog::GdvListColClick( int compare_col )
+void DbDialog::GdvListColClick( int compare_col_ )
 {
     if( db_req == REQ_PLAYERS )
         return; // not supported
-    ColumnSort( compare_col, gc_db_displayed_games.gds );  
+    ColumnSort( compare_col_, gc_db_displayed_games.gds );  
 }
 
 // Games Dialog Override - Search feature
@@ -299,9 +297,9 @@ void DbDialog::GdvSaveAllToAFile()
     int answer = fd.ShowModal();
     if( answer == wxID_OK )
     {
-        wxString dir;
-        wxFileName::SplitPath( fd.GetPath(), &dir, NULL, NULL );
-        objs.repository->nv.m_doc_dir = dir;
+        wxString dir2;
+        wxFileName::SplitPath( fd.GetPath(), &dir2, NULL, NULL );
+        objs.repository->nv.m_doc_dir = dir2;
         wxString wx_filename = fd.GetPath();
         std::string filename( wx_filename.c_str() );
         gc_db_displayed_games.FileSaveAllAsAFile( filename );
@@ -448,7 +446,7 @@ void DbDialog::GdvCheckBox( bool checked )
     }
     else   // TODO need special handling for initial position
     {
-        nbr_games_in_list_ctrl = objs.db->SetDbPosition( db_req, cr );
+        nbr_games_in_list_ctrl = objs.db->SetDbPosition( db_req );
         
         // We have shown stats while db_clipboard was true. So to avoid going back to
         //  situation where stats must be requested, unconditionally load games into
@@ -470,8 +468,8 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
     if( list_ctrl )
     {
         CompactGame pact;
-        int nbr = list_ctrl->GetItemCount();
-        for( int i=0; i<nbr; i++ )
+        size_t nbr = list_ctrl->GetItemCount();
+        for( size_t i=0; i<nbr; i++ )
         {
             if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
                 idx_focus = i;
@@ -486,9 +484,9 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
                     gc_clipboard->gds.push_back( gc_db_displayed_games.gds[i] ); // assumes smart_ptr is std::shared_ptr
                 else
                 {
-                    CompactGame pact;
-                    GdvReadItem( i, pact );
-                    ListableGameDb info( pact.game_id, pact );
+                    CompactGame pact2;
+                    GdvReadItem( i, pact2 );
+                    ListableGameDb info( pact2.game_id, pact2 );
                     make_smart_ptr( ListableGameDb, new_info, info );
                     gc_clipboard->gds.push_back( std::move(new_info ) );
                 }
@@ -506,15 +504,15 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
                 gc_clipboard->gds.push_back( gc_db_displayed_games.gds[idx_focus] ); // assumes smart_ptr is std::shared_ptr
             else
             {
-                CompactGame pact;
-                GdvReadItem( idx_focus, pact );
-                ListableGameDb info( pact.game_id, pact );
+                CompactGame pact2;
+                GdvReadItem( idx_focus, pact2 );
+                ListableGameDb info( pact2.game_id, pact2 );
                 make_smart_ptr( ListableGameDb, new_info, info );
                 gc_clipboard->gds.push_back( std::move(new_info ) );
             }
             nbr_copied++;
         }
-        Goto( 0<=idx_focus && idx_focus<nbr ? idx_focus : 0 );
+        Goto( 0<=idx_focus && static_cast<size_t>(idx_focus)<nbr ? idx_focus : 0 );
     }
     dbg_printf( "%d games copied\n", nbr_copied );
 }
@@ -536,12 +534,11 @@ void DbDialog::GdvNextMove( int idx )
     }
     
     thc::ChessRules cr_to_match = this->cr;
-    for( int i=0; i<moves_from_base_position.size(); i++ )
+    for( size_t i=0; i<moves_from_base_position.size(); i++ )
     {
         thc::Move mv = moves_from_base_position[i];
         cr_to_match.PlayMove(mv);
     }
-    uint64_t hash = cr_to_match.Hash64Calculate();
     title_ctrl->SetLabel( "Searching ...." );
     title_ctrl->Refresh();
     title_ctrl->Update();
@@ -586,7 +583,7 @@ void DbDialog::StatsCalculate()
     thc::ChessRules cr_to_match = this->cr;
     bool add_go_back = false;
     std::string go_back_string;
-    for( int i=0; i<moves_from_base_position.size(); i++ )
+    for( size_t i=0; i<moves_from_base_position.size(); i++ )
     {
         thc::Move mv = moves_from_base_position[i];
         if( i+1 == moves_from_base_position.size() )
@@ -628,7 +625,7 @@ void DbDialog::StatsCalculate()
     {
 
         // The promotion attribute is only set automatically for the tiny database games (at the moment)
-        for( int i=0; i<source->size(); i++ )
+        for( size_t i=0; i<source->size(); i++ )
             (*source)[i]->SetAttributes();
         ProgressBar progress2("Searching Clipboard", "Searching",false);
         game_count = mps->DoSearch(cr_to_match,&progress2,source);
@@ -646,10 +643,10 @@ void DbDialog::StatsCalculate()
     
     std::vector< smart_ptr<ListableGame> >  &db_games    = mps->GetVectorSourceGames();
     std::vector<DoSearchFoundGame>          &found_games = mps->GetVectorGamesFound();
-    int nbr_found_games = found_games.size();
+    size_t nbr_found_games = found_games.size();
     
     ProgressBar progress("Calculating Stats","Calculating Stats",false);
-    for( unsigned int i=0; i<nbr_found_games; i++ )
+    for( size_t i=0; i<nbr_found_games; i++ )
     {
         progress.Permill(i*1000/nbr_found_games);
         int idx                   = found_games[i].idx;
@@ -662,7 +659,7 @@ void DbDialog::StatsCalculate()
         bool new_transposition_found=false;
         bool found=false;
         int found_idx=0;
-        for( unsigned int j=0; !found && j<transpositions.size(); j++ )
+        for( size_t j=0; !found && j<transpositions.size(); j++ )
         {
             size_t len = transpositions[j].blob.size();
             if( len <= blob.size() )
@@ -698,7 +695,6 @@ void DbDialog::StatsCalculate()
             total_draws++;
         PATH_TO_POSITION *p = &transpositions[found_idx];
         p->frequency++;
-        size_t len = p->blob.length();
         if( offset_last < blob.length() ) // must be more moves
         {
             char compressed_move = blob[offset_last];
@@ -783,21 +779,21 @@ void DbDialog::StatsCalculate()
         CompressMoves press;
         std::vector<thc::Move> unpacked = press.Uncompress(p->blob);
         std::string txt;
-        thc::ChessRules cr;
-        for( int k=0; k<len; k++ )
+        thc::ChessRules cr2;
+        for( unsigned int k=0; k<len; k++ )
         {
             thc::Move mv = unpacked[k];
-            if( cr.white )
+            if( cr2.white )
             {
                 char buf[100];
-                sprintf( buf, "%d.", cr.full_move_count );
+                sprintf( buf, "%d.", cr2.full_move_count );
                 txt += buf;
             }
-            std::string s = mv.NaturalOut(&cr);
+            std::string s = mv.NaturalOut(&cr2);
             LangOut(s);
             txt += s;
             txt += " ";
-            cr.PlayMove(mv);
+            cr2.PlayMove(mv);
         }
         char buf[2000];
         sprintf( buf, "T%d: %s: %d occurences", j+1, txt.c_str(), p->frequency );
@@ -847,8 +843,10 @@ void DbDialog::StatsCalculate()
     
     list_ctrl_stats->Clear();
     list_ctrl_transpo->Clear();
-    list_ctrl_stats->InsertItems( strings_stats, 0 );
-    list_ctrl_transpo->InsertItems( strings_transpos, 0 );
+    if( !strings_stats.IsEmpty() )
+        list_ctrl_stats->InsertItems( strings_stats, 0 );
+    if( !strings_transpos.IsEmpty() )
+        list_ctrl_transpo->InsertItems( strings_transpos, 0 );
     Goto(0);
 }
 
@@ -880,31 +878,29 @@ void DbDialog::PatternSearch()
     //  list, in particular games from a disk based (i.e. not tiny) database and the clipboard. These
     //  latter types of search we are calling 'partial' search because they aren't of an entire, (albeit
     //  tiny) in memory database
-    PATTERN_STATS stats;
+    PATTERN_STATS stats_;
     if( do_partial_search )
     {
 
         // The promotion attribute is only set automatically for the tiny database games (at the moment)
-        for( int i=0; i<source->size(); i++ )
+        for( size_t i=0; i<source->size(); i++ )
             (*source)[i]->SetAttributes();
         ProgressBar progress2(objs.gl->db_clipboard ? "Searching" : "Searching", "Searching",false);
-        game_count = mps->DoPatternSearch(pm,&progress2,stats,source);
+        game_count = mps->DoPatternSearch(pm,&progress2,stats_,source);
     }
     else
     {
         ProgressBar progress2("Searching", "Searching",false);
-        game_count = mps->DoPatternSearch(pm,&progress2,stats);
+        game_count = mps->DoPatternSearch(pm,&progress2,stats_);
     }
     
     std::vector< smart_ptr<ListableGame> >  &db_games    = mps->GetVectorSourceGames();
     std::vector<DoSearchFoundGame>          &found_games = mps->GetVectorGamesFound();
-    int nbr_found_games = found_games.size();
+    size_t nbr_found_games = found_games.size();
     
-    for( unsigned int i=0; i<nbr_found_games; i++ )
+    for( size_t i=0; i<nbr_found_games; i++ )
     {
         int idx                     = found_games[i].idx;
-        unsigned short offset_first = found_games[i].offset_first;
-        unsigned short offset_last  = found_games[i].offset_last;
         gc_db_displayed_games.gds.push_back(db_games[idx]);
     }
         
@@ -914,26 +910,26 @@ void DbDialog::PatternSearch()
     list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
     char buf[1000];
     char base[1000];
-    int total_games  = stats.nbr_games;
-    int total_draws_plus_no_result = total_games - stats.white_wins - stats.black_wins;
+    int total_games  = stats_.nbr_games;
+    int total_draws_plus_no_result = total_games - stats_.white_wins - stats_.black_wins;
     double percent_score=0.0;
     if( total_games )
-        percent_score= ((1.0*stats.white_wins + 0.5*total_draws_plus_no_result) * 100.0) / total_games;
+        percent_score= ((1.0*stats_.white_wins + 0.5*total_draws_plus_no_result) * 100.0) / total_games;
     sprintf( base, "%d %s, white scores %.1f%% +%d -%d =%d",
             total_games,
             total_games==1 ? "game" : "games",
             percent_score,
-            stats.white_wins, stats.black_wins, stats.draws );
+            stats_.white_wins, stats_.black_wins, stats_.draws );
     if( !pm.parm.include_reverse_colours )
     {
         sprintf( buf, "%s", base );
     }
     else
     {
-        if( stats.nbr_reversed_games == 0 )
+        if( stats_.nbr_reversed_games == 0 )
             sprintf( buf, "%s (stats adjusted for reverse colour games, but none found)", base );
         else
-            sprintf( buf, "%s (stats adjusted for %d reverse colour game%s)", base, stats.nbr_reversed_games, stats.nbr_reversed_games>1 ? "s": "" );
+            sprintf( buf, "%s (stats adjusted for %d reverse colour game%s)", base, stats_.nbr_reversed_games, stats_.nbr_reversed_games>1 ? "s": "" );
     }
     title_ctrl->SetLabel( buf );
     int top = list_ctrl->GetTopItem();

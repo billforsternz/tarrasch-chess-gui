@@ -5,7 +5,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "wx/wx.h"
 #include "Objects.h"
 #include "GameLogic.h"
@@ -46,13 +45,13 @@ CtrlBox2::CtrlBox2
 }
 
 // Write the text
-void CtrlBox2::SetTxt( const wxString &txt, bool redraw )
+void CtrlBox2::SetTxt( const wxString &txt_, bool WXUNUSED(redraw) )
 {
-    if( this->txt != txt )
+    if( this->txt != txt_ )
     {
-        this->txt = txt;
+        this->txt = txt_;
         Clear();
-        WriteText(txt);
+        WriteText(txt_);
      /*   if( redraw )
         {
             Refresh(true);

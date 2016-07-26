@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "MoveTree.h"
 #include "thc.h"
 using namespace std;
@@ -36,8 +35,8 @@ MoveTree *MoveTree::ParentCrawler( int& level, bool& first, MoveTree *child, thc
     else
     {
         thc::ChessRules cr_before_move = cr;
-        bool root = (level==0);
-        if( !root )
+        bool at_root = (level==0);
+        if( !at_root )
             cr.PlayMove(game_move.move);
         int nbr_vars=variations.size();
         if( nbr_vars )
@@ -175,7 +174,7 @@ MoveTree *MoveTree::Promote( MoveTree *child )
 
 
             // Append the promoted move's variations, if any
-            for( int i=0; i<to_be_promoted[0].variations.size(); i++ )
+            for( size_t i=0; i<to_be_promoted[0].variations.size(); i++ )
                 mpos->variations.push_back( to_be_promoted[0].variations[i] );
 //
 // G0   [G1]   G2                                   [G1]=grand_parent
@@ -217,7 +216,7 @@ MoveTree *MoveTree::Promote( MoveTree *child )
 
             // Graft on the promoted tree, skipping the first MoveTree which
             //  we copied (move only) above [* note above]
-            for( int i=1; i<to_be_promoted.size(); i++ )
+            for( size_t i=1; i<to_be_promoted.size(); i++ )
             {
                 MoveTree mt = to_be_promoted[i];
                 grand_parent->variations[ivar2].push_back(mt);
@@ -302,7 +301,8 @@ void MoveTree::DeleteRestOfVariation( MoveTree *child )
         VARIATION &variation = parent->variations[ivar];
 
         // If the next move is part of the variation, delete from there
-        if( imove+1 < variation.size() )
+        int sz = variation.size();
+        if( imove+1 < sz )
         {
             vector<MoveTree>::iterator pos = variation.begin() + imove+1;
             variation.erase( pos, variation.end() );

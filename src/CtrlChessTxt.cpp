@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "wx/wx.h"
 #include "wx/clipbrd.h"
 #include "Appdefs.h"
@@ -39,7 +38,7 @@ CtrlChessTxt::CtrlChessTxt
     wxWindowID     id, //= wxID_ANY,
     const wxPoint &point,
     const wxSize &size
-)  : wxRichTextCtrl( parent, id, "", point, size,  wxWANTS_CHARS+wxRE_MULTILINE+wxRE_READONLY )
+)  : wxRichTextCtrl( parent, id, "", point, size,   wxWANTS_CHARS+wxRE_MULTILINE+wxRE_READONLY )
 
 {
     gl = 0;
@@ -53,16 +52,16 @@ CtrlChessTxt::CtrlChessTxt
     //GetBuffer().SetFloatingLayoutMode(false); attempt to speed up
 }
 
-void CtrlChessTxt::SetGameDocument( GameDocument *gd )
+void CtrlChessTxt::SetGameDocument( GameDocument *gd_ )
 {
-    this->gd = gd;
-    unsigned long pos = gd->non_zero_start_pos ? gd->non_zero_start_pos : gd->gv.FindMove0();
+    this->gd = gd_;
+    unsigned long pos = gd_->non_zero_start_pos ? gd_->non_zero_start_pos : gd_->gv.FindMove0();
     if( gl )
         gl->atom.Redisplay(pos);
     cprintf( "SetGameDocument() pos = %lu\n", pos );
 }
 
-void CtrlChessTxt::OnProcessCustom(wxCommandEvent& event)
+void CtrlChessTxt::OnProcessCustom(wxCommandEvent& WXUNUSED(event) )
 {
     if( gl->IsManual() )
     {
@@ -305,11 +304,11 @@ void CtrlChessTxt::Delete()
     }
 }
 
-void CtrlChessTxt::OnTextURL(wxTextUrlEvent& event)
+void CtrlChessTxt::OnTextURL(wxTextUrlEvent& WXUNUSED(event) )
 {
 }
 
-void CtrlChessTxt::OnTextMaxLen(wxCommandEvent& WXUNUSED(event))
+void CtrlChessTxt::OnTextMaxLen(wxCommandEvent& WXUNUSED(event) )
 {
 }
 

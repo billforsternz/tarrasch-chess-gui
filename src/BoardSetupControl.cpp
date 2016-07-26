@@ -5,7 +5,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "wx/wx.h"
 #include "wx/image.h"
 #include "wx/file.h"
@@ -142,7 +141,7 @@ void BoardSetupControl::SetState( const char *action, State new_state )
             timer_running_after = timer_running;
         }
     }
-    dbg_printf( "Transition: %s: %s->%s\n", action, before, after );
+    cprintf( "Transition: %s: %s->%s\n", action, before, after );
     state = new_state;
     if( timer_running_before && !timer_running_after )
         m_timer.Stop();
@@ -515,16 +514,16 @@ void BoardSetupControl::SetCustomCursor( char piece )
     wxImage image( ptr );
     image.SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_X,17);
     image.SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_Y,17);
-    wxCursor cursor(image);
-    SetCursor( cursor );    
+    wxCursor temp(image);
+    SetCursor( temp );    
 }
 
 void BoardSetupControl::ClearCustomCursor()
 {
     SetState( "ClearCustomCursor", UP_IDLE );
     this->cursor = 0;
-    wxCursor cursor(wxCURSOR_ARROW);
-    SetCursor( cursor );    
+    wxCursor temp(wxCURSOR_ARROW);
+    SetCursor( temp );    
 }
 
 

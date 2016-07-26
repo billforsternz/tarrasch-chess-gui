@@ -24,8 +24,8 @@ private:
 public:
     ListableGamePgn( int pgn_handle, long fposn ) { this->pgn_handle=pgn_handle, this->fposn = fposn; game_being_edited=0;  }
     virtual long GetFposn() { return fposn; }
-    virtual void SetFposn(long posn) { fposn=posn; }
-    virtual bool GetPgnHandle( int &pgn_handle ) { pgn_handle=this->pgn_handle; return true; }
+    virtual void SetFposn( long posn ) { fposn=posn; }
+    virtual bool GetPgnHandle( int &pgn_handle_ ) { pgn_handle_=this->pgn_handle; return true; }
     virtual void *LoadIntoMemory( void *context, bool end )
     {
         if( pack.Empty() )
@@ -98,7 +98,7 @@ public:
     virtual const char *Fen()       { return pack.Fen();      }
     virtual const char *CompressedMoves() {return pack.Blob();  }
 
-    virtual void SetGameBeingEdited( uint32_t game_being_edited ) { this->game_being_edited = game_being_edited; }
+    virtual void SetGameBeingEdited( uint32_t game_being_edited_ ) { this->game_being_edited = game_being_edited_; }
     virtual uint32_t GetGameBeingEdited() { return game_being_edited; }
 private:
     uint32_t game_being_edited;

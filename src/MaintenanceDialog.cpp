@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "wx/wx.h"
 #include "wx/valtext.h"
 #include "wx/valgen.h"
@@ -26,8 +25,6 @@ BEGIN_EVENT_TABLE( MaintenanceDialog, wxDialog )
 // EVT_BUTTON( ID_TEMP_ENGINE_BROWSE, MaintenanceDialog::OnBrowseClick )
 
 EVT_BUTTON( ID_MAINTENANCE_CMD_1, MaintenanceDialog::OnMaintenanceSpeed )
-EVT_BUTTON( ID_MAINTENANCE_CMD_2, MaintenanceDialog::OnMaintenanceCompress )
-EVT_BUTTON( ID_MAINTENANCE_CMD_3, MaintenanceDialog::OnMaintenanceDecompress )
 EVT_BUTTON( ID_MAINTENANCE_CMD_4, MaintenanceDialog::OnMaintenanceVerify )
 EVT_BUTTON( ID_MAINTENANCE_CMD_5, MaintenanceDialog::OnMaintenanceCreate )
 EVT_BUTTON( ID_CREATE_DB_APPEND, MaintenanceDialog::OnMaintenanceIndexes )
@@ -380,19 +377,6 @@ void MaintenanceDialog::SetDialogHelp()
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_1
 void MaintenanceDialog::OnMaintenanceSpeed( wxCommandEvent& WXUNUSED(event) )
 {
-}
-
-// wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_2
-void MaintenanceDialog::OnMaintenanceCompress( wxCommandEvent& WXUNUSED(event) )
-{
-    //db_maintenance_compress_pgn();
-    db_maintenance_create_player_database();
-}
-
-// wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_3
-void MaintenanceDialog::OnMaintenanceDecompress( wxCommandEvent& WXUNUSED(event) )
-{
-    db_maintenance_decompress_pgn();
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_4

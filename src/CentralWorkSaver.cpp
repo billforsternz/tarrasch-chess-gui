@@ -214,11 +214,11 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                         any_cancel = true;
                     if( answer == wxID_OK)
                     {
-                        wxString dir;
-                        wxFileName::SplitPath( fd.GetPath(), &dir, NULL, NULL );
-                        objs.repository->nv.m_doc_dir = dir;
+                        wxString dir2;
+                        wxFileName::SplitPath( fd.GetPath(), &dir2, NULL, NULL );
+                        objs.repository->nv.m_doc_dir = dir2;
                         wxString wx_filename = fd.GetPath();
-                        std::string filename( (const char *)wx_filename.c_str() );    //!@#$
+                        std::string filename( (const char*)wx_filename.c_str() );
                         if( !::wxFileExists(wx_filename ) )
                         {
                             if( fm == FILE_EXISTS_GAME_NEW )
@@ -238,10 +238,10 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                         {
                             ok = true;
                             bool append=false;
-                            int answer = wxMessageBox( "Append games to existing file ?", "'Yes' to append, 'No' to replace (be careful with 'No')",  wxYES_NO|wxCANCEL, objs.frame );
-                            if( answer == wxYES )
+                            int answer2 = wxMessageBox( "Append games to existing file ?", "'Yes' to append, 'No' to replace (be careful with 'No')",  wxYES_NO|wxCANCEL, objs.frame );
+                            if( answer2 == wxYES )
                                 append = true;
-                            else if( answer == wxCANCEL )
+                            else if( answer2 == wxCANCEL )
                                 ok = false;
                             if( ok )
                             {
@@ -266,7 +266,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                                     int existing_nbr = gc->gds.size();
                                 
                                     // Append copied temp games to newly loaded file
-                                    for( int i=0; i<gds_temp.size(); i++ )
+                                    for( size_t i=0; i<gds_temp.size(); i++ )
                                     {
                                         smart_ptr<ListableGame> smp = gds_temp[i];
                                         gc->gds.push_back( smp );
@@ -303,12 +303,12 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                     any_cancel = true;
                 if( answer == wxID_OK)
                 {
-                    wxString dir;
-                    wxFileName::SplitPath( fd.GetPath(), &dir, NULL, NULL );
-                    objs.repository->nv.m_doc_dir = dir;
+                    wxString dir2;
+                    wxFileName::SplitPath( fd.GetPath(), &dir2, NULL, NULL );
+                    objs.repository->nv.m_doc_dir = dir2;
                     gd->game_nbr = 0;
                     wxString wx_filename = fd.GetPath();
-                    std::string filename( (const char *)wx_filename.c_str() );  //!@#$
+                    std::string filename( (const char *)wx_filename.c_str() );
 
                     // If it's a new file, create with single game
                     if( !::wxFileExists( wx_filename ) )
@@ -328,10 +328,10 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                     {
                         ok = true;
                         bool append=false;
-                        int answer = wxMessageBox( "Append game to existing file ?", "'Yes' to append, 'No' to overwrite (be careful with 'No')",  wxYES_NO|wxCANCEL, objs.frame );
-                        if( answer == wxYES )
+                        int answer2 = wxMessageBox( "Append game to existing file ?", "'Yes' to append, 'No' to overwrite (be careful with 'No')",  wxYES_NO|wxCANCEL, objs.frame );
+                        if( answer2 == wxYES )
                             append = true;
-                        else if( answer == wxCANCEL )
+                        else if( answer2 == wxCANCEL )
                             ok = false;
                         if( ok && append )
                         {
@@ -477,18 +477,18 @@ bool CentralWorkSaver::FileSaveGameAs()
         ok = (answer==wxID_OK);
         if( ok )
         {
-            wxString dir;
-            wxFileName::SplitPath( fd.GetPath(), &dir, NULL, NULL );
-            objs.repository->nv.m_doc_dir = dir;
+            wxString dir2;
+            wxFileName::SplitPath( fd.GetPath(), &dir2, NULL, NULL );
+            objs.repository->nv.m_doc_dir = dir2;
             wx_filename = fd.GetPath();
             
             // If file exists, append or replace
             if( ::wxFileExists(wx_filename ) )
             {
-                int answer = wxMessageBox( "Append game to file ?", "'Yes' to append, 'No' to replace, be careful with 'No'",  wxYES_NO|wxCANCEL, objs.frame );
-                if( answer == wxYES )
+                int answer2 = wxMessageBox( "Append game to file ?", "'Yes' to append, 'No' to replace, be careful with 'No'",  wxYES_NO|wxCANCEL, objs.frame );
+                if( answer2 == wxYES )
                     append = true;
-                else if( answer == wxCANCEL )
+                else if( answer2 == wxCANCEL )
                     ok = false;
             }
         }
@@ -502,7 +502,7 @@ bool CentralWorkSaver::FileSaveGameAs()
         std::string body;
         gd->ToFileTxtGameBody( body );
         FILE *file = NULL;
-        file = fopen( (const char *)wx_filename.c_str(), append ? "ab" : "wb" );    //!@#$
+        file = fopen( (const char *)wx_filename.c_str(), append ? "ab" : "wb" );
         if( file )
         {
             fseek(file,0,SEEK_END);

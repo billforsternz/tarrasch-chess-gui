@@ -78,7 +78,7 @@ class GamesListCtrl: public wxListCtrl
 {
     DECLARE_EVENT_TABLE()
 public:
-    GamesListCtrl( GamesDialog *parent, wxWindowID id, const wxPoint &pos, const wxSize &size, long style );
+    GamesListCtrl( GamesDialog *parent, wxWindowID id, const wxPoint &pos, const wxSize &size );
     void OnChar( wxKeyEvent &event );
     
 public:
@@ -230,7 +230,7 @@ public:
     virtual void GdvButton5();
     virtual void GdvNextMove( int idx );
     virtual int  CalculateTranspo( const char *blob, int &transpo );
-    virtual int  GetBasePositionIdx( CompactGame &pact, bool receiving_focus ) { return 0; }
+    virtual int  GetBasePositionIdx( CompactGame &WXUNUSED(pact), bool WXUNUSED(receiving_focus) ) { return 0; }
 
 //  void OnClose( wxCloseEvent& event );
 //  void SaveColumns();
@@ -261,7 +261,7 @@ protected:
 
     GamesListCtrl  *list_ctrl;
     wxBoxSizer*  hsiz_panel;
-    wxBoxSizer *button_panel;
+    //wxBoxSizer *button_panel;
     wxFlexGridSizer* vsiz_panel_button1;
     wxFlexGridSizer* vsiz_panel_buttons;
     

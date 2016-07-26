@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "wx/wx.h"
 #include "wx/valtext.h"
 #include "wx/valgen.h"
@@ -173,7 +172,7 @@ void PgnDialog::GdvHelpClick()
 void PgnDialog::GdvSearch() {}
 void PgnDialog::GdvUtility() {}
 void PgnDialog::GdvOnCancel() {}
-void PgnDialog::GdvNextMove( int idx ) {}
+void PgnDialog::GdvNextMove( int UNUSED(idx) ) {}
 
 // PgnDialog constructors
 PgnDialog::PgnDialog
@@ -183,14 +182,13 @@ PgnDialog::PgnDialog
   GamesCache  *gc_clipboard,
   wxWindowID  id,
   const wxPoint& pos,
-  const wxSize& size,
-  long style
+  const wxSize& size
   ) : GamesDialog( parent, NULL, gc, gc_clipboard, id, pos, size )
 {
 }
 
 
-void PgnDialog::GdvListColClick( int compare_col )
+void PgnDialog::GdvListColClick( int compare_col_ )
 {
     local_cache.clear();
     stack.clear();
@@ -201,7 +199,7 @@ void PgnDialog::GdvListColClick( int compare_col )
     int old_percent = -1;
     void *context=0;
     bool end = false;
-    if( compare_col == 0 )
+    if( compare_col_ == 0 )
         end = true; // we don't need to load into memory for column 0
     for( int i=0; !end && i<nbr; i++ )
     {
@@ -240,25 +238,25 @@ void PgnDialog::GdvListColClick( int compare_col )
         }
     }
     if( !cancelled )
-        GamesDialog::GdvListColClick( compare_col );
+        GamesDialog::GdvListColClick( compare_col_ );
 }
 
-bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx )
+bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx_ )
 {
-    int selected_game = track->focus_idx;
-    if( selected_game != -1 )
+    int selected_game_ = track->focus_idx;
+    if( selected_game_ != -1 )
     {
         uint32_t temp = ++gl->game_being_edited_tag;
-        GameDocument *ptr = gc->gds[selected_game]->GetGameDocumentPtr();
+        GameDocument *ptr = gc->gds[selected_game_]->GetGameDocumentPtr();
         if( ptr )
         {
-            gc->gds[selected_game]->SetGameBeingEdited( temp );
+            gc->gds[selected_game_]->SetGameBeingEdited( temp );
             gd = *ptr;
             gd.SetGameBeingEdited( temp );
             gd.SetNonZeroStartPosition(track->focus_offset);
             gd.selected = false;
-            file_game_idx = selected_game; //this->file_game_idx;    // update this only if loading game from current file
+            file_game_idx_ = selected_game_; //this->file_game_idx;    // update this only if loading game from current file
         }
     }
-    return selected_game != -1;
+    return selected_game_ != -1;
 }

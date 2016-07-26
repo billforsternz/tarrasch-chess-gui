@@ -103,7 +103,7 @@ public:
     int              button4_cmd;
     CtrlBoxBookMoves *book_moves;
     wxNotebook      *notebook;
-    wxPanel         *notebook_page1;
+    //wxPanel         *notebook_page1;
     wxPanel         *notebook_page2;
 private:
     wxPoint       kbut1_base;

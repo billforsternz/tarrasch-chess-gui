@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include <time.h>
 #include "wx/wx.h"
 #include "wx/valtext.h"
@@ -505,18 +504,20 @@ void GameDetailsDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
                 ok = true;
                 for( int i=0; ok && *s; i++ )
                 {
+                    int oki=0;
                     if( i==0 )
-                        ok = (bool)isalpha(*s);
+                        oki = isalpha(*s);
                     else if( i==1 )
                     {
                         if( strlen(s) == 4 )
-                            ok = (bool)(isalpha(*s) || isdigit(*s));
+                            oki = (isalpha(*s) || isdigit(*s));
                         else  // if( strlen(s) == 3 )
-                            ok = (bool)isdigit(*s);
+                            oki = isdigit(*s);
                     }
                     else
-                        ok = (bool)isdigit(*s);
+                        oki = isdigit(*s);
                     s++;
+                    ok = (oki!=0);
                 }           
             }
             if( !ok )
@@ -639,15 +640,15 @@ bool GameDetailsDialog::Run( GameDocument &gd )
         {
             if( s[4]=='.' )
             {
-                bool ok = true;
+                bool date_ok = true;
                 int dd_offset = 8;
                 if( s[6]=='.' && s[7]!='.' )
                     dd_offset = 7;  // yyyy.m.d or yyyy.m.dd (len=8 or 9)
                 else if( s[6]!='.' && s[7]=='.' && strlen(s)>8 )
                     dd_offset = 8;  // yyyy.mm.d (len=9)
                 else
-                    ok = false;
-                if( ok )
+                    date_ok = false;
+                if( date_ok )
                 {
                     int yyyy = atoi(&s[0]);
                     int mm   = atoi(&s[5]);

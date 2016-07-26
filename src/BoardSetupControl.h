@@ -20,14 +20,14 @@ public:
                   wxWindowID id = wxID_ANY,
                   const wxPoint& point = wxDefaultPosition );
     ~BoardSetupControl();
-    void Set( const thc::ChessPosition &cp, const bool *lockdown=0 )
+    void Set( const thc::ChessPosition &cp_, const bool *lockdown_=0 )
     {
-        this->cp = cp;
-        if( lockdown )
-            memcpy(this->lockdown,lockdown,64);
+        this->cp = cp_;
+        if( lockdown_ )
+            memcpy(this->lockdown,lockdown_,64);
         if( bs )
         {
-            bs->Set(cp,lockdown);
+            bs->Set(cp_,lockdown_);
             bs->Draw();
         }
     }

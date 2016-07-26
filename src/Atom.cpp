@@ -5,7 +5,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "GameDocument.h"
 #include "GameLogic.h"
 #include "Undo.h"
@@ -32,15 +31,15 @@ Atom::Atom( GameLogic *gl )
     running = false;
 }
 
-void Atom::SetInsertionPoint( long pos )
+void Atom::SetInsertionPoint( long pos_ )
 {
     if( running )
     {
         insertion_point=true;
-        this->pos=pos;
+        this->pos = pos_;
     }
     else
-        gl->lb->SetInsertionPoint(pos);
+        gl->lb->SetInsertionPoint(pos_);
 }
 
 unsigned long Atom::GetInsertionPoint()
@@ -51,31 +50,31 @@ unsigned long Atom::GetInsertionPoint()
         return gl->lb->GetInsertionPoint();
 }
 
-void Atom::Display( long pos )
+void Atom::Display( long pos_ )
 {
     if( running )
     {
         display=true;
-        this->pos=pos;
+        this->pos=pos_;
     }
     else
-        gl->gd.Display(pos);
+        gl->gd.Display(pos_);
 }
 
-void Atom::Redisplay( long pos)
+void Atom::Redisplay( long pos_ )
 {
     if( running )
     {
         redisplay=true;
-        this->pos=pos;
+        this->pos=pos_;
     }
     else
-        gl->gd.Redisplay(pos);
+        gl->gd.Redisplay(pos_);
 }
 
-void Atom::Begin( bool set_focus )
+void Atom::Begin( bool set_focus_ )
 {
-    this->set_focus=set_focus;
+    this->set_focus = set_focus_;
     insertion_point=false;
     display=false;
     redisplay=false;

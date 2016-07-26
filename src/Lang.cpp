@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2016, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "Lang.h"
 
 static char lookup[5+1] = "KQRNB";
@@ -67,7 +66,7 @@ void LangOut( std::string &s )
         case 'B': s[0] = lookup[4];  break;
         default:
         {
-            int idx = s.find_first_of('=');
+            size_t idx = s.find_first_of('=');
             if( idx != std::string::npos )
             switch( s[idx+1] )
             {

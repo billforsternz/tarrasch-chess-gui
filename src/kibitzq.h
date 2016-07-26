@@ -37,9 +37,9 @@ public:
         unsigned int temp = put;
         unsigned int len = strlen(txt);
         char *dst = &buf[temp][0];
-        int maxlen = KQBUFSIZE-1;
+        unsigned int maxlen = KQBUFSIZE-1;
         sprintf( dst, " depth %d ", depth );
-        int offset = strlen(dst);
+        unsigned int offset = strlen(dst);
         dst += offset;
         maxlen -= offset;
         if( len <= maxlen )
@@ -70,7 +70,7 @@ public:
         if( full )
             get = Bump(get);
     }
-    bool Get( char buf[], unsigned int max_strlen )
+    bool Get( char buf_[], unsigned int max_strlen )
     {
         bool data_read = false;
         if( !Empty() )
@@ -79,11 +79,11 @@ public:
             const char *src = &this->buf[temp][0];
             unsigned int len = strlen(src);
             if( len <= max_strlen )
-                strcpy( buf, src );
+                strcpy( buf_, src );
             else
             {
-                memcpy( buf, src, max_strlen );
-                buf[max_strlen] = '\0';
+                memcpy( buf_, src, max_strlen );
+                buf_[max_strlen] = '\0';
             }
             get = Bump(temp);
             data_read = true;

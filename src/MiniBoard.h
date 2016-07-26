@@ -17,7 +17,7 @@ public:
                       wxWindowID id = wxID_ANY,
                       const wxPoint& point = wxDefaultPosition );
     ~MiniBoard();
-    void Set( const thc::ChessPosition &cp ) { if(bs) {this->cp=cp; bs->Set(cp); bs->Draw();} }
+    void Set( const thc::ChessPosition &cp_ ) { if(bs) {this->cp=cp_; bs->Set(cp_); bs->Draw();} }
     thc::ChessPosition cp;
     
 private:

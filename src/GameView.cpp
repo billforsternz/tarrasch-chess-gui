@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "thc.h"
 #include "GameLogic.h"
 #include "Lang.h"
@@ -16,20 +15,20 @@
 using namespace std;
 using namespace thc;
 
-void GameView::Build( std::string &result, MoveTree *tree, thc::ChessPosition &start_position )
+void GameView::Build( std::string &result_, MoveTree *tree_, thc::ChessPosition &start_position_ )
 {
-    this->result = result;
+    this->result = result_;
     final_position_node = NULL;
     final_position_txt = "Initial position";
     final_position.Init();
-    this->tree = tree;
+    this->tree = tree_;
     expansion.clear();
     level = -1;
     offset = 0;
     newline = true;
     comment = false;
-    this->start_position = start_position;
-    cr = start_position;
+    this->start_position = start_position_;
+    cr = start_position_;
 /*  if( tree->game_move.comment.length() )
     {
         GameViewElement gve;
@@ -42,7 +41,7 @@ void GameView::Build( std::string &result, MoveTree *tree, thc::ChessPosition &s
         expansion.push_back(gve);
         comment = true;
     } */
-    Crawler( tree, true, false );
+    Crawler( tree_, true, false );
 
     // Save a copy of the language as it was when we built the view
     memcpy( language_lookup, LangGet(), sizeof(language_lookup) );
@@ -204,9 +203,9 @@ void GameView::Crawler( MoveTree *node, bool move0, bool last_move )
         {
             gve.nag_value1 = node->game_move.nag_value1;
             fragment.append( nag_array1[node->game_move.nag_value1] );
-            char buf[10];
-            sprintf(buf," $%d",node->game_move.nag_value1);
-            file_view.append(buf);
+            char buf2[50];
+            sprintf(buf2," $%d",node->game_move.nag_value1);
+            file_view.append(buf2);
         }
         gve.nag_value2 = 0;
         if( node->game_move.nag_value2 && 
@@ -215,9 +214,9 @@ void GameView::Crawler( MoveTree *node, bool move0, bool last_move )
         {
             gve.nag_value2 = node->game_move.nag_value2;
             fragment.append( nag_array2[node->game_move.nag_value2] );
-            char buf[10];
-            sprintf(buf," $%d",node->game_move.nag_value2);
-            file_view.append(buf);
+            char buf2[50];
+            sprintf(buf2," $%d",node->game_move.nag_value2);
+            file_view.append(buf2);
         }
         if( last_move )
         {
@@ -243,14 +242,14 @@ void GameView::Crawler( MoveTree *node, bool move0, bool last_move )
         // Comment
         if( node->game_move.comment.length() )
         {
-            GameViewElement gve;
-            gve.type    = COMMENT;
-            gve.level   = level;
-            gve.offset1 = offset;
+            GameViewElement gve2;
+            gve2.type    = COMMENT;
+            gve2.level   = level;
+            gve2.offset1 = offset;
             offset += ((expansion.size()?2:1) + node->game_move.comment.length());
-            gve.offset2 = offset;
-            gve.node    = node;
-            expansion.push_back(gve);
+            gve2.offset2 = offset;
+            gve2.node    = node;
+            expansion.push_back(gve2);
             comment = true;
         }
     }
@@ -462,7 +461,7 @@ void GameView::Display( unsigned long pos )
 std::string ReplaceAll( const std::string &in, const std::string &from, const std::string &to )
 {
     std::string out = in;
-    int pos = out.find(from);
+    size_t pos = out.find(from);
     while( pos != std::string::npos )
     {
         out.replace( pos, from.length(), to );
@@ -535,8 +534,8 @@ void GameView::ToString( std::string &str, int begin, int end )
         }
 
         // Append with line wrap
-        int idx = frag.find(' ');
-        bool atomic = (idx==string::npos);  // atomic if no space
+        size_t idx_f = frag.find(' ');
+        bool atomic = (idx_f==string::npos);  // atomic if no space
         bool splitting = !atomic;           // don't split if atomic
         while( splitting )
         {
@@ -557,9 +556,9 @@ void GameView::ToString( std::string &str, int begin, int end )
                     // In column 0, left trim
                     if( col == 0 )
                     {
-                        int idx = part1.find_first_not_of(' ');
-                        if( idx!=string::npos && idx>0 )
-                            part1 = part1.substr(idx);
+                        size_t idx2 = part1.find_first_not_of(' ');
+                        if( idx2!=string::npos && idx2>0 )
+                            part1 = part1.substr(idx2);
                     }   
                     str += part1;
                     str += "\n";
@@ -591,9 +590,9 @@ void GameView::ToString( std::string &str, int begin, int end )
         // In column 0, left trim
         if( col == 0 )
         {
-            int idx = frag.find_first_not_of(' ');
-            if( idx!=string::npos && idx>0 )
-                frag = frag.substr(idx);
+            size_t idx2 = frag.find_first_not_of(' ');
+            if( idx2!=string::npos && idx2>0 )
+                frag = frag.substr(idx2);
         }   
         int len = frag.length();
         if( col+len < 80 )
@@ -1010,10 +1009,10 @@ void GameView::ToPublishString( std::string &str, int &diagram_base, int &mv_bas
             }
             case MOVE:
             {
-                thc::ChessRules cr;
+                thc::ChessRules cr2;
                 int ivar;
                 int imove;
-                MoveTree *parent = tree->Parent( gve.node, cr, ivar, imove );
+                MoveTree *parent = tree->Parent( gve.node, cr2, ivar, imove );
                 if( !parent )
                     frag = gve.str;
                 else
@@ -1021,17 +1020,17 @@ void GameView::ToPublishString( std::string &str, int &diagram_base, int &mv_bas
                     vector<MoveTree> &variation = parent->variations[ivar];
                     int j=0;
                     for( j=0; j<imove; j++ )
-                        cr.PlayMove( variation[j].game_move.move );
+                        cr2.PlayMove( variation[j].game_move.move );
                     thc::Move mv = variation[j].game_move.move;
-                    char srcPiece = cr.squares[mv.src];
-                    std::string nmove =  mv.NaturalOut(&cr);
+                    char srcPiece = cr2.squares[mv.src];
+                    std::string nmove =  mv.NaturalOut(&cr2);
                     LangOut(nmove);
                     char buf[80];
                     sprintf( buf, "%d%s%s",
-                            cr.full_move_count,
-                            cr.white?".":"...",
+                            cr2.full_move_count,
+                            cr2.white?".":"...",
                             nmove.c_str() );
-                    cr.PlayMove( mv );
+                    cr2.PlayMove( mv );
                     char buf_diag_nbr[80];
                     sprintf( buf_diag_nbr, "%d", diagram_base + (diagram_idx<0?0:diagram_idx) );
                     char buf_mv_nbr[80];
@@ -1089,7 +1088,7 @@ void GameView::ToPublishString( std::string &str, int &diagram_base, int &mv_bas
                     if( prev_move_nbr==-1 && gve.level==1 )
                     {
                         prev_move_nbr = --neg_base;
-                        thc::ChessRules cr_before = cr;
+                        thc::ChessRules cr_before = cr2;
                         cr_before.PopMove(mv);
                         frag += "\n<span id='mv";
                         char buf2[ 80 ];
@@ -1134,9 +1133,9 @@ void GameView::ToPublishString( std::string &str, int &diagram_base, int &mv_bas
                         need_open = true;
                     else if( diagram_count == 0 )
                         diagram_count++;    // try again next time
-                    diagram_cp = cr;
-                    cr.squares[64] = '\0';  // just in case
-                    frag += compressPosition(cr.squares);
+                    diagram_cp = cr2;
+                    cr2.squares[64] = '\0';  // just in case
+                    frag += compressPosition(cr2.squares);
                     frag += " ";
                     frag += buf;
                     char buf_var_moves[80];
@@ -1165,13 +1164,13 @@ void GameView::ToPublishString( std::string &str, int &diagram_base, int &mv_bas
                         if( found == std::string::npos )
                         {
                             const char *base_move = nmove.c_str();
-                            size_t found;
-                            found = s.find(base_move);
-                            if( found != std::string::npos )
+                            size_t found2;
+                            found2 = s.find(base_move);
+                            if( found2 != std::string::npos )
                             {
-                                move_txt = s.substr(0,found);                   // prefix
-                                move_txt += whole_move;                         // move
-                                move_txt += s.substr(found+strlen(base_move));  // suffix
+                                move_txt = s.substr(0,found2);                   // prefix
+                                move_txt += whole_move;                          // move
+                                move_txt += s.substr(found2+strlen(base_move));  // suffix
                             }
                         }
                     }
@@ -1307,7 +1306,7 @@ unsigned long GameView::NavigationKey( unsigned long pos, NAVIGATION_KEY nk )
     for( int repeat=0; repeat < (nk==NK_PGUP||nk==NK_PGDOWN ? 4 : 1); repeat++ )
     {
         bool found=false;
-        int level_original=0, level=0;
+        int level_original=0, level_=0;
         int start = forward ? 0   : nbr-1;
         int end   = forward ? nbr : -1;
         int iter  = forward ? +1  : -1;
@@ -1320,7 +1319,7 @@ unsigned long GameView::NavigationKey( unsigned long pos, NAVIGATION_KEY nk )
                 if( gve.offset1<=pos && pos<=gve.offset2 )
                 {
                     found = true;
-                    level_original = level = gve.level;
+                    level_original = level_ = gve.level;
                 }
             }
             else
@@ -1365,7 +1364,7 @@ unsigned long GameView::NavigationKey( unsigned long pos, NAVIGATION_KEY nk )
                     if( gve.type  == (forward?START_OF_VARIATION:END_OF_VARIATION) &&
                         gve.level == level_original
                     )
-                        level--;
+                        level_--;
                     if( gve.type==END_OF_GAME && forward )
                     {
                         pos = gve.offset2;
@@ -1373,7 +1372,7 @@ unsigned long GameView::NavigationKey( unsigned long pos, NAVIGATION_KEY nk )
                     }
                     if( gve.type==MOVE0 && gve.offset1!=pos )
                     {
-                        if( !skip_to_mainline || gve.level<=level )
+                        if( !skip_to_mainline || gve.level<=level_ )
                         {
                             pos = gve.offset1;
                             break;
@@ -1381,7 +1380,7 @@ unsigned long GameView::NavigationKey( unsigned long pos, NAVIGATION_KEY nk )
                     }
                     if( gve.type==MOVE && gve.offset2!=pos )
                     {
-                        if( !skip_to_mainline || gve.level<=level )
+                        if( !skip_to_mainline || gve.level<=level_ )
                         {
                             pos = gve.offset2;
                             break;
@@ -1414,17 +1413,17 @@ int GameView::GetInternalOffsetEndOfVariation( int start )
 {
     int nbr = expansion.size();
     GameViewElement &gve = expansion[start];
-    int level = gve.level;
+    int level_ = gve.level;
     int end = nbr;
     for( int i=start; i<nbr; i++ )
     {
-        GameViewElement &gve = expansion[i];
-        if( gve.type==END_OF_VARIATION && gve.level==level )
+        GameViewElement &gve2 = expansion[i];
+        if( gve2.type==END_OF_VARIATION && gve2.level==level_ )
         {
             end = i;
             break;
         }
-        if( gve.type == END_OF_GAME )
+        if( gve2.type == END_OF_GAME )
         {
             end = i;
             break;
@@ -1433,7 +1432,7 @@ int GameView::GetInternalOffsetEndOfVariation( int start )
     return end;
 }
 
-MoveTree *GameView::Locate( unsigned long pos, thc::ChessRules &cr, string &title, bool &at_move0 )
+MoveTree *GameView::Locate( unsigned long pos, thc::ChessRules &cr_, string &title, bool &at_move0 )
 {
     MoveTree *found = NULL;
     at_move0 = false;
@@ -1454,7 +1453,7 @@ MoveTree *GameView::Locate( unsigned long pos, thc::ChessRules &cr, string &titl
         if( in_range && gve.type==END_OF_GAME && final_position_node )
         {
             title = final_position_txt;
-            cr = final_position;
+            cr_ = final_position;
             found = final_position_node;
         }
 
@@ -1498,25 +1497,25 @@ MoveTree *GameView::Locate( unsigned long pos, thc::ChessRules &cr, string &titl
                 if( have_a_move )
                 {
                     int ivar, imove;
-                    MoveTree *parent = tree->Parent( gve.node, cr, ivar, imove );
+                    MoveTree *parent = tree->Parent( gve.node, cr_, ivar, imove );
                     if( parent )
                     {
                         found = gve.node;
                         vector<MoveTree> &variation = parent->variations[ivar];
-                        int i=0;
-                        for( i=0; i<imove; i++ )
-                            cr.PlayMove( variation[i].game_move.move );
-                        std::string nmove =  variation[i].game_move.move.NaturalOut(&cr);
+                        int i2=0;
+                        for( i2=0; i2<imove; i2++ )
+                            cr_.PlayMove( variation[i2].game_move.move );
+                        std::string nmove =  variation[i2].game_move.move.NaturalOut(&cr_);
                         LangOut(nmove);
                         char buf[80];
                         sprintf( buf, "%s %d%s%s",
                                 at_move0?"Position before":"Position after",
-                                cr.full_move_count,
-                                cr.white?".":"...",
+                                cr_.full_move_count,
+                                cr_.white?".":"...",
                                 nmove.c_str() );
                         title = buf;
                         if( !at_move0 )
-                            cr.PlayMove( variation[i].game_move.move );
+                            cr_.PlayMove( variation[i2].game_move.move );
                     }
                 }
                 break;
@@ -1540,14 +1539,14 @@ unsigned long GameView::FindMove0()
 
 unsigned long GameView::FindEnd()
 {
-    unsigned long offset=0;
+    unsigned long offs=0;
     int nbr = expansion.size();
     if( nbr > 0 )
     {
         GameViewElement gve = expansion[nbr-1];
-        offset = gve.offset2;
+        offs = gve.offset2;
     }
-    return offset;
+    return offs;
 }
 
 bool GameView::IsAtEnd( unsigned long pos )
@@ -1605,7 +1604,7 @@ bool GameView::GetOffsetWithinComment( unsigned long pos, unsigned long &pos_wit
     return found;
 }
 
-bool GameView::CommentEdit( wxRichTextCtrl *ctrl, std::string &txt_to_insert, long keycode )
+bool GameView::CommentEdit( wxRichTextCtrl *UNUSED(ctrl), std::string &txt_to_insert, long keycode )
 {
     bool used = false;
     unsigned long pos = gl->atom.GetInsertionPoint();
@@ -1761,10 +1760,10 @@ bool GameView::CommentEdit( wxRichTextCtrl *ctrl, std::string &txt_to_insert, lo
     return used;
 }
 
-bool GameView::IsInComment( wxRichTextCtrl *ctrl )
+bool GameView::IsInComment( wxRichTextCtrl *UNUSED(ctrl) )
 {
     bool pos_in_comment=false;
-    long pos;
+    unsigned long pos;
     pos = gl->atom.GetInsertionPoint();
     int nbr = expansion.size();
     for( int i=0; i<nbr; i++ )
@@ -1785,8 +1784,8 @@ bool GameView::IsInComment( wxRichTextCtrl *ctrl )
 bool GameView::IsSelectionInComment( wxRichTextCtrl *ctrl )
 {
     bool selection_in_comment=false;
-    long pos1, pos2;
-    ctrl->GetSelection( &pos1, &pos2 );
+    unsigned long pos1, pos2;
+    ctrl->GetSelection( reinterpret_cast<long *>(&pos1), reinterpret_cast<long *>(&pos2) );
     if( pos2 > pos1 )
     {
         int nbr = expansion.size();
@@ -1810,8 +1809,8 @@ void GameView::DeleteSelection( wxRichTextCtrl *ctrl )
 {
     unsigned long pos = ctrl->GetInsertionPoint();
     //unsigned long loc;
-    long pos1, pos2;
-    ctrl->GetSelection( &pos1, &pos2 );
+    unsigned long pos1, pos2;
+    ctrl->GetSelection(reinterpret_cast<long *>(&pos1), reinterpret_cast<long *>(&pos2));
     ctrl->SetSelection(pos,pos);
     int nbr = expansion.size();
     int found=0;

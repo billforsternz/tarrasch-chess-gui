@@ -460,7 +460,7 @@ void CreateDatabaseDialog::OnAppendDatabase()
                 std::string desc2("Reading file #");
                 char buf[80];
                 sprintf( buf, "%d of %d", i+1, cnt );
-                desc2 += buf;
+                desc += buf;
                 ProgressBar progress_bar2( title2, desc2, true, this, ifile );
                 uint32_t begin = BinDbGetGamesSize();
                 PgnRead pgn('B',&progress_bar2);

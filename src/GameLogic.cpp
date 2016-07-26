@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include <stdlib.h>
 #include <time.h>
 #include "wx/wx.h"
@@ -428,7 +427,7 @@ void GameLogic::CmdSwapSides()
         wxString temp                   = objs.repository->player.m_black;
         objs.repository->player.m_black = objs.repository->player.m_white;
         objs.repository->player.m_white = temp;
-        chess_clock.Swap( glc.human_is_white, cr.white );
+        chess_clock.Swap( glc.human_is_white );
         LabelPlayers();
         if( last_move )
         {
@@ -541,9 +540,9 @@ void GameLogic::CmdFileOpen()
         fd.SetDirectory(dir);
         if( wxID_OK == fd.ShowModal() )
         {
-            wxString dir;
-            wxFileName::SplitPath( fd.GetPath(), &dir, NULL, NULL );
-            objs.repository->nv.m_doc_dir = dir;
+            wxString dir2;
+            wxFileName::SplitPath( fd.GetPath(), &dir2, NULL, NULL );
+            objs.repository->nv.m_doc_dir = dir2;
             wxString wx_filename = fd.GetPath();
             std::string filename( wx_filename.c_str() );
             CmdFileOpenInner( filename );
@@ -672,13 +671,13 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
 
 bool GameLogic::CmdUpdateNextGame()
 {
-    size_t nbr = gc_pgn.gds.size();
+    int nbr = gc_pgn.gds.size();
     return( gc_pgn.gds.size()>1 && file_game_idx!=-1 && 0<=file_game_idx+1 && file_game_idx+1<nbr );
 }
 
 bool GameLogic::CmdUpdatePreviousGame()
 {
-    size_t nbr = gc_pgn.gds.size();
+    int nbr = gc_pgn.gds.size();
     return( gc_pgn.gds.size()>1 && file_game_idx!=-1 && 0<=file_game_idx-1 && file_game_idx-1<nbr );
 }
 
@@ -791,7 +790,7 @@ void trim( std::string &s )
 void GameLogic::PutBackDocument()
 {
 	cprintf( "PutBackDocument 0\n" );
-    for( int i=0; i<gc_pgn.gds.size(); i++ )
+    for( size_t i=0; i<gc_pgn.gds.size(); i++ )
     {
         smart_ptr<ListableGame> smp = gc_pgn.gds[i];
         if( smp->GetGameBeingEdited() == gd.game_being_edited && (gd.game_being_edited!=0) )
@@ -807,7 +806,7 @@ void GameLogic::PutBackDocument()
             return;
         }
     }
-    for( int i=0; i<gc_clipboard.gds.size(); i++ )
+    for( size_t i=0; i<gc_clipboard.gds.size(); i++ )
     {
         smart_ptr<ListableGame> smp = gc_clipboard.gds[i];
         if( smp->GetGameBeingEdited() == gd.game_being_edited && (gd.game_being_edited!=0)  )
@@ -825,14 +824,14 @@ void GameLogic::PutBackDocument()
 
 void GameLogic::IndicateNoCurrentDocument()
 {
-    for( int i=0; i<gc_pgn.gds.size(); i++ )
+    for( size_t i=0; i<gc_pgn.gds.size(); i++ )
     {
         smart_ptr<ListableGame> smp = gc_pgn.gds[i];
         if( smp->GetGameBeingEdited() == gd.game_being_edited )
              smp->SetGameBeingEdited(0);
         smp->SetSelected(false);
     }
-    for( int i=0; i<gc_clipboard.gds.size(); i++ )
+    for( size_t i=0; i<gc_clipboard.gds.size(); i++ )
     {
         smart_ptr<ListableGame> smp = gc_clipboard.gds[i];
         if( smp->GetGameBeingEdited() == gd.game_being_edited )
@@ -1000,7 +999,7 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req, PatternParamete
             {
                 objs.log->SaveGame(&gd,editing_log);
                 //objs.session->SaveGame(&gd);        //careful...
-                GameDocument temp = gd;
+                GameDocument temp2 = gd;
                 GameDocument new_gd;
                 PutBackDocument();
                 if( dialog.LoadGameTwo(new_gd) )
@@ -1009,7 +1008,7 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req, PatternParamete
                     tabs->SetInfile(false);
                     ShowNewDocument();
                 }
-                objs.session->SaveGame(&temp);      // ...modify session only after loading old game
+                objs.session->SaveGame(&temp2);      // ...modify session only after loading old game
             }
             atom.StatusUpdate();
         }
@@ -1296,14 +1295,14 @@ void GameLogic::FullUndo( GAME_STATE game_state )
                 white_millisecs_time = engine_millisecs_time_start;
                 black_millisecs_time = human_millisecs_time_start;
             }
-            thc::ChessRules cr;
-            std::string move_txt;
-            gd.GetSummaryMove( cr, move_txt );
-            if( !found || move_txt=="" )
+            thc::ChessRules cr2;
+            std::string move_txt2;
+            gd.GetSummaryMove( cr2, move_txt2 );
+            if( !found || move_txt2=="" )
                 reply_to = "Make your move";
             else    
             {
-                reply_to.sprintf( "Reply to %s", move_txt.c_str() );
+                reply_to.sprintf( "Reply to %s", move_txt2.c_str() );
                 if( found && found->game_move.flag_ingame )
                 {
                     if( glc.human_is_white )
@@ -2114,9 +2113,9 @@ void GameLogic::OnIdle()
                         ponder_move = ponder;
                         int ponder_full_move_count = gd.master_position.full_move_count;
                         bool ponder_white_to_play = gd.master_position.WhiteToPlay();
-                        std::string nmove = ponder.NaturalOut(&gd.master_position);
-                        LangOut(nmove);
-                        ponder_nmove_txt.sprintf( "%d%s%s", ponder_full_move_count, ponder_white_to_play?".":"...",nmove.c_str() );
+                        std::string nmove2 = ponder.NaturalOut(&gd.master_position);
+                        LangOut(nmove2);
+                        ponder_nmove_txt.sprintf( "%d%s%s", ponder_full_move_count, ponder_white_to_play?".":"...",nmove2.c_str() );
                     }
                     else
                         release_printf( "pondering failed\n" );
@@ -2790,7 +2789,7 @@ void GameLogic::StatusUpdate( int idx )
         str = "";
         if( file_loaded )
         {
-            for( int i=0; i<gc_pgn.gds.size(); i++ )
+            for( size_t i=0; i<gc_pgn.gds.size(); i++ )
             {
                 ListableGame *ptr = gc_pgn.gds[i].get();
                 uint32_t game_being_edited = ptr->GetGameBeingEdited();
@@ -3410,11 +3409,11 @@ GAME_STATE GameLogic::StartThinking( const thc::Move *human_move )
         if( book_move.Valid() )
         {
             move_after_delay = book_move;
-            unsigned long time = (gd.master_position.WhiteToPlay() ? wtime_ms : btime_ms ); 
+            unsigned long time2 = (gd.master_position.WhiteToPlay() ? wtime_ms : btime_ms ); 
             fake_book_delay = 1000;     // 1 second by default
-            if( time < 4000 )
+            if( time2 < 4000 )
                 fake_book_delay = 200;  // 200mS if less than 4 secs left
-            else if( time < 10000 )
+            else if( time2 < 10000 )
                 fake_book_delay = 500;  // 500mS if less than 10 secs left
             t1_start_delay = GetTickCount();
             ret = FAKE_BOOK_DELAY;
@@ -3683,24 +3682,24 @@ void GameLogic::KibitzUpdate( int idx, const char *txt )
             pv.sprintf( "#%d (depth %d)", mate, depth );
         else
             pv.sprintf( "%1.2f (depth %d)", ((double)score_cp)/100.0, depth );
-        const char *txt = s+strlen(temp);
-        while( *txt == ' ' )
-            txt++;
+        const char *txt2 = s+strlen(temp);
+        while( *txt2 == ' ' )
+            txt2++;
         #define MAX_NBR_KIBITZ_MOVES 13 //14
         for( unsigned int i=0; /*i<MAX_NBR_KIBITZ_MOVES*/; i++ )
         {
             thc::Move move;
             std::string nmove;
-            bool have_move = move.TerseIn( &cr, txt );
+            bool have_move = move.TerseIn( &cr, txt2 );
             if( !have_move )
                 break;
             else
             {
-                txt += 4;
-                if( isascii(*txt) && isalpha(*txt) )   // eg 'Q','R' etc.
-                    txt++;
-                while( *txt == ' ' )
-                    txt++;
+                txt2 += 4;
+                if( isascii(*txt2) && isalpha(*txt2) )   // eg 'Q','R' etc.
+                    txt2++;
+                while( *txt2 == ' ' )
+                    txt2++;
                 var.push_back( move );
                 wxString mv;
                 bool white=cr.WhiteToPlay();
@@ -3717,7 +3716,7 @@ void GameLogic::KibitzUpdate( int idx, const char *txt )
                 }
                 cr.PlayMove( move );
                 pv += mv;
-                if( *txt == '\0' )
+                if( *txt2 == '\0' )
                     break;
             }
         }
@@ -3820,9 +3819,9 @@ void GameLogic::KibitzUpdateEngineToMove( bool ponder, const char *txt )
             pv.sprintf( "#%d (depth %d)", mate, depth );
         else
             pv.sprintf( "%1.2f (depth %d)", ((double)score_cp)/100.0, depth );
-        const char *txt = s+strlen(temp);
-        while( *txt == ' ' )
-            txt++;
+        const char *txt2 = s+strlen(temp);
+        while( *txt2 == ' ' )
+            txt2++;
         for( unsigned int i=0; /*i<MAX_NBR_KIBITZ_MOVES*/; i++ )
         {
             thc::Move move;
@@ -3835,28 +3834,28 @@ void GameLogic::KibitzUpdateEngineToMove( bool ponder, const char *txt )
             }
             else
             {
-                have_move = move.TerseIn( &cr, txt );
-                txt += 4;
-                if( isalpha(*txt) )   // eg 'Q','R' etc.
-                    txt++;
-                while( *txt == ' ' )
-                    txt++;
+                have_move = move.TerseIn( &cr, txt2 );
+                txt2 += 4;
+                if( isalpha(*txt2) )   // eg 'Q','R' etc.
+                    txt2++;
+                while( *txt2 == ' ' )
+                    txt2++;
             }
             if( !have_move )
                 break;
             else
             {
                 wxString mv;
-                bool white=cr.WhiteToPlay();
+                bool white2=cr.WhiteToPlay();
                 nmove = move.NaturalOut(&cr);
                 LangOut(nmove);
-                if( white || i==0 )
-                    mv.sprintf( " %d%s%s", cr.full_move_count, white?".":"...",nmove.c_str() );
+                if( white2 || i==0 )
+                    mv.sprintf( " %d%s%s", cr.full_move_count, white2?".":"...",nmove.c_str() );
                 else
                     mv.sprintf( " %s", nmove.c_str() );
                 cr.PlayMove( move );
                 pv += mv;
-                if( *txt == '\0' )
+                if( *txt2 == '\0' )
                     break;
             }
         }

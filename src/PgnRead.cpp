@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include <random>
 #include <stdio.h>
 #include <string.h>
@@ -266,7 +265,7 @@ void PgnRead::GameParse( std::string &str )
             // Added the following to fix an ugly bug we were going IN_DOLLAR->IN_COMMENT then back to IN_DOLLAR
             //  and never escaping from IN_DOLLAR because save_state was IN_DOLLAR. Yuk. Maybe we should adopt
             //  the main tarrasch pgn parser practice of only going to IN_COMMENT and IN_DOLLAR from BETWEEN_MOVES
-            state = (save_state==IN_DOLLAR?BETWEEN_MOVES:save_state);
+            state = ((save_state==IN_DOLLAR||save_state==MOVE_NUMBER)?BETWEEN_MOVES:save_state);
         }
         else if( ch == '$' && (
                                 state!=IN_COMMENT &&
@@ -361,23 +360,20 @@ void PgnRead::GameParse( std::string &str )
                 {
                     if( ch=='.' || ch==' ' || ch=='\t' || ch=='\n' )
                     {
-                        if( len > 0 ) // only once we have some digits
+                        buf[len] = '\0';
+                        len = 0;
+                        if( TestResult(buf) )
+                            state = NORMAL_EXIT;
+                        else if( (move_number=atoi(buf)) > 0 )
                         {
-                            buf[len] = '\0';
-                            len = 0;
-                            if( TestResult(buf) )
-                                state = NORMAL_EXIT;
-                            else if( (move_number=atoi(buf)) > 0 )
-                            {
-                                state = POST_MOVE_NUMBER;
-                                if( ch == '.' )
-                                    push_back = ch;
-                            }
-                            else
-                            {
-                                Error( "Bad move number" );
-                                state = ERROR_STATE;
-                            }
+                            state = POST_MOVE_NUMBER;
+                            if( ch == '.' )
+                                push_back = ch;
+                        }
+                        else
+                        {
+                            Error( "Bad move number" );
+                            state = ERROR_STATE;
                         }
                     }
                     else
@@ -1151,6 +1147,7 @@ void PgnRead::FileOver()
 
 void PgnRead::Error( const char *msg )
 {
+    cprintf( "PgnRead::Error(%s)\n", msg );
     #ifdef _DEBUG
     int i;
     char c;
@@ -1180,17 +1177,17 @@ void PgnRead::Error( const char *msg )
 }
 
 
-bool PgnRead::DoMove( bool white, int move_number, char *buf )
+bool PgnRead::DoMove( bool white_, int move_number, char *buf )
 {
     //FILE *debug=debug_log_file();
-    //fprintf( debug, "** DoMove( white=%s, move_number=%d, buf=%s)\n", white?"true":"false", move_number, buf );
+    //fprintf( debug, "** DoMove( white=%s, move_number=%d, buf=%s)\n", white_?"true":"false", move_number, buf );
     STACK_ELEMENT *n;
     n = &stack_array[stack_idx];
     thc::Move terse;
     char buf2[FIELD_BUFLEN+10];
     thc::Move move;
     int nbr_moves = (move_number-1)*2;
-    if( !white )
+    if( !white_ )
         ++nbr_moves;
     bool okay = false;
     //bool dbg_trigger=false;
@@ -1204,8 +1201,8 @@ bool PgnRead::DoMove( bool white, int move_number, char *buf )
 #if 1
     if( nbr_moves > n->nbr_moves )
     {
-        Error( white ? "White move synchronisation"
-                     : "Black move synchronisation" );
+        Error( white_ ? "White move synchronisation"
+                      : "Black move synchronisation" );
     }
     else
     {
@@ -1215,9 +1212,9 @@ bool PgnRead::DoMove( bool white, int move_number, char *buf )
             //fprintf( debug, "** nbr_moves=%d < n->nbr_moves=%d\n", nbr_moves, n->nbr_moves );
             //dbg_trigger=true;
             //fprintf( debug_log_file(), "\nnbr_moves=%d, node_idx=%d\n", nbr_moves, node_idx );
-            const char *fen = fen_flag ? this->fen : NULL;
-            if( fen && *fen )
-                chess_rules.Forsyth( fen );
+            const char *fen2 = fen_flag ? this->fen : NULL;
+            if( fen2 && *fen2 )
+                chess_rules.Forsyth( fen2 );
             else
             {
                 thc::ChessRules temp;
@@ -1274,8 +1271,8 @@ bool PgnRead::DoMove( bool white, int move_number, char *buf )
         okay = move.NaturalInFast( &chess_rules, buf2 );
         if( !okay )
         {
-            Error( white ? "Cannot convert white terse move"
-                         : "Cannot convert black terse move" );
+            Error( white_ ? "Cannot convert white terse move"
+                          : "Cannot convert black terse move" );
         }
         else
         {

@@ -4,13 +4,12 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "wx/wx.h"
 #include "GameLifecycle.h"
 
-bool GameLifecycle::CanHumanClaimDraw( GAME_RESULT &result )
+bool GameLifecycle::CanHumanClaimDraw( GAME_RESULT &result_ )
 {
-    result = RESULT_DRAW_AGREED;
+    result_ = RESULT_DRAW_AGREED;
     return true;
 }
 

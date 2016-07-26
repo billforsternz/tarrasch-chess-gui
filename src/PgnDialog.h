@@ -38,8 +38,7 @@ public:
         GamesCache  *gc_clipboard,
         wxWindowID  id,
         const wxPoint& pos = wxDefaultPosition,
-        const wxSize& size = wxDefaultSize,
-        long style = wxCAPTION|wxRESIZE_BORDER|wxSYSTEM_MENU|wxCLOSE_BOX
+        const wxSize& size = wxDefaultSize
     );
     
     // Overrides

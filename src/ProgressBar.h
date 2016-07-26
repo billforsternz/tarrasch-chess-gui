@@ -206,11 +206,11 @@ public:
                                     (abortable ? wxPD_CAN_ABORT : 0)+
                                     wxPD_ESTIMATED_TIME );
             }
-            else if( progress  )
+            else if( progress )
             {
                 wxString wxmsg( s.c_str() );
                 if( progress->CanAcceptFocus() )
-                    progress->SetFocus();
+                   progress->SetFocus();
                 abort = !progress->Update( permill>1000 ? 1000 : permill, wxmsg );
                 old_permill = permill;
             }

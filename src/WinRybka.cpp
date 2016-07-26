@@ -4,7 +4,6 @@
  *  Licence: See licencing information in thc::ChessPosition.cpp
  *  Copyright 2010, Triple Happy Ltd.  All rights reserved.
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include <stdio.h>
 #include "Portability.h"
 
@@ -141,7 +140,7 @@ const char *str_pattern_smart( const char *str, const char *pattern );
 
 static void ErrorMessage( const char *filename_uci_exe, char *str )  //display detailed error info
 {
-    TCHAR *msg;
+    TCHAR *msg;   // wide characters
     FormatMessage(
         FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
         NULL,
@@ -152,7 +151,8 @@ static void ErrorMessage( const char *filename_uci_exe, char *str )  //display d
         NULL
     );
 
-    // Convert TCHAR* to char*  
+    // Convert TCHAR* to char*
+    TCHAR *msg_save = msg;
     char buf[1024];
     char *msg2 = buf;
     for( int count=0; count<sizeof(buf)-2 && *msg; count++ )
@@ -166,7 +166,7 @@ static void ErrorMessage( const char *filename_uci_exe, char *str )  //display d
     wxString caption;
     caption = "Error running UCI engine";
     wxMessageBox( detail, caption, wxOK|wxICON_ERROR );
-    LocalFree(msg);
+    LocalFree(msg_save);
 }
 
 // This was picked up from Stackoverflow - yet another stopgap solution to various
@@ -228,7 +228,7 @@ Rybka::Rybka( const char *filename_uci_exe )
     {
         DWORD program_type;
         BOOL is_exe;
-		is_exe = GetBinaryType(/*filename_uci_exe */convertCharArrayToLPCWSTR(filename_uci_exe), &program_type );
+		is_exe = GetBinaryType(convertCharArrayToLPCWSTR(filename_uci_exe), &program_type );
         if( is_exe && program_type==SCS_64BIT_BINARY )
         {
             wxString caption( "Error running UCI engine" );
@@ -285,11 +285,11 @@ Rybka::Rybka( const char *filename_uci_exe )
     {
         okay = true;
         suspended = false;
-        dbg_printf( "Chess engine pid = %d\n", pi.dwProcessId );
+        cprintf( "Chess engine pid = %d\n", pi.dwProcessId );
         if( ghJob )
         {
             if( 0 == AssignProcessToJobObject(ghJob,pi.hProcess) )
-                dbg_printf( "Could not AssignProcessToObject" );
+                cprintf( "Could not AssignProcessToObject" );
         }
     }
 }
@@ -413,7 +413,7 @@ void Rybka::StartThinking( bool ponder, thc::ChessPosition &pos, const char *for
 
 bool Rybka::Ponderhit( thc::ChessPosition &pos )
 {
-    bool okay = false;
+    bool ok = false;
     release_printf( "Ponderhit\n" );
     if( gbl_state==SEND_PLAY_ENGINE1 ||
         gbl_state==SEND_PLAY_ENGINE2 ||
@@ -424,14 +424,14 @@ bool Rybka::Ponderhit( thc::ChessPosition &pos )
         gbl_state == WAIT_EVALUATION
       )
     {
-        okay = true;
+        ok = true;
         pos_engine_to_move = pos;
         send_stop = false;
         send_ponderhit = true;
         release_printf( "Ponderhit inside\n" );
         Run();
     }
-    return okay;
+    return ok;
 }
 
 void Rybka::MoveNow()
@@ -582,16 +582,16 @@ void Rybka::Stop()
         NewState( "Stop()", SEND_QUIT_1 );
         unsigned long base_time = GetTickCount();	
         unsigned long elapsed_time_changed=0;
-        bool first=true;
+        bool first_time=true;
         for( unsigned long i=0; true /*i<10000*/; i++ )
         {
             bool running = Run();
             unsigned long now_time = GetTickCount();	
             unsigned long elapsed_time = now_time-base_time;
-            if( first || elapsed_time!=elapsed_time_changed )
+            if( first_time || elapsed_time!=elapsed_time_changed )
                 release_printf( "Waiting for engine to die: running=%s, elapsed_time=%lu, loops=%lu\n", running?"true":"false", elapsed_time, i );
             elapsed_time_changed = elapsed_time;
-            first = false;
+            first_time = false;
             if( !running )
                 break;
             if( elapsed_time > 20000 )   // 20 seconds
@@ -657,7 +657,7 @@ bool Rybka::Run()
             WriteFile(write_stdin,read_ptr,strlen(read_ptr),&temp,NULL); //send it to stdin
             WriteFile(write_stdin,"\r\n",2,&temp,NULL); //send it to stdin
             if( debug_trigger )
-                dbg_printf("sending %s\n", read_ptr );
+                cprintf("sending %s\n", read_ptr );
             read_ptr = NULL;
             #else
             bzero(buf);
@@ -1238,8 +1238,8 @@ void Rybka::line_out( const char *s )
                         cr.PlayMove(move);
                         p += strlen(temp);
                         thc::Move ponder;
-                        bool okay = ponder.TerseIn(&cr,p);
-                        if( okay )
+                        bool ok = ponder.TerseIn(&cr,p);
+                        if( ok )
                         {
                             gbl_ponder = ponder;
                             ponder_received = true;
@@ -1567,10 +1567,10 @@ const char *str_pattern_smart( const char *str, const char *pattern )
         bool found_token_in_patterns=false;
         for(;;)
         {
-            char *dst = buf_pattern;
+            char *dst2 = buf_pattern;
             for( int i=0; i<sizeof(buf_pattern)-2; i++ )
             {
-                *dst++ = *pattern++;
+                *dst2++ = *pattern++;
                 c = *pattern;
                 if( c=='*' || c=='-' || c=='|' || c=='\0' )
                 {
@@ -1579,7 +1579,7 @@ const char *str_pattern_smart( const char *str, const char *pattern )
                     break;
                 }
             }
-            *dst = '\0';
+            *dst2 = '\0';
             bool match;
             match = (0 == _strcmpi(buf_pattern,buf_str));
             if( match )

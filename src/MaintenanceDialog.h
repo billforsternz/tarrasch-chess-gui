@@ -88,12 +88,6 @@ public:
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_1
     void OnMaintenanceSpeed( wxCommandEvent& event );
     
-    // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_2
-    void OnMaintenanceCompress( wxCommandEvent& event );
-    
-    // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_3
-    void OnMaintenanceDecompress( wxCommandEvent& event );
-    
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_4
     void OnMaintenanceVerify( wxCommandEvent& event );
     

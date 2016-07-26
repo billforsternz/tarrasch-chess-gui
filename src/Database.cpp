@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include <stdio.h>
 #include <stdlib.h>
 #include <algorithm>
@@ -161,17 +160,12 @@ bool Database::IsOperational( std::string &error_msg )
     return operational;
 }
 
-int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr )
+// SetDbPosition() no longer sets the position! - requires a little bit of refactoring
+int Database::SetDbPosition( DB_REQ db_req_ )
 {
-    std::string empty;
-    return SetDbPosition( db_req, cr, empty );
-}
-
-int Database::SetDbPosition( DB_REQ db_req, thc::ChessRules &cr, std::string &player_name )
-{
-    this->db_req = db_req;
+    this->db_req = db_req_;
     extern void BinDbDatabaseInitialSort( std::vector< smart_ptr<ListableGame> > &games, bool sort_by_player_name );
-    BinDbDatabaseInitialSort( objs.db->tiny_db.in_memory_game_cache, db_req == REQ_PLAYERS );
+    BinDbDatabaseInitialSort( objs.db->tiny_db.in_memory_game_cache, db_req_==REQ_PLAYERS );
 	int nbr = tiny_db.in_memory_game_cache.size();
     if( nbr )
     {
@@ -237,9 +231,7 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGam
 // Returns row
 int Database::FindPlayer( std::string &name, std::string &current, int start_row, bool white )
 {
-    bool okay = true;
-    int retval = -1;                               
-    int row = 0;
+    unsigned int row = 0;
     std::string input(name);
     std::transform(input.begin(), input.end(), input.begin(), ::tolower);
     std::transform(current.begin(), current.end(), current.begin(), ::tolower);

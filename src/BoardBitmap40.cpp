@@ -5,7 +5,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "BoardBitmap40.h"
 #include "bitmaps/chess_board_bitmap-40.xpm"
 

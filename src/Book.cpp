@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -725,7 +724,7 @@ void Book::GameBegin()
     chess_rules = temp;    // init
     nbr_games++;
     if( (nbr_games%10) == 0 )
-        dbg_printf( "%d games\n", nbr_games );
+        cprintf( "%d games\n", nbr_games );
 }
 
 Book::STATE Book::Push( Book::STATE in )
@@ -773,6 +772,7 @@ void Book::FileOver()
 
 void Book::Error( const char *msg )
 {
+	cprintf( "Book::Error(%s)\n", msg );
     #ifdef _DEBUG
     int i;
     char c;
@@ -810,10 +810,10 @@ void Book::FatalError( const char *msg )
     #endif
 } */
 
-bool Book::DoMove( bool white, int move_number, char *buf )
+bool Book::DoMove( bool white_, int move_number, char *buf )
 {
     #ifdef REGENERATE
-    if( move_number==1 && white )
+    if( move_number==1 && white_ )
     {
         fprintf( file_regen, "*\n\n[White \"Anon\"]\n" );
         fprintf( file_regen, "[Black \"Anon\"]\n" );
@@ -821,26 +821,26 @@ bool Book::DoMove( bool white, int move_number, char *buf )
     }
     if( move_number < 21 )
     {
-        if( white )
+        if( white_ )
             fprintf( file_regen, "%d.", move_number );
         fprintf( file_regen, "%s ", buf );
     }
     #endif
     //FILE *debug=debug_log_file();
-    //fprintf( debug, "** DoMove( white=%s, move_number=%d, buf=%s)\n", white?"true":"false", move_number, buf );
+    //fprintf( debug, "** DoMove( white=%s, move_number=%d, buf=%s)\n", white_?"true":"false", move_number, buf );
     STACK_ELEMENT *n;
     n = &stack_array[stack_idx];
     thc::Move terse;
     char buf2[BOOK_BUFLEN+10];
     thc::Move move;
     int nbr_moves = (move_number-1)*2;
-    if( !white )
+    if( !white_ )
         ++nbr_moves;
     bool okay = false;
     //bool dbg_trigger=false;
     if( nbr_moves > n->nbr_moves )
     {
-        Error( white ? "White move synchronisation"
+        Error( white_ ? "White move synchronisation"
                      : "Black move synchronisation" );
     }
     else
@@ -851,9 +851,9 @@ bool Book::DoMove( bool white, int move_number, char *buf )
             //fprintf( debug, "** nbr_moves=%d < n->nbr_moves=%d\n", nbr_moves, n->nbr_moves );
             //dbg_trigger=true;
             //fprintf( debug_log_file(), "\nnbr_moves=%d, node_idx=%d\n", nbr_moves, node_idx );
-            const char *fen = fen_flag ? this->fen : NULL;
-            if( fen && *fen )
-                chess_rules.Forsyth( fen );
+            const char *fen_ = fen_flag ? this->fen : NULL;
+            if( fen_ && *fen_ )
+                chess_rules.Forsyth( fen_ );
             else
             {
                 thc::ChessRules temp;
@@ -882,7 +882,7 @@ bool Book::DoMove( bool white, int move_number, char *buf )
         okay = move.NaturalIn( &chess_rules, buf2 );
         if( !okay )
         {
-            Error( white ? "Cannot convert white terse move"
+            Error( white_ ? "Cannot convert white terse move"
                          : "Cannot convert black terse move" );
         }
         else
@@ -924,7 +924,7 @@ bool Book::DoMove( bool white, int move_number, char *buf )
             }
             if( !okay )
             {
-                Error( white ? "Cannot play white terse move"
+                Error( white_ ? "Cannot play white terse move"
                              : "Cannot play black terse move" );
             }
             else
@@ -1016,11 +1016,11 @@ bool Book::Compile( wxString &error_msg, wxString &compile_msg, wxString &pgn_fi
                 wxString label = predefined_labels[i];
                 ui = label.Len();
                 fwrite( &ui, sizeof(ui), 1, outfile );
-                fwrite( (const char *)label.c_str(), label.Len(), 1, outfile );   //!@#$
-                wxString fen = predefined_fens[i];
-                ui = fen.Len();
+                fwrite( (const char*)label.c_str(), label.Len(), 1, outfile );
+                wxString sfen = predefined_fens[i];
+                ui = sfen.Len();
                 fwrite( &ui, sizeof(ui), 1, outfile );
-                fwrite( (const char *)fen.c_str(), fen.Len(), 1, outfile );       //!@#$
+                fwrite( (const char*)sfen.c_str(), sfen.Len(), 1, outfile );
             }
             thc::ChessRules cr2;
             for( int i=0; i<BOOK_HASH_NBR; i++ )
@@ -1199,13 +1199,13 @@ bool Book::LoadCompiled( wxString &error_msg, wxString &pgn_compiled_file )
             // Read a hash idx and a non-zero number of BookPositions for that hash idx
             unsigned short hash;
             fread( &hash, sizeof(hash), 1, infile );
-            unsigned int ui;
-            fread( &ui, sizeof(ui), 1, infile );
-            if( ui == 0 )
+            unsigned int len;
+            fread( &len, sizeof(len), 1, infile );
+            if( len == 0 )
                 break;  // zero len vector terminates
 
             // Loop adding BookPositions
-            for( unsigned int i=0; i<ui; i++ )
+            for( unsigned int i=0; i<len; i++ )
             {
                 BookPosition       bp;  
                 BookPositionInFile bpif;

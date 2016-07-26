@@ -24,8 +24,6 @@
  */
 
 // Don't reproduce this section
-#define _CRT_SECURE_NO_DEPRECATE
-#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1293,10 +1291,10 @@ std::string ChessPosition::ForsythPublish()
         str += '-';
     else
     {
-        char file = 'a'+(char)save_file;
-        str += file;
-        char rank = '1'+(char)save_rank;
-        str += rank;
+        char file2 = 'a'+(char)save_file;
+        str += file2;
+        char rank2 = '1'+(char)save_rank;
+        str += rank2;
     }
 
     // Counts
@@ -3302,9 +3300,9 @@ bool ChessRules::Evaluate( MOVELIST *p, TERMINAL &score_terminal )
 void ChessRules::Transform()
 {
     Toggle();
-    Square wking_square = (Square)0;           
-    Square bking_square = (Square)0;           
-    Square enpassant_target = (Square)this->enpassant_target;
+    Square wking_square_ = (Square)0;           
+    Square bking_square_ = (Square)0;           
+    Square enpassant_target_ = (Square)this->enpassant_target;
 
     // swap wking <-> bking
     int tmp = wking;
@@ -3325,17 +3323,17 @@ void ChessRules::Transform()
         {
             src = SQ(file,r1);
             dst = SQ(file,r2);
-            if( wking_square == src )
-                bking_square = dst;
-            if( bking_square == src )
-                wking_square = dst;
-            if( enpassant_target == src )
-                enpassant_target = dst;
+            if( wking_square_ == src )
+                bking_square_ = dst;
+            if( bking_square_ == src )
+                wking_square_ = dst;
+            if( enpassant_target_ == src )
+                enpassant_target_ = dst;
         }
     }
-    this->wking_square      = wking_square;
-    this->bking_square      = bking_square;
-    this->enpassant_target  = enpassant_target;
+    this->wking_square      = wking_square_;
+    this->bking_square      = bking_square_;
+    this->enpassant_target  = enpassant_target_;
     
     // Loop through half the board
     for( file='a'; file<='h'; file++ )
@@ -3345,7 +3343,7 @@ void ChessRules::Transform()
             src = SQ(file ,r1);
             dst = SQ(file ,r2);
             char from = squares[src];
-            char tmp  = squares[dst];
+            char tmpc = squares[dst];
             for( int i=0; i<2; i++ )
             {
                 switch( from )
@@ -3364,7 +3362,7 @@ void ChessRules::Transform()
                     case 'p':   squares[dst] = 'P';   break;
                     default:    squares[dst] = from;
                 }
-                from = tmp;
+                from = tmpc;
                 dst  = src;
             }
         }
@@ -4236,7 +4234,7 @@ static int black_pieces[]=
  ****************************************************************************/
 void ChessEvaluation::Planning()
 {    
-    Square square, weaker_king, bonus_square;
+    Square weaker_king, bonus_square;
     char piece;
     int score_black_material = 0;
     int score_white_material = 0;
@@ -4246,7 +4244,7 @@ void ChessEvaluation::Planning()
     // Get material for both sides
     int score_black_pieces = 0;
     int score_white_pieces = 0;
-    for( square=a8; square<=h1; ++square )
+    for( Square square=a8; square<=h1; ++square )
     {
         piece = squares[square];
         score_black_material += black_material[ piece ];
@@ -4370,7 +4368,6 @@ void ChessEvaluation::Planning()
 void ChessEvaluation::EvaluateLeaf( int &material, int &positional )
 {    
 	//DIAG_evaluate_leaf_count++;	
-    Square square;
     char   piece;
     int file;
     int bonus = 0;
@@ -4457,7 +4454,7 @@ const int MATERIAL_MIDDLE  = (500 + ((8*10+4*30+2*50+90)*1)/3);
     int score_white_pieces = 0;
 
     // a8->h8    
-    for( square=a8; square<=h8; ++square )
+    for( Square square=a8; square<=h8; ++square )
     {
         piece = squares[square];
         score_black_material += black_material[ piece ];
@@ -4537,7 +4534,7 @@ const int MATERIAL_MIDDLE  = (500 + ((8*10+4*30+2*50+90)*1)/3);
     unsigned int next_passer_mask = 0;
     unsigned int passer_mask = 0;
     unsigned int three_files = 0x1c0;   // 1 1100 0000
-    for( square=a7; square<=h7; ++square )
+    for( Square square=a7; square<=h7; ++square )
     {
         piece = squares[square];
         score_black_material += black_material[ piece ];
@@ -4627,7 +4624,7 @@ const int MATERIAL_MIDDLE  = (500 + ((8*10+4*30+2*50+90)*1)/3);
     // a6->h6
     unsigned int file_mask = 0x80;  // 0 1000 0000
     three_files = 0x1c0;            // 1 1100 0000
-    for( square=a6; square<=h6; ++square )
+    for(Square square=a6; square<=h6; ++square )
     {
         piece = squares[square];
         score_black_material += black_material[ piece ];
@@ -4715,7 +4712,7 @@ const int MATERIAL_MIDDLE  = (500 + ((8*10+4*30+2*50+90)*1)/3);
     // a5->h5;
     file_mask   = 0x80;             // 0 1000 0000
 //  three_files = 0x1c0;            // 1 1100 0000
-    for( square=a5; square<=h5; ++square )
+    for( Square square=a5; square<=h5; ++square )
     {
         piece = squares[square];
         score_black_material += black_material[ piece ];
@@ -4808,7 +4805,7 @@ const int MATERIAL_MIDDLE  = (500 + ((8*10+4*30+2*50+90)*1)/3);
     next_passer_mask = 0;
     passer_mask = 0;
     three_files = 0x1c0;   // 1 1100 0000
-    for( square=a2; square<=h2; ++square )
+    for( Square square=a2; square<=h2; ++square )
     {
         piece = squares[square];
         score_black_material += black_material[ piece ];
@@ -4898,7 +4895,7 @@ const int MATERIAL_MIDDLE  = (500 + ((8*10+4*30+2*50+90)*1)/3);
     // a3->h3
     file_mask = 0x80;       // 0 1000 0000
     three_files = 0x1c0;    // 1 1100 0000
-    for( square=a3; square<=h3; ++square )
+    for( Square square=a3; square<=h3; ++square )
     {
         piece = squares[square];
         score_black_material += black_material[ piece ];
@@ -4986,7 +4983,7 @@ const int MATERIAL_MIDDLE  = (500 + ((8*10+4*30+2*50+90)*1)/3);
     // a4->h4
     file_mask   = 0x80;             // 0 1000 0000
 //  three_files = 0x1c0;            // 1 1100 0000
-    for( square=a4; square<=h4; ++square )
+    for( Square square=a4; square<=h4; ++square )
     {
         piece = squares[square];
         score_black_material += black_material[ piece ];
@@ -5076,7 +5073,7 @@ const int MATERIAL_MIDDLE  = (500 + ((8*10+4*30+2*50+90)*1)/3);
     }
 
     // a1->h1
-    for( square=a1; square<=h1; ++square )
+    for( Square square=a1; square<=h1; ++square )
     {
         piece = squares[square];
         score_black_material += black_material[ piece ];
@@ -5386,9 +5383,9 @@ const int MATERIAL_MIDDLE  = (500 + ((8*10+4*30+2*50+90)*1)/3);
             while( p > black_pawns_buf )
             {
                 p--;
-                Square square = *p;
-                int pfile2 = IFILE(square);
-                int prank2 = IRANK(square);
+                Square square2 = *p;
+                int pfile2 = IFILE(square2);
+                int prank2 = IRANK(square2);
                 if( (prank2==prank1+1 || prank2+1==prank1) &&
                     (pfile2==pfile1+1 || pfile2+1==pfile1)
                   )
@@ -5461,9 +5458,9 @@ const int MATERIAL_MIDDLE  = (500 + ((8*10+4*30+2*50+90)*1)/3);
             while( p > white_pawns_buf )
             {
                 p--;
-                Square square = *p;
-                int pfile2 = IFILE(square);
-                int prank2 = IRANK(square);
+                Square square2 = *p;
+                int pfile2 = IFILE(square2);
+                int prank2 = IRANK(square2);
                 if( (prank2==prank1+1 || prank2+1==prank1) &&
                     (pfile2==pfile1+1 || pfile2+1==pfile1)
                   )
@@ -6212,10 +6209,10 @@ int ChessEngine::Score( MOVELIST &ml, int &besti )
     return( score );
 }
 
-const char *indent( int recurse_level )
+const char *indent( int recurse_level_ )
 {
     static const char *buf = "                                               ";
-    int nbr_spaces = recurse_level*2;
+    int nbr_spaces = recurse_level_*2;
     int len = (int)strlen(buf);
     int offset = len>=nbr_spaces ? len-nbr_spaces : 0;
     return buf + offset;
@@ -6278,7 +6275,7 @@ int ChessEngine::ScoreWhiteToMove( MOVELIST &ml, int &besti, int black_mobility 
 		{
             #ifdef VARIABLE_PLY
             if( gbl_stop )
-                dbg_printf("Stop command received\n" );
+                cprintf("Stop command received\n" );
             #endif
 			int material, positional;
 			EvaluateLeaf(material,positional);
@@ -6479,7 +6476,7 @@ int ChessEngine::ScoreBlackToMove( MOVELIST &ml, int &besti, int white_mobility 
 		{
             #ifdef VARIABLE_PLY
             if( gbl_stop )
-                dbg_printf("Stop command received\n" );
+                cprintf("Stop command received\n" );
             #endif
 			int material, positional;
 			EvaluateLeaf(material,positional);
@@ -6578,7 +6575,7 @@ void ChessEngine::TestGame()
     std::string nmove;
     Move move;
     const char *s, *txt;
-    const char *moves[] =
+    const char *moves_[] =
     {
         "B Nf3",      "H e5",
         "E Nxe5",     "H Nc6",
@@ -6614,7 +6611,7 @@ void ChessEngine::TestGame()
     unsigned long before = GetTickCount();
     for(;;)
     {
-        txt = moves[idx++];
+        txt = moves_[idx++];
         if( txt == NULL )
         {
             complete = true;
@@ -6624,8 +6621,8 @@ void ChessEngine::TestGame()
         txt += 2;
         if( typ=='B' || typ=='H' )  // book or human move
         {
-            bool okay = move.NaturalIn( this, txt );
-            if( !okay )
+            bool ok = move.NaturalIn( this, txt );
+            if( !ok )
             {
                 cprintf( "Couldn't convert nmove=%s\n", txt );
                 break;
@@ -6845,7 +6842,7 @@ bool Move::NaturalIn( ChessRules *cr, const char *natural_in )
     bool enpassant=false;
     bool kcastling=false;
     bool qcastling=false;
-    Square dst=a8;
+    Square dst_=a8;
     Move *m, *found=NULL;
     char *s;
     char  move[10];
@@ -6970,7 +6967,7 @@ bool Move::NaturalIn( ChessRules *cr, const char *natural_in )
         {
             dst_file = move[len-2];
             dst_rank = move[len-1];
-            dst = SQ(dst_file,dst_rank);
+            dst_ = SQ(dst_file,dst_rank);
         }
         else
             okay = false;
@@ -7037,7 +7034,7 @@ bool Move::NaturalIn( ChessRules *cr, const char *natural_in )
                 if( (default_piece || piece==cr->squares[m->src])  &&
                     src_file  ==   FILE(m->src)       &&
                     src_rank  ==   RANK(m->src)       &&
-                    dst       ==   m->dst
+                    dst_       ==   m->dst
                 )
                 {
                     if( kcastling )
@@ -7068,7 +7065,7 @@ bool Move::NaturalIn( ChessRules *cr, const char *natural_in )
                 if( piece     ==   cr->squares[m->src]  &&
                     src_file  ==   FILE(m->src)         &&
                  /* src_rank  ==   RANK(m->src)  */
-                    dst       ==   m->dst
+                    dst_       ==   m->dst
                 )
                 {
                     found = m;
@@ -7086,7 +7083,7 @@ bool Move::NaturalIn( ChessRules *cr, const char *natural_in )
                 if( piece     ==   cr->squares[m->src]   &&
                  /* src_file  ==   FILE(m->src) */
                     src_rank  ==   RANK(m->src)          &&        
-                    dst       ==   m->dst
+                    dst_       ==   m->dst
                 )
                 {
                     found = m;
@@ -7145,7 +7142,7 @@ bool Move::NaturalIn( ChessRules *cr, const char *natural_in )
             {
                 m = &list.moves[i];
                 if( piece     ==   cr->squares[m->src]          &&
-                    dst       ==   m->dst
+                    dst_       ==   m->dst
                 )
                 {
                     found = m;
@@ -7194,7 +7191,7 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
 {
     bool err = false;
     bool found = false;
-    bool capture = false;
+    bool capture_ = false;
     Move mv;
 
     /*
@@ -7366,7 +7363,7 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
         {
             
             // Piece move
-            const lte **ray_lookup;
+            const lte **ray_lookup = queen_lookup;
             switch( f )
             {
                 case 'O':
@@ -7398,7 +7395,7 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                     f = *natural_in++;
                     if( f == 'x' )
                     {
-                        capture = true;
+                        capture_ = true;
                         f = *natural_in++;
                     }
                     if( 'a'<= f && f<='h' )
@@ -7410,7 +7407,7 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                             mv.dst = SQ(f,r);
                             mv.special = SPECIAL_KING_MOVE;
                             mv.capture = cr->squares[mv.dst];
-                            found = ( capture ? IsBlack(mv.capture) : IsEmptySquare(mv.capture) );
+                            found = ( capture_ ? IsBlack(mv.capture) : IsEmptySquare(mv.capture) );
                         }
                     }
                     break;
@@ -7428,7 +7425,7 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                     char src_rank='\0';
                     if( f == 'x' )
                     {
-                        capture = true;
+                        capture_ = true;
                         f = *natural_in++;
                     }
                     if( '1'<=f && f<='8' )
@@ -7446,11 +7443,11 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                         char g = *natural_in++;
                         if( g == 'x' )
                         {
-                            if( capture )
+                            if( capture_ )
                                 err = true;
                             else
                             {
-                                capture = true;
+                                capture_ = true;
                                 g = *natural_in++;
                             }
                         }
@@ -7476,7 +7473,7 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                             err = true;
                         if( !err )
                         {
-                            if( capture ? IsBlack(cr->squares[mv.dst]) : cr->squares[mv.dst]==' ' )
+                            if( capture_ ? IsBlack(cr->squares[mv.dst]) : cr->squares[mv.dst]==' ' )
                             {
                                 mv.capture = cr->squares[mv.dst];
                                 if( piece == 'N' )
@@ -7488,14 +7485,14 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                                         lte nbr_moves = *ptr++;
                                         while( !found && nbr_moves-- )
                                         {
-                                            Square src = (Square)*ptr++;
-                                            if( cr->squares[src]=='N' )
+                                            Square src_ = (Square)*ptr++;
+                                            if( cr->squares[src_]=='N' )
                                             {
-                                                bool src_file_ok = !src_file || FILE(src)==src_file;
-                                                bool src_rank_ok = !src_rank || RANK(src)==src_rank;
+                                                bool src_file_ok = !src_file || FILE(src_)==src_file;
+                                                bool src_rank_ok = !src_rank || RANK(src_)==src_rank;
                                                 if( src_file_ok && src_rank_ok )
                                                 {
-                                                    mv.src = src;
+                                                    mv.src = src_;
                                                     if( probe == 0 )
                                                         count++;
                                                     else // probe==1 means disambiguate by testing whether move is legal, found will be set if
@@ -7503,10 +7500,10 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                                                     {
                                                         char temp = cr->squares[mv.dst];
                                                         cr->squares[mv.dst] = 'N';  // temporarily make move
-                                                        cr->squares[src] = ' ';
+                                                        cr->squares[src_] = ' ';
                                                         found = !cr->AttackedSquare( cr->wking_square, false ); //bool AttackedSquare( Square square, bool enemy_is_white );
                                                         cr->squares[mv.dst] = temp;  // now undo move
-                                                        cr->squares[src] = 'N';
+                                                        cr->squares[src_] = 'N';
                                                     }
                                                 }
                                             }
@@ -7527,19 +7524,19 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                                             lte ray_len = *ptr++;
                                             while( !found && ray_len-- )
                                             {
-                                                Square src = (Square)*ptr++;
-                                                if( !IsEmptySquare(cr->squares[src]) )
+                                                Square src_ = (Square)*ptr++;
+                                                if( !IsEmptySquare(cr->squares[src_]) )
                                                 {
                                                     // Any piece, friend or enemy must move to end of ray
                                                     ptr += ray_len;
                                                     ray_len = 0;
-                                                    if( cr->squares[src] == piece )
+                                                    if( cr->squares[src_] == piece )
                                                     {
-                                                        bool src_file_ok = !src_file || FILE(src)==src_file;
-                                                        bool src_rank_ok = !src_rank || RANK(src)==src_rank;
+                                                        bool src_file_ok = !src_file || FILE(src_)==src_file;
+                                                        bool src_rank_ok = !src_rank || RANK(src_)==src_rank;
                                                         if( src_file_ok && src_rank_ok )
                                                         {
-                                                            mv.src = src;
+                                                            mv.src = src_;
                                                             if( probe == 0 )
                                                                 count++;
                                                             else // probe==1 means disambiguate by testing whether move is legal, found will be set if
@@ -7716,7 +7713,7 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
         {
             
             // Piece move
-            const lte **ray_lookup;
+            const lte **ray_lookup=queen_lookup;
             switch( f )
             {
                 case 'O':
@@ -7748,7 +7745,7 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                     f = *natural_in++;
                     if( f == 'x' )
                     {
-                        capture = true;
+                        capture_ = true;
                         f = *natural_in++;
                     }
                     if( 'a'<= f && f<='h' )
@@ -7760,7 +7757,7 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                             mv.dst = SQ(f,r);
                             mv.special = SPECIAL_KING_MOVE;
                             mv.capture = cr->squares[mv.dst];
-                            found = ( capture ? IsWhite(mv.capture) : IsEmptySquare(mv.capture) );
+                            found = ( capture_ ? IsWhite(mv.capture) : IsEmptySquare(mv.capture) );
                         }
                     }
                     break;
@@ -7778,7 +7775,7 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                     char src_rank='\0';
                     if( f == 'x' )
                     {
-                        capture = true;
+                        capture_ = true;
                         f = *natural_in++;
                     }
                     if( '1'<=f && f<='8' )
@@ -7796,11 +7793,11 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                         char g = *natural_in++;
                         if( g == 'x' )
                         {
-                            if( capture )
+                            if( capture_ )
                                 err = true;
                             else
                             {
-                                capture = true;
+                                capture_ = true;
                                 g = *natural_in++;
                             }
                         }
@@ -7826,7 +7823,7 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                             err = true;
                         if( !err )
                         {
-                            if( capture ? IsWhite(cr->squares[mv.dst]) : cr->squares[mv.dst]==' ' )
+                            if( capture_ ? IsWhite(cr->squares[mv.dst]) : cr->squares[mv.dst]==' ' )
                             {
                                 mv.capture = cr->squares[mv.dst];
                                 if( piece == 'n' )
@@ -7838,14 +7835,14 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                                         lte nbr_moves = *ptr++;
                                         while( !found && nbr_moves-- )
                                         {
-                                            Square src = (Square)*ptr++;
-                                            if( cr->squares[src]=='n' )
+                                            Square src_ = (Square)*ptr++;
+                                            if( cr->squares[src_]=='n' )
                                             {
-                                                bool src_file_ok = !src_file || FILE(src)==src_file;
-                                                bool src_rank_ok = !src_rank || RANK(src)==src_rank;
+                                                bool src_file_ok = !src_file || FILE(src_)==src_file;
+                                                bool src_rank_ok = !src_rank || RANK(src_)==src_rank;
                                                 if( src_file_ok && src_rank_ok )
                                                 {
-                                                    mv.src = src;
+                                                    mv.src = src_;
                                                     if( probe == 0 )
                                                         count++;
                                                     else // probe==1 means disambiguate by testing whether move is legal, found will be set if
@@ -7877,19 +7874,19 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                                             lte ray_len = *ptr++;
                                             while( !found && ray_len-- )
                                             {
-                                                Square src = (Square)*ptr++;
-                                                if( !IsEmptySquare(cr->squares[src]) )
+                                                Square src_ = (Square)*ptr++;
+                                                if( !IsEmptySquare(cr->squares[src_]) )
                                                 {
                                                     // Any piece, friend or enemy must move to end of ray
                                                     ptr += ray_len;
                                                     ray_len = 0;
-                                                    if( cr->squares[src] == piece )
+                                                    if( cr->squares[src_] == piece )
                                                     {
-                                                        bool src_file_ok = !src_file || FILE(src)==src_file;
-                                                        bool src_rank_ok = !src_rank || RANK(src)==src_rank;
+                                                        bool src_file_ok = !src_file || FILE(src_)==src_file;
+                                                        bool src_rank_ok = !src_rank || RANK(src_)==src_rank;
                                                         if( src_file_ok && src_rank_ok )
                                                         {
-                                                            mv.src = src;
+                                                            mv.src = src_;
                                                             if( probe == 0 )
                                                                 count++;
                                                             else // probe==1 means disambiguate by testing whether move is legal, found will be set if
@@ -7944,8 +7941,8 @@ bool Move::TerseIn( ChessRules *cr, const char *tmove )
                          && 'a'<=tmove[2] && tmove[2]<='h'
                          && '1'<=tmove[3] && tmove[3]<='8' )
     {
-        Square src   = SQ(tmove[0],tmove[1]);
-        Square dst   = SQ(tmove[2],tmove[3]);
+        Square src_   = SQ(tmove[0],tmove[1]);
+        Square dst_   = SQ(tmove[2],tmove[3]);
         char   expected_promotion_if_any = 'Q';
         if( tmove[4] )
         {
@@ -7961,7 +7958,7 @@ bool Move::TerseIn( ChessRules *cr, const char *tmove )
         cr->GenLegalMoveList( &list );
         for( i=0; !okay && i<list.count; i++ )
         {
-            if( list.moves[i].dst==dst && list.moves[i].src==src )
+            if( list.moves[i].dst==dst_ && list.moves[i].src==src_ )
             {
                 switch( list.moves[i].special )
                 {
@@ -8075,9 +8072,9 @@ std::string Move::NaturalOut( ChessRules *cr )
                 m = list.moves[i];
                 str_dst = compare;
             }
-            Square src = m.src;
-            Square dst = m.dst;
-            char t, p = cr->squares[src];
+            Square src_ = m.src;
+            Square dst_ = m.dst;
+            char t, p = cr->squares[src_];
             if( islower(p) )
                 p = (char)toupper(p);
             if( !IsEmptySquare(m.capture) ) // until we did it this way, enpassant was '-' instead of 'x'
@@ -8093,9 +8090,9 @@ std::string Move::NaturalOut( ChessRules *cr )
                     {
                         done = true;
                         if( t == 'x' )
-                            sprintf( nmove, "%cx%c%c", FILE(src),FILE(dst),RANK(dst) );
+                            sprintf( nmove, "%cx%c%c", FILE(src_),FILE(dst_),RANK(dst_) );
                         else
-                            sprintf( nmove, "%c%c",FILE(dst),RANK(dst) );
+                            sprintf( nmove, "%c%c",FILE(dst_),RANK(dst_) );
                         char *s = strchr(nmove,'\0');
                         switch( m.special )
                         {
@@ -8134,9 +8131,9 @@ std::string Move::NaturalOut( ChessRules *cr )
                 case ALG_ND2:
                 {
                     if( t == 'x' )
-                        sprintf( str_dst, "%cx%c%c", p, FILE(dst), RANK(dst) );
+                        sprintf( str_dst, "%cx%c%c", p, FILE(dst_), RANK(dst_) );
                     else
-                        sprintf( str_dst, "%c%c%c", p, FILE(dst), RANK(dst) );
+                        sprintf( str_dst, "%c%c%c", p, FILE(dst_), RANK(dst_) );
                     if( i >= 0 )
                     {
                         if( 0 == strcmp(nmove,compare) )
@@ -8149,9 +8146,9 @@ std::string Move::NaturalOut( ChessRules *cr )
                 case ALG_NBD2:
                 {
                     if( t == 'x' )
-                        sprintf( str_dst, "%c%cx%c%c", p, FILE(src), FILE(dst), RANK(dst) );
+                        sprintf( str_dst, "%c%cx%c%c", p, FILE(src_), FILE(dst_), RANK(dst_) );
                     else
-                        sprintf( str_dst, "%c%c%c%c", p, FILE(src), FILE(dst), RANK(dst) );
+                        sprintf( str_dst, "%c%c%c%c", p, FILE(src_), FILE(dst_), RANK(dst_) );
                     if( i >= 0 )
                     {
                         if( 0 == strcmp(nmove,compare) )
@@ -8164,9 +8161,9 @@ std::string Move::NaturalOut( ChessRules *cr )
                 case ALG_N1D2:
                 {
                     if( t == 'x' )
-                        sprintf( str_dst, "%c%cx%c%c", p, RANK(src), FILE(dst), RANK(dst) );
+                        sprintf( str_dst, "%c%cx%c%c", p, RANK(src_), FILE(dst_), RANK(dst_) );
                     else
-                        sprintf( str_dst, "%c%c%c%c", p, RANK(src), FILE(dst), RANK(dst) );
+                        sprintf( str_dst, "%c%c%c%c", p, RANK(src_), FILE(dst_), RANK(dst_) );
                     if( i >= 0 )
                     {
                         if( 0 == strcmp(nmove,compare) )
@@ -8180,9 +8177,9 @@ std::string Move::NaturalOut( ChessRules *cr )
                 {
                     done = true;
                     if( t == 'x' )
-                        sprintf( nmove, "%c%c%cx%c%c", p, FILE(src), RANK(src), FILE(dst), RANK(dst) );
+                        sprintf( nmove, "%c%c%cx%c%c", p, FILE(src_), RANK(src_), FILE(dst_), RANK(dst_) );
                     else
-                        sprintf( nmove, "%c%c%c%c%c", p, FILE(src), RANK(src), FILE(dst), RANK(dst) );
+                        sprintf( nmove, "%c%c%c%c%c", p, FILE(src_), RANK(src_), FILE(dst_), RANK(dst_) );
                     break;
                 }
             }

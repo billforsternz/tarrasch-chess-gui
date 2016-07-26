@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "wx/wx.h"
 #include "wx/valtext.h"
 #include "wx/valgen.h"
@@ -89,7 +88,7 @@ void PositionDialog::Init()
 }
 
 
-void PositionDialog::Pos2Fen( const thc::ChessPosition& pos, wxString& fen )
+void PositionDialog::Pos2Fen( const thc::ChessPosition& pos, wxString& fen_ )
 {
     const char *src=pos.squares;
     char buf[128];
@@ -190,7 +189,7 @@ void PositionDialog::Pos2Fen( const thc::ChessPosition& pos, wxString& fen )
         ep_buf[1] = '3';
         ep_buf[2] = '\0';
     }
-    fen.sprintf( "%s %c %s %s %d %d", 
+    fen_.sprintf( "%s %c %s %s %d %d", 
             buf,
             pos.white?'w':'b',
             castling,
@@ -883,11 +882,11 @@ void PositionDialog::OnPredefined( wxCommandEvent& WXUNUSED(event) )
         if( txt == labels[i] )
         {
             thc::ChessRules cr;
-            wxString fen = fens[i];
-            if( cr.Forsyth(fen.c_str()) )
+            wxString sfen = fens[i];
+            if( cr.Forsyth(sfen.c_str()) )
             {
                 found = true;
-                this->fen = fen;
+                this->fen = sfen;
                 m_pos = cr;
                 bsc->ClearCustomCursor();
                 WriteToControls();

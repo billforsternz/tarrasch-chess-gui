@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2015, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "CompressMoves.h"
 #include "PackedGame.h"
 
@@ -29,7 +28,7 @@ PackedGame::PackedGame
 {
     char buf[2048];
     bool complete=false;
-    char *ptr;
+    char *ptr=buf;
     for( int attempt=0; !complete && attempt<2; attempt++ )
     {
         ptr = buf;
@@ -273,8 +272,8 @@ void PackedGame::Unpack( std::string &blob )
     int begin_idx = single ? 1+(i-1) : 1+2*(i-1);
     bool bad=false;
     unsigned char c, d;
-    unsigned int end_offset;
-    unsigned int begin_offset;
+    unsigned int end_offset=0;
+    unsigned int begin_offset=0;
     if( single )
     {
         c = fields[begin_idx++];
@@ -303,7 +302,7 @@ void PackedGame::Unpack( Roster &r )
         int end_idx   = single ? 1+i : 1+2*i;
         bool bad=false;
         unsigned char c, d;
-        unsigned int end_offset;
+        unsigned int end_offset=0;
         unsigned int begin_offset=0;
         if( single )
         {

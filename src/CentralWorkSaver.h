@@ -19,7 +19,7 @@ class CentralWorkSaver
 {    
 public:
     CentralWorkSaver() {}
-    void Init( Undo *undo, GameDocument *gd, GamesCache *gc, GamesCache *gc_clipboard ) {this->undo=undo, this->gd=gd; this->gc=gc; this->gc_clipboard=gc_clipboard;}
+    void Init( Undo *undo_, GameDocument *gd_, GamesCache *gc_, GamesCache *gc_clipboard_ ) {this->undo=undo_, this->gd=gd_; this->gc=gc_; this->gc_clipboard=gc_clipboard_;}
     void SetTitle();
     bool FileNew();
     bool FileOpen();

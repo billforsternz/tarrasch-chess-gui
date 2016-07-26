@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "Tabs.h"
 #include "GameLogic.h"
 
@@ -77,7 +76,8 @@ Undo *Tabs::BeginUndo()
 GameDocument *Tabs::Next()
 {
     GameDocument *p = NULL;
-    if( 0<=iter_doc && iter_doc<v.size() )
+    int sz=v.size();
+    if( 0<=iter_doc && iter_doc<sz )
     {
         p = iter_doc==current_idx ? &gl->gd : &v[iter_doc].gd;
     }
@@ -88,7 +88,8 @@ GameDocument *Tabs::Next()
 Undo *Tabs::NextUndo()
 {
     Undo *p = NULL;
-    if( 0<=iter_undo && iter_undo<v.size() )
+    int sz = v.size();
+    if( 0<=iter_undo && iter_undo<sz )
     {
         p = iter_undo==current_idx ? &gl->undo : &v[iter_undo].undo;
     }

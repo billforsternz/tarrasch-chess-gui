@@ -4,8 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
-
 #include <algorithm>
 #include <vector>
 #include <stdlib.h>
@@ -1868,7 +1866,6 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
 bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( PatternMatch &pm, bool &reverse, const char *moves_in, unsigned short &offset_first, unsigned short &offset_last )
 {
     unsigned short offset=0;
-    bool target_white = search_position.white;  // searching for position with white to move?
     QuickGameInit();
     int total_count=30;     // 32 - 2 kings
     for(;;)
@@ -2680,7 +2677,6 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( const std::string &mo
 
 bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( PatternMatch &pm, bool &reverse, const std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last )          // semi fast
 {
-    bool target_white = search_position.white;  // searching for position with white to move?
     int total_count=30;     // 32 - 2 kings
     SlowGameInit();
     int len = moves_in.size();
@@ -2709,7 +2705,6 @@ bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( PatternMatch &
             mv = UncompressSlowMode(code);
             other->fast_mode = false;   // force other side to reset and retry
         }
-        char mover = msi.cr.squares[mv.src];
         msi.cr.PlayMove(mv);
         if( mv.special == thc::SPECIAL_PROMOTION_BISHOP ) // Impose the distinct dark squared bishop = 'd'/'D' convention over the top
         {

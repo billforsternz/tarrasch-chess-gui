@@ -22,7 +22,7 @@ public:
 
     // Get/Set  ticking
     bool GetTicking()         { return ticking; }
-    void SetTicking( bool ticking ) { this->ticking = ticking; }
+    void SetTicking( bool ticking_ ) { this->ticking = ticking_; }
 
     // Get the current displayed time
     bool GetDisplay( wxString &txt, bool expire_show_neg );   // returns bool expired

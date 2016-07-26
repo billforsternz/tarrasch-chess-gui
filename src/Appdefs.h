@@ -12,9 +12,9 @@
 // #define USING_KINGBASE
 #define MASTER_VERSION "V3 Post Beta"
 #ifdef  USING_KINGBASE
-//#define MASTER_VERSION "V3 Beta 2016-07-20-a(k)"  // 'k' indicates default .tdb is kingbase
+//#define MASTER_VERSION "V3 Beta 2016-07-13-a(k)"  // 'k' indicates default .tdb is kingbase
 #else
-//#define MASTER_VERSION "V3 Beta 2016-07-20-a(g)"  // 'g' indicates default .tdb is great players database
+//#define MASTER_VERSION "V3 Beta 2016-07-13-a(g)"  // 'g' indicates default .tdb is great players database
 #endif
 #define DEFAULT_ENGINE "stockfish 7 32bit.exe"
 #define DEFAULT_ENGINE_64 "stockfish 7 x64.exe"
@@ -30,6 +30,7 @@
 // Misc
 #define NBR_KIBITZ_LINES 4
 #define BORDER_COMMON wxBORDER_SUNKEN   //wxBORDER_SIMPLE
+#define UNUSED(x)
 
 //-----------------------------------------------------------------------------
 // Menu item identifiers

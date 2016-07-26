@@ -4,7 +4,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2016, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include <vector>
 #include <set>
 #include <map>
@@ -1029,7 +1028,7 @@ void BinDbShowDebugOrder( const std::vector< smart_ptr<ListableGame> > &gms, con
     }
 }
 
-void BinDbDatabaseInitialSort( std::vector< smart_ptr<ListableGame> > &games, bool sort_by_player_name )
+void BinDbDatabaseInitialSort( std::vector< smart_ptr<ListableGame> > &games_, bool sort_by_player_name )
 {
 
     // Usually the database is sorted according to game_id - bail out quickly if no need to sort
@@ -1037,9 +1036,9 @@ void BinDbDatabaseInitialSort( std::vector< smart_ptr<ListableGame> > &games, bo
     {
         bool sorted=true;
         uint32_t prev=0;
-        for( uint32_t i=0; sorted && i<games.size(); i++ )
+        for( uint32_t i=0; sorted && i<games_.size(); i++ )
         {
-            uint32_t id = games[i]->game_id;
+            uint32_t id = games_[i]->game_id;
             if( id < prev )
                 sorted = false;
             prev = id;
@@ -1054,11 +1053,11 @@ void BinDbDatabaseInitialSort( std::vector< smart_ptr<ListableGame> > &games, bo
     std::string desc(sort_by_player_name?"Sorting by player name":"Initial sort");
     ProgressBar progress_bar( "Sorting", desc, true );
     //progress_bar.DrawNow();
-    BinDbShowDebugOrder( games, "Initial sort before");
-    sort_before( games.begin(), games.end(), sort_by_player_name ? predicate_sorts_by_player : predicate_sorts_by_game_id, &progress_bar );
-    std::sort( games.begin(), games.end(), sort_by_player_name ? predicate_sorts_by_player : predicate_sorts_by_game_id );
+    BinDbShowDebugOrder( games_, "Initial sort before");
+    sort_before( games_.begin(), games_.end(), sort_by_player_name ? predicate_sorts_by_player : predicate_sorts_by_game_id, &progress_bar );
+    std::sort( games_.begin(), games_.end(), sort_by_player_name ? predicate_sorts_by_player : predicate_sorts_by_game_id );
     sort_after();
-    BinDbShowDebugOrder( games, "Initial sort after");
+    BinDbShowDebugOrder( games_, "Initial sort after");
 }
 
 bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
@@ -1086,7 +1085,7 @@ bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
         {
             if( pb->Perfraction( i,nbr_games) )
                 return false;   // abort
-            bool more = (i+1<games.size()-1);
+            bool more = (i+1 < nbr_games-1);
             bool next_matches = (0 == strcmp(games[i]->CompressedMoves(),games[i+1]->CompressedMoves()) );
             bool eval_dups = (in_dups && !more);
             if( !in_dups )

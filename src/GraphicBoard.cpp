@@ -5,7 +5,6 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 #include "wx/wx.h"
 #include "wx/image.h"
 #include "wx/rawbmp.h"
@@ -111,7 +110,7 @@ GraphicBoard::GraphicBoard
 	// Read the initial position displayed on the bitmap
 #ifdef THC_WINDOWS
 	//my_chess_bmp.GetBitmapBits( width_bytes*height, buf_board );   //@@
-    int ret= ::GetBitmapBits((HBITMAP)(my_chess_bmp.GetHBITMAP()), width_bytes*height, buf_board );
+    /*int ret=*/ ::GetBitmapBits((HBITMAP)(my_chess_bmp.GetHBITMAP()), width_bytes*height, buf_board );
     //dbg_printf( "::GetBitmapBits() returns %d\n",ret);
 #else
 #ifdef THC_MAC
@@ -568,7 +567,7 @@ void GraphicBoard::HitTestEx( char &file, char &rank, wxPoint shift )
 
 
 // Setup a position	on the graphic board
-void GraphicBoard::SetPositionEx( thc::ChessPosition pos, bool blank_other_squares, char pickup_file, char pickup_rank, wxPoint shift )
+void GraphicBoard::SetPositionEx( thc::ChessPosition pos, bool blank_other_squares, char pickup_file_, char pickup_rank_, wxPoint shift )
 {
 	char piece, save_piece=0;
 	int  file=0, rank=7;
@@ -605,7 +604,7 @@ void GraphicBoard::SetPositionEx( thc::ChessPosition pos, bool blank_other_squar
         // Is this square highlighted ? Does it contain a picked up piece ?
 		if( normal_orientation )
 		{
-            if( dst_file==pickup_file && dst_rank==pickup_rank )
+            if( dst_file==pickup_file_ && dst_rank==pickup_rank_ )
             {
                 save_piece = piece;
                 piece = ' ';
@@ -617,7 +616,7 @@ void GraphicBoard::SetPositionEx( thc::ChessPosition pos, bool blank_other_squar
 		}
 		else
 		{
-            if( rev_file==pickup_file && rev_rank==pickup_rank )
+            if( rev_file==pickup_file_ && rev_rank==pickup_rank_ )
             {
                 save_piece = piece;
                 piece = ' ';
