@@ -175,39 +175,39 @@ void PatternDialog::CreateControls()
     }
    
     castling_box->Add( inc_reflection, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
     castling_box->Add( inc_reverse, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
     if( b_dont_allow_more )
     {
         castling_box->Add( dont_allow_more, 0,
-            wxALIGN_CENTER_VERTICAL|wxALL, 5);
+            wxALL, 5);
     }
     if( b_pawns )
     {
         castling_box->Add( pawns_same_files, 0,
-            wxALIGN_CENTER_VERTICAL|wxALL, 5);
+            wxALL, 5);
     }
     if( b_bishops )
     {
         castling_box->Add( bishops_same_colour, 0,
-            wxALIGN_CENTER_VERTICAL|wxALL, 5);
+            wxALL, 5);
     }
     if( b_ply )
     {
         castling_box->Add(move_count_sizer, 
          wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 5);
-         //wxALIGN_CENTER_VERTICAL|wxALL, 5);
+         //wxALL, 5);
     }
 
     if( b_white )
     { 
         who_box->Add( white_to_move, 0,
-            wxALIGN_CENTER_VERTICAL|wxALL, 5);
+            wxALL, 5);
         who_box->Add( black_to_move, 0,
-            wxALIGN_CENTER_VERTICAL|wxALL, 5);
+            wxALL, 5);
         who_box->Add( either_to_move, 0,
-            wxALIGN_CENTER_VERTICAL|wxALL, 5);
+            wxALL, 5);
     }
 
     // A vertical box sizer to contain Reset, Clear, OK, Cancel and Help
@@ -216,32 +216,32 @@ void PatternDialog::CreateControls()
     // The Initial button
     wxButton* reset = new wxButton( this, ID_PATTERN_RESET, wxT("&Initial"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    buttons_box->Add( reset, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    buttons_box->Add( reset, 0, wxALL, 5);
 
     // The Current button
     wxButton* current = new wxButton( this, ID_PATTERN_CURRENT, wxT("&Current"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    buttons_box->Add( current, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    buttons_box->Add( current, 0, wxALL, 5);
 
     // The Clear button
     wxButton* clear = new wxButton( this, ID_PATTERN_CLEAR, wxT("&Clear"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    buttons_box->Add( clear, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    buttons_box->Add( clear, 0, wxALL, 5);
 
     // The OK button
     ok_button = new wxButton ( this, wxID_OK, wxT("&OK"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    buttons_box->Add( ok_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    buttons_box->Add( ok_button, 0, wxALL, 5);
 
     // The Cancel button
     wxButton* cancel = new wxButton ( this, wxID_CANCEL,
         wxT("&Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
-    buttons_box->Add( cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    buttons_box->Add( cancel, 0, wxALL, 5);
 
     // The Help button
     wxButton* help = new wxButton( this, wxID_HELP, wxT("&Help"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    buttons_box->Add( help, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    buttons_box->Add( help, 0, wxALL, 5);
 
     //box_sizer->Add( buttons_box, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
     horiz_board->Add( bsc, 1, wxALIGN_LEFT|wxALL|wxFIXED_MINSIZE, 5 );

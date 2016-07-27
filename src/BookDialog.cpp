@@ -111,36 +111,36 @@ void BookDialog::CreateControls()
        wxT("&Enabled"), wxDefaultPosition, wxDefaultSize, 0 );
     enabled_box->SetValue( dat.m_enabled );
     box_sizer->Add( enabled_box, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     // Label for the moves limit
     wxStaticText* limit_moves_label = new wxStaticText ( this, wxID_STATIC,
         wxT("&If available always play book moves up until move:"), wxDefaultPosition, wxDefaultSize, 0 );
-    box_sizer->Add(limit_moves_label, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    box_sizer->Add(limit_moves_label, 0, wxALL, 5);
 
     // A spin control for the moves limit
     wxSpinCtrl* limit_moves_spin = new wxSpinCtrl ( this, ID_LIMIT_MOVES,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 0, 120, 25 );
-    box_sizer->Add(limit_moves_spin, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    box_sizer->Add(limit_moves_spin, 0, wxALL, 5);
 
     // Label for the post limit percentage
     wxStaticText* post_limit_percent_label = new wxStaticText ( this, wxID_STATIC,
         wxT("&Then if available play book moves this percentage of the time:"), wxDefaultPosition, wxDefaultSize, 0 );
-    box_sizer->Add(post_limit_percent_label, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    box_sizer->Add(post_limit_percent_label, 0, wxALL, 5);
 
     // A spin control for the post limit percentage
     wxSpinCtrl* post_limit_percent_spin = new wxSpinCtrl ( this, ID_POST_LIMIT_PERCENT,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 0, 100, 50 );
-    box_sizer->Add(post_limit_percent_spin, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    box_sizer->Add(post_limit_percent_spin, 0, wxALL, 5);
 
     // Suggest book moves
     wxCheckBox* suggest_box = new wxCheckBox( this, ID_SUGGEST,
        wxT("&Suggest book moves"), wxDefaultPosition, wxDefaultSize, 0 );
     suggest_box->SetValue( dat.m_suggest );
     box_sizer->Add( suggest_box, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     // A dividing line before the OK and Cancel buttons
     wxStaticLine* line = new wxStaticLine ( this, wxID_STATIC,

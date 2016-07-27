@@ -97,55 +97,55 @@ void TrainingDialog::CreateControls()
     // Label for the nbr half moves behind
     wxStaticText* nbr_half_moves_behind_label = new wxStaticText ( this, wxID_STATIC,
         wxT("&Board position lags play by this many half moves:"), wxDefaultPosition, wxDefaultSize, 0 );
-    box_sizer->Add(nbr_half_moves_behind_label, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    box_sizer->Add(nbr_half_moves_behind_label, 0, wxALL, 5);
 
     // A spin control for the nbr half moves behind
     wxSpinCtrl* nbr_half_moves_behind_spin = new wxSpinCtrl ( this, ID_NBR_HALF_MOVES_BEHIND,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 0, 120, 25 );
-    box_sizer->Add(nbr_half_moves_behind_spin, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    box_sizer->Add(nbr_half_moves_behind_spin, 0, wxALL, 5);
 
     // Peek at complete position
     wxCheckBox* peek_at_complete_position_box = new wxCheckBox( this, ID_PEEK_AT_COMPLETE_POSITION,
        wxT("&Peek at complete position"), wxDefaultPosition, wxDefaultSize, 0 );
     peek_at_complete_position_box->SetValue( dat.m_peek_at_complete_position );
     box_sizer->Add( peek_at_complete_position_box, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     // Blindfold hide white pawns
     wxCheckBox* blindfold_hide_white_pawns_box = new wxCheckBox( this, ID_BLINDFOLD_HIDE_WHITE_PAWNS,
        wxT("&Blindfold: hide white pawns"), wxDefaultPosition, wxDefaultSize, 0 );
     blindfold_hide_white_pawns_box->SetValue( dat.m_blindfold_hide_white_pawns );
     box_sizer->Add( blindfold_hide_white_pawns_box, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     // Blindfold hide white pieces
     wxCheckBox* blindfold_hide_white_pieces_box = new wxCheckBox( this, ID_BLINDFOLD_HIDE_WHITE_PIECES,
        wxT("&Blindfold: hide white pieces"), wxDefaultPosition, wxDefaultSize, 0 );
     blindfold_hide_white_pieces_box->SetValue( dat.m_blindfold_hide_white_pieces );
     box_sizer->Add( blindfold_hide_white_pieces_box, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     // Blindfold hide black pawns
     wxCheckBox* blindfold_hide_black_pawns_box = new wxCheckBox( this, ID_BLINDFOLD_HIDE_BLACK_PAWNS,
        wxT("&Blindfold: hide black pawns"), wxDefaultPosition, wxDefaultSize, 0 );
     blindfold_hide_black_pawns_box->SetValue( dat.m_blindfold_hide_black_pawns );
     box_sizer->Add( blindfold_hide_black_pawns_box, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     // Blindfold hide black pieces
     wxCheckBox* blindfold_hide_black_pieces_box = new wxCheckBox( this, ID_BLINDFOLD_HIDE_BLACK_PIECES,
        wxT("&Blindfold: hide black pieces"), wxDefaultPosition, wxDefaultSize, 0 );
     blindfold_hide_black_pieces_box->SetValue( dat.m_blindfold_hide_black_pawns );
     box_sizer->Add( blindfold_hide_black_pieces_box, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     // Blindfold hide board
  /* wxCheckBox* blindfold_hide_board_box = new wxCheckBox( this, ID_BLINDFOLD_HIDE_BOARD,
        wxT("&Blindfold: hide board"), wxDefaultPosition, wxDefaultSize, 0 );
     blindfold_hide_board_box->SetValue( dat.m_blindfold_hide_board );
     box_sizer->Add( blindfold_hide_board_box, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5); */
+        wxALL, 5); */
 
     // A dividing line before the OK and Cancel buttons
     wxStaticLine* line = new wxStaticLine ( this, wxID_STATIC,

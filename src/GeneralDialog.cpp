@@ -123,49 +123,49 @@ void GeneralDialog::CreateControls()
        wxT("Use small chess board (requires restart)"), wxDefaultPosition, wxDefaultSize, 0 );
     use_small_board_box->SetValue( dat.m_small_board );
     box_sizer->Add( use_small_board_box, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     // Use large font for chess text
     wxCheckBox* use_large_font_box = new wxCheckBox( this, ID_LARGE_FONT,
        wxT("Use larger font in move window"), wxDefaultPosition, wxDefaultSize, 0 );
     use_large_font_box->SetValue( dat.m_large_font );
     box_sizer->Add( use_large_font_box, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     // Don't use italics for subvariations
     wxCheckBox* no_italics_box = new wxCheckBox( this, ID_NO_ITALICS,
        wxT("Don't use italics for subvariations"), wxDefaultPosition, wxDefaultSize, 0 );
     no_italics_box->SetValue( dat.m_no_italics );
     box_sizer->Add( no_italics_box, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     // Go straight to game for single game pgns
     wxCheckBox* straight_to_game_box = new wxCheckBox( this, ID_STRAIGHT_TO_GAME,
        wxT("Go straight to game for single game .pgn files"), wxDefaultPosition, wxDefaultSize, 0 );
     straight_to_game_box->SetValue( dat.m_straight_to_game );
     box_sizer->Add( straight_to_game_box, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     // Go straight to game for all pgns
     wxCheckBox* straight_to_first_game_box = new wxCheckBox( this, ID_STRAIGHT_TO_FIRST_GAME,
        wxT("Go straight to first game for all .pgn files"), wxDefaultPosition, wxDefaultSize, 0 );
     straight_to_first_game_box->SetValue( dat.m_straight_to_first_game );
     box_sizer->Add( straight_to_first_game_box, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     // No auto flip at start of game or on swap sides
     wxCheckBox* no_auto_flip = new wxCheckBox( this, ID_NO_AUTO_FLIP,
        wxT("Don't flip board to put human at bottom"), wxDefaultPosition, wxDefaultSize, 0 );
     no_auto_flip->SetValue( dat.m_no_auto_flip );
     box_sizer->Add( no_auto_flip, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     // Emit bell sound when engine moves
     wxCheckBox* emit_bell_sound_when_engine_moves = new wxCheckBox( this, ID_EMIT_BELL,
        wxT("Emit bell sound when engine moves"), wxDefaultPosition, wxDefaultSize, 0 );
     emit_bell_sound_when_engine_moves->SetValue( dat.m_bell );
     box_sizer->Add( emit_bell_sound_when_engine_moves, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     // A dividing line before the OK and Cancel buttons
     wxStaticLine* line = new wxStaticLine ( this, wxID_STATIC,

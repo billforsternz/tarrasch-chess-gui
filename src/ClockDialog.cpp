@@ -128,19 +128,19 @@ void ClockDialog::CreateControls()
     increment_ctrl = new wxSpinCtrl ( this, ID_WHITE_INCREMENT,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 0, 120, 30 );
-    small_sizer->Add(increment_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    small_sizer->Add(increment_ctrl, 0, wxALL, 5);
 
     visible_box = new wxCheckBox( this, ID_WHITE_VISIBLE,
        wxT("&Visible"), wxDefaultPosition, wxDefaultSize, 0 );
     visible_box->SetValue( dat.m_white_visible );
     small_sizer->Add( visible_box, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     running_box = new wxCheckBox( this, ID_WHITE_RUNNING,
        wxT("&Running"), wxDefaultPosition, wxDefaultSize, 0 );
     running_box->SetValue( dat.m_white_running );
     small_sizer->Add( running_box, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     horiz_sizer->Add(small_sizer, 1, wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 10);
     //box_sizer->Add(small_sizer, 0, wxGROW | (wxALL/* & ~wxLEFT */), 10);
@@ -172,21 +172,21 @@ void ClockDialog::CreateControls()
     increment_ctrl2 = new wxSpinCtrl ( this, ID_BLACK_INCREMENT,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 0, 120, 30 );
-    small_sizer2->Add(increment_ctrl2, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    small_sizer2->Add(increment_ctrl2, 0, wxALL, 5);
 
     visible_box2 = new wxCheckBox( this, ID_BLACK_VISIBLE,
        wxT("&Visible"), wxDefaultPosition, wxDefaultSize, 0 );
     visible_box2->SetValue( dat.m_black_visible );
     small_sizer2->Add( visible_box2, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     running_box2 = new wxCheckBox( this, ID_BLACK_RUNNING,
        wxT("&Running"), wxDefaultPosition, wxDefaultSize, 0 );
     running_box2->SetValue( dat.m_black_running );
     small_sizer2->Add( running_box2, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
-    horiz_sizer->Add(small_sizer2, 1, wxALIGN_RIGHT|wxGROW | (wxALL/* & ~wxLEFT */), 10);
+    horiz_sizer->Add(small_sizer2, 1, wxGROW | (wxALL/* & ~wxLEFT */), 10);
     //box_sizer->Add(small_sizer2, 1, wxGROW | (wxALL/* & ~wxLEFT */), 10);
     box_sizer->Add(horiz_sizer, 1, wxGROW | (wxALL/* & ~wxLEFT */), 10);
 
@@ -207,7 +207,7 @@ void ClockDialog::CreateControls()
     wxSpinCtrl* time_ctrl3 = new wxSpinCtrl ( this, ID_HUMAN_TIME,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 1, 120, 90 );
-    small_sizer3->Add(time_ctrl3, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    small_sizer3->Add(time_ctrl3, 0, wxALL, 5);
 
     // Label for increment
     wxStaticText* increment_label3 = new wxStaticText ( this, wxID_STATIC,
@@ -218,19 +218,19 @@ void ClockDialog::CreateControls()
     wxSpinCtrl* increment_ctrl3 = new wxSpinCtrl ( this, ID_HUMAN_INCREMENT,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 0, 120, 30 );
-    small_sizer3->Add(increment_ctrl3, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    small_sizer3->Add(increment_ctrl3, 0, wxALL, 5);
 
     human_visible_checkbox = new wxCheckBox( this, ID_HUMAN_VISIBLE,
        wxT("&Visible"), wxDefaultPosition, wxDefaultSize, 0 );
     human_visible_checkbox->SetValue( dat.m_human_visible );
     small_sizer3->Add( human_visible_checkbox, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     human_running_checkbox = new wxCheckBox( this, ID_HUMAN_RUNNING,
        wxT("&Running"), wxDefaultPosition, wxDefaultSize, 0 );
     human_running_checkbox->SetValue( dat.m_human_running );
     small_sizer3->Add( human_running_checkbox, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     horiz_sizer2->Add(small_sizer3, 1, wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 10);
     //box_sizer->Add(small_sizer, 0, wxGROW | (wxALL/* & ~wxLEFT */), 10);
@@ -246,7 +246,7 @@ void ClockDialog::CreateControls()
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, dat.m_fixed_period_mode?0:1, 120, 90 );
         // engine minutes can (usually is) 0 in fixed period mode, but 1 minute is min otherwise
-    small_sizer4->Add(time_ctrl4, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    small_sizer4->Add(time_ctrl4, 0, wxALL, 5);
 
     // Label for increment
     cprintf( "dat.m_fixed_period_mode = %s\n", dat.m_fixed_period_mode ? "true" : "false" );
@@ -258,21 +258,21 @@ void ClockDialog::CreateControls()
     increment_ctrl4 = new wxSpinCtrl ( this, ID_ENGINE_INCREMENT,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 0, 120, 30 );
-    small_sizer4->Add(increment_ctrl4, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    small_sizer4->Add(increment_ctrl4, 0, wxALL, 5);
 
     engine_visible_checkbox = new wxCheckBox( this, ID_ENGINE_VISIBLE,
        wxT("&Visible"), wxDefaultPosition, wxDefaultSize, 0 );
     engine_visible_checkbox->SetValue( dat.m_engine_visible );
     small_sizer4->Add( engine_visible_checkbox, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     engine_running_checkbox = new wxCheckBox( this, ID_ENGINE_RUNNING,
        wxT("&Running"), wxDefaultPosition, wxDefaultSize, 0 );
     engine_running_checkbox->SetValue( dat.m_engine_running );
     small_sizer4->Add( engine_running_checkbox, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
-    horiz_sizer2->Add(small_sizer4, 1, wxALIGN_RIGHT|wxGROW | (wxALL/* & ~wxLEFT */), 10);
+    horiz_sizer2->Add(small_sizer4, 1, wxGROW | (wxALL/* & ~wxLEFT */), 10);
     //box_sizer->Add(small_sizer2, 1, wxGROW | (wxALL/* & ~wxLEFT */), 10);
     box_sizer->Add(horiz_sizer2, 1, wxGROW | (wxALL/* & ~wxLEFT */), 10);
 
@@ -285,8 +285,8 @@ void ClockDialog::CreateControls()
        wxT("Engine gets fixed time per move, human not timed"), wxDefaultPosition, wxDefaultSize, 0 );
     fixed_period_mode->SetValue( dat.m_fixed_period_mode );
     small_sizer5->Add( fixed_period_mode, 0,
-        /*wxALIGN_CENTER_VERTICAL|*/wxALL, 5);
-    horiz_sizer3->Add(small_sizer5, 1, wxALIGN_RIGHT/*|wxGROW */| (wxALL/* & ~wxLEFT */), 10);
+        wxALL, 5);
+    horiz_sizer3->Add(small_sizer5, 1, (wxALL/* & ~wxLEFT */), 10);
     box_sizer->Add(horiz_sizer3, 0, wxGROW |  (wxALL/* & ~wxLEFT */), 10);
 
     // A dividing line before the OK and Cancel buttons

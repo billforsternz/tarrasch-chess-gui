@@ -112,7 +112,7 @@ void LogDialog::CreateControls()
        wxT("&Enabled"), wxDefaultPosition, wxDefaultSize, 0 );
     enabled_box->SetValue( dat.m_enabled );
     box_sizer->Add( enabled_box, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     // A dividing line before the OK and Cancel buttons
     wxStaticLine* line = new wxStaticLine ( this, wxID_STATIC,

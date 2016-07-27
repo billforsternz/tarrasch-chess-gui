@@ -437,28 +437,28 @@ void PositionDialog::CreateControls()
     en_passant_sizer->Add(en_passant_ctrl,  0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
    
     castling_box->Add( white_oo, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
     castling_box->Add( white_ooo, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
     castling_box->Add( black_oo, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
     castling_box->Add( black_ooo, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     who_box->Add( white_to_move, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
     who_box->Add( black_to_move, 0,
-        wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        wxALL, 5);
 
     details_box->Add(move_count_sizer, 
         wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 5);
-        //wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        //wxALL, 5);
     details_box->Add(half_count_sizer,
         wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 5);
-        //wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        //wxALL, 5);
     details_box->Add(en_passant_sizer,
         wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 5);
-        //wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        //wxALL, 5);
 
     // A vertical box sizer to contain Reset, Clear, OK, Cancel and Help
     wxBoxSizer* buttons_box = new wxBoxSizer(wxVERTICAL);
@@ -466,38 +466,38 @@ void PositionDialog::CreateControls()
     // The Initial button
     wxButton* reset = new wxButton( this, ID_POSITION_RESET, wxT("&Initial"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    buttons_box->Add( reset, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    buttons_box->Add( reset, 0, wxALL, 5);
 
     // The Current button
     wxButton* current = new wxButton( this, ID_POSITION_CURRENT, wxT("&Current"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    buttons_box->Add( current, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    buttons_box->Add( current, 0, wxALL, 5);
 
     // The Clear button
     wxButton* clear = new wxButton( this, ID_POSITION_CLEAR, wxT("&Clear"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    buttons_box->Add( clear, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    buttons_box->Add( clear, 0, wxALL, 5);
 
     // The Chess960 button
     wxButton* chess_960 = new wxButton( this, ID_POSITION_960, wxT("Shuffle"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    buttons_box->Add( chess_960, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    buttons_box->Add( chess_960, 0, wxALL, 5);
     buttons_box->AddSpacer(50);
 
     // The OK button
     ok_button = new wxButton ( this, wxID_OK, wxT("&OK"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    buttons_box->Add( ok_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    buttons_box->Add( ok_button, 0, wxALL, 5);
 
     // The Cancel button
     wxButton* cancel = new wxButton ( this, wxID_CANCEL,
         wxT("&Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
-    buttons_box->Add( cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    buttons_box->Add( cancel, 0, wxALL, 5);
 
     // The Help button
     wxButton* help = new wxButton( this, wxID_HELP, wxT("&Help"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    buttons_box->Add( help, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    buttons_box->Add( help, 0, wxALL, 5);
 
     //box_sizer->Add( buttons_box, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
     horiz_board->Add( bsc, 1, wxALIGN_LEFT|wxALL|wxFIXED_MINSIZE, 5 );
@@ -529,13 +529,13 @@ void PositionDialog::CreateControls()
 
     wxBoxSizer* horiz_fen  = new wxBoxSizer(wxHORIZONTAL);
     horiz_fen->Add( fen_ctrl,  1, wxALIGN_LEFT|wxGROW|wxALL, 5);
-    horiz_fen->Add( apply,     0, wxALIGN_RIGHT|wxALL, 5);
+    horiz_fen->Add( apply,     0, wxALL, 5);
     box_sizer->Add( horiz_fen, 0, wxALIGN_LEFT|wxALL, 5 );
 */
     wxStaticBox *box4 = new wxStaticBox(this, wxID_ANY, "&FEN (Forsyth-Edwards Notation)" );
     wxSizer     *fen_box = new wxStaticBoxSizer(box4, /*wxGROW|*/wxHORIZONTAL);
 /*  fen_box->Add( fen_ctrl,  0, wxALIGN_LEFT|wxALL|wxFIXED_MINSIZE, 5);
-    fen_box->Add( apply,     0, wxALIGN_RIGHT|wxALL, 5 );
+    fen_box->Add( apply,     0, wxALL, 5 );
     box_sizer->Add( fen_box, 1, wxALIGN_LEFT|wxGROW|wxALL, 5 ); */
     fen_box->Add( fen_ctrl,  0, wxALIGN_CENTER_VERTICAL|wxALL|wxFIXED_MINSIZE, 2);
     fen_box->AddSpacer(5);

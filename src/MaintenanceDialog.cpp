@@ -147,17 +147,17 @@ void MaintenanceDialog::CreateControls()
                                             wxT("&Ponder"), wxDefaultPosition, wxDefaultSize, 0 );
     ponder_box->SetValue( dat.m_ponder );
     box_sizer->Add( ponder_box, 0,
-                   wxALIGN_CENTER_VERTICAL|wxALL, 5);
+                   wxALL, 5);
      // Label for the hash
      wxStaticText* hash_label = new wxStaticText ( this, wxID_STATIC,
      wxT("&Hash:"), wxDefaultPosition, wxDefaultSize, 0 );
-     box_sizer->Add(hash_label, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+     box_sizer->Add(hash_label, 0, wxALL, 5);
      
      // A spin control for the hash
      wxSpinCtrl* hash_spin = new wxSpinCtrl ( this, ID_TEMP_HASH,
      wxEmptyString, wxDefaultPosition, wxSize(60, -1),
      wxSP_ARROW_KEYS, 1, 4096, 64 );
-     box_sizer->Add(hash_spin, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+     box_sizer->Add(hash_spin, 0, wxALL, 5);
     
     // Label for the hash
     wxStaticText* hash_label = new wxStaticText ( this, wxID_STATIC,
@@ -170,18 +170,18 @@ void MaintenanceDialog::CreateControls()
     wxBoxSizer* hash_horiz  = new wxBoxSizer(wxHORIZONTAL);
     hash_horiz->Add( hash_label,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
     hash_horiz->Add( hash_spin,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
-    box_sizer->Add( hash_horiz, 0, wxALIGN_CENTER_VERTICAL|wxTOP|wxBOTTOM|wxRIGHT, 5);
+    box_sizer->Add( hash_horiz, 0, wxTOP|wxBOTTOM|wxRIGHT, 5);
     
      // Label for max cpu cores
      wxStaticText* max_cpu_cores_label = new wxStaticText ( this, wxID_STATIC,
      wxT("&Max CPU cores:"), wxDefaultPosition, wxDefaultSize, 0 );
-     box_sizer->Add(max_cpu_cores_label, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+     box_sizer->Add(max_cpu_cores_label, 0, wxALL, 5);
      
      // A spin control for max cpu cores
      wxSpinCtrl* max_cpu_cores_spin = new wxSpinCtrl ( this, ID_TEMP_MAX_CPU_CORES,
      wxEmptyString, wxDefaultPosition, wxSize(60, -1),
      wxSP_ARROW_KEYS, 1, nbr_cpus, 1 );
-     box_sizer->Add(max_cpu_cores_spin, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+     box_sizer->Add(max_cpu_cores_spin, 0, wxALL, 5);
     
     // Label for max cpu cores
     wxStaticText* max_cpu_cores_label = new wxStaticText ( this, wxID_STATIC,
@@ -194,7 +194,7 @@ void MaintenanceDialog::CreateControls()
     wxBoxSizer* max_cpu_cores_horiz  = new wxBoxSizer(wxHORIZONTAL);
     max_cpu_cores_horiz->Add( max_cpu_cores_label,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
     max_cpu_cores_horiz->Add( max_cpu_cores_spin,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
-    box_sizer->Add( max_cpu_cores_horiz, 0, wxALIGN_CENTER_VERTICAL|wxTOP|wxBOTTOM|wxRIGHT, 5);
+    box_sizer->Add( max_cpu_cores_horiz, 0, wxTOP|wxBOTTOM|wxRIGHT, 5);
     
     // Text controls for custom parameter 1
     wxTextCtrl *custom1a_ctrl = new wxTextCtrl ( this, ID_TEMP_CUSTOM1A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
@@ -206,7 +206,7 @@ void MaintenanceDialog::CreateControls()
     box_sizer->Add(custom1_label, 0, wxALIGN_LEFT|wxALL, 5);
     wxBoxSizer* custom1_horiz  = new wxBoxSizer(wxHORIZONTAL);
     custom1_horiz->Add( custom1a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
-    custom1_horiz->Add( custom1b_ctrl,  1, wxALIGN_RIGHT|wxLEFT|wxBOTTOM|wxRIGHT, 5);
+    custom1_horiz->Add( custom1b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
     box_sizer->Add( custom1_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 5 );
     
     // Text controls for custom parameter 2
@@ -219,7 +219,7 @@ void MaintenanceDialog::CreateControls()
     box_sizer->Add(custom2_label, 0, wxALIGN_LEFT|wxALL, 5);
     wxBoxSizer* custom2_horiz  = new wxBoxSizer(wxHORIZONTAL);
     custom2_horiz->Add( custom2a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
-    custom2_horiz->Add( custom2b_ctrl,  1, wxALIGN_RIGHT|wxLEFT|wxBOTTOM|wxRIGHT, 5);
+    custom2_horiz->Add( custom2b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
     box_sizer->Add( custom2_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 5 );
     
     // Text controls for custom parameter 3
@@ -232,7 +232,7 @@ void MaintenanceDialog::CreateControls()
     box_sizer->Add(custom3_label, 0, wxALIGN_LEFT|wxALL, 5);
     wxBoxSizer* custom3_horiz  = new wxBoxSizer(wxHORIZONTAL);
     custom3_horiz->Add( custom3a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
-    custom3_horiz->Add( custom3b_ctrl,  1, wxALIGN_RIGHT|wxLEFT|wxBOTTOM|wxRIGHT, 5);
+    custom3_horiz->Add( custom3b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
     box_sizer->Add( custom3_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 5 );
     
     // Text controls for custom parameter 4
@@ -245,7 +245,7 @@ void MaintenanceDialog::CreateControls()
     box_sizer->Add(custom4_label, 0, wxALIGN_LEFT|wxALL, 5);
     wxBoxSizer* custom4_horiz  = new wxBoxSizer(wxHORIZONTAL);
     custom4_horiz->Add( custom4a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
-    custom4_horiz->Add( custom4b_ctrl,  1, wxALIGN_RIGHT|wxLEFT|wxBOTTOM|wxRIGHT, 5);
+    custom4_horiz->Add( custom4b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
     box_sizer->Add( custom4_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 5 );
 */
     
@@ -256,25 +256,25 @@ void MaintenanceDialog::CreateControls()
     
     // Temporary primitive database management functions
     wxBoxSizer* db_vert  = new wxBoxSizer(wxVERTICAL);
-    box_sizer->Add( db_vert, 0, wxALIGN_CENTER_VERTICAL|wxTOP|wxBOTTOM|wxRIGHT, 5);
+    box_sizer->Add( db_vert, 0, wxTOP|wxBOTTOM|wxRIGHT, 5);
     wxButton* button_cmd_1 = new wxButton( this, ID_MAINTENANCE_CMD_1, wxT("&Database speed test"),
                                           wxDefaultPosition, wxDefaultSize, 0 );
-    db_vert->Add( button_cmd_1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    db_vert->Add( button_cmd_1, 0, wxALL, 5);
     wxButton* button_cmd_2 = new wxButton( this, ID_MAINTENANCE_CMD_2, wxT("&Build great players database"),
                                           wxDefaultPosition, wxDefaultSize, 0 );
-    db_vert->Add( button_cmd_2, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    db_vert->Add( button_cmd_2, 0, wxALL, 5);
     wxButton* button_cmd_3 = new wxButton( this, ID_MAINTENANCE_CMD_3, wxT("&Test decompress file .qgn -> .pgn"),
                                           wxDefaultPosition, wxDefaultSize, 0 );
-    db_vert->Add( button_cmd_3, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    db_vert->Add( button_cmd_3, 0, wxALL, 5);
     wxButton* button_cmd_4 = new wxButton( this, ID_MAINTENANCE_CMD_4, wxT("&Test move compression algorithm"),
                                           wxDefaultPosition, wxDefaultSize, 0 );
-    db_vert->Add( button_cmd_4, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    db_vert->Add( button_cmd_4, 0, wxALL, 5);
     wxButton* button_cmd_5 = new wxButton( this, ID_MAINTENANCE_CMD_5, wxT("&DANGER append to database from .pgn"),
                                           wxDefaultPosition, wxDefaultSize, 0 );
-    db_vert->Add( button_cmd_5, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    db_vert->Add( button_cmd_5, 0, wxALL, 5);
     wxButton* button_cmd_6 = new wxButton( this, ID_CREATE_DB_APPEND, wxT("&DANGER database create indexes"),
                                           wxDefaultPosition, wxDefaultSize, 0 );
-    db_vert->Add( button_cmd_6, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    db_vert->Add( button_cmd_6, 0, wxALL, 5);
     
     
     // A dividing line before the OK and Cancel buttons

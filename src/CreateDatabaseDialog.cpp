@@ -164,14 +164,14 @@ void CreateDatabaseDialog::CreateControls()
     // Label for elo cutoff
     wxStaticText* elo_cutoff_label = new wxStaticText ( this, wxID_STATIC,
         wxT("Elo cutoff (if Elo values present, at least one player must meet this threshold)"), wxDefaultPosition, wxDefaultSize, 0 );
-    box_sizer->Add(elo_cutoff_label, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    box_sizer->Add(elo_cutoff_label, 0, wxALL, 5);
 
     // A spin control for the elo cutoff
     elo_cutoff_spin = new wxSpinCtrl ( this, ID_CREATE_ELO_CUTOFF,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 0, 4000, 2000 );
     elo_cutoff_spin->SetValue( objs.repository->database.m_elo_cutoff );
-    box_sizer->Add(elo_cutoff_spin, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    box_sizer->Add(elo_cutoff_spin, 0, wxALL, 5);
 
     // A dividing line before the OK and Cancel buttons
     wxStaticLine* line2 = new wxStaticLine ( this, wxID_STATIC,
