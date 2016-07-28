@@ -350,6 +350,12 @@ void GameView::Crawler( MoveTree *node, bool move0, bool last_move )
     level--;
 }
 
+#if 1
+    #define gv_printf(...) cprintf ( __VA_ARGS__ ), cprintf("\n")
+#else
+    #define gv_printf(...) 
+#endif
+
 void GameView::Display( unsigned long pos )
 {
     wxRichTextCtrl *ctrl = objs.canvas->lb;
@@ -357,15 +363,22 @@ void GameView::Display( unsigned long pos )
     {
 #ifndef THC_MAC
         ctrl->Freeze();
+        gv_printf( "ctrl->Freeze();" );
 #endif
         ctrl->BeginSuppressUndo();
+        gv_printf( "ctrl->BeginSuppressUndo();" );
         ctrl->Clear();
+        gv_printf( "ctrl->Clear();" );
         ctrl->EndAllStyles();
+        gv_printf( "ctrl->EndAllStyles();" );
         ctrl->BeginParagraphSpacing(0, 10);
+        gv_printf( "ctrl->BeginParagraphSpacing(0, 10);" );
         bool italic=false;
         bool bold=true;
         ctrl->BeginBold();
+        gv_printf( "ctrl->BeginBold();" );
         ctrl->BeginLeftIndent(0);
+        gv_printf( "ctrl->BeginLeftIndent(0);" );
         int nbr = expansion.size();
         for( int i=0; i<nbr; i++ )
         {
@@ -380,11 +393,18 @@ void GameView::Display( unsigned long pos )
                     if( gve.type != PRE_COMMENT )
                         c_str = gve.node->game_move.comment.c_str();
                     ctrl->BeginTextColour(wxColour(0, 0, 255));
+                    gv_printf( "ctrl->BeginTextColour(wxColour(0, 0, 255));" );
                     if( i )
+                    {
                         ctrl->WriteText( " " );
+                        gv_printf( "ctrl->WriteText( " " );" );
+                    }
                     ctrl->WriteText( c_str );
+                    gv_printf( "ctrl->WriteText( \"%s\" );", c_str );
                     ctrl->WriteText( " " );
+                    gv_printf( "ctrl->WriteText( " " );" );
                     ctrl->EndTextColour();
+                    gv_printf( "ctrl->EndTextColour();" );
                     break;
                 }
                 case MOVE0:
@@ -394,67 +414,96 @@ void GameView::Display( unsigned long pos )
                 case MOVE:
                 {
                     ctrl->WriteText( gve.str.c_str() );
+                    gv_printf( "ctrl->WriteText( \"%s\" );", gve.str.c_str() );
                     break;
                 }
                 case START_OF_VARIATION:
                 {
                     ctrl->WriteText( "(" );
+                    gv_printf( "ctrl->WriteText( \"(\" );" );
                     break;
                 }
                 case END_OF_VARIATION:
                 {
                     ctrl->WriteText( ")" );
+                    gv_printf( "ctrl->WriteText( \")\" );" );
                     break;
                 }
                 case END_OF_GAME:
                 {
                     if( gve.str.length() )
+                    {
                         ctrl->WriteText( gve.str.c_str() );
+                        gv_printf( "ctrl->WriteText( \"%s\" );", gve.str.c_str() );
+                    }
                     break;
                 }
                 case NEWLINE:
                 {
-                    ctrl->EndLeftIndent();
                     if( bold )
                     {
                         ctrl->EndBold();
+                        gv_printf( "ctrl->EndBold();" );
                         bold = false;
                     }
                     if( italic )
                     {
                         ctrl->EndItalic();
+                        gv_printf( "ctrl->EndItalic();" );
                         italic = false;
                     }
-                    if( gve.level > 0 )
-                        ctrl->BeginLeftIndent(20*(gve.level-1));
-                    else
-                        ctrl->BeginLeftIndent(0);
                     ctrl->Newline();
+                    gv_printf( "ctrl->Newline();" );
+                    ctrl->EndLeftIndent();
+                    gv_printf( "ctrl->EndLeftIndent();" );
+                    if( gve.level > 0 )
+                    {
+                        ctrl->BeginLeftIndent(20*(gve.level-1));
+                        gv_printf( "ctrl->BeginLeftIndent( %d );", 20*(gve.level-1) );
+                    }
+                    else
+                    {
+                        ctrl->BeginLeftIndent(0);
+                        gv_printf( "ctrl->BeginLeftIndent(0);" );
+                    }
                     if( gve.level == 1 )
                     {
                         bold = true;
                         ctrl->BeginBold();
+                        gv_printf( "ctrl->BeginBold();" );
                     }
                     else if( gve.level > 2 && !objs.repository->general.m_no_italics )
                     {
                         italic = true;
                         ctrl->BeginItalic();
+                        gv_printf( "ctrl->BeginItalic();" );
                     }
                     break;
                 }
             }
         }
         if( bold )
+        {
             ctrl->EndBold();
+            gv_printf( "ctrl->EndBold();" );
+        }
         if( italic )
+        {
             ctrl->EndItalic();
+            gv_printf( "ctrl->EndItalic();" );
+        }
         ctrl->SetInsertionPoint(pos);
+        gv_printf( "ctrl->SetInsertionPoint(%lu);", pos );
         ctrl->EndSuppressUndo();
+        gv_printf( "ctrl->EndSuppressUndo();" );
 #ifndef THC_MAC
         ctrl->Thaw();
+        gv_printf( "ctrl->Thaw();" );
 #endif
         ctrl->ShowPosition(pos);
+        gv_printf( "ctrl->ShowPosition(%lu);", pos );
         ctrl->Update();
+        gv_printf( "ctrl->Update();" );
     }
 }
 

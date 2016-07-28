@@ -13,6 +13,7 @@
 #include "DebugPrintf.h"
 #include "wx/progdlg.h"
 
+
 class ProgressBarLegacy
 {
 public:
@@ -52,8 +53,7 @@ public:
                     permill = (int)( file_offset / (file_len/1000L) );
                 if( permill != old_permill )
                 {
-                    if( progress.CanAcceptFocus() )
-                        progress.SetFocus();
+                    SetFocusChecked();
                     bool abort = !progress.Update( permill>1000 ? 1000 : permill );
                     if( abort )
                         return true;
@@ -75,8 +75,7 @@ public:
         if( old_permill != permill )
         {
             wxString wxmsg( s.c_str() );
-            if( progress.CanAcceptFocus() )
-                progress.SetFocus();
+            SetFocusChecked();
             abort = !progress.Update( permill>1000 ? 1000 : permill, wxmsg );
             old_permill = permill;
         }
@@ -89,7 +88,13 @@ private:
     wxProgressDialog progress;
     FILE *ifile;
     unsigned long file_len;
-
+    void SetFocusChecked()
+    {
+#if wxABI_VERSION > 28600
+        if( progress.CanAcceptFocus() )
+#endif
+        progress.SetFocus();
+    }
 };
 
 
@@ -163,8 +168,7 @@ public:
                     }
                     else if( progress )
                     {
-                        if( progress->CanAcceptFocus() )
-                            progress->SetFocus();
+                        SetFocusChecked();
                         bool abort = !progress->Update( permill>1000 ? 1000 : permill );
                         if( abort )
                             return true;
@@ -209,8 +213,7 @@ public:
             else if( progress )
             {
                 wxString wxmsg( s.c_str() );
-                if( progress->CanAcceptFocus() )
-                   progress->SetFocus();
+                SetFocusChecked();
                 abort = !progress->Update( permill>1000 ? 1000 : permill, wxmsg );
                 old_permill = permill;
             }
@@ -240,6 +243,13 @@ private:
     std::string desc;
     bool abortable;
     wxWindow *parent;
+    void SetFocusChecked()
+    {
+#if wxABI_VERSION > 28600
+        if( progress->CanAcceptFocus() )
+#endif
+        progress->SetFocus();
+    }
 };
 
 

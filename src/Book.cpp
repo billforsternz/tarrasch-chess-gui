@@ -217,8 +217,10 @@ bool Book::Process( FILE *infile, wxProgressDialog &progress )
                 percent = (int)( file_offset / (file_len/100L) );
             if( percent != old_percent )
             {
+#if wxABI_VERSION > 28600
                 if( progress.CanAcceptFocus() )
-                    progress.SetFocus();
+#endif
+                progress.SetFocus();
                 if( !progress.Update( percent>100 ? 100 : percent ) )
                 {
                     aborted = true;

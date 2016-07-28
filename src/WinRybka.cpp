@@ -228,7 +228,13 @@ Rybka::Rybka( const char *filename_uci_exe )
     {
         DWORD program_type;
         BOOL is_exe;
-		is_exe = GetBinaryType(convertCharArrayToLPCWSTR(filename_uci_exe), &program_type );
+		is_exe = GetBinaryType(
+#if wxABI_VERSION > 28600
+        convertCharArrayToLPCWSTR(filename_uci_exe),
+#else
+        filename_uci_exe,
+#endif
+            &program_type );
         if( is_exe && program_type==SCS_64BIT_BINARY )
         {
             wxString caption( "Error running UCI engine" );
