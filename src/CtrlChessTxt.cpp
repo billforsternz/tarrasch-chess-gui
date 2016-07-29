@@ -326,6 +326,7 @@ void CtrlChessTxt::OnChar(wxKeyEvent& event)
     if( event.GetModifiers() & wxMOD_SHIFT )
         shift = true;
     long keycode = event.GetKeyCode();
+    //cprintf( "OnChar() keycode=%lu\n", keycode );
     {
         switch ( keycode )
         {
@@ -639,6 +640,7 @@ void CtrlChessTxt::OnKeyDown(wxKeyEvent& event)
     if( event.GetModifiers() & wxMOD_SHIFT )
         shift = true;
     long keycode = event.GetKeyCode();
+    //cprintf( "OnKeyDown() keycode=%lu\n", keycode );
     {
         switch ( keycode )
         {
@@ -744,6 +746,28 @@ void CtrlChessTxt::OnAnnotNag2( int nag2 )
     gl->atom.Redisplay( gl->gd.gv.GetMoveOffset(popup_mt) );
 }
 
+void CtrlChessTxt::OnUndo(wxCommandEvent& WXUNUSED(event))
+{
+    gl->CmdEditUndo();
+}
+
+void CtrlChessTxt::OnUpdateUndo( wxUpdateUIEvent &event )
+{
+    bool enabled = gl->CmdUpdateEditUndo();
+    event.Enable(enabled);
+}
+
+void CtrlChessTxt::OnRedo(wxCommandEvent& WXUNUSED(event))
+{
+    gl->CmdEditRedo();
+}
+
+void CtrlChessTxt::OnUpdateRedo( wxUpdateUIEvent &event )
+{
+    bool enabled = gl->CmdUpdateEditRedo();
+    event.Enable(enabled);
+}
+
 void CtrlChessTxt::OnAnnot1(wxCommandEvent& WXUNUSED(event))
 {
     OnAnnotNag1(1);
@@ -833,6 +857,10 @@ BEGIN_EVENT_TABLE(CtrlChessTxt, wxRichTextCtrl)
     EVT_KEY_DOWN(CtrlChessTxt::OnKeyDown)
     EVT_KEY_UP(CtrlChessTxt::OnKeyUp)
     EVT_CHAR(CtrlChessTxt::OnChar)
+    EVT_MENU (wxID_UNDO,           CtrlChessTxt::OnUndo)
+        EVT_UPDATE_UI (wxID_UNDO,           CtrlChessTxt::OnUpdateUndo)
+    EVT_MENU (wxID_REDO,           CtrlChessTxt::OnRedo)
+        EVT_UPDATE_UI (wxID_REDO,           CtrlChessTxt::OnUpdateRedo)
     EVT_TEXT(wxID_ANY, CtrlChessTxt::OnText)
     EVT_TEXT_ENTER(wxID_ANY, CtrlChessTxt::OnTextEnter)
     EVT_TEXT_URL(wxID_ANY, CtrlChessTxt::OnTextURL)

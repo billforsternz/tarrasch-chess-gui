@@ -676,7 +676,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     menu_edit->Append (wxID_COPY,                    _T("Copy\tCtrl+C"));
     menu_edit->Append (wxID_CUT,                     _T("Cut\tCtrl+X"));
     menu_edit->Append (wxID_PASTE,                   _T("Paste\tCtrl+V"));
-    menu_edit->Append (wxID_UNDO,                    _T("Undo\tCtrl+Z"));
+    menu_edit->Append (wxID_UNDO,                    "Undo\tCtrl+Z");
     menu_edit->Append (wxID_REDO,                    _T("Redo\tCtrl+Y"));
     menu_edit->Append (wxID_DELETE,                  _T("Delete comment text or remainder of variation\tDel"));
     menu_edit->Append (ID_EDIT_GAME_DETAILS,         _T("Edit game details"));

@@ -42,6 +42,10 @@ private:
     void OnContext( wxContextMenuEvent &event );
     void OnEraseBackground(wxEraseEvent& WXUNUSED(evt));
     void OnSize(wxSizeEvent& WXUNUSED(evt));
+    void OnUndo(wxCommandEvent& WXUNUSED(event));
+    void OnUpdateUndo( wxUpdateUIEvent &event );
+    void OnRedo(wxCommandEvent& WXUNUSED(event));
+    void OnUpdateRedo( wxUpdateUIEvent &event );
 
     // 13 event handlers
     void OnKeyDown(wxKeyEvent& event);

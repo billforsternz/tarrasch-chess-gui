@@ -350,7 +350,7 @@ void GameView::Crawler( MoveTree *node, bool move0, bool last_move )
     level--;
 }
 
-#if 1
+#if 0
     #define gv_printf(...) cprintf ( __VA_ARGS__ ), cprintf("\n")
 #else
     #define gv_printf(...) 
