@@ -6,6 +6,7 @@
  ****************************************************************************/
 #include "wx/wx.h"
 #include "wx/button.h"
+#include "wx/sysopt.h"
 #include "wx/notebook.h"
 #include "Appdefs.h"
 #include "CtrlBox.h"
@@ -75,29 +76,29 @@ static int window_id_positions_54[NBR_OF_WIDS][4] =
     {10,425,116,19},                       // book_moves
     {512+XDELTA,480,68,28},                // wclock
     {584+XDELTA,480,68,28},                // bclock
-    {472+XDELTA,11+YDELTA,202,434},        // moves          + 3
+    {472+XDELTA,12+YDELTA,202,433},        // moves          + 3
     {394+XDELTA,498+YDELTA,0,0},           // button
     {10+XDELTA,558,570,99},                // kibitz
     {590+XDELTA,580,60,20},                // kibitz_button1
     {590+XDELTA,608,60,20}                 // kibitz_button2
 
     #else
-    {32+XDELTA,5+YDELTA,435,435},          // gb = graphic board
+    {32+XDELTA,6+YDELTA,435,435},          // gb = graphic board
     {10,10+YDELTA,20,20},                  // who_top
     {10,402+YDELTA,20,20},                 // who_bottom
     {32+XDELTA,446+YDELTA,206,22},         // white_player
     {238+XDELTA,446+YDELTA,20,22},         // dash_player
     {258+XDELTA,446+YDELTA,206,22},        // black_player
-    {10+XDELTA,468+YDELTA,674,37},         // box
-    {20+XDELTA,478+YDELTA,286,22},         // status
+    {10+XDELTA,466+YDELTA,662,37},         // box
+    {20+XDELTA,476+YDELTA,286,22},         // status
     {10,425,116,19},                       // book_moves
-    {512+XDELTA,466,68,28},                // wclock
-    {584+XDELTA,466,68,28},                // bclock
-    {472+XDELTA,5+YDELTA,202,434},         // moves          + 3
-    {394+XDELTA,482/*478*/+YDELTA,0,0},           // button
-    {10+XDELTA,530,570,99},                // kibitz
-    {590+XDELTA,550,60,20},                // kibitz_button1
-    {590+XDELTA,580,60,20}                 // kibitz_button2
+    {512+XDELTA,466,68,24},                // wclock
+    {584+XDELTA,466,68,24},                // bclock
+    {472+XDELTA,8+YDELTA,202,432},         // moves          + 3
+    {394+XDELTA,481+YDELTA,0,0},           // button
+    {10+XDELTA,528,560,99},               // kibitz
+    {578+XDELTA,550,60,20},                // kibitz_button1
+    {578+XDELTA,580,60,20}                 // kibitz_button2
     #endif
 };
 
@@ -364,9 +365,12 @@ Canvas::Canvas
     int x,y,h,w;
     LOCATE_4( moves, x, y, w, h );
     sz2.x += w;
-
+    sz2.y += 1; // moving to wx3.1 we needed just 1 more pixel to avoid a weird erasure effect on the first tab header
+                //  when creating subsequent tabs
+    //wxSystemOptions::SetOption("msw.notebook.themed-background", 0);
     notebook = new wxNotebook(this, wxID_ANY, pt2, sz2 );
     wxPanel *notebook_page1 = new wxPanel(notebook, wxID_ANY );
+    //wxWindow *notebook_page1 = new wxWindow(notebook, wxID_ANY );
     notebook->AddPage(notebook_page1,"New Game",true);
 #endif
 
@@ -378,9 +382,9 @@ Canvas::Canvas
     // Create labels
     who_top    = new wxStaticText(this,ID_WHO_TOP,   " ");
     who_bottom = new wxStaticText(this,ID_WHO_BOTTOM," ");
-    font1      = new wxFont( 14, wxROMAN,  wxITALIC, wxBOLD,   false );
-    font2      = new wxFont( 14, wxSWISS,  wxNORMAL, wxNORMAL, false );
-    font3      = new wxFont( 12, wxSWISS, wxNORMAL, wxNORMAL, false );
+    font1      = new wxFont( 14, wxFONTFAMILY_ROMAN,  wxFONTSTYLE_ITALIC, wxFONTWEIGHT_BOLD,   false );
+    font2      = new wxFont( 14, wxFONTFAMILY_SWISS,  wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false );
+    font3      = new wxFont( 12, wxFONTFAMILY_SWISS,  wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false );
     wxPoint pos;
     wxSize  size;
     who_top->SetFont( *font1 );
@@ -392,7 +396,7 @@ Canvas::Canvas
     who_bottom->SetPosition( pos );
     who_bottom->SetSize( size );
 
-    font_book = new wxFont( 10, wxROMAN, wxNORMAL, wxBOLD,   false );
+    font_book = new wxFont( 10, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD,   false );
     wxRect r;
     LOCATE_R( book_moves, r );
     pt.x = r.x;
@@ -411,7 +415,7 @@ Canvas::Canvas
     book_moves->SetFont( *font_book );
     book_moves->SetTxt("no book moves",false);
     
-    font_clock = new wxFont( 14, wxROMAN, wxNORMAL, wxBOLD,   false );
+    font_clock = new wxFont( 14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD,   false );
     LOCATE_R( wclock, r );
     pt.x = r.x;
     pt.y = r.y;

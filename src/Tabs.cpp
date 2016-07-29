@@ -26,6 +26,7 @@ void Tabs::TabNew( GameDocument &new_gd )
         gl->undo = e.undo; // blank
         current_idx = nbr_tabs-1;
         wxPanel *notebook_page1 = new wxPanel(objs.canvas->notebook, wxID_ANY );
+        //wxWindow *notebook_page1 = new wxWindow(objs.canvas->notebook, wxID_ANY );
         objs.canvas->notebook->AddPage(notebook_page1,"New Game",true);
     }
     cprintf( "New tab idx=%d, pos=%ld\n", current_idx, pos );

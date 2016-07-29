@@ -414,7 +414,7 @@ bool ChessApp::OnInit()
     wxString error_msg;
     int disp_width, disp_height;
     wxDisplaySize(&disp_width, &disp_height);
-    dbg_printf( "Display size = %d x %d\n", disp_width, disp_height );
+    cprintf( "Display size = %d x %d\n", disp_width, disp_height );
     objs.repository = new Repository;
     #if 0 // small screen testing
     wxSize  win_size  = wxSize(708, 596);
