@@ -873,7 +873,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     int nbr_tools = toolbar->GetToolsCount() - nbr_separators;
     const int SEPARATOR_WIDTH = 8;  // Can only be calculated after Realize(), so done
                                     //  offline below
-    const int BOOK_MOVES_WIDTH = 100;
+    const int BOOK_MOVES_WIDTH = 105;
     int x1 = nbr_tools*sz2.x + (nbr_tools-1)*space1 + nbr_separators*SEPARATOR_WIDTH;    // where we are now
     int x2 = (sz0.x - BOOK_MOVES_WIDTH - 20);                                            // where we want to be
     nbr_separators = (x2-x1)/SEPARATOR_WIDTH;
