@@ -1,3 +1,14 @@
+28/7/2016
+Made a new icon by making a 256x256 png (use adobe acrobat 390% view of a chess mag for pieces)
+Use gimp to make transparent panels (easy-peasy - select rectangle and press delete - then export)
+Then use convertico.com to make a 6 size ico file from that
+
+
+Some things to do
+Change credit to thanks for the icon idea
+move buttons up a pix or two
+don't show neg numbers in clock times
+
 3/7/2016
 
 #Fixed/Done
@@ -34,6 +45,10 @@ Separate fixed_period_mode times stored in .ini
 #For Beta
 
 #Postpone for now
+If there is a nasty assert (eg wxALIGN_CENTRE_VERTICAL) then "Yes" to abort the program doesn't work?!
+Get rid of edit game prefix
+Fix bolded first line of credits etc.
+Fix Larry Oliver's bug
 Idea: in database next move pane asterisk moves that mimic the current game.
 First line of help is bold for some reason (wx31)
 Dynamic US spelling (basically because of color)
