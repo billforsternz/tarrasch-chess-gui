@@ -18,7 +18,6 @@
 #include "Appdefs.h"
 #include "Canvas.h"
 #include "thc.h"
-#include "GraphicBoard.h"
 #include "Book.h"
 #include "GameLogic.h"
 #include "Lang.h"
@@ -2655,7 +2654,7 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
                         break;
     }
     bool white = gd.master_position.WhiteToPlay();
-    if( canvas->gb->GetNormalOrientation() )
+    if( canvas->GetNormalOrientation() )
     {
         canvas->who_top->SetLabel   ( white ? "" : "B" );
         canvas->who_bottom->SetLabel( white ? "W" : "" );

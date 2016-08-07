@@ -15,6 +15,7 @@
 #include "CtrlBox2.h"
 #include "thc.h"
 class GraphicBoard;
+class GraphicBoardResizable;
 class PopupControl;
 class CtrlBox;
 class CtrlBoxBookMoves;
@@ -74,7 +75,12 @@ public:
 public:
     bool            resize_ready;
     thc::ChessPosition   save_position;
-    GraphicBoard    *gb;
+    // #define RESIZABLE_BOARD // At the moment we are just getting started on RESIZABLE_BOARD - it's not usable
+    #ifdef RESIZABLE_BOARD
+    GraphicBoardResizable   *gb;
+    #else
+    GraphicBoard            *gb;
+    #endif
     CtrlChessTxt    *lb;
     PopupControl    *popup;
     wxStaticText    *who_top;

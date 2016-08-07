@@ -22,7 +22,6 @@
 #include "Canvas.h"
 #include "GameState.h"
 #include "Database.h"
-class GraphicBoard;
 
 class GameLogic
 {

@@ -12,7 +12,6 @@
 class  Canvas;
 class  GameLogic;
 class  CentralWorkSaver;
-class  GraphicBoard;
 class  wxListCtrl;
 class  PopupControl;
 class  Rybka;

@@ -15,6 +15,7 @@
 #include "CtrlBoxBookMoves.h"
 #include "Canvas.h"
 #include "GraphicBoard.h"
+#include "GraphicBoardResizable.h"
 #include "GameLogic.h"
 #include "CentralWorkSaver.h"
 #include "thc.h"
@@ -374,7 +375,11 @@ Canvas::Canvas
     notebook->AddPage(notebook_page1,"New Game",true);
 #endif
 
+    #ifdef RESIZABLE_BOARD
+    gb = new GraphicBoardResizable( this,
+    #else
     gb = new GraphicBoard( this,
+    #endif
                           wxID_ANY,
                           pt,
                           sz, using_large_chess_board?54:40 );

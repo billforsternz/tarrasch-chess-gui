@@ -23,7 +23,6 @@
 #include "wx/log.h"
 #include "Appdefs.h"
 #include "Canvas.h"
-#include "GraphicBoard.h"
 #include "GameLogic.h"
 #include "Lang.h"
 #include "CentralWorkSaver.h"
