@@ -71,7 +71,7 @@ bool GameClockHalf::GetDisplay( wxString &txt, bool expire_show_neg  )   // retu
         if( expire_show_neg )
             txt = "- 0";
         else
-            txt = "0";
+            txt = "0.00";
     }
     else
     {

@@ -24,7 +24,7 @@ public:
     void SetTimes( int white_millisecs_time, int black_millisecs_time );
     void GetTimes( int &white_millisecs_time, int &black_millisecs_time );
     bool Run( bool white_to_move );
-    void Press( bool white_move );
+    void Press( bool white_move, bool ingame, bool human_is_white );
     void GameOver();
     int  MillisecsToNextSecond();
     void PauseBegin();

@@ -1572,6 +1572,20 @@ void GameLogic::CmdClocks()
     ClockConfig cfg = objs.repository->clock;
     cfg.m_engine_minutes = cfg.m_fixed_period_mode ? cfg.m_engine_fixed_minutes : cfg.m_engine_time;
     cfg.m_engine_seconds = cfg.m_fixed_period_mode ? cfg.m_engine_fixed_seconds : cfg.m_engine_increment;
+    bool adjust_engine_time = false;
+    if( cfg.m_fixed_period_mode && (state==HUMAN||state==PONDERING) )
+    {
+        if( glc.human_is_white )
+        {
+            adjust_engine_time = (cfg.m_black_time==cfg.m_engine_fixed_minutes &&
+                                  cfg.m_black_secs==cfg.m_engine_fixed_seconds);
+        }
+        else
+        {
+            adjust_engine_time = (cfg.m_white_time==cfg.m_engine_fixed_minutes &&
+                                  cfg.m_white_secs==cfg.m_engine_fixed_seconds);
+        }
+    }
     ClockDialog dialog( cfg, objs.frame );
     chess_clock.PauseBegin();
     int ret = dialog.ShowModal();
@@ -1586,6 +1600,19 @@ void GameLogic::CmdClocks()
         {
             dialog.dat.m_engine_fixed_minutes = dialog.dat.m_engine_minutes;
             dialog.dat.m_engine_fixed_seconds = dialog.dat.m_engine_seconds;
+            if( adjust_engine_time )
+            {
+                if( glc.human_is_white )
+                {
+                    dialog.dat.m_black_time = dialog.dat.m_engine_fixed_minutes;
+                    dialog.dat.m_black_secs = dialog.dat.m_engine_fixed_seconds;
+                }
+                else
+                {
+                    dialog.dat.m_white_time = dialog.dat.m_engine_fixed_minutes;
+                    dialog.dat.m_white_secs = dialog.dat.m_engine_fixed_seconds;
+                }
+            }
         }
         else
         {
@@ -1900,8 +1927,11 @@ void GameLogic::OnIdle()
         case PONDERING:		    
         case SLIDING:       
         case THINKING:
-        expired = chess_clock.Run( white );
+        expired = chess_clock.Run( white );     // Here expired means time_remaining < 0 (see below)
     }
+    bool show_white_expired = false;
+    bool show_black_expired = false;
+    bool fixed_expired = false;
     if( expired )
     {
         switch( state )
@@ -1920,9 +1950,16 @@ void GameLogic::OnIdle()
             {
                 bool computer_to_play = (state==PONDERING||state==THINKING);
                 if( computer_to_play && chess_clock.fixed_period_mode )
+                {
+                    fixed_expired = true;
                     CmdMoveNow();
+                }
                 else
                 {
+                    if( white )
+                        show_white_expired = true;
+                    else
+                        show_black_expired = true;
                     glc.Set( white ? RESULT_WHITE_LOSE_TIME : RESULT_BLACK_LOSE_TIME );
                     NewState( GAMEOVER );
                     if( gd.AreWeInMain() )
@@ -1940,9 +1977,22 @@ void GameLogic::OnIdle()
         }
     }
     wxString txt;
-    chess_clock.white.GetDisplay( txt, true );
+    expired = chess_clock.white.GetDisplay( txt, show_white_expired );  // Here expired means time_remaining <= 0 (see above)
+                                                                        // so expired can be true here but false above
+    bool white_is_computer_to_play_fixed = (white && chess_clock.fixed_period_mode && (state==PONDERING||state==THINKING));
+    if( expired && white_is_computer_to_play_fixed && !fixed_expired )
+    {
+        fixed_expired = true;
+        CmdMoveNow();
+    }
     canvas->WhiteClock( txt );
-    chess_clock.black.GetDisplay( txt, true );
+    expired = chess_clock.black.GetDisplay( txt, show_black_expired );
+    bool black_is_computer_to_play_fixed = (!white && chess_clock.fixed_period_mode && (state==PONDERING||state==THINKING));
+    if( expired && black_is_computer_to_play_fixed && !fixed_expired )
+    {
+        fixed_expired = true;
+        CmdMoveNow();
+    }
     canvas->BlackClock( txt );
     if( state==POPUP || state==POPUP_MANUAL )
     {
@@ -3049,7 +3099,7 @@ bool GameLogic::MakeMove( thc::Move move, GAME_RESULT &result )
     bool black_visible;
     int  increment;
     bool running;
-    chess_clock.Press( white );
+    chess_clock.Press( white, ingame, glc.human_is_white );
     chess_clock.white.GetClock( white_time, increment, running, white_visible );
     chess_clock.black.GetClock( black_time, increment, running, black_visible );
     game_move.white_clock_visible = white_visible;
@@ -3070,7 +3120,7 @@ bool GameLogic::MakeMove( thc::Move move, GAME_RESULT &result )
     bool allow_overwrite = !ingame;
     bool gameover = false; 
     if( !gd.MakeMove( game_move, allow_overwrite) )
-        chess_clock.Press( !white );    // temp hack, undo previous press (almost)
+        chess_clock.Press( !white, ingame, glc.human_is_white );    // temp hack, undo previous press (almost)
     else
     {
         gd.master_position.PlayMove(move);

@@ -199,7 +199,7 @@ bool GameClock::Run( bool white_to_move )
     return expired;
 }
 
-void GameClock::Press( bool white_move )
+void GameClock::Press( bool white_move, bool ingame, bool human_is_white )
 {
     if( white_move )
     {
@@ -211,8 +211,23 @@ void GameClock::Press( bool white_move )
         black.Stop(true);
         white.Start();
     }
-    if( fixed_period_mode )
+    if( fixed_period_mode && ingame )
+    {
+        ClockConfig *rep = &objs.repository->clock;
+        if( human_is_white )
+        {
+            rep->m_black_time      = rep->m_engine_fixed_minutes;
+            rep->m_black_secs      = rep->m_engine_fixed_seconds;
+            rep->m_black_increment = 0;
+        }    
+        else 
+        {    
+            rep->m_white_time      = rep->m_engine_fixed_minutes;
+            rep->m_white_secs      = rep->m_engine_fixed_seconds;
+            rep->m_white_increment = 0;
+        }
         Repository2Clocks();
+    }
 }
 
 void GameClock::GameOver()
