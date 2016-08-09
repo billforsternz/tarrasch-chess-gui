@@ -1860,7 +1860,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
             }
         }
     }
-    return false;
+    //return false;     // unreachable
 }
 
 bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( PatternMatch &pm, bool &reverse, const char *moves_in, unsigned short &offset_first, unsigned short &offset_last )
@@ -2551,7 +2551,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
             }
         }
     }
-    return false;
+    //return false;     // unreachable
 }
 
 bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( const std::string &moves_in, unsigned short &offset_first, unsigned short &offset_last )          // semi fast
