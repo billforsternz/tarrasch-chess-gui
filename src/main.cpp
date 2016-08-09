@@ -95,7 +95,7 @@ public:
 //  on the stack - no need to use it
 static int dbg_printf_prepend_time=0;
 static FILE *teefile;   // private debugging log
-#define DURING_DEVELOPMENT
+//#define DURING_DEVELOPMENT
 #ifdef DURING_DEVELOPMENT
 static bool dbg_console_enabled = true;     // set this to false except during development
 #else
@@ -651,6 +651,8 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     : wxFrame((wxFrame *)NULL, wxID_ANY, title, pos, size ) //, wxDEFAULT_FRAME_STYLE|wxCLIP_CHILDREN|
                                                             //        wxNO_FULL_REPAINT_ON_RESIZE )
 {
+    // Set the frame icon
+    SetIcon(wxICON(aaaaaaaa));      // for explanation of 'aaaaaaaa' see Tarrasch.rc
 
     // Timer
     m_timer.SetOwner(this,TIMER_ID);
@@ -1045,7 +1047,7 @@ void ChessFrame::OnCredits(wxCommandEvent& WXUNUSED(event))
         "Thanks to David L Brown and the Good Companions for the chess "
         "graphics."
         "\n\n"
-        "Thanks to Pawel Koziol for the icon."
+        "Thanks to Pawel Koziol for the icon idea."
         "\n\n"
         "Thanks to Yusuke Kamiyamane for some of the toolbar icons."
         "\n\n"
