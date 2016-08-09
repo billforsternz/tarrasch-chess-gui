@@ -335,7 +335,7 @@ void Repository::SetDirectories()
     exe_dir = exe.GetPath();
     if( dirs.Count() > 1 )
         name = dirs[dirs.Count()-1];
-    if( name=="vc_mswd" || name=="vc_msw" ) // during development
+    if( name=="vc_mswd" || name=="vc_msw" || name=="vc_mswud" || name=="vc_mswu" ) // during development
         name = "TarraschDb";
     if( name.Len() == 0 )
         name = "TarraschDb";
