@@ -6,17 +6,110 @@ it allows you to create and edit .pgn files (i.e standard chess documents) and e
 separate UCI (i.e. standard) chess engines. You can either play against a chess engine or use
 it to analyse positions and games.
 
-Tarrasch has been around for a few years. Tarrasch V1 was primitive but useful in some
-contexts. Tarrasch V2 was much more complete and useful. You can find out more about Tarrasch
-and download Tarrasch V2 for Windows at this [website](http://triplehappy.com). Tarrasch
-V2 is also an open-source project, using the peer old-tarrasch-chess-gui repository on github.
+Version information: This repository contains Tarrasch V3, (also known as TarraschDb in
+recognition of Tarrasch's (nifty) database features. Tarrasch V3 is the newest version, now in
+beta. Tarrasch V3 is approaching completion and can be used instead of the established
+version.
 
-At the time of writing Tarrasch V3 is under development. I have been working on it
-privately for some time, but now I am putting the working repository on Github and the
-plan is to develop in the open and keep the repository here updated regularly.
+Tarrasch V2 is still the "current version" of Tarrasch. I hope to retire it soon.
+Tarrasch V2 uses the peer old-tarrasch-chess-gui repository on github.
 
-Features
-========
+Tarrasch V1 was primitive but useful in some contexts.
+
+You can find out more about Tarrasch
+and download Tarrasch V2 and V3 for Windows at this [website](http://triplehappy.com). 
+
+Building Tarrasch
+=================
+
+It is now easy to grab the Tarrasch source code, rebuild it and hack on it (at least
+on Windows). This is a new development, as for the first 6 or more years of its life
+I accepted that using wxWidgets inevitably resulted in a difficult barrier for new
+developers. I recently (July-August 2016) took a fresh look at this as part of a long
+delayed upgrade to wxWidgets V3 and it turns out it's not so hard.
+
+Steps
+
+1) Download a recent version of Visual Studio, with C++ support. I've tried VS2010
+and VS2015
+
+2) Put this repository into a convenient working directory, eg
+git clone https:/github.com/billforsternz/tarrasch-chess-gui
+
+3) Just the one project file is required, it's called TarraschDb.vcxproj. It does
+assume that subdirectory wxWidgets-3.1.0 contains the required includes and libraries
+which is a problem as they are too big to store in the repository, but....
+
+4) I have prepared a .zip (well actually a .7z for extra space savings) that you
+can download from my website. Just download, unzip into the right place with
+7zip and you are ready to go. Download instructions a bit further down.
+
+Building Tarrasch on Linux and Mac
+==================================
+
+For the moment these are second class citizens unfortunately. In due course I hope
+this changes. However you can certainly have a play if you are keen. I can't/won't
+outline the steps required in detail, but basically;
+
+1) Grab repository as above
+
+2) Install wxWidgets and build one or more samples, in particular samples/richtext
+
+3) Once you have samples/richtext working, just replace richtext.cpp with all the
+source files in the repository src directory. Pay attention to file src/platform.h
+and make sure that THC_MAC or THC_LINUX are defined. (thc is a convenient prefix
+it stands for triple happy chess - Triplehappy.com is the Tarrasch's home website)
+
+wxWidgets Dependency
+====================
+
+To obtain a populated wxWidgets-3.1.0 directory on Windows. Either;
+
+A) Download an already prepared installation in the form of a single compressed .7z (7zip) archive
+from the project website, and uncompress it with 7zip. Two versions are available;
+ http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2010.7z
+ http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2015.7z
+These are the same except the completed libraries have been compiled with VS2010 in the first
+and VS2015 in the second. Use the one corresponding to the version of Visual Studio you intend
+to use.
+
+B) Install wxWidgets from wxwidgets.org and follow the MSW (Microsoft Windows) instructions
+in build/msw to build your own installation from scratch. Important: For each wxWidgets subproject
+you must go to properties > configuration properties > C/C++ > code generation and change
+/MD to /MT (release) and /MDd to /MTd (debug). This enables a fully static final executable.
+Once you've successfully rebuilt wxWidgets (both debug and release) copy the include and lib
+directory trees into place in the wxWidgets-3.1.0 directory.
+
+The .7z archives only include the 24 wxWidgets libraries required by Tarrasch. These libraries
+are all in the wxWidgets-3.1.0\lib\vc_lib subdirectory as follows;
+
+.\wxWidgets-3.1.0\lib\vc_lib\wxbase31u.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxbase31ud.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxbase31ud_xml.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxbase31u_xml.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxexpat.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxexpatd.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxjpeg.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxjpegd.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxmsw31ud_adv.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxmsw31ud_core.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxmsw31ud_html.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxmsw31ud_richtext.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_adv.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_core.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_html.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_richtext.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxpng.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxpngd.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxregexu.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxregexud.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxtiff.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxtiffd.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxzlib.lib
+.\wxWidgets-3.1.0\lib\vc_lib\wxzlibd.lib
+
+New in Tarrasch V3
+==================
 
 Tarrasch V3 seeks to add the following features to the existing Tarrasch V2
 
@@ -26,33 +119,4 @@ Tarrasch V3 seeks to add the following features to the existing Tarrasch V2
 * Publish to .html (and possibly .rtf).
 * Work with huge files, easily preview games before loading.
 
-Status
-======
-
-As I write this, I am preparing to upload an initial commit that partially implements each of
-key features above. However nothing works flawlessly yet, and some things that worked well in
-Tarrasch V2 are currently broken. As well as incomplete code, there are other things typical
-of work in progress - for example hardwired paths and filenames that should be preferences.
-
-I am using a Mac for Tarrasch V3 development, even though some
-things from V2 haven't made it into the Mac version (yet). For example the simple "book" feature
-of V2. I chose to use the V3 development as an exercise in learning to use my Mac for programming.
-My first step was to get V2 working, but I never got everything working perfectly before moving
-onto the V3 features, so I don't have a practical V2 for Mac.
-
-I am using C++ and wxWidgets as a GUI library. There is now a production ready wxWidgets Cocoa
-release for Mac (V3.0) and I am using that. People with an interest in the Tarrasch source code
-have always struggled most with the annoying wxWidgets dependency. I am not going to apologise
-for that as without wxWidgets I wouldn't have a practical chess program! Having said that, I
-should check for other github projects that use wxWidgets and find out what good practice is for
-incorporating wxWidgets. In the meantime, my practice is to leave it up to the user to figure
-out how to download wxWidgets and build a sample project. Once you can do that, replacing the
-sample application code with Tarrasch code shouldn't be too onerous.
-
-Apart from the dependency on wxWidgets Tarrasch should be like any other Xcode 5 C++ project.
-I do find on Mac everything tends to be very version dependent. When I upgraded from Lion to
-Mavericks I also had to upgrade from Xcode 4 to 5, and it took me a while to get things going
-again. The github project includes all the ancillary and boilerplate files characteristic of
-a wxWidgets cocoa application on Mac.
-
-Bill Forster <billforsternz@gmail.com> 8Feb2014
+Bill Forster <billforsternz@gmail.com> Last update: 10Aug2016
