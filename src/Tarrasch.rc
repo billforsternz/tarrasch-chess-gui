@@ -18,7 +18,7 @@
 // first icon in the executable and the icons are sorted both by their order
 // and alphabetically (!), so put this icon first and give it a name
 // starting with "a"
-aaaaaaaa ICON "TarraschDb.ico"  // @@ instead of "sample.ico"
+aaaaaaaa ICON "TarraschDb3.ico"  // @@ instead of "sample.ico"
 
 // this icon is used with wxFrame::SetIcon() (@@ commented out)
 //@@ sample ICON "sample.ico"
