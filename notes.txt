@@ -1,3 +1,31 @@
+9/8/2016
+
+Tidying up the 16x16 icon inside of TarraschDb.ico;
+
+We went looking for pixels we could see in adjacent positions. The following
+triples are RGB values (from MS Paint's colour editor).
+TarraschDb2.ico looking for patterns
+
+for each run of 16 and or 12
+    search for each triple
+        145,134,113
+        246,220,177
+        230,182,135
+        141,105,76
+
+See program icon-scan.cpp in misc directory.
+We found the pixels and determined that the 16x16 bmp is embedded as follows
+
+offset 0x44e = top left. Then each pixel is 4 bytes B,G,R,Alpha, 
+top row is 0x40 bytes (16 pixels; 0x44e-0x48d
+2nd row is 0x40e-0x44d
+3rd row is 0x3c3-0x40d ...
+15th row is 0x08e-0x12d
+
+Wrote a little code in icon-scan.cpp to replace the "drunk insect" iconography
+(caused by scaling down from 256x256 in convertico.com) with a more precise
+version.
+
 28/7/2016
 Made a new icon by making a 256x256 png (use adobe acrobat 390% view of a chess mag for pieces)
 Use gimp to make transparent panels (easy-peasy - select rectangle and press delete - then export)
