@@ -1,3 +1,5 @@
+*Recently updated - Tarrasch is now a lot more developer friendly I hope*
+
 Background
 ==========
 
@@ -8,7 +10,7 @@ it to analyse positions and games.
 
 Version information: This repository contains Tarrasch V3, (also known as TarraschDb in
 recognition of Tarrasch's (nifty) database features. Tarrasch V3 is the newest version, now in
-beta. Tarrasch V3 is approaching completion and can be used instead of the established
+beta. Tarrasch V3 is approaching completion and can be used instead of the established current
 version.
 
 Tarrasch V2 is still the "current version" of Tarrasch. I hope to retire it soon.
@@ -36,9 +38,15 @@ and VS2015
 2) Put this repository into a convenient working directory, eg
 git clone https:/github.com/billforsternz/tarrasch-chess-gui
 
-3) Just the one project file is required, it's called TarraschDb.vcxproj. It does
-assume that subdirectory wxWidgets-3.1.0 contains the required includes and libraries
-which is a problem as they are too big to store in the repository, but....
+3) Just the one project file is required, it's called TarraschDb.vcxproj.
+It works on VS2010 and VS2015. The project structure is now super lean,
+mean and easy. There are a bunch of C++ source files (obviously) plus a
+simple resource file and icon (actually two icon files now) in the src
+directory. The project does assume the existance of a wxWidgets
+directory using standard wxWidgets conventions. The directory should be
+named wxWidgets-3.1.0 and it only needs to contain the include and lib
+directories. Still this is a problem as these files collectively are
+really too big to store in the repository, but....
 
 4) I have prepared a .zip (well actually a .7z for extra space savings) that you
 can download from my website. Just download, unzip into the right place with
@@ -56,7 +64,7 @@ outline the steps required in detail, but basically;
 2) Install wxWidgets and build one or more samples, in particular samples/richtext
 
 3) Once you have samples/richtext working, just replace richtext.cpp with all the
-source files in the repository src directory. Pay attention to file src/platform.h
+source files in the repository src directory. Pay attention to file src/Portability.h
 and make sure that THC_MAC or THC_LINUX are defined. (thc is a convenient prefix
 it stands for triple happy chess - Triplehappy.com is the Tarrasch's home website)
 
@@ -67,8 +75,8 @@ To obtain a populated wxWidgets-3.1.0 directory on Windows. Either;
 
 A) Download an already prepared installation in the form of a single compressed .7z (7zip) archive
 from the project website, and uncompress it with 7zip. Two versions are available;
- http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2010.7z
- http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2015.7z
+ (VS2010 version)[http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2010.7z]
+ (VS2015 version)[http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2015.7z]
 These are the same except the completed libraries have been compiled with VS2010 in the first
 and VS2015 in the second. Use the one corresponding to the version of Visual Studio you intend
 to use.
@@ -119,4 +127,4 @@ Tarrasch V3 seeks to add the following features to the existing Tarrasch V2
 * Publish to .html (and possibly .rtf).
 * Work with huge files, easily preview games before loading.
 
-Bill Forster <billforsternz@gmail.com> Last update: 10Aug2016
+Bill Forster <billforsternz@gmail.com> Last update: 12Aug2016
