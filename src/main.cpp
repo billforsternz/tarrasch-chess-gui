@@ -652,7 +652,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
                                                             //        wxNO_FULL_REPAINT_ON_RESIZE )
 {
     // Set the frame icon
-    SetIcon(wxICON(aaaaaaaa));      // for explanation of 'aaaaaaaa' see Tarrasch.rc
+    SetIcon(wxICON(bbbbbbbb));      // for explanation of 'bbbbbbbb' see Tarrasch.rc
 
     // Timer
     m_timer.SetOwner(this,TIMER_ID);
