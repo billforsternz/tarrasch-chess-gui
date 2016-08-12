@@ -75,8 +75,8 @@ To obtain a populated wxWidgets-3.1.0 directory on Windows. Either;
 
 A) Download an already prepared installation in the form of a single compressed .7z (7zip) archive
 from the project website, and uncompress it with 7zip. Two versions are available;
- (VS2010 version)[http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2010.7z]
- (VS2015 version)[http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2015.7z]
+ [VS2010 version](http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2010.7z)
+ [VS2015 version](http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2015.7z)
 These are the same except the completed libraries have been compiled with VS2010 in the first
 and VS2015 in the second. Use the one corresponding to the version of Visual Studio you intend
 to use.
@@ -91,30 +91,30 @@ directory trees into place in the wxWidgets-3.1.0 directory.
 The .7z archives only include the 24 wxWidgets libraries required by Tarrasch. These libraries
 are all in the wxWidgets-3.1.0\lib\vc_lib subdirectory as follows;
 
-.\wxWidgets-3.1.0\lib\vc_lib\wxbase31u.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxbase31ud.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxbase31ud_xml.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxbase31u_xml.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxexpat.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxexpatd.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxjpeg.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxjpegd.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxmsw31ud_adv.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxmsw31ud_core.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxmsw31ud_html.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxmsw31ud_richtext.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_adv.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_core.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_html.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_richtext.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxpng.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxpngd.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxregexu.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxregexud.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxtiff.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxtiffd.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxzlib.lib
-.\wxWidgets-3.1.0\lib\vc_lib\wxzlibd.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxbase31u.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxbase31ud.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxbase31ud_xml.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxbase31u_xml.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxexpat.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxexpatd.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxjpeg.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxjpegd.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31ud_adv.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31ud_core.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31ud_html.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31ud_richtext.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_adv.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_core.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_html.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_richtext.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxpng.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxpngd.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxregexu.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxregexud.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxtiff.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxtiffd.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxzlib.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxzlibd.lib
 
 New in Tarrasch V3
 ==================
