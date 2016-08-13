@@ -36,7 +36,7 @@ Steps
 VS2010 and VS2015
 
 2) Put this repository into a convenient working directory, eg
-git clone https:/github.com/billforsternz/tarrasch-chess-gui workdir
+git clone https::/github.com/billforsternz/tarrasch-chess-gui workdir
 
 3) Just the one project file is required, it's called TarraschDb.vcxproj.
 It works on VS2010 and VS2015. The project structure is now super lean,
@@ -51,6 +51,15 @@ really too big to store in the repository, but....
 4) I have prepared a .zip (well actually a .7z for extra space savings) that you
 can download from my website. Just download, unzip into the right place with
 7zip and you are ready to go. Download instructions a bit further down.
+
+Note that if you get nothing but compile errors like this;
+
+Cannot open include file: 'wx/wx.h': No such file or directory
+
+That is a strong indication that you either ommitted step 4) or didn't unzip into
+the right place in the directory hierarchy. It is really important to have a directory
+wxWidgets-3.1.0 in your working directory and to have valid lib and include directories
+within that.
 
 Building Tarrasch on Linux and Mac
 ==================================
