@@ -18,10 +18,10 @@
 // first icon in the executable and the icons are sorted both by their order
 // and alphabetically (!), so put this icon first and give it a name
 // starting with "a"
-aaaaaaaa ICON "TarraschDb2.ico"  // @@ instead of "sample.ico"
+aaaaaaaa ICON "Tarrasch9Squares.ico"  // @@ instead of "sample.ico"
 
 // this icon is used with wxFrame::SetIcon()
-bbbbbbbb ICON "TarraschDbOffset.ico" //@@ instead of "sample.ico"
+bbbbbbbb ICON "Tarrasch4Squares.ico" //@@ instead of "sample.ico"
 
 // set this to 1 if you don't want to use manifest resource (manifest resource
 // is needed to enable visual styles on Windows XP - see docs/msw/winxp.txt
