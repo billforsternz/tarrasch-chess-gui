@@ -32,11 +32,11 @@ delayed upgrade to wxWidgets V3 and it turns out it's not so hard.
 
 Steps
 
-1) Download a recent version of Visual Studio, with C++ support. I've tried VS2010
-and VS2015
+1) Download and install a recent version of Visual Studio, with C++ support. I've tried
+VS2010 and VS2015
 
 2) Put this repository into a convenient working directory, eg
-git clone https:/github.com/billforsternz/tarrasch-chess-gui
+git clone https:/github.com/billforsternz/tarrasch-chess-gui workdir
 
 3) Just the one project file is required, it's called TarraschDb.vcxproj.
 It works on VS2010 and VS2015. The project structure is now super lean,
@@ -75,7 +75,7 @@ To obtain a populated wxWidgets-3.1.0 directory on Windows. Either;
 
 A) Download an already prepared installation in the form of a single compressed .7z (7zip) archive
 from the project website, and uncompress it with 7zip. Two versions are available;
- [VS2010 version](http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2010.7z)
+ [VS2010 version](http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2010.7z) and
  [VS2015 version](http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2015.7z)
 These are the same except the completed libraries have been compiled with VS2010 in the first
 and VS2015 in the second. Use the one corresponding to the version of Visual Studio you intend
