@@ -29,8 +29,6 @@
 #include "Tabs.h"
 #include "Repository.h"
 #include "Objects.h"
-using namespace std;
-using namespace thc;
 
 //temp
 bool view_flags_book_moves;
@@ -936,7 +934,7 @@ void Canvas::SetPosition()
 
 void Canvas::BookUpdate( bool suppress )
 {
-    vector<thc::Move> bmoves;
+    std::vector<thc::Move> bmoves;
     bool have_book_moves=false;
     if( objs.gl )
         have_book_moves = objs.book->Lookup( objs.gl->gd.master_position, bmoves );

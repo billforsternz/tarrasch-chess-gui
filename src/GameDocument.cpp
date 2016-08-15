@@ -13,8 +13,6 @@
 #include "GameLogic.h"
 #include "Lang.h"
 #include "GameDocument.h"
-using namespace std;
-using namespace thc;
 
 GameDocument::GameDocument( GameLogic *gl )
     : gv(gl)
@@ -312,10 +310,10 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
 
         // these vars are for locating starting point in tree only
         thc::ChessRules cr_variation_start;
-        vector<VARIATION>::iterator v;
-        vector<VARIATION>::iterator vend;
-        vector<MoveTree>::iterator m;
-        vector<MoveTree>::iterator mend;
+        std::vector<VARIATION>::iterator v;
+        std::vector<VARIATION>::iterator vend;
+        std::vector<MoveTree>::iterator m;
+        std::vector<MoveTree>::iterator mend;
     };
     STACK_ELEMENT stk_array[MAX_DEPTH+1];
     int stk_idx = 0;
@@ -388,7 +386,7 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
                 }
                 else
                 {
-                    vector<MoveTree>::iterator m = stk->m++;
+                    std::vector<MoveTree>::iterator m = stk->m++;
                     stk = &stk_array[++stk_idx];
                     stk->v      = m->variations.begin();
                     stk->vend   = m->variations.end();
@@ -805,7 +803,7 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
                                         node.game_move.move.src =
                                         node.game_move.move.dst = lookup[i];
                                         node.game_move.move.capture = cr.squares[i];  // empty
-                                        node.game_move.move.special = NOT_SPECIAL;
+                                        node.game_move.move.special = thc::NOT_SPECIAL;
                                         okay = true;
                                         break;
                                     }
@@ -1967,7 +1965,7 @@ void GameDocument::GetSummary( thc::ChessPosition &start_position_, std::vector<
     MoveTree *found = Locate( pos, cr, title, at_move0 );
     int ivar=0;
     int imove=0;
-    vector<GAME_MOVE> temp;
+    std::vector<GAME_MOVE> temp;
     if( found )
     {
         bool leaf = true;   // start at the leaf and iterate back
@@ -2107,7 +2105,7 @@ void GameDocument::ToFileTxtGameDetails( std::string &str )
     #else
     #define EOL "\n"
     #endif
-    string str1;
+    std::string str1;
     str1 += "[Event \"";
     str1 += (r.event=="" ? "?" : r.event);
     str1 += "\"]" EOL;
@@ -2161,14 +2159,14 @@ void GameDocument::ToFileTxtGameDetails( std::string &str )
 
 void GameDocument::ToFileTxtGameBody( std::string &str )
 {
-    string str1;
+    std::string str1;
     gv.ToString( str1 );
     str1 += "\n";
     str1 += "\n";
     #ifndef _WINDOWS
     str = str1;
     #else
-    string str2;
+    std::string str2;
     int len = str1.length();
     for( int i=0; i<len; i++ )
     {
@@ -2184,14 +2182,14 @@ void GameDocument::ToFileTxtGameBody( std::string &str )
 
 void GameDocument::ToPublishTxtGameBody( std::string &str, int &diagram_base, int &mv_base, int &neg_base, int publish_options )
 {
-    string str1;
+    std::string str1;
     gv.ToPublishString( str1, diagram_base, mv_base, neg_base, publish_options );
     str1 += "\n";
     str1 += "\n";
     #ifndef _WINDOWS
     str = str1;
     #else
-    string str2;
+    std::string str2;
     int len = str1.length();
     for( int i=0; i<len; i++ )
     {
@@ -2231,10 +2229,10 @@ void GameDocument::Temp()
     {
         VARIATION  *pvar;
         thc::ChessRules cr;
-        vector<VARIATION>::iterator v;
-        vector<VARIATION>::iterator vend;
-        vector<MoveTree>::iterator m;
-        vector<MoveTree>::iterator mend;
+        std::vector<VARIATION>::iterator v;
+        std::vector<VARIATION>::iterator vend;
+        std::vector<MoveTree>::iterator m;
+        std::vector<MoveTree>::iterator mend;
     };
     STACK_ELEMENT stk_array[MAX_DEPTH+1];
     int stk_idx = 0;
@@ -2264,7 +2262,7 @@ void GameDocument::Temp()
                 }
                 else
                 {
-                    vector<MoveTree>::iterator m = stk->m;
+                    std::vector<MoveTree>::iterator m = stk->m;
                     stk = &stk_array[++stk_idx];
                     stk->v      = m->variations.begin();
                     stk->vend   = m->variations.end();

@@ -17,10 +17,6 @@
 #include "BoardSetupControl.h"
 #include "bitmaps/board_setup_bitmap.xpm"
 #include "bitmaps/custom_cursors.xpm"
-using namespace std;
-using namespace thc;
-
-//static wxBitmap static_chess_bmp=wxBitmap( board_setup_bitmap_xpm );
 
 BoardSetupControl::BoardSetupControl
 (

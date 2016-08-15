@@ -11,11 +11,6 @@
 #include "BoardSetup.h"
 #include "thc.h"
 
-using namespace std;
-using namespace thc;
-
-//#define XBORDER 46
-//#define YBORDER 11
 #define SQUARE_HEIGHT 34
 #define SQUARE_WIDTH  34
 

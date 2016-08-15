@@ -12,8 +12,6 @@
 #include "Book.h"
 #include "Repository.h"
 #include "Objects.h"
-using namespace std;
-using namespace thc;
 #define nbrof(array) ( sizeof(array) / sizeof((array)[0]) )
 
 //#define REGENERATE
@@ -908,7 +906,7 @@ bool Book::DoMove( bool white_, int move_number, char *buf )
                 #endif
                 hash &= BOOK_HASH_MSK;
                 bool found = false;
-                vector<BookPosition>::iterator it;
+                std::vector<BookPosition>::iterator it;
                 if( bucket[hash].size() )
                 {
                     for( it = bucket[hash].begin(); it != bucket[hash].end(); it++ )
@@ -1035,7 +1033,7 @@ bool Book::Compile( wxString &error_msg, wxString &compile_msg, wxString &pgn_fi
                     fwrite( &ui, sizeof(ui), 1, outfile );
                     //bool multi = (bucket[i].size()>1);
                     //dbg_printf( "bucket[%04x] has %d position%s", i, bucket[i].size(), multi?"s":"" );
-                    vector<BookPosition>::iterator it;
+                    std::vector<BookPosition>::iterator it;
                     for( it = bucket[i].begin(); it != bucket[i].end(); it++ )
                     {
                         BookPosition bp = *it;
@@ -1263,14 +1261,14 @@ bool Book::LoadCompiled( wxString &error_msg, wxString &pgn_compiled_file )
 }
 
 // Lookup full move list, return true if any moves found
-bool Book::Lookup( thc::ChessPosition &pos, vector<BookMove> &bmoves )
+bool Book::Lookup( thc::ChessPosition &pos, std::vector<BookMove> &bmoves )
 {
     bool found = false;
     //if( pos.squares[c4]=='P' && pos.squares[f3]=='N' && pos.squares[d5]=='p' )
     if( objs.repository->book.m_enabled )
     {
         bmoves.clear();
-        vector<thc::Move> moves;
+        std::vector<thc::Move> moves;
         thc::ChessRules cr = pos;
         cr.GenLegalMoveList( moves );
         for( unsigned int i=0; i<moves.size(); i++ )
@@ -1278,9 +1276,9 @@ bool Book::Lookup( thc::ChessPosition &pos, vector<BookMove> &bmoves )
             thc::Move move = moves[i];
             cr = pos;
             cr.PlayMove( move );
-            CompressedPosition cpos;
+            thc::CompressedPosition cpos;
             unsigned short hash = BOOK_HASH_MSK & cr.Compress( cpos );
-            vector<BookPosition>::iterator it;
+            std::vector<BookPosition>::iterator it;
             if( bucket[hash].size() )
             {
                 for( it = bucket[hash].begin(); it != bucket[hash].end(); it++ )
@@ -1305,10 +1303,10 @@ bool Book::Lookup( thc::ChessPosition &pos, vector<BookMove> &bmoves )
 }
 
 // Lookup simple move list, return true if any moves found
-bool Book::Lookup( thc::ChessPosition &pos, vector<thc::Move> &moves )
+bool Book::Lookup( thc::ChessPosition &pos, std::vector<thc::Move> &moves )
 {
     moves.clear();
-    vector<BookMove> bms;
+    std::vector<BookMove> bms;
     bool found = Lookup( pos, bms );
     if( found )
     {
