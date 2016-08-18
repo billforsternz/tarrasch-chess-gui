@@ -7,7 +7,7 @@
  ****************************************************************************/
 
 // This resizable version is just getting started - don't #define RESIZABLE_BOARD
-// in Canvas.h until it's much more mature! 
+// in Appdefs.h until it's much more mature! 
 
 #include "wx/wx.h"
 #include "wx/image.h"
@@ -21,8 +21,6 @@
 #include "Objects.h"
 #include "BoardBitmap40.h"
 #include "BoardBitmap54.h"
-using namespace std;
-using namespace thc;
 
 // Initialise the graphic board
 GraphicBoardResizable::GraphicBoardResizable
@@ -106,7 +104,7 @@ GraphicBoardResizable::GraphicBoardResizable
     const char *board[] =
     {
         "rNbQkBnR",
-        "Pp qK   ",
+        "Pp#qK   ",
     };
     dc.SetTextForeground( *wxBLACK );
     dc.SetBackgroundMode( wxPENSTYLE_TRANSPARENT );
@@ -117,29 +115,35 @@ GraphicBoardResizable::GraphicBoardResizable
         x = 0;
         for( int j=0; j<8; j++ )
         {
-            char buf[2];
-            char c = xlat[*s++];
-            buf[0] = c;
-            buf[1] = '\0';
-            dc.SetTextBackground( dark ? *wxBLUE : *wxRED );
+            char d = *s++;
+            char c = xlat[d];
+            if( d == '#' )  // dark square
+            {
+                dc.SetBrush( *wxCYAN_BRUSH );
+                dc.SetPen(*wxCYAN_PEN);
+                dc.DrawRectangle(x<0?0:x, y, PIX, PIX );
+           /*
+                wxColour magic(255,0,255);
+                wxBrush magicBrush(magic);
+                //dc.SetBrush( magicBrush );
+                dc.SetBrush( *wxCYAN_BRUSH );
+                dc.SetBrush( *wxGREEN_BRUSH ); */
+            }
+            else
+            {
+                char buf[2];
+                buf[0] = c;
+                buf[1] = '\0';
+                dc.SetTextBackground( dark ? *wxBLUE : *wxRED );
+                dc.DrawText( buf, x<0?0:x, y );
+            }
             dark = !dark;
-            dc.DrawText( buf, x<0?0:x, y );
             x += PIX;
         }
         y += PIX;
     }
 
-    //dc.SetBrush( *wxGREEN_BRUSH );
-    //dc.SetPen( *wxRED_PEN );
-    //dc.SetPen(*wxTRANSPARENT_PEN);
-    dc.SetBrush( *wxBLUE_BRUSH );
-    dc.SetPen(*wxTRANSPARENT_PEN);
-    dc.SetBackgroundMode( wxPENSTYLE_SOLID );
-    //dc.DrawRectangle(PIX*3-2, PIX*3-2, 10, 10 );
-    bool ok = dc.FloodFill( PIX*3, PIX*3, *wxBLACK, wxFLOOD_BORDER );
-    cprintf( "FloodFill returns %s\n", ok?"true":"false" );
-
-    wxNativePixelData bmdata(my_chess_bmp); //bmp_fly);
+    wxNativePixelData bmdata(my_chess_bmp);
     height = bmdata.GetHeight();
     width  = bmdata.GetWidth();
     int row_stride = bmdata.GetRowStride();
@@ -150,6 +154,14 @@ GraphicBoardResizable::GraphicBoardResizable
 	    density  = width_bytes/width;
 	xborder	     = (width_bytes%8) / 2;
 	yborder	     = (height%8) / 2;
+
+    dc.SetBrush( *wxBLUE_BRUSH );
+    dc.SetPen(*wxTRANSPARENT_PEN);
+    dc.SetBackgroundMode( wxPENSTYLE_SOLID );
+    //dc.DrawRectangle(PIX*3-2, PIX*3-2, 10, 10 );
+    //bool ok = dc.FloodFill( PIX*3, PIX*3, *wxBLACK, wxFLOOD_BORDER );
+    //cprintf( "FloodFill returns %s\n", ok?"true":"false" );
+
 
    	// Allocate an image of the board
 	buf_board = new byte[width_bytes*height];
@@ -172,6 +184,283 @@ GraphicBoardResizable::GraphicBoardResizable
             p++;
         }
     }
+
+	char *buf_mask_raw    = new char[ width*height];
+	char *buf_mask_cooked = new char[ width*height];
+    for( unsigned int row=0; row<height/4; row++ )
+    {
+        p.MoveTo(bmdata, 0, row );
+        char *s = &buf_mask_raw[ row*width ];
+        for( unsigned int col=0; col<width; col++ )
+        {
+            uint8_t r = p.Red();
+            uint8_t g = p.Green();
+            uint8_t b = p.Blue();
+            p++;
+            char c = (r==255 && g==255 && b==255) ? '0' : '1';
+            s[col] = c;
+        }
+    }
+    int sq_width = width/8;
+    int sq_height = height/8;
+    #define OFFSET(sq_row,sq_col) ((sq_row)*sq_height*width) + ((sq_col)*sq_width)
+
+    for( int piece=0; piece<12; piece++ )
+    {
+        const char *pri;
+        const char *sec;
+        char *mask;
+        switch( piece )
+        {
+            // White pawn
+            case 0:
+            {
+                pri  = buf_mask_raw    + OFFSET(1,0);
+                mask = buf_mask_cooked + OFFSET(1,0);
+                sec  = buf_mask_raw    + OFFSET(1,1);   // sec is black pawn
+                break;
+            }
+
+            // Black pawn
+            case 1:
+            {
+                pri  = buf_mask_raw    + OFFSET(1,1);
+                mask = buf_mask_cooked + OFFSET(1,1);
+                sec  = buf_mask_cooked + OFFSET(1,0);   // sec is cooked white pawn
+                break;
+            }
+
+            // White knight
+            case 2:
+            {
+                pri  = buf_mask_raw    + OFFSET(0,1);
+                mask = buf_mask_cooked + OFFSET(0,1);
+                sec  = buf_mask_raw    + OFFSET(0,6);   // sec is black knight
+                break;
+            }
+
+            // Black knight
+            case 3:
+            {
+                pri  = buf_mask_raw    + OFFSET(0,6);
+                mask = buf_mask_cooked + OFFSET(0,6);
+                sec  = buf_mask_cooked + OFFSET(0,1);   // sec is cooked white knight
+                break;
+            }
+
+            // White bishop
+            case 4:
+            {
+                pri  = buf_mask_raw    + OFFSET(0,5);
+                mask = buf_mask_cooked + OFFSET(0,5);
+                sec  = buf_mask_raw    + OFFSET(0,2);   // sec is black bishop
+                break;
+            }
+
+            // Black bishop
+            case 5:
+            {
+                pri  = buf_mask_raw    + OFFSET(0,2);
+                mask = buf_mask_cooked + OFFSET(0,2);
+                sec  = buf_mask_cooked + OFFSET(0,5);   // sec is cooked white bishop
+                break;
+            }
+
+            // White rook
+            case 6:
+            {
+                pri  = buf_mask_raw    + OFFSET(0,7);
+                mask = buf_mask_cooked + OFFSET(0,7);
+                sec  = buf_mask_raw    + OFFSET(0,0);   // sec is black rook
+                break;
+            }
+
+            // Black rook
+            case 7:
+            {
+                pri  = buf_mask_raw    + OFFSET(0,0);
+                mask = buf_mask_cooked + OFFSET(0,0);
+                sec  = buf_mask_cooked + OFFSET(0,7);   // sec is cooked white rook
+                break;
+            }
+
+            // White queen
+            case 8:
+            {
+                pri  = buf_mask_raw    + OFFSET(0,3);
+                mask = buf_mask_cooked + OFFSET(0,3);
+                sec  = buf_mask_raw    + OFFSET(1,3);   // sec is black queen
+                break;
+            }
+
+            // Black queen
+            case 9:
+            {
+                pri  = buf_mask_raw    + OFFSET(1,3);
+                mask = buf_mask_cooked + OFFSET(1,3);
+                sec  = buf_mask_cooked + OFFSET(0,3);   // sec is cooked white queen
+                break;
+            }
+
+            // White king
+            case 10:
+            {
+                pri  = buf_mask_raw    + OFFSET(1,4);
+                mask = buf_mask_cooked + OFFSET(1,4);
+                sec  = buf_mask_raw    + OFFSET(0,4);   // sec is black king
+                break;
+            }
+
+            // Black king
+            case 11:
+            {
+                pri  = buf_mask_raw    + OFFSET(0,4);
+                mask = buf_mask_cooked + OFFSET(0,4);
+                sec  = buf_mask_cooked + OFFSET(1,4);   // sec is cooked white king
+                break;
+            }
+        }
+        char *save_mask = mask;
+
+        int state = 0;      // start, dark, light
+        int count = 0;      // nbr of light pixels in a row
+        for( int i=0; i<sq_height; i++ )
+        {
+            state = 0; // start
+            memset( mask, '1', sq_width );  // default state
+            for( int j=0; j<sq_width; j++ )
+            {
+                bool debug = false; //(i==6 && j==15);
+                char c = *pri++;
+                sec++;
+                switch( state )
+                {
+                    case 0: // start
+                    {
+                        if( c == '0' )
+                            mask[j] = '0';
+                        else
+                            state = 1;  // dark
+                        break;
+                    }
+                    case 1: // dark
+                    {
+                        if( c == '0' )
+                        {
+                            state = 2;      // light
+                            count = 1;      // nbr of light pixels in a row
+                        }
+                        break;
+                    }
+                    case 2: // light
+                    {
+                        if( c == '0' )
+                            count++;    // nbr of light pixels in a row
+                        else
+                        {
+                            state = 1;  // dark
+
+                            // Check whether the stretch of light pixels is real by
+                            //  looking at the peer image, which is similar but darker
+                            //  (idea is to eliminate internal light pixels - in
+                            //   effect this is a smart flood fill - necessary because
+                            //   the piece's dark boundaries might have micro gaps)
+                            bool peer_indicates_real_light_stretch = false;
+                            int matches=0;
+                            if( debug )
+                            {
+                                cprintf( "pri> " );
+                                for( int k=14; k>=0; k-- )
+                                    cprintf( "%c", *(pri-k) );
+                                cprintf("\n");
+                                cprintf( "sec> " );
+                                for( int k=14; k>=0; k-- )
+                                    cprintf( "%c", *(sec-k) );
+                                cprintf("\n");
+                            }  
+                            for( int n=1; n<=count+1; n++ )
+                            {
+                                if( *(pri-n) == *(sec-n) )
+                                    matches++;
+                            }
+                            if( count+1 <= 2 )
+                                peer_indicates_real_light_stretch = (matches == count+1);
+                            else if( count+1 <= 3 )
+                                peer_indicates_real_light_stretch = ((matches*100)/(count+1) >= 60);
+                            else if( count+1 <= 4 )
+                                peer_indicates_real_light_stretch = ((matches*100)/(count+1) >= 65);
+                            else if( count+1 <= 8 )
+                                peer_indicates_real_light_stretch = ((matches*100)/(count+1) >= 70);
+                            else if( count+1 <= 16 )
+                                peer_indicates_real_light_stretch = ((matches*100)/(count+1) >= 75);
+                            else
+                                peer_indicates_real_light_stretch = ((matches*100)/(count+1) >= 85);
+                            if( debug )
+                                cprintf( "count=%d, matches=%d, peer_indicates_real_light_stretch=%s\n", count, matches, peer_indicates_real_light_stretch?"true":"false");
+                            if( peer_indicates_real_light_stretch )
+                            {
+                                bool middle = (j>=sq_width/2 && (j-count)<=sq_width/2);
+                                bool lower  = (i>sq_height/2);
+                                bool knight = (piece==2 || piece==3);
+                                bool bishop = (piece==4 || piece==5);
+                            //  bool rook   = (piece==6 || piece==7);
+                                bool queen  = (piece==8 || piece==9);
+                                bool nostril= (knight && i>(sq_height*55)/100 && i<(sq_height*70)/100); // knight's nostril shouldn't be real light stretch
+                                if( nostril )
+                                    peer_indicates_real_light_stretch = false;
+                                else if( bishop || queen )
+                                {
+                                    if( middle && lower )
+                                        peer_indicates_real_light_stretch = false;
+                                    else if( bishop && lower )
+                                        peer_indicates_real_light_stretch = false;
+                                }
+                                else
+                                {
+                                    if( middle )
+                                        peer_indicates_real_light_stretch = false;
+                                }
+                            }
+                            if( peer_indicates_real_light_stretch )
+                            {
+                                for( int n=1; n<=count; n++ )
+                                    mask[j-n] = '0';    
+                            }  // else leave as '1'
+                        }
+                        break;
+                    }
+                }
+            }
+            if( state == 2 )  // expected
+            {
+                for( int n=1; n<=count; n++ )
+                    mask[sq_width-n] = '0';    
+            }
+            pri -= sq_width;
+            pri += width;
+            sec -= sq_width;
+            sec += width;
+            mask+= width;
+        }
+
+        mask = save_mask;
+        for( int i=0; i<sq_height; i++ )
+        {
+            for( int j=0; j<sq_width; j++ )
+            {
+                char c = *mask++;
+                cprintf( "%c", c );
+            }
+            cprintf( "\n" );
+            mask -= sq_width;
+            mask+= width;
+        }
+        cprintf( "\n" );
+    }
+	delete(buf_mask_cooked);
+	delete(buf_mask_raw);
+
+
     //FILE *f = fopen( "c:/users/bill/x.bin", "wb" );
     //fwrite( buf_board, dst-buf_board, 1, f );
     //fclose(f);
@@ -188,77 +477,6 @@ GraphicBoardResizable::GraphicBoardResizable
 	ClearHighlight1();
 	ClearHighlight2();
 
-#if 0
-    #if 0 //def THC_WINDOWS
-	    BITMAP info;
-	    // Get dimensions of the wxBitmap
-	    //my_chess_bmp.GetBitmap( &info ); // return ::GetObject(m_hObject, sizeof(BITMAP), pBitMap);
-        ::GetObject( my_chess_bmp.GetHBITMAP(), sizeof(BITMAP), &info ); //@@
-        //this->board_rect = board_rect;
-	    width_bytes  = info.bmWidthBytes;   // bytes
-	    width        = info.bmWidth;        // pixels
-	    height       = info.bmHeight;
-  	    cprintf( "width_bytes=%lu, width=%lu, height=%lu\n",
-						    (unsigned long)info.bmWidthBytes,
-						    (unsigned long)info.bmWidth,
-						    (unsigned long)info.bmHeight );
-	    density      = info.bmWidthBytes/info.bmWidth;
-    #else
-        height = my_chess_bmp.GetHeight();
-    #if 0 //def THC_MAC
-        wxAlphaPixelData bmdata(my_chess_bmp);
-    #else
-        wxNativePixelData bmdata(my_chess_bmp);
-    #endif
-        height = bmdata.GetHeight();
-        width  = bmdata.GetWidth();
-        wxPoint x2 = bmdata.GetOrigin();
-        wxSize  z = bmdata.GetSize();
-        int row_stride = bmdata.GetRowStride();
-        if( row_stride < 0 )
-            row_stride = 0-row_stride;
-        cprintf( "x=%d,%d z=%d,%d, height=%d, width=%d, row_stride=%d\n",x2.x,x2.y,z.x,z.y,height,width,row_stride);
-        width_bytes = row_stride;
-        if( width )
-	        density      = width_bytes/width;
-    #endif
-	    xborder	     = (width_bytes%8) / 2;
-	    yborder	     = (height%8) / 2;
-        dc.SelectObject( wxNullBitmap );
-
-	    // Allocate an image of the board
-	    buf_board = new byte[width_bytes*height];
-        memset( buf_board, 0, width_bytes*height);
-	
-	    // Allocate an image of the box (pieces off the board)
-	    buf_box   = new byte[width_bytes*height];
-
-	    // Read the initial position displayed on the bitmap
-    #if 0 //def THC_WINDOWS
-	    //my_chess_bmp.GetBitmapBits( width_bytes*height, buf_board );   //@@
-        /*int ret=*/ ::GetBitmapBits((HBITMAP)(my_chess_bmp.GetHBITMAP()), width_bytes*height, buf_board );
-        //dbg_printf( "::GetBitmapBits() returns %d\n",ret);
-    #else
-    #if 0 //def THC_MAC
-        wxAlphaPixelData::Iterator p(bmdata);
-    #else
-        wxNativePixelData::Iterator p(bmdata);
-    #endif
-        byte *dst = buf_board;
-        for( int row=0; row<height; row++ )
-        {
-            p.MoveTo(bmdata, 0, row );
-    #if 0 //def THC_MAC
-            *dst++ = p.Alpha();
-    #endif
-            *dst++ = p.Red();
-            *dst++ = p.Green();
-            *dst++ = p.Blue();
-            p++;
-        }
-    #endif
-
-#endif
 	// Read from position on left below (the .bmp resource) into the box
 	//  at right. The box has all the piece/colour combinations we need
     //  (eg only two pawns from each side are needed, one of each colour).
@@ -468,87 +686,22 @@ void GraphicBoardResizable::SetPosition( char *position_ascii )
 	}
 
 	// Copy from the image buffer into the wxBitmap
-#if 0 //def THC_WINDOWS
-	//my_chess_bmp.SetBitmapBits( width_bytes*height, buf_board );
-    /*int ret = ::*/SetBitmapBits( (HBITMAP)(my_chess_bmp.GetHBITMAP()), width_bytes*height, buf_board );  //@@
-    //dbg_printf( "::SetBitmapBits() returns %d\n", ret );
-#else
-#if 0 //def THC_MAC
-    wxAlphaPixelData bmdata(my_chess_bmp);
-    wxAlphaPixelData::Iterator p(bmdata);
-#else
     wxNativePixelData bmdata(my_chess_bmp);
     wxNativePixelData::Iterator p(bmdata);
-#endif
-#if 0
     byte *src = buf_board;
     for( int row=0; row<height; row++ )
     {
         p.MoveTo(bmdata, 0, row );
         for( int col=0; col<width; col++ )
         {
-#if 0 //def THC_MAC
-            p.Alpha() = *src++; 
-#endif
             p.Red()   = *src++; 
             p.Green() = *src++; 
             p.Blue()  = *src++; 
             p++;
         }
     }
-#endif
-#endif
 
-#if 0
-    // Now use GDI to add highlights
-    int row, col, x, y;
-    int square_width = width/8;
-    int square_height= height/8;
-    char highlight_file = highlight_file1;
-    char highlight_rank = highlight_rank1;
-    bool is_highlight = false;
-    //highlight_file = 'f';
-    //highlight_rank = '4';
-    for( int i=0; i<2; i++ )
-    {
-        if( highlight_file )
-        {
-            if( normal_orientation )
-            {
-                col = highlight_file-'a';       // 'a'->0, 'b'->1 .. 'h'->7
-                row = 7-(highlight_rank-'1');   // '1'->7, '2'->6 .. '8'->0
-            }
-            else
-            {
-                col = 7-(highlight_file-'a');   // 'h'->0, 'g'->1 .. 'a'->7
-                row = highlight_rank-'1';       // '1'->0, '2'->1 .. '8'->7
-            }
-            x = col*square_width;
-            y = row*square_height;
-            if( !is_highlight )
-            {
-       	        /*@@restore = */dcmem.SelectObject( my_chess_bmp );
-                is_highlight = true;
-            }
-            wxPoint rect[5];
-            rect[0].x = x;
-            rect[0].y = y;
-            rect[1].x = x + square_width-1;
-            rect[1].y = y;
-            rect[2].x = x + square_width-1;
-            rect[2].y = y + square_height-1;
-            rect[3].x = x;
-            rect[3].y = y + square_height-1;
-            rect[4].x = x;
-            rect[4].y = y;
-            dcmem.DrawLines( 4, rect );
-        }
-        highlight_file = highlight_file2;
-        highlight_rank = highlight_rank2;
-    }
-    //@@ if( is_highlight )
-    //@@    dcmem.SelectObject( *restore );
-#endif
+    // Now use GDI to add highlights (removed)
 }
 
 
