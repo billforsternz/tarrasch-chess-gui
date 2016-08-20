@@ -11,9 +11,9 @@
 
 #define USING_KINGBASE
 #ifdef  USING_KINGBASE
-#define MASTER_VERSION "V3 Nightly 2016-08-13-a(k)"  // 'k' indicates default .tdb is kingbase
+#define MASTER_VERSION "V3 Nightly 2016-08-20-a(k)"  // 'k' indicates default .tdb is kingbase
 #else
-#define MASTER_VERSION "V3 Nightly 2016-08-13-a(g)"  // 'g' indicates default .tdb is great players database
+#define MASTER_VERSION "V3 Nightly 2016-08-20-a(g)"  // 'g' indicates default .tdb is great players database
 #endif
 #define DEFAULT_ENGINE "stockfish 7 32bit.exe"
 #define DEFAULT_ENGINE_64 "stockfish 7 x64.exe"
@@ -28,7 +28,7 @@
 
 // Conditional compiles
 #define DURING_DEVELOPMENT  // if defined we get a console window for cprintf()
-#define RESIZABLE_BOARD     // At the moment we are just getting started on RESIZABLE_BOARD - it's not usable
+// #define RESIZABLE_BOARD     // At the moment we are just getting started on RESIZABLE_BOARD - it's not usable
 
 // Misc
 #define NBR_KIBITZ_LINES 4
