@@ -10,6 +10,7 @@
 #include "wx/listctrl.h"
 #include "wx/notebook.h"
 #include "wx/richtext/richtextctrl.h"
+#include "Appdefs.h"
 #include "CtrlChessTxt.h"
 #include "CtrlBox.h"
 #include "CtrlBox2.h"
@@ -75,7 +76,6 @@ public:
 public:
     bool            resize_ready;
     thc::ChessPosition   save_position;
-    // #define RESIZABLE_BOARD // At the moment we are just getting started on RESIZABLE_BOARD - it's not usable
     #ifdef RESIZABLE_BOARD
     GraphicBoardResizable   *gb;
     #else

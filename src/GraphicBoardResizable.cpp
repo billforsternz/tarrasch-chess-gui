@@ -19,8 +19,6 @@
 #include "GameLogic.h"
 #include "thc.h"
 #include "Objects.h"
-#include "BoardBitmap40.h"
-#include "BoardBitmap54.h"
 
 // Initialise the graphic board
 GraphicBoardResizable::GraphicBoardResizable
@@ -37,7 +35,7 @@ GraphicBoardResizable::GraphicBoardResizable
     pickup_point.x = 0;
     pickup_point.y = 0;
     sliding = false;
-    BoardBitmap40 bm1;
+/*  BoardBitmap40 bm1;
     BoardBitmap54 bm2;
     BoardBitmap   *bm;
     if( nbr_pixels == 40 )
@@ -55,7 +53,7 @@ GraphicBoardResizable::GraphicBoardResizable
     black_knight_mask = bm->GetBlackKnightMask();
     black_bishop_mask = bm->GetBlackBishopMask();
     black_rook_mask   = bm->GetBlackRookMask();
-    black_pawn_mask   = bm->GetBlackPawnMask();
+    black_pawn_mask   = bm->GetBlackPawnMask(); */
 
     const int PIX=54;
     my_chess_bmp.Create(PIX*8,PIX*8,24);
@@ -63,15 +61,18 @@ GraphicBoardResizable::GraphicBoardResizable
     dc.SelectObject(my_chess_bmp);
     dc.SetMapMode(wxMM_TEXT);
 
-    dc.SetBrush( *wxWHITE_BRUSH );
+    wxColour icon_light(255,226,179);
+    wxColour legacy_dark(200,200,200);
+    wxColour icon_dark(220,162,116);
+    wxColour magic(255,0,255);
+    wxBrush light_brush(icon_light);
+    dc.SetBrush( light_brush );
+    //dc.SetBrush( *wxWHITE_BRUSH );
+
     dc.SetPen(*wxTRANSPARENT_PEN);
     dc.DrawRectangle(0,0,my_chess_bmp.GetWidth(),my_chess_bmp.GetHeight());
-
-    wxColour magic(255,0,255);
-    wxBrush magicBrush(magic);
-    //dc.SetBrush( magicBrush );
-    dc.SetBrush( *wxCYAN_BRUSH );
-    dc.SetBrush( *wxGREEN_BRUSH );
+    //dc.SetBrush( *wxCYAN_BRUSH );
+    //dc.SetBrush( *wxGREEN_BRUSH );
     //dc.SetPen( *wxRED_PEN );
     //dc.SetPen(*wxTRANSPARENT_PEN);
     //dc.DrawRectangle(120,120,200,200);
@@ -119,8 +120,13 @@ GraphicBoardResizable::GraphicBoardResizable
             char c = xlat[d];
             if( d == '#' )  // dark square
             {
-                dc.SetBrush( *wxCYAN_BRUSH );
-                dc.SetPen(*wxCYAN_PEN);
+                wxColour icon_light(255,226,179);
+                wxColour legacy_dark(200,200,200);
+                wxColour icon_dark(220,162,116);
+                wxBrush dark_brush(icon_dark);
+                dc.SetBrush( dark_brush );
+                //dc.SetBrush( *wxCYAN_BRUSH );
+                //dc.SetPen(*wxCYAN_PEN);
                 dc.DrawRectangle(x<0?0:x, y, PIX, PIX );
            /*
                 wxColour magic(255,0,255);
@@ -197,7 +203,7 @@ GraphicBoardResizable::GraphicBoardResizable
             uint8_t g = p.Green();
             uint8_t b = p.Blue();
             p++;
-            char c = (r==255 && g==255 && b==255) ? '0' : '1';
+            char c = (r==255 && g==226 && b==179) /*(r==255 && g==255 && b==255)*/ ? '0' : '1';
             s[col] = c;
         }
     }
@@ -205,6 +211,8 @@ GraphicBoardResizable::GraphicBoardResizable
     int sq_height = height/8;
     #define OFFSET(sq_row,sq_col) ((sq_row)*sq_height*width) + ((sq_col)*sq_width)
 
+    std::string *p_str=0;
+    const char **p_mask=0;
     for( int piece=0; piece<12; piece++ )
     {
         const char *pri;
@@ -215,6 +223,8 @@ GraphicBoardResizable::GraphicBoardResizable
             // White pawn
             case 0:
             {
+                p_str =  &str_white_pawn_mask;
+                p_mask = &white_pawn_mask;
                 pri  = buf_mask_raw    + OFFSET(1,0);
                 mask = buf_mask_cooked + OFFSET(1,0);
                 sec  = buf_mask_raw    + OFFSET(1,1);   // sec is black pawn
@@ -224,6 +234,8 @@ GraphicBoardResizable::GraphicBoardResizable
             // Black pawn
             case 1:
             {
+                p_str =  &str_black_pawn_mask;
+                p_mask = &black_pawn_mask;
                 pri  = buf_mask_raw    + OFFSET(1,1);
                 mask = buf_mask_cooked + OFFSET(1,1);
                 sec  = buf_mask_cooked + OFFSET(1,0);   // sec is cooked white pawn
@@ -233,6 +245,8 @@ GraphicBoardResizable::GraphicBoardResizable
             // White knight
             case 2:
             {
+                p_str =  &str_white_knight_mask;
+                p_mask = &white_knight_mask;
                 pri  = buf_mask_raw    + OFFSET(0,1);
                 mask = buf_mask_cooked + OFFSET(0,1);
                 sec  = buf_mask_raw    + OFFSET(0,6);   // sec is black knight
@@ -242,6 +256,8 @@ GraphicBoardResizable::GraphicBoardResizable
             // Black knight
             case 3:
             {
+                p_str =  &str_black_knight_mask;
+                p_mask = &black_knight_mask;
                 pri  = buf_mask_raw    + OFFSET(0,6);
                 mask = buf_mask_cooked + OFFSET(0,6);
                 sec  = buf_mask_cooked + OFFSET(0,1);   // sec is cooked white knight
@@ -251,6 +267,8 @@ GraphicBoardResizable::GraphicBoardResizable
             // White bishop
             case 4:
             {
+                p_str =  &str_white_bishop_mask;
+                p_mask = &white_bishop_mask;
                 pri  = buf_mask_raw    + OFFSET(0,5);
                 mask = buf_mask_cooked + OFFSET(0,5);
                 sec  = buf_mask_raw    + OFFSET(0,2);   // sec is black bishop
@@ -260,6 +278,8 @@ GraphicBoardResizable::GraphicBoardResizable
             // Black bishop
             case 5:
             {
+                p_str =  &str_black_bishop_mask;
+                p_mask = &black_bishop_mask;
                 pri  = buf_mask_raw    + OFFSET(0,2);
                 mask = buf_mask_cooked + OFFSET(0,2);
                 sec  = buf_mask_cooked + OFFSET(0,5);   // sec is cooked white bishop
@@ -269,6 +289,8 @@ GraphicBoardResizable::GraphicBoardResizable
             // White rook
             case 6:
             {
+                p_str =  &str_white_rook_mask;
+                p_mask = &white_rook_mask;
                 pri  = buf_mask_raw    + OFFSET(0,7);
                 mask = buf_mask_cooked + OFFSET(0,7);
                 sec  = buf_mask_raw    + OFFSET(0,0);   // sec is black rook
@@ -278,6 +300,8 @@ GraphicBoardResizable::GraphicBoardResizable
             // Black rook
             case 7:
             {
+                p_str =  &str_black_rook_mask;
+                p_mask = &black_rook_mask;
                 pri  = buf_mask_raw    + OFFSET(0,0);
                 mask = buf_mask_cooked + OFFSET(0,0);
                 sec  = buf_mask_cooked + OFFSET(0,7);   // sec is cooked white rook
@@ -287,6 +311,8 @@ GraphicBoardResizable::GraphicBoardResizable
             // White queen
             case 8:
             {
+                p_str =  &str_white_queen_mask;
+                p_mask = &white_queen_mask;
                 pri  = buf_mask_raw    + OFFSET(0,3);
                 mask = buf_mask_cooked + OFFSET(0,3);
                 sec  = buf_mask_raw    + OFFSET(1,3);   // sec is black queen
@@ -296,6 +322,8 @@ GraphicBoardResizable::GraphicBoardResizable
             // Black queen
             case 9:
             {
+                p_str =  &str_black_queen_mask;
+                p_mask = &black_queen_mask;
                 pri  = buf_mask_raw    + OFFSET(1,3);
                 mask = buf_mask_cooked + OFFSET(1,3);
                 sec  = buf_mask_cooked + OFFSET(0,3);   // sec is cooked white queen
@@ -305,6 +333,8 @@ GraphicBoardResizable::GraphicBoardResizable
             // White king
             case 10:
             {
+                p_str =  &str_white_king_mask;
+                p_mask = &white_king_mask;
                 pri  = buf_mask_raw    + OFFSET(1,4);
                 mask = buf_mask_cooked + OFFSET(1,4);
                 sec  = buf_mask_raw    + OFFSET(0,4);   // sec is black king
@@ -314,6 +344,8 @@ GraphicBoardResizable::GraphicBoardResizable
             // Black king
             case 11:
             {
+                p_str =  &str_black_king_mask;
+                p_mask = &black_king_mask;
                 pri  = buf_mask_raw    + OFFSET(0,4);
                 mask = buf_mask_cooked + OFFSET(0,4);
                 sec  = buf_mask_cooked + OFFSET(1,4);   // sec is cooked white king
@@ -444,19 +476,42 @@ GraphicBoardResizable::GraphicBoardResizable
         }
 
         mask = save_mask;
+        std::string str;
         for( int i=0; i<sq_height; i++ )
         {
             for( int j=0; j<sq_width; j++ )
             {
                 char c = *mask++;
-                cprintf( "%c", c );
+                str += c;
+                if( piece == 10 )
+                    cprintf( "%c", c );
             }
-            cprintf( "\n" );
+            if( piece == 10 )
+                cprintf( "\n" );
             mask -= sq_width;
             mask+= width;
         }
-        cprintf( "\n" );
+        if( piece == 10 )
+            cprintf( "\n" );
+        *p_str = str;
+        *p_mask = p_str->c_str();
     }
+//    cprintf( "bm->GetWhiteKingMask(): %s\n", bm->GetWhiteKingMask() );
+    cprintf( "white_king_mask:      : %s\n", white_king_mask );
+/*  white_king_mask   = bm->GetWhiteKingMask();
+    white_queen_mask  = bm->GetWhiteQueenMask();
+    white_knight_mask = bm->GetWhiteKnightMask();
+    white_bishop_mask = bm->GetWhiteBishopMask();
+    white_rook_mask   = bm->GetWhiteRookMask();
+    white_pawn_mask   = bm->GetWhitePawnMask();
+    black_king_mask   = bm->GetBlackKingMask();
+    black_queen_mask  = bm->GetBlackQueenMask();
+    black_knight_mask = bm->GetBlackKnightMask();
+    black_bishop_mask = bm->GetBlackBishopMask();
+    black_rook_mask   = bm->GetBlackRookMask();
+    black_pawn_mask   = bm->GetBlackPawnMask(); */
+
+
 	delete(buf_mask_cooked);
 	delete(buf_mask_raw);
 
@@ -667,22 +722,6 @@ void GraphicBoardResizable::SetPosition( char *position_ascii )
 		}
 
 	    Put( src_file, src_rank, dst_file, dst_rank );
-//        if( is_black_square )
-//        {
-//            Put( 'a', '3', dst_file, dst_rank );    //@ preload black square
-//            CPoint no_shift(0,0);
-//            if( src_file!='a' || src_rank!='3' )
-//                PutEx( piece, dst_file, dst_rank, no_shift );
-//        }
-//        else
-//        {
-
-
-		    // Copy from the box into the image buffer of the wxBitmap
-//		    Put( src_file, src_rank, dst_file, dst_rank );
-//        }
-
-
 	}
 
 	// Copy from the image buffer into the wxBitmap
@@ -994,82 +1033,22 @@ void GraphicBoardResizable::SetPositionEx( thc::ChessPosition pos, bool blank_ot
     PutEx( save_piece, pickup2_file, pickup2_rank, shift );
 
 	// Copy from the image buffer into the wxBitmap
-#if 0 //def THC_WINDOWS
-	//my_chess_bmp.SetBitmapBits( width_bytes*height, buf_board );
-    /*int ret = ::*/SetBitmapBits( (HBITMAP)(my_chess_bmp.GetHBITMAP()), width_bytes*height, buf_board );  //@@
-    //dbg_printf( "::SetBitmapBits() returns %d\n", ret );
-#else
-#if 0 //def THC_MAC
-    wxAlphaPixelData bmdata(my_chess_bmp);
-    wxAlphaPixelData::Iterator p(bmdata);
-#else
     wxNativePixelData bmdata(my_chess_bmp);
     wxNativePixelData::Iterator p(bmdata);
-#endif
-#if 0
     byte *src = buf_board;
     for( int row=0; row<height; row++ )
     {
         p.MoveTo(bmdata, 0, row );
         for( int col=0; col<width; col++ )
         {
-#if 0 //def THC_MAC
-            p.Alpha() = *src++; 
-#endif
             p.Red()   = *src++; 
             p.Green() = *src++; 
             p.Blue()  = *src++; 
             p++;
         }
     }
-#endif
-#endif
 
-#if 0
-    // Now use GDI to add highlights
-    char highlight_file = highlight_file1;
-    char highlight_rank = highlight_rank1;
-    bool is_highlight = false;
-    //highlight_file = 'f';
-    //highlight_rank = '4';
-    for( int i=0; i<2; i++ )
-    {
-        if( highlight_file )
-        {
-            if( normal_orientation )
-            {
-                col = highlight_file-'a';       // 'a'->0, 'b'->1 .. 'h'->7
-                row = 7-(highlight_rank-'1');   // '1'->7, '2'->6 .. '8'->0
-            }
-            else
-            {
-                col = 7-(highlight_file-'a');   // 'h'->0, 'g'->1 .. 'a'->7
-                row = highlight_rank-'1';       // '1'->0, '2'->1 .. '8'->7
-            }
-            x = col*square_width;
-            y = row*square_height;
-            if( !is_highlight )
-            {
-       	        /*@@restore = */dcmem.SelectObject( my_chess_bmp );
-                is_highlight = true;
-            }
-            wxPoint rect[5];
-            rect[0].x = x;
-            rect[0].y = y;
-            rect[1].x = x + square_width-1;
-            rect[1].y = y;
-            rect[2].x = x + square_width-1;
-            rect[2].y = y + square_height-1;
-            rect[3].x = x;
-            rect[3].y = y + square_height-1;
-            rect[4].x = x;
-            rect[4].y = y;
-            dcmem.DrawLines( 5, rect );
-        }
-        highlight_file = highlight_file2;
-        highlight_rank = highlight_rank2;
-    }
-#endif
+    // Now use GDI to add highlights (removed)
 }
 
 
@@ -1231,224 +1210,6 @@ void GraphicBoardResizable::OnMouseLeftUp( wxMouseEvent &event )
     }
 }
 
-
-#if 0
-#define nbrof(a) ( sizeof(a) / sizeof((a)[0]) )
-void TempCreateXpm( wxBitmap &bmp, const char *name )
-{
-    static char codes[] = " .-,`~{}=+&$*@#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    static int reds[1000];
-    static int greens[1000];
-    static int blues[1000];
-    int nbr_of=0;
-    static char filename[100];
-    sprintf( filename, "%s.xpm", name );
-
-	// Get dimensions of the wxBitmap
-	//bmp.GetBitmap( &info );
-	BITMAP info;
-    ::GetObject( bmp.GetHBITMAP(), sizeof(BITMAP), &info ); //@@
-	int width_bytes  = info.bmWidthBytes;   // bytes
-	int width        = info.bmWidth;        // pixels
-  	assert( (info.bmWidthBytes%info.bmWidth) == 0 );
-	int density      = info.bmWidthBytes/info.bmWidth;
-	int height       = info.bmHeight;
-    byte                *buf_bmp;
-    buf_bmp = new byte[width_bytes*height];
-    memset( buf_bmp, 0, width_bytes*height);
-    ::GetBitmapBits((HBITMAP)(bmp.GetHBITMAP()), width_bytes*height, buf_bmp );
-    FILE *f;
-    f = fopen(filename,"wt");
-    if( f )
-    {
-        byte r,g,b, *p;
-        int row,col;
-        for( row=0; row<height; row++ )
-        {
-            p = buf_bmp + row*width_bytes;
-            for( col=0; col<width; col++ )
-            {
-                byte *q = p;
-                b = *p++;
-                g = *p++;
-                r = *p++;
-                p = q+density;
-                bool found = false;
-                for( int i=0; !found && i<nbr_of; i++ )
-                {
-                    if( reds[i]==r && greens[i]==g &&  blues[i]==b )
-                        found = true;
-                }
-                if( !found )
-                {
-                    reds  [nbr_of] = r;
-                    greens[nbr_of] = g;
-                    blues [nbr_of] = b;
-                    if( nbr_of+1 < nbrof(codes)-1 )
-                        nbr_of++;
-                }
-            }
-        }
-    /*  for( int i=0; i<nbr_of; i++ )
-        {
-            double d1 = ((double)reds[i]);
-            double d2 = ((double)greens[i]);
-            double d3 = ((double)blues[i]);
-            double d = d1*d1 + d2*d2 + d3*d3;
-            double max_so_far = 0.0;
-            int max_so_far_idx = 0;
-            for( int j=i+1; j<nbr_of; j++ )
-            {
-                double e1 = ((double)reds[j]);
-                double e2 = ((double)greens[j]);
-                double e3 = ((double)blues[j]);
-                double e = e1*e1 + e2*e2 + e3*e3;
-                if( e > max_so_far )
-                {
-                    max_so_far = e;
-                    max_so_far_idx = j;
-                }
-            }
-            if( max_so_far > d )
-            {
-                int j = max_so_far_idx;
-                int temp  = reds[i];
-                reds[i]   = reds[j];
-                reds[j]   = temp;
-                temp      = greens[i];
-                greens[i] = greens[j];
-                greens[j] = temp;
-                temp      = blues[i];
-                blues[i]  = blues[j];
-                blues[j]  = temp;
-            }
-            static char specials[] = " .-,`~{}=+&$*@#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-            if( reds[i]==0xff && blues[i]==0 && greens[i]==0 )
-                codes[i] = 'R';
-            else if( reds[i]==0 && blues[i]==0 && greens[i]==0xff )
-                codes[i] = 'G';
-            else if( reds[i]==0 && blues[i]==0xff && greens[i]==0 )
-                codes[i] = 'B';
-            else if( i >= strlen(specials) )
-                codes[i] = 'a' + (i-strlen(specials));
-            else
-                codes[i] = specials[i];
-        } */
-        fprintf( f, "static char *%s_xpm[] = {\n", name );
-        fprintf( f, "\"%d %d %d 1\",\n", width, height, nbr_of );
-        for( int i=0; i<nbr_of; i++ )
-        {
-            fprintf( f, "\"%c c #%02x%02x%02x\",\n", codes[i], reds[i], greens[i], blues[i] );
-        }
-        for( row=0; row<height; row++ )
-        {
-            p = buf_bmp + row*width_bytes;
-            for( col=0; col<width; col++ )
-            {
-                byte *q = p;
-                b = *p++;
-                g = *p++;
-                r = *p++;
-                p = q+density;
-                int found_idx = 0;
-                bool found = false;
-                for( int i=0; i<nbr_of; i++ )
-                {
-                    if(  r == reds[i] &&
-                         g == greens[i] &&
-                         b == blues[i]
-                      )
-                    {
-                        found = true;
-                        found_idx = i;
-                        break;
-                    }
-                }
-                if( !found )
-                {
-                    double min_so_far = 1000000000.0;
-                    for( int i=0; i<nbr_of; i++ )
-                    {
-                        double d1 = ((double)reds[i]   - (double)r );
-                        double d2 = ((double)greens[i] - (double)g );
-                        double d3 = ((double)blues[i]  - (double)b );
-                        double d = d1*d1 + d2*d2 + d3*d3;
-                        if( d < min_so_far )
-                        {
-                            min_so_far = d;
-                            found_idx = i;
-                            found = true;
-                        }
-                    }
-                }
-                if( col == 0 )
-                    fprintf( f, "\"" );
-                if( found )
-                    fprintf( f, "%c", codes[found_idx] );
-                else
-                    fprintf( f, "[ #%02x%02x%02x ]", r, g, b );
-            }
-            if( row+1 < height )
-                fprintf( f, "\",\n" );
-            else
-                fprintf( f, "\"\n" );
-        }
-        fprintf( f, "};\n" );
-        fclose(f);
-    }
-    #if 0
-    f = fopen("masks_black.txt","wt");
-    if( f )
-    {
-        byte r,g,b, *p;
-        int row,col;
-        for( row=0; row<height; row++ )
-        {
-            p = buf_bmp + row*width_bytes;
-            for( col=0; col<width; col++ )
-            {
-                b = *p++;
-                g = *p++;
-                r = *p++;
-                if( col == 0 )
-                    fprintf( f, "\"" );
-                fprintf( f, "%c", (r==0xff && g==0 && b==0) ? '0' : '1' );
-            }
-            if( row+1 < height )
-                fprintf( f, "\",\n" );
-            else
-                fprintf( f, "\"\n" );
-        }
-        fclose(f);
-    }
-    f = fopen("masks_white.txt","wt");
-    if( f )
-    {
-        byte r,g,b, *p;
-        int row,col;
-        for( row=0; row<height; row++ )
-        {
-            p = buf_bmp + row*width_bytes;
-            for( col=0; col<width; col++ )
-            {
-                b = *p++;
-                g = *p++;
-                r = *p++;
-                if( col == 0 )
-                    fprintf( f, "\"" );
-                fprintf( f, "%c", (r==0 && g==0 && b==0xff) ? '0' : '1' );
-            }
-            if( row+1 < height )
-                fprintf( f, "\",\n" );
-            else
-                fprintf( f, "\"\n" );
-        }
-        fclose(f);
-    }
-    #endif
-    delete(buf_bmp);
-}
-#endif
 
 BEGIN_EVENT_TABLE(GraphicBoardResizable, wxControl)
     EVT_PAINT(GraphicBoardResizable::OnPaint)

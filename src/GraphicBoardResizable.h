@@ -71,17 +71,29 @@ private:
 	char		 highlight_file1, highlight_rank1;
 	char		 highlight_file2, highlight_rank2;
     char         _position_ascii[100];
+    std::string  str_white_king_mask;
     const char  *white_king_mask;
+    std::string  str_white_queen_mask;
     const char  *white_queen_mask;
+    std::string  str_white_knight_mask;
     const char  *white_knight_mask;
+    std::string  str_white_bishop_mask;
     const char  *white_bishop_mask;
+    std::string  str_white_rook_mask;
     const char  *white_rook_mask;
+    std::string  str_white_pawn_mask;
     const char  *white_pawn_mask;
+    std::string  str_black_king_mask;
     const char  *black_king_mask;
+    std::string  str_black_queen_mask;
     const char  *black_queen_mask;
+    std::string  str_black_knight_mask;
     const char  *black_knight_mask;
+    std::string  str_black_bishop_mask;
     const char  *black_bishop_mask;
+    std::string  str_black_rook_mask;
     const char  *black_rook_mask;
+    std::string  str_black_pawn_mask;
     const char  *black_pawn_mask;
 
 	// Helpers

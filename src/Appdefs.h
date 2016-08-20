@@ -26,6 +26,10 @@
 #define DEFAULT_DATABASE "great-players-demo.tdb"
 #endif
 
+// Conditional compiles
+#define DURING_DEVELOPMENT  // if defined we get a console window for cprintf()
+#define RESIZABLE_BOARD     // At the moment we are just getting started on RESIZABLE_BOARD - it's not usable
+
 // Misc
 #define NBR_KIBITZ_LINES 4
 #define BORDER_COMMON wxBORDER_SUNKEN   //wxBORDER_SIMPLE

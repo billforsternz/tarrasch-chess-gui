@@ -17,8 +17,6 @@
 #include "Objects.h"
 #include "BoardBitmap40.h"
 #include "BoardBitmap54.h"
-using namespace std;
-using namespace thc;
 
 // Initialise the graphic board
 GraphicBoard::GraphicBoard
