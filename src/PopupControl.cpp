@@ -190,8 +190,8 @@ void PopupControl::OnPaint( wxPaintEvent& WXUNUSED(event) )
         //dc.DrawLine(0, y+height -1, size.x -1, y+height  -1);
         //dbg_printf( "DrawLine %d, %d, %d, %d\n", 0, y+height, size.x, y+height );
         dc.DrawText( s, 0+4, y+2 );
-        const char *x = s.c_str();
-        dbg_printf( "DrawText %d, %d, %s\n", 0+4, y+2, x );
+        const char *mv = s.c_str();
+        dbg_printf( "DrawText %d, %d, %s\n", 0+4, y+2, mv );
         y += height;
     }
  /*

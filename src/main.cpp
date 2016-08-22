@@ -374,7 +374,9 @@ private:
 // Application class
 //-----------------------------------------------------------------------------
 
+#ifndef NEW_USER_INTERFACE
 IMPLEMENT_APP(ChessApp)
+#endif
 
 extern void JobBegin();
 extern void JobEnd();
