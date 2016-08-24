@@ -1910,7 +1910,7 @@ void GameLogic::OnIdle()
         }
         StatusWarning();
         SetFocusOnList();
-        objs.canvas->notebook->AdvanceSelection();
+        //TEMP objs.canvas->notebook->AdvanceSelection();
     }
     bool expired = false;
     bool white = gd.master_position.WhiteToPlay();

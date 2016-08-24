@@ -21,6 +21,7 @@
 #include "wx/clipbrd.h"
 #include "wx/sysopt.h"
 #include "wx/log.h"
+#include "wx/aui/aui.h"
 #include "Appdefs.h"
 #include "Canvas.h"
 #include "GameLogic.h"
@@ -44,6 +45,8 @@
 #include "Repository.h"
 #include "CtrlBox.h"
 #include "CtrlBoxBookMoves.h"
+#include "GraphicBoardResizable.h"
+#include "CtrlChessTxt.h"
 
 #if 1
     #include "bitmaps/myicons.xpm"
@@ -227,7 +230,11 @@ class ChessFrame: public wxFrame
 {
 public:
     ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
-    ~ChessFrame() { canvas->resize_ready = false; }  // stops a bogus resize during shutdown on mac
+    ~ChessFrame()
+    {
+        canvas->resize_ready = false;   // stops a bogus resize during shutdown on mac
+        m_mgr.UnInit();                 // deinitialize the frame manager
+    }  
     void OnIdle(wxIdleEvent& event);
     void OnMove       (wxMoveEvent &event);
     void OnTimeout    (wxTimerEvent& event);
@@ -368,7 +375,9 @@ private:
     Canvas *canvas;
     wxTimer m_timer;
     void SetFocusOnList() { if(canvas) canvas->SetFocusOnList(); }
+    wxAuiManager m_mgr;
 };
+
 
 //-----------------------------------------------------------------------------
 // Application class
@@ -652,6 +661,8 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     : wxFrame((wxFrame *)NULL, wxID_ANY, title, pos, size ) //, wxDEFAULT_FRAME_STYLE|wxCLIP_CHILDREN|
                                                             //        wxNO_FULL_REPAINT_ON_RESIZE )
 {
+    m_mgr.SetManagedWindow(this);
+
     // Set the frame icon
     SetIcon(wxICON(bbbbbbbb));      // for explanation of 'bbbbbbbb' see Tarrasch.rc
 
@@ -924,8 +935,21 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     }
     #endif
 
-    canvas = new Canvas( this, wxID_ANY, wxPoint(0,0), wxSize(10,10) );
+    GraphicBoardResizable *gb = new GraphicBoardResizable( this,
+                            wxID_ANY,
+                            wxDefaultPosition, wxSize(432,432), 20 );
+//    gb->SetPosition( "rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR" );
+    CtrlChessTxt *lb = new CtrlChessTxt( this, ID_LIST_CTRL, wxDefaultPosition, wxSize(600,432) ); // BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER ); */
+    canvas = new Canvas( this, wxID_ANY, wxPoint(0,0), wxDefaultSize, gb, lb );
     objs.canvas = canvas;
+
+    // add the panes to the manager
+    m_mgr.AddPane(gb, wxLEFT, wxT("The Board - remove later?"));
+    m_mgr.AddPane(canvas, wxBOTTOM, wxT("The details"));
+    m_mgr.AddPane(lb, wxCENTER);
+ 
+    // tell the manager to "commit" all the changes just made
+    m_mgr.Update();
 }
 
 void ChessFrame::OnClose( wxCloseEvent& WXUNUSED(event) )

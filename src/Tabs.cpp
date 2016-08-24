@@ -122,7 +122,7 @@ void Tabs::SetTitle( GameDocument &gd )
     }
     wxString ws(s.c_str());
     if( objs.canvas->resize_ready )
-        objs.canvas->notebook->SetPageText( current_idx, ws );
+;//TEMP        objs.canvas->notebook->SetPageText( current_idx, ws );
 }
 
 int Tabs::TabDelete()

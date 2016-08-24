@@ -282,6 +282,9 @@ Canvas::~Canvas()
     }
 }
 
+
+
+
 #define MARGIN 10
 #define SMALL_MARGIN 4
 #define FIELD 20
@@ -293,14 +296,16 @@ Canvas::Canvas
     wxWindow *parent, 
     wxWindowID id,
     const wxPoint &point,
-    const wxSize &siz
+    const wxSize &siz,
+    GraphicBoardResizable *gb_,
+    CtrlChessTxt *lb_
 )
     : wxPanel( parent, id, point, siz, wxSUNKEN_BORDER )
 {
     resize_ready = false;
     popup = NULL;
-    lb = NULL;
-    gb = NULL;
+    lb = lb_;
+    gb = gb_;
     who_top = NULL;
     who_bottom = NULL;
     who_top = NULL;
@@ -367,20 +372,25 @@ Canvas::Canvas
     sz2.y += 1; // moving to wx3.1 we needed just 1 more pixel to avoid a weird erasure effect on the first tab header
                 //  when creating subsequent tabs
     //wxSystemOptions::SetOption("msw.notebook.themed-background", 0);
+#define NB_TEMP
+#ifdef NB_TEMP
+    wxPanel *notebook_page1 = new wxPanel(this, wxID_ANY );
+#else
     notebook = new wxNotebook(this, wxID_ANY, pt2, sz2 );
     wxPanel *notebook_page1 = new wxPanel(notebook, wxID_ANY );
     //wxWindow *notebook_page1 = new wxWindow(notebook, wxID_ANY );
     notebook->AddPage(notebook_page1,"New Game",true);
 #endif
+#endif
 
-    #ifdef RESIZABLE_BOARD
+/*    #ifdef RESIZABLE_BOARD
     gb = new GraphicBoardResizable( this,
     #else
     gb = new GraphicBoard( this,
     #endif
                           wxID_ANY,
                           pt,
-                          sz, using_large_chess_board?54:40 );
+                          sz, using_large_chess_board?54:40 ); */
 
     // Create labels
     who_top    = new wxStaticText(this,ID_WHO_TOP,   " ");
@@ -464,8 +474,8 @@ Canvas::Canvas
     black_player->SetFont( *font2 );
 
     // Create moves listbox
-    LOCATE_4( moves, x, y, w, h );
-    lb = new CtrlChessTxt( this, ID_LIST_CTRL, wxPoint(x,y), wxSize(w,h) ); // BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER );
+ /*   LOCATE_4( moves, x, y, w, h );
+    lb = new CtrlChessTxt( this, ID_LIST_CTRL, wxPoint(x,y), wxSize(w,h) ); // BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER ); */
 
     //wxListItem col1;
     //col1.SetColumn(0);//Text("Nbr");
@@ -741,9 +751,9 @@ void Canvas::OnSize( wxSizeEvent &WXUNUSED(event) )
         lb_sz.x += (sz.x-parent_sz_base.x);
         wxSize lb_sz_previous = lb->GetSize();
         lb->SetSize(lb_sz);
-        wxSize notebook_sz = notebook->GetSize();
+  /*      wxSize notebook_sz = notebook->GetSize();
         notebook_sz.x += (lb_sz.x-lb_sz_previous.x);
-        notebook->SetSize( notebook_sz );
+        notebook->SetSize( notebook_sz ); */
         wxSize ksiz = k_sz_base;
         ksiz.x += (sz.x-parent_sz_base.x);
         kibitz_ctrl->SetSize(ksiz);

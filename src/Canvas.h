@@ -36,7 +36,7 @@ public:
 class Canvas: public wxPanel
 {
 public:
-    Canvas( wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size );
+    Canvas( wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size, GraphicBoardResizable *gb_, CtrlChessTxt *lb_ );
     ~Canvas();
     void SetPlayers( const char *white, const char *black );
     bool GetNormalOrientation();
