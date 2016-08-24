@@ -35,30 +35,24 @@ GraphicBoardResizable::GraphicBoardResizable
     pickup_point.x = 0;
     pickup_point.y = 0;
     sliding = false;
-/*  BoardBitmap40 bm1;
-    BoardBitmap54 bm2;
-    BoardBitmap   *bm;
-    if( nbr_pixels == 40 )
-        bm = &bm1;
-    else
-        bm = &bm2;
-    white_king_mask   = bm->GetWhiteKingMask();
-    white_queen_mask  = bm->GetWhiteQueenMask();
-    white_knight_mask = bm->GetWhiteKnightMask();
-    white_bishop_mask = bm->GetWhiteBishopMask();
-    white_rook_mask   = bm->GetWhiteRookMask();
-    white_pawn_mask   = bm->GetWhitePawnMask();
-    black_king_mask   = bm->GetBlackKingMask();
-    black_queen_mask  = bm->GetBlackQueenMask();
-    black_knight_mask = bm->GetBlackKnightMask();
-    black_bishop_mask = bm->GetBlackBishopMask();
-    black_rook_mask   = bm->GetBlackRookMask();
-    black_pawn_mask   = bm->GetBlackPawnMask(); */
+    buf_board = 0;
+    buf_box = 0;
+    strcpy( _position_ascii, "rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR" );
+    Init( size );
+}
 
-    const int PIX=54;
-    my_chess_bmp.Create(PIX*8,PIX*8,24);
+void GraphicBoardResizable::Init
+(
+    const wxSize& size
+)
+
+{
+    int min = size.x<size.y ? size.x : size.y;
+    PIX = min/8;
+    wxBitmap my_chess_bmp_;
+    my_chess_bmp_.Create(PIX*8,PIX*8,24);
     wxMemoryDC dc;
-    dc.SelectObject(my_chess_bmp);
+    dc.SelectObject(my_chess_bmp_);
     dc.SetMapMode(wxMM_TEXT);
 
     wxColour icon_light(255,226,179);
@@ -70,7 +64,7 @@ GraphicBoardResizable::GraphicBoardResizable
     //dc.SetBrush( *wxWHITE_BRUSH );
 
     dc.SetPen(*wxTRANSPARENT_PEN);
-    dc.DrawRectangle(0,0,my_chess_bmp.GetWidth(),my_chess_bmp.GetHeight());
+    dc.DrawRectangle(0,0,my_chess_bmp_.GetWidth(),my_chess_bmp_.GetHeight());
     //dc.SetBrush( *wxCYAN_BRUSH );
     //dc.SetBrush( *wxGREEN_BRUSH );
     //dc.SetPen( *wxRED_PEN );
@@ -149,7 +143,7 @@ GraphicBoardResizable::GraphicBoardResizable
         y += PIX;
     }
 
-    wxNativePixelData bmdata(my_chess_bmp);
+    wxNativePixelData bmdata(my_chess_bmp_);
     height = bmdata.GetHeight();
     width  = bmdata.GetWidth();
     int row_stride = bmdata.GetRowStride();
@@ -170,10 +164,14 @@ GraphicBoardResizable::GraphicBoardResizable
 
 
    	// Allocate an image of the board
+    if( buf_board )
+        delete buf_board;
 	buf_board = new byte[width_bytes*height];
     memset( buf_board, 0, width_bytes*height);
 	
 	// Allocate an image of the box (pieces off the board)
+    if( buf_box )
+        delete buf_box;
 	buf_box   = new byte[width_bytes*height];
 
 	// Read the initial position displayed on the bitmap
@@ -496,33 +494,9 @@ GraphicBoardResizable::GraphicBoardResizable
         *p_str = str;
         *p_mask = p_str->c_str();
     }
-//    cprintf( "bm->GetWhiteKingMask(): %s\n", bm->GetWhiteKingMask() );
-    cprintf( "white_king_mask:      : %s\n", white_king_mask );
-/*  white_king_mask   = bm->GetWhiteKingMask();
-    white_queen_mask  = bm->GetWhiteQueenMask();
-    white_knight_mask = bm->GetWhiteKnightMask();
-    white_bishop_mask = bm->GetWhiteBishopMask();
-    white_rook_mask   = bm->GetWhiteRookMask();
-    white_pawn_mask   = bm->GetWhitePawnMask();
-    black_king_mask   = bm->GetBlackKingMask();
-    black_queen_mask  = bm->GetBlackQueenMask();
-    black_knight_mask = bm->GetBlackKnightMask();
-    black_bishop_mask = bm->GetBlackBishopMask();
-    black_rook_mask   = bm->GetBlackRookMask();
-    black_pawn_mask   = bm->GetBlackPawnMask(); */
-
 
 	delete(buf_mask_cooked);
 	delete(buf_mask_raw);
-
-
-    //FILE *f = fopen( "c:/users/bill/x.bin", "wb" );
-    //fwrite( buf_board, dst-buf_board, 1, f );
-    //fclose(f);
-    //my_chess_bmp = bmp_fly;
-    //my_chess_bmp = wxBitmap( bm->GetXpm() );
-    //my_chess_bmp = bmp_fly.GetSubBitmap(
-    //                 wxRect(0, 0, bmp_fly.GetWidth(), bmp_fly.GetHeight()));
 
 
 	// Orientation
@@ -607,6 +581,7 @@ GraphicBoardResizable::GraphicBoardResizable
 	Get( 'e','7', 'e','4', white_king_mask  );  // White king on white square
 	Get( 'd','7', 'd','5', black_queen_mask );  // Black queen on white square
 	Get( 'd','8', 'd','4', white_queen_mask );  // White queen on black square
+    my_chess_bmp = my_chess_bmp_;
 }
 
 // Cleanup
@@ -1211,9 +1186,21 @@ void GraphicBoardResizable::OnMouseLeftUp( wxMouseEvent &event )
 }
 
 
+void GraphicBoardResizable::OnSize( wxSizeEvent& event )
+{
+    wxSize sz = event.GetSize();
+    cprintf( "resize x=%d, y=%d\n", sz.x, sz.y );
+    char temp[ sizeof(_position_ascii) + 1 ];
+    strcpy( temp, _position_ascii );
+    Init(sz);
+    SetPosition( temp );
+    Refresh();
+    Update();
+}
+
 BEGIN_EVENT_TABLE(GraphicBoardResizable, wxControl)
     EVT_PAINT(GraphicBoardResizable::OnPaint)
-//    EVT_SIZE(GraphicBoardResizable::OnSize)
+    EVT_SIZE(GraphicBoardResizable::OnSize)
 //    EVT_MOUSE_CAPTURE_LOST(GraphicBoardResizable::OnMouseCaptureLost)
 //    EVT_MOUSE_EVENTS(GraphicBoardResizable::OnMouseEvent)
     EVT_LEFT_UP (GraphicBoardResizable::OnMouseLeftUp)

@@ -24,6 +24,7 @@ public:
                   const wxSize& size,
                   int nbr_pixels  );
 	~GraphicBoardResizable();
+    void Init( const wxSize& size );
 
 	// Find a square within the graphic board
 	void HitTest( wxPoint hit, char &file, char &rank );
@@ -35,6 +36,7 @@ public:
 	// Draw the graphic board
     void Draw();
     void OnPaint(wxPaintEvent& WXUNUSED(evt));
+    void OnSize( wxSizeEvent& event );
 
 	// Get/Set orientation
 	void SetNormalOrientation( bool _normal_orientation )
@@ -111,6 +113,7 @@ private:
     char         pickup_rank;
     wxPoint      pickup_point;
     thc::ChessPosition     slide_pos;
+    int          PIX;
 };
 
 #endif // GRAPHICBOARD_RESIZABLE_H

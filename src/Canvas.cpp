@@ -58,131 +58,34 @@ enum
     NBR_OF_WIDS
 };
 
-#ifdef THC_WINDOWS
 #define XDELTA 10
 #define YDELTA 24
-static int window_id_positions_54[NBR_OF_WIDS][4] =
+static int window_id_positions[NBR_OF_WIDS][4] =
 {
-    #if 0
-    {32+XDELTA,11+YDELTA,435,435},         // gb
-    {10,10+YDELTA,20,20},                  // who_top
-    {10,422+YDELTA,20,20},                 // who_bottom
-    {32+XDELTA,464+YDELTA,206,22},         // white_player
-    {238+XDELTA,464+YDELTA,20,22},         // dash_player
-    {258+XDELTA,464+YDELTA,206,22},        // black_player
-    {10+XDELTA,488+YDELTA,674,37},         // box
-    {20+XDELTA,498+YDELTA,286,22},         // status
-    {10,425,116,19},                       // book_moves
-    {512+XDELTA,480,68,28},                // wclock
-    {584+XDELTA,480,68,28},                // bclock
-    {472+XDELTA,12+YDELTA,202,433},        // moves          + 3
-    {394+XDELTA,498+YDELTA,0,0},           // button
-    {10+XDELTA,558,570,99},                // kibitz
-    {590+XDELTA,580,60,20},                // kibitz_button1
-    {590+XDELTA,608,60,20}                 // kibitz_button2
-
-    #else
-    {32+XDELTA,6+YDELTA,435,435},          // gb = graphic board
-    {10,10+YDELTA,20,20},                  // who_top
-    {10,402+YDELTA,20,20},                 // who_bottom
-    {32+XDELTA,446+YDELTA,206,22},         // white_player
-    {238+XDELTA,446+YDELTA,20,22},         // dash_player
-    {258+XDELTA,446+YDELTA,206,22},        // black_player
-    {10+XDELTA,466+YDELTA,662,37},         // box
-    {20+XDELTA,476+YDELTA,286,22},         // status
-    {10,425,116,19},                       // book_moves
-    {512+XDELTA,466,68,24},                // wclock
-    {584+XDELTA,466,68,24},                // bclock
-    {472+XDELTA,8+YDELTA,202,432},         // moves          + 3
-    {394+XDELTA,481+YDELTA,0,0},           // button
-    {10+XDELTA,528,560,99},               // kibitz
-    {578+XDELTA,550,60,20},                // kibitz_button1
-    {578+XDELTA,580,60,20}                 // kibitz_button2
-    #endif
+    {0,0,0,0},                  // gb = graphic board
+    {2,2,20,20},                // who_top
+    {2,2,20,20},                // who_bottom
+    {32+XDELTA,10+YDELTA,206,22},           // white_player
+    {238+XDELTA,10+YDELTA,20,22},           // dash_player
+    {258+XDELTA,10+YDELTA,206,22},          // black_player
+    {10+XDELTA,30+YDELTA,662,37},           // box
+    {20+XDELTA,40+YDELTA,286,22},           // status
+    {0,0,0,0},                  // book_moves
+    {512+XDELTA,6+YDELTA,68,24},                  // wclock
+    {584+XDELTA,6+YDELTA,68,24},                  // bclock
+    {0,0,0,0},                  // moves
+    {394+XDELTA,45+YDELTA,0,0},                    // button
+    {10+XDELTA,68+YDELTA,560,99},                  // kibitz
+    {578+XDELTA,90+YDELTA,60,20},                  // kibitz_button1
+    {578+XDELTA,120+YDELTA,60,20}                   // kibitz_button2
 };
 
-static int window_id_positions_40[NBR_OF_WIDS][4] =
-{
-    {32,4,322,322},             // gb                       {32 /*151*/,11,432,432},        // gb
-    {10,4,20,20},               // who_top                  {10 /*129*/,10,20,20},          // who_top
-    {10,296,20,20},             // who_bottom               {10 /*129*/,422,20,20},         // who_bottom
-    {32,334,206,22},            // white_player             {32 /*151*/,454,206,22},        // white_player
-    {238,334,20,22},            // dash_player              {238 /*357*/,454,20,22},        // dash_player
-    {258,334,206,22},           // black_player             {258 /*377*/,454,206,22},       // black_player
-    {10,360,674,37},            // box                      {10,478,674/*574*/,37},         // box
-    {20,370,286,22},            // status                   {20,488,286,22},                // status
-    {10,313,116,19},            // book_moves               {10,425,116,19},                // book_moves
-    {512,334,68,28},            // wclock                   {467+216/2-4-68,450,68,28},     // wclock
-    {584,334,68,28},            // bclock                   {467+216/2+4,450,68,28},        // bclock
-    {360,4, 320,322},           // moves                    {467 /*10*/,10,216/*116*/,434}, // moves          + 3
-    {296,370,0,0},              // button                   {394,488,0,0},                  // button
-    {10,402,578,80},            // kibitz               //  {10,518,578,99},                // kibitz
-    {600,414,60,20},            // kibitz_button1           {600,540,60,20},                // kibitz_button1
-    {600,442,60,20}             // kibitz_button2           {600,568,60,20}                 // kibitz_button2
-};
-#else
-#define YDELTA_TOP 10
-#define YDELTA 30
-static int window_id_positions_54[NBR_OF_WIDS][4] =
-{
-    {32,21+YDELTA_TOP,432,432},                // gb
-    {10,20+YDELTA_TOP,20,20},                  // who_top
-    {10,422+YDELTA,20,20},                 // who_bottom
-    {32,454+YDELTA,206,22},                // white_player
-    {238,454+YDELTA,20,22},                // dash_player
-    {258,454+YDELTA,206,22},               // black_player
-    {10,478+YDELTA,674,37+10},                // box
-    {20,488+YDELTA,286,22},                // status
-    {10,425+YDELTA,116,19},                // book_moves
-    {512,450+YDELTA,68,28},                // wclock
-    {584,450+YDELTA,68,28},                // bclock
-    {470,20+YDELTA_TOP,200,434},               // moves          + 3
-    {394+10,488+YDELTA+8,0,0},                  // button
-    {10,518+YDELTA,578,99},                // kibitz
-    {600,540+YDELTA,60,20},                // kibitz_button1
-    {600,568+YDELTA,60,20}                 // kibitz_button2
-};
-
-static int window_id_positions_40[NBR_OF_WIDS][4] =
-{
-    {32,4+YDELTA,322,322},             // gb                       {32 /*151*/,11,432,432},        // gb
-    {10,4+YDELTA,20,20},               // who_top                  {10 /*129*/,10,20,20},          // who_top
-    {10,296+YDELTA,20,20},             // who_bottom               {10 /*129*/,422,20,20},         // who_bottom
-    {32,334+YDELTA,206,22},            // white_player             {32 /*151*/,454,206,22},        // white_player
-    {238,334+YDELTA,20,22},            // dash_player              {238 /*357*/,454,20,22},        // dash_player
-    {258,334+YDELTA,206,22},           // black_player             {258 /*377*/,454,206,22},       // black_player
-    {10,360+YDELTA,674,37},            // box                      {10,478,674/*574*/,37},         // box
-    {20,370+YDELTA,286,22},            // status                   {20,488,286,22},                // status
-    {10,313+YDELTA,116,19},            // book_moves               {10,425,116,19},                // book_moves
-    {512,334+YDELTA,68,28},            // wclock                   {467+216/2-4-68,450,68,28},     // wclock
-    {584,334+YDELTA,68,28},            // bclock                   {467+216/2+4,450,68,28},        // bclock
-    {360,4+YDELTA, 320,322},           // moves                    {467 /*10*/,10,216/*116*/,434}, // moves          + 3
-    {296,370+YDELTA,0,0},              // button                   {394,488,0,0},                  // button
-    {10,402+YDELTA,578,80},            // kibitz               //  {10,518,578,99},                // kibitz
-    {600,414+YDELTA,60,20},            // kibitz_button1           {600,540,60,20},                // kibitz_button1
-    {600,442+YDELTA,60,20}             // kibitz_button2           {600,568,60,20}                 // kibitz_button2
-};
-
-#endif
-
-// 1st cut, create table
-#if 0
-#define LOCATE_R( name, rec  )      release_printf( "TAG{%s,%d,%d,%d,%d},\n", #name, (rec).x, (rec).y, (rec).width, (rec).height )
-#define LOCATE_P( name, pos )       release_printf( "TAG{%s,%d,%d},\n", #name, (pos).x, (pos).y )
-#define LOCATE_XY( name, x, y )     release_printf( "TAG{%s,%d,%d},\n", #name, x, y )
-#define LOCATE_2( name, pos, siz )  release_printf( "TAG{%s,%d,%d,%d,%d},\n", #name, (pos).x, (pos).y, (siz).x, (siz).y )
-#define LOCATE_4( name, x, y, w, h) release_printf( "TAG{%s,%d,%d,%d,%d},\n", #name, x, y, w, h )
-
-#else
 static bool using_large_chess_board = false;
-#define window_id_positions (using_large_chess_board?window_id_positions_54:window_id_positions_40)
-// 2nd cut, get value from table
 #define LOCATE_R( name, rec  )      rec.x = window_id_positions[ wid_ ## name ][0], rec.y = window_id_positions[ wid_ ## name ][1], rec.width = window_id_positions[ wid_ ## name ][2], rec.height  = window_id_positions[ wid_ ## name ][3]
 #define LOCATE_P( name, pos )       pos.x = window_id_positions[ wid_ ## name ][0], pos.y = window_id_positions[ wid_ ## name ][1]
 #define LOCATE_XY( name, x, y )     x     = window_id_positions[ wid_ ## name ][0], y = window_id_positions[ wid_ ## name ][1]
 #define LOCATE_2( name, pos, siz )  pos.x = window_id_positions[ wid_ ## name ][0], pos.y = window_id_positions[ wid_ ## name ][1], siz.x = window_id_positions[ wid_ ## name ][2], siz.y = window_id_positions[ wid_ ## name ][3]
 #define LOCATE_4( name, x, y, w, h) x     = window_id_positions[ wid_ ## name ][0], y = window_id_positions[ wid_ ## name ][1], w = window_id_positions[ wid_ ## name ][2], h  = window_id_positions[ wid_ ## name ][3]
-#endif
 
 //-----------------------------------------------------------------------------
 // Event table
@@ -214,37 +117,6 @@ END_EVENT_TABLE()
 // Destructor
 Canvas::~Canvas()
 {
-/* No need to delete child windows, they are deleted by parent
-    if( gb )
-    {
-        delete gb;
-        gb = NULL;
-    }
-    if( lb )
-    {
-        delete lb;
-        lb = NULL;
-    }
-    if( who_top )
-    {
-        delete who_top;
-        who_top = NULL;
-    }
-    if( who_bottom )
-    {
-        delete who_bottom;
-        who_bottom = NULL;
-    }
-    if( white_clock )
-    {
-        delete white_clock;
-        white_clock = NULL;
-    }
-    if( black_clock )
-    {
-        delete black_clock;
-        black_clock = NULL;
-    }  */
     if( font1 )
     {
         delete font1;
@@ -325,31 +197,6 @@ Canvas::Canvas
     using_large_chess_board = (rect.height >= 680);
     LOCATE_R( gb, board_rect );
     
-#ifdef THC_MAC
-    wxPoint pt;
-    wxSize  sz;
-    pt.x = board_rect.x;
-    pt.y = board_rect.y;
-    sz.x = board_rect.width;
-    sz.y = board_rect.height;
-    wxSize  sz2;
-    wxPoint pt2;
-    pt2 = pt;
-    //pt2.x = 0;
-    pt2.x -= 9;
-    pt2.y -= 30;
-    sz2 = sz;
-    sz2.x += 23;
-    sz2.y += 42;
-    //sz2.x += 4;
-    int x,y,h,w;
-    LOCATE_4( moves, x, y, w, h );
-    sz2.x += w;
-
-    notebook = new wxNotebook(this, wxID_ANY, pt2, sz2 );
-    wxPanel *notebook_page1 = new wxPanel(notebook, wxID_ANY );
-    notebook->AddPage(notebook_page1,"New Game",true);
-#else
     wxPoint pt;
     wxSize  sz;
     pt.x = board_rect.x;
@@ -381,7 +228,6 @@ Canvas::Canvas
     //wxWindow *notebook_page1 = new wxWindow(notebook, wxID_ANY );
     notebook->AddPage(notebook_page1,"New Game",true);
 #endif
-#endif
 
 /*    #ifdef RESIZABLE_BOARD
     gb = new GraphicBoardResizable( this,
@@ -410,16 +256,6 @@ Canvas::Canvas
     who_bottom->SetSize( size );
 
     font_book = new wxFont( 10, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD,   false );
-    wxRect r;
-    LOCATE_R( book_moves, r );
-    pt.x = r.x;
-    pt.y = r.y;
-    sz.x = r.width;
-    sz.y = r.height;
-    // book_moves = new CtrlBoxBookMoves( this,
-    //                      wxID_ANY,
-    //                      pt,
-    //                      sz );
     extern CtrlBoxBookMoves *gbl_book_moves;
     book_moves = gbl_book_moves;
     book_moves->SetBackgroundColour( *wxGREEN );
@@ -429,6 +265,7 @@ Canvas::Canvas
     book_moves->SetTxt("no book moves",false);
     
     font_clock = new wxFont( 14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD,   false );
+    wxRect r;
     LOCATE_R( wclock, r );
     pt.x = r.x;
     pt.y = r.y;
@@ -473,21 +310,6 @@ Canvas::Canvas
 
     black_player->SetFont( *font2 );
 
-    // Create moves listbox
- /*   LOCATE_4( moves, x, y, w, h );
-    lb = new CtrlChessTxt( this, ID_LIST_CTRL, wxPoint(x,y), wxSize(w,h) ); // BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER ); */
-
-    //wxListItem col1;
-    //col1.SetColumn(0);//Text("Nbr");
-    //lb->InsertColumn(0,col1);
-    //lb->SetColumnWidth(0,34); // w/4+6);  // 116/4 + 6 = 29+6 = 35
-    //wxListItem col2;
-    //col2.SetColumn(1);//Text("Move");
-    //lb->InsertColumn(1,"Move");
-    //lb->InsertColumn(1,col2);
-    //lb->SetColumnWidth(1,60);//w - w/4 -4-24);  //-4 else get ugly horizontal scroll bar
-                                               // -20 more else same prob once vert scroll bar appears
-                               //   116 -29 - 28 = 87 -28 = 59
     // Create Status box
     box = new wxStaticBox( this,ID_BOX,"");
     LOCATE_2( box, pos, size );
@@ -751,9 +573,9 @@ void Canvas::OnSize( wxSizeEvent &WXUNUSED(event) )
         lb_sz.x += (sz.x-parent_sz_base.x);
         wxSize lb_sz_previous = lb->GetSize();
         lb->SetSize(lb_sz);
-  /*      wxSize notebook_sz = notebook->GetSize();
-        notebook_sz.x += (lb_sz.x-lb_sz_previous.x);
-        notebook->SetSize( notebook_sz ); */
+        //TEMP wxSize notebook_sz = notebook->GetSize();
+        //TEMP notebook_sz.x += (lb_sz.x-lb_sz_previous.x);
+        //TEMP notebook->SetSize( notebook_sz );
         wxSize ksiz = k_sz_base;
         ksiz.x += (sz.x-parent_sz_base.x);
         kibitz_ctrl->SetSize(ksiz);
