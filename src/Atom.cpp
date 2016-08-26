@@ -74,7 +74,6 @@ void Atom::Redisplay( long pos_ )
 
 void Atom::Begin( bool set_focus_ )
 {
-    return; //TEMP
     this->set_focus = set_focus_;
     insertion_point=false;
     display=false;
@@ -87,7 +86,6 @@ void Atom::Begin( bool set_focus_ )
 
 void Atom::End()
 {
-    return; //TEMP
     if( redisplay )
         gl->gd.Redisplay(pos);
     else if( display )

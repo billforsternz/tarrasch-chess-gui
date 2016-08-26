@@ -183,7 +183,6 @@ void GameLogic::CmdSetPosition()
 
 void GameLogic::ShowNewDocument()
 {
-    return; // TEMP TEMP
     human_or_pondering = HUMAN;
     kibitz = false;
     CmdClearKibitz(true);
@@ -1898,7 +1897,6 @@ void GameLogic::LabelPlayers( bool start_game, bool set_document_player_names )
 
 void GameLogic::OnIdle()
 {
-    return; //TEMP
     Atomic begin(false);
     static bool not_first_time;
     if( !not_first_time )

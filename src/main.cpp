@@ -1002,6 +1002,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     CtrlChessTxt *lb = new CtrlChessTxt( this, -1, /*ID_LIST_CTRL*/ wxDefaultPosition, wxSize(ww-hh/2,hh/2) ); // BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER ); */
 
     canvas = new Canvas( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,hh/2), gb, lb );
+    objs.canvas = canvas;
     /*wxTextCtrl* text2 = new wxTextCtrl(this, -1, _("Pane 2 - sample text"),
     wxDefaultPosition, wxSize(200,150),
     wxNO_BORDER | wxTE_MULTILINE); */
