@@ -22,7 +22,7 @@ public:
         #endif
         GraphicBoardResizable *gb = new GraphicBoardResizable( this,
                               wxID_ANY,
-                              wxDefaultPosition, wxSize(200,150), 20 );
+                              wxDefaultPosition, wxSize(200,150) );
         gb->SetPosition( "rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR" );
         wxTextCtrl* text2 = new wxTextCtrl(this, -1, _("Pane 2 - sample text"),
         wxDefaultPosition, wxSize(200,150),

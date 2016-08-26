@@ -36,7 +36,7 @@ CtrlChessTxt::CtrlChessTxt
     wxWindowID     id, //= wxID_ANY,
     const wxPoint &point,
     const wxSize &size
-)  : wxRichTextCtrl( parent, id, "", point, size,   wxWANTS_CHARS+wxRE_MULTILINE+wxRE_READONLY )
+)  : wxRichTextCtrl( parent, id, "", point, size,   wxNO_BORDER+wxWANTS_CHARS+wxRE_MULTILINE+wxRE_READONLY )
 
 {
     gl = 0;
@@ -82,9 +82,12 @@ void CtrlChessTxt::OnEraseBackground(wxEraseEvent& WXUNUSED(evt))
     // intentionally empty
 }
 
-void CtrlChessTxt::OnSize(wxSizeEvent& WXUNUSED(evt))
+void CtrlChessTxt::OnSize( wxSizeEvent& event )
 {
+    wxSize sz = event.GetSize();
+    ((wxRichTextCtrl *)this)->SetSize(sz);
     Refresh();
+    Update();
 }
 
 void CtrlChessTxt::OnMouseLeftDown( wxMouseEvent& ev )
@@ -844,7 +847,7 @@ void CtrlChessTxt::OnAnnot20(wxCommandEvent& WXUNUSED(event))
 
 BEGIN_EVENT_TABLE(CtrlChessTxt, wxRichTextCtrl)
 //    EVT_PAINT(CtrlChessTxt::OnPaint)
-//    EVT_SIZE(CtrlChessTxt::OnSize)
+      EVT_SIZE(CtrlChessTxt::OnSize)
 //    EVT_MOUSE_EVENTS(CtrlChessTxt::OnMouseEvent)
 //    EVT_LEFT_UP (CtrlChessTxt::OnMouseLeftUp)
 //    EVT_LEFT_DOWN (CtrlChessTxt::OnMouseLeftDown)

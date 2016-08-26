@@ -172,8 +172,9 @@ Canvas::Canvas
     GraphicBoardResizable *gb_,
     CtrlChessTxt *lb_
 )
-    : wxPanel( parent, id, point, siz, wxSUNKEN_BORDER )
+    : wxPanel( parent, id, point, siz, wxNO_BORDER )
 {
+#if 0
     resize_ready = false;
     popup = NULL;
     lb = lb_;
@@ -492,11 +493,12 @@ Canvas::Canvas
     objs.repository->nv.m_h = parent_sz.y;
     //notebook->AdvanceSelection();
     //notebook->AdvanceSelection();
+#endif
 }
 
 void Canvas::SetMinimumPlaySize()
 {
-    wxSize      sz1;
+/*    wxSize      sz1;
     wxSize      sz2;
     wxSize      sz3;
     wxPoint     pos1;
@@ -507,7 +509,7 @@ void Canvas::SetMinimumPlaySize()
     pos3 = box->GetScreenPosition();
     sz1 = GetParent()->GetSize();
     sz2 = GetSize();
-    sz3 = box->GetSize();
+    sz3 = box->GetSize();    */
 /*  
     +------------------------+
     |          h1            |
@@ -525,7 +527,7 @@ void Canvas::SetMinimumPlaySize()
 
  */
 
-    int h1 = pos2.y-pos1.y;
+/*    int h1 = pos2.y-pos1.y;
     int h2 = sz1.y-sz2.y-h1;
     int min_y = (pos3.y - pos1.y +  // to the top of the status box
                   + sz3.y           // + height of the status box
@@ -535,7 +537,7 @@ void Canvas::SetMinimumPlaySize()
     {
         sz1.y = min_y;
         GetParent()->SetSize( sz1 );
-    }
+    }      */
 }
 
 void Canvas::SetMinimumKibitzSize()
@@ -562,6 +564,7 @@ void Canvas::OnMove()
 
 void Canvas::OnSize( wxSizeEvent &WXUNUSED(event) )
 {
+    #if 0
     if( resize_ready )
     {
         wxSize sz = GetParent()->GetSize();
@@ -569,10 +572,10 @@ void Canvas::OnSize( wxSizeEvent &WXUNUSED(event) )
             sz.x = parent_sz_base.x;
         objs.repository->nv.m_w = sz.x;
         objs.repository->nv.m_h = sz.y;
-        wxSize lb_sz = lb_sz_base;
-        lb_sz.x += (sz.x-parent_sz_base.x);
-        wxSize lb_sz_previous = lb->GetSize();
-        lb->SetSize(lb_sz);
+        //wxSize lb_sz = lb_sz_base;
+        //lb_sz.x += (sz.x-parent_sz_base.x);
+        //wxSize lb_sz_previous = lb->GetSize();
+        //lb->SetSize(lb_sz);
         //TEMP wxSize notebook_sz = notebook->GetSize();
         //TEMP notebook_sz.x += (lb_sz.x-lb_sz_previous.x);
         //TEMP notebook->SetSize( notebook_sz );
@@ -587,10 +590,12 @@ void Canvas::OnSize( wxSizeEvent &WXUNUSED(event) )
         pos.x += (sz.x-parent_sz_base.x);
         kibitz_button2->SetPosition(pos);
    }
+    #endif
 }
 
 void Canvas::AdjustPosition( bool have_players )
 {
+    #if 0
     int i;
     wxRect r;
     wxButton *button;
@@ -637,6 +642,7 @@ void Canvas::AdjustPosition( bool have_players )
     pos.y += shift;
     black_player->SetPosition( pos );
     black_player->Show( have_players );
+    #endif
 }        
 
 void Canvas::PositionButtons()

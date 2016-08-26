@@ -21,8 +21,7 @@ public:
 	GraphicBoardResizable( wxWindow *parent,
                   wxWindowID id,
                   const wxPoint& point,
-                  const wxSize& size,
-                  int nbr_pixels  );
+                  const wxSize& size );
 	~GraphicBoardResizable();
     void Init( const wxSize& size );
 

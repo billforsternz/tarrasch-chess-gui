@@ -90,6 +90,8 @@ public:
     virtual int  OnExit();
 };
 
+
+
 // ----------------------------------------------------------------------------
 // main frame
 // ----------------------------------------------------------------------------
@@ -425,31 +427,23 @@ bool ChessApp::OnInit()
     wxDisplaySize(&disp_width, &disp_height);
     cprintf( "Display size = %d x %d\n", disp_width, disp_height );
     objs.repository = new Repository;
-    #if 0 // small screen testing
-    wxSize  win_size  = wxSize(708, 596);
-    wxPoint win_point = wxPoint(20, 0);
-    #else
-    wxSize  win_size  = wxSize(708, 738); //710); //680);
-    wxPoint win_point = wxPoint(20, 20);
-    gbl_small_screen_detected = (disp_height<768);
-    if( gbl_small_screen_detected || objs.repository->general.m_small_board )
-    {
-        win_size  = wxSize(708, 596);
-        win_point = wxPoint(20, 0);
-    }
-    else if( disp_height < 800 )
-        win_point = wxPoint(20, 0);
-    #endif
+    int xx = (disp_width * 10) /100;
+    int yy = (disp_height * 10) /100;
+    int ww = (disp_width * 80) /100;
+    int hh = (disp_height * 80) /100;
+    wxPoint pt(xx,yy);
+    wxSize  sz(ww,hh);
     ChessFrame *frame = new ChessFrame (_T("Tarrasch Chess GUI V3 -- Beta version use cautiously"),
-                                  win_point, win_size );
+                                  pt, sz );
     objs.frame = frame;
-    frame->Show (true);
     SetTopWindow (frame);
+    frame->Show(true);
     if( objs.gl )
         objs.gl->StatusUpdate();
     objs.db         = new Database( objs.repository->database.m_file.c_str() );
     return true;
 }
+
 
 int ChessApp::OnExit()
 {
@@ -657,12 +651,32 @@ END_EVENT_TABLE()
 CtrlBoxBookMoves *gbl_book_moves;
 
 
+/*
+class MySplitterWindow : public wxSplitterWindow
+{
+public:
+    MySplitterWindow(wxFrame *parent);
+
+    // event handlers
+    void OnPositionChanged(wxSplitterEvent& event);
+    void OnPositionChanging(wxSplitterEvent& event);
+    void OnDClick(wxSplitterEvent& event);
+    void OnUnsplitEvent(wxSplitterEvent& event);
+
+private:
+    wxFrame *m_frame;
+
+    wxDECLARE_EVENT_TABLE();
+    wxDECLARE_NO_COPY_CLASS(MySplitterWindow);
+};
+
+  */
+
+
 ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
     : wxFrame((wxFrame *)NULL, wxID_ANY, title, pos, size ) //, wxDEFAULT_FRAME_STYLE|wxCLIP_CHILDREN|
                                                             //        wxNO_FULL_REPAINT_ON_RESIZE )
 {
-    m_mgr.SetManagedWindow(this);
-
     // Set the frame icon
     SetIcon(wxICON(bbbbbbbb));      // for explanation of 'bbbbbbbb' see Tarrasch.rc
 
@@ -935,21 +949,71 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     }
     #endif
 
+    int hh = size.y;
+    int ww = size.x;
+
+    #if 0  // splitter stuff
     GraphicBoardResizable *gb = new GraphicBoardResizable( this,
-                            wxID_ANY,
-                            wxDefaultPosition, wxSize(432,432), 20 );
-//    gb->SetPosition( "rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR" );
-    CtrlChessTxt *lb = new CtrlChessTxt( this, ID_LIST_CTRL, wxDefaultPosition, wxSize(600,432) ); // BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER ); */
-    canvas = new Canvas( this, wxID_ANY, wxPoint(0,0), wxDefaultSize, gb, lb );
+                            -1, /*wxID_ANY*/
+                            wxDefaultPosition, wxSize(hh/2,hh/2) );
+    CtrlChessTxt *lb = new CtrlChessTxt( this, -1, /*ID_LIST_CTRL*/ wxDefaultPosition, wxSize(ww/2,hh/2) ); // BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER ); */
+//    wxRichTextCtrl *lb2 = new wxRichTextCtrl( this, ID_LIST_CTRL, "", wxDefaultPosition, wxSize(ww/2,hh/2) ); // BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER ); */
+    wxTextCtrl *lb2 = new wxTextCtrl( this, -1, "", wxDefaultPosition, wxSize(ww/2,hh/2),
+        wxNO_BORDER | wxTE_MULTILINE);
+    canvas = new Canvas( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,hh/2), gb, lb );
     objs.canvas = canvas;
 
+    // notify wxAUI which frame to use
+    m_mgr.SetManagedWindow(this);
+
     // add the panes to the manager
-    m_mgr.AddPane(gb, wxLEFT, wxT("The Board - remove later?"));
-    m_mgr.AddPane(canvas, wxBOTTOM, wxT("The details"));
-    m_mgr.AddPane(lb, wxCENTER);
+    m_mgr.AddPane(lb2, wxLEFT);
+    m_mgr.AddPane(canvas, wxBOTTOM);
+    m_mgr.AddPane(gb, wxCENTER);
+    wxAuiPaneInfo cinfo = m_mgr.GetPane(canvas);
+    bool ok = cinfo.IsOk();
+    if( ok )
+    {
+        //info.BestSize( ww, hh/4 );
+    }
+    wxAuiPaneInfo tinfo = m_mgr.GetPane(lb2);
+    ok = tinfo.IsOk();
+    //tinfo.Resizable();
+
+    // tell the manager to "commit" all the changes just made
+    m_mgr.Update();
+    #endif
+
+
+
+    #if 1
+    // notify wxAUI which frame to use
+    m_mgr.SetManagedWindow(this);
+ 
+    // create several text controls
+    //wxTextCtrl* text1 = new wxTextCtrl(this, -1, _("Pane 1 - sample text"),
+    //    wxDefaultPosition, wxSize(200,150),
+    //    wxNO_BORDER | wxTE_MULTILINE);
+    GraphicBoardResizable *gb = new GraphicBoardResizable( this,
+                            wxID_ANY,
+                            wxDefaultPosition, wxSize(hh/2,hh/2) );
+    canvas = new Canvas( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,hh/2), gb, NULL );
+    /*wxTextCtrl* text2 = new wxTextCtrl(this, -1, _("Pane 2 - sample text"),
+    wxDefaultPosition, wxSize(200,150),
+    wxNO_BORDER | wxTE_MULTILINE); */
+ 
+    wxTextCtrl* text3 = new wxTextCtrl(this, -1, _("Main content window"),
+    wxDefaultPosition, wxSize(ww-hh/2,hh/2),
+    wxNO_BORDER | wxTE_MULTILINE);
+ 
+    // add the panes to the manager
+    m_mgr.AddPane(text3, wxLEFT, wxT("Pane Number One"));
+    m_mgr.AddPane(canvas, wxBOTTOM, wxT("Pane Number Two"));
+    m_mgr.AddPane(gb, wxCENTER);
  
     // tell the manager to "commit" all the changes just made
     m_mgr.Update();
+    #endif
 }
 
 void ChessFrame::OnClose( wxCloseEvent& WXUNUSED(event) )
