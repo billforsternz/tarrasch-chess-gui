@@ -997,17 +997,19 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     GraphicBoardResizable *gb = new GraphicBoardResizable( this,
                             wxID_ANY,
                             wxDefaultPosition, wxSize(hh/2,hh/2) );
-    canvas = new Canvas( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,hh/2), gb, NULL );
+
+    //wxRichTextCtrl* text3 = new wxRichTextCtrl(this, -1, _("Main content window"),wxDefaultPosition, wxSize(ww-hh/2,hh/2),wxNO_BORDER | wxTE_MULTILINE);
+    CtrlChessTxt *lb = new CtrlChessTxt( this, -1, /*ID_LIST_CTRL*/ wxDefaultPosition, wxSize(ww-hh/2,hh/2) ); // BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER ); */
+
+    canvas = new Canvas( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,hh/2), gb, lb );
     /*wxTextCtrl* text2 = new wxTextCtrl(this, -1, _("Pane 2 - sample text"),
     wxDefaultPosition, wxSize(200,150),
     wxNO_BORDER | wxTE_MULTILINE); */
  
-    wxTextCtrl* text3 = new wxTextCtrl(this, -1, _("Main content window"),
-    wxDefaultPosition, wxSize(ww-hh/2,hh/2),
-    wxNO_BORDER | wxTE_MULTILINE);
+
  
     // add the panes to the manager
-    m_mgr.AddPane(text3, wxLEFT, wxT("Pane Number One"));
+    m_mgr.AddPane(lb, wxLEFT, wxT("Pane Number One"));
     m_mgr.AddPane(canvas, wxBOTTOM, wxT("Pane Number Two"));
     m_mgr.AddPane(gb, wxCENTER);
  

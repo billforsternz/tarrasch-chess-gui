@@ -84,10 +84,11 @@ void CtrlChessTxt::OnEraseBackground(wxEraseEvent& WXUNUSED(evt))
 
 void CtrlChessTxt::OnSize( wxSizeEvent& event )
 {
-    wxSize sz = event.GetSize();
+    event.Skip();   //continue to process event
+/*    wxSize sz = event.GetSize();
     ((wxRichTextCtrl *)this)->SetSize(sz);
     Refresh();
-    Update();
+    Update(); */
 }
 
 void CtrlChessTxt::OnMouseLeftDown( wxMouseEvent& ev )

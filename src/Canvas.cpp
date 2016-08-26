@@ -91,7 +91,7 @@ static bool using_large_chess_board = false;
 // Event table
 //-----------------------------------------------------------------------------
 BEGIN_EVENT_TABLE(Canvas, wxPanel)
-    EVT_SIZE( Canvas::OnSize )
+//    EVT_SIZE( Canvas::OnSize )
     EVT_CHAR( Canvas::OnChar )
     EVT_LEFT_DOWN (Canvas::OnMouseLeftDown)
     EVT_MOTION (Canvas::OnMouseMove)
@@ -174,7 +174,7 @@ Canvas::Canvas
 )
     : wxPanel( parent, id, point, siz, wxNO_BORDER )
 {
-#if 0
+#if 1
     resize_ready = false;
     popup = NULL;
     lb = lb_;
@@ -453,7 +453,7 @@ Canvas::Canvas
     objs.gl         = gl;
     gl->gd.gl       = gl;
     gl->gd.gv.gl    = gl;
-    lb->gl          = gl;
+    if( lb ) lb->gl          = gl;
     objs.tabs->gl   = gl;
     GameDocument    blank;
     objs.tabs->TabNew( blank );
@@ -462,7 +462,7 @@ Canvas::Canvas
     PositionButtons();
 //    objs.db         = new Database( objs.repository->database.m_file.c_str() );
 
-    lb_sz_base           = lb->GetSize();
+    //lb_sz_base           = lb->GetSize();
     parent_sz_base       = parent->GetSize();
     wxSize  parent_sz    = this->parent_sz_base;
     wxPoint parent_pos   = parent->GetPosition();
