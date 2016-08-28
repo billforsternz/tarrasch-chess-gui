@@ -186,7 +186,6 @@
     <ClCompile Include="src\PositionDialog.cpp" />
     <ClCompile Include="src\Repository.cpp" />
     <ClCompile Include="src\Session.cpp" />
-    <ClCompile Include="src\SplitterBasedInterface.cpp" />
     <ClCompile Include="src\sqlite3.c" />
     <ClCompile Include="src\Tabs.cpp" />
     <ClCompile Include="src\thc.cpp" />
