@@ -5,10 +5,6 @@
 #ifndef GRPHICBOARD_RESIZABLE_H
 #define GRAPHICBOARD_RESIZABLE_H
 
-// This resizable version is just getting started - don't #define RESIZABLE_BOARD
-// in Canvas.h until it's much more mature! 
-
-
 #include "wx/wx.h"
 #include "Portability.h"
 #include "thc.h"

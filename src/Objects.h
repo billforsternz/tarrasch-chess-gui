@@ -9,8 +9,8 @@
 
 // The object box has pointers to objects, rather than objects themselves,
 //  so we can use forward references rather than including all the objects
-class  Canvas;
 class  GameLogic;
+class  PanelContext;
 class  CentralWorkSaver;
 class  wxListCtrl;
 class  PopupControl;
@@ -30,7 +30,7 @@ public:
     Tabs         *tabs;
     Rybka        *rybka;
     wxFrame      *frame;
-    Canvas       *canvas;
+    PanelContext *canvas;
     Repository   *repository;
     Book         *book;
     Log          *log;

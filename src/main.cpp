@@ -23,7 +23,7 @@
 #include "wx/log.h"
 #include "wx/aui/aui.h"
 #include "Appdefs.h"
-#include "Canvas.h"
+#include "PanelContext.h"
 #include "GameLogic.h"
 #include "Lang.h"
 #include "CentralWorkSaver.h"
@@ -234,7 +234,7 @@ public:
     ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
     ~ChessFrame()
     {
-        canvas->resize_ready = false;   // stops a bogus resize during shutdown on mac
+        context->resize_ready = false;   // stops a bogus resize during shutdown on mac
         m_mgr.UnInit();                 // deinitialize the frame manager
     }  
     void OnIdle(wxIdleEvent& event);
@@ -374,9 +374,9 @@ public:
 
     DECLARE_EVENT_TABLE()
 private:
-    Canvas *canvas;
+    PanelContext *context;
     wxTimer m_timer;
-    void SetFocusOnList() { if(canvas) canvas->SetFocusOnList(); }
+    void SetFocusOnList() { if(context) context->SetFocusOnList(); }
     wxAuiManager m_mgr;
 };
 
@@ -952,71 +952,29 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     int hh = size.y;
     int ww = size.x;
 
-    #if 0  // splitter stuff
-    GraphicBoardResizable *gb = new GraphicBoardResizable( this,
-                            -1, /*wxID_ANY*/
-                            wxDefaultPosition, wxSize(hh/2,hh/2) );
-    CtrlChessTxt *lb = new CtrlChessTxt( this, -1, /*ID_LIST_CTRL*/ wxDefaultPosition, wxSize(ww/2,hh/2) ); // BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER ); */
-//    wxRichTextCtrl *lb2 = new wxRichTextCtrl( this, ID_LIST_CTRL, "", wxDefaultPosition, wxSize(ww/2,hh/2) ); // BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER ); */
-    wxTextCtrl *lb2 = new wxTextCtrl( this, -1, "", wxDefaultPosition, wxSize(ww/2,hh/2),
-        wxNO_BORDER | wxTE_MULTILINE);
-    canvas = new Canvas( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,hh/2), gb, lb );
-    objs.canvas = canvas;
-
-    // notify wxAUI which frame to use
-    m_mgr.SetManagedWindow(this);
-
-    // add the panes to the manager
-    m_mgr.AddPane(lb2, wxLEFT);
-    m_mgr.AddPane(canvas, wxBOTTOM);
-    m_mgr.AddPane(gb, wxCENTER);
-    wxAuiPaneInfo cinfo = m_mgr.GetPane(canvas);
-    bool ok = cinfo.IsOk();
-    if( ok )
-    {
-        //info.BestSize( ww, hh/4 );
-    }
-    wxAuiPaneInfo tinfo = m_mgr.GetPane(lb2);
-    ok = tinfo.IsOk();
-    //tinfo.Resizable();
-
-    // tell the manager to "commit" all the changes just made
-    m_mgr.Update();
-    #endif
-
-
-
-    #if 1
     // notify wxAUI which frame to use
     m_mgr.SetManagedWindow(this);
  
-    // create several text controls
-    //wxTextCtrl* text1 = new wxTextCtrl(this, -1, _("Pane 1 - sample text"),
-    //    wxDefaultPosition, wxSize(200,150),
-    //    wxNO_BORDER | wxTE_MULTILINE);
     GraphicBoardResizable *gb = new GraphicBoardResizable( this,
                             wxID_ANY,
                             wxDefaultPosition, wxSize(hh/2,hh/2) );
 
-    //wxRichTextCtrl* text3 = new wxRichTextCtrl(this, -1, _("Main content window"),wxDefaultPosition, wxSize(ww-hh/2,hh/2),wxNO_BORDER | wxTE_MULTILINE);
     CtrlChessTxt *lb = new CtrlChessTxt( this, -1, /*ID_LIST_CTRL*/ wxDefaultPosition, wxSize(ww-hh/2,hh/2) ); // BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER ); */
 
-    canvas = new Canvas( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,hh/2), gb, lb );
-    objs.canvas = canvas;
-    /*wxTextCtrl* text2 = new wxTextCtrl(this, -1, _("Pane 2 - sample text"),
-    wxDefaultPosition, wxSize(200,150),
-    wxNO_BORDER | wxTE_MULTILINE); */
- 
-
+    context = new PanelContext( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,hh/2), gb, lb );
+    objs.canvas = context;
  
     // add the panes to the manager
-    m_mgr.AddPane(lb, wxLEFT, wxT("Pane Number One"));
-    m_mgr.AddPane(canvas, wxBOTTOM, wxT("Pane Number Two"));
-    m_mgr.AddPane(gb, wxCENTER);
+    m_mgr.AddPane(gb, wxLEFT, wxT("Pane Number One"));
+    m_mgr.AddPane(lb, wxCENTER);
+    m_mgr.AddPane(context, wxBOTTOM, wxT("Pane Number Two"));
+
+    wxAuiPaneInfo tinfo = m_mgr.GetPane(lb);
+    bool ok = tinfo.IsOk();
+    //tinfo.Resizable();
  
     // tell the manager to "commit" all the changes just made
     m_mgr.Update();
-    #endif
 }
 
 void ChessFrame::OnClose( wxCloseEvent& WXUNUSED(event) )
@@ -1757,7 +1715,7 @@ void ChessFrame::OnOptionsReset(wxCommandEvent &)
     }
     else
         objs.gl->chess_clock.Repository2Clocks();
-    canvas->RedrawClocks();
+    context->RedrawClocks();
     const char *to = LangCheckDiffEnd();
     bool after_large_font = objs.repository->general.m_large_font;
     bool after_no_italics = objs.repository->general.m_no_italics;

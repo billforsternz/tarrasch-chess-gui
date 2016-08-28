@@ -16,7 +16,7 @@
 #endif // wxUSE_THREADS
 #include "wx/thread.h"
 #include "Appdefs.h"
-#include "Canvas.h"
+#include "PanelContext.h"
 #include "thc.h"
 #include "Book.h"
 #include "GameLogic.h"
@@ -65,7 +65,7 @@ void ReportOnProgress
 
 
 // Initialise the game logic
-GameLogic::GameLogic( Canvas *canvas, CtrlChessTxt *lb )
+GameLogic::GameLogic( PanelContext *canvas, CtrlChessTxt *lb )
     : atom(this), gd(this), undo(this)
 {
     state    = RESET;

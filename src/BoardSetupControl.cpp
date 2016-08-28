@@ -11,7 +11,7 @@
 #include "Appdefs.h"
 #include "thc.h"
 #include "DebugPrintf.h"
-#include "Canvas.h"
+#include "PanelContext.h"
 #include "Objects.h"
 #include "BoardSetup.h"
 #include "BoardSetupControl.h"

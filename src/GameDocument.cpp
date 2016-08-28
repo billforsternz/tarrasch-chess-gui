@@ -5,7 +5,7 @@
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
 #include "Appdefs.h"
-#include "Canvas.h"
+#include "PanelContext.h"
 #include "Repository.h"
 #include "Objects.h"
 #include "DebugPrintf.h"

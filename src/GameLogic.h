@@ -19,7 +19,7 @@
 #include "Undo.h"
 #include "Atom.h"
 #include "kibitzq.h"
-#include "Canvas.h"
+#include "PanelContext.h"
 #include "GameState.h"
 #include "Database.h"
 
@@ -28,7 +28,7 @@ class GameLogic
 public:
 
 	// Initialise, shutdown
-	GameLogic( Canvas *canvas, CtrlChessTxt *lb );
+	GameLogic( PanelContext *canvas, CtrlChessTxt *lb );
     void Init();
 
     // The user hovers over the book moves rectangle
@@ -185,7 +185,7 @@ private:
     char src_file;
     char src_rank;
     char slide_buf[80];
-    Canvas *canvas;
+    PanelContext *canvas;
     thc::ChessPosition pre_popup_position;
     unsigned long t1_start_delay;
     unsigned long fake_book_delay;
