@@ -14,6 +14,7 @@ class PanelBoard: public wxPanel
 public:
     PanelBoard( wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size );
     void OnSize( wxSizeEvent &evt );
+    GraphicBoardResizable *gb;
 /*    ~PanelBoard();
     void SetPlayers( const char *white, const char *black );
     bool GetNormalOrientation();

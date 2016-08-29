@@ -24,6 +24,7 @@
 #include "wx/aui/aui.h"
 #include "Appdefs.h"
 #include "PanelContext.h"
+#include "PanelBoard.h"
 #include "GameLogic.h"
 #include "Lang.h"
 #include "CentralWorkSaver.h"
@@ -45,7 +46,6 @@
 #include "Repository.h"
 #include "CtrlBox.h"
 #include "CtrlBoxBookMoves.h"
-#include "GraphicBoardResizable.h"
 #include "CtrlChessTxt.h"
 
 #if 1
@@ -89,8 +89,6 @@ public:
     virtual bool OnInit();
     virtual int  OnExit();
 };
-
-
 
 // ----------------------------------------------------------------------------
 // main frame
@@ -954,18 +952,18 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 
     // notify wxAUI which frame to use
     m_mgr.SetManagedWindow(this);
- 
-    GraphicBoardResizable *gb = new GraphicBoardResizable( this,
+
+    PanelBoard *pb = new PanelBoard( this,
                             wxID_ANY,
                             wxDefaultPosition, wxSize(hh/2,hh/2) );
 
     CtrlChessTxt *lb = new CtrlChessTxt( this, -1, /*ID_LIST_CTRL*/ wxDefaultPosition, wxSize(ww-hh/2,hh/2) ); // BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER ); */
 
-    context = new PanelContext( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,hh/2), gb, lb );
+    context = new PanelContext( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,hh/2), pb->gb, lb );
     objs.canvas = context;
  
     // add the panes to the manager
-    m_mgr.AddPane(gb, wxLEFT, wxT("Pane Number One"));
+    m_mgr.AddPane(pb, wxLEFT, wxT("Pane Number One"));
     m_mgr.AddPane(lb, wxCENTER);
     m_mgr.AddPane(context, wxBOTTOM, wxT("Pane Number Two"));
 

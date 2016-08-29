@@ -26,12 +26,12 @@ public:
     void HitTestEx( char &file, char &rank, wxPoint shift );
 
 	// Setup a position	on the graphic board
-	void SetPosition( char *position_ascii );
+	void SetChessPosition( char *position_ascii );
 
 	// Draw the graphic board
     void Draw();
     void OnPaint(wxPaintEvent& WXUNUSED(evt));
-    void OnSize( wxSizeEvent& event );
+    void SetBoardSize( wxSize &sz );
 
 	// Get/Set orientation
 	void SetNormalOrientation( bool _normal_orientation )

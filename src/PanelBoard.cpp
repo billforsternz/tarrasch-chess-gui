@@ -4,6 +4,7 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
+#include "DebugPrintf.h"
 #include "PanelBoard.h"
 
 //-----------------------------------------------------------------------------
@@ -38,11 +39,34 @@ PanelBoard::PanelBoard
 )
     : wxPanel( parent, id, point, siz, wxNO_BORDER )
 {
+    int w = siz.x;
+    int h = siz.y;
+    int x = ((5*w)/100);
+    int y = ((5*h)/100);
+    w = ((90*w)/100);
+    h = ((90*h)/100);
+    gb = new GraphicBoardResizable( this,
+                            wxID_ANY,
+                            wxPoint(x,y), wxSize(w,h) );
 }
-
 
 void PanelBoard::OnSize( wxSizeEvent &evt )
 {
+    wxSize sz = evt.GetSize();
+    cprintf( "Parent: resize x=%d, y=%d\n", sz.x, sz.y );
+    int w = sz.x;
+    int h = sz.y;
+    int x = ((5*w)/100);
+    int y = ((5*h)/100);
+    gb->SetPosition(wxPoint(x,y));
+    int w2 = ((90*w)/100);
+    int h2 = ((90*h)/100);
+    if( h2 > w2 )
+        h2 = w2;
+    else if( w2 > h2 )
+        w2 = h2;
+    wxSize sz2(w2,h2);
+    gb->SetBoardSize(sz2);
     #if 0
     if( resize_ready )
     {

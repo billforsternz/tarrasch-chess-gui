@@ -744,19 +744,19 @@ bool PanelContext::GetNormalOrientation()
 void PanelContext::SetNormalOrientation( bool normal )
 {
     gb->SetNormalOrientation( normal );
-    SetPosition();
+    SetChessPosition();
 }
 
-void PanelContext::SetPosition( thc::ChessPosition &pos )
+void PanelContext::SetChessPosition( thc::ChessPosition &pos )
 {
     memcpy( &save_position, &pos, sizeof(save_position) );
-    SetPosition();
+    SetChessPosition();
 }
 
-void PanelContext::SetPosition()
+void PanelContext::SetChessPosition()
 {
     bool normal = gb->GetNormalOrientation();
-    gb->SetPosition( save_position.squares );
+    gb->SetChessPosition( save_position.squares );
     gb->Draw();
     if( normal )
     {

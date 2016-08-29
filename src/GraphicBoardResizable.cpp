@@ -600,7 +600,7 @@ void GraphicBoardResizable::OnPaint( wxPaintEvent& WXUNUSED(event) )
 }
 
 // Setup a position	on the graphic board
-void GraphicBoardResizable::SetPosition( char *position_ascii )
+void GraphicBoardResizable::SetChessPosition( char *position_ascii )
 {
 #if 0 // Setup a custom position here
     #define CUSTOM_POSITION "rnbqnrk|pp4b|4N|3qk|3QK|8|PPxx|R1BQKBNR| w KQkq - 0 1"
@@ -1185,21 +1185,21 @@ void GraphicBoardResizable::OnMouseLeftUp( wxMouseEvent &event )
 }
 
 
-void GraphicBoardResizable::OnSize( wxSizeEvent& event )
+void GraphicBoardResizable::SetBoardSize( wxSize &sz )
 {
-    wxSize sz = event.GetSize();
-    cprintf( "resize x=%d, y=%d\n", sz.x, sz.y );
+    cprintf( "Child: resize x=%d, y=%d\n", sz.x, sz.y );
     char temp[ sizeof(_position_ascii) + 1 ];
     strcpy( temp, _position_ascii );
+    SetSize(sz);
     Init(sz);
-    SetPosition( temp );
+    SetChessPosition( temp );
     Refresh();
     Update();
 }
 
+
 BEGIN_EVENT_TABLE(GraphicBoardResizable, wxControl)
     EVT_PAINT(GraphicBoardResizable::OnPaint)
-    EVT_SIZE(GraphicBoardResizable::OnSize)
 //    EVT_MOUSE_CAPTURE_LOST(GraphicBoardResizable::OnMouseCaptureLost)
 //    EVT_MOUSE_EVENTS(GraphicBoardResizable::OnMouseEvent)
     EVT_LEFT_UP (GraphicBoardResizable::OnMouseLeftUp)

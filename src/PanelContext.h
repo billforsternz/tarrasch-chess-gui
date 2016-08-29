@@ -41,8 +41,8 @@ public:
     void SetPlayers( const char *white, const char *black );
     bool GetNormalOrientation();
     void SetNormalOrientation( bool normal );
-    void SetPosition( thc::ChessPosition &pos );
-    void SetPosition();
+    void SetChessPosition( thc::ChessPosition &pos );
+    void SetChessPosition();
     void AdjustPosition( bool have_players );
     void PositionButtons();
     void SetSmallBox( bool is_small );

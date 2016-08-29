@@ -1165,7 +1165,7 @@ void GameDocument::Redisplay( unsigned long pos )
     if( objs.canvas )
     {
         Display( pos );
-        objs.canvas->SetPosition( master_position );
+        objs.canvas->SetChessPosition( master_position );
         objs.frame->SetTitle(title.c_str());
     }
 }

@@ -3275,7 +3275,7 @@ void GameLogic::SetGroomedPosition( bool show_title )
             }
         }
     }
-    canvas->SetPosition( view_pos );
+    canvas->SetChessPosition( view_pos );
     if( objs.frame && show_title )
         objs.frame->SetTitle( title );
     if( canvas->resize_ready && tabs && show_title )
