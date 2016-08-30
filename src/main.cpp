@@ -947,19 +947,20 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     }
     #endif
 
-    int hh = size.y;
-    int ww = size.x;
+    wxSize csz = GetClientSize();
+    int hh = csz.y;
+    int ww = csz.x;
 
     // notify wxAUI which frame to use
     m_mgr.SetManagedWindow(this);
 
     PanelBoard *pb = new PanelBoard( this,
                             wxID_ANY,
-                            wxDefaultPosition, wxSize(hh/2,hh/2) );
+                            wxDefaultPosition, wxSize(ww/2,(90*hh)/100) );
 
-    CtrlChessTxt *lb = new CtrlChessTxt( this, -1, /*ID_LIST_CTRL*/ wxDefaultPosition, wxSize(ww-hh/2,hh/2) ); // BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER ); */
+    CtrlChessTxt *lb = new CtrlChessTxt( this, -1, /*ID_LIST_CTRL*/ wxDefaultPosition, wxSize(ww/2,(90*hh)/100) ); // BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER ); */
 
-    context = new PanelContext( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,hh/2), pb->gb, lb );
+    context = new PanelContext( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,(10*hh)/100), pb->gb, lb );
     objs.canvas = context;
  
     // add the panes to the manager
@@ -967,16 +968,49 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     m_mgr.AddPane(lb, wxCENTER);
     m_mgr.AddPane(context, wxBOTTOM, wxT("Pane Number Two"));
 
+    wxAuiPaneInfo binfo = m_mgr.GetPane(pb);
+    bool ok = binfo.IsOk();
+    //binfo.MinSize(ww/2,(90*hh)/100);
+    //binfo.Fixed(); //MinSize(ww/2,(90*hh)/100);
+    binfo.Resizable(false);
     wxAuiPaneInfo tinfo = m_mgr.GetPane(lb);
-    bool ok = tinfo.IsOk();
-    //tinfo.Resizable();
- 
+    ok = tinfo.IsOk();
+    //tinfo.Fixed();
+    tinfo.Resizable(false);
+//    tinfo.MinSize(ww/2,(90*hh)/100);
+//    tinfo.MaxSize(ww/2,(90*hh)/100);
+//    tinfo.MinSize(ww/2,(90*hh)/100);
+    wxAuiPaneInfo cinfo = m_mgr.GetPane(context);
+    ok = cinfo.IsOk();
+    //cinfo.Fixed();
+    cinfo.Resizable(false);
+
     // tell the manager to "commit" all the changes just made
     m_mgr.Update();
+    wxString persp = m_mgr.SavePerspective();
+    const char *txt = persp.c_str();
+    FILE *f = fopen( "c:/temp/persp.txt", "wb" );
+    fputs(txt,f);
+    fclose(f);
+
+    std::string s(txt);
+    size_t idx = s.find("dock_size(4,0,0)=456");
+    if( idx != std::string::npos )
+    {
+        cprintf( "dock idx=%u\n", idx ); 
+        std::string t = s.substr(0,idx) + "dock_size(4,0,0)=792|dock_size(5,0,0)=456|dock_size(3,0,0)=104|";
+        wxString persp2(t.c_str());
+        m_mgr.LoadPerspective( persp2, true );
+    }
 }
 
 void ChessFrame::OnClose( wxCloseEvent& WXUNUSED(event) )
 {
+//    wxString persp = m_mgr.SavePerspective();
+//    const char *txt = persp.c_str();
+//    FILE *f = fopen( "c:/temp/persp.txt", "wb" );
+//    fputs(txt,f);
+//    fclose(f);
     bool okay = objs.gl->OnExit();
     if( okay )
         Destroy();  // only exit if OnExit() worked okay (eg, if it wasn't cancelled)

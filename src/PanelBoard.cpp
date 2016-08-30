@@ -52,6 +52,31 @@ PanelBoard::PanelBoard
 
 void PanelBoard::OnSize( wxSizeEvent &evt )
 {
+/*
+       +----------------------------------------------+
+       |         Botvinnik, Mikhail       23:00       |
+       |      +-------------------------------+       |
+       |    8 |                               |       |
+       |  B   |                               |       |
+       |    7 |                               |       |
+       |      |                               |       |
+       |    6 |                               |       |
+       |      |                               |       |
+       |    5 |                               |       |
+       |      |                               |       |
+       |    4 |                               |       |
+       |      |                               |       |
+       |    3 |                               |       |
+       |      |                               |       |
+       |    2 |                               |       |
+       |  W   |                               |       |
+       |    1 |                               |       |
+       |      +-------------------------------+       |
+       |        a   b   c   d   e   f   g   h         |
+       |        Fischer, Robert          45:00        |
+       +----------------------------------------------+
+
+*/
     wxSize sz = evt.GetSize();
     cprintf( "Parent: resize x=%d, y=%d\n", sz.x, sz.y );
     int w = sz.x;
