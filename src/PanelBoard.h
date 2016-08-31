@@ -15,6 +15,35 @@ public:
     PanelBoard( wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size );
     void OnSize( wxSizeEvent &evt );
     GraphicBoardResizable *gb;
+    wxStaticText    *who_top;
+    wxStaticText    *who_bottom;
+    wxStaticText    *name_top;
+    wxStaticText    *name_bottom;
+    wxStaticText    *time_top;
+    wxStaticText    *time_bottom;
+    wxStaticText    *coord1;
+    wxStaticText    *coord2;
+    wxStaticText    *coord3;
+    wxStaticText    *coord4;
+    wxStaticText    *coord5;
+    wxStaticText    *coord6;
+    wxStaticText    *coord7;
+    wxStaticText    *coord8;
+    wxStaticText    *coorda;
+    wxStaticText    *coordb;
+    wxStaticText    *coordc;
+    wxStaticText    *coordd;
+    wxStaticText    *coorde;
+    wxStaticText    *coordf;
+    wxStaticText    *coordg;
+    wxStaticText    *coordh;
+
+private:
+    wxFont       *font1;
+    wxFont       *font2;
+    wxFont       *font3;
+    wxFont       *font4;
+
 /*    ~PanelBoard();
     void SetPlayers( const char *white, const char *black );
     bool GetNormalOrientation();

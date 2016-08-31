@@ -986,6 +986,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     cinfo.Resizable(false);
 
     // tell the manager to "commit" all the changes just made
+    m_mgr.SetDockSizeConstraint(1.0,1.0);
     m_mgr.Update();
     wxString persp = m_mgr.SavePerspective();
     const char *txt = persp.c_str();
@@ -993,7 +994,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     fputs(txt,f);
     fclose(f);
 
-    std::string s(txt);
+/*    std::string s(txt);
     size_t idx = s.find("dock_size(4,0,0)=456");
     if( idx != std::string::npos )
     {
@@ -1001,7 +1002,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
         std::string t = s.substr(0,idx) + "dock_size(4,0,0)=792|dock_size(5,0,0)=456|dock_size(3,0,0)=104|";
         wxString persp2(t.c_str());
         m_mgr.LoadPerspective( persp2, true );
-    }
+    } */
 }
 
 void ChessFrame::OnClose( wxCloseEvent& WXUNUSED(event) )

@@ -1,3 +1,9 @@
+31/8/2016
+Horizontal suggestions if no kibitz box
+Vertical suggestions if kibitz box
+Suggestions, Your move, Engine thinking labels
+
+
 13/8/2016
 
 git add -u is a good way to tell git to cement changes (like file deletions)
