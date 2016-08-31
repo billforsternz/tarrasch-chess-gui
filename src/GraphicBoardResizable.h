@@ -2,7 +2,7 @@
  * Control - The graphic chess board that is the centre-piece of the GUI
  *  Still working on making it a more-self contained and reusable control
  ****************************************************************************/
-#ifndef GRPHICBOARD_RESIZABLE_H
+#ifndef GRAPHICBOARD_RESIZABLE_H
 #define GRAPHICBOARD_RESIZABLE_H
 
 #include "wx/wx.h"

@@ -13,6 +13,7 @@ class PanelBoard: public wxPanel
 {
 public:
     PanelBoard( wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size );
+    ~PanelBoard();
     void OnSize( wxSizeEvent &evt );
     GraphicBoardResizable *gb;
     wxStaticText    *who_top;
@@ -37,20 +38,32 @@ public:
     wxStaticText    *coordf;
     wxStaticText    *coordg;
     wxStaticText    *coordh;
+    void SetPlayers( const char *white, const char *black );
+    bool GetNormalOrientation();
+    void SetNormalOrientation( bool normal );
+    void SetChessPosition( thc::ChessPosition &pos );
+    void SetChessPosition();
+    void ClocksVisible();                  
+    void WhiteClock( const wxString &txt );
+    void BlackClock( const wxString &txt );
+    void RedrawClocks();                   
 
 private:
     wxFont       *font1;
     wxFont       *font2;
     wxFont       *font3;
     wxFont       *font4;
+    thc::ChessPosition   save_position;
+    std::string  white_player;
+    std::string  black_player;
+    std::string  white_clock_txt;
+    std::string  black_clock_txt;
+    std::string  time_top_txt;
+    std::string  time_bottom_txt;
+    bool         white_clock_visible;
+    bool         black_clock_visible;
 
-/*    ~PanelBoard();
-    void SetPlayers( const char *white, const char *black );
-    bool GetNormalOrientation();
-    void SetNormalOrientation( bool normal );
-    void SetPosition( thc::ChessPosition &pos );
-    void SetPosition();
-    void AdjustPosition( bool have_players );
+/*  
     void ClocksVisible();
     void WhiteClock( const wxString &txt );
     void BlackClock( const wxString &txt );

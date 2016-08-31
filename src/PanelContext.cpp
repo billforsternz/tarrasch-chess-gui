@@ -13,9 +13,8 @@
 #include "CtrlBox2.h"
 #include "CtrlBoxBookMoves.h"
 #include "CtrlBoxBookMoves.h"
-#include "PanelContext.h"
-#include "GraphicBoard.h"
 #include "GraphicBoardResizable.h"
+#include "PanelContext.h"
 #include "GameLogic.h"
 #include "CentralWorkSaver.h"
 #include "thc.h"
@@ -40,11 +39,6 @@ bool view_flags_book_moves;
 enum
 {
     wid_gb = 0,
-    wid_who_top,
-    wid_who_bottom,
-    wid_white_player,
-    wid_dash_player,
-    wid_black_player,
     wid_box,
     wid_status,
     wid_book_moves,
@@ -63,21 +57,16 @@ enum
 static int window_id_positions[NBR_OF_WIDS][4] =
 {
     {0,0,0,0},                  // gb = graphic board
-    {2,2,20,20},                // who_top
-    {2,2,20,20},                // who_bottom
-    {32+XDELTA,10+YDELTA,206,22},           // white_player
-    {238+XDELTA,10+YDELTA,20,22},           // dash_player
-    {258+XDELTA,10+YDELTA,206,22},          // black_player
     {10+XDELTA,30+YDELTA,662,37},           // box
     {20+XDELTA,40+YDELTA,286,22},           // status
     {0,0,0,0},                  // book_moves
-    {512+XDELTA,6+YDELTA,68,24},                  // wclock
-    {584+XDELTA,6+YDELTA,68,24},                  // bclock
+    {512+XDELTA,6+YDELTA,68,24},            // wclock
+    {584+XDELTA,6+YDELTA,68,24},            // bclock
     {0,0,0,0},                  // moves
-    {394+XDELTA,45+YDELTA,0,0},                    // button
-    {10+XDELTA,68+YDELTA,560,99},                  // kibitz
-    {578+XDELTA,90+YDELTA,60,20},                  // kibitz_button1
-    {578+XDELTA,120+YDELTA,60,20}                   // kibitz_button2
+    {394+XDELTA,45+YDELTA,0,0},             // button
+    {10+XDELTA,68+YDELTA,560,99},           // kibitz
+    {578+XDELTA,90+YDELTA,60,20},           // kibitz_button1
+    {578+XDELTA,120+YDELTA,60,20}           // kibitz_button2
 };
 
 static bool using_large_chess_board = false;
@@ -137,11 +126,6 @@ PanelContext::~PanelContext()
         delete font_book;
         font_book = NULL;
     }
-    if( font_clock )
-    {
-        delete font_clock;
-        font_clock = NULL;
-    }
     if( box )
     {
         delete box;
@@ -169,6 +153,7 @@ PanelContext::PanelContext
     wxWindowID id,
     const wxPoint &point,
     const wxSize &siz,
+    PanelBoard *pb_,
     GraphicBoardResizable *gb_,
     CtrlChessTxt *lb_
 )
@@ -177,18 +162,13 @@ PanelContext::PanelContext
 #if 1
     resize_ready = false;
     popup = NULL;
+    pb = pb_;
     lb = lb_;
     gb = gb_;
-    who_top = NULL;
-    who_bottom = NULL;
-    who_top = NULL;
     font1 = NULL;
     font2 = NULL;
     font3 = NULL;
     font_book = NULL;
-    font_clock = NULL;
-    white_clock = NULL;
-    black_clock = NULL;
     box = NULL;
     status = NULL;
     view_flags_book_moves = true;
@@ -240,21 +220,11 @@ PanelContext::PanelContext
                           sz, using_large_chess_board?54:40 ); */
 
     // Create labels
-    who_top    = new wxStaticText(this,ID_WHO_TOP,   " ");
-    who_bottom = new wxStaticText(this,ID_WHO_BOTTOM," ");
     font1      = new wxFont( 14, wxFONTFAMILY_ROMAN,  wxFONTSTYLE_ITALIC, wxFONTWEIGHT_BOLD,   false );
     font2      = new wxFont( 14, wxFONTFAMILY_SWISS,  wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false );
     font3      = new wxFont( 12, wxFONTFAMILY_SWISS,  wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false );
     wxPoint pos;
     wxSize  size;
-    who_top->SetFont( *font1 );
-    LOCATE_2( who_top, pos, size );
-    who_top->SetPosition( pos );
-    who_top->SetSize( size );
-    LOCATE_2( who_bottom, pos, size );
-    who_bottom->SetFont( *font1 );
-    who_bottom->SetPosition( pos );
-    who_bottom->SetSize( size );
 
     font_book = new wxFont( 10, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD,   false );
     extern CtrlBoxBookMoves *gbl_book_moves;
@@ -265,51 +235,13 @@ PanelContext::PanelContext
     book_moves->SetFont( *font_book );
     book_moves->SetTxt("no book moves",false);
     
-    font_clock = new wxFont( 14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD,   false );
-    wxRect r;
-    LOCATE_R( wclock, r );
-    pt.x = r.x;
-    pt.y = r.y;
-    sz.x = r.width;
-    sz.y = r.height;
-    white_clock = new CtrlBox( this,
-                          wxID_ANY,
-                          pt,
-                          sz );
-    white_clock->hack_its_a_clock = true;
-    white_clock->SetBackgroundColour( *wxWHITE );
-    white_clock->SetBackgroundStyle( wxBG_STYLE_COLOUR );
-    white_clock->SetForegroundColour( *wxBLACK );
-    white_clock->SetFont( *font_clock );
-    white_clock->SetTxt("***",false);
-    LOCATE_R( bclock, r );
-    pt.x = r.x;
-    pt.y = r.y;
-    sz.x = r.width;
-    sz.y = r.height;
-    black_clock = new CtrlBox( this,
-                          wxID_ANY,
-                          pt,
-                          sz );
-    black_clock->hack_its_a_clock = true;
-    black_clock->SetBackgroundColour( *wxWHITE );
-    black_clock->SetBackgroundStyle( wxBG_STYLE_COLOUR );
-    black_clock->SetForegroundColour( *wxBLACK );
-    black_clock->SetFont( *font_clock );
-    black_clock->SetTxt("***",false);
+//    font_clock = new wxFont( 14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD,   false );
 
-    LOCATE_2( white_player, pos, size );
+/*
     white_player = new wxStaticTextSub(this,ID_WHITE_PLAYER,"",pos,size,wxALIGN_RIGHT|wxST_NO_AUTORESIZE);
-    LOCATE_2( dash_player, pos, size );
     dash_player  = new wxStaticTextSub(this,ID_DASH_PLAYER,"",pos,size,wxALIGN_CENTRE|wxST_NO_AUTORESIZE);
-    LOCATE_2( black_player, pos, size );
     black_player = new wxStaticTextSub(this,ID_BLACK_PLAYER,"",pos,size,wxALIGN_LEFT|wxST_NO_AUTORESIZE);
-    white_player->SetFont( *font2 );
-
-    dash_player->SetFont( *font2 );
-    dash_player->SetLabel( "" );
-
-    black_player->SetFont( *font2 );
+  */
 
     // Create Status box
     box = new wxStaticBox( this,ID_BOX,"");
@@ -593,9 +525,9 @@ void PanelContext::OnSize( wxSizeEvent &WXUNUSED(event) )
     #endif
 }
 
+#if 0
 void PanelContext::AdjustPosition( bool have_players )
 {
-    #if 0
     int i;
     wxRect r;
     wxButton *button;
@@ -642,8 +574,8 @@ void PanelContext::AdjustPosition( bool have_players )
     pos.y += shift;
     black_player->SetPosition( pos );
     black_player->Show( have_players );
-    #endif
 }        
+#endif
 
 void PanelContext::PositionButtons()
 {
@@ -724,52 +656,6 @@ void PanelContext::SetSmallBox( bool is_small )
     box->SetLabel( is_small ? "Start" : "" );
 }
 
-void PanelContext::SetPlayers( const char *white, const char *black )
-{
-    white_player->SetLabel( white );
-    black_player->SetLabel( black );
-    bool have_players=true;
-    //if( *white=='\0' && *black=='\0' )
-    //    have_players = false;
-    dash_player->SetLabel( have_players ? "-" : " " );
-    AdjustPosition( have_players );
-}
-
-bool PanelContext::GetNormalOrientation()
-{
-    bool normal = gb->GetNormalOrientation();
-    return normal;
-}
-
-void PanelContext::SetNormalOrientation( bool normal )
-{
-    gb->SetNormalOrientation( normal );
-    SetChessPosition();
-}
-
-void PanelContext::SetChessPosition( thc::ChessPosition &pos )
-{
-    memcpy( &save_position, &pos, sizeof(save_position) );
-    SetChessPosition();
-}
-
-void PanelContext::SetChessPosition()
-{
-    bool normal = gb->GetNormalOrientation();
-    gb->SetChessPosition( save_position.squares );
-    gb->Draw();
-    if( normal )
-    {
-        who_top->SetLabel( !save_position.white ? "B" : "" );
-        who_bottom->SetLabel( save_position.white ? "W" : "" );
-    }
-    else
-    {
-        who_top->SetLabel( save_position.white ? "W" : "" );
-        who_bottom->SetLabel( !save_position.white ? "B" : "" );
-    }
-}
-
 void PanelContext::BookUpdate( bool suppress )
 {
     std::vector<thc::Move> bmoves;
@@ -799,12 +685,6 @@ void PanelContext::BookUpdate( bool suppress )
         book_moves->Show(true);
         book_moves->SetTxt(txt);
     }
-}
-
-void PanelContext::ClocksVisible()
-{
-    white_clock->Show( objs.repository->clock.m_white_visible );
-    black_clock->Show( objs.repository->clock.m_black_visible );        
 }
 
 void PanelContext::OnPaint (wxPaintEvent &)
@@ -892,32 +772,8 @@ void PanelContext::OnChar( wxKeyEvent &event )
     lb->GetEventHandler()->ProcessEvent(event);
 }
 
-void PanelContext::OnMouseLeftDown( wxMouseEvent &event )
+void PanelContext::OnMouseLeftDown( wxMouseEvent &WXUNUSED(event) )
 {
-    wxPoint point = event.GetPosition();
-    wxRect test_clocks;
-    wxRect test_players;
-    test_clocks.x       = white_clock->r.x;
-    test_clocks.width   = black_clock->r.x+black_clock->r.width;
-    test_clocks.y       = white_clock->r.y;
-    test_clocks.height  = white_clock->r.height;
-    test_players.x      = board_rect.x;
-    test_players.width  = board_rect.width;
-    test_players.y      = test_clocks.y;
-    test_players.height = test_clocks.height;
-
-    if( test_clocks.x<=point.x && point.x<(test_clocks.x+test_clocks.width) &&
-        test_clocks.y<=point.y && point.y<(test_clocks.y+test_clocks.height)
-      )
-    {
-        objs.gl->CmdClocks();
-    }
-    else if( test_players.x<=point.x && point.x<(test_players.x+test_players.width) &&
-        test_players.y<=point.y && point.y<(test_players.y+test_players.height)
-      )
-    {
-        objs.gl->CmdPlayers();
-    }
 }
 
 void PanelContext::OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(event) )
@@ -930,17 +786,6 @@ void PanelContext::OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(event) 
 void PanelContext::OnMouseMove( wxMouseEvent& WXUNUSED(event) )
 {
 }
-
-void PanelContext::WhiteClock( const wxString &txt )
-{
-    white_clock->SetTxt(txt);
-}
-
-void PanelContext::BlackClock( const wxString &txt )
-{
-    black_clock->SetTxt(txt);
-}
-
 
 void PanelContext::Kibitz( int idx, const wxString &txt )
 {
@@ -1021,11 +866,4 @@ void PanelContext::KibitzScroll( const wxString &txt )
     Kibitz( 4, line4 );
 }
 
-void PanelContext::RedrawClocks()
-{
-    white_clock->Refresh(false);
-    white_clock->Update();
-    black_clock->Refresh(false);
-    black_clock->Update();
-}
 

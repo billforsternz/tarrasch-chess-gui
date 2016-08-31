@@ -23,8 +23,8 @@
 #include "wx/log.h"
 #include "wx/aui/aui.h"
 #include "Appdefs.h"
-#include "PanelContext.h"
 #include "PanelBoard.h"
+#include "PanelContext.h"
 #include "GameLogic.h"
 #include "Lang.h"
 #include "CentralWorkSaver.h"
@@ -960,7 +960,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 
     CtrlChessTxt *lb = new CtrlChessTxt( this, -1, /*ID_LIST_CTRL*/ wxDefaultPosition, wxSize(ww/2,(90*hh)/100) ); // BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER ); */
 
-    context = new PanelContext( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,(10*hh)/100), pb->gb, lb );
+    context = new PanelContext( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,(10*hh)/100), pb, pb->gb, lb );
     objs.canvas = context;
  
     // add the panes to the manager

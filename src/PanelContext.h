@@ -14,6 +14,7 @@
 #include "CtrlChessTxt.h"
 #include "CtrlBox.h"
 #include "CtrlBox2.h"
+#include "PanelBoard.h"
 #include "thc.h"
 class GraphicBoard;
 class GraphicBoardResizable;
@@ -36,18 +37,20 @@ public:
 class PanelContext: public wxPanel
 {
 public:
-    PanelContext( wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size, GraphicBoardResizable *gb_, CtrlChessTxt *lb_ );
+    PanelContext( wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size, PanelBoard *pb_, GraphicBoardResizable *gb_, CtrlChessTxt *lb_ );
     ~PanelContext();
-    void SetPlayers( const char *white, const char *black );
-    bool GetNormalOrientation();
-    void SetNormalOrientation( bool normal );
-    void SetChessPosition( thc::ChessPosition &pos );
-    void SetChessPosition();
-    void AdjustPosition( bool have_players );
+    void SetPlayers( const char *white, const char *black ) { pb->SetPlayers(white,black); }
+    bool GetNormalOrientation()                             { return pb->GetNormalOrientation(); }
+    void SetNormalOrientation( bool normal )                { pb->SetNormalOrientation(normal); }
+    void SetChessPosition( thc::ChessPosition &pos )        { pb->SetChessPosition(pos); }
+    void SetChessPosition()                                 { pb->SetChessPosition(); }
+    void ClocksVisible()                                    { pb->ClocksVisible(); }
+    void WhiteClock( const wxString &txt )                  { pb->WhiteClock(txt); }
+    void BlackClock( const wxString &txt )                  { pb->BlackClock(txt); }
+    void RedrawClocks()                                     { pb->RedrawClocks(); }
     void PositionButtons();
     void SetSmallBox( bool is_small );
     void BookUpdate( bool suppress );
-    void ClocksVisible();
     void OnChar( wxKeyEvent &event );
     void OnMouseLeftDown (wxMouseEvent & event);
     void OnMouseMove (wxMouseEvent & event);
@@ -62,9 +65,6 @@ public:
     void OnButton4( wxCommandEvent &event );
     void OnKibitzButton1( wxCommandEvent &event );
     void OnKibitzButton2( wxCommandEvent &event );
-    void WhiteClock( const wxString &txt );
-    void BlackClock( const wxString &txt );
-    void RedrawClocks();
     void Kibitz( int idx, const wxString &txt );
     void KibitzScroll( const wxString &txt );
     void SetFocusOnList() { if(lb) lb->SetFocus(); }
@@ -76,11 +76,10 @@ public:
 public:
     bool            resize_ready;
     thc::ChessPosition   save_position;
+    PanelBoard              *pb;
     GraphicBoardResizable   *gb;
     CtrlChessTxt    *lb;
     PopupControl    *popup;
-    wxStaticText    *who_top;
-    wxStaticText    *who_bottom;
     wxStaticText    *status;
     wxStaticText    *kibitz0;
     wxStaticText    *kibitz1;
@@ -122,11 +121,6 @@ private:
     wxStaticBox  *kibitz_box;
     //wxRichTextCtrl *kibitz_ctrl;
 
-    CtrlBox          *white_clock;
-    CtrlBox          *black_clock;
-    wxStaticText *white_player;
-    wxStaticText *black_player;
-    wxStaticText *dash_player;
     wxRect       board_rect;
     int          box_width;
     bool         captured;

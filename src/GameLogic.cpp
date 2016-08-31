@@ -2703,17 +2703,7 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
                         b4 = NULL; //"Play as Black";
                         break;
     }
-    bool white = gd.master_position.WhiteToPlay();
-    if( canvas->GetNormalOrientation() )
-    {
-        canvas->who_top->SetLabel   ( white ? "" : "B" );
-        canvas->who_bottom->SetLabel( white ? "W" : "" );
-    }
-    else
-    {
-        canvas->who_top->SetLabel   ( white ? "W" : "" );
-        canvas->who_bottom->SetLabel( white ? "" : "B" );
-    }
+    canvas->SetChessPosition( gd.master_position );
     if( red )
         canvas->status->SetForegroundColour( *wxRED );
     else

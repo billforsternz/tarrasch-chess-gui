@@ -5,6 +5,8 @@
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
 #include "DebugPrintf.h"
+#include "Repository.h"
+#include "Objects.h"
 #include "PanelBoard.h"
 
 //-----------------------------------------------------------------------------
@@ -43,6 +45,9 @@ PanelBoard::PanelBoard
     font2      = new wxFont( 14, wxFONTFAMILY_SWISS,  wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false );
     font3      = new wxFont( 12, wxFONTFAMILY_SWISS,  wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false );
     font4      = new wxFont( 8, wxFONTFAMILY_SWISS,  wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false );
+    white_clock_visible = false;
+    black_clock_visible = false;
+
     who_top     = new wxStaticText(this,wxID_ANY,"B");
     who_top->SetFont( *font1 );
     who_bottom  = new wxStaticText(this,wxID_ANY,"W");
@@ -51,9 +56,9 @@ PanelBoard::PanelBoard
     name_top->SetFont( *font2 );
     name_bottom = new wxStaticText(this,wxID_ANY,"Botvinnik, Mikhail");
     name_bottom->SetFont( *font2 );
-    time_top    = new wxStaticText(this,wxID_ANY,"120:00");
+    time_top    = new wxStaticText(this,wxID_ANY,"");
     time_top->SetFont( *font2 );
-    time_bottom = new wxStaticText(this,wxID_ANY,"120:00");
+    time_bottom = new wxStaticText(this,wxID_ANY,"");
     time_bottom->SetFont( *font2 );
     coord1     = new wxStaticText(this,wxID_ANY,"1");
     coord1->SetFont( *font4 );
@@ -255,6 +260,141 @@ void PanelBoard::OnSize( wxSizeEvent &evt )
     name_bottom->SetPosition(wxPoint(x,y));
     x = origin_x + dim - time_x_offset;
     time_bottom->SetPosition(wxPoint(x,y));
+    RedrawClocks();
+}
+
+void PanelBoard::RedrawClocks()
+{
+    white_clock_visible = objs.repository->clock.m_white_visible;
+    black_clock_visible = objs.repository->clock.m_black_visible;        
+    bool normal = gb->GetNormalOrientation();
+    if( normal )
+    {
+        std::string temp(white_clock_visible ? white_clock_txt.c_str() : "");
+        if( temp !=  time_bottom_txt )
+        {
+            time_bottom_txt = temp; 
+            time_bottom->SetLabel( time_bottom_txt.c_str() );
+        }
+        std::string temp2(black_clock_visible ? black_clock_txt.c_str() : "");
+        if( temp2 !=  time_top_txt )
+        {
+            time_top_txt = temp2;
+            time_top->SetLabel( time_top_txt.c_str() );
+        }
+    }
+    else
+    {
+        std::string temp(black_clock_visible ? black_clock_txt.c_str() : "");
+        if( temp != time_bottom_txt )
+        {
+            time_bottom_txt = temp; 
+            time_bottom->SetLabel( time_bottom_txt.c_str() );
+        }
+        std::string temp2(white_clock_visible ? white_clock_txt.c_str() : "");
+        if( temp2 !=  time_top_txt )
+        {
+            time_top_txt = temp2;
+            time_top->SetLabel( time_top_txt.c_str() );
+        }
+    }
+}
+
+void PanelBoard::ClocksVisible()
+{
+    white_clock_visible = objs.repository->clock.m_white_visible;
+    black_clock_visible = objs.repository->clock.m_black_visible;        
+    RedrawClocks();
+}
+
+void PanelBoard::WhiteClock( const wxString &txt )
+{
+    white_clock_txt = std::string(txt.c_str());
+    RedrawClocks();
+}
+
+void PanelBoard::BlackClock( const wxString &txt )
+{
+    black_clock_txt = std::string(txt.c_str());
+    RedrawClocks();
+}
+
+void PanelBoard::SetPlayers( const char *white, const char *black )
+{
+    white_player = std::string(white);
+    black_player = std::string(black);
+    SetChessPosition();
+}
+
+bool PanelBoard::GetNormalOrientation()
+{
+    bool normal = gb->GetNormalOrientation();
+    return normal;
+}
+
+void PanelBoard::SetNormalOrientation( bool normal )
+{
+    gb->SetNormalOrientation( normal );
+    SetChessPosition();
+}
+
+void PanelBoard::SetChessPosition( thc::ChessPosition &pos )
+{
+    memcpy( &save_position, &pos, sizeof(save_position) );
+    SetChessPosition();
+}
+
+void PanelBoard::SetChessPosition()
+{
+    bool normal = gb->GetNormalOrientation();
+    gb->SetChessPosition( save_position.squares );
+    gb->Draw();
+    if( normal )
+    {
+        name_bottom->SetLabel( white_player.c_str() );
+        name_top->SetLabel( black_player.c_str() );
+        who_top->SetLabel( !save_position.white ? "B" : "" );
+        who_bottom->SetLabel( save_position.white ? "W" : "" );
+        coorda->SetLabel('a');
+        coordb->SetLabel('b');
+        coordc->SetLabel('c');
+        coordd->SetLabel('d');
+        coorde->SetLabel('e');
+        coordf->SetLabel('f');
+        coordg->SetLabel('g');
+        coordh->SetLabel('h');
+        coord1->SetLabel('1');
+        coord2->SetLabel('2');
+        coord3->SetLabel('3');
+        coord4->SetLabel('4');
+        coord5->SetLabel('5');
+        coord6->SetLabel('6');
+        coord7->SetLabel('7');
+        coord8->SetLabel('8');
+    }
+    else
+    {
+        name_bottom->SetLabel( black_player.c_str() );
+        name_top->SetLabel( white_player.c_str() );
+        who_top->SetLabel( save_position.white ? "W" : "" );
+        who_bottom->SetLabel( !save_position.white ? "B" : "" );
+        coorda->SetLabel('h');
+        coordb->SetLabel('g');
+        coordc->SetLabel('f');
+        coordd->SetLabel('e');
+        coorde->SetLabel('d');
+        coordf->SetLabel('c');
+        coordg->SetLabel('b');
+        coordh->SetLabel('a');
+        coord1->SetLabel('8');
+        coord2->SetLabel('7');
+        coord3->SetLabel('6');
+        coord4->SetLabel('5');
+        coord5->SetLabel('4');
+        coord6->SetLabel('3');
+        coord7->SetLabel('2');
+        coord8->SetLabel('1');
+    }
 }
 
 #if 0
@@ -298,3 +438,28 @@ void PanelBoard::RedrawClocks()
 }
 
 #endif
+
+// Destructor
+PanelBoard::~PanelBoard()
+{
+    if( font1 )
+    {
+        delete font1;
+        font1 = NULL;
+    }
+    if( font2 )
+    {
+        delete font2;
+        font2 = NULL;
+    }
+    if( font3 )
+    {
+        delete font3;
+        font3 = NULL;
+    }
+    if( font4 )
+    {
+        delete font4;
+        font4 = NULL;
+    }
+}
