@@ -192,7 +192,6 @@ void GameLogic::ShowNewDocument()
     string title;
     gd.Locate( atom.GetInsertionPoint(), cr ); //, title );
     gd.master_position = cr;
-//    objs.frame->SetTitle(title.c_str());
     chess_clock.SetDefault();
     canvas->RedrawClocks();
     GAME_RESULT result = RESULT_NONE;
@@ -2704,11 +2703,7 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
                         break;
     }
     canvas->SetChessPosition( gd.master_position );
-    if( red )
-        canvas->status->SetForegroundColour( *wxRED );
-    else
-        canvas->status->SetForegroundColour( *wxBLACK );
-    canvas->status->SetLabel( stat?stat:"" );
+    canvas->SetBoardTitle( stat?stat:"", red );
     if( !b1 )
         canvas->button1->Show( false );        
     else
@@ -2764,8 +2759,8 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
         canvas->kibitz_button2->Show(false);
     }
     #endif
-    canvas->SetSmallBox(stat?false:true);
-    canvas->PositionButtons();
+    bool horiz=!kibitz;
+    canvas->PositionButtons(horiz);
     canvas->button1->Refresh();
     canvas->button2->Refresh();
     canvas->button3->Refresh();
@@ -3266,8 +3261,7 @@ void GameLogic::SetGroomedPosition( bool show_title )
         }
     }
     canvas->SetChessPosition( view_pos );
-    if( objs.frame && show_title )
-        objs.frame->SetTitle( title );
+    canvas->SetBoardTitle( title );
     if( canvas->resize_ready && tabs && show_title )
         tabs->SetTitle( gd );
  }

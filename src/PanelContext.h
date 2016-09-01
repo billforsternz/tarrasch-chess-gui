@@ -16,8 +16,6 @@
 #include "CtrlBox2.h"
 #include "PanelBoard.h"
 #include "thc.h"
-class GraphicBoard;
-class GraphicBoardResizable;
 class PopupControl;
 class CtrlBox;
 class CtrlBoxBookMoves;
@@ -37,7 +35,7 @@ public:
 class PanelContext: public wxPanel
 {
 public:
-    PanelContext( wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size, PanelBoard *pb_, GraphicBoardResizable *gb_, CtrlChessTxt *lb_ );
+    PanelContext( wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size, PanelBoard *pb_, CtrlChessTxt *lb_ );
     ~PanelContext();
     void SetPlayers( const char *white, const char *black ) { pb->SetPlayers(white,black); }
     bool GetNormalOrientation()                             { return pb->GetNormalOrientation(); }
@@ -48,8 +46,8 @@ public:
     void WhiteClock( const wxString &txt )                  { pb->WhiteClock(txt); }
     void BlackClock( const wxString &txt )                  { pb->BlackClock(txt); }
     void RedrawClocks()                                     { pb->RedrawClocks(); }
-    void PositionButtons();
-    void SetSmallBox( bool is_small );
+    void SetBoardTitle( const char *txt, bool highlight=false )   { pb->SetBoardTitle( txt, highlight ); }
+    int PositionButtons( bool horiz=true, bool test_shown=true );
     void BookUpdate( bool suppress );
     void OnChar( wxKeyEvent &event );
     void OnMouseLeftDown (wxMouseEvent & event);
@@ -77,10 +75,8 @@ public:
     bool            resize_ready;
     thc::ChessPosition   save_position;
     PanelBoard              *pb;
-    GraphicBoardResizable   *gb;
     CtrlChessTxt    *lb;
     PopupControl    *popup;
-    wxStaticText    *status;
     wxStaticText    *kibitz0;
     wxStaticText    *kibitz1;
     wxStaticText    *kibitz2;
@@ -107,6 +103,7 @@ public:
     //wxPanel         *notebook_page1;
     wxPanel         *notebook_page2;
 private:
+    wxStaticText    *status;
     wxPoint       kbut1_base;
     wxPoint       kbut2_base;
     wxSize        lb_sz_base;

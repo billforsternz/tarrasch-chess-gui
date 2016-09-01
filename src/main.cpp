@@ -960,30 +960,42 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 
     CtrlChessTxt *lb = new CtrlChessTxt( this, -1, /*ID_LIST_CTRL*/ wxDefaultPosition, wxSize(ww/2,(90*hh)/100) ); // BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER ); */
 
-    context = new PanelContext( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,(10*hh)/100), pb, pb->gb, lb );
+    context = new PanelContext( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,(10*hh)/100), pb, lb );
     objs.canvas = context;
  
-    // add the panes to the manager
-    m_mgr.AddPane(pb, wxLEFT, wxT("Pane Number One"));
-    m_mgr.AddPane(lb, wxCENTER);
-    m_mgr.AddPane(context, wxBOTTOM, wxT("Pane Number Two"));
+    // add the panes to the manager Note: Experience shows there is no point trying to change a panel's fundamental characteristics
+    //  after adding it to the manager - Things like CaptionVisible(false) etc need to be intantiated with the panel
+    m_mgr.AddPane(pb, //wxLEFT );         //, wxT("Pane Number One"));
+// CreateTreeCtrl(),
+                  wxAuiPaneInfo().
+                  Name(wxT("test8")).CaptionVisible(false). //(wxT("Tree Pane")).
+                  Left().Layer(1).Position(1).
+                  CloseButton(false).MaximizeButton(false));
+    m_mgr.AddPane(lb, wxCENTER );
+    m_mgr.AddPane(context, //wxBOTTOM);    //, wxT("Pane Number Two"));
+                  wxAuiPaneInfo().
+                  Name(wxT("test9")).CaptionVisible(false). //(wxT("Tree Pane")).
+                  Bottom().Layer(1).Position(2).
+                  CloseButton(false).MaximizeButton(false));
 
-    wxAuiPaneInfo binfo = m_mgr.GetPane(pb);
-    bool ok = binfo.IsOk();
+    //wxAuiPaneInfo binfo = m_mgr.GetPane(pb);
+    //bool ok = binfo.IsOk();
     //binfo.MinSize(ww/2,(90*hh)/100);
     //binfo.Fixed(); //MinSize(ww/2,(90*hh)/100);
-    binfo.Resizable(false);
-    wxAuiPaneInfo tinfo = m_mgr.GetPane(lb);
-    ok = tinfo.IsOk();
+    //binfo.CaptionVisible(false);
+    //binfo.CloseButton(false);
+    //binfo.Resizable(false);
+    //wxAuiPaneInfo tinfo = m_mgr.GetPane(lb);
+    //ok = tinfo.IsOk();
     //tinfo.Fixed();
-    tinfo.Resizable(false);
+    //tinfo.Resizable(false);
 //    tinfo.MinSize(ww/2,(90*hh)/100);
 //    tinfo.MaxSize(ww/2,(90*hh)/100);
 //    tinfo.MinSize(ww/2,(90*hh)/100);
-    wxAuiPaneInfo cinfo = m_mgr.GetPane(context);
-    ok = cinfo.IsOk();
+    //wxAuiPaneInfo cinfo = m_mgr.GetPane(context);
+    //ok = cinfo.IsOk();
     //cinfo.Fixed();
-    cinfo.Resizable(false);
+    //cinfo.Resizable(false);
 
     // tell the manager to "commit" all the changes just made
     m_mgr.SetDockSizeConstraint(1.0,1.0);
@@ -993,6 +1005,17 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     FILE *f = fopen( "c:/temp/persp.txt", "wb" );
     fputs(txt,f);
     fclose(f);
+
+/*    std::string s(txt);
+    size_t idx = s.find("state=2099196");
+    if( idx != std::string::npos )
+    {
+        std::string t = s.substr(0,idx);
+        std::string u = s.substr(idx+12);
+        std::string v = t + "state=768" + u;
+        wxString persp2(v.c_str());
+        m_mgr.LoadPerspective( persp2, true );
+    } */
 
 /*    std::string s(txt);
     size_t idx = s.find("dock_size(4,0,0)=456");

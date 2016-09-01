@@ -14,10 +14,27 @@ class PanelBoard: public wxPanel
 public:
     PanelBoard( wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size );
     ~PanelBoard();
+    void SetPlayers( const char *white, const char *black );
+    bool GetNormalOrientation();
+    void SetNormalOrientation( bool normal );
+    void SetChessPosition( thc::ChessPosition &pos );
+    void SetChessPosition();
+    void ClocksVisible();                  
+    void WhiteClock( const wxString &txt );
+    void BlackClock( const wxString &txt );
+    void RedrawClocks();                   
+    void SetBoardTitle( const char *txt, bool highlight=false );
+
+private:
+    wxFont       *font1;
+    wxFont       *font2;
+    wxFont       *font3;
+    wxFont       *font4;
     void OnSize( wxSizeEvent &evt );
     GraphicBoardResizable *gb;
     wxStaticText    *who_top;
     wxStaticText    *who_bottom;
+    wxStaticText    *board_title;
     wxStaticText    *name_top;
     wxStaticText    *name_bottom;
     wxStaticText    *time_top;
@@ -38,21 +55,6 @@ public:
     wxStaticText    *coordf;
     wxStaticText    *coordg;
     wxStaticText    *coordh;
-    void SetPlayers( const char *white, const char *black );
-    bool GetNormalOrientation();
-    void SetNormalOrientation( bool normal );
-    void SetChessPosition( thc::ChessPosition &pos );
-    void SetChessPosition();
-    void ClocksVisible();                  
-    void WhiteClock( const wxString &txt );
-    void BlackClock( const wxString &txt );
-    void RedrawClocks();                   
-
-private:
-    wxFont       *font1;
-    wxFont       *font2;
-    wxFont       *font3;
-    wxFont       *font4;
     thc::ChessPosition   save_position;
     std::string  white_player;
     std::string  black_player;
@@ -62,13 +64,6 @@ private:
     std::string  time_bottom_txt;
     bool         white_clock_visible;
     bool         black_clock_visible;
-
-/*  
-    void ClocksVisible();
-    void WhiteClock( const wxString &txt );
-    void BlackClock( const wxString &txt );
-    void RedrawClocks();
-    void OnMove(); */
     DECLARE_EVENT_TABLE()
 };
 

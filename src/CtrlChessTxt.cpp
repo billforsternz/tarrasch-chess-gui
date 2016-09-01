@@ -190,7 +190,7 @@ void CtrlChessTxt::Goto( unsigned long pos, bool from_mouse_move )
         gl->gd.master_position = cr;
         gl->SetManual( mt, at_move0, from_mouse_move );
         objs.canvas->SetChessPosition( cr );
-        objs.frame->SetTitle(title.c_str());
+        objs.canvas->SetBoardTitle(title.c_str());
     }
     old_from_mouse_move = from_mouse_move;
     old_pos      =pos;

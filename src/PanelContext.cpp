@@ -38,35 +38,19 @@ bool view_flags_book_moves;
 
 enum
 {
-    wid_gb = 0,
-    wid_box,
-    wid_status,
-    wid_book_moves,
-    wid_wclock,
-    wid_bclock,
-    wid_moves,
-    wid_button,
     wid_kibitz,
     wid_kibitz_button1,
     wid_kibitz_button2,
     NBR_OF_WIDS
 };
 
-#define XDELTA 10
-#define YDELTA 24
+#define XDELTA 0
+#define YDELTA 0
 static int window_id_positions[NBR_OF_WIDS][4] =
 {
-    {0,0,0,0},                  // gb = graphic board
-    {10+XDELTA,30+YDELTA,662,37},           // box
-    {20+XDELTA,40+YDELTA,286,22},           // status
-    {0,0,0,0},                  // book_moves
-    {512+XDELTA,6+YDELTA,68,24},            // wclock
-    {584+XDELTA,6+YDELTA,68,24},            // bclock
-    {0,0,0,0},                  // moves
-    {394+XDELTA,45+YDELTA,0,0},             // button
-    {10+XDELTA,68+YDELTA,560,99},           // kibitz
-    {578+XDELTA,90+YDELTA,60,20},           // kibitz_button1
-    {578+XDELTA,120+YDELTA,60,20}           // kibitz_button2
+    {200+XDELTA,10+YDELTA,560,99},           // kibitz
+    {700+XDELTA,70+YDELTA,60,20},           // kibitz_button1
+    {700+XDELTA,100+YDELTA,60,20}           // kibitz_button2
 };
 
 static bool using_large_chess_board = false;
@@ -131,20 +115,12 @@ PanelContext::~PanelContext()
         delete box;
         box = NULL;
     }
-    if( status )
-    {
-        delete status;
-        status = NULL;
-    }
 }
-
-
 
 
 #define MARGIN 10
 #define SMALL_MARGIN 4
 #define FIELD 20
-
 
 // Constructor
 PanelContext::PanelContext
@@ -154,51 +130,23 @@ PanelContext::PanelContext
     const wxPoint &point,
     const wxSize &siz,
     PanelBoard *pb_,
-    GraphicBoardResizable *gb_,
     CtrlChessTxt *lb_
 )
     : wxPanel( parent, id, point, siz, wxNO_BORDER )
 {
-#if 1
     resize_ready = false;
     popup = NULL;
     pb = pb_;
     lb = lb_;
-    gb = gb_;
     font1 = NULL;
     font2 = NULL;
     font3 = NULL;
     font_book = NULL;
     box = NULL;
-    status = NULL;
     view_flags_book_moves = true;
 
-    // Create board
-    wxRect rect = parent->GetRect();
-    using_large_chess_board = (rect.height >= 680);
-    LOCATE_R( gb, board_rect );
-    
-    wxPoint pt;
-    wxSize  sz;
-    pt.x = board_rect.x;
-    pt.y = board_rect.y;
-    sz.x = board_rect.width;
-    sz.y = board_rect.height;
-    wxSize  sz2;
-    wxPoint pt2;
-    pt2 = pt;
-    //pt2.x = 0;
-    //pt2.x -= 9;
-    pt2.y -= 28;
-    sz2 = sz;
-    sz2.x += 7;
-    sz2.y = 28;
-    //sz2.x += 4;
-    int x,y,h,w;
-    LOCATE_4( moves, x, y, w, h );
-    sz2.x += w;
-    sz2.y += 1; // moving to wx3.1 we needed just 1 more pixel to avoid a weird erasure effect on the first tab header
-                //  when creating subsequent tabs
+    // moving to wx3.1 we needed just 1 more pixel to avoid a weird erasure effect on the first tab header
+    //  when creating subsequent tabs
     //wxSystemOptions::SetOption("msw.notebook.themed-background", 0);
 #define NB_TEMP
 #ifdef NB_TEMP
@@ -210,14 +158,6 @@ PanelContext::PanelContext
     notebook->AddPage(notebook_page1,"New Game",true);
 #endif
 
-/*    #ifdef RESIZABLE_BOARD
-    gb = new GraphicBoardResizable( this,
-    #else
-    gb = new GraphicBoard( this,
-    #endif
-                          wxID_ANY,
-                          pt,
-                          sz, using_large_chess_board?54:40 ); */
 
     // Create labels
     font1      = new wxFont( 14, wxFONTFAMILY_ROMAN,  wxFONTSTYLE_ITALIC, wxFONTWEIGHT_BOLD,   false );
@@ -245,24 +185,15 @@ PanelContext::PanelContext
 
     // Create Status box
     box = new wxStaticBox( this,ID_BOX,"");
-    LOCATE_2( box, pos, size );
-    box->SetPosition( pos );
-    box->SetSize( size );
-    
-    box_width = size.x;
-    status  = new wxStaticText(this,ID_STATUS,    " ");
-    status->SetFont( *font2 );
-    LOCATE_2( status, pos, size );
-    status->SetPosition( pos );
-    status->SetSize( size );
+    box->SetLabel( "Suggestions" );
+    box->SetPosition( wxPoint(10,10) );
 
     // Create buttons
-    LOCATE_XY( button, x, y );
-    button1 = new wxButton( this, ID_BUTTON1, "New Game",       wxPoint(x,y), wxDefaultSize );
-    button2 = new wxButton( this, ID_BUTTON2, "Setup Position", wxPoint(x,y), wxDefaultSize );
-    button3 = new wxButton( this, ID_BUTTON3, "Play as White",  wxPoint(x,y), wxDefaultSize );
-    button4 = new wxButton( this, ID_BUTTON4, "Play as Black",  wxPoint(x,y), wxDefaultSize );
-    wxSize button_sz = button1->GetSize();
+    button1 = new wxButton( this, ID_BUTTON1, "New Game",       wxDefaultPosition, wxDefaultSize );
+    button2 = new wxButton( this, ID_BUTTON2, "Setup Position", wxDefaultPosition, wxDefaultSize );
+    button3 = new wxButton( this, ID_BUTTON3, "Play as White",  wxDefaultPosition, wxDefaultSize );
+    button4 = new wxButton( this, ID_BUTTON4, "Play as Black",  wxDefaultPosition, wxDefaultSize );
+/*    wxSize button_sz = button1->GetSize();
     button_sz.y -= 4;
     button1->SetSize( button_sz );
     button_sz = button2->GetSize();
@@ -273,19 +204,25 @@ PanelContext::PanelContext
     button3->SetSize( button_sz );
     button_sz = button4->GetSize();
     button_sz.y -= 4;
-    button4->SetSize( button_sz );
-
+    button4->SetSize( button_sz ); */
+    PositionButtons(false,false);
+    wxSize sz1 = this->GetSize();
+    wxSize sz2 = box->GetSize();
     // Create Kibitz box
     wxPoint kpos;
     wxSize  ksiz;
+    kpos.x = 10 + sz2.x + 10;
+    kpos.y = 10;
+    ksiz.x = sz1.x - 2*kpos.x;
+    ksiz.y = sz2.y;
 /*  kibitz_box = new wxStaticBox( this,ID_KIBITZ_BOX,"");
     LOCATE_2( kibitz_box, kpos, ksiz );
     kibitz_box->SetPosition( kpos );
-    kibitz_box->SetSize( ksiz ); */
+    kibitz_box->SetSize( ksiz );
     LOCATE_2( kibitz, kpos, ksiz );
     extern bool gbl_small_screen_detected;
     if( !gbl_small_screen_detected && ksiz.y==80 )
-        ksiz.y=99;  // small board graphics on a big screen, show 4 kibitz lines not 3
+        ksiz.y=99;  // small board graphics on a big screen, show 4 kibitz lines not 3 */
     kibitz_ctrl = new wxListCtrl( this, ID_KIBITZ, kpos, ksiz, BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER );
     k_sz_base = ksiz;
     wxListItem col1;
@@ -308,7 +245,7 @@ PanelContext::PanelContext
     kibitz_ctrl->InsertItem( 3, "", 0 );
 //    kibitz_ctrl->SetItem( 3, 0, "dddd" );
 //    kibitz_ctrl->SetItem( 3, 1, "4444" );
-    if( !gbl_small_screen_detected )
+//    if( !gbl_small_screen_detected )
         kibitz_ctrl->InsertItem( 4, "", 0 );    // on a small screen show only 3
 //    kibitz_ctrl->SetItem( 4, 0, "eeee" );
 //    kibitz_ctrl->SetItem( 4, 1, "5555" );
@@ -330,7 +267,7 @@ PanelContext::PanelContext
     // Else no, resize box to avoid scroll bars
     else
     {
-        int y_needed = (height+descent+external_leading)*(gbl_small_screen_detected?4:5) + 4;
+        int y_needed = (height+descent+external_leading)*(true/*gbl_small_screen_detected*/?4:5) + 4;
         ksiz.y =  y_needed + 4;  // safety margin
         kibitz_ctrl->SetSize( ksiz );
         int calculated_y = kpos.y + ksiz.y + 4; // + 4 = safety margin
@@ -425,7 +362,6 @@ PanelContext::PanelContext
     objs.repository->nv.m_h = parent_sz.y;
     //notebook->AdvanceSelection();
     //notebook->AdvanceSelection();
-#endif
 }
 
 void PanelContext::SetMinimumPlaySize()
@@ -577,16 +513,19 @@ void PanelContext::AdjustPosition( bool have_players )
 }        
 #endif
 
-void PanelContext::PositionButtons()
+int PanelContext::PositionButtons( bool horiz, bool test_shown ) 
 {
     int i;
-    wxRect r;
+    wxSize sz;
     wxButton *button;
-    int x, y, w, h;
-    LOCATE_4( box, x, y, w, h );
-    x += box_width; // right border
-
-    // Calculate space required
+    int x=0, y=0, h=0, w=0;
+    int max_width_so_far=0;
+    int max_height_so_far=0;
+    wxPoint pos = box->GetPosition();
+    x = pos.x + 5;
+    y = pos.y + 20;
+    w = 5;
+    h = 5;
     for( i=0; i<4; i++ )
     {
         switch(i)
@@ -597,32 +536,27 @@ void PanelContext::PositionButtons()
             case 2: button = button3;  break;
             case 3: button = button4;  break;
         }
-        r = button->GetRect();
-        x -= (r.width+MARGIN);
-    }
-
-    // Hidden buttons first
-    for( i=0; i<4; i++ )
-    {
-        switch(i)
+        if( !test_shown || button->IsShown() )
         {
-            default:
-            case 0: button = button1;  break;
-            case 1: button = button2;  break;
-            case 2: button = button3;  break;
-            case 3: button = button4;  break;
-        }
-        if( !button->IsShown() )
-        {
-            r = button->GetRect();
-            r.x = x;
-            x += (r.width+MARGIN);
-            button->SetSize(r);
+            button->SetPosition(wxPoint(x,y));
+            sz = button->GetSize();
+            if( horiz )
+            {
+                w += (sz.x + 5);
+                x += (sz.x + 5);
+            }
+            else
+            {
+                h += (sz.y + 5);
+                y += (sz.y + 5);
+            }
+            if( sz.x > max_width_so_far )
+                max_width_so_far = sz.x;
+            if( sz.y > max_height_so_far )
+                max_height_so_far = sz.y;
         }
     }
-
-    // Then visible buttons
-    for( i=0; i<4; i++ )
+    for( i=0; !horiz && i<4; i++ )
     {
         switch(i)
         {
@@ -634,27 +568,21 @@ void PanelContext::PositionButtons()
         }
         if( button->IsShown() )
         {
-            r = button->GetRect();
-            r.x = x;
-            x += (r.width+MARGIN);
-            button->SetSize(r);
+            sz = button->GetSize();
+            sz.x = max_width_so_far;
+            button->SetSize(sz);
         }
     }
+    if( horiz )
+        h = max_height_so_far+10;
+    else
+        w = max_width_so_far+10;
+    sz.x = w;
+    sz.y = h;
+    box->SetSize(sz);
+    return w;
 }
 
-void PanelContext::SetSmallBox( bool is_small )
-{
-    wxRect r;
-    LOCATE_R( box, r );
-#ifdef THC_WINDOWS
-    box_width = is_small ? ((r.width*48)/100) : r.width;
-#else
-    box_width = is_small ? ((r.width*505)/1000) : r.width;
-#endif
-    r.width = box_width;
-    box->SetSize(r);
-    box->SetLabel( is_small ? "Start" : "" );
-}
 
 void PanelContext::BookUpdate( bool suppress )
 {

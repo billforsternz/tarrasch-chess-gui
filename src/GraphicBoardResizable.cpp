@@ -480,16 +480,16 @@ void GraphicBoardResizable::Init
             {
                 char c = *mask++;
                 str += c;
-                if( piece == 10 )
-                    cprintf( "%c", c );
+                //if( piece == 10 )
+                //    cprintf( "%c", c );
             }
-            if( piece == 10 )
-                cprintf( "\n" );
+            //if( piece == 10 )
+            //    cprintf( "\n" );
             mask -= sq_width;
             mask+= width;
         }
-        if( piece == 10 )
-            cprintf( "\n" );
+        //if( piece == 10 )
+        //    cprintf( "\n" );
         *p_str = str;
         *p_mask = p_str->c_str();
     }
