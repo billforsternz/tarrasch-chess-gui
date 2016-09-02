@@ -954,17 +954,24 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     // notify wxAUI which frame to use
     m_mgr.SetManagedWindow(this);
 
+    wxPanel *skinny = new wxPanel( this, -1, wxDefaultPosition, wxSize(ww,(3*hh)/100), wxNO_BORDER );
+
     PanelBoard *pb = new PanelBoard( this,
                             wxID_ANY,
                             wxDefaultPosition, wxSize(ww/2,(90*hh)/100) );
 
-    CtrlChessTxt *lb = new CtrlChessTxt( this, -1, /*ID_LIST_CTRL*/ wxDefaultPosition, wxSize(ww/2,(90*hh)/100) ); // BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER ); */
+    CtrlChessTxt *lb = new CtrlChessTxt( this, -1, /*ID_LIST_CTRL*/ wxDefaultPosition, wxSize(ww/2,(90*hh)/100) );
 
     context = new PanelContext( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,(10*hh)/100), pb, lb );
     objs.canvas = context;
  
     // add the panes to the manager Note: Experience shows there is no point trying to change a panel's fundamental characteristics
     //  after adding it to the manager - Things like CaptionVisible(false) etc need to be intantiated with the panel
+    m_mgr.AddPane(skinny, //wxBOTTOM);    //, wxT("Pane Number Two"));
+                  wxAuiPaneInfo().
+                  Name(wxT("test7")).CaptionVisible(false). //(wxT("Tree Pane")).
+                  Top().Layer(1).Position(0).Fixed().Resizable(false).
+                  CloseButton(false).MaximizeButton(false));
     m_mgr.AddPane(pb, //wxLEFT );         //, wxT("Pane Number One"));
 // CreateTreeCtrl(),
                   wxAuiPaneInfo().
@@ -1000,11 +1007,11 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     // tell the manager to "commit" all the changes just made
     m_mgr.SetDockSizeConstraint(1.0,1.0);
     m_mgr.Update();
-    wxString persp = m_mgr.SavePerspective();
-    const char *txt = persp.c_str();
-    FILE *f = fopen( "c:/temp/persp.txt", "wb" );
-    fputs(txt,f);
-    fclose(f);
+    //wxString persp = m_mgr.SavePerspective();
+    //const char *txt = persp.c_str();
+    //FILE *f = fopen( "c:/temp/persp.txt", "wb" );
+    //fputs(txt,f);
+    //fclose(f);
 
 /*    std::string s(txt);
     size_t idx = s.find("state=2099196");

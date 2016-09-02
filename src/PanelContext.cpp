@@ -206,7 +206,7 @@ PanelContext::PanelContext
     button_sz.y -= 4;
     button4->SetSize( button_sz ); */
     PositionButtons(false,false);
-    wxSize sz1 = this->GetSize();
+    wxSize sz1 = siz;
     wxSize sz2 = box->GetSize();
     // Create Kibitz box
     wxPoint kpos;
@@ -214,7 +214,7 @@ PanelContext::PanelContext
     kpos.x = 10 + sz2.x + 10;
     kpos.y = 10;
     ksiz.x = sz1.x - 2*kpos.x;
-    ksiz.y = sz2.y;
+    ksiz.y = 99; //sz2.y;
 /*  kibitz_box = new wxStaticBox( this,ID_KIBITZ_BOX,"");
     LOCATE_2( kibitz_box, kpos, ksiz );
     kibitz_box->SetPosition( kpos );
@@ -261,6 +261,7 @@ PanelContext::PanelContext
                                                                               // status box                  =20,564    delta=10,484
 
     // Is kibitz text same size as on dev system ?
+    #if 0
     if( height==16 && descent==3 && external_leading==0 )
         ;   // yes, don't change anything
 
@@ -275,15 +276,18 @@ PanelContext::PanelContext
         wxSize sz_ = parent->GetSize();
         sz_.y += (calculated_y-actual_y);
         parent->SetSize(sz_);
-    }    
+    }
+    #endif    
 
     // Create kibitz buttons
-    LOCATE_2( kibitz_button1, kpos, ksiz );
-    kbut1_base = kpos;
+    kpos.x += ksiz.x;
+    kpos.x += 10;
+
     kibitz_button1 = new wxButton( this, ID_KIBITZ_BUTTON1, "Capture one",  kpos, wxDefaultSize );
-    LOCATE_2( kibitz_button2, kpos, ksiz );
-    kbut2_base = kpos;
-    kibitz_button2 = new wxButton( this, ID_KIBITZ_BUTTON2, "Capture all", kpos, wxDefaultSize );
+    wxSize sz3 = kibitz_button1->GetSize();
+    kpos.y += sz3.y;
+    kpos.y += 10;
+    kibitz_button2 = new wxButton( this, ID_KIBITZ_BUTTON2, "Capture all",  kpos, wxDefaultSize );
 
     // Make them the same width
     wxSize button1_size = kibitz_button1->GetSize();    
@@ -295,20 +299,6 @@ PanelContext::PanelContext
     kibitz_button1->SetSize( button1_size);    
     kibitz_button2->SetSize( button2_size);    
 
-/*  kibitz0 = new wxStaticText(this,ID_KIBITZ0,"",kpos,ksiz,wxALIGN_LEFT|wxST_NO_AUTORESIZE);
-    kpos.y += ksiz.y;
-    kibitz1 = new wxStaticText(this,ID_KIBITZ1,"",kpos,ksiz,wxALIGN_LEFT|wxST_NO_AUTORESIZE);
-    kpos.y += ksiz.y;
-    kibitz2 = new wxStaticText(this,ID_KIBITZ2,"",kpos,ksiz,wxALIGN_LEFT|wxST_NO_AUTORESIZE);
-    kpos.y += ksiz.y;
-    kibitz3 = new wxStaticText(this,ID_KIBITZ3,"",kpos,ksiz,wxALIGN_LEFT|wxST_NO_AUTORESIZE);
-    kpos.y += ksiz.y;
-    kibitz4 = new wxStaticText(this,ID_KIBITZ4,"",kpos,ksiz,wxALIGN_LEFT|wxST_NO_AUTORESIZE); */
-    //kibitz1->SetFont( *font2 );
-    //kibitz2->SetFont( *font2 );
-    //kibitz3->SetFont( *font2 );
-    //kibitz4->SetFont( *font2 );
-    
     // Init game logic only after everything setup
     objs.session    = new Session;
     objs.log        = new Log;
@@ -515,6 +505,7 @@ void PanelContext::AdjustPosition( bool have_players )
 
 int PanelContext::PositionButtons( bool horiz, bool test_shown ) 
 {
+    horiz = false;
     int i;
     wxSize sz;
     wxButton *button;
