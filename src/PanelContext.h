@@ -9,6 +9,8 @@
 #include "wx/wx.h"
 #include "wx/listctrl.h"
 #include "wx/notebook.h"
+#include "wx/aui/aui.h"
+#include "wx/aui/auibook.h"
 #include "wx/richtext/richtextctrl.h"
 #include "Appdefs.h"
 #include "CtrlChessTxt.h"
@@ -47,7 +49,8 @@ public:
     void BlackClock( const wxString &txt )                  { pb->BlackClock(txt); }
     void RedrawClocks()                                     { pb->RedrawClocks(); }
     void SetBoardTitle( const char *txt, bool highlight=false )   { pb->SetBoardTitle( txt, highlight ); }
-    int PositionButtons( bool horiz=true, bool test_shown=true );
+    void Layout( wxSize const &siz, bool buttons_horiz=true );
+    int  PositionButtons( bool horiz=true );
     void BookUpdate( bool suppress );
     void OnChar( wxKeyEvent &event );
     void OnMouseLeftDown (wxMouseEvent & event);
@@ -66,9 +69,8 @@ public:
     void Kibitz( int idx, const wxString &txt );
     void KibitzScroll( const wxString &txt );
     void SetFocusOnList() { if(lb) lb->SetFocus(); }
-    void OnSize( wxSizeEvent &event );
+    void OnSize( wxSizeEvent &evt );
     void OnMove();
-    void SetMinimumPlaySize();
     void SetMinimumKibitzSize();
 
 public:
@@ -99,9 +101,7 @@ public:
     int              button3_cmd;
     int              button4_cmd;
     CtrlBoxBookMoves *book_moves;
-    wxNotebook      *notebook;
-    //wxPanel         *notebook_page1;
-    wxPanel         *notebook_page2;
+    wxAuiNotebook      *notebook;
 private:
     wxStaticText    *status;
     wxPoint       kbut1_base;

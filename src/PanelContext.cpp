@@ -7,11 +7,9 @@
 #include "wx/wx.h"
 #include "wx/button.h"
 #include "wx/sysopt.h"
-#include "wx/notebook.h"
 #include "Appdefs.h"
 #include "CtrlBox.h"
 #include "CtrlBox2.h"
-#include "CtrlBoxBookMoves.h"
 #include "CtrlBoxBookMoves.h"
 #include "GraphicBoardResizable.h"
 #include "PanelContext.h"
@@ -33,38 +31,10 @@
 bool view_flags_book_moves;
 
 //-----------------------------------------------------------------------------
-// Locate windows
-//-----------------------------------------------------------------------------
-
-enum
-{
-    wid_kibitz,
-    wid_kibitz_button1,
-    wid_kibitz_button2,
-    NBR_OF_WIDS
-};
-
-#define XDELTA 0
-#define YDELTA 0
-static int window_id_positions[NBR_OF_WIDS][4] =
-{
-    {200+XDELTA,10+YDELTA,560,99},           // kibitz
-    {700+XDELTA,70+YDELTA,60,20},           // kibitz_button1
-    {700+XDELTA,100+YDELTA,60,20}           // kibitz_button2
-};
-
-static bool using_large_chess_board = false;
-#define LOCATE_R( name, rec  )      rec.x = window_id_positions[ wid_ ## name ][0], rec.y = window_id_positions[ wid_ ## name ][1], rec.width = window_id_positions[ wid_ ## name ][2], rec.height  = window_id_positions[ wid_ ## name ][3]
-#define LOCATE_P( name, pos )       pos.x = window_id_positions[ wid_ ## name ][0], pos.y = window_id_positions[ wid_ ## name ][1]
-#define LOCATE_XY( name, x, y )     x     = window_id_positions[ wid_ ## name ][0], y = window_id_positions[ wid_ ## name ][1]
-#define LOCATE_2( name, pos, siz )  pos.x = window_id_positions[ wid_ ## name ][0], pos.y = window_id_positions[ wid_ ## name ][1], siz.x = window_id_positions[ wid_ ## name ][2], siz.y = window_id_positions[ wid_ ## name ][3]
-#define LOCATE_4( name, x, y, w, h) x     = window_id_positions[ wid_ ## name ][0], y = window_id_positions[ wid_ ## name ][1], w = window_id_positions[ wid_ ## name ][2], h  = window_id_positions[ wid_ ## name ][3]
-
-//-----------------------------------------------------------------------------
 // Event table
 //-----------------------------------------------------------------------------
 BEGIN_EVENT_TABLE(PanelContext, wxPanel)
-//    EVT_SIZE( PanelContext::OnSize )
+    EVT_SIZE( PanelContext::OnSize )
     EVT_CHAR( PanelContext::OnChar )
     EVT_LEFT_DOWN (PanelContext::OnMouseLeftDown)
     EVT_MOTION (PanelContext::OnMouseMove)
@@ -77,7 +47,6 @@ BEGIN_EVENT_TABLE(PanelContext, wxPanel)
     EVT_BUTTON(ID_BUTTON4,PanelContext::OnButton4)
     EVT_BUTTON(ID_KIBITZ_BUTTON1,PanelContext::OnKibitzButton1)
     EVT_BUTTON(ID_KIBITZ_BUTTON2,PanelContext::OnKibitzButton2)
-    EVT_NOTEBOOK_PAGE_CHANGED( wxID_ANY, PanelContext::OnTabSelected)
 //    EVT_ERASE_BACKGROUND(  PanelContext::OnEraseBackground)
 END_EVENT_TABLE()
 
@@ -145,20 +114,6 @@ PanelContext::PanelContext
     box = NULL;
     view_flags_book_moves = true;
 
-    // moving to wx3.1 we needed just 1 more pixel to avoid a weird erasure effect on the first tab header
-    //  when creating subsequent tabs
-    //wxSystemOptions::SetOption("msw.notebook.themed-background", 0);
-#define NB_TEMP
-#ifdef NB_TEMP
-    wxPanel *notebook_page1 = new wxPanel(this, wxID_ANY );
-#else
-    notebook = new wxNotebook(this, wxID_ANY, pt2, sz2 );
-    wxPanel *notebook_page1 = new wxPanel(notebook, wxID_ANY );
-    //wxWindow *notebook_page1 = new wxWindow(notebook, wxID_ANY );
-    notebook->AddPage(notebook_page1,"New Game",true);
-#endif
-
-
     // Create labels
     font1      = new wxFont( 14, wxFONTFAMILY_ROMAN,  wxFONTSTYLE_ITALIC, wxFONTWEIGHT_BOLD,   false );
     font2      = new wxFont( 14, wxFONTFAMILY_SWISS,  wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false );
@@ -175,129 +130,40 @@ PanelContext::PanelContext
     book_moves->SetFont( *font_book );
     book_moves->SetTxt("no book moves",false);
     
-//    font_clock = new wxFont( 14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD,   false );
-
-/*
-    white_player = new wxStaticTextSub(this,ID_WHITE_PLAYER,"",pos,size,wxALIGN_RIGHT|wxST_NO_AUTORESIZE);
-    dash_player  = new wxStaticTextSub(this,ID_DASH_PLAYER,"",pos,size,wxALIGN_CENTRE|wxST_NO_AUTORESIZE);
-    black_player = new wxStaticTextSub(this,ID_BLACK_PLAYER,"",pos,size,wxALIGN_LEFT|wxST_NO_AUTORESIZE);
-  */
-
     // Create Status box
-    box = new wxStaticBox( this,ID_BOX,"");
+    box = new wxStaticBox( this,ID_BOX,"",wxDefaultPosition, wxDefaultSize );
     box->SetLabel( "Suggestions" );
-    box->SetPosition( wxPoint(10,10) );
 
-    // Create buttons
+    // Create flexible buttons
     button1 = new wxButton( this, ID_BUTTON1, "New Game",       wxDefaultPosition, wxDefaultSize );
     button2 = new wxButton( this, ID_BUTTON2, "Setup Position", wxDefaultPosition, wxDefaultSize );
     button3 = new wxButton( this, ID_BUTTON3, "Play as White",  wxDefaultPosition, wxDefaultSize );
     button4 = new wxButton( this, ID_BUTTON4, "Play as Black",  wxDefaultPosition, wxDefaultSize );
-/*    wxSize button_sz = button1->GetSize();
-    button_sz.y -= 4;
-    button1->SetSize( button_sz );
-    button_sz = button2->GetSize();
-    button_sz.y -= 4;
-    button2->SetSize( button_sz );
-    button_sz = button3->GetSize();
-    button_sz.y -= 4;
-    button3->SetSize( button_sz );
-    button_sz = button4->GetSize();
-    button_sz.y -= 4;
-    button4->SetSize( button_sz ); */
-    PositionButtons(false,false);
-    wxSize sz1 = siz;
-    wxSize sz2 = box->GetSize();
+
     // Create Kibitz box
-    wxPoint kpos;
-    wxSize  ksiz;
-    kpos.x = 10 + sz2.x + 10;
-    kpos.y = 10;
-    ksiz.x = sz1.x - 2*kpos.x;
-    ksiz.y = 99; //sz2.y;
-/*  kibitz_box = new wxStaticBox( this,ID_KIBITZ_BOX,"");
-    LOCATE_2( kibitz_box, kpos, ksiz );
-    kibitz_box->SetPosition( kpos );
-    kibitz_box->SetSize( ksiz );
-    LOCATE_2( kibitz, kpos, ksiz );
-    extern bool gbl_small_screen_detected;
-    if( !gbl_small_screen_detected && ksiz.y==80 )
-        ksiz.y=99;  // small board graphics on a big screen, show 4 kibitz lines not 3 */
-    kibitz_ctrl = new wxListCtrl( this, ID_KIBITZ, kpos, ksiz, BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER );
-    k_sz_base = ksiz;
+    kibitz_ctrl = new wxListCtrl( this, ID_KIBITZ, wxDefaultPosition, wxDefaultSize , BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER );
     wxListItem col1;
     col1.SetColumn(0);
     kibitz_ctrl->InsertColumn(0,col1);
-    kibitz_ctrl->SetColumnWidth(0,k_sz_base.x-18);
     wxListItem col2;
     col2.SetColumn(1);
     kibitz_ctrl->InsertColumn(1,col2);
-    kibitz_ctrl->SetColumnWidth(1,4);
     kibitz_ctrl->InsertItem( 0, "", 0 );
-//    kibitz_ctrl->SetItem( 0, 0, "As I played this I was convinced it must be game over (I was right) but I also had the uneasy feeling that I might have to find one more good move and that with less than 5 minutes left I might fail (I was right again!)" );
-//    kibitz_ctrl->SetItem( 0, 1, "1111" );
     kibitz_ctrl->InsertItem( 1, "", 0 );
-//    kibitz_ctrl->SetItem( 1, 0, "bbbb" );
-//    kibitz_ctrl->SetItem( 1, 1, "2222" );
     kibitz_ctrl->InsertItem( 2, "", 0 );
-//    kibitz_ctrl->SetItem( 2, 0, "cccc" );
-//    kibitz_ctrl->SetItem( 2, 1, "3333" );
     kibitz_ctrl->InsertItem( 3, "", 0 );
-//    kibitz_ctrl->SetItem( 3, 0, "dddd" );
-//    kibitz_ctrl->SetItem( 3, 1, "4444" );
-//    if( !gbl_small_screen_detected )
-        kibitz_ctrl->InsertItem( 4, "", 0 );    // on a small screen show only 3
-//    kibitz_ctrl->SetItem( 4, 0, "eeee" );
-//    kibitz_ctrl->SetItem( 4, 1, "5555" );
+    kibitz_ctrl->InsertItem( 4, "", 0 );
     wxClientDC dc(kibitz_ctrl);
     wxCoord width, height, descent, external_leading;
     dc.GetTextExtent( "AbWy123456789", &width, &height, &descent, &external_leading );
-    dbg_printf( "Kibitz box height=%d; font height=%d, descent=%d, external_leading=%d\n", ksiz.y, height, descent, external_leading );
-    // results of this: Kibitz box height=99; font height=16, descent=3, external_leading=0
-    //  Theory, min height of kibitz box to avoid scroll bars is 99 = (16+3)*5 + 4
-    //  So if only 4 lines say, 80
-    wxSize client_siz = parent->GetClientSize();
-    dbg_printf( "Client size=%d,%d\n", client_siz.x, client_siz.y );       // 692,629         tl=10,80  br=697,704   delta=687,624
-                                                                              // status box                  =20,564    delta=10,484
-
-    // Is kibitz text same size as on dev system ?
-    #if 0
-    if( height==16 && descent==3 && external_leading==0 )
-        ;   // yes, don't change anything
-
-    // Else no, resize box to avoid scroll bars
-    else
-    {
-        int y_needed = (height+descent+external_leading)*(true/*gbl_small_screen_detected*/?4:5) + 4;
-        ksiz.y =  y_needed + 4;  // safety margin
-        kibitz_ctrl->SetSize( ksiz );
-        int calculated_y = kpos.y + ksiz.y + 4; // + 4 = safety margin
-        int actual_y = client_siz.y;
-        wxSize sz_ = parent->GetSize();
-        sz_.y += (calculated_y-actual_y);
-        parent->SetSize(sz_);
-    }
-    #endif    
+    dbg_printf( "Kibitz box font height=%d, descent=%d, external_leading=%d\n", height, descent, external_leading );
 
     // Create kibitz buttons
-    kpos.x += ksiz.x;
-    kpos.x += 10;
+    kibitz_button1 = new wxButton( this, ID_KIBITZ_BUTTON1, "Capture one",  wxDefaultPosition, wxDefaultSize );
+    kibitz_button2 = new wxButton( this, ID_KIBITZ_BUTTON2, "Capture all",  wxDefaultPosition, wxDefaultSize );
 
-    kibitz_button1 = new wxButton( this, ID_KIBITZ_BUTTON1, "Capture one",  kpos, wxDefaultSize );
-    wxSize sz3 = kibitz_button1->GetSize();
-    kpos.y += sz3.y;
-    kpos.y += 10;
-    kibitz_button2 = new wxButton( this, ID_KIBITZ_BUTTON2, "Capture all",  kpos, wxDefaultSize );
-
-    // Make them the same width
-    wxSize button1_size = kibitz_button1->GetSize();    
-    wxSize button2_size = kibitz_button2->GetSize();    
-    if( button1_size.x > button2_size.x )
-        button2_size.x = button1_size.x;
-    else
-        button1_size.x = button2_size.x;
-    kibitz_button1->SetSize( button1_size);    
-    kibitz_button2->SetSize( button2_size);    
+    // Fit everything to size
+    Layout( siz, false );
 
     // Init game logic only after everything setup
     objs.session    = new Session;
@@ -318,8 +184,6 @@ PanelContext::PanelContext
     objs.tabs->TabNew( blank );
     objs.cws->Init( &objs.gl->undo, &objs.gl->gd, &objs.gl->gc_pgn, &objs.gl->gc_clipboard ); 
     SetPlayers( "", "" );
-    PositionButtons();
-//    objs.db         = new Database( objs.repository->database.m_file.c_str() );
 
     lb_sz_base           = lb->GetSize();
     parent_sz_base       = parent->GetSize();
@@ -350,53 +214,8 @@ PanelContext::PanelContext
     objs.repository->nv.m_y = parent_pos.y;
     objs.repository->nv.m_w = parent_sz.x;
     objs.repository->nv.m_h = parent_sz.y;
-    //notebook->AdvanceSelection();
-    //notebook->AdvanceSelection();
 }
 
-void PanelContext::SetMinimumPlaySize()
-{
-/*    wxSize      sz1;
-    wxSize      sz2;
-    wxSize      sz3;
-    wxPoint     pos1;
-    wxPoint     pos2;
-    wxPoint     pos3;
-    pos1 = GetParent()->GetScreenPosition();
-    pos2 = GetScreenPosition();
-    pos3 = box->GetScreenPosition();
-    sz1 = GetParent()->GetSize();
-    sz2 = GetSize();
-    sz3 = box->GetSize();    */
-/*  
-    +------------------------+
-    |          h1            |
-    | +--------------------+ |
-    | |                    | |
-    | |                    | |
-    | |                    | |
-    | |       canvas       | |
-    | |                    | |
-    | |                    | |
-    | |                    | |
-    | +--------------------+ |
-    |          h2            |
-    +------------------------+
-
- */
-
-/*    int h1 = pos2.y-pos1.y;
-    int h2 = sz1.y-sz2.y-h1;
-    int min_y = (pos3.y - pos1.y +  // to the top of the status box
-                  + sz3.y           // + height of the status box
-                  + 10              // + a little gap
-                  + h2);            // + height of status bar
-    if( min_y > sz1.y )
-    {
-        sz1.y = min_y;
-        GetParent()->SetSize( sz1 );
-    }      */
-}
 
 void PanelContext::SetMinimumKibitzSize()
 {
@@ -420,90 +239,57 @@ void PanelContext::OnMove()
     }
 }
 
-void PanelContext::OnSize( wxSizeEvent &WXUNUSED(event) )
+void PanelContext::OnSize( wxSizeEvent &evt )
 {
-    #if 0
+    cprintf( "OnSize()\n" );
     if( resize_ready )
     {
-        wxSize sz = GetParent()->GetSize();
-        if( sz.x < parent_sz_base.x )
-            sz.x = parent_sz_base.x;
-        objs.repository->nv.m_w = sz.x;
-        objs.repository->nv.m_h = sz.y;
-        //wxSize lb_sz = lb_sz_base;
-        //lb_sz.x += (sz.x-parent_sz_base.x);
-        //wxSize lb_sz_previous = lb->GetSize();
-        //lb->SetSize(lb_sz);
-        //TEMP wxSize notebook_sz = notebook->GetSize();
-        //TEMP notebook_sz.x += (lb_sz.x-lb_sz_previous.x);
-        //TEMP notebook->SetSize( notebook_sz );
-        wxSize ksiz = k_sz_base;
-        ksiz.x += (sz.x-parent_sz_base.x);
-        kibitz_ctrl->SetSize(ksiz);
-        kibitz_ctrl->SetColumnWidth(0,ksiz.x-18);
-        wxPoint pos=kbut1_base;
-        pos.x += (sz.x-parent_sz_base.x);
-        kibitz_button1->SetPosition(pos);
-        pos=kbut2_base;
-        pos.x += (sz.x-parent_sz_base.x);
-        kibitz_button2->SetPosition(pos);
-   }
-    #endif
+        wxSize siz = evt.GetSize();
+        Layout( siz );
+    }
 }
 
-#if 0
-void PanelContext::AdjustPosition( bool have_players )
+void PanelContext::Layout( wxSize const &siz, bool buttons_horiz )
 {
-    int i;
-    wxRect r;
-    wxButton *button;
-    int shift = (have_players?0:FIELD);
+    PositionButtons(buttons_horiz);
+    wxSize sz1 = siz;
+    wxSize sz2 = box->GetSize();
 
-    // Position box
-    wxPoint pos;
-    LOCATE_P( box, pos );
-    pos.y -= shift;
-    box->SetPosition( pos );
+    // Size Kibitz box
+    wxPoint kpos;
+    wxSize  ksiz;
+    kpos.x = 10 + sz2.x + 10;
+    kpos.y = 10;
+    ksiz.x = sz1.x - 2*kpos.x;
+    ksiz.y = 99; //sz2.y;
+    kibitz_ctrl->SetPosition(kpos);
+    kibitz_ctrl->SetSize(ksiz);
+    kibitz_ctrl->SetColumnWidth(0,ksiz.x-18);
+    kibitz_ctrl->SetColumnWidth(1,4);
 
-    // Position status
-    LOCATE_P( status, pos );
-    pos.y -= shift;
-    status->SetPosition( pos );
+    // Position kibitz buttons
+    kpos.x += ksiz.x;
+    kpos.x += 10;
+    wxSize button_sz = kibitz_button1->GetSize();
+    kpos.y += (ksiz.y - button_sz.y*2 - 10)/2;
 
-    // Position buttons
-    int x, y;
-    LOCATE_XY( button, x, y );
-    y -= shift;
-    for( i=0; i<4; i++ )
-    {
-        switch(i)
-        {
-            default:
-            case 0: button = button1;  break;
-            case 1: button = button2;  break;
-            case 2: button = button3;  break;
-            case 3: button = button4;  break;
-        }
-        r = button->GetRect();
-        button->SetSize(r);
-    }
+    kibitz_button1->SetPosition(kpos);
+    kpos.y += button_sz.y;
+    kpos.y += 10;
+    kibitz_button2->SetPosition(kpos);
 
-    LOCATE_P( white_player, pos );
-    pos.y += shift;
-    white_player->SetPosition( pos );
-    white_player->Show( have_players );
-    LOCATE_P( dash_player,  pos);
-    pos.y += shift;
-    dash_player->SetPosition( pos );
-    dash_player->Show( have_players );
-    LOCATE_P( black_player, pos );
-    pos.y += shift;
-    black_player->SetPosition( pos );
-    black_player->Show( have_players );
-}        
-#endif
+    // Make them the same width
+    wxSize button1_size = kibitz_button1->GetSize();    
+    wxSize button2_size = kibitz_button2->GetSize();    
+    if( button1_size.x > button2_size.x )
+        button2_size.x = button1_size.x;
+    else
+        button1_size.x = button2_size.x;
+    kibitz_button1->SetSize( button1_size);    
+    kibitz_button2->SetSize( button2_size);    
+}
 
-int PanelContext::PositionButtons( bool horiz, bool test_shown ) 
+int PanelContext::PositionButtons( bool horiz ) 
 {
     horiz = false;
     int i;
@@ -512,11 +298,12 @@ int PanelContext::PositionButtons( bool horiz, bool test_shown )
     int x=0, y=0, h=0, w=0;
     int max_width_so_far=0;
     int max_height_so_far=0;
-    wxPoint pos = box->GetPosition();
+    wxPoint pos(10,10);
+    box->SetPosition( pos );
     x = pos.x + 5;
     y = pos.y + 20;
     w = 5;
-    h = 5;
+    h = 20;
     for( i=0; i<4; i++ )
     {
         switch(i)
@@ -527,7 +314,7 @@ int PanelContext::PositionButtons( bool horiz, bool test_shown )
             case 2: button = button3;  break;
             case 3: button = button4;  break;
         }
-        if( !test_shown || button->IsShown() )
+        if( button->IsShown() )
         {
             button->SetPosition(wxPoint(x,y));
             sz = button->GetSize();
@@ -638,12 +425,6 @@ void PanelContext::ButtonCmd( int cmd )
         case wxID_UNDO:             objs.gl->CmdEditUndo();     break;
         case wxID_REDO:             objs.gl->CmdEditRedo();     break;
     }
-}
-
-void PanelContext::OnTabSelected( wxBookCtrlEvent& event )
-{
-    if( resize_ready )
-        objs.gl->OnTabSelected(event.GetSelection());
 }
 
 void PanelContext::OnButton1( wxCommandEvent& WXUNUSED(event) )

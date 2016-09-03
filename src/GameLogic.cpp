@@ -248,7 +248,6 @@ void GameLogic::CmdPlayWhite()
             if( !objs.canvas->GetNormalOrientation() )
                 objs.canvas->SetNormalOrientation(true);
         }
-        objs.canvas->SetMinimumPlaySize();
         glc.Begin( true );
         thc::ChessRules cr;
         string move_txt;
@@ -292,7 +291,6 @@ void GameLogic::CmdPlayBlack()
             if( objs.canvas->GetNormalOrientation() )
                 objs.canvas->SetNormalOrientation(false);
         }
-        objs.canvas->SetMinimumPlaySize();
         glc.Begin( false );
         thc::ChessRules cr;
         string move_txt;
@@ -1909,7 +1907,7 @@ void GameLogic::OnIdle()
         }
         StatusWarning();
         SetFocusOnList();
-        //TEMP objs.canvas->notebook->AdvanceSelection();
+        objs.canvas->notebook->AdvanceSelection();
     }
     bool expired = false;
     bool white = gd.master_position.WhiteToPlay();

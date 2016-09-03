@@ -21,7 +21,9 @@
 #include "wx/clipbrd.h"
 #include "wx/sysopt.h"
 #include "wx/log.h"
+#include "wx/notebook.h"
 #include "wx/aui/aui.h"
+#include "wx/aui/auibook.h"
 #include "Appdefs.h"
 #include "PanelBoard.h"
 #include "PanelContext.h"
@@ -89,6 +91,50 @@ public:
     virtual bool OnInit();
     virtual int  OnExit();
 };
+
+
+class PanelNotebook: public wxWindow
+{
+public:
+    PanelNotebook( wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size );
+    void OnTabSelected( wxAuiNotebookEvent& event );
+    wxAuiNotebook      *notebook;
+    wxPanel         *notebook_page1;
+    DECLARE_EVENT_TABLE()
+};
+
+
+BEGIN_EVENT_TABLE(PanelNotebook, wxWindow)
+    EVT_AUINOTEBOOK_PAGE_CHANGED( wxID_ANY, PanelNotebook::OnTabSelected)
+END_EVENT_TABLE()
+
+
+// Constructor
+PanelNotebook::PanelNotebook
+(
+    wxWindow *parent, 
+    wxWindowID id,
+    const wxPoint &point,
+    const wxSize &siz
+)
+    : wxWindow( parent, id, point, siz, wxNO_BORDER )
+{
+    // Note that the wxNotebook is twice as high as the panel it's in. If the wxNotebook is very short,
+    // a weird erasure effect occurs on the first tab header when creating subsequent tabs. Making the
+    // wxNotebook think it's less short fixes this - and it still appears nice and short through the
+    // short panel parenting it.
+    notebook = new wxAuiNotebook(this, wxID_ANY, wxPoint(0,0), wxSize(siz.x,siz.y*2) );
+    wxPanel *notebook_page1 = new wxPanel(notebook, wxID_ANY );
+    notebook->AddPage(notebook_page1,"New Game",true);
+}
+
+void PanelNotebook::OnTabSelected( wxAuiNotebookEvent& event )
+{
+    if( objs.gl )
+        objs.gl->OnTabSelected(event.GetSelection());
+}
+
+
 
 // ----------------------------------------------------------------------------
 // main frame
@@ -649,27 +695,6 @@ END_EVENT_TABLE()
 CtrlBoxBookMoves *gbl_book_moves;
 
 
-/*
-class MySplitterWindow : public wxSplitterWindow
-{
-public:
-    MySplitterWindow(wxFrame *parent);
-
-    // event handlers
-    void OnPositionChanged(wxSplitterEvent& event);
-    void OnPositionChanging(wxSplitterEvent& event);
-    void OnDClick(wxSplitterEvent& event);
-    void OnUnsplitEvent(wxSplitterEvent& event);
-
-private:
-    wxFrame *m_frame;
-
-    wxDECLARE_EVENT_TABLE();
-    wxDECLARE_NO_COPY_CLASS(MySplitterWindow);
-};
-
-  */
-
 
 ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
     : wxFrame((wxFrame *)NULL, wxID_ANY, title, pos, size ) //, wxDEFAULT_FRAME_STYLE|wxCLIP_CHILDREN|
@@ -954,7 +979,8 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     // notify wxAUI which frame to use
     m_mgr.SetManagedWindow(this);
 
-    wxPanel *skinny = new wxPanel( this, -1, wxDefaultPosition, wxSize(ww,(3*hh)/100), wxNO_BORDER );
+
+    PanelNotebook *skinny = new PanelNotebook( this, -1, wxDefaultPosition, wxSize(ww,4+(3*hh)/100) );
 
     PanelBoard *pb = new PanelBoard( this,
                             wxID_ANY,
@@ -963,6 +989,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     CtrlChessTxt *lb = new CtrlChessTxt( this, -1, /*ID_LIST_CTRL*/ wxDefaultPosition, wxSize(ww/2,(90*hh)/100) );
 
     context = new PanelContext( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,(10*hh)/100), pb, lb );
+    context->notebook = skinny->notebook;
     objs.canvas = context;
  
     // add the panes to the manager Note: Experience shows there is no point trying to change a panel's fundamental characteristics
