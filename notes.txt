@@ -2,6 +2,7 @@
 Horizontal suggestions if no kibitz box
 Vertical suggestions if kibitz box
 Suggestions, Your move, Engine thinking labels
+ndeed to get click on players, clocks working again
 
 
 13/8/2016
