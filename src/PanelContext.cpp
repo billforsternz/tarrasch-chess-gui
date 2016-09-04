@@ -113,6 +113,7 @@ PanelContext::PanelContext
     font_book = NULL;
     box = NULL;
     view_flags_book_moves = true;
+    parent_sz_base  = parent->GetSize();
 
     // Create labels
     font1      = new wxFont( 14, wxFONTFAMILY_ROMAN,  wxFONTSTYLE_ITALIC, wxFONTWEIGHT_BOLD,   false );
@@ -164,56 +165,6 @@ PanelContext::PanelContext
 
     // Fit everything to size
     Layout( siz, false );
-
-    // Init game logic only after everything setup
-    objs.session    = new Session;
-    objs.log        = new Log;
-    objs.book       = new Book;
-    objs.cws        = new CentralWorkSaver;
-    objs.tabs       = new Tabs;
-    objs.gl         = NULL;
-    GameLogic *gl   = new GameLogic( this, lb );
-
-    // Hook up connections to GameLogic
-    objs.gl         = gl;
-    gl->gd.gl       = gl;
-    gl->gd.gv.gl    = gl;
-    lb->gl          = gl;
-    objs.tabs->gl   = gl;
-    GameDocument    blank;
-    objs.tabs->TabNew( blank );
-    objs.cws->Init( &objs.gl->undo, &objs.gl->gd, &objs.gl->gc_pgn, &objs.gl->gc_clipboard ); 
-    SetPlayers( "", "" );
-
-    lb_sz_base           = lb->GetSize();
-    parent_sz_base       = parent->GetSize();
-    wxSize  parent_sz    = this->parent_sz_base;
-    wxPoint parent_pos   = parent->GetPosition();
-    resize_ready = true;
-    if( objs.repository->nv.m_x>=0 &&
-        objs.repository->nv.m_y>=0 &&
-        objs.repository->nv.m_w>=0 &&
-        objs.repository->nv.m_h>=0
-      )
-    {
-        int disp_width, disp_height;
-        wxDisplaySize(&disp_width, &disp_height);
-        if( objs.repository->nv.m_x+objs.repository->nv.m_w <= disp_width &&
-            objs.repository->nv.m_y+objs.repository->nv.m_h <= disp_height
-          )
-        {
-            wxPoint pos_( objs.repository->nv.m_x, objs.repository->nv.m_y );
-            wxSize  sz_ ( objs.repository->nv.m_w, objs.repository->nv.m_h );
-            if( sz_.x < parent_sz_base.x )
-                sz_.x = parent_sz_base.x;  // minimum startup width
-            parent->SetPosition(parent_pos = pos_);
-            parent->SetSize    (parent_sz  = sz_);
-        }
-    }
-    objs.repository->nv.m_x = parent_pos.x;
-    objs.repository->nv.m_y = parent_pos.y;
-    objs.repository->nv.m_w = parent_sz.x;
-    objs.repository->nv.m_h = parent_sz.y;
 }
 
 

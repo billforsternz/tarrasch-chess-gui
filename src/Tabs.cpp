@@ -25,7 +25,7 @@ void Tabs::TabNew( GameDocument &new_gd )
         gl->gd = new_gd;
         gl->undo = e.undo; // blank
         current_idx = nbr_tabs-1;
-        wxPanel *notebook_page1 = new wxPanel(objs.canvas->notebook, wxID_ANY );
+        wxTextCtrl *notebook_page1 = new wxTextCtrl(objs.canvas->notebook, wxID_ANY,"", wxDefaultPosition, wxDefaultSize /*objs.canvas->notebook->GetPosition(), objs.canvas->notebook->GetSize()*/, wxNO_BORDER );
         //wxWindow *notebook_page1 = new wxWindow(objs.canvas->notebook, wxID_ANY );
         objs.canvas->notebook->AddPage(notebook_page1,"New Game",true);
     }
@@ -43,9 +43,10 @@ bool Tabs::TabSelected( int idx )
         // If reverting to an old tab (as opposed to switching to a new one) save
         //  the current insertion point, doc and undo and restore the saved
         //  insertion point doc and undo
+        unsigned long pos;
         if( idx != current_idx )
         {
-            unsigned long pos = gl->gd.GetInsertionPoint();
+            pos = gl->gd.GetInsertionPoint();
             v[current_idx].gd  = gl->gd;
             v[current_idx].pos = pos;
             v[current_idx].undo = gl->undo;
@@ -122,24 +123,30 @@ void Tabs::SetTitle( GameDocument &gd )
     }
     wxString ws(s.c_str());
     if( objs.canvas->resize_ready )
+    {
+        cprintf( "Tabs::SetTitle(%d,%s)\n", current_idx, s.c_str() );
         objs.canvas->notebook->SetPageText( current_idx, ws );
+    }
 }
 
-int Tabs::TabDelete()
+void Tabs::TabDelete( int idx, bool system_will_delete_notebook_page )
 {
-    if( nbr_tabs>1 && current_idx<nbr_tabs )
+    if( nbr_tabs>1 && idx<nbr_tabs )
     {
-        v.erase( v.begin() + current_idx );
-        objs.canvas->notebook->DeletePage( current_idx );
+        int idx_to_delete = idx;
+        v.erase( v.begin() + idx );
+        for( size_t i=0; i<v.size(); i++ )
+        {
+            GameDocument gd =v[i].gd;
+            cprintf( "Tab %d: %s-%s\n", i, gd.White(), gd.Black() );
+        }
         nbr_tabs--;
         if( current_idx == nbr_tabs )
             current_idx--;
-        int idx = current_idx;
-        gl->undo = v[idx].undo;
-        gl->gd = v[idx].gd;
-        unsigned long pos = v[idx].pos;
-        gl->gd.SetInsertionPoint(pos);
-        gl->gd.non_zero_start_pos = pos;
+        if( idx == nbr_tabs )
+            idx--;
+        if( !system_will_delete_notebook_page )
+            objs.canvas->notebook->DeletePage( idx_to_delete );
     }
-    return( current_idx );
 }
+

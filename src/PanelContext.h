@@ -103,11 +103,6 @@ public:
     CtrlBoxBookMoves *book_moves;
     wxAuiNotebook      *notebook;
 private:
-    wxStaticText    *status;
-    wxPoint       kbut1_base;
-    wxPoint       kbut2_base;
-    wxSize        lb_sz_base;
-    wxSize        k_sz_base;
     wxSize        parent_sz_base;
     wxFont       *font1;
     wxFont       *font2;
@@ -115,12 +110,6 @@ private:
     wxFont       *font_book;
     wxFont       *font_clock;
     wxStaticBox  *box;
-    wxStaticBox  *kibitz_box;
-    //wxRichTextCtrl *kibitz_ctrl;
-
-    wxRect       board_rect;
-    int          box_width;
-    bool         captured;
     void         ButtonCmd( int cmd );
     DECLARE_EVENT_TABLE()
 };

@@ -61,6 +61,7 @@ public:
 
     // Command handlers
     void OnTabSelected( int idx );
+    void OnTabClose( int idx );
     bool OnExit();
     void CmdFlip();
     void CmdSetPosition();

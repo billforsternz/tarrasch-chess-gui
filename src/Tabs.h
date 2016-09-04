@@ -37,9 +37,10 @@ public:
         iter_doc = 0;
         iter_undo = 0;
     }
+    int  GetCurrentIdx() { return current_idx; }
     void TabNew( GameDocument &new_gd );
     bool TabSelected( int idx );
-    int  TabDelete();
+    void TabDelete( int idx, bool system_will_delete_notebook_page );
     void SetInfile( bool infile ) { if( current_idx<nbr_tabs ) v[current_idx].infile = infile; }
     bool GetInfile() { return current_idx<nbr_tabs ? v[current_idx].infile : false; }
     bool GetInfile(int idx) { return idx<nbr_tabs ? v[idx].infile : false; }

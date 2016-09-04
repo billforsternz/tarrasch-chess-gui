@@ -98,6 +98,7 @@ class PanelNotebook: public wxWindow
 public:
     PanelNotebook( wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size );
     void OnTabSelected( wxAuiNotebookEvent& event );
+    void OnTabClose( wxAuiNotebookEvent& event );
     wxAuiNotebook      *notebook;
     wxPanel         *notebook_page1;
     DECLARE_EVENT_TABLE()
@@ -105,7 +106,8 @@ public:
 
 
 BEGIN_EVENT_TABLE(PanelNotebook, wxWindow)
-    EVT_AUINOTEBOOK_PAGE_CHANGED( wxID_ANY, PanelNotebook::OnTabSelected)
+    EVT_AUINOTEBOOK_PAGE_CHANGED( wxID_ANY, PanelNotebook::OnTabSelected)   //user selects a tab
+    EVT_AUINOTEBOOK_PAGE_CLOSE( wxID_ANY, PanelNotebook::OnTabClose)        //user closes a tab
 END_EVENT_TABLE()
 
 
@@ -122,16 +124,25 @@ PanelNotebook::PanelNotebook
     // Note that the wxNotebook is twice as high as the panel it's in. If the wxNotebook is very short,
     // a weird erasure effect occurs on the first tab header when creating subsequent tabs. Making the
     // wxNotebook think it's less short fixes this - and it still appears nice and short through the
-    // short panel parenting it.
-    notebook = new wxAuiNotebook(this, wxID_ANY, wxPoint(0,0), wxSize(siz.x,siz.y*2) );
-    wxPanel *notebook_page1 = new wxPanel(notebook, wxID_ANY );
+    // short panel parenting it. [Removed this when changing to wxAuiNotebook]
+    notebook = new wxAuiNotebook(this, wxID_ANY, wxPoint(5,0), wxSize(siz.x,siz.y), 
+        wxAUI_NB_TOP | wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | /*wxAUI_NB_SCROLL_BUTTONS |*/ wxAUI_NB_CLOSE_ON_ALL_TABS );
+    wxTextCtrl *notebook_page1 = new wxTextCtrl(notebook, wxID_ANY,"", wxDefaultPosition, wxDefaultSize /*wxPoint(0,0), wxSize((90*siz.x)/100,(90*siz.y)/100)*/, wxNO_BORDER );
     notebook->AddPage(notebook_page1,"New Game",true);
 }
 
 void PanelNotebook::OnTabSelected( wxAuiNotebookEvent& event )
 {
+    int idx = event.GetSelection();
     if( objs.gl )
-        objs.gl->OnTabSelected(event.GetSelection());
+        objs.gl->OnTabSelected(idx);
+}
+
+void PanelNotebook::OnTabClose( wxAuiNotebookEvent& event )
+{
+    int idx = event.GetSelection();
+    if( objs.gl )
+        objs.gl->OnTabClose(idx);
 }
 
 
@@ -991,6 +1002,55 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     context = new PanelContext( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,(10*hh)/100), pb, lb );
     context->notebook = skinny->notebook;
     objs.canvas = context;
+
+    // Init game logic only after everything setup
+    objs.gl         = NULL;
+    objs.session    = new Session;
+    objs.log        = new Log;
+    objs.book       = new Book;
+    objs.cws        = new CentralWorkSaver;
+    objs.tabs       = new Tabs;
+    GameLogic *gl   = new GameLogic( context, lb );
+
+    // Hook up connections to GameLogic
+    objs.gl         = gl;
+    gl->gd.gl       = gl;
+    gl->gd.gv.gl    = gl;
+    lb->gl          = gl;
+    objs.tabs->gl   = gl;
+    GameDocument    blank;
+    objs.tabs->TabNew( blank );
+    objs.cws->Init( &objs.gl->undo, &objs.gl->gd, &objs.gl->gc_pgn, &objs.gl->gc_clipboard ); 
+    context->SetPlayers( "", "" );
+
+    // Save restore windows logic - needs revamp for new aui/splitters/panels organisation
+    wxSize  parent_sz    = GetSize();
+    wxPoint parent_pos   = GetPosition();
+    if( objs.repository->nv.m_x>=0 &&
+        objs.repository->nv.m_y>=0 &&
+        objs.repository->nv.m_w>=0 &&
+        objs.repository->nv.m_h>=0
+      )
+    {
+        int disp_width, disp_height;
+        wxDisplaySize(&disp_width, &disp_height);
+        if( objs.repository->nv.m_x+objs.repository->nv.m_w <= disp_width &&
+            objs.repository->nv.m_y+objs.repository->nv.m_h <= disp_height
+          )
+        {
+        /*    wxPoint pos_( objs.repository->nv.m_x, objs.repository->nv.m_y );
+            wxSize  sz_ ( objs.repository->nv.m_w, objs.repository->nv.m_h );
+            if( sz_.x < parent_sz_base.x )
+                sz_.x = parent_sz_base.x;  // minimum startup width
+            parent->SetPosition(parent_pos = pos_);
+            parent->SetSize    (parent_sz  = sz_); */
+        }
+    }
+    objs.repository->nv.m_x = parent_pos.x;
+    objs.repository->nv.m_y = parent_pos.y;
+    objs.repository->nv.m_w = parent_sz.x;
+    objs.repository->nv.m_h = parent_sz.y;
+    context->resize_ready = true;
  
     // add the panes to the manager Note: Experience shows there is no point trying to change a panel's fundamental characteristics
     //  after adding it to the manager - Things like CaptionVisible(false) etc need to be intantiated with the panel
@@ -1012,28 +1072,11 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
                   Bottom().Layer(1).Position(2).
                   CloseButton(false).MaximizeButton(false));
 
-    //wxAuiPaneInfo binfo = m_mgr.GetPane(pb);
-    //bool ok = binfo.IsOk();
-    //binfo.MinSize(ww/2,(90*hh)/100);
-    //binfo.Fixed(); //MinSize(ww/2,(90*hh)/100);
-    //binfo.CaptionVisible(false);
-    //binfo.CloseButton(false);
-    //binfo.Resizable(false);
-    //wxAuiPaneInfo tinfo = m_mgr.GetPane(lb);
-    //ok = tinfo.IsOk();
-    //tinfo.Fixed();
-    //tinfo.Resizable(false);
-//    tinfo.MinSize(ww/2,(90*hh)/100);
-//    tinfo.MaxSize(ww/2,(90*hh)/100);
-//    tinfo.MinSize(ww/2,(90*hh)/100);
-    //wxAuiPaneInfo cinfo = m_mgr.GetPane(context);
-    //ok = cinfo.IsOk();
-    //cinfo.Fixed();
-    //cinfo.Resizable(false);
 
     // tell the manager to "commit" all the changes just made
     m_mgr.SetDockSizeConstraint(1.0,1.0);
     m_mgr.Update();
+
     //wxString persp = m_mgr.SavePerspective();
     //const char *txt = persp.c_str();
     //FILE *f = fopen( "c:/temp/persp.txt", "wb" );

@@ -375,6 +375,7 @@ void GameLogic::CmdTabNew()
 
 void GameLogic::OnTabSelected( int idx )
 {
+    cprintf( "OnTabSelected(%d)\n",idx);
     Atomic begin;
     if( tabs->TabSelected(idx) )
     {
@@ -387,14 +388,37 @@ void GameLogic::OnTabSelected( int idx )
 }
 
 
+void GameLogic::OnTabClose( int idx )
+{
+    cprintf( "OnTabClose(%d)\n",idx);
+    Atomic begin;
+    tabs->TabDelete(idx,true);    // true means system deletes the notebook page
+/*    int current_idx = tabs->GetCurrentIdx();
+    if( tabs->TabSelected( current_idx ) )
+    {
+        Undo temp = undo;
+        ShowNewDocument();   // clears undo
+        undo = temp;
+        atom.NotUndoAble();  // don't save an undo position
+    } */
+    undo.ShowStackSize( "OnTabClose()" );
+}
+
+
 void GameLogic::CmdTabClose()
 {
+    cprintf( "CmdTabClose()\n");
     Atomic begin;
-    tabs->TabSelected( tabs->TabDelete() );
-    Undo temp = undo;
-    ShowNewDocument();  // clears undo
-    undo = temp;
-    atom.NotUndoAble(); // don't save an undo position
+    int current_idx = tabs->GetCurrentIdx();
+    tabs->TabDelete(current_idx,false);    // false means system doesn't delete the notebook page
+/*    current_idx = tabs->GetCurrentIdx();
+    if( tabs->TabSelected( current_idx ) )
+    {
+        Undo temp = undo;
+        ShowNewDocument();   // clears undo
+        undo = temp;
+        atom.NotUndoAble();  // don't save an undo position
+    } */
     undo.ShowStackSize( "CmdTabClose()" );
 }
 
@@ -1908,6 +1932,7 @@ void GameLogic::OnIdle()
         StatusWarning();
         SetFocusOnList();
         objs.canvas->notebook->AdvanceSelection();
+        objs.canvas->lb->SetFocus();
     }
     bool expired = false;
     bool white = gd.master_position.WhiteToPlay();
