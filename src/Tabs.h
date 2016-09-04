@@ -40,7 +40,11 @@ public:
     int  GetCurrentIdx() { return current_idx; }
     void TabNew( GameDocument &new_gd );
     bool TabSelected( int idx );
+#ifdef AUI_NOTEBOOK
     void TabDelete( int idx, bool system_will_delete_notebook_page );
+#else
+    int  TabDelete();
+#endif
     void SetInfile( bool infile ) { if( current_idx<nbr_tabs ) v[current_idx].infile = infile; }
     bool GetInfile() { return current_idx<nbr_tabs ? v[current_idx].infile : false; }
     bool GetInfile(int idx) { return idx<nbr_tabs ? v[idx].infile : false; }

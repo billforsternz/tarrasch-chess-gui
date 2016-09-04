@@ -388,6 +388,7 @@ void GameLogic::OnTabSelected( int idx )
 }
 
 
+#ifdef AUI_NOTEBOOK
 void GameLogic::OnTabClose( int idx )
 {
     cprintf( "OnTabClose(%d)\n",idx);
@@ -421,6 +422,19 @@ void GameLogic::CmdTabClose()
     } */
     undo.ShowStackSize( "CmdTabClose()" );
 }
+
+#else
+void GameLogic::CmdTabClose()
+{
+    Atomic begin;
+    tabs->TabSelected( tabs->TabDelete() );
+    Undo temp = undo;
+    ShowNewDocument();  // clears undo
+    undo = temp;
+    atom.NotUndoAble(); // don't save an undo position
+    undo.ShowStackSize( "CmdTabClose()" );
+}
+#endif
 
 void GameLogic::CmdTabInclude()
 {

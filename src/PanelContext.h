@@ -101,7 +101,11 @@ public:
     int              button3_cmd;
     int              button4_cmd;
     CtrlBoxBookMoves *book_moves;
-    wxAuiNotebook      *notebook;
+    #ifdef AUI_NOTEBOOK
+    wxAuiNotebook    *notebook;
+    #else
+    wxNotebook       *notebook;
+    #endif
 private:
     wxSize        parent_sz_base;
     wxFont       *font1;

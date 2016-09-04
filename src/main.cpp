@@ -21,10 +21,13 @@
 #include "wx/clipbrd.h"
 #include "wx/sysopt.h"
 #include "wx/log.h"
-#include "wx/notebook.h"
-#include "wx/aui/aui.h"
-#include "wx/aui/auibook.h"
 #include "Appdefs.h"
+#include "wx/aui/aui.h"
+#ifdef AUI_NOTEBOOK
+#include "wx/aui/auibook.h"
+#else
+#include "wx/notebook.h"
+#endif
 #include "PanelBoard.h"
 #include "PanelContext.h"
 #include "GameLogic.h"
@@ -97,17 +100,26 @@ class PanelNotebook: public wxWindow
 {
 public:
     PanelNotebook( wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size );
+#ifdef AUI_NOTEBOOK
     void OnTabSelected( wxAuiNotebookEvent& event );
     void OnTabClose( wxAuiNotebookEvent& event );
-    wxAuiNotebook      *notebook;
+    wxAuiNotebook   *notebook;
+#else
+    void OnTabSelected( wxBookCtrlEvent& event );
+    wxNotebook      *notebook;
+#endif
     wxPanel         *notebook_page1;
     DECLARE_EVENT_TABLE()
 };
 
 
 BEGIN_EVENT_TABLE(PanelNotebook, wxWindow)
+#ifdef AUI_NOTEBOOK
     EVT_AUINOTEBOOK_PAGE_CHANGED( wxID_ANY, PanelNotebook::OnTabSelected)   //user selects a tab
     EVT_AUINOTEBOOK_PAGE_CLOSE( wxID_ANY, PanelNotebook::OnTabClose)        //user closes a tab
+#else
+    EVT_NOTEBOOK_PAGE_CHANGED( wxID_ANY, PanelNotebook::OnTabSelected)   //user selects a tab
+#endif
 END_EVENT_TABLE()
 
 
@@ -125,19 +137,17 @@ PanelNotebook::PanelNotebook
     // a weird erasure effect occurs on the first tab header when creating subsequent tabs. Making the
     // wxNotebook think it's less short fixes this - and it still appears nice and short through the
     // short panel parenting it. [Removed this when changing to wxAuiNotebook]
+#ifdef AUI_NOTEBOOK
     notebook = new wxAuiNotebook(this, wxID_ANY, wxPoint(5,0), wxSize(siz.x,siz.y), 
         wxAUI_NB_TOP | wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | /*wxAUI_NB_SCROLL_BUTTONS |*/ wxAUI_NB_CLOSE_ON_ALL_TABS );
+#else
+    notebook = new wxNotebook(this, wxID_ANY, wxPoint(5,0), wxSize(siz.x,siz.y*5) );
+#endif
     wxTextCtrl *notebook_page1 = new wxTextCtrl(notebook, wxID_ANY,"", wxDefaultPosition, wxDefaultSize /*wxPoint(0,0), wxSize((90*siz.x)/100,(90*siz.y)/100)*/, wxNO_BORDER );
     notebook->AddPage(notebook_page1,"New Game",true);
 }
 
-void PanelNotebook::OnTabSelected( wxAuiNotebookEvent& event )
-{
-    int idx = event.GetSelection();
-    if( objs.gl )
-        objs.gl->OnTabSelected(idx);
-}
-
+#ifdef AUI_NOTEBOOK
 void PanelNotebook::OnTabClose( wxAuiNotebookEvent& event )
 {
     int idx = event.GetSelection();
@@ -145,7 +155,15 @@ void PanelNotebook::OnTabClose( wxAuiNotebookEvent& event )
         objs.gl->OnTabClose(idx);
 }
 
-
+void PanelNotebook::OnTabSelected( wxAuiNotebookEvent& event )
+#else
+void PanelNotebook::OnTabSelected( wxBookCtrlEvent& event )
+#endif
+{
+    int idx = event.GetSelection();
+    if( objs.gl )
+        objs.gl->OnTabSelected(idx);
+}
 
 // ----------------------------------------------------------------------------
 // main frame

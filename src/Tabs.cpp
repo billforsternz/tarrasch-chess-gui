@@ -129,6 +129,7 @@ void Tabs::SetTitle( GameDocument &gd )
     }
 }
 
+#ifdef AUI_NOTEBOOK
 void Tabs::TabDelete( int idx, bool system_will_delete_notebook_page )
 {
     if( nbr_tabs>1 && idx<nbr_tabs )
@@ -150,3 +151,23 @@ void Tabs::TabDelete( int idx, bool system_will_delete_notebook_page )
     }
 }
 
+#else
+int Tabs::TabDelete()
+{
+    if( nbr_tabs>1 && current_idx<nbr_tabs )
+    {
+        v.erase( v.begin() + current_idx );
+        objs.canvas->notebook->DeletePage( current_idx );
+        nbr_tabs--;
+        if( current_idx == nbr_tabs )
+            current_idx--;
+        int idx = current_idx;
+        gl->undo = v[idx].undo;
+        gl->gd = v[idx].gd;
+        unsigned long pos = v[idx].pos;
+        gl->gd.SetInsertionPoint(pos);
+        gl->gd.non_zero_start_pos = pos;
+    }
+    return( current_idx );
+}
+#endif
