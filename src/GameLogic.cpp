@@ -211,7 +211,7 @@ void GameLogic::ShowNewDocument()
             case TERMINAL_BSTALEMATE:  result = RESULT_DRAW_BLACK_STALEMATED;   break;
         }
     }
-    else if( gd.master_position.IsDraw(true,draw_type1) && gd.master_position.IsDraw(false,draw_type2) )
+/*  else if( gd.master_position.IsDraw(true,draw_type1) && gd.master_position.IsDraw(false,draw_type2) )
     {
         gameover = true; 
         result = RESULT_DRAW_INSUFFICIENT;
@@ -219,7 +219,7 @@ void GameLogic::ShowNewDocument()
             result = RESULT_DRAW_50MOVE;
         else if( draw_type1==DRAWTYPE_REPITITION || draw_type2==DRAWTYPE_REPITITION )
             result = RESULT_DRAW_REPITITION;
-    }
+    } */
     objs.repository->player.m_white = gd.r.white;
     objs.repository->player.m_black = gd.r.black;
     LabelPlayers(false,true);
@@ -272,7 +272,9 @@ void GameLogic::CmdPlayWhite()
             NewState( HUMAN );
         }
         else
+        {
             NewState( StartThinking(NULL) );
+        }
         objs.canvas->RedrawClocks();
         SetGroomedPosition();
         LabelPlayers( true, is_new_game_main );
@@ -532,6 +534,8 @@ void GameLogic::CmdKibitz()
         }
         if( kibitz )
         {
+            bool horiz = false;
+            objs.canvas->PositionButtons(horiz);
             canvas->kibitz_ctrl->Show(true );
             canvas->kibitz_button1->Show(true);
             canvas->kibitz_button2->Show(true);
@@ -549,6 +553,7 @@ void GameLogic::CmdClearKibitz( bool hide_window )
     kibitz_text_to_clear = false;
     if( hide_window )
     {
+        canvas->PositionButtons();
         canvas->kibitz_ctrl->Show(false);
         canvas->kibitz_button1->Show(false);
         canvas->kibitz_button2->Show(false);
@@ -2661,8 +2666,10 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
         human_or_pondering = new_state; // now we have something to come back to if state
                                         //  later changes temporarily to say POPUP
     bool show=false;
+    bool suggestions = true;
     switch( state )
     {
+        case HUMAN:
         case RESET:
         case GAMEOVER:
         case MANUAL:  show=true;
@@ -2677,13 +2684,14 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
     const char *b2 = NULL;
     const char *b3 = NULL;
     const char *b4 = NULL;
-    const char *stat = "";
+    const char *title = "";
     wxString wx_stat;
     switch( state )
     {
         case RESET:
         case MANUAL:
-                        stat = NULL;
+        case SLIDING_MANUAL:
+                        title = NULL;
                         b1 = NULL; //"New Game";
                         b2 = "Setup Position";  b2_cmd = ID_CMD_SET_POSITION;
                         b3 = "Play White";      b3_cmd = ID_CMD_PLAY_WHITE;
@@ -2694,7 +2702,7 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
                         red = true;
                         chess_clock.GameOver();
                         glc.TestResult( wx_stat );
-                        stat = wx_stat.c_str();
+                        title = wx_stat.c_str();
                         b1 = "New Game";        b1_cmd = ID_CMD_NEW_GAME;
                         b2 = "Setup Position";  b2_cmd = ID_CMD_SET_POSITION;
                         b3 = NULL; // "Play as White";
@@ -2702,28 +2710,30 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
                         objs.log->Gameover();// initial_position, game_moves, glc.Get() );
                         break;
 
+        case SLIDING:
         case HUMAN:
         case PONDERING:
-                        stat = reply_to.c_str();
+                        canvas->box->SetLabel(reply_to.c_str());
+                        suggestions = false;
                         b1 = "New Game";        b1_cmd = ID_CMD_NEW_GAME;
                         b2 = "Setup Position";  b2_cmd = ID_CMD_SET_POSITION;
                         b3 = "Swap sides";      b3_cmd = ID_CMD_SWAP_SIDES;
                         b4 = NULL; //"Play as Black";
                         break;
 
-        case SLIDING:
+/*        case SLIDING:
         case SLIDING_MANUAL:
-                        stat = slide_buf;
+                        //title = slide_buf;
                         b1 = NULL; //"New Game";
                         b2 = NULL; //"Setup Position";
                         b3 = NULL; //"Play as White";
                         b4 = NULL; //"Play as Black";
-                        break;
+                        break; */
 
         case FAKE_BOOK_DELAY:
         case THINKING:
                         red = true;
-                        stat = "Engine thinking...";
+                        title = "Engine thinking...";
                         b1 = "New Game";    b1_cmd = ID_CMD_NEW_GAME;
                         b2 = NULL; //"Setup Position";
                         b3 = NULL; //"Play as White";
@@ -2732,7 +2742,7 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
 
         case POPUP:
         case POPUP_MANUAL:
-                        stat = "Select move";
+                        title = "Select move";
                         b1 = NULL; //"New Game";
                         b2 = NULL; //"Setup Position";
                         b3 = NULL; //"Play as White";
@@ -2740,7 +2750,10 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
                         break;
     }
     canvas->SetChessPosition( gd.master_position );
-    canvas->SetBoardTitle( stat?stat:"", red );
+    if( suggestions )
+        canvas->box->SetLabel("Suggestions");
+    if( title && !show )
+        canvas->SetBoardTitle( title, red );
     if( !b1 )
         canvas->button1->Show( false );        
     else
@@ -3237,7 +3250,7 @@ void GameLogic::SetGroomedPosition( bool show_title )
         }
     }
     if( state == RESET )
-        title = "Tarrasch Chess GUI";
+        title = "Initial Position";
     else if( ingame )
     {
         for( int i=0; i<4; i++ )

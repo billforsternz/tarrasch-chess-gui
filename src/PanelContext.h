@@ -49,7 +49,7 @@ public:
     void BlackClock( const wxString &txt )                  { pb->BlackClock(txt); }
     void RedrawClocks()                                     { pb->RedrawClocks(); }
     void SetBoardTitle( const char *txt, bool highlight=false )   { pb->SetBoardTitle( txt, highlight ); }
-    void Layout( wxSize const &siz, bool buttons_horiz=true );
+    void Layout( wxSize const &siz );
     int  PositionButtons( bool horiz=true );
     void BookUpdate( bool suppress );
     void OnChar( wxKeyEvent &event );
@@ -76,9 +76,10 @@ public:
 public:
     bool            resize_ready;
     thc::ChessPosition   save_position;
-    PanelBoard              *pb;
+    PanelBoard      *pb;
     CtrlChessTxt    *lb;
     PopupControl    *popup;
+    wxStaticBox     *box;
     wxStaticText    *kibitz0;
     wxStaticText    *kibitz1;
     wxStaticText    *kibitz2;
@@ -113,7 +114,7 @@ private:
     wxFont       *font3;
     wxFont       *font_book;
     wxFont       *font_clock;
-    wxStaticBox  *box;
+    bool          box_horiz;
     void         ButtonCmd( int cmd );
     DECLARE_EVENT_TABLE()
 };

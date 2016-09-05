@@ -86,11 +86,6 @@ PanelContext::~PanelContext()
     }
 }
 
-
-#define MARGIN 10
-#define SMALL_MARGIN 4
-#define FIELD 20
-
 // Constructor
 PanelContext::PanelContext
 (
@@ -133,6 +128,7 @@ PanelContext::PanelContext
     
     // Create Status box
     box = new wxStaticBox( this,ID_BOX,"",wxDefaultPosition, wxDefaultSize );
+    box_horiz = true;   // normally horizontal, except when kibitz shown
     box->SetLabel( "Suggestions" );
 
     // Create flexible buttons
@@ -164,7 +160,7 @@ PanelContext::PanelContext
     kibitz_button2 = new wxButton( this, ID_KIBITZ_BUTTON2, "Capture all",  wxDefaultPosition, wxDefaultSize );
 
     // Fit everything to size
-    Layout( siz, false );
+    Layout( siz );
 }
 
 
@@ -200,18 +196,17 @@ void PanelContext::OnSize( wxSizeEvent &evt )
     }
 }
 
-void PanelContext::Layout( wxSize const &siz, bool buttons_horiz )
+void PanelContext::Layout( wxSize const &siz )
 {
-    PositionButtons(buttons_horiz);
-    wxSize sz1 = siz;
-    wxSize sz2 = box->GetSize();
+    // Position suggestion box and buttons
+    int box_width_if_vertical = PositionButtons(box_horiz);
 
     // Size Kibitz box
     wxPoint kpos;
     wxSize  ksiz;
-    kpos.x = 10 + sz2.x + 10;
+    kpos.x = 10 + box_width_if_vertical + 10;
     kpos.y = 10;
-    ksiz.x = sz1.x - 2*kpos.x;
+    ksiz.x = siz.x - 2*kpos.x;
     ksiz.y = 99; //sz2.y;
     kibitz_ctrl->SetPosition(kpos);
     kibitz_ctrl->SetSize(ksiz);
@@ -242,19 +237,20 @@ void PanelContext::Layout( wxSize const &siz, bool buttons_horiz )
 
 int PanelContext::PositionButtons( bool horiz ) 
 {
-    horiz = false;
+    box_horiz = horiz;
     int i;
     wxSize sz;
     wxButton *button;
     int x=0, y=0, h=0, w=0;
     int max_width_so_far=0;
     int max_height_so_far=0;
-    wxPoint pos(10,10);
+    #define SPACER 5
+    wxPoint pos(SPACER*2,SPACER*2);
     box->SetPosition( pos );
-    x = pos.x + 5;
-    y = pos.y + 20;
-    w = 5;
-    h = 20;
+    x = pos.x + SPACER;
+    y = pos.y + SPACER*4;
+    w = SPACER;
+    h = SPACER*4;
     for( i=0; i<4; i++ )
     {
         switch(i)
@@ -271,13 +267,13 @@ int PanelContext::PositionButtons( bool horiz )
             sz = button->GetSize();
             if( horiz )
             {
-                w += (sz.x + 5);
-                x += (sz.x + 5);
+                w += (sz.x + SPACER);
+                x += (sz.x + SPACER);
             }
             else
             {
-                h += (sz.y + 5);
-                y += (sz.y + 5);
+                h += (sz.y + SPACER);
+                y += (sz.y + SPACER);
             }
             if( sz.x > max_width_so_far )
                 max_width_so_far = sz.x;
@@ -303,15 +299,14 @@ int PanelContext::PositionButtons( bool horiz )
         }
     }
     if( horiz )
-        h = max_height_so_far+10;
+        h = max_height_so_far+SPACER*2;
     else
-        w = max_width_so_far+10;
+        w = max_width_so_far+SPACER*2;
     sz.x = w;
     sz.y = h;
     box->SetSize(sz);
-    return w;
+    return max_width_so_far+SPACER*2;   // returns width if rendered vertical
 }
-
 
 void PanelContext::BookUpdate( bool suppress )
 {

@@ -150,7 +150,7 @@ void PanelBoard::OnSize( wxSizeEvent &evt )
     wxClientDC dc0(board_title);
     wxCoord txt_width, txt_height, txt_descent, txt_external_leading;
     dc0.GetTextExtent( "Ready", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
-    int t1 = 130*(txt_height + txt_descent)/100;
+    int t1 = 150*(txt_height + txt_descent)/100;
     int t1_height = txt_height + txt_descent;
     int board_title_y_offset = 120*(txt_height + txt_descent)/100;
     wxClientDC dc1(time_top);
@@ -162,7 +162,9 @@ void PanelBoard::OnSize( wxSizeEvent &evt )
     int time_x_offset = txt_width;
     wxClientDC dc2(coorda);
     dc2.GetTextExtent( "w", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
-    int l = 110*(txt_width)/100;
+    int coord_char_width = txt_width;
+    int coord_char_height = txt_height;
+    int l = 200*(txt_width)/100;
     int coord1_x_offset = 105*(txt_width)/100;
     dc2.GetTextExtent( "g", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
     int b1 = 110*(txt_height + txt_descent)/100;
@@ -175,8 +177,9 @@ void PanelBoard::OnSize( wxSizeEvent &evt )
 
     wxClientDC dc4(who_bottom);
     dc4.GetTextExtent( "W", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
-    int r = 110*(txt_width)/100;
-    int who_x_offset = 5*(txt_width)/100;
+    int who_height=txt_height;
+    int r = 150*(txt_width)/100;
+    int who_x_offset = 40*(txt_width)/100;
 
     // decide whether we have excess space above+below or left+right
     int dim;
@@ -229,48 +232,50 @@ void PanelBoard::OnSize( wxSizeEvent &evt )
     time_bottom->SetSize(sz);
 
     // Coords 1-8
+    int half = coord_char_height/4;
     x = origin_x - coord1_x_offset;
-    y = origin_y + dim/16;          // 1/16,3/16,5,16,7/16,9/16,11/16,13/16,15/16
+    y = origin_y + dim/16 - half;          // 1/16,3/16,5,16,7/16,9/16,11/16,13/16,15/16
     coord8->SetPosition(wxPoint(x,y));
-    y = origin_y + (3*dim)/16;      // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
+    y = origin_y + (3*dim)/16 - half;      // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
     coord7->SetPosition(wxPoint(x,y));
-    y = origin_y + (5*dim)/16;      // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
+    y = origin_y + (5*dim)/16 - half;      // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
     coord6->SetPosition(wxPoint(x,y));
-    y = origin_y + (7*dim)/16;      // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
+    y = origin_y + (7*dim)/16 - half;      // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
     coord5->SetPosition(wxPoint(x,y));
-    y = origin_y + (9*dim)/16;      // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
+    y = origin_y + (9*dim)/16 - half;      // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
     coord4->SetPosition(wxPoint(x,y));
-    y = origin_y + (11*dim)/16;     // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
+    y = origin_y + (11*dim)/16 - half;     // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
     coord3->SetPosition(wxPoint(x,y));
-    y = origin_y + (13*dim)/16;     // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
+    y = origin_y + (13*dim)/16 - half;     // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
     coord2->SetPosition(wxPoint(x,y));
-    y = origin_y + (15*dim)/16;     // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
+    y = origin_y + (15*dim)/16 - half;     // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
     coord1->SetPosition(wxPoint(x,y));
 
     // Who top and bottom
     x = origin_x + dim + who_x_offset;
     y = origin_y + (2*dim)/16;
     who_top->SetPosition(wxPoint(x,y));
-    y = origin_y + (14*dim)/16;
+    y = origin_y + (14*dim)/16 - who_height;
     who_bottom->SetPosition(wxPoint(x,y));
 
     // Coords a-h
+    half = coord_char_width/4;
     y = origin_y + dim + coorda_y_offset;     
-    x = origin_x + dim/16;          // 1/16,3/16,5,16,7/16,9/16,11/16,13/16,15/16
+    x = origin_x + dim/16 - half;          // 1/16,3/16,5,16,7/16,9/16,11/16,13/16,15/16
     coorda->SetPosition(wxPoint(x,y));
-    x = origin_x + (3*dim)/16;      // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
+    x = origin_x + (3*dim)/16 - half;      // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
     coordb->SetPosition(wxPoint(x,y));
-    x = origin_x + (5*dim)/16;      // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
+    x = origin_x + (5*dim)/16 - half;      // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
     coordc->SetPosition(wxPoint(x,y));
-    x = origin_x + (7*dim)/16;      // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
+    x = origin_x + (7*dim)/16 - half;      // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
     coordd->SetPosition(wxPoint(x,y));
-    x = origin_x + (9*dim)/16;      // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
+    x = origin_x + (9*dim)/16 - half;      // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
     coorde->SetPosition(wxPoint(x,y));
-    x = origin_x + (11*dim)/16;     // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
+    x = origin_x + (11*dim)/16 - half;     // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
     coordf->SetPosition(wxPoint(x,y));
-    x = origin_x + (13*dim)/16;     // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
+    x = origin_x + (13*dim)/16 - half;     // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
     coordg->SetPosition(wxPoint(x,y));
-    x = origin_x + (15*dim)/16;     // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
+    x = origin_x + (15*dim)/16 - half;     // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
     coordh->SetPosition(wxPoint(x,y));
     
     // Name and time, bottom
@@ -340,6 +345,7 @@ void PanelBoard::BlackClock( const wxString &txt )
 
 void PanelBoard::SetBoardTitle( const char *txt, bool highlight )
 {
+    cprintf( "SetBoardTitle(\"%s\",%s)\n", txt, highlight?"true":"false" );
     if( highlight )
         board_title->SetForegroundColour( *wxRED );
     else

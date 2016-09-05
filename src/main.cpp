@@ -1008,16 +1008,19 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     // notify wxAUI which frame to use
     m_mgr.SetManagedWindow(this);
 
+    int height_context  = 120 < hh/2 ? 120 : hh/2;
+    int height_notebook = 29  < hh/4 ? 29  : hh/4;
+    int height_board    = hh - height_context - height_notebook;
 
-    PanelNotebook *skinny = new PanelNotebook( this, -1, wxDefaultPosition, wxSize(ww,4+(3*hh)/100) );
+    PanelNotebook *skinny = new PanelNotebook( this, -1, wxDefaultPosition, wxSize(ww,height_notebook) );
 
     PanelBoard *pb = new PanelBoard( this,
                             wxID_ANY,
-                            wxDefaultPosition, wxSize(ww/2,(90*hh)/100) );
+                            wxDefaultPosition, wxSize(ww/2,height_board) );
 
-    CtrlChessTxt *lb = new CtrlChessTxt( this, -1, /*ID_LIST_CTRL*/ wxDefaultPosition, wxSize(ww/2,(90*hh)/100) );
+    CtrlChessTxt *lb = new CtrlChessTxt( this, -1, /*ID_LIST_CTRL*/ wxDefaultPosition, wxSize(ww/2,height_board) );
 
-    context = new PanelContext( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,(10*hh)/100), pb, lb );
+    context = new PanelContext( this, -1, /*wxID_ANY*/ wxDefaultPosition, wxSize(ww,height_context), pb, lb );
     context->notebook = skinny->notebook;
     objs.canvas = context;
 
@@ -1095,11 +1098,11 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     m_mgr.SetDockSizeConstraint(1.0,1.0);
     m_mgr.Update();
 
-    //wxString persp = m_mgr.SavePerspective();
-    //const char *txt = persp.c_str();
-    //FILE *f = fopen( "c:/temp/persp.txt", "wb" );
-    //fputs(txt,f);
-    //fclose(f);
+ /*   wxString persp = m_mgr.SavePerspective();
+    const char *txt = persp.c_str();
+    FILE *f = fopen( "c:/temp/persp.txt", "wb" );
+    fputs(txt,f);
+    fclose(f); */
 
 /*    std::string s(txt);
     size_t idx = s.find("state=2099196");
