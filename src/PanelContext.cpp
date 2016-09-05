@@ -132,10 +132,15 @@ PanelContext::PanelContext
     box->SetLabel( "Suggestions" );
 
     // Create flexible buttons
-    button1 = new wxButton( this, ID_BUTTON1, "New Game",       wxDefaultPosition, wxDefaultSize );
-    button2 = new wxButton( this, ID_BUTTON2, "Setup Position", wxDefaultPosition, wxDefaultSize );
-    button3 = new wxButton( this, ID_BUTTON3, "Play as White",  wxDefaultPosition, wxDefaultSize );
-    button4 = new wxButton( this, ID_BUTTON4, "Play as Black",  wxDefaultPosition, wxDefaultSize );
+    button1 = new wxButton( this, ID_BUTTON1, "Play engine as white" /*longest button text*/,       wxDefaultPosition, wxDefaultSize ); 
+    button2 = new wxButton( this, ID_BUTTON2, "", wxDefaultPosition, wxDefaultSize );
+    button3 = new wxButton( this, ID_BUTTON3, "",  wxDefaultPosition, wxDefaultSize );
+    button4 = new wxButton( this, ID_BUTTON4, "",  wxDefaultPosition, wxDefaultSize );
+    wxSize sz = button1->GetSize();
+    wxClientDC dc1(button1);
+    wxCoord width, height, descent, external_leading;
+    dc1.GetTextExtent( "Play engine as white", &width, &height, &descent, &external_leading );
+    button_width_delta = sz.x - width;
 
     // Create Kibitz box
     kibitz_ctrl = new wxListCtrl( this, ID_KIBITZ, wxDefaultPosition, wxDefaultSize , BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER );
@@ -150,9 +155,8 @@ PanelContext::PanelContext
     kibitz_ctrl->InsertItem( 2, "", 0 );
     kibitz_ctrl->InsertItem( 3, "", 0 );
     kibitz_ctrl->InsertItem( 4, "", 0 );
-    wxClientDC dc(kibitz_ctrl);
-    wxCoord width, height, descent, external_leading;
-    dc.GetTextExtent( "AbWy123456789", &width, &height, &descent, &external_leading );
+    wxClientDC dc2(kibitz_ctrl);
+    dc2.GetTextExtent( "AbWy123456789", &width, &height, &descent, &external_leading );
     dbg_printf( "Kibitz box font height=%d, descent=%d, external_leading=%d\n", height, descent, external_leading );
 
     // Create kibitz buttons
@@ -251,6 +255,29 @@ int PanelContext::PositionButtons( bool horiz )
     y = pos.y + SPACER*4;
     w = SPACER;
     h = SPACER*4;
+
+    // Size buttons optimally
+    wxClientDC dc1(button1);
+    for( i=0; i<4; i++ )
+    {
+        switch(i)
+        {
+            default:
+            case 0: button = button1;  break;
+            case 1: button = button2;  break;
+            case 2: button = button3;  break;
+            case 3: button = button4;  break;
+        }
+        wxString ws = button->GetLabel();
+        const char *label = ws.c_str();
+        wxCoord width, height, descent, external_leading;
+        dc1.GetTextExtent( label, &width, &height, &descent, &external_leading );
+        wxSize sz = button->GetSize();
+        sz.x = width + button_width_delta;
+        button->SetSize(sz);
+    }
+
+    // Position buttons
     for( i=0; i<4; i++ )
     {
         switch(i)
@@ -281,6 +308,8 @@ int PanelContext::PositionButtons( bool horiz )
                 max_height_so_far = sz.y;
         }
     }
+
+    // Set all vertical buttons to same width
     for( i=0; !horiz && i<4; i++ )
     {
         switch(i)
@@ -354,6 +383,7 @@ void PanelContext::ButtonCmd( int cmd )
         case ID_CMD_NEW_GAME:       objs.gl->CmdNewGame();      break;
         case ID_CMD_TAKEBACK:       objs.gl->CmdTakeback();     break;
         case ID_CMD_MOVENOW:        objs.gl->CmdMoveNow();      break;
+        case ID_CMD_EXAMINE_GAME:   objs.gl->CmdExamineGame();  break;
         case ID_CMD_WHITE_RESIGNS:  objs.gl->CmdWhiteResigns(); break;
         case ID_CMD_BLACK_RESIGNS:  objs.gl->CmdBlackResigns(); break;
         case ID_CMD_DRAW:           objs.gl->CmdDraw();         break;

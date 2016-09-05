@@ -569,6 +569,13 @@ void GameLogic::CmdMoveNow()
         fake_book_delay = 0;
 }
 
+void GameLogic::CmdExamineGame()
+{
+    Atomic begin;
+    NewState( MANUAL ); // same as simply clicking in game
+}
+
+
 void GameLogic::CmdFileOpen()
 {
     Atomic begin;
@@ -2468,8 +2475,8 @@ void GameLogic::MouseUp( char file, char rank, wxPoint &point )
     }
 
     // Else not sliding piece, just set position
-    else
-        SetGroomedPosition( false );
+    //else
+    //    SetGroomedPosition( false );
 }
 
 void GameLogic::MouseUp()
@@ -2479,8 +2486,8 @@ void GameLogic::MouseUp()
         NewState( human_or_pondering );
     else if( state == SLIDING_MANUAL )
         NewState( MANUAL );
-    else
-        SetGroomedPosition( false );
+    //else
+    //    SetGroomedPosition( false );
 }
 
 /****************************************************************************
@@ -2684,70 +2691,70 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
     const char *b2 = NULL;
     const char *b3 = NULL;
     const char *b4 = NULL;
-    const char *title = "";
+    const char *title = NULL;
     wxString wx_stat;
     switch( state )
     {
         case RESET:
         case MANUAL:
         case SLIDING_MANUAL:
-                        title = NULL;
-                        b1 = NULL; //"New Game";
-                        b2 = "Setup Position";  b2_cmd = ID_CMD_SET_POSITION;
-                        b3 = "Play White";      b3_cmd = ID_CMD_PLAY_WHITE;
-                        b4 = "Play Black";      b4_cmd = ID_CMD_PLAY_BLACK;
+        case POPUP_MANUAL:
+        {
+                        TERMINAL terminal_score;
+                        gd.master_position.Evaluate(terminal_score);
+                        bool gameover = (terminal_score==TERMINAL_WCHECKMATE || terminal_score==TERMINAL_BCHECKMATE ||
+                                         terminal_score==TERMINAL_WSTALEMATE || terminal_score==TERMINAL_BSTALEMATE);
+                        if( gameover )
+                        {
+                            b1 = "New Game";                    b1_cmd = ID_CMD_NEW_GAME;
+                        }
+                        else
+                        {
+                            b1 = "Play engine as white";        b1_cmd = ID_CMD_PLAY_WHITE;
+                            b2 = "Play engine as black";        b2_cmd = ID_CMD_PLAY_BLACK;
+                            b3 = "Setup a position";            b3_cmd = ID_CMD_SET_POSITION;
+                        }
                         break;
-
+        }
         case GAMEOVER:
-                        red = true;
                         chess_clock.GameOver();
-                        glc.TestResult( wx_stat );
-                        title = wx_stat.c_str();
-                        b1 = "New Game";        b1_cmd = ID_CMD_NEW_GAME;
-                        b2 = "Setup Position";  b2_cmd = ID_CMD_SET_POSITION;
-                        b3 = NULL; // "Play as White";
-                        b4 = NULL; // "Play as Black";
+                        //red = true;
+                        //glc.TestResult( wx_stat );
+                        //title = wx_stat.c_str();
+                        b1 = "New Game";                    b1_cmd = ID_CMD_NEW_GAME;
+                        b2 = "Examine game";                b2_cmd = ID_CMD_EXAMINE_GAME;
                         objs.log->Gameover();// initial_position, game_moves, glc.Get() );
                         break;
 
         case SLIDING:
         case HUMAN:
         case PONDERING:
+        case POPUP:
                         canvas->box->SetLabel(reply_to.c_str());
                         suggestions = false;
-                        b1 = "New Game";        b1_cmd = ID_CMD_NEW_GAME;
-                        b2 = "Setup Position";  b2_cmd = ID_CMD_SET_POSITION;
-                        b3 = "Swap sides";      b3_cmd = ID_CMD_SWAP_SIDES;
-                        b4 = NULL; //"Play as Black";
+                        b1 = "New Game";                    b1_cmd = ID_CMD_NEW_GAME;
+                        b2 = "Swap sides";                  b2_cmd = ID_CMD_SWAP_SIDES;
+                        b3 = "Examine game";                b3_cmd = ID_CMD_EXAMINE_GAME;
                         break;
 
-/*        case SLIDING:
+/*      case SLIDING:
         case SLIDING_MANUAL:
                         //title = slide_buf;
-                        b1 = NULL; //"New Game";
-                        b2 = NULL; //"Setup Position";
-                        b3 = NULL; //"Play as White";
-                        b4 = NULL; //"Play as Black";
-                        break; */
+                        break;
+        case POPUP:
+        case POPUP_MANUAL:
+                        title = "Select move";
+                        break;  */
 
         case FAKE_BOOK_DELAY:
         case THINKING:
                         red = true;
                         title = "Engine thinking...";
-                        b1 = "New Game";    b1_cmd = ID_CMD_NEW_GAME;
-                        b2 = NULL; //"Setup Position";
-                        b3 = NULL; //"Play as White";
-                        b4 = NULL; //"Play as Black";
+                        b1 = "New Game";                    b1_cmd = ID_CMD_NEW_GAME;
+                        b2 = "Force immediate move";        b2_cmd = ID_CMD_MOVENOW;
+                        b3 = "Examine game";                b3_cmd = ID_CMD_EXAMINE_GAME;
                         break;
 
-        case POPUP:
-        case POPUP_MANUAL:
-                        title = "Select move";
-                        b1 = NULL; //"New Game";
-                        b2 = NULL; //"Setup Position";
-                        b3 = NULL; //"Play as White";
-                        b4 = NULL; //"Play as Black";
-                        break;
     }
     canvas->SetChessPosition( gd.master_position );
     if( suggestions )

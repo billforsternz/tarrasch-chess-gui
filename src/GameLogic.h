@@ -70,6 +70,7 @@ public:
     void CmdEditUndo();
     void CmdEditRedo();
     void CmdMoveNow();
+    void CmdExamineGame();
     void CmdFileNew();
     void CmdFileOpen();
     void CmdFileOpenLog();

@@ -54,6 +54,7 @@ enum
     ID_CMD_NEW_GAME,        
     ID_CMD_TAKEBACK,     
     ID_CMD_MOVENOW,     
+    ID_CMD_EXAMINE_GAME,
     ID_CMD_DRAW,
     ID_CMD_WHITE_RESIGNS,
     ID_CMD_BLACK_RESIGNS,

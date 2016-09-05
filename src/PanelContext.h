@@ -109,6 +109,7 @@ public:
     #endif
 private:
     wxSize        parent_sz_base;
+    int           button_width_delta;
     wxFont       *font1;
     wxFont       *font2;
     wxFont       *font3;
