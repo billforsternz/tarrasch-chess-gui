@@ -2504,9 +2504,12 @@ void GameLogic::BookHover( wxPoint& WXUNUSED(point) )
             if( objs.rybka )
                 objs.rybka->SuspendResume(false);   // suspend
             vector<thc::Move> menu; // empty
+            wxPoint pt_base = objs.canvas->book_moves->GetParent()->GetPosition();
             wxPoint pt   = objs.canvas->book_moves->GetPosition();
             wxRect  rect = objs.canvas->book_moves->GetRect();
-            pt.y = -4;  // just above client area
+            pt.x += pt_base.x;
+            pt.y += pt_base.y;
+            pt.y += rect.height;
             DoPopup( pt, menu, book_moves, BOOK_HOVER, rect );
             NewState( (state==HUMAN||state==PONDERING) ? POPUP : POPUP_MANUAL );
         }

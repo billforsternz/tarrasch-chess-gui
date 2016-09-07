@@ -95,6 +95,7 @@ public:
     virtual int  OnExit();
 };
 
+CtrlBoxBookMoves *gbl_book_moves;
 
 class PanelNotebook: public wxWindow
 {
@@ -106,14 +107,15 @@ public:
     wxAuiNotebook   *notebook;
 #else
     void OnTabSelected( wxBookCtrlEvent& event );
+    void OnSize( wxSizeEvent &evt );
     wxNotebook      *notebook;
 #endif
-    wxPanel         *notebook_page1;
     DECLARE_EVENT_TABLE()
 };
 
 
 BEGIN_EVENT_TABLE(PanelNotebook, wxWindow)
+    EVT_SIZE( PanelNotebook::OnSize )
 #ifdef AUI_NOTEBOOK
     EVT_AUINOTEBOOK_PAGE_CHANGED( wxID_ANY, PanelNotebook::OnTabSelected)   //user selects a tab
     EVT_AUINOTEBOOK_PAGE_CLOSE( wxID_ANY, PanelNotebook::OnTabClose)        //user closes a tab
@@ -137,15 +139,36 @@ PanelNotebook::PanelNotebook
     // a weird erasure effect occurs on the first tab header when creating subsequent tabs. Making the
     // wxNotebook think it's less short fixes this - and it still appears nice and short through the
     // short panel parenting it. [Removed this when changing to wxAuiNotebook]
+    const int BOOK_MOVES_WIDTH = 105;
 #ifdef AUI_NOTEBOOK
     notebook = new wxAuiNotebook(this, wxID_ANY, wxPoint(5,0), wxSize(siz.x,siz.y), 
         wxAUI_NB_TOP | wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | /*wxAUI_NB_SCROLL_BUTTONS |*/ wxAUI_NB_CLOSE_ON_ALL_TABS );
 #else
-    notebook = new wxNotebook(this, wxID_ANY, wxPoint(5,0), wxSize(siz.x,siz.y*5) );
+    notebook = new wxNotebook(this, wxID_ANY, wxPoint(5,0), wxSize(siz.x-BOOK_MOVES_WIDTH-10,siz.y*5) );
 #endif
     wxTextCtrl *notebook_page1 = new wxTextCtrl(notebook, wxID_ANY,"", wxDefaultPosition, wxDefaultSize /*wxPoint(0,0), wxSize((90*siz.x)/100,(90*siz.y)/100)*/, wxNO_BORDER );
     notebook->AddPage(notebook_page1,"New Game",true);
+
+    wxPoint pt(siz.x-BOOK_MOVES_WIDTH-2,5);
+    wxSize  sz(BOOK_MOVES_WIDTH,siz.y-5);
+    gbl_book_moves = new CtrlBoxBookMoves( this,
+                          wxID_ANY,
+                          pt,
+                          sz );
 }
+
+void PanelNotebook::OnSize( wxSizeEvent &evt )
+{
+    wxSize siz = evt.GetSize();
+    wxSize sz1;
+    const int BOOK_MOVES_WIDTH = 105;
+    sz1.x = siz.x-BOOK_MOVES_WIDTH-10;
+    sz1.y = siz.y*5;
+    notebook->SetSize(sz1);
+    wxPoint pt(siz.x-BOOK_MOVES_WIDTH-2,5);
+    gbl_book_moves->SetPosition(pt);
+}
+
 
 #ifdef AUI_NOTEBOOK
 void PanelNotebook::OnTabClose( wxAuiNotebookEvent& event )
@@ -721,7 +744,6 @@ BEGIN_EVENT_TABLE(ChessFrame, wxFrame)
     EVT_TIMER( TIMER_ID, ChessFrame::OnTimeout)
     EVT_MOVE (ChessFrame::OnMove)
 END_EVENT_TABLE()
-CtrlBoxBookMoves *gbl_book_moves;
 
 
 
@@ -950,29 +972,21 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     wxSize sz2 = toolbar->GetToolSize();
     int space1 = toolbar->GetToolPacking();
     int nbr_tools = toolbar->GetToolsCount() - nbr_separators;
-    const int SEPARATOR_WIDTH = 8;  // Can only be calculated after Realize(), so done
+/*    const int SEPARATOR_WIDTH = 8;  // Can only be calculated after Realize(), so done
                                     //  offline below
     const int BOOK_MOVES_WIDTH = 105;
     int x1 = nbr_tools*sz2.x + (nbr_tools-1)*space1 + nbr_separators*SEPARATOR_WIDTH;    // where we are now
     int x2 = (sz0.x - BOOK_MOVES_WIDTH - 20);                                            // where we want to be
     nbr_separators = (x2-x1)/SEPARATOR_WIDTH;
     for( int i=0; i<nbr_separators; i++ )
-        toolbar->AddSeparator();
+        toolbar->AddSeparator(); */
 
-    //wxComboBox *combobox = new wxComboBox(toolbar,ID_COMBOBOX);
-    //wxPoint pt(100,0);
-    wxSize sz(BOOK_MOVES_WIDTH,20);
-    gbl_book_moves = new CtrlBoxBookMoves( toolbar,
-                          wxID_ANY,
-                          wxDefaultPosition,
-                          sz );
-    toolbar->AddControl(gbl_book_moves);
     toolbar->Realize();
     SetToolBar(toolbar);
 
-    // Some Debug only code to calculate SEPARATOR_WIDTH note that
+    // Some old Debug only code to calculate SEPARATOR_WIDTH note that
     //  GetPosition() of controls in toolbar is useless until Realize()
-    #ifdef _DEBUG
+    #if 0 
     int space2 = toolbar->GetToolSeparation();
     nbr_tools = toolbar->GetToolsCount();
     int x,y;

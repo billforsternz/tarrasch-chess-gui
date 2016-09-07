@@ -140,7 +140,7 @@ PanelContext::PanelContext
     wxClientDC dc1(button1);
     wxCoord width, height, descent, external_leading;
     dc1.GetTextExtent( "Play engine as white", &width, &height, &descent, &external_leading );
-    button_width_delta = sz.x - width;
+    button_width_delta = sz.x - width;  // used to neatly size button width to suit flexible labels
 
     // Create Kibitz box
     kibitz_ctrl = new wxListCtrl( this, ID_KIBITZ, wxDefaultPosition, wxDefaultSize , BORDER_COMMON|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_HEADER );
