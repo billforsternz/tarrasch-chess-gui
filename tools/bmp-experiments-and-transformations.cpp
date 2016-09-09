@@ -8,6 +8,10 @@
 #include <string.h>
 #include <stdint.h>
 #include <math.h>
+#include <algorithm>
+#include <vector>
+#include <set>
+#include <map>
 
 #define BUF_SIZE 20000000
 
@@ -33,6 +37,7 @@ struct BmpHeader
 };
 
 static BmpHeader *ReadFile( char *buf, const char *filename );
+static void Convert2Xpm( BmpHeader *in, const char *filename );
 static void DrawTextPicture( BmpHeader *in );
 static void SliceOutPieces( BmpHeader *in );
 static void SpliceFiles( char *buf );
@@ -45,12 +50,32 @@ int main()
         printf( "Cannot allocate memory\n" );
         return 0;
     }
-#define SPLICE_FILES
+//#define SPLICE_FILES
 #ifdef  SPLICE_FILES
     SpliceFiles( buf );
-#else
+#endif
+//#define ONE_FILE
+#ifdef ONE_FILE
+    const char *filename = "../font-200b.bmp";
+    BmpHeader *in = ReadFile( buf, filename );
+    if( in )
+    {
+        //DrawTextPicture(in);
+        Convert2Xpm(in,filename);
+    }
+#endif
+#define BULK_FILES
+#ifdef BULK_FILES
     const char *files[] =
     {
+     /* "../adobe5-14-20.bmp",
+        "../adobe5-22-50.bmp",
+        "../adobe5-55-95.bmp",
+        "../adobe5-100-130.bmp",
+        "../adobe5-140-160.bmp",
+        "../adobe5-160-180.bmp",
+        "../adobe5-190-200.bmp"
+        ,
         "../font-14-20.bmp",
         "../font-22-50.bmp",
         "../font-55-95.bmp",
@@ -58,7 +83,86 @@ int main()
         "../font-140-160w.bmp",
         "../font-160b-180w.bmp",
         "../font-180b-200w.bmp",
-        "../font-200b.bmp"
+        "../font-200b.bmp" */
+
+   /*     "pitch-015-batch2.bmp",
+        "pitch-016-batch2.bmp",
+        "pitch-018-2-batch2.bmp",
+        "pitch-018-batch2.bmp",
+        "pitch-021-batch2.bmp",
+        "pitch-023-batch2.bmp",
+        "pitch-025-batch2.bmp",
+        "pitch-027-batch1.bmp",
+        "pitch-027-batch2.bmp",
+        "pitch-029-batch1.bmp",
+        "pitch-029-batch2.bmp",
+        "pitch-030-batch1.bmp",
+        "pitch-031-batch2.bmp",
+        "pitch-032-batch1.bmp",
+        "pitch-033-batch2.bmp",
+        "pitch-035-batch1.bmp",
+        "pitch-035-batch2.bmp",
+        "pitch-037-batch1.bmp",
+        "pitch-037-batch2.bmp",
+        "pitch-039-batch2.bmp",
+        "pitch-040-batch1.bmp",
+        "pitch-040-batch2.bmp",
+        "pitch-042-batch2.bmp",
+        "pitch-043-batch1.bmp",
+        "pitch-045-batch2.bmp",
+        "pitch-046-batch1.bmp",
+        "pitch-046-batch2.bmp",
+        "pitch-048-batch2.bmp",
+        "pitch-050-batch1.bmp",
+        "pitch-050-batch2.bmp",
+        "pitch-052-batch1.bmp",
+        "pitch-055-batch2.bmp",
+        "pitch-056-batch1.bmp",
+        "pitch-059-batch1.bmp",
+        "pitch-060-batch2.bmp",
+        "pitch-062-batch1.bmp",
+        "pitch-065-batch1.bmp",
+        "pitch-065-batch2.bmp",
+        "pitch-068-batch1.bmp",
+        "pitch-070-batch2.bmp",
+        "pitch-071-batch1.bmp",
+        "pitch-074-batch1.bmp",
+        "pitch-075-batch2.bmp",
+        "pitch-077-batch1.bmp",
+        "pitch-080-batch2.bmp",
+        "pitch-085-batch1.bmp",
+        "pitch-085-batch2.bmp",
+        "pitch-090-batch2.bmp",
+        "pitch-092-batch1.bmp",
+        "pitch-095-batch2.bmp",
+        "pitch-100-batch1.bmp",
+        "pitch-100-batch2.bmp",
+        "pitch-107-batch1.bmp",
+        "pitch-110-batch2.bmp",
+        "pitch-115-batch1.bmp",
+        "pitch-120-batch2.bmp",
+        "pitch-123-batch1.bmp",
+        "pitch-130-batch1.bmp",
+        "pitch-130-batch2.bmp",
+        "pitch-138-batch1.bmp",
+        "pitch-140-batch2.bmp",
+        "pitch-146-batch1.bmp",
+        "pitch-150-batch2.bmp",
+        "pitch-154-batch1.bmp",
+        "pitch-160-batch2.bmp",
+        "pitch-169-batch1.bmp",
+        "pitch-170-batch2.bmp",
+        "pitch-180-batch2.bmp",
+        "pitch-185-batch1.bmp",
+        "pitch-190-batch2.bmp",
+        "pitch-200-batch2.bmp",
+        "pitch-215-batch1.bmp",
+        "pitch-231-batch1.bmp",
+        "pitch-246-batch1.bmp",
+        "pitch-261-batch1.bmp",
+        "pitch-277-batch1.bmp",
+        "pitch-292-batch1.bmp", */
+        "pitch-306-batch1.bmp"
     };
     for( int i=0; i<sizeof(files)/sizeof(files[0]); i++ )
     {
@@ -66,7 +170,8 @@ int main()
         if( in )
         {
             //DrawTextPicture(in);
-            SliceOutPieces(in);
+            //SliceOutPieces(in);
+            Convert2Xpm( in, files[i] );
         }
     }
 #endif
@@ -169,6 +274,78 @@ static uint8_t *Locate( BmpHeader *h, uint32_t x, uint32_t y )
     return ptr;
 }
 
+
+static void Convert2Xpm( BmpHeader *in, const char *filename )
+{
+    int len = strlen(filename);
+    std::string s1(filename);
+    std::string s2(".xpm");
+    s1.append(s2);
+    std::string xpm_filename = s1;// + s2; // + std::string(".xpm"); //.substr(0,len-3) + "xpm";
+                                //printf( "height=%d, width=%d\n", in->height, in->width );
+    std::map<uint32_t,char> colours;
+    char next = ' ';    
+    for( uint32_t y=0; y<in->height; y++ )
+    {
+        uint8_t *ptr = Locate(in,y);
+        for( uint32_t x=0; x<in->width; x++ )
+        {
+            uint8_t b = *ptr++;    
+            uint8_t g = *ptr++;    
+            uint8_t r = *ptr++;
+            uint32_t rgb = r;
+            rgb <<= 8;
+            rgb |= g;
+            rgb <<= 8;
+            rgb |= b;
+            if( 0 == colours.count(rgb) )
+                colours[rgb] = next++;
+        }
+    }
+    printf( "File %s, colours found (%d)\n", filename, colours.size() );
+    if( colours.size() < 50 )
+    {
+/*        {
+            for( std::map<uint32_t,char>::iterator it=colours.begin(); it!=colours.end(); it++ )
+                printf( "#%06x\n", it->first );
+        }   */
+        FILE *f = fopen(xpm_filename.c_str(),"wt");
+        if( !f )
+        {
+            printf( "Cannot open %s\n", xpm_filename.c_str() );
+            return;
+        }
+        char *buf = (char *)malloc(BUF_SIZE/10);
+        if( !buf )
+        {
+            fclose(f);
+            printf( "Cannot allocate memory\n" );
+            return;
+        }
+        for( uint32_t y=0; y<in->height; y++ )
+        {
+            char *s = buf;
+            uint8_t *ptr = Locate(in,y);
+            for( uint32_t x=0; x<in->width; x++ )
+            {
+                uint8_t b = *ptr++;    
+                uint8_t g = *ptr++;    
+                uint8_t r = *ptr++;
+                uint32_t rgb = r;
+                rgb <<= 8;
+                rgb |= g;
+                rgb <<= 8;
+                rgb |= b;
+                *s++ = colours[rgb];
+            }
+            fprintf(f,"%s\n",buf);
+        }
+        free(buf);
+        fclose(f);
+    }
+}
+
+
 // Just to establish confidence, draw a text picture, assumes a magenta background
 static void DrawTextPicture( BmpHeader *in )
 {
@@ -253,12 +430,12 @@ static void WritePieceLine( BmpHeader *in, uint32_t pitch, int nbr_pieces, Piece
 {
     static int pitches[1000];
     char fname[100];
-    sprintf( fname, "pieces-%d-pitch-%d.bmp", nbr_pieces, pitch );
+    sprintf( fname, "pieces%spitch-%d.bmp", nbr_pieces==12?"-":"-half-", pitch );
     if( pitch < 1000 )
     {
         pitches[pitch]++;
         if( pitches[pitch] > 1 )
-            sprintf( fname, "pieces-%d-pitch-%d-%d.bmp", nbr_pieces, pitch, pitches[pitch] );
+            sprintf( fname, "pieces%spitch-%d-%d.bmp", nbr_pieces==12?"-":"-half-", pitch, pitches[pitch] );
     }
     FILE *f = fopen(fname,"wb");
     if( !f )
@@ -370,37 +547,44 @@ static int ReadPieceLine( BmpHeader *in, uint32_t y_begin, uint32_t y_end, uint3
             case 25: if( !blank )  { state=26;             } break;
         }
     }
-    uint32_t height = y_end-y_begin;
-    uint32_t width = wk_end-wk_begin;
-    #define max(a,b) ((a)>(b)?(a):(b))
-    width = max( wq_end-wq_begin, width ); 
-    width = max( wr_end-wr_begin, width ); 
-    width = max( wb_end-wb_begin, width ); 
-    width = max( wn_end-wn_begin, width ); 
-    width = max( wp_end-wp_begin, width ); 
+    nbr_pieces = 0;
     if( state == 13 )
-    {
         nbr_pieces = 6;
-        int span = wp_end-wk_begin;
-        pitch = static_cast<uint32_t>( ceil(span * 0.17425) );
-    }
     else if( state == 25 )
-    {
         nbr_pieces = 12;
-        int span = bp_end-wk_begin;
-        pitch = static_cast<uint32_t>( ceil(span * 0.084944) );
-        width = max( bq_end-bq_begin, width ); 
-        width = max( br_end-br_begin, width ); 
-        width = max( bb_end-bb_begin, width ); 
-        width = max( bn_end-bn_begin, width ); 
-        width = max( bp_end-bp_begin, width ); 
-    }
-    if( nbr_pieces == 0 )
-    {
-        printf( "Cannot split out pieces (%d)\n", state );
-    }
     else
+        printf( "Cannot split out pieces (%d)\n", state );
+    if( nbr_pieces > 0 )
     {
+        uint32_t height = y_end-y_begin;
+        uint32_t width = wk_end-wk_begin;
+        #define max(a,b) ((a)>(b)?(a):(b))
+        width = max( wq_end-wq_begin, width ); 
+        width = max( wr_end-wr_begin, width ); 
+        width = max( wb_end-wb_begin, width ); 
+        width = max( wn_end-wn_begin, width ); 
+        width = max( wp_end-wp_begin, width ); 
+        double fpitch;
+        if( nbr_pieces == 6 )
+        {
+            int span = wp_end-wk_begin;
+            fpitch = span * 0.17425;
+        }
+        else if( nbr_pieces == 12 )
+        {
+            int span = bp_end-wk_begin;
+            fpitch = span * 0.084944;
+            width = max( bq_end-bq_begin, width ); 
+            width = max( br_end-br_begin, width ); 
+            width = max( bb_end-bb_begin, width ); 
+            width = max( bn_end-bn_begin, width ); 
+            width = max( bp_end-bp_begin, width ); 
+        }
+        uint32_t hi = static_cast<uint32_t>( ceil (fpitch) );
+        uint32_t lo = static_cast<uint32_t>( floor(fpitch) );
+        pitch = (hi==lo ? lo : hi);
+        if( pitch>100 && (pitch&1) )
+            pitch = pitch & (~1);   // eg 101->100
         bool clearance = pitch>(width+1) && pitch>(height+1);
         printf( "%d piece line found, height=%d, width=%d, pitch=%d %s\n", nbr_pieces, height, width, pitch, clearance?"have clearance":"*clearance problem*"  );
         while( !clearance )
@@ -408,8 +592,8 @@ static int ReadPieceLine( BmpHeader *in, uint32_t y_begin, uint32_t y_end, uint3
             pitch++;
             clearance = pitch>(width+1) && pitch>(height+1);
         }
-        if( pitch == 307 )
-            pitch = 306;    // ugly repair
+        //if( pitch == 307 )
+        //    pitch = 306;    // ugly repair
         for( int i=0; i<nbr_pieces; i++ )
         {
             uint32_t x, w;
@@ -498,39 +682,39 @@ static void SpliceFiles( char *buf )
 {
     const char *files[] =
     {
-        "pieces-6-pitch-154.bmp",
-        "pieces-6-pitch-154-2.bmp",
-        "pieces-pitch-154.bmp",
-        "pieces-6-pitch-169.bmp",
-        "pieces-6-pitch-169-2.bmp",
-        "pieces-pitch-169.bmp",
-        "pieces-6-pitch-185.bmp",
-        "pieces-6-pitch-185-2.bmp",
-        "pieces-pitch-185.bmp",
-        "pieces-6-pitch-200.bmp",
-        "pieces-6-pitch-200-2.bmp",
-        "pieces-pitch-200.bmp",
-        "pieces-6-pitch-215.bmp",
-        "pieces-6-pitch-215-2.bmp",
-        "pieces-pitch-215.bmp",
-        "pieces-6-pitch-231.bmp",
-        "pieces-6-pitch-231-2.bmp",
-        "pieces-pitch-231.bmp",
-        "pieces-6-pitch-246.bmp",
-        "pieces-6-pitch-246-2.bmp",
-        "pieces-pitch-246.bmp",
-        "pieces-6-pitch-261.bmp",
-        "pieces-6-pitch-261-2.bmp",
-        "pieces-pitch-261.bmp",
-        "pieces-6-pitch-277.bmp",
-        "pieces-6-pitch-277-2.bmp",
-        "pieces-pitch-277.bmp",
-        "pieces-6-pitch-292.bmp",
-        "pieces-6-pitch-292-2.bmp",
-        "pieces-pitch-292.bmp",
-        "pieces-6-pitch-306.bmp",
-        "pieces-6-pitch-306-2.bmp",
-        "pieces-pitch-306.bmp"
+        "pieces-half-pitch-100.bmp",
+        "pieces-half-pitch-100-2.bmp",
+        "pieces-pitch-100.bmp",
+        "pieces-half-pitch-110.bmp",
+        "pieces-half-pitch-110-2.bmp",
+        "pieces-pitch-110.bmp",
+        "pieces-half-pitch-120.bmp",
+        "pieces-half-pitch-120-2.bmp",
+        "pieces-pitch-120.bmp",
+        "pieces-half-pitch-130.bmp",
+        "pieces-half-pitch-130-2.bmp",
+        "pieces-pitch-130.bmp",
+        "pieces-half-pitch-140.bmp",
+        "pieces-half-pitch-140-2.bmp",
+        "pieces-pitch-140.bmp",
+        "pieces-half-pitch-150.bmp",
+        "pieces-half-pitch-150-2.bmp",
+        "pieces-pitch-150.bmp",
+        "pieces-half-pitch-160.bmp",
+        "pieces-half-pitch-160-2.bmp",
+        "pieces-pitch-160.bmp",
+        "pieces-half-pitch-170.bmp",
+        "pieces-half-pitch-170-2.bmp",
+        "pieces-pitch-170.bmp",
+        "pieces-half-pitch-180.bmp",
+        "pieces-half-pitch-180-2.bmp",
+        "pieces-pitch-180.bmp",
+        "pieces-half-pitch-190.bmp",
+        "pieces-half-pitch-190-2.bmp",
+        "pieces-pitch-190.bmp",
+        "pieces-half-pitch-200.bmp",
+        "pieces-half-pitch-200-2.bmp",
+        "pieces-pitch-200.bmp"
     };
 
     char *buf2 = (char *)malloc(BUF_SIZE);
