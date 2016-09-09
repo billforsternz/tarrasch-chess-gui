@@ -10,6 +10,7 @@
 #include <math.h>
 #include <algorithm>
 #include <vector>
+#include <string>
 #include <set>
 #include <map>
 
@@ -85,7 +86,7 @@ int main()
         "../font-180b-200w.bmp",
         "../font-200b.bmp" */
 
-   /*     "pitch-015-batch2.bmp",
+        "pitch-015-batch2.bmp",
         "pitch-016-batch2.bmp",
         "pitch-018-2-batch2.bmp",
         "pitch-018-batch2.bmp",
@@ -161,7 +162,7 @@ int main()
         "pitch-246-batch1.bmp",
         "pitch-261-batch1.bmp",
         "pitch-277-batch1.bmp",
-        "pitch-292-batch1.bmp", */
+        "pitch-292-batch1.bmp",
         "pitch-306-batch1.bmp"
     };
     for( int i=0; i<sizeof(files)/sizeof(files[0]); i++ )
@@ -272,77 +273,6 @@ static uint8_t *Locate( BmpHeader *h, uint32_t x, uint32_t y )
         row_bytes = (row_bytes|3) + 1;
     uint8_t *ptr = (uint8_t *)h + sizeof(BmpHeader) + h->data_len - (y+1)*row_bytes + 3*x;
     return ptr;
-}
-
-
-static void Convert2Xpm( BmpHeader *in, const char *filename )
-{
-    int len = strlen(filename);
-    std::string s1(filename);
-    std::string s2(".xpm");
-    s1.append(s2);
-    std::string xpm_filename = s1;// + s2; // + std::string(".xpm"); //.substr(0,len-3) + "xpm";
-                                //printf( "height=%d, width=%d\n", in->height, in->width );
-    std::map<uint32_t,char> colours;
-    char next = ' ';    
-    for( uint32_t y=0; y<in->height; y++ )
-    {
-        uint8_t *ptr = Locate(in,y);
-        for( uint32_t x=0; x<in->width; x++ )
-        {
-            uint8_t b = *ptr++;    
-            uint8_t g = *ptr++;    
-            uint8_t r = *ptr++;
-            uint32_t rgb = r;
-            rgb <<= 8;
-            rgb |= g;
-            rgb <<= 8;
-            rgb |= b;
-            if( 0 == colours.count(rgb) )
-                colours[rgb] = next++;
-        }
-    }
-    printf( "File %s, colours found (%d)\n", filename, colours.size() );
-    if( colours.size() < 50 )
-    {
-/*        {
-            for( std::map<uint32_t,char>::iterator it=colours.begin(); it!=colours.end(); it++ )
-                printf( "#%06x\n", it->first );
-        }   */
-        FILE *f = fopen(xpm_filename.c_str(),"wt");
-        if( !f )
-        {
-            printf( "Cannot open %s\n", xpm_filename.c_str() );
-            return;
-        }
-        char *buf = (char *)malloc(BUF_SIZE/10);
-        if( !buf )
-        {
-            fclose(f);
-            printf( "Cannot allocate memory\n" );
-            return;
-        }
-        for( uint32_t y=0; y<in->height; y++ )
-        {
-            char *s = buf;
-            uint8_t *ptr = Locate(in,y);
-            for( uint32_t x=0; x<in->width; x++ )
-            {
-                uint8_t b = *ptr++;    
-                uint8_t g = *ptr++;    
-                uint8_t r = *ptr++;
-                uint32_t rgb = r;
-                rgb <<= 8;
-                rgb |= g;
-                rgb <<= 8;
-                rgb |= b;
-                *s++ = colours[rgb];
-            }
-            fprintf(f,"%s\n",buf);
-        }
-        free(buf);
-        fclose(f);
-    }
 }
 
 
@@ -785,4 +715,96 @@ static void SpliceFiles( char *buf )
     }
     free(buf3);
     free(buf2);
+}
+
+static void Convert2Xpm( BmpHeader *in, const char *filename )
+{
+    std::string s(filename);
+    std::string xpm_filename = s.substr(0,s.length()-4) + ".xpm";
+    std::set<uint32_t> colour_set;
+    colour_set.insert(0xff00ff);    // some of the code below assumes magenta present, so insist it is represented
+    for( uint32_t y=0; y<in->height; y++ )
+    {
+        uint8_t *ptr = Locate(in,y);
+        for( uint32_t x=0; x<in->width; x++ )
+        {
+            uint8_t b = *ptr++;    
+            uint8_t g = *ptr++;    
+            uint8_t r = *ptr++;
+            uint32_t rgb = r;
+            rgb <<= 8;
+            rgb |= g;
+            rgb <<= 8;
+            rgb |= b;
+            colour_set.insert(rgb);
+        }
+    }
+    bool too_many = ( colour_set.size() > 50 );
+    printf( "File %s, %d colours found%s\n", filename, colour_set.size(), too_many?" too many!":"" );
+    if( !too_many )
+    {
+        char colour_proxy_character = '!';    
+        std::map<uint32_t,char> colour_map;
+        for( std::set<uint32_t>::iterator it=colour_set.begin(); it!=colour_set.end(); it++ )
+        {
+            colour_map[*it] = (*it==0xff00ff ? ' ' : colour_proxy_character++); // magenta background gets ' '
+            if( colour_proxy_character == '\'' || colour_proxy_character=='\"' )
+                colour_proxy_character++;
+        }
+        FILE *f = fopen(xpm_filename.c_str(),"wt");
+        if( !f )
+        {
+            printf( "Cannot open %s\n", xpm_filename.c_str() );
+            return;
+        }
+        char *buf = (char *)malloc(BUF_SIZE/10);
+        if( !buf )
+        {
+            fclose(f);
+            printf( "Cannot allocate memory\n" );
+            return;
+        }
+
+        /*
+            // Format we are going for;
+            static const char *bitmap_xpm[] = {
+                "6 2 3 1",      // width 6, height 2, 3 colours
+                "M c #ff00ff",
+                "B c #0000ff",
+                "R c #ff0000",
+                "RRBBRR",
+                "RRMMRR"
+            };
+
+        */
+        fprintf( f, "static const char *pitch_%d_xpm[] = {\n", in->height  );
+        fprintf( f, "\"%d %d %d 1\",\n", in->width, in->height, colour_set.size() );
+        fprintf( f, "\"%c c #%06x\",\n", ' ', 0xff00ff );   // magenta background first
+        for( std::map<uint32_t,char>::iterator it=colour_map.begin(); it!=colour_map.end(); it++ )
+        {
+            if( it->first != 0xff00ff ) //we've already listed magenta
+                fprintf( f, "\"%c c #%06x\",\n", it->second, it->first ); 
+        }
+        for( uint32_t y=0; y<in->height; y++ )
+        {
+            char *s = buf;
+            uint8_t *ptr = Locate(in,y);
+            for( uint32_t x=0; x<in->width; x++ )
+            {
+                uint8_t b = *ptr++;    
+                uint8_t g = *ptr++;    
+                uint8_t r = *ptr++;
+                uint32_t rgb = r;
+                rgb <<= 8;
+                rgb |= g;
+                rgb <<= 8;
+                rgb |= b;
+                *s++ = colour_map[rgb];
+            }
+            fprintf(f,"\"%s\"%s\n",buf, y+1<in->height?",":"");
+        }
+        fprintf(f,"};\n");
+        free(buf);
+        fclose(f);
+    }
 }

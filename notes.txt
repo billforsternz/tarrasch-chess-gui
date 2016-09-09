@@ -1,3 +1,93 @@
+10/9/2016
+
+Log of conversions from .bmp -> .xpm using tools/bmp-experiments-and-transformations.cpp
+
+batch1 were created with acrobat reader 9.4
+batch2 were created with acrobat reader 5.1 after we found many of
+the batch1 files weren't greyscale (greyscale = [r==g==b for all colours])
+meaning they had too many colours for .xpm
+
+File pitch-015-batch2.bmp, 16 colours found
+File pitch-016-batch2.bmp, 17 colours found
+File pitch-018-2-batch2.bmp, 17 colours found
+File pitch-018-batch2.bmp, 17 colours found
+File pitch-021-batch2.bmp, 17 colours found
+File pitch-023-batch2.bmp, 17 colours found
+File pitch-025-batch2.bmp, 17 colours found
+File pitch-027-batch1.bmp, 1024 colours found too many!
+File pitch-027-batch2.bmp, 17 colours found
+File pitch-029-batch1.bmp, 1154 colours found too many!
+File pitch-029-batch2.bmp, 17 colours found
+File pitch-030-batch1.bmp, 1162 colours found too many!
+File pitch-031-batch2.bmp, 17 colours found
+File pitch-032-batch1.bmp, 1222 colours found too many!
+File pitch-033-batch2.bmp, 17 colours found
+File pitch-035-batch1.bmp, 1247 colours found too many!
+File pitch-035-batch2.bmp, 17 colours found
+File pitch-037-batch1.bmp, 1297 colours found too many!
+File pitch-037-batch2.bmp, 17 colours found
+File pitch-039-batch2.bmp, 17 colours found
+File pitch-040-batch1.bmp, 1305 colours found too many!
+File pitch-040-batch2.bmp, 17 colours found
+File pitch-042-batch2.bmp, 17 colours found
+File pitch-043-batch1.bmp, 1318 colours found too many!
+File pitch-045-batch2.bmp, 17 colours found
+File pitch-046-batch1.bmp, 1328 colours found too many!
+File pitch-046-batch2.bmp, 17 colours found
+File pitch-048-batch2.bmp, 17 colours found
+File pitch-050-batch1.bmp, 1355 colours found too many!
+File pitch-050-batch2.bmp, 17 colours found
+File pitch-052-batch1.bmp, 1342 colours found too many!
+File pitch-055-batch2.bmp, 17 colours found
+File pitch-056-batch1.bmp, 1353 colours found too many!
+File pitch-059-batch1.bmp, 1339 colours found too many!
+File pitch-060-batch2.bmp, 17 colours found
+File pitch-062-batch1.bmp, 1363 colours found too many!
+File pitch-065-batch1.bmp, 1406 colours found too many!
+File pitch-065-batch2.bmp, 17 colours found
+File pitch-068-batch1.bmp, 1402 colours found too many!
+File pitch-070-batch2.bmp, 17 colours found
+File pitch-071-batch1.bmp, 1440 colours found too many!
+File pitch-074-batch1.bmp, 1454 colours found too many!
+File pitch-075-batch2.bmp, 17 colours found
+File pitch-077-batch1.bmp, 1449 colours found too many!
+File pitch-080-batch2.bmp, 17 colours found
+File pitch-085-batch1.bmp, 1489 colours found too many!
+File pitch-085-batch2.bmp, 17 colours found
+File pitch-090-batch2.bmp, 17 colours found
+File pitch-092-batch1.bmp, 1526 colours found too many!
+File pitch-095-batch2.bmp, 17 colours found
+File pitch-100-batch1.bmp, 1568 colours found too many!
+File pitch-100-batch2.bmp, 17 colours found
+File pitch-107-batch1.bmp, 18 colours found
+File pitch-110-batch2.bmp, 18 colours found
+File pitch-115-batch1.bmp, 18 colours found
+File pitch-120-batch2.bmp, 18 colours found
+File pitch-123-batch1.bmp, 18 colours found
+File pitch-130-batch1.bmp, 18 colours found
+File pitch-130-batch2.bmp, 18 colours found
+File pitch-138-batch1.bmp, 18 colours found
+File pitch-140-batch2.bmp, 18 colours found
+File pitch-146-batch1.bmp, 18 colours found
+File pitch-150-batch2.bmp, 18 colours found
+File pitch-154-batch1.bmp, 18 colours found
+File pitch-160-batch2.bmp, 18 colours found
+File pitch-169-batch1.bmp, 18 colours found
+File pitch-170-batch2.bmp, 18 colours found
+File pitch-180-batch2.bmp, 18 colours found
+File pitch-185-batch1.bmp, 18 colours found
+File pitch-190-batch2.bmp, 18 colours found
+File pitch-200-batch2.bmp, 18 colours found
+File pitch-215-batch1.bmp, 18 colours found
+File pitch-231-batch1.bmp, 18 colours found
+File pitch-246-batch1.bmp, 18 colours found
+File pitch-261-batch1.bmp, 18 colours found
+File pitch-277-batch1.bmp, 18 colours found
+File pitch-292-batch1.bmp, 18 colours found
+File pitch-306-batch1.bmp, 18 colours found
+Press enter
+
+
 31/8/2016
 Horizontal suggestions if no kibitz box
 Vertical suggestions if kibitz box
