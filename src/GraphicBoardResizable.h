@@ -20,6 +20,7 @@ public:
                   const wxSize& size );
 	~GraphicBoardResizable();
     void Init( const wxSize& size );
+    void Init2( const wxSize& size );
 
 	// Find a square within the graphic board
 	void HitTest( wxPoint hit, char &file, char &rank );
@@ -109,6 +110,7 @@ private:
     wxPoint      pickup_point;
     thc::ChessPosition     slide_pos;
     int          PIX;
+    int          pix;
 };
 
 #endif // GRAPHICBOARD_RESIZABLE_H
