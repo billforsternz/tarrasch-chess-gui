@@ -37,11 +37,27 @@ struct BmpHeader
     uint32_t  res7;
 };
 
+class CompressedXpm
+{
+public:
+    uint32_t width;
+    uint32_t height;
+    uint32_t background_colour;
+    int      nbr_other_colours;
+    uint32_t other_colours[16];
+    uint32_t binary_len;
+    uint8_t *bin;
+};
+
+
 static BmpHeader *ReadFile( char *buf, const char *filename );
 static void Convert2Xpm( BmpHeader *in, const char *filename );
 static void DrawTextPicture( BmpHeader *in );
 static void SliceOutPieces( BmpHeader *in );
 static void SpliceFiles( char *buf );
+
+static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXpm &compressed );
+static void CompressedXpm2Xpm( CompressedXpm &compressed, const char *filename );
 
 int main()
 {
@@ -55,17 +71,19 @@ int main()
 #ifdef  SPLICE_FILES
     SpliceFiles( buf );
 #endif
-//#define ONE_FILE
+#define ONE_FILE
 #ifdef ONE_FILE
-    const char *filename = "../font-200b.bmp";
+    const char *filename = "pitch-070-batch2.bmp";
     BmpHeader *in = ReadFile( buf, filename );
     if( in )
     {
-        //DrawTextPicture(in);
-        Convert2Xpm(in,filename);
+        CompressedXpm compressed;
+        Bmp2CompressedXpm(in,filename,compressed);
+        CompressedXpm2Xpm(compressed,filename);
+        free(compressed.bin);
     }
 #endif
-#define BULK_FILES
+//#define BULK_FILES
 #ifdef BULK_FILES
     const char *files[] =
     {
@@ -748,7 +766,7 @@ static void Convert2Xpm( BmpHeader *in, const char *filename )
         for( std::set<uint32_t>::iterator it=colour_set.begin(); it!=colour_set.end(); it++ )
         {
             colour_map[*it] = (*it==0xff00ff ? ' ' : colour_proxy_character++); // magenta background gets ' '
-            if( colour_proxy_character == '\'' || colour_proxy_character=='\"' )
+            while( colour_proxy_character == '\'' || colour_proxy_character=='\"' )
                 colour_proxy_character++;
         }
         FILE *f = fopen(xpm_filename.c_str(),"wt");
@@ -808,3 +826,514 @@ static void Convert2Xpm( BmpHeader *in, const char *filename )
         fclose(f);
     }
 }
+
+static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXpm &compressed )
+{
+    int dbg=0;
+    #define DBG_NBR 12
+    #define DBG_NBR_OUT 14
+    bool ok=true;   // returns bool ok
+    uint8_t *buf = (uint8_t *)malloc(BUF_SIZE/10);
+    if( !buf )
+    {
+        printf( "Cannot allocate memory\n" );
+        return false;
+    }
+    const uint32_t magenta = 0xff00ff;
+    compressed.width  = in->width;    
+    compressed.height = in->height;
+    compressed.background_colour = magenta;    
+    std::set<uint32_t> colour_set;
+    colour_set.insert(magenta);
+    for( uint32_t y=0; y<in->height; y++ )
+    {
+        uint8_t *ptr = Locate(in,y);
+        for( uint32_t x=0; x<in->width; x++ )
+        {
+            uint8_t b = *ptr++;    
+            uint8_t g = *ptr++;    
+            uint8_t r = *ptr++;
+            uint32_t rgb = r;
+            rgb <<= 8;
+            rgb |= g;
+            rgb <<= 8;
+            rgb |= b;
+            colour_set.insert(rgb);
+        }
+    }
+    bool too_many = ( colour_set.size() > 17 );
+    printf( "File %s, %d colours found%s\n", filename, colour_set.size(), too_many?" too many!":"" );
+    ok = !too_many;
+    if( ok )
+    {
+        compressed.bin = (uint8_t *)malloc( compressed.width * compressed.height * 2 ); // *2 = safety margin for some weird edge case where compressed bigger than uncompressed
+        if( !compressed.bin )
+        {
+            printf( "Cannot allocate memory\n" );
+            ok = false;
+        }
+    }
+    if( ok )
+    {
+        compressed.nbr_other_colours = colour_set.size()-1;
+        int idx=0;
+        for( std::set<uint32_t>::iterator it=colour_set.begin(); it!=colour_set.end(); it++ )
+        {
+            uint32_t colour = *it;
+            if( colour != magenta )
+                compressed.other_colours[ idx++ ] = colour;
+        }
+        uint8_t *dst = compressed.bin;
+        /*
+            Byte by byte coding system
+            --------------------------
+            up to 2^3  =8    successive codes cccc                0nnncccc
+            up to 2^9  =512  successive codes cccc                100nnnnn nnnncccc
+            up to 2^13 =8192 successive background codes          101nnnnn nnnnnnnn
+            up to 2^5  =32   arbitrary codes                      110nnnnn followed by codes
+            up to 2^13 =8192 arbitrary codes                      111nnnnn nnnnnnnn followed by codes
+        */
+        uint32_t prev_rgb=0;
+        uint8_t  cccc=0;
+        uint32_t n=0;
+        enum{ init, search, in_run, in_run_magenta } state=init;
+        for( uint32_t y=0; y<in->height; y++ )
+        {
+            uint8_t *ptr = Locate(in,y);
+            for( uint32_t x=0; x<in->width; x++ )
+            {
+                uint8_t b = *ptr++;    
+                uint8_t g = *ptr++;    
+                uint8_t r = *ptr++;
+                uint32_t rgb = r;
+                rgb <<= 8;
+                rgb |= g;
+                rgb <<= 8;
+                rgb |= b;
+                for( int i=0; i<compressed.nbr_other_colours; i++ )
+                {
+                    if( rgb == compressed.other_colours[i] )
+                    {
+                        cccc = i;
+                        break;
+                    }
+                }
+
+                // Last pixel ?
+                bool end = ((y+1)==in->height && (x+1)==in->width);
+
+                // Encoding state machine begin
+                switch( state )
+                {
+
+                    // First pixel
+                    case init:
+                    {
+                        if( rgb == magenta )
+                        {
+                            state = in_run_magenta;
+                            n = 1;
+                        }
+                        else
+                        {
+                            state = search;
+                            idx = 0;
+                            buf[idx++] = cccc;
+                        }
+                        break;
+                    }
+                    
+                    // Buffering arbitrary pixels, waiting for magenta or runs of same colour
+                    case search:
+                    {
+                        bool write_out_buf = false;
+                        if( rgb == magenta )
+                        {
+                            write_out_buf = true;
+                        }
+                        else if( end )
+                        {
+                            write_out_buf = true;
+                            buf[idx++] = cccc;
+                        }
+                        else if( rgb == prev_rgb )
+                        {
+                            write_out_buf = true;
+                            idx--;  // remove last from buf, it will be encoded as first of run
+                        }
+                        else if( rgb != prev_rgb )
+                        {
+                            buf[idx++] = cccc;  // buffer and keep searching
+                        }
+
+                        // Write out buf at end or at start of run
+                        if( write_out_buf )
+                        {
+
+                            unsigned int nbr_remaining = idx;
+                            unsigned int src = 0;
+                            while( nbr_remaining > 0 )
+                            {
+                                unsigned int chunk = nbr_remaining;
+                                if( chunk > 8192 )
+                                    chunk = 8192;
+                                nbr_remaining -= chunk;
+                                uint8_t *dat=dst;
+                                if( chunk <= 32 )
+                                {
+                                    uint8_t b = chunk-1;
+                                    b |= 0xc0;
+                                    *dst++ = b;
+                                    if( dbg++ < DBG_NBR )
+                                        printf( "Buf <=32 (%d) [%02x]\n", chunk, dat[0] );
+                                }
+                                else
+                                {
+                                    uint16_t w = chunk-1;
+                                    w |= 0xe000;
+                                    *dst++ = (w>>8)&0xff;
+                                    *dst++ = w&0xff;
+                                    if( dbg++ < DBG_NBR )
+                                        printf( "Buf >32 (%d) [%02x]\n", chunk, dat[0], dat[1] );
+                                }
+                                *dst = 0;
+                                dat=dst;
+                                for( unsigned int i=0; i<chunk; i++ )
+                                {
+                                    *dst >>= 4;
+                                    *dst |= (buf[src++] << 4);
+                                    if( (i&1) )
+                                    {
+                                        dst++;
+                                        *dst = 0;
+                                    }
+                                }
+                                if( dbg++ < DBG_NBR )
+                                    printf( "[%02x %02x %02x %02x %02x...]\n", dat[0], dat[1], dat[2], dat[3], dat[4] );
+                            }
+
+                            // Account for final pixel at end
+                            if( end && rgb==magenta )
+                            {
+                                // add a single magenta pixel
+                                *dst++ = 0xa0;
+                                *dst = 0;
+                            }
+
+                            // Next state
+                            if( rgb == magenta )
+                            {
+                                state = in_run_magenta;
+                                n = 1;
+                            }
+                            else
+                            {
+                                state = in_run;
+                                n = 2;
+                            }
+                        }
+                        break;
+                    }
+                    
+                    // In a run of magenta pixels
+                    case in_run_magenta:
+                    {
+                        if( rgb == magenta )
+                            n++;
+
+                        // Write out buf at end or end of run
+                        if( end || rgb!=magenta )
+                        {
+                            unsigned int nbr_remaining = n;
+                            while( nbr_remaining > 0 )
+                            {
+                                unsigned int chunk = nbr_remaining;
+                                if( chunk > 8192 )
+                                    chunk = 8192;
+                                nbr_remaining -= chunk;
+                                uint16_t w = chunk-1;
+                                w |= 0xa000;
+                                uint8_t *dat=dst;
+                                *dst++ = (w>>8)&0xff;
+                                *dst++ = w&0xff;
+                                if( dbg++ < DBG_NBR )
+                                    printf( "Magenta (%d) [%02x %02x]\n", chunk, dat[0], dat[1] );
+                            }
+
+                            // Account for final pixel at end
+                            if( end && rgb!=magenta )
+                            {
+
+                                // Need a single non magenta pixel
+                                *dst++ = cccc;
+                            }
+
+                            // Next state
+                            state = search;
+                            idx = 0;
+                            buf[idx++] = cccc;
+                        }
+                        break;
+                    }
+
+                    // In a run of non magenta pixels
+                    case in_run:
+                    {
+                        if( rgb == prev_rgb )
+                            n++;
+
+                        // Write out sequence at end or at end of run
+                        if( end || rgb!=prev_rgb )
+                        {
+                            unsigned int nbr_remaining = n;
+                            while( nbr_remaining > 0 )
+                            {
+                                unsigned int chunk = nbr_remaining;
+                                if( chunk > 512 )
+                                    chunk = 512;
+                                nbr_remaining -= chunk;
+                                uint8_t *dat=dst;
+                                if( chunk <= 8 )
+                                {
+                                    uint8_t b = chunk-1;
+                                    b = b<<4;
+                                    b |= cccc;
+                                    *dst++ = b;
+                                    if( dbg++ < DBG_NBR )
+                                        printf( "Seq <=8 (%d,%d) [%02x]\n", cccc, chunk, dat[0] );
+                                }
+                                else //if( chunk <= 512 )
+                                {
+                                    uint16_t w = chunk-1;
+                                    w = w<<4;
+                                    w |= cccc;
+                                    w |= 0x8000;
+                                    *dst++ = (w>>8)&0xff;
+                                    *dst++ = w&0xff;
+                                    if( dbg++ < DBG_NBR )
+                                        printf( "Seq >8 (%d,%d) [%02x %02x]\n", cccc, chunk, dat[0], dat[1] );
+                                }
+                            }
+
+                            // Account for final pixel at end
+                            if( end )
+                            {
+                                // May need a single magenta pixel
+                                if( rgb == magenta )
+                                {
+                                    *dst++ = 0xa0;
+                                    *dst = 0;
+                                }
+
+                                // Or a single non magenta pixel
+                                else if( rgb != prev_rgb )
+                                    *dst++ = cccc;
+                            }
+
+                            // Next state
+                            if( rgb == magenta )
+                            {
+                                state = in_run_magenta;
+                                n = 1;
+                            }
+                            else
+                            {
+                                state = search;
+                                idx = 0;
+                                buf[idx++] = cccc;
+                            }
+                        }
+                        break;
+                    }
+                }
+
+                // After encoding state machine
+                prev_rgb  = rgb;
+            }
+        }
+        compressed.binary_len = dst-compressed.bin;
+        compressed.bin = (uint8_t *)realloc( (void *)compressed.bin, compressed.binary_len );
+    }
+    return ok;
+}
+
+
+static void CompressedXpm2Xpm( CompressedXpm &compressed, const char *filename )
+{
+    int dbg=0;
+
+    std::string s(filename);
+    std::string xpm_filename = s.substr(0,s.length()-4) + "reconstituted.xpm";
+    FILE *f = fopen(xpm_filename.c_str(),"wt");
+    if( !f )
+    {
+        printf( "Cannot open %s\n", xpm_filename.c_str() );
+        return;
+    }
+    char *buf = (char *)malloc(BUF_SIZE/10);
+    if( !buf )
+    {
+        fclose(f);
+        printf( "Cannot allocate memory\n" );
+        return;
+    }
+
+    /*
+        // Format we are going for;
+        static const char *bitmap_xpm[] = {
+            "6 2 3 1",      // width 6, height 2, 3 colours
+            "M c #ff00ff",
+            "B c #0000ff",
+            "R c #ff0000",
+            "RRBBRR",
+            "RRMMRR"
+        };
+
+    */
+
+    fprintf( f, "static const char *pitch_%d_xpm[] = {\n", compressed.height  );
+    fprintf( f, "\"%d %d %d 1\",\n", compressed.width, compressed.height, compressed.nbr_other_colours+1 );
+    fprintf( f, "\"%c c #%06x\",\n", ' ', 0xff00ff );   // magenta background first
+    char proxy='!';
+    char proxy_colours[16];
+    for( int i=0; i<compressed.nbr_other_colours; i++ )
+    {
+        fprintf( f, "\"%c c #%06x\",\n", proxy, compressed.other_colours[i] ); 
+        proxy_colours[i] = proxy;
+        proxy++;
+        while( proxy == '\'' || proxy=='\"' )
+            proxy++; 
+    }
+
+    int len = compressed.binary_len;
+    uint8_t *src = compressed.bin;
+
+    /*
+        Byte by byte coding system
+        --------------------------
+        up to 2^3  =8    successive codes cccc                0nnncccc
+        up to 2^9  =512  successive codes cccc                100nnnnn nnnncccc
+        up to 2^13 =8192 successive background codes          101nnnnn nnnnnnnn
+        up to 2^5  =32   arbitrary codes                      110nnnnn followed by codes
+        up to 2^13 =8192 arbitrary codes                      111nnnnn nnnnnnnn followed by codes
+    */
+
+    fprintf( f, "\"" );
+    uint32_t offset=0;  // from 0 to width*height
+    while( len > 0 )
+    {
+        uint8_t c = *src++;
+        len--;
+        bool arbitrary_data=false;
+        char proxy=' ';
+        uint32_t n=0;
+        if( (c&0x80) == 0 )
+        {
+            // Sequence of one colour (short)
+            uint32_t cccc = c&0x0f;
+            proxy = proxy_colours[cccc];
+            n = ((c>>4)&0x07) + 1;
+            if( dbg++ < DBG_NBR_OUT )
+                printf( "Seq short\n" );
+        }
+        else if( (c&0xe0) == 0xc0 )
+        {
+            // Arbitrary data (short)
+            n = (c&0x1f) + 1;
+            arbitrary_data = true;
+            if( dbg++ < DBG_NBR_OUT )
+                printf( "Data short\n" );
+        }
+        else
+        {
+            uint8_t d = *src++;
+            len--;
+            if( (c&0xe0) == 0x80 )
+            {
+                // Sequence of one colour (long)
+                uint32_t cccc = d&0x0f;
+                proxy = proxy_colours[cccc];
+                n =  ((d>>4)&0x0f);
+                n += ((c&0x1f)<<4);
+                n++;
+                if( dbg++ < DBG_NBR_OUT )
+                    printf( "Seq long\n" );
+            }
+            else if( (c&0xe0) == 0xa0 )
+            {
+                // Sequence of background colour
+                proxy = ' ';
+                n =  d;
+                n += ((c&0x1f)<<8);
+                n++;
+                if( dbg++ < DBG_NBR_OUT )
+                    printf( "Magenta\n" );
+            }
+            else if( (c&0xe0) == 0xe0 )
+            {
+                // Arbitrary data (long)
+                n =  d;
+                n += ((c&0x1f)<<8);
+                n++;
+                arbitrary_data = true;
+                if( dbg++ < DBG_NBR_OUT )
+                    printf( "Data long\n" );
+            }
+        }
+
+        // Generate decoded data
+        if( !arbitrary_data )
+            memset( buf, proxy, n );
+        else
+        {
+            for( unsigned int i=0; i<n; i++ )
+            {
+                uint8_t dat = *src;
+                if( (i&1) == 0 )
+                    buf[i] = proxy_colours[ (dat>>4)&0x0f ];
+                else
+                {
+                    buf[i] = proxy_colours[dat&0x0f];
+                    src++;
+                    len--;
+                }
+            }
+        }
+        if( dbg < DBG_NBR_OUT )
+        {
+            printf( "dat (%d) >", n );
+            for( unsigned int i=0; i<n && i<10; i++ )
+            {
+                char c = buf[i];
+                if( c == ' ' )
+                    printf( "magenta " );
+                else
+                {
+                    for( int j=0; j<16; j++ )
+                    {
+                        if( c == proxy_colours[j] )
+                        {
+                            printf( "%02x ", j );
+                            break;
+                        }
+                    }
+                }
+            }
+            printf( "\n" );
+        }
+
+        for( unsigned int i=0; i<n; i++ )
+        {
+            fprintf( f, "%c", buf[i] );
+            offset++;
+            if( offset == compressed.height*compressed.width )
+                fprintf( f, "\"\n};\n" );
+            else if( (offset%compressed.width) == 0 )
+                fprintf( f, "\",\n\"" );
+        }
+    }
+    free(buf);
+    fclose(f);
+}
+
+
