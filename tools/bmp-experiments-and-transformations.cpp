@@ -830,8 +830,9 @@ static void Convert2Xpm( BmpHeader *in, const char *filename )
 static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXpm &compressed )
 {
     int dbg=0;
-    #define DBG_NBR 12
-    #define DBG_NBR_OUT 14
+    bool dbg_enable=false;
+    #define DBG_NBR_IN  16
+    #define DBG_NBR_OUT 30
     bool ok=true;   // returns bool ok
     uint8_t *buf = (uint8_t *)malloc(BUF_SIZE/10);
     if( !buf )
@@ -895,6 +896,7 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
         */
         uint32_t prev_rgb=0;
         uint8_t  cccc=0;
+        uint8_t  cccc_in_run=0;
         uint32_t n=0;
         enum{ init, search, in_run, in_run_magenta } state=init;
         for( uint32_t y=0; y<in->height; y++ )
@@ -950,6 +952,7 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
                         if( rgb == magenta )
                         {
                             write_out_buf = true;
+                            dbg_enable = true;
                         }
                         else if( end )
                         {
@@ -984,7 +987,7 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
                                     uint8_t b = chunk-1;
                                     b |= 0xc0;
                                     *dst++ = b;
-                                    if( dbg++ < DBG_NBR )
+                                    if( dbg_enable && dbg<DBG_NBR_IN )
                                         printf( "Buf <=32 (%d) [%02x]\n", chunk, dat[0] );
                                 }
                                 else
@@ -993,23 +996,36 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
                                     w |= 0xe000;
                                     *dst++ = (w>>8)&0xff;
                                     *dst++ = w&0xff;
-                                    if( dbg++ < DBG_NBR )
-                                        printf( "Buf >32 (%d) [%02x]\n", chunk, dat[0], dat[1] );
+                                    if( dbg_enable && dbg<DBG_NBR_IN )
+                                        printf( "Buf >32 (%d) [%02x] [%02x]\n", chunk, dat[0], dat[1] );
                                 }
-                                *dst = 0;
                                 dat=dst;
+                                int x = src;      //  chunk=3, src-> 09 00 03 -> 90 00 ??
+                                uint8_t byt;
+                                if( dbg_enable && buf[src]==9 && buf[src+1]==0 && buf[src+2]==3 && chunk==3 )
+                                    printf("trigger\n");
                                 for( unsigned int i=0; i<chunk; i++ )
                                 {
-                                    *dst >>= 4;
-                                    *dst |= (buf[src++] << 4);
-                                    if( (i&1) )
+                                    if( (i&1) == 0 )
                                     {
-                                        dst++;
-                                        *dst = 0;
+                                        byt = (buf[src++]<<4)&0xf0;         //90
+                                        *dst = byt;                         //90,30
+                                        if( i+1 == chunk )
+                                            dst++;
+                                    }
+                                    else
+                                    {
+                                        byt |= (buf[src++] & 0x0f);           //90,
+                                        *dst++ = byt;
                                     }
                                 }
-                                if( dbg++ < DBG_NBR )
+                                if( dbg_enable && dbg<DBG_NBR_IN )
+                                {
+                                    printf( "[%02x %02x %02x %02x %02x...]\n", buf[x], buf[x+1], buf[x+2], buf[x+3], buf[x+4] );
                                     printf( "[%02x %02x %02x %02x %02x...]\n", dat[0], dat[1], dat[2], dat[3], dat[4] );
+                                    dbg_enable = false;
+                                    dbg++;
+                                }
                             }
 
                             // Account for final pixel at end
@@ -1029,6 +1045,7 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
                             else
                             {
                                 state = in_run;
+                                cccc_in_run = cccc;
                                 n = 2;
                             }
                         }
@@ -1056,7 +1073,7 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
                                 uint8_t *dat=dst;
                                 *dst++ = (w>>8)&0xff;
                                 *dst++ = w&0xff;
-                                if( dbg++ < DBG_NBR )
+                                if( dbg_enable && dbg<DBG_NBR_IN )
                                     printf( "Magenta (%d) [%02x %02x]\n", chunk, dat[0], dat[1] );
                             }
 
@@ -1097,20 +1114,20 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
                                 {
                                     uint8_t b = chunk-1;
                                     b = b<<4;
-                                    b |= cccc;
+                                    b |= cccc_in_run;
                                     *dst++ = b;
-                                    if( dbg++ < DBG_NBR )
+                                    if( dbg_enable && dbg<DBG_NBR_IN )
                                         printf( "Seq <=8 (%d,%d) [%02x]\n", cccc, chunk, dat[0] );
                                 }
                                 else //if( chunk <= 512 )
                                 {
                                     uint16_t w = chunk-1;
                                     w = w<<4;
-                                    w |= cccc;
+                                    w |= cccc_in_run;
                                     w |= 0x8000;
                                     *dst++ = (w>>8)&0xff;
                                     *dst++ = w&0xff;
-                                    if( dbg++ < DBG_NBR )
+                                    if( dbg_enable && dbg<DBG_NBR_IN )
                                         printf( "Seq >8 (%d,%d) [%02x %02x]\n", cccc, chunk, dat[0], dat[1] );
                                 }
                             }
@@ -1290,7 +1307,14 @@ static void CompressedXpm2Xpm( CompressedXpm &compressed, const char *filename )
             {
                 uint8_t dat = *src;
                 if( (i&1) == 0 )
+                {
                     buf[i] = proxy_colours[ (dat>>4)&0x0f ];
+                    if( i+1 == n )
+                    {        
+                        src++;
+                        len--;
+                    }
+                }
                 else
                 {
                     buf[i] = proxy_colours[dat&0x0f];
@@ -1302,19 +1326,22 @@ static void CompressedXpm2Xpm( CompressedXpm &compressed, const char *filename )
         if( dbg < DBG_NBR_OUT )
         {
             printf( "dat (%d) >", n );
-            for( unsigned int i=0; i<n && i<10; i++ )
+            if( arbitrary_data )
             {
-                char c = buf[i];
-                if( c == ' ' )
-                    printf( "magenta " );
-                else
+                for( unsigned int i=0; i<n && i<(arbitrary_data?10:1); i++ )
                 {
-                    for( int j=0; j<16; j++ )
+                    char c = buf[i];
+                    if( c == ' ' )
+                        printf( "magenta " );
+                    else
                     {
-                        if( c == proxy_colours[j] )
+                        for( int j=0; j<16; j++ )
                         {
-                            printf( "%02x ", j );
-                            break;
+                            if( c == proxy_colours[j] )
+                            {
+                                printf( "%02x ", j );
+                                break;
+                            }
                         }
                     }
                 }
