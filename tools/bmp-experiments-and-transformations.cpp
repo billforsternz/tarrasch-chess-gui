@@ -37,16 +37,28 @@ struct BmpHeader
     uint32_t  res7;
 };
 
-class CompressedXpm
+struct CompressedXpm
 {
-public:
     uint32_t width;
     uint32_t height;
     uint32_t background_colour;
     int      nbr_other_colours;
     uint32_t other_colours[16];
     uint32_t binary_len;
-    uint8_t *bin;
+    uint8_t  *bin;
+};
+
+class CompressedXpmProcessor
+{
+public:
+    CompressedXpmProcessor( const CompressedXpm *encoded );
+    ~CompressedXpmProcessor();
+    char **GetXpm()       {return xpm;}
+    int    GetXpmLen()    {return nbr_xpm_strings;}
+private:
+    char **xpm;
+    int  nbr_xpm_strings; 
+    char *string_storage;
 };
 
 
@@ -58,6 +70,8 @@ static void SpliceFiles( char *buf );
 
 static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXpm &compressed );
 static void CompressedXpm2Xpm( CompressedXpm &compressed, const char *filename );
+static void CompressedXpm2CHeader( CompressedXpm &compressed, const char *filename, bool append );
+static void StaticTest();
 
 int main()
 {
@@ -71,6 +85,10 @@ int main()
 #ifdef  SPLICE_FILES
     SpliceFiles( buf );
 #endif
+//#define STATIC_TEST
+#ifdef STATIC_TEST
+    StaticTest();
+#endif
 #define ONE_FILE
 #ifdef ONE_FILE
     const char *filename = "pitch-070-batch2.bmp";
@@ -79,7 +97,8 @@ int main()
     {
         CompressedXpm compressed;
         Bmp2CompressedXpm(in,filename,compressed);
-        CompressedXpm2Xpm(compressed,filename);
+        CompressedXpm2CHeader(compressed,"pitch-070-batch2-compressed-xpm.h",false);
+        //CompressedXpm2Xpm(compressed,filename);
         free(compressed.bin);
     }
 #endif
@@ -982,7 +1001,13 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
                                     chunk = 8192;
                                 nbr_remaining -= chunk;
                                 uint8_t *dat=dst;
-                                if( chunk <= 32 )
+                                if( chunk == 1 )
+                                {
+                                    // no prefix required 0000cccc in buf encodes as 0nnncccc nnn is range 1-8, 000 encodes as 1
+                                    if( dbg_enable && dbg<DBG_NBR_IN )
+                                        printf( "Buf (%d)\n", chunk );
+                                }
+                                else if( chunk <= 32 )
                                 {
                                     uint8_t b = chunk-1;
                                     b |= 0xc0;
@@ -1008,14 +1033,14 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
                                 {
                                     if( (i&1) == 0 )
                                     {
-                                        byt = (buf[src++]<<4)&0xf0;         //90
-                                        *dst = byt;                         //90,30
+                                        byt = (buf[src++] & 0x0f);
+                                        *dst = byt;
                                         if( i+1 == chunk )
                                             dst++;
                                     }
                                     else
                                     {
-                                        byt |= (buf[src++] & 0x0f);           //90,
+                                        byt |= (buf[src++]<<4)&0xf0;
                                         *dst++ = byt;
                                     }
                                 }
@@ -1033,7 +1058,7 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
                             {
                                 // add a single magenta pixel
                                 *dst++ = 0xa0;
-                                *dst = 0;
+                                *dst++ = 0;
                             }
 
                             // Next state
@@ -1139,7 +1164,7 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
                                 if( rgb == magenta )
                                 {
                                     *dst++ = 0xa0;
-                                    *dst = 0;
+                                    *dst++ = 0;
                                 }
 
                                 // Or a single non magenta pixel
@@ -1174,26 +1199,66 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
     return ok;
 }
 
+static void CompressedXpm2CHeader( CompressedXpm &compressed, const char *filename, bool append )
+{
+    FILE *f = fopen(filename,append?"at":"wt");
+    if( !f )
+    {
+        printf( "Cannot open %s\n", filename );
+        return;
+    }
+    fprintf( f, "static uint8_t pitch_%03d_compressed_xpm_data[] =\n{\n    ",  compressed.height  );
+    for( uint32_t i=0; i<compressed.binary_len; i++ )
+    {
+        fprintf( f, "\'\\x%02x\'", compressed.bin[i] );
+        if( i+1 == compressed.binary_len )
+            fprintf( f, "\n};\n" );
+        else if( (i+1) % 8 == 0 )
+            fprintf( f, ",\n    " );
+        else
+            fprintf( f, ", " );
+    }
+    fprintf( f, "\n" );
+    fprintf( f, "static CompressedXpm pitch_%03d_compressed_xpm =\n{\n",  compressed.height  );
+    fprintf( f, "    %d,  // width\n"                                 , compressed.width   );
+    fprintf( f, "    %d,  // height\n"                                , compressed.height  );
+    fprintf( f, "    0x%06x,  // background_colour\n"                   , compressed.background_colour  );
+    fprintf( f, "    %d,  // nbr_other_colours\n    {"                , compressed.nbr_other_colours  );
+    for( int i=0; i<compressed.nbr_other_colours; i++ )
+        fprintf( f, "0x%06x%s", compressed.other_colours[i], i+1<compressed.nbr_other_colours?",":"},\n" );
+    fprintf( f, "    %d,  // binary_len\n"                           , compressed.binary_len  );
+    fprintf( f, "    pitch_%03d_compressed_xpm_data //bin\n"           , compressed.height   );
+    fprintf( f, "};\n" );
+    fclose(f);
+}
 
 static void CompressedXpm2Xpm( CompressedXpm &compressed, const char *filename )
 {
-    int dbg=0;
-
+    CompressedXpmProcessor processor( &compressed );
     std::string s(filename);
-    std::string xpm_filename = s.substr(0,s.length()-4) + "reconstituted.xpm";
+    std::string xpm_filename = s.substr(0,s.length()-4) + "-reconstituted.xpm";
     FILE *f = fopen(xpm_filename.c_str(),"wt");
     if( !f )
     {
         printf( "Cannot open %s\n", xpm_filename.c_str() );
         return;
     }
-    char *buf = (char *)malloc(BUF_SIZE/10);
-    if( !buf )
+
+    fprintf( f, "static const char *pitch_%d_xpm[] = {\n", compressed.height  );
+    int nbr_strings  = processor.GetXpmLen();
+    char **xpm = processor.GetXpm();
+    for( int i=0; i<nbr_strings; i++ )
     {
-        fclose(f);
-        printf( "Cannot allocate memory\n" );
-        return;
+        const char *line = xpm[i];
+        fprintf( f, "\"%s\"%s\n", line, i+1==nbr_strings?"":"," );
     }
+    fprintf( f, "};\n" );
+    fclose(f);
+}
+
+CompressedXpmProcessor::CompressedXpmProcessor( const CompressedXpm *encoded )
+{
+    int dbg=0;
 
     /*
         // Format we are going for;
@@ -1208,22 +1273,47 @@ static void CompressedXpm2Xpm( CompressedXpm &compressed, const char *filename )
 
     */
 
-    fprintf( f, "static const char *pitch_%d_xpm[] = {\n", compressed.height  );
-    fprintf( f, "\"%d %d %d 1\",\n", compressed.width, compressed.height, compressed.nbr_other_colours+1 );
-    fprintf( f, "\"%c c #%06x\",\n", ' ', 0xff00ff );   // magenta background first
+    // Calculate storage requirements    
+    int nbr_colours = 1 /*background*/ + encoded->nbr_other_colours;
+    nbr_xpm_strings = 1 /*header*/ + nbr_colours + encoded->height;
+    char hdr[100];
+    sprintf( hdr, "%d %d %d 1", encoded->width, encoded->height, nbr_colours );
+    size_t string_storage_required = strlen(hdr)+1;
+    string_storage_required += (nbr_colours * (11 + 1));  // strlen("M c #ff00ff") == 11
+    string_storage_required += (encoded->height * (encoded->width+1)); // height * width C strings with +1 for trailing '\0'
+
+    // Dynamic allocation
+//#define C_STYLE
+#ifdef C_STYLE
+    string_storage = (char *) malloc( string_storage_required );
+    xpm = (char **) malloc( nbr_xpm_strings * sizeof( char **) );
+#else
+    string_storage = new char[ string_storage_required ];
+    xpm = new char *[nbr_xpm_strings];
+#endif
+    char *s = string_storage;
+    int line_idx=0;
+    strcpy( s , hdr );
+    xpm[line_idx++] = s;
+    s += (strlen(s) + 1);
+    sprintf( s, "%c c #%06x", ' ', 0xffffff & encoded->background_colour );   // background first
+    xpm[line_idx++] = s;
+    s += (strlen(s) + 1);
     char proxy='!';
     char proxy_colours[16];
-    for( int i=0; i<compressed.nbr_other_colours; i++ )
+    for( int i=0; i<encoded->nbr_other_colours; i++ )
     {
-        fprintf( f, "\"%c c #%06x\",\n", proxy, compressed.other_colours[i] ); 
+        sprintf( s, "%c c #%06x", proxy, 0xffffff & encoded->other_colours[i] ); 
+        xpm[line_idx++] = s;
+        s += (strlen(s) + 1);
         proxy_colours[i] = proxy;
         proxy++;
         while( proxy == '\'' || proxy=='\"' )
             proxy++; 
     }
 
-    int len = compressed.binary_len;
-    uint8_t *src = compressed.bin;
+    int len = encoded->binary_len;
+    const uint8_t *src = encoded->bin;
 
     /*
         Byte by byte coding system
@@ -1235,7 +1325,7 @@ static void CompressedXpm2Xpm( CompressedXpm &compressed, const char *filename )
         up to 2^13 =8192 arbitrary codes                      111nnnnn nnnnnnnn followed by codes
     */
 
-    fprintf( f, "\"" );
+    xpm[line_idx++] = s;
     uint32_t offset=0;  // from 0 to width*height
     while( len > 0 )
     {
@@ -1298,7 +1388,10 @@ static void CompressedXpm2Xpm( CompressedXpm &compressed, const char *filename )
             }
         }
 
-        // Generate decoded data
+        // Generate decoded data at end of allowed storage space, if you
+        //  think about it carefully, you realise that it can't be
+        //  overwritten before it is used
+        char *buf = string_storage + string_storage_required - n;
         if( !arbitrary_data )
             memset( buf, proxy, n );
         else
@@ -1308,7 +1401,7 @@ static void CompressedXpm2Xpm( CompressedXpm &compressed, const char *filename )
                 uint8_t dat = *src;
                 if( (i&1) == 0 )
                 {
-                    buf[i] = proxy_colours[ (dat>>4)&0x0f ];
+                    buf[i] = proxy_colours[dat&0x0f];
                     if( i+1 == n )
                     {        
                         src++;
@@ -1317,7 +1410,7 @@ static void CompressedXpm2Xpm( CompressedXpm &compressed, const char *filename )
                 }
                 else
                 {
-                    buf[i] = proxy_colours[dat&0x0f];
+                    buf[i] = proxy_colours[(dat>>4)&0x0f];
                     src++;
                     len--;
                 }
@@ -1328,7 +1421,7 @@ static void CompressedXpm2Xpm( CompressedXpm &compressed, const char *filename )
             printf( "dat (%d) >", n );
             if( arbitrary_data )
             {
-                for( unsigned int i=0; i<n && i<(arbitrary_data?10:1); i++ )
+                for( uint32_t i=0; i<n && i<10; i++ )
                 {
                     char c = buf[i];
                     if( c == ' ' )
@@ -1349,18 +1442,1194 @@ static void CompressedXpm2Xpm( CompressedXpm &compressed, const char *filename )
             printf( "\n" );
         }
 
+        // Move generated data into final resting place, interspercing end of string after each line (=row of pixels)
         for( unsigned int i=0; i<n; i++ )
         {
-            fprintf( f, "%c", buf[i] );
+            *s++ = buf[i];
             offset++;
-            if( offset == compressed.height*compressed.width )
-                fprintf( f, "\"\n};\n" );
-            else if( (offset%compressed.width) == 0 )
-                fprintf( f, "\",\n\"" );
+            if( offset == encoded->height*encoded->width )
+            {
+                *s++ = '\0';
+                printf( "Check 1: %s\n", len == 0 ? "Pass" : "Fail" );
+                printf( "Check 2: %s\n", s == (string_storage+string_storage_required) ? "Pass" : "Fail" );
+                printf( "Check 3: %s\n", line_idx == nbr_xpm_strings ? "Pass" : "Fail" );
+            }
+            else if( (offset%encoded->width) == 0 )
+            {
+                *s++ = '\0';
+                xpm[line_idx++] = s;
+            }
         }
     }
-    free(buf);
-    fclose(f);
+}
+
+CompressedXpmProcessor::~CompressedXpmProcessor()
+{
+#ifdef C_STYLE
+    free(xpm);
+    free(string_storage);
+#else
+    delete[](xpm);
+    delete[](string_storage);
+#endif
+}
+
+static uint8_t pitch_070_compressed_xpm_data[] =
+{
+    '\xae', '\x4f', '\xc1', '\xc4', '\xa1', '\xa1', '\x0e', '\xa0',
+    '\x8b', '\x0d', '\x81', '\x18', '\x0d', '\xa0', '\xbf', '\xc1',
+    '\x3b', '\x10', '\xc1', '\xc4', '\xa0', '\x04', '\xc1', '\x4c',
+    '\x10', '\xc1', '\xb3', '\xa0', '\x30', '\xc2', '\x09', '\x03',
+    '\xa0', '\x8a', '\x0d', '\x81', '\x18', '\x0d', '\xa0', '\xbf',
+    '\xc5', '\x4c', '\x10', '\xe6', '\xa0', '\x04', '\xc1', '\x5c',
+    '\x10', '\xc1', '\xc4', '\xa0', '\x31', '\xc1', '\xe5', '\xa0',
+    '\x8a', '\x0b', '\x81', '\x10', '\x0b', '\xa0', '\x2f', '\xc4',
+    '\x8b', '\x84', '\x0b', '\xa0', '\x0d', '\xc5', '\x8d', '\x65',
+    '\xe9', '\xa0', '\x23', '\x78', '\x0d', '\xa0', '\x05', '\x0b',
+    '\x80', '\x98', '\x0b', '\xa0', '\x06', '\x78', '\xa0', '\x27',
+    '\x0c', '\x40', '\xc1', '\xd1', '\xa0', '\x02', '\xc1', '\x1c',
+    '\x40', '\x0b', '\xa0', '\x2f', '\x03', '\x10', '\x06', '\xa0',
+    '\x89', '\x0b', '\x81', '\x10', '\x0b', '\xa0', '\x2f', '\xc4',
+    '\x59', '\x64', '\x0b', '\xa0', '\x0d', '\xc4', '\x6b', '\x54',
+    '\x09', '\xa0', '\x24', '\x78', '\x0d', '\xa0', '\x05', '\x0b',
+    '\x80', '\x98', '\x0b', '\xa0', '\x05', '\x0d', '\x78', '\xa0',
+    '\x27', '\xc1', '\x1c', '\x30', '\xc1', '\xe3', '\xa0', '\x02',
+    '\xc1', '\x1c', '\x30', '\xc1', '\xc1', '\xa0', '\x30', '\xc1',
+    '\x54', '\xa0', '\x8a', '\x0b', '\x81', '\x10', '\x0b', '\xa0',
+    '\x2e', '\x07', '\x40', '\x06', '\xa0', '\x0b', '\xc1', '\x19',
+    '\x30', '\xc1', '\xc2', '\xa0', '\x22', '\x70', '\x0b', '\xa0',
+    '\x05', '\x08', '\x80', '\x90', '\x08', '\xa0', '\x06', '\x70',
+    '\xa0', '\x27', '\xc7', '\x04', '\xd5', '\x1c', '\x60', '\xa0',
+    '\x02', '\xc2', '\x05', '\x02', '\x1d', '\xc2', '\x03', '\x05',
+    '\xa0', '\x2e', '\x0d', '\x30', '\x09', '\xa0', '\x49', '\xc1',
+    '\xae', '\x18', '\xc1', '\xea', '\xa0', '\x38', '\x0b', '\x20',
+    '\xc2', '\xb3', '\x03', '\x50', '\xc2', '\xb3', '\x03', '\x20',
+    '\x0b', '\xa0', '\x2d', '\xc1', '\x3e', '\x40', '\x09', '\xa0',
+    '\x0b', '\x06', '\x40', '\xc1', '\xe3', '\xa0', '\x22', '\x70',
+    '\x0b', '\xa0', '\x05', '\x08', '\x80', '\x90', '\x08', '\xa0',
+    '\x05', '\x0b', '\x70', '\xa0', '\x27', '\x04', '\x50', '\x08',
+    '\xa0', '\x02', '\x04', '\x50', '\x05', '\xa0', '\x2a', '\x1c',
+    '\xa0', '\x03', '\xc2', '\x02', '\x09', '\xa0', '\x4a', '\xc1',
+    '\xae', '\x18', '\xc1', '\xea', '\xa0', '\x38', '\x0b', '\x20',
+    '\xc1', '\x81', '\x7b', '\xc1', '\x18', '\x20', '\x0b', '\xa0',
+    '\x2d', '\x08', '\x10', '\xc5', '\x84', '\x17', '\x80', '\xa0',
+    '\x09', '\xc3', '\x1d', '\x40', '\x18', '\xc2', '\x02', '\x02',
+    '\xa0', '\x22', '\x70', '\x0b', '\xa0', '\x05', '\x08', '\x80',
+    '\x90', '\x08', '\xa0', '\x06', '\x70', '\xa0', '\x27', '\x10',
+    '\x0a', '\x1f', '\xc2', '\x04', '\x04', '\xa0', '\x02', '\xc2',
+    '\x01', '\x08', '\x1f', '\x08', '\x10', '\xa0', '\x29', '\xc1',
+    '\x8b', '\xa0', '\x02', '\x09', '\x40', '\x09', '\xa0', '\x47',
+    '\xc1', '\x18', '\x30', '\xc1', '\x81', '\xa0', '\x37', '\x0b',
+    '\x10', '\xc4', '\xe3', '\xef', '\x05', '\x30', '\xc4', '\xe5',
+    '\xef', '\x03', '\x10', '\x0b', '\xa0', '\x2d', '\x04', '\x60',
+    '\x0b', '\xa0', '\x09', '\x08', '\x60', '\x04', '\xa0', '\x22',
+    '\x70', '\x0b', '\xa0', '\x05', '\x08', '\x80', '\x90', '\x08',
+    '\xa0', '\x05', '\x0b', '\x70', '\xa0', '\x27', '\x60', '\x04',
+    '\xa0', '\x02', '\x70', '\xa0', '\x2a', '\xc2', '\x1b', '\x0c',
+    '\xa0', '\x02', '\x20', '\x0c', '\xa0', '\x48', '\xc1', '\x18',
+    '\x30', '\xc1', '\x81', '\xa0', '\x37', '\x0b', '\x10', '\xc3',
+    '\x03', '\xc1', '\x5f', '\xc3', '\x1c', '\x30', '\x10', '\x0b',
+    '\xa0', '\x2d', '\xc2', '\x02', '\x05', '\x2f', '\xc2', '\x09',
+    '\x02', '\xa0', '\x09', '\xc2', '\x08', '\x02', '\x2f', '\xc3',
+    '\x1e', '\xa0', '\xa0', '\x21', '\x10', '\x04', '\x1f', '\x08',
+    '\x10', '\x0b', '\xa0', '\x05', '\x08', '\x10', '\x0b', '\x3f',
+    '\x0b', '\x10', '\x08', '\xa0', '\x06', '\x10', '\x04', '\x1f',
+    '\x04', '\x10', '\xa0', '\x27', '\x10', '\x07', '\x1f', '\xc2',
+    '\x03', '\x04', '\xa0', '\x02', '\xc2', '\x03', '\x04', '\x1f',
+    '\x05', '\x10', '\xa0', '\x29', '\xc3', '\x0b', '\xe5', '\xa0',
+    '\x00', '\x07', '\x10', '\x04', '\x20', '\x09', '\xa0', '\x44',
+    '\xc1', '\x4e', '\x70', '\xc1', '\xe4', '\xa0', '\x35', '\x0b',
+    '\x10', '\x09', '\x3f', '\x06', '\x10', '\x06', '\x3f', '\x09',
+    '\x10', '\x0b', '\xa0', '\x2c', '\x0d', '\x70', '\x06', '\xa0',
+    '\x09', '\x02', '\x70', '\x0d', '\xa0', '\x21', '\x70', '\x0b',
+    '\xa0', '\x05', '\x08', '\x80', '\x90', '\x08', '\xa0', '\x05',
+    '\x0b', '\x70', '\xa0', '\x27', '\x60', '\x04', '\xa0', '\x02',
+    '\x01', '\x60', '\xa0', '\x2a', '\xc3', '\x0b', '\xc1', '\xa0',
+    '\x01', '\x20', '\xc1', '\xc1', '\xa0', '\x45', '\xc1', '\x3e',
+    '\x70', '\xc1', '\xe3', '\xa0', '\x35', '\x0b', '\x10', '\xc4',
+    '\x6b', '\x10', '\x0c', '\x3f', '\xc4', '\x1c', '\x60', '\x0b',
+    '\x10', '\x0b', '\xa0', '\x2d', '\x10', '\x0b', '\x2f', '\x0e',
+    '\x10', '\xa0', '\x09', '\xc2', '\x04', '\x07', '\x3f', '\xc2',
+    '\x04', '\x08', '\xa0', '\x21', '\x10', '\x04', '\x1f', '\x08',
+    '\x10', '\x0b', '\xa0', '\x05', '\x08', '\x10', '\x0b', '\x3f',
+    '\x0b', '\x10', '\x08', '\xa0', '\x06', '\x10', '\x04', '\x1f',
+    '\x04', '\x10', '\xa0', '\x27', '\x05', '\x10', '\xc1', '\x23',
+    '\x10', '\x08', '\xa0', '\x02', '\x08', '\x10', '\xc1', '\x32',
+    '\x10', '\x05', '\xa0', '\x29', '\x0b', '\x10', '\xc6', '\xc3',
+    '\x04', '\xf3', '\x06', '\x20', '\x34', '\xc3', '\x85', '\xc9',
+    '\xa0', '\x3c', '\x07', '\x10', '\xc1', '\xa3', '\x1f', '\xc1',
+    '\x3a', '\x10', '\x07', '\xa0', '\x35', '\x0b', '\x10', '\xc1',
+    '\xc1', '\x3f', '\x17', '\x3f', '\xc1', '\x1c', '\x10', '\x0b',
+    '\xa0', '\x2c', '\x0b', '\x70', '\x04', '\xa0', '\x09', '\x80',
+    '\x80', '\x0b', '\xa0', '\x21', '\x70', '\x0b', '\xa0', '\x05',
+    '\x08', '\x80', '\x90', '\x08', '\xa0', '\x05', '\x0b', '\x70',
+    '\xa0', '\x27', '\x03', '\x50', '\x09', '\xa0', '\x02', '\x07',
+    '\x50', '\x05', '\xa0', '\x2a', '\x0b', '\x10', '\xc2', '\xa1',
+    '\x0b', '\x40', '\x08', '\xa0', '\x44', '\x07', '\x80', '\x90',
+    '\x07', '\xa0', '\x35', '\x0b', '\x10', '\xc5', '\xfb', '\x06',
+    '\xc1', '\x1f', '\xc5', '\x1c', '\x60', '\xbf', '\x10', '\x0b',
+    '\xa0', '\x2d', '\x10', '\x0a', '\x2f', '\xc2', '\x0c', '\x01',
+    '\xa0', '\x09', '\xc2', '\x06', '\x05', '\x3f', '\xc2', '\x03',
+    '\x08', '\xa0', '\x21', '\x10', '\x04', '\x1f', '\x08', '\x10',
+    '\x0b', '\xa0', '\x05', '\x08', '\x10', '\x0b', '\x3f', '\x0b',
+    '\x10', '\x08', '\xa0', '\x06', '\x10', '\x04', '\x1f', '\x04',
+    '\x10', '\xa0', '\x27', '\xc1', '\x1c', '\x30', '\xc1', '\xe4',
+    '\xa0', '\x03', '\x05', '\x30', '\xc1', '\xe4', '\xa0', '\x29',
+    '\x0b', '\x20', '\xc3', '\x21', '\x80', '\x1f', '\x06', '\x80',
+    '\x90', '\xc3', '\x51', '\xe9', '\xa0', '\x37', '\x0d', '\x10',
+    '\xc1', '\xe2', '\x3f', '\xc1', '\x2e', '\x10', '\x0d', '\xa0',
+    '\x34', '\x0b', '\x20', '\xc1', '\xb1', '\x7f', '\xc1', '\x1b',
+    '\x20', '\x0b', '\xa0', '\x2c', '\x0c', '\x70', '\x05', '\xa0',
+    '\x09', '\x02', '\x70', '\x0c', '\xa0', '\x21', '\x70', '\x0b',
+    '\xa0', '\x05', '\x08', '\x80', '\x90', '\x08', '\xa0', '\x05',
+    '\x0b', '\x70', '\xa0', '\x27', '\x0b', '\x40', '\x06', '\xa0',
+    '\x03', '\xc1', '\x2e', '\x30', '\xc1', '\xe5', '\xa0', '\x2a',
+    '\x0b', '\x80', '\xa0', '\xc1', '\xa2', '\xa0', '\x41', '\x0d',
+    '\x80', '\xb0', '\x0d', '\xa0', '\x34', '\x0b', '\x10', '\x0b',
+    '\x1f', '\xc2', '\x06', '\x01', '\x1c', '\xc2', '\x01', '\x06',
+    '\x1f', '\x0b', '\x10', '\x0b', '\xa0', '\x2d', '\xc8', '\x05',
+    '\xd3', '\xef', '\x05', '\x06', '\xa0', '\x09', '\x0b', '\x10',
+    '\x0b', '\x1f', '\x08', '\x10', '\x0d', '\xa0', '\x21', '\x10',
+    '\x04', '\x1f', '\x08', '\x80', '\xb0', '\x0b', '\x3f', '\x0b',
+    '\x80', '\xb0', '\x04', '\x1f', '\x04', '\x10', '\xa0', '\x28',
+    '\x07', '\x30', '\x0c', '\xa0', '\x03', '\xc1', '\x2e', '\x30',
+    '\xc1', '\xe2', '\xa0', '\x2a', '\x50', '\x08', '\x2f', '\xc1',
+    '\x18', '\x80', '\xa0', '\xc2', '\x61', '\x0d', '\xa0', '\x35',
+    '\x08', '\x10', '\x09', '\x5f', '\x09', '\x10', '\x08', '\xa0',
+    '\x34', '\x0b', '\x40', '\x09', '\x5f', '\x09', '\x40', '\x0b',
+    '\xa0', '\x2d', '\x02', '\x60', '\x09', '\xa0', '\x09', '\x08',
+    '\x60', '\x02', '\xa0', '\x22', '\x82', '\x90', '\xa0', '\x28',
+    '\x05', '\x30', '\x0e', '\xa0', '\x03', '\xc1', '\x1e', '\x30',
+    '\x03', '\xa0', '\x2b', '\x0d', '\x80', '\xd0', '\xc3', '\x63',
+    '\xc8', '\xa0', '\x3c', '\x08', '\x80', '\xb0', '\x08', '\xa0',
+    '\x34', '\x0b', '\x10', '\x0b', '\x2f', '\x06', '\x30', '\x06',
+    '\x2f', '\x0b', '\x10', '\x0b', '\xa0', '\x2d', '\xc1', '\x1c',
+    '\x40', '\xc1', '\xe1', '\xa0', '\x0a', '\x05', '\x50', '\x08',
+    '\xa0', '\x22', '\x10', '\x04', '\x1f', '\x08', '\x80', '\xb0',
+    '\x0b', '\x3f', '\x0b', '\x80', '\xb0', '\x04', '\x1f', '\x04',
+    '\x10', '\xa0', '\x27', '\x09', '\x10', '\x01', '\x10', '\xc1',
+    '\xe3', '\xa0', '\x02', '\x04', '\x10', '\xc1', '\x86', '\x10',
+    '\x04', '\xa0', '\x2a', '\x10', '\xc4', '\xeb', '\x04', '\x05',
+    '\x3f', '\xc7', '\x6e', '\x74', '\xda', '\x2f', '\x60', '\xc1',
+    '\xd6', '\xa0', '\x33', '\x08', '\x10', '\x0b', '\x5f', '\x0b',
+    '\x10', '\x08', '\xa0', '\x34', '\x0b', '\x40', '\xc1', '\xe2',
+    '\x3f', '\xc1', '\x2e', '\x40', '\x0b', '\xa0', '\x2d', '\x0a',
+    '\x50', '\x03', '\xa0', '\x0b', '\x02', '\x50', '\x0b', '\xa0',
+    '\x22', '\x82', '\x90', '\xa0', '\x27', '\x09', '\x40', '\xc1',
+    '\xe3', '\xa0', '\x01', '\xc1', '\x3e', '\x50', '\x06', '\xa0',
+    '\x2b', '\x01', '\x81', '\x10', '\xc2', '\x84', '\x0d', '\xa0',
+    '\x38', '\x08', '\x80', '\xb0', '\x08', '\xa0', '\x34', '\x0b',
+    '\x10', '\x0b', '\x3f', '\x04', '\x10', '\x04', '\x3f', '\x0b',
+    '\x10', '\x0b', '\xa0', '\x2e', '\xc1', '\x6d', '\x40', '\x0b',
+    '\xa0', '\x0a', '\x02', '\x30', '\xc1', '\xa3', '\xa0', '\x23',
+    '\x10', '\x04', '\x1f', '\x0b', '\x80', '\xb8', '\x0d', '\x3f',
+    '\x0d', '\x80', '\xb8', '\x09', '\x1f', '\x04', '\x10', '\xa0',
+    '\x26', '\xc5', '\x1c', '\x30', '\x9c', '\x10', '\x03', '\x1e',
+    '\x05', '\x10', '\x06', '\x1f', '\x04', '\x10', '\x08', '\xa0',
+    '\x29', '\xc1', '\x41', '\x1f', '\x0a', '\x10', '\x0b', '\x80',
+    '\x9f', '\x09', '\x70', '\xc1', '\x81', '\xa0', '\x32', '\x09',
+    '\x10', '\x0a', '\x5f', '\x0a', '\x10', '\x08', '\xa0', '\x34',
+    '\x0b', '\x30', '\xc1', '\xe3', '\x5f', '\xc1', '\x3e', '\x30',
+    '\x0b', '\xa0', '\x2e', '\xc1', '\x4c', '\x40', '\x0d', '\xa0',
+    '\x09', '\x0d', '\x40', '\xc1', '\xc4', '\xa0', '\x23', '\x82',
+    '\x90', '\xa0', '\x26', '\x0c', '\x60', '\x03', '\x1e', '\x03',
+    '\x70', '\x0a', '\xa0', '\x2a', '\x06', '\x50', '\x03', '\x80',
+    '\xd0', '\xc1', '\xa4', '\xa0', '\x36', '\x09', '\x80', '\xb0',
+    '\x08', '\xa0', '\x26', '\xc1', '\x8a', '\x34', '\xc2', '\x97',
+    '\x0d', '\xa0', '\x04', '\x0b', '\x10', '\x0b', '\x2f', '\x09',
+    '\x30', '\x09', '\x2f', '\x0b', '\x10', '\x0b', '\xa0', '\x04',
+    '\xc2', '\x9d', '\x07', '\x34', '\xc1', '\xa8', '\xa0', '\x21',
+    '\x0d', '\x10', '\xc3', '\x65', '\x40', '\xa0', '\x09', '\xc6',
+    '\x08', '\x85', '\x01', '\x08', '\xa0', '\x24', '\x10', '\x04',
+    '\x82', '\x3f', '\x04', '\x10', '\xa0', '\x25', '\xc4', '\x3e',
+    '\x30', '\x0e', '\x1f', '\x09', '\x10', '\xc1', '\x31', '\x10',
+    '\x06', '\x2f', '\xc1', '\x1d', '\x10', '\x0c', '\xa0', '\x28',
+    '\xc4', '\x04', '\xfe', '\x0b', '\x10', '\xc1', '\xe2', '\x80',
+    '\x9f', '\x1b', '\xc2', '\xfe', '\x01', '\x40', '\xc1', '\xd3',
+    '\xa0', '\x30', '\xc3', '\x1e', '\x60', '\x5f', '\x04', '\x10',
+    '\x0c', '\xa0', '\x26', '\xc1', '\x9d', '\x48', '\x0b', '\xa0',
+    '\x05', '\x0b', '\x20', '\xc1', '\xe5', '\x2f', '\x1e', '\x2f',
+    '\xc1', '\x5e', '\x20', '\x0b', '\xa0', '\x05', '\x0b', '\x48',
+    '\xc1', '\xd9', '\xa0', '\x21', '\x0a', '\x40', '\x06', '\xa0',
+    '\x09', '\x06', '\x40', '\x0a', '\xa0', '\x24', '\x82', '\x90',
+    '\xa0', '\x25', '\xc1', '\x1e', '\x70', '\xc1', '\x32', '\x80',
+    '\x80', '\xc1', '\xd1', '\xa0', '\x29', '\x0a', '\x40', '\xc1',
+    '\xa6', '\x70', '\xc4', '\xb8', '\x68', '\x01', '\x20', '\xc1',
+    '\x92', '\xa0', '\x35', '\x02', '\x80', '\xa0', '\x0c', '\xa0',
+    '\x23', '\xc2', '\x8e', '\x01', '\x80', '\x80', '\xc1', '\x93',
+    '\xa0', '\x02', '\x0b', '\x10', '\x0b', '\x1f', '\x09', '\x10',
+    '\x18', '\x10', '\x09', '\x1f', '\x0b', '\x10', '\x0b', '\xa0',
+    '\x02', '\xc1', '\x39', '\x80', '\x80', '\xc2', '\x81', '\x0e',
+    '\xa0', '\x1e', '\x09', '\x10', '\xc4', '\xef', '\x01', '\x0b',
+    '\xa0', '\x07', '\xc7', '\x1e', '\xd0', '\x7f', '\x50', '\xa0',
+    '\x24', '\x10', '\x04', '\x82', '\x3f', '\x04', '\x10', '\xa0',
+    '\x25', '\xc3', '\x05', '\xd1', '\x3f', '\x09', '\x30', '\x06',
+    '\x4f', '\x08', '\x10', '\x03', '\xa0', '\x28', '\xc5', '\x05',
+    '\x85', '\x13', '\x10', '\x05', '\x80', '\xdf', '\xc3', '\x06',
+    '\x14', '\x20', '\xc1', '\xa1', '\xa0', '\x30', '\x09', '\x10',
+    '\xc1', '\xe8', '\x1f', '\xc1', '\x6e', '\x10', '\x06', '\xa0',
+    '\x25', '\xc1', '\x39', '\x70', '\xc2', '\x61', '\x0b', '\xa0',
+    '\x02', '\x0b', '\x10', '\x06', '\x3f', '\x0e', '\x13', '\x0e',
+    '\x3f', '\x06', '\x10', '\x0b', '\xa0', '\x02', '\xc1', '\x6b',
+    '\x80', '\x80', '\xc1', '\x92', '\xa0', '\x1f', '\x07', '\x50',
+    '\x0d', '\xa0', '\x07', '\x0d', '\x50', '\x07', '\xa0', '\x24',
+    '\x82', '\x90', '\xa0', '\x25', '\x04', '\x81', '\x40', '\x04',
+    '\xa0', '\x2a', '\x02', '\x30', '\xc2', '\xfd', '\x01', '\x50',
+    '\x04', '\x4f', '\xc1', '\x29', '\x20', '\xc1', '\xb3', '\xa0',
+    '\x33', '\x0a', '\x80', '\x90', '\x08', '\xa0', '\x23', '\xc1',
+    '\x1a', '\x80', '\xc0', '\xc1', '\x92', '\xa0', '\x00', '\x0b',
+    '\x10', '\xc2', '\xfb', '\x09', '\x10', '\x09', '\x1f', '\x09',
+    '\x10', '\xc2', '\xf9', '\x0b', '\x10', '\x0b', '\xa0', '\x00',
+    '\xc1', '\x29', '\x80', '\xc0', '\xc1', '\xa1', '\xa0', '\x1d',
+    '\xc2', '\x06', '\x05', '\x1f', '\xc2', '\x08', '\x04', '\xa0',
+    '\x07', '\xc2', '\x08', '\x06', '\x1f', '\xc2', '\x0a', '\x01',
+    '\xa0', '\x24', '\x10', '\x04', '\x82', '\x3f', '\x03', '\x10',
+    '\xa0', '\x24', '\x08', '\x10', '\x0b', '\x5f', '\x07', '\x10',
+    '\x03', '\x6f', '\x04', '\x10', '\x08', '\xa0', '\x27', '\x08',
+    '\x20', '\xc2', '\xe5', '\x05', '\x10', '\x0d', '\x80', '\xcf',
+    '\x0e', '\x1f', '\x07', '\x40', '\x09', '\xa0', '\x2e', '\xc1',
+    '\x5d', '\x10', '\xc1', '\xe2', '\x1f', '\xc1', '\x3e', '\x10',
+    '\x09', '\xa0', '\x23', '\xc1', '\x3c', '\x80', '\xc0', '\xc1',
+    '\xb4', '\xa0', '\x00', '\x0b', '\x10', '\x0a', '\x2f', '\xc1',
+    '\x1c', '\x10', '\xc1', '\xc1', '\x2f', '\x0a', '\x10', '\x0b',
+    '\xa0', '\x00', '\xc1', '\x4b', '\x80', '\xc0', '\xc1', '\xc3',
+    '\xa0', '\x1d', '\x03', '\x50', '\x06', '\xa0', '\x07', '\x05',
+    '\x50', '\x04', '\xa0', '\x24', '\x82', '\x90', '\xa0', '\x24',
+    '\x08', '\x80', '\xa0', '\x03', '\x1b', '\xc1', '\x28', '\x60',
+    '\x0a', '\xa0', '\x29', '\x08', '\x20', '\x03', '\x1f', '\xc1',
+    '\x19', '\x40', '\xc1', '\xe2', '\x5f', '\xc1', '\x18', '\x20',
+    '\xc1', '\xe7', '\xa0', '\x30', '\xc1', '\x4b', '\x80', '\x90',
+    '\x08', '\xa0', '\x22', '\x09', '\x20', '\xc3', '\x61', '\xda',
+    '\x1f', '\xc3', '\xbe', '\x58', '\x30', '\xc1', '\x84', '\x10',
+    '\xc1', '\x9b', '\x10', '\x09', '\x3f', '\x09', '\x10', '\xc1',
+    '\xb9', '\x10', '\xc1', '\x49', '\x30', '\xc3', '\x85', '\xeb',
+    '\x1f', '\xc3', '\xad', '\x16', '\x20', '\x09', '\xa0', '\x1c',
+    '\xc2', '\x02', '\x08', '\x1f', '\xc3', '\x1e', '\xb0', '\xa0',
+    '\x05', '\xc3', '\x1e', '\xd0', '\x1f', '\x0e', '\x10', '\x0c',
+    '\xa0', '\x23', '\x03', '\x10', '\x08', '\x82', '\x0f', '\xc1',
+    '\x6e', '\x10', '\x05', '\xa0', '\x23', '\xc3', '\x1c', '\x80',
+    '\x7f', '\xc3', '\x06', '\xc1', '\x5f', '\x0c', '\x10', '\xc1',
+    '\xd1', '\xa0', '\x26', '\x08', '\x10', '\xc1', '\xd1', '\x1f',
+    '\xc2', '\x1a', '\x0b', '\x80', '\xff', '\x0c', '\x50', '\x09',
+    '\xa0', '\x2b', '\xc1', '\x6d', '\x20', '\xc1', '\xc1', '\x3f',
+    '\xc1', '\x1c', '\x10', '\xc1', '\xd6', '\xa0', '\x20', '\xc1',
+    '\x19', '\x80', '\xf0', '\xc1', '\xa5', '\x10', '\xc4', '\xd1',
+    '\xcf', '\x01', '\x30', '\xc4', '\xc1', '\xdf', '\x01', '\x10',
+    '\xc1', '\x5a', '\x80', '\xf0', '\xc1', '\x91', '\xa0', '\x1b',
+    '\x0d', '\x70', '\x0d', '\xa0', '\x05', '\x0b', '\x70', '\xa0',
+    '\x24', '\x06', '\x82', '\x70', '\x06', '\xa0', '\x23', '\x0c',
+    '\x80', '\xb0', '\x09', '\x2f', '\xc1', '\x3e', '\x50', '\xc1',
+    '\xe2', '\xa0', '\x27', '\xc1', '\x1c', '\x20', '\x04', '\x3f',
+    '\x04', '\x40', '\xc2', '\x71', '\x0d', '\x4f', '\xc1', '\x3d',
+    '\x20', '\xc1', '\xc3', '\xa0', '\x2d', '\xc1', '\x4c', '\x80',
+    '\xc0', '\xc1', '\xb4', '\xa0', '\x1f', '\x09', '\x20', '\xc1',
+    '\xe5', '\x80', '\x8f', '\xc2', '\x8e', '\x01', '\x40', '\x06',
+    '\x10', '\x09', '\x5f', '\x09', '\x10', '\x06', '\x40', '\xc2',
+    '\x81', '\x0e', '\x80', '\x8f', '\xc1', '\x5e', '\x20', '\x09',
+    '\xa0', '\x1a', '\x0c', '\x10', '\x0c', '\x2f', '\xc2', '\x08',
+    '\x04', '\xa0', '\x05', '\xc2', '\x08', '\x06', '\x3f', '\xc2',
+    '\x03', '\x08', '\xa0', '\x23', '\xc1', '\x3e', '\x10', '\x06',
+    '\x81', '\xef', '\xc1', '\x3e', '\x10', '\xc1', '\xe3', '\xa0',
+    '\x23', '\xc2', '\x03', '\x02', '\x80', '\x9f', '\xc3', '\x04',
+    '\xd1', '\x5f', '\x07', '\x10', '\x06', '\xa0', '\x26', '\x0b',
+    '\x10', '\x08', '\x3f', '\x0e', '\x81', '\x1f', '\xc1', '\x14',
+    '\x40', '\x09', '\xa0', '\x28', '\xc2', '\x7c', '\x01', '\x20',
+    '\xc1', '\xc2', '\x5f', '\xc1', '\x3e', '\x20', '\xc2', '\x83',
+    '\x0c', '\xa0', '\x1c', '\x0a', '\x81', '\x60', '\xc1', '\x73',
+    '\x70', '\xc1', '\x37', '\x81', '\x60', '\x0b', '\xa0', '\x1a',
+    '\x09', '\x70', '\x08', '\xa0', '\x05', '\x04', '\x70', '\x0b',
+    '\xa0', '\x24', '\x06', '\x82', '\x50', '\x06', '\xa0', '\x23',
+    '\xc1', '\x2e', '\x80', '\xb0', '\x04', '\x3f', '\xc1', '\x3e',
+    '\x50', '\x08', '\xa0', '\x26', '\xc1', '\x3e', '\x30', '\x04',
+    '\x3f', '\x08', '\x70', '\xc1', '\xd6', '\x3f', '\xc1', '\x6e',
+    '\x20', '\xc1', '\xa1', '\xa0', '\x2a', '\xc1', '\x6a', '\x81',
+    '\x00', '\xc2', '\x62', '\x0a', '\xa0', '\x1b', '\x0c', '\x20',
+    '\x08', '\x80', '\xcf', '\xc1', '\x4d', '\x50', '\x09', '\x7f',
+    '\x09', '\x50', '\xc1', '\xd5', '\x80', '\xcf', '\x06', '\x10',
+    '\xc1', '\xd1', '\xa0', '\x09', '\xc2', '\xbd', '\x0d', '\xa0',
+    '\x0c', '\xc2', '\x08', '\x02', '\x3f', '\xc3', '\x1e', '\xb0',
+    '\xa0', '\x03', '\xc3', '\x1e', '\xd0', '\x3f', '\xc2', '\x07',
+    '\x05', '\xa0', '\x0c', '\x0e', '\x1b', '\xa0', '\x14', '\xc1',
+    '\x3e', '\x10', '\x06', '\x81', '\xcf', '\xc1', '\x3e', '\x10',
+    '\xc1', '\xe3', '\xa0', '\x23', '\x08', '\x10', '\x0b', '\x80',
+    '\x9f', '\xc4', '\x3e', '\x30', '\x0e', '\x4f', '\xc1', '\x1e',
+    '\x10', '\x0d', '\xa0', '\x25', '\xc3', '\x09', '\xe1', '\x81',
+    '\x9f', '\xc1', '\x3c', '\x20', '\x0a', '\xa0', '\x25', '\xc1',
+    '\x4a', '\x30', '\xc2', '\x81', '\x0e', '\x80', '\x8f', '\xc1',
+    '\x29', '\x30', '\xc1', '\x92', '\xa0', '\x19', '\xc1', '\x1d',
+    '\x83', '\x90', '\xc1', '\xe1', '\xa0', '\x09', '\xc2', '\xbc',
+    '\x0e', '\xa0', '\x0c', '\x06', '\x70', '\xc1', '\xe1', '\xa0',
+    '\x03', '\x0b', '\x80', '\x80', '\x08', '\xa0', '\x0c', '\xc2',
+    '\xbe', '\x0c', '\xa0', '\x15', '\x06', '\x82', '\x30', '\x06',
+    '\xa0', '\x24', '\x08', '\x80', '\xd0', '\x08', '\x3f', '\xc1',
+    '\x1d', '\x40', '\xc1', '\xe1', '\xa0', '\x25', '\x07', '\x40',
+    '\x03', '\x3f', '\x0a', '\x80', '\x90', '\xc1', '\xe7', '\x3f',
+    '\x07', '\x30', '\x09', '\xa0', '\x27', '\xc1', '\x28', '\x81',
+    '\x50', '\xc2', '\x71', '\x0e', '\xa0', '\x18', '\x04', '\x10',
+    '\x05', '\x80', '\xff', '\x08', '\x81', '\x30', '\x08', '\x80',
+    '\xff', '\x05', '\x10', '\x06', '\xa0', '\x07', '\xc1', '\x4e',
+    '\x20', '\xc1', '\xe5', '\xa0', '\x0a', '\xc2', '\x05', '\x06',
+    '\x4f', '\xc2', '\x08', '\x04', '\xa0', '\x03', '\xc2', '\x06',
+    '\x06', '\x4f', '\xc2', '\x0a', '\x01', '\xa0', '\x0b', '\xc1',
+    '\x19', '\x10', '\xc1', '\xc2', '\xa0', '\x14', '\x06', '\x10',
+    '\xc1', '\xe4', '\x81', '\x9f', '\xc1', '\x3e', '\x10', '\xc1',
+    '\xe3', '\xa0', '\x23', '\xc3', '\x1d', '\x40', '\x80', '\xbf',
+    '\xc3', '\x1c', '\x30', '\x5f', '\x08', '\x10', '\x06', '\xa0',
+    '\x24', '\x09', '\x10', '\x09', '\x81', '\xbf', '\x08', '\x20',
+    '\xc1', '\xc1', '\xa0', '\x22', '\xc1', '\x4e', '\x20', '\xc2',
+    '\x61', '\x0a', '\x80', '\xdf', '\xc2', '\x6a', '\x01', '\x20',
+    '\xc1', '\xb2', '\xa0', '\x17', '\x06', '\x83', '\xb0', '\x07',
+    '\xa0', '\x07', '\xc1', '\x3c', '\x20', '\x08', '\xa0', '\x0b',
+    '\x02', '\x80', '\x80', '\x08', '\xa0', '\x03', '\x04', '\x80',
+    '\x80', '\x04', '\xa0', '\x0b', '\x08', '\x20', '\xc1', '\xc3',
+    '\xa0', '\x14', '\x06', '\x30', '\x0b', '\x81', '\x8f', '\x30',
+    '\xc1', '\xe3', '\xa0', '\x23', '\x0d', '\x80', '\xe0', '\xc1',
+    '\xd1', '\x3f', '\x0a', '\x50', '\x08', '\xa0', '\x24', '\x0d',
+    '\x60', '\x0d', '\x2f', '\x08', '\x80', '\xa0', '\xc1', '\xb1',
+    '\x3f', '\x09', '\x30', '\x09', '\xa0', '\x24', '\xc1', '\x3c',
+    '\x81', '\x90', '\xc1', '\x81', '\xa0', '\x16', '\x0d', '\x10',
+    '\xc1', '\xe1', '\x81', '\x0f', '\x09', '\x81', '\x10', '\x09',
+    '\x81', '\x0f', '\xc1', '\x1d', '\x10', '\x0e', '\xa0', '\x06',
+    '\xc6', '\x04', '\x42', '\x01', '\x05', '\xa0', '\x0a', '\xc2',
+    '\x01', '\x0a', '\x4f', '\x0e', '\x10', '\x0b', '\xa0', '\x01',
+    '\x0d', '\x10', '\x0d', '\x4f', '\x0e', '\x10', '\x0c', '\xa0',
+    '\x09', '\x0a', '\x40', '\xc1', '\xd1', '\xa0', '\x14', '\x06',
+    '\x81', '\xf0', '\xc1', '\xe3', '\xa0', '\x24', '\x05', '\x10',
+    '\x0d', '\x80', '\xcf', '\x0a', '\x10', '\x06', '\x4f', '\xc4',
+    '\x1e', '\x10', '\x0e', '\xa0', '\x22', '\x09', '\x10', '\x09',
+    '\x81', '\xcf', '\x0a', '\x30', '\xc1', '\xe3', '\xa0', '\x20',
+    '\xc1', '\x2c', '\x10', '\xc1', '\x92', '\x81', '\x3f', '\xc1',
+    '\x29', '\x20', '\x08', '\xa0', '\x15', '\x0d', '\x81', '\xc0',
+    '\x01', '\x14', '\x01', '\x81', '\xb0', '\xc1', '\xe1', '\xa0',
+    '\x06', '\x02', '\x40', '\x08', '\xa0', '\x09', '\x0d', '\x80',
+    '\x90', '\xc1', '\xe1', '\xa0', '\x01', '\x0b', '\x80', '\xa0',
+    '\xa0', '\x0a', '\x08', '\x40', '\x02', '\xa0', '\x15', '\x06',
+    '\x20', '\x0b', '\x81', '\x8f', '\x20', '\xc1', '\xe3', '\xa0',
+    '\x24', '\x04', '\x80', '\xf0', '\x03', '\x4f', '\x04', '\x40',
+    '\x02', '\xa0', '\x24', '\x06', '\x60', '\xc4', '\x93', '\x9b',
+    '\x01', '\x80', '\xc0', '\x09', '\x3f', '\x09', '\x30', '\x09',
+    '\xa0', '\x22', '\xc1', '\x1c', '\x81', '\xc0', '\x06', '\xa0',
+    '\x15', '\x08', '\x10', '\x07', '\x81', '\x2f', '\x09', '\x10',
+    '\x03', '\x80', '\x98', '\x03', '\x10', '\x09', '\x81', '\x2f',
+    '\x06', '\x10', '\x09', '\xa0', '\x05', '\xc2', '\x0c', '\x03',
+    '\x1f', '\xc3', '\x1e', '\xd0', '\xa0', '\x08', '\x0c', '\x10',
+    '\x0e', '\x5f', '\xc2', '\x06', '\x04', '\xa0', '\x01', '\xc2',
+    '\x06', '\x06', '\x6f', '\xc2', '\x03', '\x08', '\xa0', '\x09',
+    '\xc7', '\x04', '\xf8', '\x5e', '\x80', '\xa0', '\x15', '\x05',
+    '\x81', '\xd0', '\xc1', '\xe2', '\xa0', '\x24', '\x0b', '\x10',
+    '\x06', '\x80', '\xef', '\x07', '\x10', '\x09', '\x4f', '\x07',
+    '\x10', '\x09', '\xa0', '\x21', '\x0c', '\x10', '\x08', '\x81',
+    '\xdf', '\x0c', '\x40', '\x06', '\xa0', '\x1f', '\xc1', '\x2e',
+    '\x10', '\xc1', '\xe6', '\x81', '\x6f', '\x08', '\x20', '\x08',
+    '\xa0', '\x14', '\x09', '\x81', '\xb0', '\x08', '\x3f', '\x08',
+    '\x81', '\xb0', '\x0a', '\xa0', '\x05', '\x09', '\x50', '\x02',
+    '\xa0', '\x09', '\x09', '\x80', '\xa0', '\x08', '\xa0', '\x01',
+    '\x04', '\x80', '\xa0', '\x0b', '\xa0', '\x09', '\x02', '\x50',
+    '\x09', '\xa0', '\x15', '\x05', '\x10', '\x0b', '\x81', '\x8f',
+    '\x10', '\xc1', '\xe2', '\xa0', '\x24', '\x0b', '\x81', '\x10',
+    '\x08', '\x3f', '\x0d', '\x50', '\x0a', '\xa0', '\x22', '\x0d',
+    '\x81', '\xa0', '\x09', '\x3f', '\x07', '\x20', '\xc1', '\xc1',
+    '\xa0', '\x20', '\xc1', '\x1d', '\x81', '\xe0', '\x07', '\xa0',
+    '\x14', '\x06', '\x10', '\x0b', '\x81', '\x3f', '\x07', '\x10',
+    '\x0c', '\x7f', '\x0c', '\x10', '\x07', '\x81', '\x3f', '\x0b',
+    '\x10', '\x08', '\xa0', '\x05', '\xc2', '\x0b', '\x08', '\x2f',
+    '\xc2', '\x04', '\x0b', '\xa0', '\x08', '\xc2', '\x08', '\x03',
+    '\x6f', '\x0d', '\x10', '\x1d', '\x10', '\x0d', '\x6f', '\xc2',
+    '\x08', '\x06', '\xa0', '\x09', '\x10', '\x2f', '\xc2', '\x09',
+    '\x04', '\xa0', '\x15', '\x08', '\x10', '\x06', '\x81', '\x88',
+    '\x10', '\x04', '\xa0', '\x25', '\x04', '\x10', '\x0d', '\x80',
+    '\xff', '\xc3', '\x03', '\xd1', '\x3f', '\x0d', '\x10', '\x03',
+    '\xa0', '\x21', '\xc2', '\x02', '\x05', '\x81', '\xff', '\xc3',
+    '\x8b', '\x46', '\x10', '\x0a', '\xa0', '\x1e', '\x05', '\x10',
+    '\x08', '\x81', '\x9f', '\x0c', '\x20', '\x0d', '\xa0', '\x13',
+    '\x07', '\x80', '\xa0', '\xc4', '\x42', '\x46', '\x01', '\x80',
+    '\xa0', '\x05', '\x5f', '\x05', '\x80', '\xa0', '\xc4', '\x41',
+    '\x46', '\x02', '\x80', '\xa0', '\x08', '\xa0', '\x05', '\x08',
+    '\x60', '\xa0', '\x09', '\x05', '\x80', '\xa0', '\xc2', '\xe1',
+    '\x0a', '\x80', '\xb0', '\x08', '\xa0', '\x09', '\x60', '\x08',
+    '\xa0', '\x15', '\x08', '\x10', '\x0b', '\x81', '\x8f', '\x10',
+    '\x04', '\xa0', '\x25', '\x04', '\x81', '\x20', '\x0c', '\x3f',
+    '\x06', '\x40', '\x06', '\xa0', '\x22', '\x07', '\x81', '\xb0',
+    '\x09', '\x3f', '\x06', '\x20', '\xc1', '\xe2', '\xa0', '\x1f',
+    '\x04', '\x82', '\x00', '\x0b', '\xa0', '\x13', '\x04', '\x10',
+    '\x81', '\x5f', '\xc3', '\x04', '\xe2', '\x5f', '\xc3', '\x2e',
+    '\x40', '\x81', '\x5f', '\x10', '\x04', '\xa0', '\x05', '\xc2',
+    '\x0c', '\x04', '\x1f', '\xc3', '\x1e', '\xd0', '\xa0', '\x08',
+    '\xc2', '\x04', '\x08', '\x7f', '\xc1', '\x06', '\x16', '\xc1',
+    '\x60', '\x7f', '\xc2', '\x0b', '\x02', '\xa0', '\x09', '\xc2',
+    '\x03', '\x0d', '\x1f', '\xc2', '\x08', '\x07', '\xa0', '\x15',
+    '\x08', '\x10', '\x0b', '\x81', '\x8f', '\x10', '\x04', '\xa0',
+    '\x24', '\x0b', '\x10', '\x05', '\x81', '\x0f', '\x0c', '\x10',
+    '\x04', '\x4f', '\x03', '\x10', '\x0e', '\xa0', '\x1f', '\xc3',
+    '\x0b', '\xd1', '\x4f', '\x1b', '\x0c', '\x81', '\xbf', '\xc3',
+    '\x01', '\xe2', '\xa0', '\x1c', '\x0b', '\x10', '\x04', '\x81',
+    '\xbf', '\x07', '\x10', '\x06', '\xa0', '\x13', '\x04', '\x80',
+    '\x80', '\xc1', '\xd5', '\x4f', '\xc1', '\x6c', '\x80', '\x80',
+    '\x0b', '\x5f', '\x0b', '\x80', '\x80', '\xc1', '\xb6', '\x4f',
+    '\xc1', '\x5d', '\x80', '\x80', '\x05', '\xa0', '\x05', '\x09',
+    '\x50', '\x01', '\xa0', '\x09', '\x01', '\x80', '\xb0', '\xc1',
+    '\x28', '\x80', '\xb0', '\x04', '\xa0', '\x09', '\x01', '\x50',
+    '\x08', '\xa0', '\x15', '\x08', '\x10', '\x08', '\x81', '\x8b',
+    '\x10', '\x04', '\xa0', '\x24', '\x0b', '\x81', '\x30', '\x03',
+    '\x3f', '\x0d', '\x40', '\x01', '\xa0', '\x22', '\x02', '\x81',
+    '\xc0', '\x09', '\x3f', '\x03', '\x20', '\x06', '\xa0', '\x1e',
+    '\x0b', '\x82', '\x10', '\x05', '\xa0', '\x13', '\x04', '\x10',
+    '\x81', '\x5f', '\xc3', '\x1d', '\x70', '\x5f', '\xc3', '\x07',
+    '\xd1', '\x81', '\x5f', '\x10', '\x04', '\xa0', '\x06', '\xc7',
+    '\x03', '\x43', '\x02', '\xe1', '\xa0', '\x08', '\x10', '\x0b',
+    '\x7f', '\x0d', '\x30', '\x0c', '\x80', '\x8f', '\x10', '\x0d',
+    '\xa0', '\x08', '\xc7', '\x05', '\x83', '\x17', '\xd0', '\xa0',
+    '\x15', '\x08', '\x10', '\x0b', '\x81', '\x8f', '\x10', '\x04',
+    '\xa0', '\x24', '\x06', '\x10', '\x0b', '\x81', '\x1f', '\x08',
+    '\x10', '\x09', '\x3f', '\x08', '\x10', '\x09', '\xa0', '\x1f',
+    '\xc2', '\x08', '\x07', '\x4f', '\x03', '\x20', '\xc2', '\x71',
+    '\x0d', '\x81', '\x7f', '\x0c', '\x20', '\x08', '\xa0', '\x1c',
+    '\x06', '\x10', '\x0a', '\x81', '\xbf', '\x0b', '\x10', '\x01',
+    '\xa0', '\x13', '\x04', '\x70', '\x08', '\x80', '\x8f', '\xc1',
+    '\x5d', '\x60', '\x0b', '\x5f', '\x0b', '\x60', '\xc1', '\xc3',
+    '\x80', '\x8f', '\x08', '\x70', '\x04', '\xa0', '\x05', '\xc1',
+    '\x1e', '\x40', '\x04', '\xa0', '\x08', '\x0c', '\x81', '\xb0',
+    '\xa0', '\x08', '\xc1', '\x4e', '\x40', '\xc1', '\xe1', '\xa0',
+    '\x15', '\x08', '\x81', '\xd0', '\x04', '\xa0', '\x24', '\x05',
+    '\x81', '\x40', '\x09', '\x3f', '\x06', '\x40', '\x0b', '\xa0',
+    '\x20', '\x0d', '\x10', '\xc1', '\x84', '\x2b', '\xc1', '\x17',
+    '\x81', '\x50', '\x09', '\x2f', '\xc1', '\x1e', '\x20', '\x0b',
+    '\xa0', '\x1d', '\x05', '\x82', '\x20', '\xa0', '\x13', '\x05',
+    '\x10', '\x81', '\x6f', '\x08', '\x10', '\x0b', '\x3f', '\x0b',
+    '\x10', '\x08', '\x81', '\x6f', '\x10', '\x07', '\xa0', '\x06',
+    '\xc1', '\x3e', '\x20', '\xc3', '\x01', '\xc2', '\xa0', '\x06',
+    '\xc2', '\x0a', '\x01', '\x80', '\x9f', '\x06', '\x10', '\x04',
+    '\x80', '\x9f', '\xc2', '\x04', '\x09', '\xa0', '\x06', '\xc1',
+    '\x5e', '\x40', '\xc1', '\x91', '\xa0', '\x16', '\x08', '\x10',
+    '\x0b', '\x81', '\x8f', '\x10', '\x04', '\xa0', '\x23', '\x0e',
+    '\x10', '\x02', '\x81', '\x3f', '\xc3', '\x02', '\xe1', '\x2f',
+    '\x0c', '\x10', '\x07', '\xa0', '\x1f', '\xc2', '\x05', '\x0d',
+    '\x3f', '\x09', '\x50', '\xc1', '\xd2', '\x81', '\x6f', '\x08',
+    '\x20', '\xc1', '\xd1', '\xa0', '\x1b', '\x01', '\x10', '\x06',
+    '\x81', '\xb8', '\x06', '\x20', '\x0c', '\xa0', '\x12', '\x05',
+    '\x60', '\x02', '\x80', '\xbf', '\x08', '\x50', '\x09', '\x5f',
+    '\x09', '\x50', '\x06', '\x80', '\xbf', '\x02', '\x60', '\x06',
+    '\xa0', '\x06', '\xc1', '\x1c', '\x40', '\xc1', '\xe3', '\xa0',
+    '\x06', '\x08', '\x81', '\xb0', '\x0c', '\xa0', '\x06', '\xc1',
+    '\x3d', '\x40', '\xc1', '\xc1', '\xa0', '\x16', '\x08', '\x81',
+    '\xd0', '\x04', '\xa0', '\x23', '\x0e', '\x81', '\x50', '\xc1',
+    '\xe1', '\x2f', '\x0b', '\x40', '\x08', '\xa0', '\x20', '\xc2',
+    '\x0b', '\x08', '\x5f', '\xc1', '\x3d', '\x81', '\x50', '\x0b',
+    '\x2f', '\x0b', '\x20', '\x02', '\xa0', '\x1d', '\x82', '\x30',
+    '\x0b', '\xa0', '\x12', '\x08', '\x10', '\x0c', '\x81', '\x6f',
+    '\xc2', '\x02', '\x03', '\x3f', '\xc2', '\x04', '\x02', '\x81',
+    '\x6f', '\x0c', '\x10', '\x08', '\xa0', '\x08', '\xc7', '\x5b',
+    '\x50', '\x03', '\x91', '\xa0', '\x05', '\xc2', '\x07', '\x05',
+    '\x80', '\x9f', '\x0d', '\x10', '\x0b', '\x80', '\x9f', '\xc2',
+    '\x08', '\x06', '\xa0', '\x05', '\xc1', '\x2c', '\x10', '\xc4',
+    '\x02', '\xa2', '\x0e', '\xa0', '\x17', '\x08', '\x10', '\x0b',
+    '\x81', '\x8f', '\x10', '\x04', '\xa0', '\x23', '\x09', '\x10',
+    '\x08', '\x81', '\x3f', '\x0b', '\x10', '\x08', '\x3f', '\x10',
+    '\x04', '\xa0', '\x1e', '\xc2', '\x0e', '\x03', '\x4f', '\x08',
+    '\x30', '\xc1', '\x92', '\x81', '\x8f', '\x05', '\x30', '\x06',
+    '\xa0', '\x1a', '\x0c', '\x82', '\x30', '\x0b', '\xa0', '\x12',
+    '\x08', '\x60', '\x07', '\x80', '\xcf', '\x09', '\x40', '\xc1',
+    '\xe2', '\x3f', '\xc1', '\x2e', '\x40', '\x09', '\x80', '\xcf',
+    '\x07', '\x60', '\x08', '\xa0', '\x07', '\xc2', '\x9e', '\x03',
+    '\x30', '\xc1', '\xc1', '\xa0', '\x05', '\x05', '\x81', '\xb0',
+    '\x08', '\xa0', '\x05', '\xc1', '\x1a', '\x30', '\xc2', '\x83',
+    '\x0e', '\xa0', '\x17', '\x08', '\x81', '\xd0', '\x04', '\xa0',
+    '\x23', '\x09', '\x81', '\x60', '\x09', '\x3f', '\x02', '\x30',
+    '\x05', '\xa0', '\x20', '\xc2', '\x08', '\x08', '\x6f', '\x0d',
+    '\x81', '\x50', '\xc1', '\xc1', '\x2f', '\x08', '\x20', '\x08',
+    '\xa0', '\x1b', '\x0b', '\x82', '\x30', '\x0b', '\xa0', '\x12',
+    '\x0a', '\x10', '\x09', '\x81', '\x6f', '\x0b', '\x10', '\x09',
+    '\x1f', '\x09', '\x10', '\x0b', '\x81', '\x6f', '\x09', '\x10',
+    '\x0b', '\xa0', '\x09', '\x0e', '\x10', '\xc1', '\x6d', '\x10',
+    '\x07', '\xa0', '\x04', '\xc2', '\x03', '\x09', '\x80', '\xaf',
+    '\x14', '\x80', '\xaf', '\xc2', '\x0b', '\x02', '\xa0', '\x04',
+    '\x09', '\x10', '\xc4', '\x91', '\x01', '\x09', '\xa0', '\x19',
+    '\x08', '\x10', '\x0b', '\x81', '\x8f', '\x10', '\x04', '\xa0',
+    '\x23', '\x06', '\x10', '\x0d', '\x81', '\x4f', '\xc3', '\x05',
+    '\xe1', '\x2f', '\xc2', '\x04', '\x01', '\xa0', '\x1e', '\xc2',
+    '\x07', '\x07', '\x4f', '\xc4', '\x2a', '\x20', '\x09', '\x81',
+    '\xaf', '\xc1', '\x3c', '\x30', '\x0d', '\xa0', '\x19', '\x0b',
+    '\x82', '\x30', '\x0b', '\xa0', '\x12', '\x09', '\x60', '\x08',
+    '\x3f', '\x0c', '\x14', '\xc1', '\xd8', '\x4f', '\x09', '\x40',
+    '\xc1', '\x92', '\x1e', '\xc1', '\x29', '\x40', '\x08', '\x4f',
+    '\xc1', '\x7b', '\x14', '\x0c', '\x3f', '\x08', '\x60', '\x0a',
+    '\xa0', '\x09', '\x0b', '\x50', '\x09', '\xa0', '\x04', '\x81',
+    '\xc0', '\x05', '\xa0', '\x04', '\x07', '\x50', '\x0b', '\xa0',
+    '\x19', '\x08', '\x81', '\xd0', '\x04', '\xa0', '\x23', '\x05',
+    '\x81', '\x60', '\x04', '\x3f', '\x07', '\x30', '\x04', '\xa0',
+    '\x20', '\x07', '\x10', '\xc1', '\x82', '\x5f', '\x04', '\x81',
+    '\x50', '\xc1', '\xe2', '\x2f', '\x02', '\x10', '\xc1', '\xe1',
+    '\xa0', '\x1a', '\x0c', '\x80', '\xb4', '\x02', '\x80', '\x90',
+    '\x02', '\x80', '\xb4', '\x0c', '\xa0', '\x12', '\x0e', '\x10',
+    '\x06', '\x81', '\x7f', '\xc2', '\x04', '\x02', '\x1f', '\xc2',
+    '\x02', '\x04', '\x81', '\x7f', '\x06', '\x10', '\x0e', '\xa0',
+    '\x0a', '\xc4', '\x06', '\xf6', '\x08', '\x10', '\xc1', '\xe4',
+    '\xa0', '\x01', '\x0e', '\x10', '\x0d', '\x80', '\xaf', '\x1b',
+    '\x80', '\xbf', '\x10', '\x0d', '\xa0', '\x01', '\xc1', '\x6e',
+    '\x10', '\xc4', '\xc3', '\x08', '\x01', '\xa0', '\x1a', '\x08',
+    '\x10', '\x0b', '\x81', '\x8f', '\x10', '\x04', '\xa0', '\x23',
+    '\xc2', '\x02', '\x02', '\x81', '\x5f', '\x0d', '\x10', '\x08',
+    '\x2f', '\x04', '\x10', '\xa0', '\x1d', '\x0b', '\x10', '\x0a',
+    '\x82', '\x6f', '\xc1', '\x18', '\x10', '\x07', '\xa0', '\x26',
+    '\x08', '\x10', '\x0b', '\x3f', '\x0b', '\x10', '\x08', '\xa0',
+    '\x1f', '\x0d', '\x60', '\x08', '\x3f', '\x04', '\x30', '\xc1',
+    '\xe7', '\x3f', '\x07', '\x80', '\xd0', '\x05', '\x3f', '\xc1',
+    '\x4e', '\x30', '\x04', '\x3f', '\x08', '\x60', '\x0e', '\xa0',
+    '\x0a', '\x02', '\x50', '\x06', '\xa0', '\x02', '\x0b', '\x81',
+    '\xc0', '\x01', '\xa0', '\x02', '\xc1', '\x4e', '\x50', '\x03',
+    '\xa0', '\x1a', '\x08', '\x81', '\xd0', '\x04', '\xa0', '\x23',
+    '\x01', '\x81', '\x70', '\x3f', '\x0a', '\x40', '\xa0', '\x1f',
+    '\x0c', '\x40', '\xc2', '\xfc', '\x0e', '\x2b', '\x04', '\x81',
+    '\x60', '\x07', '\x2f', '\x0b', '\x20', '\x08', '\xa0', '\x27',
+    '\x08', '\x80', '\x90', '\x08', '\xa0', '\x20', '\xc3', '\x04',
+    '\xe1', '\x81', '\x6f', '\x09', '\x10', '\x19', '\x10', '\x09',
+    '\x81', '\x7f', '\xc2', '\x01', '\x04', '\xa0', '\x0b', '\xc9',
+    '\x0c', '\xe1', '\xaf', '\x01', '\xc2', '\xa0', '\x00', '\xc2',
+    '\x0a', '\x02', '\x81', '\x9f', '\xc2', '\x05', '\x09', '\xa0',
+    '\x00', '\xc1', '\x3c', '\x10', '\xc5', '\xe6', '\x2f', '\x80',
+    '\xa0', '\x1a', '\x08', '\x10', '\x0b', '\x81', '\x8f', '\x10',
+    '\x04', '\xa0', '\x23', '\x10', '\x06', '\x81', '\x6f', '\xc2',
+    '\x06', '\x02', '\x2f', '\x08', '\x10', '\xa0', '\x1c', '\xc3',
+    '\x1e', '\x20', '\x82', '\x8f', '\xc4', '\x4d', '\x10', '\x0e',
+    '\xa0', '\x25', '\x08', '\x10', '\x0b', '\x3f', '\x0b', '\x10',
+    '\x08', '\xa0', '\x20', '\x03', '\x50', '\x05', '\x3f', '\x04',
+    '\x40', '\xc1', '\xe3', '\x3f', '\x03', '\x80', '\xb0', '\xc1',
+    '\xe2', '\x2f', '\xc1', '\x1c', '\x40', '\x04', '\x3f', '\x05',
+    '\x50', '\x03', '\xa0', '\x0b', '\x09', '\x60', '\xc1', '\xe3',
+    '\xa0', '\x00', '\x08', '\x81', '\xd0', '\x0c', '\xa0', '\x00',
+    '\xc1', '\x1b', '\x60', '\x09', '\xa0', '\x1a', '\x08', '\x81',
+    '\xd0', '\x04', '\xa0', '\x22', '\x0e', '\x81', '\x80', '\x0a',
+    '\x2f', '\x0e', '\x40', '\xa0', '\x1f', '\x04', '\x40', '\xc1',
+    '\x57', '\x81', '\xc0', '\x0c', '\x2f', '\x04', '\x10', '\x02',
+    '\xa0', '\x27', '\x08', '\x80', '\x90', '\x08', '\xa0', '\x20',
+    '\x09', '\x10', '\x09', '\x81', '\x7f', '\xc1', '\x02', '\x14',
+    '\xc1', '\x20', '\x81', '\x7f', '\x09', '\x10', '\x09', '\xa0',
+    '\x0c', '\xc2', '\x04', '\x08', '\x1f', '\xc7', '\x2c', '\x10',
+    '\x69', '\x70', '\x81', '\x9f', '\xc4', '\x08', '\xa6', '\x01',
+    '\x10', '\x08', '\x1f', '\xc3', '\x09', '\xe1', '\xa0', '\x1a',
+    '\x08', '\x10', '\x0b', '\x81', '\x8f', '\x10', '\x04', '\xa0',
+    '\x22', '\x0c', '\x10', '\x08', '\x81', '\x6f', '\x0d', '\x10',
+    '\x0a', '\x1f', '\x08', '\x10', '\xa0', '\x1b', '\xc1', '\x3e',
+    '\x10', '\x0b', '\x82', '\x9f', '\x09', '\x10', '\x09', '\xa0',
+    '\x25', '\x08', '\x10', '\x0b', '\x3f', '\x0b', '\x10', '\x08',
+    '\xa0', '\x20', '\x08', '\x50', '\x01', '\x3f', '\x08', '\x50',
+    '\xc1', '\xe3', '\x2f', '\x0b', '\x80', '\xb0', '\x0b', '\x2f',
+    '\xc1', '\x2e', '\x50', '\x08', '\x3f', '\x01', '\x50', '\x08',
+    '\xa0', '\x0c', '\x01', '\x60', '\xc2', '\xc1', '\x04', '\x81',
+    '\xd0', '\x18', '\x70', '\x02', '\xa0', '\x1b', '\x08', '\x81',
+    '\xd0', '\x04', '\xa0', '\x22', '\x0b', '\x81', '\x80', '\x07',
+    '\x3f', '\x03', '\x30', '\xa0', '\x1e', '\x08', '\x82', '\x40',
+    '\x04', '\x2f', '\x0b', '\x20', '\x0a', '\xa0', '\x26', '\x08',
+    '\x80', '\x90', '\x08', '\xa0', '\x21', '\xc2', '\x01', '\x02',
+    '\x81', '\x7f', '\x08', '\x30', '\x08', '\x81', '\x7f', '\xc3',
+    '\x04', '\xe1', '\xa0', '\x0c', '\xc3', '\x09', '\xe1', '\x1f',
+    '\xc1', '\x3e', '\x10', '\xc2', '\x01', '\x0a', '\x81', '\x9f',
+    '\xc2', '\x0c', '\x01', '\x10', '\xc1', '\xb1', '\x2f', '\xc2',
+    '\x02', '\x06', '\xa0', '\x1b', '\x08', '\x10', '\x0b', '\x81',
+    '\x8f', '\x10', '\x04', '\xa0', '\x22', '\x0b', '\x10', '\x0b',
+    '\x81', '\x7f', '\xc2', '\x04', '\x06', '\x1f', '\x08', '\x10',
+    '\xa0', '\x1a', '\xc1', '\x3e', '\x10', '\x08', '\x82', '\xaf',
+    '\x04', '\x10', '\x03', '\xa0', '\x25', '\x08', '\x10', '\x0b',
+    '\x3f', '\x0b', '\x10', '\x08', '\xa0', '\x20', '\xc1', '\x1e',
+    '\x50', '\x0a', '\x2f', '\xc1', '\x1e', '\x50', '\x07', '\x3f',
+    '\x06', '\x80', '\x90', '\x04', '\x3f', '\x05', '\x50', '\xc1',
+    '\xe1', '\x2f', '\x0a', '\x50', '\xc1', '\xe1', '\xa0', '\x0c',
+    '\x08', '\x82', '\x70', '\x01', '\x80', '\x80', '\x08', '\xa0',
+    '\x1b', '\x08', '\x81', '\xd0', '\x04', '\xa0', '\x22', '\x0b',
+    '\x81', '\x80', '\x02', '\x3f', '\x04', '\x30', '\xa0', '\x1d',
+    '\xc1', '\x1e', '\x82', '\x50', '\x0c', '\x2f', '\x04', '\x10',
+    '\x05', '\xa0', '\x26', '\x08', '\x80', '\x90', '\x08', '\xa0',
+    '\x21', '\x08', '\x10', '\x08', '\x81', '\x6f', '\x0d', '\x30',
+    '\x0d', '\x81', '\x6f', '\x09', '\x10', '\x08', '\xa0', '\x0e',
+    '\xc2', '\x02', '\x09', '\x3f', '\x06', '\x20', '\x0e', '\x81',
+    '\xaf', '\x01', '\x10', '\xc1', '\xe3', '\x2f', '\x09', '\x10',
+    '\x0d', '\xa0', '\x1b', '\x08', '\x10', '\x0b', '\x81', '\x8f',
+    '\x10', '\x04', '\xa0', '\x22', '\x0b', '\x10', '\x0b', '\x81',
+    '\x7f', '\xc2', '\x09', '\x02', '\x1f', '\x08', '\x10', '\xa0',
+    '\x1a', '\x06', '\x10', '\x06', '\x82', '\xaf', '\x0d', '\x30',
+    '\x0c', '\xa0', '\x24', '\x07', '\x10', '\x0b', '\x3f', '\x0b',
+    '\x10', '\x07', '\xa0', '\x21', '\x08', '\x50', '\x05', '\x3f',
+    '\x0a', '\x60', '\x0b', '\x2f', '\x0d', '\x80', '\x90', '\x0b',
+    '\x2f', '\x0a', '\x60', '\x0a', '\x3f', '\x05', '\x50', '\x06',
+    '\xa0', '\x0d', '\x0d', '\x83', '\x00', '\xc1', '\xe1', '\xa0',
+    '\x1b', '\x08', '\x81', '\xd0', '\x04', '\xa0', '\x22', '\x0b',
+    '\x81', '\x90', '\x0d', '\x2f', '\x08', '\x30', '\xa0', '\x1d',
+    '\x05', '\x82', '\x60', '\x06', '\x2f', '\x09', '\x20', '\x0e',
+    '\xa0', '\x25', '\x06', '\x80', '\x90', '\x06', '\xa0', '\x21',
+    '\xc4', '\x2e', '\x10', '\x0e', '\x81', '\x6f', '\x03', '\x10',
+    '\x03', '\x81', '\x6f', '\xc4', '\x1e', '\x10', '\x0e', '\xa0',
+    '\x0e', '\xc2', '\x08', '\x02', '\x4f', '\xc2', '\x08', '\x04',
+    '\x81', '\xbf', '\xc2', '\x05', '\x06', '\x4f', '\xc2', '\x03',
+    '\x06', '\xa0', '\x1c', '\x08', '\x10', '\x0b', '\x81', '\x8f',
+    '\x10', '\x04', '\xa0', '\x22', '\x0e', '\x10', '\x0b', '\x81',
+    '\x8f', '\xc6', '\x01', '\xfc', '\x04', '\x01', '\xa0', '\x19',
+    '\x06', '\x10', '\x06', '\x82', '\xbf', '\x07', '\x30', '\x07',
+    '\xa0', '\x23', '\xc4', '\x1e', '\x10', '\x0e', '\x3f', '\xc4',
+    '\x1e', '\x10', '\x0e', '\xa0', '\x20', '\xc1', '\x1e', '\x50',
+    '\x0c', '\x3f', '\x06', '\x50', '\x02', '\x3f', '\x05', '\x70',
+    '\x04', '\x3f', '\x02', '\x50', '\x07', '\x3f', '\x0c', '\x50',
+    '\xc1', '\xe1', '\xa0', '\x0e', '\x06', '\x82', '\xf0', '\x08',
+    '\xa0', '\x1c', '\x08', '\x81', '\xd0', '\x04', '\xa0', '\x22',
+    '\x0c', '\x81', '\x90', '\x09', '\x2f', '\x08', '\x20', '\x03',
+    '\xa0', '\x1c', '\x08', '\x82', '\x70', '\xc1', '\xe1', '\x2f',
+    '\x01', '\x10', '\x09', '\xa0', '\x24', '\x0d', '\x80', '\xb0',
+    '\x0d', '\xa0', '\x21', '\x09', '\x10', '\x04', '\x81', '\x6f',
+    '\x08', '\x10', '\x08', '\x81', '\x6f', '\x05', '\x10', '\x09',
+    '\xa0', '\x0f', '\x0e', '\x10', '\x09', '\x4f', '\xc1', '\x9a',
+    '\x81', '\xbf', '\x19', '\x4f', '\x0b', '\x10', '\x0c', '\xa0',
+    '\x1c', '\x08', '\x10', '\x0b', '\x81', '\x8f', '\x10', '\x04',
+    '\xa0', '\x23', '\x10', '\x08', '\x81', '\x8f', '\xc6', '\x05',
+    '\xf9', '\x04', '\x04', '\xa0', '\x18', '\x09', '\x10', '\x06',
+    '\x81', '\x8f', '\x0e', '\x81', '\x2f', '\x04', '\x30', '\x02',
+    '\xa0', '\x23', '\x06', '\x10', '\x08', '\x5f', '\x08', '\x10',
+    '\x08', '\xa0', '\x21', '\x08', '\x50', '\x04', '\x4f', '\x03',
+    '\x50', '\x09', '\x2f', '\x0b', '\x70', '\x0b', '\x2f', '\x09',
+    '\x50', '\x03', '\x4f', '\x04', '\x50', '\x08', '\xa0', '\x0f',
+    '\x0b', '\x82', '\xf0', '\x0d', '\xa0', '\x1c', '\x08', '\x81',
+    '\xd0', '\x04', '\xa0', '\x23', '\x81', '\x90', '\x05', '\x2f',
+    '\x08', '\x20', '\x04', '\xa0', '\x1b', '\x0b', '\x81', '\x70',
+    '\x06', '\x81', '\x00', '\x09', '\x2f', '\x05', '\x10', '\x06',
+    '\xa0', '\x24', '\x06', '\x80', '\xb0', '\x06', '\xa0', '\x22',
+    '\x04', '\x10', '\x08', '\x81', '\x5f', '\x0d', '\x10', '\x0d',
+    '\x81', '\x5f', '\x08', '\x10', '\x04', '\xa0', '\x11', '\xc2',
+    '\x06', '\x03', '\x82', '\x9f', '\xc2', '\x04', '\x04', '\xa0',
+    '\x1d', '\x08', '\x10', '\x0b', '\x81', '\x8f', '\x10', '\x04',
+    '\xa0', '\x23', '\xc2', '\x04', '\x07', '\x81', '\x8f', '\xc6',
+    '\x08', '\xf7', '\x01', '\x05', '\xa0', '\x17', '\xc3', '\x1d',
+    '\x60', '\x81', '\x9f', '\x06', '\x81', '\x3f', '\x08', '\x30',
+    '\x0c', '\xa0', '\x21', '\x0d', '\x10', '\x02', '\x6f', '\xc4',
+    '\x1e', '\x10', '\x0e', '\xa0', '\x21', '\x03', '\x50', '\x08',
+    '\x3f', '\xc1', '\x1e', '\x40', '\x04', '\x3f', '\x02', '\x50',
+    '\x02', '\x3f', '\x04', '\x40', '\xc1', '\xe2', '\x3f', '\x08',
+    '\x50', '\x03', '\xa0', '\x11', '\x03', '\x82', '\xd0', '\x06',
+    '\xa0', '\x1d', '\x08', '\x81', '\xd0', '\x04', '\xa0', '\x23',
+    '\x03', '\x81', '\x90', '\x0e', '\x1f', '\x08', '\x20', '\x07',
+    '\xa0', '\x1a', '\xc1', '\x1c', '\x81', '\x60', '\xc1', '\xb9',
+    '\x81', '\x00', '\x05', '\x2f', '\x09', '\x10', '\x01', '\xa0',
+    '\x23', '\x0e', '\x80', '\xd0', '\x0d', '\xa0', '\x21', '\xc1',
+    '\x1d', '\x10', '\x09', '\x80', '\xcf', '\xc1', '\xab', '\x18',
+    '\x44', '\x10', '\x34', '\x05', '\x18', '\xc1', '\xcb', '\x80',
+    '\xcf', '\x09', '\x10', '\xc1', '\xe1', '\xa0', '\x11', '\x0d',
+    '\x10', '\x0b', '\x80', '\xbf', '\xc2', '\xbe', '\x0a', '\x28',
+    '\x34', '\x38', '\xc1', '\xcb', '\x80', '\xbf', '\x0b', '\x10',
+    '\x0b', '\xa0', '\x1d', '\x08', '\x10', '\x0b', '\x81', '\x8f',
+    '\x10', '\x04', '\xa0', '\x23', '\xc2', '\x07', '\x02', '\x81',
+    '\x8f', '\xc3', '\x0b', '\xd4', '\x10', '\x08', '\xa0', '\x17',
+    '\xc2', '\x06', '\x05', '\x80', '\xbf', '\xc1', '\xc7', '\x80',
+    '\xaf', '\xc2', '\x4a', '\x03', '\x81', '\x4f', '\xc1', '\x3c',
+    '\x10', '\x08', '\xa0', '\x21', '\x07', '\x10', '\x08', '\x7f',
+    '\x07', '\x10', '\x09', '\xa0', '\x21', '\x0c', '\x60', '\x0a',
+    '\x3f', '\xc1', '\x1c', '\x40', '\x0d', '\x2f', '\x08', '\x50',
+    '\x07', '\x2f', '\x0d', '\x40', '\xc1', '\xc1', '\x3f', '\x0a',
+    '\x50', '\xc1', '\xc1', '\xa0', '\x11', '\x09', '\x82', '\xd0',
+    '\x0d', '\xa0', '\x1d', '\x08', '\x81', '\xd0', '\x04', '\xa0',
+    '\x23', '\x06', '\x81', '\x90', '\x09', '\x1f', '\x06', '\x20',
+    '\x08', '\xa0', '\x19', '\xc1', '\x1c', '\x81', '\x60', '\x09',
+    '\xa0', '\x00', '\x0a', '\x81', '\x00', '\x01', '\x2f', '\x0c',
+    '\x20', '\x0c', '\xa0', '\x22', '\x08', '\x80', '\xd0', '\x06',
+    '\xa0', '\x22', '\x0a', '\x20', '\x09', '\x6f', '\xc3', '\x8d',
+    '\x25', '\x81', '\x50', '\xc3', '\x73', '\xe9', '\x6f', '\x09',
+    '\x20', '\x0b', '\xa0', '\x13', '\xc2', '\x04', '\x04', '\x6f',
+    '\xc4', '\xae', '\x48', '\x01', '\x81', '\x00', '\xc3', '\x63',
+    '\xd9', '\x6f', '\xc2', '\x04', '\x02', '\xa0', '\x1e', '\x08',
+    '\x10', '\x0b', '\x81', '\x8f', '\x10', '\x04', '\xa0', '\x23',
+    '\x0a', '\x10', '\x0b', '\x81', '\x7f', '\xc3', '\x0b', '\x82',
+    '\x10', '\x0b', '\xa0', '\x16', '\xc3', '\x0d', '\xe1', '\x80',
+    '\xbf', '\xc4', '\x01', '\x41', '\x05', '\x48', '\xc1', '\x45',
+    '\x20', '\x06', '\x81', '\x6f', '\xc2', '\x08', '\x04', '\xa0',
+    '\x20', '\xc4', '\x1e', '\x10', '\x0e', '\x7f', '\x0d', '\x10',
+    '\x02', '\xa0', '\x22', '\x08', '\x50', '\xc1', '\xa1', '\x3f',
+    '\xc6', '\x0b', '\x53', '\xb8', '\x0d', '\x2f', '\x0e', '\x5b',
+    '\x0e', '\x2f', '\xc6', '\xbd', '\x68', '\x03', '\x0c', '\x3f',
+    '\xc1', '\x1b', '\x50', '\x09', '\xa0', '\x13', '\x01', '\x80',
+    '\xe0', '\x03', '\x14', '\x06', '\x58', '\x24', '\x02', '\x80',
+    '\xe0', '\x04', '\xa0', '\x1e', '\x08', '\x81', '\xd0', '\x04',
+    '\xa0', '\x23', '\x09', '\x81', '\x90', '\xc3', '\xe2', '\x2f',
+    '\x20', '\x0b', '\xa0', '\x18', '\xc1', '\x1e', '\x20', '\xc1',
+    '\x43', '\x81', '\x10', '\x09', '\xa0', '\x01', '\x08', '\x81',
+    '\x10', '\x0b', '\x2f', '\x20', '\x08', '\xa0', '\x22', '\x02',
+    '\x80', '\xe0', '\x0e', '\xa0', '\x22', '\x08', '\x20', '\x09',
+    '\x2f', '\xc2', '\x8e', '\x03', '\x80', '\xa0', '\x03', '\x54',
+    '\x03', '\x80', '\xa0', '\xc2', '\x93', '\x0e', '\x2f', '\x09',
+    '\x20', '\x09', '\xa0', '\x14', '\x0a', '\x10', '\x0c', '\x2f',
+    '\xc2', '\x7c', '\x03', '\x70', '\x80', '\x94', '\x70', '\xc2',
+    '\x62', '\x0a', '\x2f', '\x0d', '\x10', '\x09', '\xa0', '\x1e',
+    '\x08', '\x10', '\x0b', '\x81', '\x8f', '\x10', '\x04', '\xa0',
+    '\x24', '\xc2', '\x01', '\x04', '\x81', '\x7f', '\x0b', '\x10',
+    '\x02', '\x10', '\x0e', '\xa0', '\x16', '\xc2', '\x08', '\x07',
+    '\x2f', '\xc2', '\x49', '\x07', '\x6f', '\x07', '\x80', '\xd0',
+    '\x09', '\x81', '\x6f', '\x08', '\x10', '\xa0', '\x20', '\x09',
+    '\x10', '\x07', '\x80', '\x9f', '\x04', '\x10', '\x0c', '\xa0',
+    '\x22', '\x06', '\x60', '\x08', '\x82', '\x1f', '\x08', '\x60',
+    '\x07', '\xa0', '\x14', '\x08', '\x80', '\x80', '\xc4', '\x62',
+    '\xb8', '\x0e', '\x80', '\xff', '\xc4', '\xbd', '\x58', '\x01',
+    '\x80', '\x80', '\x0b', '\xa0', '\x1e', '\x08', '\x81', '\xd0',
+    '\x04', '\xa0', '\x23', '\x0e', '\x81', '\xa0', '\xc1', '\x54',
+    '\x30', '\xa0', '\x19', '\x08', '\x10', '\xc1', '\xd3', '\x1f',
+    '\xc1', '\x7e', '\x80', '\xd0', '\xc1', '\xb1', '\xa0', '\x02',
+    '\x08', '\x81', '\x10', '\x08', '\x2f', '\x04', '\x10', '\x06',
+    '\xa0', '\x21', '\x0c', '\x80', '\xf0', '\x08', '\xa0', '\x23',
+    '\x06', '\x20', '\xc3', '\xe8', '\x18', '\x50', '\xc4', '\x63',
+    '\xb8', '\x0c', '\x80', '\xbf', '\xc4', '\xbc', '\x68', '\x03',
+    '\x50', '\xc3', '\x81', '\x9e', '\x20', '\x06', '\xa0', '\x16',
+    '\xc5', '\x02', '\xd6', '\x27', '\x40', '\xc3', '\x74', '\xb9',
+    '\x80', '\xdf', '\xc3', '\x9b', '\x47', '\x40', '\xc5', '\x71',
+    '\x6d', '\x20', '\xa0', '\x1f', '\x08', '\x10', '\x0b', '\x81',
+    '\x8f', '\x10', '\x04', '\xa0', '\x24', '\x06', '\x10', '\x0b',
+    '\x81', '\x6f', '\x0b', '\x30', '\x03', '\xa0', '\x17', '\xc2',
+    '\x05', '\x0a', '\x1f', '\xc3', '\x08', '\x81', '\x6f', '\xc1',
+    '\x3e', '\x80', '\x80', '\x12', '\x10', '\x0d', '\x81', '\x5f',
+    '\xc1', '\x1d', '\x10', '\x0b', '\xa0', '\x1f', '\x05', '\x10',
+    '\x0c', '\x80', '\x9f', '\x09', '\x10', '\x07', '\xa0', '\x23',
+    '\x04', '\x60', '\x0a', '\x81', '\xff', '\x0a', '\x60', '\x06',
+    '\xa0', '\x15', '\x0d', '\x50', '\xc2', '\x83', '\x0d', '\x81',
+    '\x9f', '\xc2', '\x7c', '\x02', '\x40', '\x04', '\xa0', '\x1f',
+    '\x08', '\x81', '\xd0', '\x04', '\xa0', '\x24', '\x05', '\x70',
+    '\xc3', '\x61', '\xb9', '\x7f', '\xc3', '\xab', '\x27', '\x60',
+    '\x04', '\xa0', '\x19', '\x04', '\x10', '\x0a', '\x3f', '\x09',
+    '\x10', '\xc2', '\x43', '\x01', '\x60', '\xc2', '\x71', '\x0e',
+    '\xa0', '\x03', '\x05', '\x81', '\x10', '\x05', '\x2f', '\x06',
+    '\x10', '\x03', '\xa0', '\x21', '\x07', '\x80', '\xf0', '\x03',
+    '\xa0', '\x24', '\x06', '\x20', '\x01', '\x30', '\xc3', '\x61',
+    '\xe9', '\x81', '\x5f', '\xc3', '\x9e', '\x16', '\x30', '\x01',
+    '\x20', '\x06', '\xa0', '\x17', '\x08', '\x50', '\xc3', '\x61',
+    '\xea', '\x81', '\x6f', '\xc2', '\x6a', '\x01', '\x50', '\x08',
+    '\xa0', '\x1f', '\x08', '\x10', '\x0b', '\x81', '\x8f', '\x10',
+    '\x04', '\xa0', '\x24', '\x0b', '\x10', '\xc1', '\xe2', '\x4f',
+    '\xc1', '\xbd', '\x78', '\x1b', '\x4f', '\x09', '\x30', '\x07',
+    '\xa0', '\x17', '\xc2', '\x04', '\x0b', '\x1f', '\xc2', '\xbe',
+    '\x0e', '\x7f', '\xc2', '\x1e', '\x00', '\x1d', '\x3b', '\x0d',
+    '\xa0', '\x01', '\xc2', '\x05', '\x03', '\x81', '\x6f', '\x06',
+    '\x20', '\x08', '\xa0', '\x1f', '\x10', '\x02', '\x80', '\xaf',
+    '\x0e', '\x10', '\x03', '\xa0', '\x23', '\xc1', '\x5e', '\x40',
+    '\x09', '\x80', '\xcf', '\x0d', '\x5b', '\x0d', '\x80', '\xcf',
+    '\x09', '\x40', '\x06', '\xa0', '\x17', '\x06', '\x20', '\xc1',
+    '\xc4', '\x81', '\xff', '\xc1', '\x19', '\x20', '\x09', '\xa0',
+    '\x1f', '\x08', '\x81', '\xd0', '\x04', '\xa0', '\x24', '\x0a',
+    '\x50', '\xc1', '\xa4', '\x80', '\xff', '\xc1', '\x3b', '\x40',
+    '\x08', '\xa0', '\x19', '\x04', '\x10', '\x3f', '\xc3', '\x19',
+    '\xc2', '\x1f', '\x0a', '\x30', '\xc2', '\xd7', '\x0b', '\xa0',
+    '\x06', '\x02', '\x81', '\x10', '\x02', '\x2f', '\x08', '\x20',
+    '\xa0', '\x21', '\x03', '\x81', '\x00', '\x0e', '\xa0', '\x24',
+    '\x08', '\x40', '\xc1', '\x94', '\x81', '\xdf', '\xc1', '\x49',
+    '\x40', '\x09', '\xa0', '\x18', '\x0e', '\x30', '\xc1', '\x94',
+    '\x81', '\xdf', '\xc1', '\x4a', '\x30', '\x0e', '\xa0', '\x1f',
+    '\x08', '\x10', '\x0b', '\x81', '\x8f', '\x10', '\x04', '\xa0',
+    '\x25', '\x02', '\x10', '\xc5', '\xf6', '\x8d', '\x15', '\x80',
+    '\xc0', '\xc4', '\x83', '\xfd', '\x05', '\x30', '\x0a', '\xa0',
+    '\x17', '\xc2', '\x04', '\x0b', '\x5f', '\xc1', '\x37', '\x4f',
+    '\xc2', '\x05', '\x06', '\xa0', '\x07', '\x0c', '\x10', '\x09',
+    '\x81', '\x5f', '\x0b', '\x30', '\x05', '\xa0', '\x1e', '\x0b',
+    '\x10', '\x06', '\x80', '\xbf', '\x03', '\x10', '\xa0', '\x25',
+    '\x06', '\x20', '\x04', '\x6f', '\xc4', '\xad', '\x58', '\x04',
+    '\x80', '\xb0', '\xc4', '\x54', '\xa8', '\x0d', '\x6f', '\x04',
+    '\x20', '\x07', '\xa0', '\x18', '\x0c', '\x10', '\x03', '\x80',
+    '\x9f', '\x0e', '\x1b', '\x0a', '\x78', '\x1b', '\x0c', '\x80',
+    '\x9f', '\x0c', '\x10', '\x02', '\xa0', '\x20', '\x08', '\x81',
+    '\xd0', '\x04', '\xa0', '\x25', '\x02', '\x30', '\x08', '\x81',
+    '\x3f', '\x08', '\x30', '\x0c', '\xa0', '\x19', '\x05', '\x10',
+    '\x1f', '\xc4', '\x4e', '\x10', '\x0c', '\x2f', '\x0b', '\x20',
+    '\xc1', '\xe1', '\xa0', '\x07', '\x0d', '\x81', '\x30', '\x2f',
+    '\x08', '\x20', '\x0c', '\xa0', '\x20', '\x81', '\x10', '\x0b',
+    '\xa0', '\x25', '\x0c', '\x10', '\xc1', '\xd2', '\x82', '\x1f',
+    '\xc1', '\x2d', '\x10', '\x0c', '\xa0', '\x1a', '\x04', '\x10',
+    '\x0c', '\x82', '\x1f', '\x0d', '\x10', '\x04', '\xa0', '\x20',
+    '\x08', '\x10', '\x0b', '\x81', '\x8f', '\x10', '\x04', '\xa0',
+    '\x25', '\x09', '\x20', '\x03', '\x81', '\x30', '\x05', '\x30',
+    '\x01', '\xa0', '\x18', '\xc2', '\x06', '\x08', '\x3f', '\xc3',
+    '\x3e', '\x80', '\x3f', '\xc3', '\x08', '\xe1', '\xa0', '\x06',
+    '\xc3', '\x3e', '\x20', '\x81', '\x6f', '\x0a', '\x30', '\x02',
+    '\xa0', '\x1e', '\x08', '\x10', '\x08', '\x80', '\xbf', '\x05',
+    '\x10', '\x0c', '\xa0', '\x25', '\x0a', '\x10', '\x03', '\x2f',
+    '\xc3', '\x8c', '\x15', '\x81', '\x50', '\xc3', '\x51', '\xc8',
+    '\x2f', '\x03', '\x10', '\x0a', '\xa0', '\x1a', '\x10', '\x08',
+    '\x4f', '\xc3', '\x8c', '\x46', '\x81', '\x00', '\xc4', '\x41',
+    '\xa8', '\x0d', '\x4f', '\x10', '\x05', '\xa0', '\x20', '\x08',
+    '\x10', '\x03', '\x81', '\x84', '\x10', '\x04', '\xa0', '\x25',
+    '\x09', '\x20', '\x07', '\x6f', '\xc1', '\xbc', '\x28', '\xc2',
+    '\xb9', '\x0e', '\x6f', '\x06', '\x10', '\x02', '\xa0', '\x1a',
+    '\x09', '\x10', '\xc2', '\xf9', '\x06', '\x10', '\x08', '\x3f',
+    '\x09', '\x20', '\x0a', '\xa0', '\x08', '\x08', '\x81', '\x30',
+    '\x0b', '\x1f', '\x0b', '\x20', '\x0b', '\xa0', '\x1f', '\x0b',
+    '\x81', '\x10', '\x08', '\xa0', '\x26', '\x10', '\x02', '\x80',
+    '\xdf', '\xc1', '\x7d', '\x34', '\xc1', '\xc6', '\x80', '\xdf',
+    '\x02', '\x10', '\xa0', '\x1b', '\x04', '\x10', '\x80', '\xef',
+    '\x0b', '\x38', '\x0b', '\x80', '\xef', '\x10', '\x04', '\xa0',
+    '\x20', '\x08', '\x10', '\x06', '\x81', '\x88', '\x10', '\x04',
+    '\xa0', '\x26', '\x02', '\x50', '\xc2', '\x74', '\x08', '\x80',
+    '\x9b', '\xc2', '\x78', '\x04', '\x50', '\x06', '\xa0', '\x18',
+    '\xc3', '\x09', '\xc1', '\x2f', '\x04', '\x10', '\x08', '\x2f',
+    '\x08', '\x10', '\x0a', '\xa0', '\x07', '\x03', '\x10', '\x0a',
+    '\x81', '\x7f', '\x09', '\x30', '\xa0', '\x1e', '\x08', '\x10',
+    '\x0b', '\x80', '\xbf', '\x08', '\x10', '\x0b', '\xa0', '\x26',
+    '\x20', '\x15', '\x01', '\x81', '\xd0', '\x01', '\x15', '\x20',
+    '\xa0', '\x1b', '\xc7', '\x02', '\xf2', '\x8d', '\x15', '\x81',
+    '\x90', '\xc4', '\x62', '\xea', '\x0c', '\x10', '\x08', '\xa0',
+    '\x20', '\x08', '\x10', '\x0b', '\x81', '\x8f', '\x10', '\x04',
+    '\xa0', '\x26', '\x02', '\x10', '\x09', '\x2f', '\xc2', '\x7c',
+    '\x03', '\x80', '\x80', '\xc3', '\x62', '\xe9', '\x2f', '\x08',
+    '\x10', '\x08', '\xa0', '\x1a', '\xc1', '\x2e', '\x50', '\x0e',
+    '\x3f', '\x04', '\x10', '\x05', '\xa0', '\x09', '\x03', '\x81',
+    '\x30', '\x0b', '\x1f', '\x0b', '\x20', '\x09', '\xa0', '\x1f',
+    '\x0b', '\x81', '\x10', '\x08', '\xa0', '\x26', '\x03', '\x10',
+    '\x80', '\xdf', '\x01', '\x50', '\x01', '\x80', '\xdf', '\x10',
+    '\x04', '\xa0', '\x1b', '\x08', '\x10', '\x80', '\xdf', '\x04',
+    '\x50', '\x04', '\x80', '\xdf', '\x10', '\x06', '\xa0', '\x20',
+    '\x08', '\x81', '\xd0', '\x04', '\xa0', '\x26', '\x0b', '\x20',
+    '\xc2', '\x92', '\x0e', '\x80', '\xff', '\xc2', '\x9e', '\x02',
+    '\x20', '\x0c', '\xa0', '\x18', '\xc6', '\x2e', '\x10', '\xb7',
+    '\x06', '\x20', '\xc3', '\xb5', '\x39', '\x10', '\x08', '\xa0',
+    '\x07', '\x06', '\x10', '\x05', '\x81', '\x9f', '\x09', '\x20',
+    '\x0b', '\xa0', '\x1d', '\x08', '\x10', '\x08', '\x80', '\xbf',
+    '\x08', '\x10', '\x0b', '\xa0', '\x26', '\x03', '\x80', '\xf0',
+    '\xc2', '\x91', '\x0d', '\x1f', '\xc2', '\x8c', '\x01', '\x80',
+    '\xf0', '\x04', '\xa0', '\x1b', '\x04', '\x81', '\x00', '\xc1',
+    '\x73', '\x18', '\xc1', '\x16', '\x81', '\x00', '\x08', '\xa0',
+    '\x20', '\x07', '\x10', '\x0b', '\x81', '\x8f', '\x10', '\x03',
+    '\xa0', '\x26', '\x09', '\x10', '\xc3', '\xf5', '\x29', '\x50',
+    '\x03', '\x14', '\x02', '\x50', '\xc3', '\xa5', '\x2e', '\x10',
+    '\x0d', '\xa0', '\x1b', '\x0b', '\x40', '\x03', '\x2f', '\xc1',
+    '\x5e', '\x10', '\xc1', '\xe2', '\xa0', '\x08', '\x0b', '\x81',
+    '\x40', '\x08', '\x1f', '\x0b', '\x20', '\x08', '\xa0', '\x1f',
+    '\x0b', '\x81', '\x10', '\x08', '\xa0', '\x26', '\x04', '\x10',
+    '\x80', '\xdf', '\x01', '\x50', '\x02', '\x80', '\xdf', '\x10',
+    '\x04', '\xa0', '\x1b', '\x08', '\x10', '\x0c', '\x80', '\xcf',
+    '\x04', '\x50', '\x03', '\x80', '\xcf', '\x0c', '\x10', '\x08',
+    '\xa0', '\x1f', '\xc1', '\x1c', '\x81', '\xe0', '\x09', '\xa0',
+    '\x26', '\x05', '\x10', '\x0b', '\x81', '\x3f', '\x0b', '\x10',
+    '\x06', '\xa0', '\x1a', '\xc1', '\x1c', '\x80', '\xb0', '\x09',
+    '\xa0', '\x06', '\xc1', '\x3e', '\x10', '\xc1', '\xe3', '\x81',
+    '\xaf', '\x08', '\x10', '\x0b', '\xa0', '\x1d', '\x0a', '\x10',
+    '\x06', '\x80', '\xbf', '\x04', '\x10', '\x0d', '\xa0', '\x26',
+    '\x04', '\x80', '\xf0', '\x07', '\x5f', '\x07', '\x80', '\xf0',
+    '\x04', '\xa0', '\x1b', '\x06', '\x80', '\xf0', '\x08', '\x4f',
+    '\xc1', '\x3e', '\x80', '\xf0', '\x09', '\xa0', '\x1f', '\x09',
+    '\x20', '\x0b', '\x81', '\x8f', '\x20', '\x06', '\xa0', '\x26',
+    '\x04', '\x80', '\x90', '\x0c', '\x3f', '\x08', '\x80', '\x90',
+    '\x07', '\xa0', '\x1d', '\x09', '\x20', '\xc1', '\xc1', '\x1f',
+    '\xc1', '\x1a', '\x10', '\xc1', '\xc1', '\xa0', '\x09', '\x02',
+    '\x81', '\x40', '\x08', '\x2f', '\x20', '\x08', '\xa0', '\x1f',
+    '\x0e', '\x81', '\x10', '\x0a', '\xa0', '\x26', '\x04', '\x10',
+    '\x80', '\xdf', '\xc2', '\x8e', '\x07', '\x14', '\xc2', '\x98',
+    '\x0e', '\x80', '\xdf', '\x10', '\x04', '\xa0', '\x1b', '\x0a',
+    '\x10', '\x0b', '\x80', '\xcf', '\xc1', '\x9e', '\x38', '\xc1',
+    '\xe9', '\x80', '\xcf', '\x0b', '\x10', '\x08', '\xa0', '\x1e',
+    '\xc3', '\x1c', '\x60', '\x81', '\xbf', '\x06', '\x10', '\x0b',
+    '\xa0', '\x25', '\x08', '\x10', '\x0b', '\x6f', '\xc1', '\x6e',
+    '\x14', '\xc1', '\xe6', '\x6f', '\x0b', '\x10', '\x08', '\xa0',
+    '\x1b', '\xc2', '\x8e', '\x03', '\x10', '\xc1', '\x81', '\x30',
+    '\xc1', '\xb4', '\xa0', '\x06', '\xc1', '\x3e', '\x10', '\xc1',
+    '\xc1', '\x81', '\xbf', '\x02', '\x10', '\x09', '\xa0', '\x1d',
+    '\xc3', '\x1e', '\x10', '\x80', '\xbf', '\xc2', '\x01', '\x02',
+    '\xa0', '\x27', '\x04', '\x80', '\xf0', '\x07', '\x5f', '\x07',
+    '\x80', '\xf0', '\x04', '\xa0', '\x1b', '\x08', '\x80', '\xf0',
+    '\x0b', '\x5f', '\x08', '\x80', '\xf0', '\x0b', '\xa0', '\x1e',
+    '\x09', '\x30', '\x0b', '\x81', '\x8f', '\x30', '\x07', '\xa0',
+    '\x25', '\x06', '\x10', '\xc2', '\x84', '\x03', '\x40', '\xc1',
+    '\xe8', '\x1f', '\xc1', '\x6d', '\x40', '\xc2', '\x84', '\x02',
+    '\x10', '\x08', '\xa0', '\x1e', '\xc3', '\x1a', '\xc2', '\xa0',
+    '\x00', '\xc1', '\x5e', '\x20', '\xc1', '\xc1', '\xa0', '\x09',
+    '\x07', '\x81', '\x50', '\x08', '\x2f', '\x20', '\x08', '\xa0',
+    '\x20', '\x03', '\x80', '\xf0', '\xc1', '\xe1', '\xa0', '\x26',
+    '\x04', '\x40', '\x06', '\x81', '\xbf', '\x06', '\x40', '\x04',
+    '\xa0', '\x1b', '\x0b', '\x40', '\xc1', '\xe3', '\x81', '\xaf',
+    '\x03', '\x40', '\x0a', '\xa0', '\x1d', '\xc3', '\x1c', '\x60',
+    '\x81', '\xdf', '\xc3', '\x06', '\xc1', '\xa0', '\x24', '\x07',
+    '\x10', '\xc1', '\xa2', '\x5f', '\x09', '\x30', '\x09', '\x5f',
+    '\xc1', '\x2a', '\x10', '\x07', '\xa0', '\x1e', '\xc2', '\xbe',
+    '\x0e', '\xa0', '\x00', '\x0d', '\x1b', '\x0e', '\xa0', '\x07',
+    '\xc1', '\x3c', '\x10', '\xc1', '\xc1', '\x81', '\xbf', '\x08',
+    '\x20', '\x08', '\xa0', '\x1e', '\x09', '\x10', '\x06', '\x80',
+    '\x9f', '\x08', '\x10', '\x0a', '\xa0', '\x27', '\x04', '\x20',
+    '\xc3', '\x96', '\x3b', '\x80', '\x90', '\x06', '\x3b', '\x06',
+    '\x80', '\x90', '\xc3', '\xb3', '\x69', '\x20', '\x04', '\xa0',
+    '\x1b', '\x08', '\x40', '\x03', '\x80', '\x90', '\xc1', '\xe5',
+    '\x3f', '\xc1', '\x1b', '\x80', '\x90', '\x04', '\x40', '\x0b',
+    '\xa0', '\x1d', '\x09', '\x40', '\x03', '\x81', '\x84', '\x40',
+    '\x09', '\xa0', '\x24', '\x04', '\x10', '\x1d', '\x02', '\x80',
+    '\xf0', '\xc2', '\xd5', '\x0a', '\x10', '\x08', '\xa0', '\x23',
+    '\x06', '\x20', '\xc1', '\xe6', '\xa0', '\x09', '\x09', '\x81',
+    '\x60', '\x07', '\x2f', '\x20', '\x08', '\xa0', '\x20', '\x0a',
+    '\x80', '\xf0', '\x09', '\xa0', '\x27', '\x06', '\x30', '\xc1',
+    '\xe3', '\x81', '\xbf', '\xc1', '\x3e', '\x30', '\x07', '\xa0',
+    '\x1b', '\x0e', '\x30', '\xc1', '\xe3', '\x81', '\xbf', '\xc1',
+    '\x3e', '\x30', '\x0b', '\xa0', '\x1c', '\xc3', '\x1c', '\x60',
+    '\x81', '\xff', '\xc3', '\x06', '\xc1', '\xa0', '\x23', '\x04',
+    '\x20', '\xc1', '\xe6', '\x4f', '\xc1', '\x8e', '\x14', '\xc1',
+    '\xe8', '\x4f', '\xc1', '\x6e', '\x20', '\x04', '\xa0', '\x2d',
+    '\xc1', '\x1b', '\x10', '\xc1', '\xc1', '\x81', '\xbf', '\xc1',
+    '\x1d', '\x20', '\x08', '\xa0', '\x1f', '\x08', '\x10', '\x08',
+    '\x7f', '\x08', '\x10', '\x08', '\xa0', '\x28', '\x05', '\x10',
+    '\x08', '\x2f', '\x07', '\x81', '\x90', '\x07', '\x2f', '\x08',
+    '\x10', '\x06', '\xa0', '\x1b', '\x0b', '\x10', '\xc1', '\xb3',
+    '\x1f', '\x07', '\x80', '\xa0', '\x03', '\x14', '\x02', '\x80',
+    '\xa0', '\x09', '\x1f', '\xc1', '\x1a', '\x10', '\xa0', '\x1d',
+    '\x09', '\x82', '\x50', '\x09', '\xa0', '\x23', '\x04', '\x81',
+    '\x90', '\x08', '\xa0', '\x23', '\xc3', '\x8a', '\xe9', '\xa0',
+    '\x0a', '\x09', '\x81', '\x70', '\x04', '\x2f', '\x20', '\x08',
+    '\xa0', '\x21', '\x08', '\x80', '\xd0', '\x09', '\xa0', '\x28',
+    '\x08', '\x20', '\xc1', '\xe2', '\x81', '\xdf', '\xc1', '\x2e',
+    '\x20', '\x08', '\xa0', '\x1c', '\x20', '\xc1', '\xd1', '\x81',
+    '\xdf', '\xc1', '\x1e', '\x20', '\x0c', '\xa0', '\x1c', '\xc2',
+    '\x01', '\x03', '\x82', '\x1f', '\xc3', '\x03', '\xe1', '\xa0',
+    '\x22', '\x05', '\x10', '\x06', '\x81', '\x3f', '\x06', '\x10',
+    '\x05', '\xa0', '\x2c', '\x08', '\x20', '\xc1', '\xc1', '\x81',
+    '\xcf', '\x04', '\x30', '\x08', '\xa0', '\x1f', '\x0b', '\x10',
+    '\x0a', '\x7f', '\x0a', '\x10', '\x0b', '\xa0', '\x28', '\x08',
+    '\x10', '\xc3', '\xb6', '\x6a', '\x81', '\xb0', '\xc3', '\xa6',
+    '\x6b', '\x10', '\x08', '\xa0', '\x1b', '\x0c', '\x10', '\x09',
+    '\x1f', '\xc1', '\x3e', '\x81', '\x90', '\xc1', '\xe6', '\x1f',
+    '\x08', '\x10', '\xa0', '\x1d', '\x82', '\x70', '\x0c', '\xa0',
+    '\x22', '\x04', '\x70', '\xc2', '\x41', '\x06', '\x38', '\xc2',
+    '\x47', '\x02', '\x70', '\x08', '\xa0', '\x30', '\xc1', '\x6e',
+    '\x81', '\x80', '\x04', '\x2f', '\x20', '\x08', '\xa0', '\x21',
+    '\x0b', '\x80', '\xd0', '\x0b', '\xa0', '\x28', '\x08', '\x10',
+    '\xc1', '\xc1', '\x7f', '\x0e', '\x2b', '\x78', '\x2b', '\x0e',
+    '\x7f', '\xc1', '\x1c', '\x10', '\x08', '\xa0', '\x1c', '\xc3',
+    '\x02', '\xc1', '\x80', '\xcf', '\x0c', '\x1b', '\x0c', '\x80',
+    '\xef', '\xc1', '\x1c', '\x10', '\xa0', '\x1d', '\x10', '\x04',
+    '\x82', '\x1f', '\x04', '\x10', '\xa0', '\x23', '\x08', '\x10',
+    '\x0b', '\x81', '\x3f', '\x0b', '\x10', '\x08', '\xa0', '\x2a',
+    '\xc1', '\x6e', '\x20', '\xc1', '\xc3', '\x81', '\xcf', '\x0d',
+    '\x40', '\x08', '\xa0', '\x1f', '\x0b', '\x10', '\x0c', '\x7f',
+    '\x0c', '\x10', '\x09', '\xa0', '\x28', '\x08', '\x82', '\x70',
+    '\x08', '\xa0', '\x1c', '\x10', '\xc2', '\x82', '\x05', '\x81',
+    '\xc0', '\xc5', '\x51', '\x18', '\x20', '\xa0', '\x1d', '\x82',
+    '\x70', '\x0b', '\xa0', '\x22', '\x04', '\x40', '\xc2', '\x83',
+    '\x0c', '\x80', '\x9f', '\xc2', '\x9d', '\x04', '\x40', '\x08',
+    '\xa0', '\x2f', '\xc1', '\x19', '\x81', '\x90', '\x07', '\x2f',
+    '\x20', '\x08', '\xa0', '\x21', '\x0b', '\x80', '\xd0', '\x08',
+    '\xa0', '\x28', '\x08', '\x10', '\x04', '\x3f', '\xc3', '\x8d',
+    '\x46', '\x81', '\x10', '\xc3', '\x64', '\xd8', '\x3f', '\x04',
+    '\x10', '\x08', '\xa0', '\x1c', '\xc2', '\x04', '\x04', '\x4f',
+    '\xc5', '\xbe', '\x68', '\x14', '\x80', '\xa0', '\xc5', '\x42',
+    '\x85', '\xc9', '\x5f', '\x04', '\x10', '\xa0', '\x1c', '\x0c',
+    '\x10', '\x09', '\x82', '\x1f', '\x09', '\x10', '\x0c', '\xa0',
+    '\x22', '\x08', '\x10', '\x0b', '\x1f', '\x1b', '\x80', '\xb8',
+    '\x1b', '\x1f', '\x0b', '\x10', '\x08', '\xa0', '\x29', '\xc1',
+    '\x3e', '\x20', '\xc1', '\xe3', '\x81', '\xef', '\x09', '\x30',
+    '\x0b', '\xa0', '\x1a', '\xc2', '\xbe', '\x0a', '\x18', '\x06',
+    '\x10', '\x80', '\x9f', '\x10', '\x04', '\x28', '\xc1', '\xdb',
+    '\xa0', '\x23', '\x08', '\x80', '\xb0', '\x02', '\x24', '\x06',
+    '\x58', '\x07', '\x24', '\x02', '\x80', '\xb0', '\x08', '\xa0',
+    '\x1c', '\x80', '\x90', '\xc2', '\x42', '\x07', '\x18', '\x0a',
+    '\x7b', '\x28', '\xc2', '\x45', '\x01', '\x80', '\x80', '\x04',
+    '\xa0', '\x1c', '\x09', '\x82', '\x70', '\x06', '\xa0', '\x22',
+    '\x08', '\x20', '\xc1', '\xc6', '\x80', '\xff', '\xc1', '\x4b',
+    '\x20', '\x08', '\xa0', '\x2d', '\xc1', '\x2c', '\x81', '\xb0',
+    '\x08', '\x2f', '\x20', '\x0b', '\xa0', '\x1c', '\xc2', '\xbe',
+    '\x0a', '\x18', '\x06', '\x80', '\xd0', '\x04', '\x28', '\xc1',
+    '\xca', '\xa0', '\x23', '\x08', '\x10', '\xc4', '\xf4', '\x8e',
+    '\x02', '\x81', '\x90', '\xc4', '\x82', '\xfe', '\x04', '\x10',
+    '\x08', '\xa0', '\x1c', '\xc2', '\x06', '\x04', '\x1f', '\xc2',
+    '\x8e', '\x03', '\x81', '\x70', '\xc2', '\x85', '\x0e', '\x1f',
+    '\xc2', '\x04', '\x03', '\xa0', '\x1b', '\xc3', '\x1c', '\x90',
+    '\x82', '\x3f', '\xc3', '\x09', '\xc1', '\xa0', '\x21', '\x09',
+    '\x10', '\xc1', '\x24', '\x81', '\x10', '\xc1', '\x42', '\x10',
+    '\x09', '\xa0', '\x28', '\xc1', '\x3e', '\x20', '\x06', '\x82',
+    '\x1f', '\x09', '\x20', '\x0b', '\xa0', '\x17', '\xc2', '\x7c',
+    '\x03', '\x60', '\x02', '\x80', '\x9f', '\x02', '\x60', '\xc2',
+    '\x61', '\x0b', '\xa0', '\x20', '\x08', '\x40', '\xc4', '\x51',
+    '\xa8', '\x0b', '\x81', '\x3f', '\xc4', '\xab', '\x48', '\x01',
+    '\x40', '\x08', '\xa0', '\x1c', '\x04', '\x40', '\xc2', '\x82',
+    '\x0b', '\x81', '\x4f', '\xc3', '\xad', '\x16', '\x40', '\x04',
+    '\xa0', '\x1b', '\x06', '\x82', '\x90', '\x06', '\xa0', '\x21',
+    '\x08', '\x10', '\x08', '\x6f', '\x0c', '\x3b', '\x0d', '\x6f',
+    '\x05', '\x10', '\x0b', '\xa0', '\x2c', '\xc1', '\x1c', '\x81',
+    '\xc0', '\x08', '\x2f', '\x20', '\x0b', '\xa0', '\x19', '\xc2',
+    '\x7c', '\x03', '\x81', '\xa0', '\xc1', '\xa5', '\xa0', '\x20',
+    '\x0b', '\x10', '\xc2', '\xa4', '\x01', '\x40', '\xc1', '\x64',
+    '\x18', '\x2b', '\x0e', '\x3f', '\x0d', '\x2b', '\x18', '\xc1',
+    '\x45', '\x40', '\xc2', '\xa1', '\x04', '\x10', '\x0b', '\xa0',
+    '\x1c', '\xc4', '\x08', '\xd4', '\x06', '\x30', '\xc4', '\x41',
+    '\x86', '\x09', '\x1b', '\x0e', '\x5f', '\x0e', '\x1b', '\xc3',
+    '\x89', '\x46', '\x40', '\xc4', '\xd6', '\x04', '\x04', '\xa0',
+    '\x1a', '\xc3', '\x19', '\x90', '\x82', '\x5f', '\xc3', '\x09',
+    '\x91', '\xa0', '\x20', '\x0c', '\x50', '\xc2', '\x42', '\x06',
+    '\x78', '\xc2', '\x46', '\x02', '\x50', '\x0c', '\xa0', '\x28',
+    '\x08', '\x20', '\x08', '\x82', '\x3f', '\x04', '\x10', '\x0b',
+    '\xa0', '\x15', '\xc1', '\x4c', '\x80', '\x80', '\xc1', '\x71',
+    '\x80', '\x9f', '\x04', '\x80', '\x90', '\xc1', '\xc4', '\xa0',
+    '\x1e', '\x0b', '\x20', '\xc1', '\xa3', '\x81', '\xdf', '\xc1',
+    '\x3a', '\x20', '\x0b', '\xa0', '\x1c', '\x04', '\x20', '\xc1',
+    '\xb1', '\x81', '\xaf', '\xc1', '\x8e', '\x30', '\x07', '\xa0',
+    '\x1a', '\x06', '\x82', '\xb0', '\x06', '\xa0', '\x20', '\x0b',
+    '\x10', '\x0b', '\x2f', '\xc2', '\x7c', '\x03', '\x70', '\xc2',
+    '\x73', '\x0d', '\x2f', '\x08', '\x10', '\x0d', '\xa0', '\x2b',
+    '\xc1', '\x2e', '\x81', '\xd0', '\x08', '\x1f', '\x0d', '\x20',
+    '\x0d', '\xa0', '\x17', '\xc1', '\x4c', '\x81', '\xf0', '\xc1',
+    '\xb2', '\xa0', '\x1e', '\x0b', '\x10', '\x01', '\x10', '\xc3',
+    '\x61', '\xd9', '\x81', '\x5f', '\xc3', '\x9d', '\x16', '\x10',
+    '\x01', '\x10', '\x0b', '\xa0', '\x1c', '\xc2', '\x08', '\x01',
+    '\x10', '\xc3', '\x61', '\xda', '\x81', '\x5f', '\xc3', '\x9d',
+    '\x16', '\x10', '\xc2', '\x01', '\x04', '\xa0', '\x19', '\x09',
+    '\x10', '\x0b', '\x82', '\x7f', '\x0b', '\x10', '\x09', '\xa0',
+    '\x12', '\xc3', '\x9d', '\x58', '\x34', '\x05', '\x18', '\xc2',
+    '\xdb', '\x0f', '\x20', '\xc2', '\x81', '\x0e', '\x80', '\xdf',
+    '\xc2', '\x8e', '\x01', '\x20', '\xc2', '\xdf', '\x0b', '\x18',
+    '\x05', '\x34', '\xc3', '\x85', '\xd9', '\xa0', '\x1a', '\xc4',
+    '\x1e', '\x10', '\x0c', '\x82', '\x4f', '\x03', '\x10', '\x0b',
+    '\xa0', '\x14', '\x09', '\x30', '\xc4', '\x61', '\xb8', '\x0e',
+    '\x81', '\x1f', '\xc3', '\xbd', '\x58', '\x40', '\x09', '\xa0',
+    '\x1d', '\x0b', '\x20', '\x0e', '\x5f', '\xc1', '\xbd', '\x28',
+    '\xc2', '\x46', '\x06', '\x38', '\xc2', '\x46', '\x06', '\x28',
+    '\xc1', '\xdb', '\x5f', '\x0e', '\x20', '\x0b', '\xa0', '\x1c',
+    '\x08', '\x20', '\x0c', '\x81', '\xdf', '\x07', '\x20', '\x08',
+    '\xa0', '\x19', '\x07', '\x82', '\xd0', '\x07', '\xa0', '\x12',
+    '\xc3', '\x9c', '\x58', '\x34', '\x06', '\x18', '\xc2', '\xdb',
+    '\x0e', '\x10', '\xc3', '\xf5', '\x39', '\x80', '\xd0', '\xc8',
+    '\xb4', '\x4e', '\x10', '\xcf', '\x0b', '\x18', '\x05', '\x34',
+    '\xc3', '\x85', '\xd9', '\xa0', '\x1e', '\x05', '\x81', '\xe0',
+    '\x08', '\x1f', '\x0b', '\x20', '\xa0', '\x17', '\x09', '\x82',
+    '\x30', '\x09', '\xa0', '\x1d', '\x0b', '\x30', '\xc1', '\xe8',
+    '\x81', '\xbf', '\xc1', '\x8e', '\x30', '\x0b', '\xa0', '\x1c',
+    '\x0b', '\x20', '\xc1', '\xe8', '\x81', '\xbf', '\xc1', '\x7e',
+    '\x20', '\x08', '\xa0', '\x19', '\x04', '\x10', '\x82', '\x9f',
+    '\x10', '\x04', '\xa0', '\x10', '\xc1', '\x39', '\x80', '\xd0',
+    '\x01', '\x10', '\x03', '\x81', '\x1f', '\x03', '\x10', '\x01',
+    '\x80', '\xd0', '\xc1', '\x93', '\xa0', '\x18', '\x0a', '\x10',
+    '\x09', '\x82', '\x4f', '\x0d', '\x20', '\x0e', '\xa0', '\x13',
+    '\x0a', '\x20', '\xc1', '\x92', '\x81', '\xaf', '\xc2', '\x8e',
+    '\x01', '\x20', '\x09', '\xa0', '\x1c', '\x0b', '\x20', '\x09',
+    '\x1f', '\xc3', '\x8b', '\x14', '\x81', '\x30', '\xc3', '\x41',
+    '\xb8', '\x1f', '\x09', '\x20', '\x0b', '\xa0', '\x1c', '\x08',
+    '\x20', '\x4f', '\x0b', '\x18', '\x05', '\x14', '\x01', '\x70',
+    '\x02', '\x14', '\xc3', '\x86', '\xca', '\x3f', '\x09', '\x20',
+    '\x08', '\xa0', '\x19', '\x04', '\x82', '\xd0', '\x04', '\xa0',
+    '\x10', '\xc1', '\x29', '\x80', '\xc0', '\x01', '\x81', '\x80',
+    '\x01', '\x80', '\xd0', '\xc1', '\x93', '\xa0', '\x1b', '\x09',
+    '\x81', '\xf0', '\x0b', '\x1f', '\x0b', '\x10', '\x02', '\xa0',
+    '\x16', '\x0a', '\x82', '\x50', '\x09', '\xa0', '\x1c', '\x0b',
+    '\x20', '\x07', '\x81', '\xff', '\x07', '\x20', '\x0b', '\xa0',
+    '\x1c', '\x0c', '\x10', '\x07', '\x81', '\xff', '\x05', '\x10',
+    '\x08', '\xa0', '\x19', '\x04', '\x10', '\x82', '\x9f', '\x10',
+    '\x04', '\xa0', '\x0e', '\xc1', '\x4e', '\x30', '\x03', '\x64',
+    '\x70', '\xc3', '\x82', '\xcb', '\x80', '\x9f', '\xc3', '\xbc',
+    '\x38', '\x70', '\x64', '\x03', '\x30', '\xc1', '\xe3', '\xa0',
+    '\x16', '\x08', '\x10', '\x82', '\x5f', '\x09', '\x20', '\xa0',
+    '\x13', '\xc1', '\x1e', '\x10', '\xc1', '\xe6', '\x81', '\xdf',
+    '\xc1', '\x3d', '\x10', '\xc1', '\xe1', '\xa0', '\x1b', '\x0b',
+    '\x30', '\x04', '\x81', '\xd0', '\x04', '\x30', '\x0b', '\xa0',
+    '\x1c', '\x0a', '\x20', '\xc3', '\xa8', '\x37', '\x81', '\x60',
+    '\xc4', '\x41', '\xb8', '\x05', '\x20', '\x0b', '\xa0', '\x19',
+    '\x04', '\x82', '\xd0', '\x04', '\xa0', '\x0e', '\xc1', '\x3d',
+    '\x83', '\x90', '\xc1', '\xe4', '\xa0', '\x18', '\xc1', '\x1e',
+    '\x81', '\xf0', '\x0b', '\x1f', '\x09', '\x10', '\x04', '\xa0',
+    '\x15', '\xc1', '\x1e', '\x82', '\x50', '\xc1', '\xd1', '\xa0',
+    '\x1b', '\x0e', '\x20', '\x07', '\x81', '\xff', '\x07', '\x20',
+    '\x0e', '\xa0', '\x1d', '\x10', '\x06', '\x81', '\xff', '\x04',
+    '\x10', '\x09', '\xa0', '\x19', '\x04', '\x10', '\x82', '\x9f',
+    '\x10', '\x04', '\xa0', '\x0e', '\x03', '\x10', '\xc1', '\xb6',
+    '\x80', '\xaf', '\xc5', '\xbc', '\x78', '\x14', '\x81', '\x10',
+    '\xc5', '\x41', '\x87', '\xcb', '\x80', '\xaf', '\xc1', '\x6b',
+    '\x10', '\x03', '\xa0', '\x16', '\xc2', '\x08', '\x04', '\x82',
+    '\x5f', '\x06', '\x10', '\x01', '\xa0', '\x13', '\x08', '\x10',
+    '\x02', '\x82', '\x0f', '\x0b', '\x20', '\x08', '\xa0', '\x1b',
+    '\x0e', '\x82', '\x70', '\x0e', '\xa0', '\x1c', '\x0b', '\x82',
+    '\x50', '\x0b', '\xa0', '\x19', '\x04', '\x82', '\xd0', '\x04',
+    '\xa0', '\x0d', '\xc1', '\x3e', '\x83', '\xb0', '\x04', '\xa0',
+    '\x18', '\x08', '\x82', '\x00', '\x0b', '\x1f', '\x08', '\x10',
+    '\x08', '\xa0', '\x15', '\x08', '\x82', '\x70', '\x07', '\xa0',
+    '\x1c', '\x06', '\x20', '\xc1', '\xe8', '\x81', '\xbf', '\xc1',
+    '\x8e', '\x20', '\x06', '\xa0', '\x1e', '\x03', '\x10', '\xc1',
+    '\xd6', '\x81', '\xbf', '\xc1', '\x5d', '\x10', '\xc1', '\xd2',
+    '\xa0', '\x19', '\x04', '\x10', '\x82', '\x9f', '\x10', '\x04',
+    '\xa0', '\x0d', '\xc3', '\x08', '\xc2', '\x81', '\x2f', '\xc3',
+    '\xad', '\x28', '\x80', '\x90', '\xc3', '\x82', '\xda', '\x81',
+    '\x2f', '\xc3', '\x2c', '\x80', '\xa0', '\x15', '\x09', '\x10',
+    '\x80', '\xcf', '\x0d', '\x80', '\xab', '\x0c', '\x80', '\xbf',
+    '\x01', '\x10', '\x04', '\xa0', '\x13', '\x04', '\x10', '\x06',
+    '\x82', '\x1b', '\x02', '\x10', '\x02', '\xa0', '\x1c', '\x04',
+    '\x82', '\x50', '\x04', '\xa0', '\x1d', '\xc1', '\x1e', '\x82',
+    '\x30', '\xc1', '\xe2', '\xa0', '\x19', '\x04', '\x82', '\xd0',
+    '\x04', '\xa0', '\x0d', '\x08', '\x83', '\xd0', '\x09', '\xa0',
+    '\x17', '\x01', '\x82', '\x00', '\x0b', '\x1f', '\x05', '\x10',
+    '\x0a', '\xa0', '\x15', '\x04', '\x82', '\x70', '\x02', '\xa0',
+    '\x1d', '\x06', '\x30', '\xc2', '\x85', '\x0b', '\x81', '\x5f',
+    '\xc2', '\x8b', '\x05', '\x30', '\x06', '\xa0', '\x20', '\x08',
+    '\x20', '\xc2', '\x85', '\x0b', '\x81', '\x4f', '\xc3', '\xbe',
+    '\x38', '\x10', '\xc2', '\x81', '\x0e', '\xa0', '\x1a', '\x04',
+    '\x10', '\x82', '\x9f', '\x10', '\x04', '\xa0', '\x0d', '\xc2',
+    '\x02', '\x0a', '\x81', '\x4f', '\xc5', '\x8d', '\x01', '\x51',
+    '\x38', '\xc5', '\x25', '\x10', '\xd8', '\x81', '\x4f', '\xc2',
+    '\x0a', '\x02', '\xa0', '\x15', '\x0d', '\x10', '\xc3', '\xe8',
+    '\xab', '\x18', '\x05', '\x14', '\x01', '\x81', '\x20', '\x01',
+    '\x14', '\x06', '\x18', '\xc2', '\xdb', '\x0c', '\x20', '\x07',
+    '\xa0', '\x13', '\x82', '\x90', '\xa0', '\x1c', '\xc1', '\x3e',
+    '\x82', '\x30', '\xc1', '\xe3', '\xa0', '\x1e', '\xc1', '\x4e',
+    '\x82', '\x10', '\xc1', '\xe8', '\xa0', '\x1a', '\x04', '\x82',
+    '\xd0', '\x04', '\xa0', '\x0d', '\x01', '\x81', '\xa0', '\xc1',
+    '\x41', '\x38', '\xc1', '\x14', '\x81', '\xa0', '\x03', '\xa0',
+    '\x16', '\x0c', '\x82', '\x10', '\x06', '\x1b', '\x01', '\x10',
+    '\x0d', '\xa0', '\x15', '\x82', '\x90', '\xa0', '\x1e', '\xc1',
+    '\x2a', '\x50', '\xc1', '\x43', '\x18', '\x0a', '\x2b', '\x0e',
+    '\x1f', '\x0e', '\x2b', '\x0a', '\x18', '\xc1', '\x34', '\x50',
+    '\xc1', '\xa2', '\xa0', '\x22', '\xc1', '\x6d', '\x40', '\xc2',
+    '\x42', '\x06', '\x18', '\x80', '\x9b', '\x18', '\xc2', '\x46',
+    '\x01', '\x30', '\xc2', '\x81', '\x0d', '\xa0', '\x1c', '\x04',
+    '\x82', '\xd0', '\x04', '\xa0', '\x0c', '\x0e', '\x10', '\x80',
+    '\xdf', '\x0e', '\x2b', '\x18', '\xc1', '\x24', '\x10', '\xc1',
+    '\xb3', '\xa0', '\x07', '\xc1', '\x3b', '\x10', '\xc1', '\x42',
+    '\x18', '\x2b', '\x0d', '\x80', '\xdf', '\x10', '\x0e', '\xa0',
+    '\x15', '\x04', '\x82', '\x90', '\x0a', '\xa0', '\x13', '\x82',
+    '\x90', '\xa0', '\x1e', '\xc1', '\x18', '\x81', '\xf0', '\xc1',
+    '\x81', '\xa0', '\x22', '\xc1', '\x29', '\x81', '\xc0', '\xc2',
+    '\x71', '\x0d', '\xa0', '\x1c', '\x04', '\x82', '\xd0', '\x04',
+    '\xa0', '\x0c', '\x0c', '\x81', '\x90', '\xc1', '\xa3', '\xa0',
+    '\x07', '\xc1', '\x29', '\x81', '\x90', '\xa0', '\x16', '\x0b',
+    '\x82', '\x60', '\x01', '\xa0', '\x16', '\x82', '\x90', '\xa0',
+    '\x20', '\xc1', '\x59', '\x81', '\xb0', '\xc1', '\x95', '\xa0',
+    '\x26', '\xc2', '\x8e', '\x04', '\x81', '\x60', '\xc2', '\x62',
+    '\x0a', '\xa0', '\x1f', '\x04', '\x82', '\xd0', '\x04', '\xa0',
+    '\x0c', '\x0b', '\x10', '\x06', '\x64', '\x80', '\xe0', '\x06',
+    '\xa0', '\x0b', '\x06', '\x80', '\xe0', '\x64', '\x06', '\x10',
+    '\x0b', '\xa0', '\x15', '\x0c', '\x82', '\x80', '\xc1', '\xe1',
+    '\xa0', '\x13', '\x82', '\x9b', '\xa0', '\x1f', '\xc2', '\x8e',
+    '\x02', '\x81', '\xb0', '\xc2', '\x82', '\x0e', '\xa0', '\x25',
+    '\xc2', '\x6b', '\x02', '\x81', '\x60', '\xc2', '\x51', '\x09',
+    '\xa0', '\x1f', '\x04', '\x82', '\xd0', '\x04', '\xa0', '\x0c',
+    '\x0b', '\x81', '\x80', '\x06', '\xa0', '\x0a', '\xc1', '\x3e',
+    '\x81', '\x80', '\xa0', '\x17', '\x03', '\x82', '\x50', '\x05',
+    '\xa0', '\x16', '\x82', '\x9b', '\xa0', '\x22', '\xc5', '\xbe',
+    '\x58', '\x14', '\x80', '\xf0', '\xc5', '\x41', '\x85', '\xeb',
+    '\xa0', '\x2c', '\xc2', '\x8b', '\x07', '\x14', '\x80', '\xa0',
+    '\xc5', '\x41', '\x85', '\xda', '\xa0', '\x22', '\x09', '\x82',
+    '\xd8', '\x09', '\xa0', '\x0c', '\x0b', '\x81', '\x70', '\x02',
+    '\xa0', '\x0d', '\x02', '\x81', '\x70', '\x0b', '\xa0', '\x16',
+    '\x0a', '\x82', '\x78', '\x0a', '\xa0', '\x61', '\xc3', '\x8c',
+    '\x46', '\x81', '\x30', '\xc3', '\x64', '\xc8', '\xa0', '\x2b',
+    '\xc4', '\x9d', '\x48', '\x03', '\x80', '\xc0', '\xc4', '\x42',
+    '\x87', '\x0c', '\xa0', '\x22', '\x09', '\x82', '\xd8', '\x09',
+    '\xa0', '\x0c', '\x0b', '\x81', '\x70', '\x03', '\xa0', '\x0c',
+    '\xc1', '\x1e', '\x81', '\x70', '\xa0', '\x18', '\x0c', '\x82',
+    '\x4b', '\x0d', '\xa0', '\x6b', '\x0d', '\x80', '\x9b', '\x0d',
+    '\xa0', '\x3d', '\x0d', '\x1b', '\x0d', '\xa0', '\x69', '\x30',
+    '\xc2', '\x74', '\x08', '\x1b', '\x0d', '\xa0', '\x0b', '\x1b',
+    '\x0d', '\xa0', '\x0d', '\x0d', '\x1b', '\xa0', '\x0b', '\x0d',
+    '\x1b', '\xc2', '\x78', '\x04', '\x30', '\xa0', '\xa9', '\x0c',
+    '\x4b', '\x38', '\x4b', '\x0c', '\xa0', '\x38', '\x0d', '\x6b',
+    '\x0c', '\xa0', '\x66', '\x0d', '\x30', '\xc2', '\x74', '\x08',
+    '\x1b', '\x0c', '\xa0', '\x0a', '\x2b', '\x0d', '\xa0', '\x0d',
+    '\x0d', '\x1b', '\x0c', '\xa0', '\x0a', '\x2b', '\xc2', '\x78',
+    '\x04', '\x20', '\x01', '\xa1', '\x63', '\xc2', '\x64', '\x0b',
+    '\xa0', '\x39', '\xc2', '\x6a', '\x04', '\xa1', '\x63', '\xc2',
+    '\x73', '\x0c', '\xa0', '\x39', '\x0a', '\x16', '\xaa', '\x66'
+};
+
+static CompressedXpm pitch_070_compressed_xpm =
+{
+    840,  // width
+    70,  // height
+    0xff00ff,  // background_colour
+    16,  // nbr_other_colours
+    {0x000000,0x393939,0x535353,0x686868,0x7a7a7a,0x8b8b8b,0x999999,0xa7a7a7,0xb4b4b4,0xc0c0c0,0xcccccc,0xd7d7d7,0xe1e1e1,0xececec,0xf5f5f5,0xffffff},
+    9104,  // binary_len
+    pitch_070_compressed_xpm_data //bin
+};
+
+static void StaticTest()
+{
+    CompressedXpm2Xpm( pitch_070_compressed_xpm, "pitch_070_compressed.xpm" );
 }
 
 
