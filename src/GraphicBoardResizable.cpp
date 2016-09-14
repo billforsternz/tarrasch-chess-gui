@@ -6,15 +6,13 @@
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
 
-// This resizable version is just getting started - don't #define RESIZABLE_BOARD
-// in Appdefs.h until it's much more mature! 
-
 #include "wx/wx.h"
 #include "wx/image.h"
 #include "wx/rawbmp.h"
 #include "wx/file.h"
 #include "Portability.h"
 #include "DebugPrintf.h"
+#include "CompressedBitmaps.h"
 #include "GraphicBoardResizable.h"
 #include "GameLogic.h"
 #include "thc.h"
@@ -40,14 +38,6 @@ GraphicBoardResizable::GraphicBoardResizable
     Init( size );
 }
 
-#include "bitmaps/pitch-015-batch2.xpm"
-#include "bitmaps/pitch-023-batch2.xpm"
-#include "bitmaps/pitch-031-batch2.xpm"
-#include "bitmaps/pitch-040-batch2.xpm"
-#include "bitmaps/pitch-050-batch2.xpm"
-#include "bitmaps/pitch-060-batch2.xpm"
-#include "bitmaps/pitch-070-batch2.xpm"
-
 void GraphicBoardResizable::Init
 (
     const wxSize& size
@@ -59,46 +49,14 @@ void GraphicBoardResizable::Init
     pix = min/8;
     wxBitmap my_chess_bmp_;
     my_chess_bmp_.Create(pix*8,pix*8,24);
-//    if( pix < 15 )    TODO handle this
-    int pitch=0;
-    if( pix < 23 )
-    {
-        xpm = pitch_15_xpm;
-        pitch = 15;
-    }
-    else if( pix < 31 )
-    {
-        xpm = pitch_23_xpm;
-        pitch = 23;
-    }
-    else if( pix < 40 )
-    {
-        xpm = pitch_31_xpm;
-        pitch = 31;
-    }
-    else if( pix < 50 )
-    {
-        xpm = pitch_40_xpm;
-        pitch = 40;
-    }
-    else if( pix < 60 )
-    {
-        xpm = pitch_50_xpm;
-        pitch = 50;
-    }
-    else if( pix < 70 )
-    {
-        xpm = pitch_60_xpm;
-        pitch = 60;
-    }
-    else
-    {
-        xpm = pitch_70_xpm;
-        pitch = 70;
-    }
+    int pitch;
+    const CompressedXpm *compressed_xpm = GetBestFit( pix, pitch );
     wxMemoryDC dc;
     dc.SelectObject(my_chess_bmp_);
     dc.SetMapMode(wxMM_TEXT);
+    CompressedXpmProcessor processor(compressed_xpm);
+    xpm = (const char **)processor.GetXpm();
+    wxBitmap lookup(xpm);
 
     wxColour icon_light(255,226,179);
     wxColour legacy_dark(200,200,200);
@@ -208,7 +166,6 @@ void GraphicBoardResizable::Init
                                 p_mask = &black_pawn_mask;
                                 break;
                 }
-                wxBitmap lookup(xpm);
                 wxNativePixelData pixels_src(lookup);
                 wxNativePixelData::Iterator src(pixels_src);
                 wxNativePixelData pixels_dst(my_chess_bmp_);
@@ -244,7 +201,7 @@ void GraphicBoardResizable::Init
                         byte g = dst.Green();
                         byte b = dst.Blue();
                         bool magenta = (r==255 && g==0 && b==255);
-                        if( magenta || before )
+                        if( magenta )//|| before )
                         {
                             if( dark )
                             {
@@ -262,7 +219,7 @@ void GraphicBoardResizable::Init
                             dst.m_ptr[1] = g;
                             dst.m_ptr[0] = b;
                         }
-                    /*    else if( before && r==g && r==b )
+                 /*     else if( before && r==g && r==b )
                         {
                             float lightening_factor = r<128 ? 1.0 : ((r*0.2)/128);
                             #define max(a,b) ((a)>(b) ? (a) : (b))

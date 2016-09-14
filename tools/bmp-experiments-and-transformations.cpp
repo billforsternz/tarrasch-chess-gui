@@ -158,7 +158,7 @@ int main()
         "../font-140-160w.bmp",
         "../font-160b-180w.bmp",
         "../font-180b-200w.bmp",
-        "../font-200b.bmp" */
+        "../font-200b.bmp"
 
         "pitch-015-batch2.bmp",
         "pitch-016-batch2.bmp",
@@ -237,7 +237,56 @@ int main()
         "pitch-261-batch1.bmp",
         "pitch-277-batch1.bmp",
         "pitch-292-batch1.bmp",
-        "pitch-306-batch1.bmp"
+        "pitch-306-batch1.bmp" */
+
+        "pitch-015-batch2.bmp",
+        "pitch-018-2-batch2.bmp",
+        "pitch-021-batch2.bmp",
+        "pitch-025-batch2.bmp",
+        "pitch-029-batch2.bmp",
+        "pitch-033-batch2.bmp",
+        "pitch-037-batch2.bmp",
+        "pitch-040-batch2.bmp",
+        "pitch-042-batch2.bmp",
+        "pitch-045-batch2.bmp",
+        "pitch-050-batch2.bmp",
+        "pitch-055-batch2.bmp",
+        "pitch-060-batch2.bmp",
+        "pitch-065-batch2.bmp",
+        "pitch-070-batch2.bmp",
+        "pitch-075-batch2.bmp",
+        "pitch-080-batch2.bmp",
+        "pitch-085-batch2.bmp",
+        "pitch-090-batch2.bmp",
+        "pitch-095-batch2.bmp",
+        "pitch-100-batch2.bmp",
+        "pitch-110-batch2.bmp",
+        "pitch-120-batch2.bmp",
+        "pitch-130-batch2.bmp",
+        "pitch-140-batch2.bmp",
+        "pitch-150-batch2.bmp",
+        "pitch-160-batch2.bmp",
+        "pitch-170-batch2.bmp",
+        "pitch-180-batch2.bmp",
+        "pitch-190-batch2.bmp",
+        "pitch-200-batch2.bmp",
+        "pitch-215-batch1.bmp",
+        "pitch-231-batch1.bmp",
+        "pitch-246-batch1.bmp",
+        "pitch-261-batch1.bmp",
+        "pitch-277-batch1.bmp",
+        "pitch-292-batch1.bmp",
+        "pitch-306-batch1.bmp" 
+
+/*
+        "pitch-015-batch2.bmp",
+        "pitch-023-batch2.bmp",
+        "pitch-031-batch2.bmp",
+        "pitch-040-batch2.bmp",
+        "pitch-050-batch2.bmp",
+        "pitch-060-batch2.bmp",
+        "pitch-070-batch2.bmp" */
+
     };
     for( int i=0; i<sizeof(files)/sizeof(files[0]); i++ )
     {
@@ -251,8 +300,10 @@ int main()
             CompressedXpm compressed;
             if( Bmp2CompressedXpm(in,filename,compressed) )
             {
-                //CompressedXpm2CHeader(compressed,"pitch-070-batch2-compressed-xpm.h",false);
-                CompressedXpm2Xpm(compressed,filename);
+                std::string s(filename);
+                std::string hdr_filename = "../../../src/bitmaps/" + s.substr(0,s.length()-4) + "-compressed.h";
+                CompressedXpm2CHeader(compressed,hdr_filename.c_str(),false);
+                //CompressedXpm2Xpm(compressed,filename);
                 free(compressed.bin);
             }
         }
@@ -1334,7 +1385,7 @@ static void CompressedXpm2CHeader( CompressedXpm &compressed, const char *filena
     fprintf( f, "static uint8_t pitch_%03d_compressed_xpm_data[] =\n{\n    ",  compressed.height  );
     for( uint32_t i=0; i<compressed.binary_len; i++ )
     {
-        fprintf( f, "\'\\x%02x\'", compressed.bin[i] );
+        fprintf( f, "0x%02x", compressed.bin[i] );
         if( i+1 == compressed.binary_len )
             fprintf( f, "\n};\n" );
         else if( (i+1) % 8 == 0 )

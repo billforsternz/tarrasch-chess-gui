@@ -138,6 +138,7 @@
     <ClCompile Include="src\ClipboardDialog.cpp" />
     <ClCompile Include="src\ClockDialog.cpp" />
     <ClCompile Include="src\CompactGame.cpp" />
+    <ClCompile Include="src\CompressedBitmaps.cpp" />
     <ClCompile Include="src\CompressMoves.cpp" />
     <ClCompile Include="src\CreateDatabaseDialog.cpp" />
     <ClCompile Include="src\CtrlBox.cpp" />
@@ -215,6 +216,7 @@
     <ClInclude Include="src\ClipboardDialog.h" />
     <ClInclude Include="src\ClockDialog.h" />
     <ClInclude Include="src\CompactGame.h" />
+    <ClInclude Include="src\CompressedBitmaps.h" />
     <ClInclude Include="src\CompressMoves.h" />
     <ClInclude Include="src\CreateDatabaseDialog.h" />
     <ClInclude Include="src\CtrlBox.h" />
