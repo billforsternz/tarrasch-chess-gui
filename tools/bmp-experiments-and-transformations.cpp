@@ -21,7 +21,7 @@ struct BmpHeader
 {
     uint16_t  bm;               // always 'B', 'M'
     uint32_t  file_len;         // should equal hdr_len + data_len
-    uint16_t  res1;
+    uint16_t  res1;             // res = various reserved / don't care fields
     uint16_t  res2;
     uint32_t  hdr_len;          // always 54
     uint32_t  sub_hdr_len;      // always 40
@@ -37,17 +37,52 @@ struct BmpHeader
     uint32_t  res7;
 };
 
+/* struct CompressedXpm is the basis of a simple bespoke bmp compression scheme. We want
+    to have a decent set of pre-rendered chess graphic bitmaps and in .xpm form they are
+    very big. This simple scheme encodes in about 7 times less space in the executable
+    program.
+  
+    Compression system works for up to 17 colours (a background colour plus up to 16
+    other colours) - uses run length encoding and nibble coding for the non-background
+    colours.
+
+    Byte by byte coding system
+    --------------------------
+    up to 2^3  =8    successive codes cccc                0nnncccc
+    up to 2^9  =512  successive codes cccc                100nnnnn nnnncccc
+    up to 2^13 =8192 successive background codes          101nnnnn nnnnnnnn
+    up to 2^5  =32   arbitrary codes                      110nnnnn followed by nibble codes
+    up to 2^13 =8192 arbitrary codes                      111nnnnn nnnnnnnn followed by nibble codes
+
+    In this cccc is a nibble code 0-15 and encodes a colour. And nnnn is a run length code
+    that encodes from 1 to 2^m for an m bit field. So the code includes an offset of 1, so
+    for example nnn=000 encodes 1 not 0, which means single byte 0000cccc encodes one pixel
+    of colour cccc. Nibble encoding is least significant nibble first.
+
+    Kludge added later: Support an 18th colour (it turned out we needed to) using a quirk
+    of the coding system. Code 110nnnnn is never used for nnnnn=00000 since one code can
+    be more efficiently encoded with 0nnncccc for nnn=000. So make use of the spare code
+    freed up (=0xc0) to directly represent the 18th colour. I dynamically calculate the least
+    frequently encountered colour code to be represented by the kludge code.
+
+*/
+
+
 struct CompressedXpm
 {
     uint32_t width;
     uint32_t height;
     uint32_t background_colour;
+    uint32_t kludge_colour;
+    int      kludge_idx;
     int      nbr_other_colours;
     uint32_t other_colours[16];
     uint32_t binary_len;
     uint8_t  *bin;
 };
 
+// CompressedXpmProcessor decompresses into a single char **xpm pointer that can be used
+//  for xpm -> bitmap generation within wxWidgets
 class CompressedXpmProcessor
 {
 public:
@@ -89,20 +124,22 @@ int main()
 #ifdef STATIC_TEST
     StaticTest();
 #endif
-#define ONE_FILE
+//#define ONE_FILE
 #ifdef ONE_FILE
     const char *filename = "pitch-070-batch2.bmp";
     BmpHeader *in = ReadFile( buf, filename );
     if( in )
     {
         CompressedXpm compressed;
-        Bmp2CompressedXpm(in,filename,compressed);
-        CompressedXpm2CHeader(compressed,"pitch-070-batch2-compressed-xpm.h",false);
-        //CompressedXpm2Xpm(compressed,filename);
-        free(compressed.bin);
+        if( Bmp2CompressedXpm(in,filename,compressed) )
+        {
+            CompressedXpm2CHeader(compressed,"pitch-070-batch2-compressed-xpm.h",false);
+            //CompressedXpm2Xpm(compressed,filename);
+            free(compressed.bin);
+        }
     }
 #endif
-//#define BULK_FILES
+#define BULK_FILES
 #ifdef BULK_FILES
     const char *files[] =
     {
@@ -204,12 +241,20 @@ int main()
     };
     for( int i=0; i<sizeof(files)/sizeof(files[0]); i++ )
     {
-        BmpHeader *in = ReadFile( buf, files[i] );
+        const char *filename = files[i];
+        BmpHeader *in = ReadFile( buf, filename );
         if( in )
         {
             //DrawTextPicture(in);
             //SliceOutPieces(in);
-            Convert2Xpm( in, files[i] );
+            //Convert2Xpm( in, files[i] );
+            CompressedXpm compressed;
+            if( Bmp2CompressedXpm(in,filename,compressed) )
+            {
+                //CompressedXpm2CHeader(compressed,"pitch-070-batch2-compressed-xpm.h",false);
+                CompressedXpm2Xpm(compressed,filename);
+                free(compressed.bin);
+            }
         }
     }
 #endif
@@ -846,6 +891,7 @@ static void Convert2Xpm( BmpHeader *in, const char *filename )
     }
 }
 
+
 static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXpm &compressed )
 {
     int dbg=0;
@@ -860,11 +906,12 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
         return false;
     }
     const uint32_t magenta = 0xff00ff;
+    uint32_t kludge_rgb = 0;
     compressed.width  = in->width;    
     compressed.height = in->height;
     compressed.background_colour = magenta;    
-    std::set<uint32_t> colour_set;
-    colour_set.insert(magenta);
+    std::map<uint32_t,uint32_t> colour_map;
+    colour_map[magenta] = 0;
     for( uint32_t y=0; y<in->height; y++ )
     {
         uint8_t *ptr = Locate(in,y);
@@ -878,12 +925,47 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
             rgb |= g;
             rgb <<= 8;
             rgb |= b;
-            colour_set.insert(rgb);
+            int count = colour_map.count(rgb);
+            if( count == 0 )
+                colour_map[rgb] = 0;
+            else
+            {
+                uint32_t val = colour_map[rgb];
+                val++;
+                colour_map[rgb] = val;
+            }
         }
     }
-    bool too_many = ( colour_set.size() > 17 );
-    printf( "File %s, %d colours found%s\n", filename, colour_set.size(), too_many?" too many!":"" );
+    int nbr_colours = colour_map.size();
+    bool too_many = (nbr_colours > 18);
+
+    // Set kudge_rgb to be a colour that doesn't otherwise exist
+    kludge_rgb = 0;
+    while( colour_map.count(kludge_rgb) > 0 )
+        kludge_rgb++;  // try something else
+
+    // But if we have 18 colours, we need kludge_rgb - set it to least frequent colour
+    if( nbr_colours == 18 )
+    {
+        too_many = true;
+        uint32_t min = 1000000000;
+        for( std::map<uint32_t,uint32_t>::iterator it=colour_map.begin(); it!=colour_map.end(); it++ )
+        {
+            if( it->second < min )
+            {
+                if( it->first != magenta )
+                {
+                    min = it->second;
+                    kludge_rgb = it->first;
+                    too_many = false;
+                }
+            }
+        }
+        if( !too_many )
+            printf( "18 colours accommodated with kludge colour #%06x\n", kludge_rgb );
+    }
     ok = !too_many;
+    printf( "File %s, %d colours found%s\n", filename, nbr_colours, too_many?" too many!":"" );
     if( ok )
     {
         compressed.bin = (uint8_t *)malloc( compressed.width * compressed.height * 2 ); // *2 = safety margin for some weird edge case where compressed bigger than uncompressed
@@ -895,15 +977,20 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
     }
     if( ok )
     {
-        compressed.nbr_other_colours = colour_set.size()-1;
         int idx=0;
-        for( std::set<uint32_t>::iterator it=colour_set.begin(); it!=colour_set.end(); it++ )
+        compressed.kludge_colour = kludge_rgb;
+        compressed.kludge_idx = -1;
+        for( std::map<uint32_t,uint32_t>::iterator it=colour_map.begin(); it!=colour_map.end(); it++ )
         {
-            uint32_t colour = *it;
-            if( colour != magenta )
+            uint32_t colour = it->first;
+            if( colour == kludge_rgb )
+                compressed.kludge_idx = idx;
+            else if( colour != magenta )
                 compressed.other_colours[ idx++ ] = colour;
         }
+        compressed.nbr_other_colours = idx;
         uint8_t *dst = compressed.bin;
+
         /*
             Byte by byte coding system
             --------------------------
@@ -913,6 +1000,7 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
             up to 2^5  =32   arbitrary codes                      110nnnnn followed by codes
             up to 2^13 =8192 arbitrary codes                      111nnnnn nnnnnnnn followed by codes
         */
+
         uint32_t prev_rgb=0;
         uint8_t  cccc=0;
         uint8_t  cccc_in_run=0;
@@ -931,6 +1019,7 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
                 rgb |= g;
                 rgb <<= 8;
                 rgb |= b;
+                cccc = 0;    // if not found it should be magenta or kludge_rgb
                 for( int i=0; i<compressed.nbr_other_colours; i++ )
                 {
                     if( rgb == compressed.other_colours[i] )
@@ -955,6 +1044,13 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
                             state = in_run_magenta;
                             n = 1;
                         }
+                        else if( rgb == kludge_rgb )
+                        {
+                            state = init;
+                            *dst++ = 0xc0;  // 0xc0 represents a kludge pixel - it's otherwise unneeded since
+                                            //  it specifies a len=1 buffer which can be more efficiently
+                                            //  represented as a one byte code 0000cccc
+                        }
                         else
                         {
                             state = search;
@@ -971,7 +1067,10 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
                         if( rgb == magenta )
                         {
                             write_out_buf = true;
-                            dbg_enable = true;
+                        }
+                        else if( rgb == kludge_rgb )
+                        {
+                            write_out_buf = true;
                         }
                         else if( end )
                         {
@@ -1067,6 +1166,11 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
                                 state = in_run_magenta;
                                 n = 1;
                             }
+                            else if( rgb == kludge_rgb )
+                            {
+                                state = init;
+                                *dst++ = 0xc0;
+                            }
                             else
                             {
                                 state = in_run;
@@ -1102,8 +1206,9 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
                                     printf( "Magenta (%d) [%02x %02x]\n", chunk, dat[0], dat[1] );
                             }
 
+
                             // Account for final pixel at end
-                            if( end && rgb!=magenta )
+                            if( end && rgb!=magenta && rgb!=kludge_rgb )
                             {
 
                                 // Need a single non magenta pixel
@@ -1111,9 +1216,17 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
                             }
 
                             // Next state
-                            state = search;
-                            idx = 0;
-                            buf[idx++] = cccc;
+                            if( rgb == kludge_rgb )
+                            {
+                                state = init;
+                                *dst++ = 0xc0;
+                            }
+                            else
+                            {
+                                state = search;
+                                idx = 0;
+                                buf[idx++] = cccc;
+                            }
                         }
                         break;
                     }
@@ -1167,6 +1280,10 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
                                     *dst++ = 0;
                                 }
 
+                                // Or a single kludge pixel
+                                else if( rgb == kludge_rgb )
+                                    *dst++ = 0xc0;
+
                                 // Or a single non magenta pixel
                                 else if( rgb != prev_rgb )
                                     *dst++ = cccc;
@@ -1177,6 +1294,12 @@ static bool Bmp2CompressedXpm( BmpHeader *in, const char *filename, CompressedXp
                             {
                                 state = in_run_magenta;
                                 n = 1;
+                            }
+                            else if( rgb == kludge_rgb )
+                            {
+                                state = init;
+                                if( !end )
+                                    *dst++ = 0xc0;
                             }
                             else
                             {
@@ -1207,6 +1330,7 @@ static void CompressedXpm2CHeader( CompressedXpm &compressed, const char *filena
         printf( "Cannot open %s\n", filename );
         return;
     }
+    fprintf( f, "// Bespoke bitmap compression, generated with tools/bmp-experiments-and-transformations.cpp\n"  );
     fprintf( f, "static uint8_t pitch_%03d_compressed_xpm_data[] =\n{\n    ",  compressed.height  );
     for( uint32_t i=0; i<compressed.binary_len; i++ )
     {
@@ -1220,14 +1344,16 @@ static void CompressedXpm2CHeader( CompressedXpm &compressed, const char *filena
     }
     fprintf( f, "\n" );
     fprintf( f, "static CompressedXpm pitch_%03d_compressed_xpm =\n{\n",  compressed.height  );
-    fprintf( f, "    %d,  // width\n"                                 , compressed.width   );
-    fprintf( f, "    %d,  // height\n"                                , compressed.height  );
-    fprintf( f, "    0x%06x,  // background_colour\n"                   , compressed.background_colour  );
+    fprintf( f, "    %d,  // width\n"                                  , compressed.width   );
+    fprintf( f, "    %d,  // height\n"                                 , compressed.height  );
+    fprintf( f, "    0x%06x,  // background_colour\n"                  , compressed.background_colour  );
+    fprintf( f, "    0x%06x,  // kludge_colour\n"                      , compressed.kludge_colour  );
+    fprintf( f, "    %d,  // kludge_idx\n"                            , compressed.kludge_idx  );
     fprintf( f, "    %d,  // nbr_other_colours\n    {"                , compressed.nbr_other_colours  );
     for( int i=0; i<compressed.nbr_other_colours; i++ )
         fprintf( f, "0x%06x%s", compressed.other_colours[i], i+1<compressed.nbr_other_colours?",":"},\n" );
-    fprintf( f, "    %d,  // binary_len\n"                           , compressed.binary_len  );
-    fprintf( f, "    pitch_%03d_compressed_xpm_data //bin\n"           , compressed.height   );
+    fprintf( f, "    %d,  // binary_len\n"                            , compressed.binary_len  );
+    fprintf( f, "    pitch_%03d_compressed_xpm_data //bin\n"          , compressed.height   );
     fprintf( f, "};\n" );
     fclose(f);
 }
@@ -1236,7 +1362,7 @@ static void CompressedXpm2Xpm( CompressedXpm &compressed, const char *filename )
 {
     CompressedXpmProcessor processor( &compressed );
     std::string s(filename);
-    std::string xpm_filename = s.substr(0,s.length()-4) + "-reconstituted.xpm";
+    std::string xpm_filename = "reconstituted/" + s.substr(0,s.length()-4) + ".xpm";
     FILE *f = fopen(xpm_filename.c_str(),"wt");
     if( !f )
     {
@@ -1259,6 +1385,7 @@ static void CompressedXpm2Xpm( CompressedXpm &compressed, const char *filename )
 CompressedXpmProcessor::CompressedXpmProcessor( const CompressedXpm *encoded )
 {
     int dbg=0;
+    bool dbg_enable=false;
 
     /*
         // Format we are going for;
@@ -1275,6 +1402,8 @@ CompressedXpmProcessor::CompressedXpmProcessor( const CompressedXpm *encoded )
 
     // Calculate storage requirements    
     int nbr_colours = 1 /*background*/ + encoded->nbr_other_colours;
+    if( encoded->kludge_idx != -1 )
+        nbr_colours++;
     nbr_xpm_strings = 1 /*header*/ + nbr_colours + encoded->height;
     char hdr[100];
     sprintf( hdr, "%d %d %d 1", encoded->width, encoded->height, nbr_colours );
@@ -1288,7 +1417,7 @@ CompressedXpmProcessor::CompressedXpmProcessor( const CompressedXpm *encoded )
     string_storage = (char *) malloc( string_storage_required );
     xpm = (char **) malloc( nbr_xpm_strings * sizeof( char **) );
 #else
-    string_storage = new char[ string_storage_required ];
+    string_storage = new char[ string_storage_required + 100 ];     // note my silly little safety margin
     xpm = new char *[nbr_xpm_strings];
 #endif
     char *s = string_storage;
@@ -1300,9 +1429,20 @@ CompressedXpmProcessor::CompressedXpmProcessor( const CompressedXpm *encoded )
     xpm[line_idx++] = s;
     s += (strlen(s) + 1);
     char proxy='!';
+    char proxy_kludge='z';
     char proxy_colours[16];
     for( int i=0; i<encoded->nbr_other_colours; i++ )
     {
+        if( i == encoded->kludge_idx )
+        {
+            sprintf( s, "%c c #%06x", proxy, 0xffffff & encoded->kludge_colour ); 
+            xpm[line_idx++] = s;
+            s += (strlen(s) + 1);
+            proxy_kludge = proxy;
+            proxy++;
+            while( proxy == '\'' || proxy=='\"' )
+                proxy++; 
+        }
         sprintf( s, "%c c #%06x", proxy, 0xffffff & encoded->other_colours[i] ); 
         xpm[line_idx++] = s;
         s += (strlen(s) + 1);
@@ -1334,13 +1474,18 @@ CompressedXpmProcessor::CompressedXpmProcessor( const CompressedXpm *encoded )
         bool arbitrary_data=false;
         char proxy=' ';
         uint32_t n=0;
-        if( (c&0x80) == 0 )
+        if( c == 0xc0 )   // This is the kludge code - search for "kludge" for explanation
+        {
+            proxy = proxy_kludge;
+            n = 1;
+        }
+        else if( (c&0x80) == 0 )
         {
             // Sequence of one colour (short)
             uint32_t cccc = c&0x0f;
             proxy = proxy_colours[cccc];
             n = ((c>>4)&0x07) + 1;
-            if( dbg++ < DBG_NBR_OUT )
+            if( dbg_enable && dbg++ < DBG_NBR_OUT )
                 printf( "Seq short\n" );
         }
         else if( (c&0xe0) == 0xc0 )
@@ -1348,7 +1493,7 @@ CompressedXpmProcessor::CompressedXpmProcessor( const CompressedXpm *encoded )
             // Arbitrary data (short)
             n = (c&0x1f) + 1;
             arbitrary_data = true;
-            if( dbg++ < DBG_NBR_OUT )
+            if( dbg_enable && dbg++ < DBG_NBR_OUT )
                 printf( "Data short\n" );
         }
         else
@@ -1363,7 +1508,7 @@ CompressedXpmProcessor::CompressedXpmProcessor( const CompressedXpm *encoded )
                 n =  ((d>>4)&0x0f);
                 n += ((c&0x1f)<<4);
                 n++;
-                if( dbg++ < DBG_NBR_OUT )
+                if( dbg_enable && dbg++ < DBG_NBR_OUT )
                     printf( "Seq long\n" );
             }
             else if( (c&0xe0) == 0xa0 )
@@ -1373,7 +1518,7 @@ CompressedXpmProcessor::CompressedXpmProcessor( const CompressedXpm *encoded )
                 n =  d;
                 n += ((c&0x1f)<<8);
                 n++;
-                if( dbg++ < DBG_NBR_OUT )
+                if( dbg_enable && dbg++ < DBG_NBR_OUT )
                     printf( "Magenta\n" );
             }
             else if( (c&0xe0) == 0xe0 )
@@ -1383,7 +1528,7 @@ CompressedXpmProcessor::CompressedXpmProcessor( const CompressedXpm *encoded )
                 n += ((c&0x1f)<<8);
                 n++;
                 arbitrary_data = true;
-                if( dbg++ < DBG_NBR_OUT )
+                if( dbg_enable && dbg++ < DBG_NBR_OUT )
                     printf( "Data long\n" );
             }
         }
@@ -1416,7 +1561,7 @@ CompressedXpmProcessor::CompressedXpmProcessor( const CompressedXpm *encoded )
                 }
             }
         }
-        if( dbg < DBG_NBR_OUT )
+        if( dbg_enable && dbg < DBG_NBR_OUT )
         {
             printf( "dat (%d) >", n );
             if( arbitrary_data )
@@ -2621,6 +2766,8 @@ static CompressedXpm pitch_070_compressed_xpm =
     840,  // width
     70,  // height
     0xff00ff,  // background_colour
+    0x000001,  // kludge_colour
+    -1,  // kludge_idx
     16,  // nbr_other_colours
     {0x000000,0x393939,0x535353,0x686868,0x7a7a7a,0x8b8b8b,0x999999,0xa7a7a7,0xb4b4b4,0xc0c0c0,0xcccccc,0xd7d7d7,0xe1e1e1,0xececec,0xf5f5f5,0xffffff},
     9104,  // binary_len
