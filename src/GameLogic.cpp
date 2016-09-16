@@ -1934,11 +1934,11 @@ void GameLogic::LabelPlayers( bool start_game, bool set_document_player_names )
     }
     objs.repository->player.m_white = white;
     objs.repository->player.m_black = black;
+    canvas->SetPlayers( white.c_str(), black.c_str()  );
     if( set_document_player_names )
     {
         gd.r.white = objs.repository->player.m_white;
         gd.r.black = objs.repository->player.m_black;
-        canvas->SetPlayers( white.c_str(), black.c_str()  );
     }
 }
 
@@ -3071,7 +3071,15 @@ void GameLogic::DoPopup( wxPoint &point, vector<thc::Move> &target_moves,
     if( canvas->popup )
         delete canvas->popup;
     //dbg_printf( "objs.frame is a %s window\n", objs.frame->IsTopLevel()?"top level":"child" );
-    canvas->popup = new PopupControl( objs.frame,strs,terses,book,popup_mode,hover,ID_POPUP,point );
+
+    // After introducing new windowing arrangement with an intermediate PanelBoard holding the graphical
+    //  board we, need different parent windows depending on whether we are clicking inside or outside
+    //  the PanelBoard
+    if( popup_mode == BOOK_HOVER )
+        canvas->popup = new PopupControl( objs.frame, strs,terses,book,popup_mode,hover,ID_POPUP,point );
+    else
+        canvas->popup = new PopupControl( objs.canvas->pb, strs,terses,book,popup_mode,hover,ID_POPUP,point );
+    //Why doesn't this compile? canvas->popup = new PopupControl( (popup_mode==BOOK_HOVER ? objs.frame : objs.canvas->pb), strs,terses,book,popup_mode,hover,ID_POPUP,point );
 }
 
 bool GameLogic::CheckPopup( thc::Move &move )

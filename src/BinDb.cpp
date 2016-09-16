@@ -1164,13 +1164,31 @@ bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
 
         // Games to be deleted are at the end - with id GAME_ID_SENTINEL
         int nbr_deleted=0;
+        FILE *pgn_dup = 0;
         for( int i=games.size()-1; i>=0; i-- )
         {
-            if( games[i]->game_id == GAME_ID_SENTINEL )
-                nbr_deleted++;
-            else
+            if( games[i]->game_id != GAME_ID_SENTINEL )
                 break;
+            else
+            {
+                nbr_deleted++;
+                if( !pgn_dup )
+                    pgn_dup = fopen("TarraschDbDuplicateFile.pgn","wt");
+                GameDocument  the_game;
+                CompactGame pact;
+                games[i]->GetCompactGame( pact );
+                pact.Upscale(the_game);
+                std::string str;
+                the_game.ToFileTxtGameDetails( str );
+                if( pgn_dup )
+                    fwrite(str.c_str(),1,str.length(),pgn_dup);
+                the_game.ToFileTxtGameBody( str );
+                if( pgn_dup )
+                    fwrite(str.c_str(),1,str.length(),pgn_dup);
+            }
         }
+        if( pgn_dup )
+            fclose(pgn_dup);
         cprintf( "Number of duplicates deleted: %d\n", nbr_deleted );
         if( nbr_deleted )
             games.erase( games.end()-nbr_deleted, games.end() );

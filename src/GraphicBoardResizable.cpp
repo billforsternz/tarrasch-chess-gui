@@ -25,7 +25,7 @@ GraphicBoardResizable::GraphicBoardResizable
     wxWindowID id,
     const wxPoint& point,
     const wxSize& size
-)   : wxControl( parent, id, point, size, BORDER_COMMON )
+)   : wxControl( parent, id, point, size, wxBORDER_NONE /*BORDER_COMMON*/ )
 {
     pickup_file    = 0;
     pickup_rank    = 0;

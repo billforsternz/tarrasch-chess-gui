@@ -156,8 +156,9 @@ int Tabs::TabDelete()
 {
     if( nbr_tabs>1 && current_idx<nbr_tabs )
     {
-        v.erase( v.begin() + current_idx );
-        objs.canvas->notebook->DeletePage( current_idx );
+        int temp = current_idx;
+        objs.canvas->notebook->DeletePage( current_idx );   // changes current_idx
+        v.erase( v.begin() + temp );
         nbr_tabs--;
         if( current_idx == nbr_tabs )
             current_idx--;

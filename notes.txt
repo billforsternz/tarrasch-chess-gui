@@ -1,3 +1,25 @@
+15/9/2016
+
+Doing scandi prep, load game (instead of use game) by mistake. Tried closing tab - crash
+Got into a situation with Kibitzer stopped and suggestions horizontal - looks bad
+Need to get click on players, clocks working again
+Can we control multiple instances?
+Get close box on tabs
+Efficient undo
+Book moves not at far right if maximise
+Height of book moves should maybe set notebook width
+Board minimum width is controlled by pitch=15
+Add duplicate game thing
+Check all bitmaps have white pieces on left
+Layout is non-volatile
+Lose the sunken border effect
+Get click on square working again
+Edit colours, including highlight colours
+Bring colours into other chess boards
+Alt F underlining etc
+6 custom commands
+New tab button next to book moves?
+
 10/9/2016
 
 Log of conversions from .bmp -> .xpm using tools/bmp-experiments-and-transformations.cpp
@@ -92,8 +114,6 @@ Press enter
 Horizontal suggestions if no kibitz box
 Vertical suggestions if kibitz box
 Suggestions, Your move, Engine thinking labels
-ndeed to get click on players, clocks working again
-
 
 13/8/2016
 

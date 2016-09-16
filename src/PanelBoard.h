@@ -24,6 +24,7 @@ public:
     void BlackClock( const wxString &txt );
     void RedrawClocks();                   
     void SetBoardTitle( const char *txt, bool highlight=false );
+    GraphicBoardResizable *gb;
 
 private:
     wxFont       *font1;
@@ -31,7 +32,6 @@ private:
     wxFont       *font3;
     wxFont       *font4;
     void OnSize( wxSizeEvent &evt );
-    GraphicBoardResizable *gb;
     wxStaticText    *who_top;
     wxStaticText    *who_bottom;
     wxStaticText    *board_title;

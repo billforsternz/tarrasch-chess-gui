@@ -58,7 +58,12 @@ PopupControl::PopupControl
     wxSize  size( max_w, n*max_h );
     wxPoint pos = point;
     release_button_to_exit = (popup_mode==CLICK_ON_DESTINATION);
-    wxRect rect = objs.canvas->GetRect();
+
+    // Note that rect below provides dimensions of PanelBoard - the panel
+    //  in which the GraphicBoard sits - and point/pos are relative to
+    //  the PanelBoard and finally the PopupControl is now a child of
+    //  the PanelBoard (except in BOOK_HOVER mode)
+    wxRect rect = objs.canvas->pb->GetRect();   // pb = panel board
     if( popup_mode != BOOK_HOVER )
     {
         pos.x -= (4*size.x)/5;
@@ -68,7 +73,12 @@ PopupControl::PopupControl
     // If there's not enough room - do it upside down
     if( popup_mode != BOOK_HOVER && (pos.y+size.y) >= (rect.height-4) )
         upside_down = true;
+    dbg_printf( "**************\n" );
     dbg_printf( "rect.x=%d rect.y=%d rect.width=%d rect.height=%d\n", rect.x, rect.y, rect.width, rect.height );
+    dbg_printf( "point.x=%d, point.y=%d\n", point.x, point.y );
+    wxRect board;
+    board = objs.canvas->pb->gb->GetRect();
+    cprintf( "board.x=%d, board.y=%d, board.w=%d, board.h=%d\n",  board.x, board.y, board.width, board.height );
     dbg_printf( "pos.x=%d, pos.y=%d, size.y=%d\n", pos.x, pos.y, size.y );
     dbg_printf( "upside_down = %s\n", upside_down?"true":"false" );
     if( upside_down )
