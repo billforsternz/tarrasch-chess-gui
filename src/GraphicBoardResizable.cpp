@@ -25,7 +25,7 @@ GraphicBoardResizable::GraphicBoardResizable
     wxWindowID id,
     const wxPoint& point,
     const wxSize& size
-)   : wxControl( parent, id, point, size, wxBORDER_NONE /*BORDER_COMMON*/ )
+)   : wxControl( parent, id, point, size, wxBORDER_SIMPLE ) //wxBORDER_NONE /*BORDER_COMMON*/ )
 {
     pickup_file    = 0;
     pickup_rank    = 0;
@@ -64,20 +64,11 @@ void GraphicBoardResizable::Init
     wxColour magic(255,0,255);
     wxBrush light_brush(icon_light);
     dc.SetBrush( light_brush );
-    //dc.SetBrush( *wxWHITE_BRUSH );
-
     dc.SetPen(*wxTRANSPARENT_PEN);
     dc.DrawRectangle(0,0,my_chess_bmp_.GetWidth(),my_chess_bmp_.GetHeight());
-    //dc.SetBrush( *wxCYAN_BRUSH );
-    //dc.SetBrush( *wxGREEN_BRUSH );
-    //dc.SetPen( *wxRED_PEN );
-    //dc.SetPen(*wxTRANSPARENT_PEN);
-    //dc.DrawRectangle(120,120,200,200);
-
     //
-    const int MARGIN=0;
-    int x = MARGIN;
-    int y = MARGIN;
+    int x = 0;
+    int y = 0;
     const char *board[] =
     {
         "rNbQkBnR",

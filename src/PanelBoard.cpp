@@ -95,16 +95,22 @@ PanelBoard::PanelBoard
     coordh     = new wxStaticText(this,wxID_ANY,"h");
     coordh->SetFont( *font4 );
 
+    // Calculate approximate size but will be recalculated with OnSize later
     int w = siz.x;
     int h = siz.y;
     int x = ((5*w)/100);
     int y = ((5*h)/100);
-    w = ((90*w)/100);
-    h = ((90*h)/100);
+    w = ((90*w)/100)&~7;
+    h = ((90*h)/100)&~7;
+    if( w < h )
+        h = w;
+    else
+        w = h;
     gb = new GraphicBoardResizable( this,
                             wxID_ANY,
                             wxPoint(x,y), wxSize(w,h) );
 }
+
 
 void PanelBoard::OnSize( wxSizeEvent &evt )
 {
@@ -182,18 +188,20 @@ void PanelBoard::OnSize( wxSizeEvent &evt )
     int who_x_offset = 40*(txt_width)/100;
 
     // decide whether we have excess space above+below or left+right
+    int dim_w = ((w-l-r)&~7);   // square size based on width dimension (divisible by 8)
+    int dim_h = ((h-t-b)&~7);   // square size based on height dimension (divisible by 8)
     int dim;
-    if( w-l-r < h-t-b )
+    if( dim_w < dim_h )
     {   // excess space above+below
-        dim = w-l-r;
-        int diff = (h-t-b) - (w-l-r);
+        dim = dim_w;
+        int diff = (h-t-b) - dim;
         t += (diff/8);  // about 1/8 of the way down
         b += (diff - diff/8);
     }
     else
     {   // excess space left+right
-        dim = h-t-b;
-        int diff = (w-l-r) - (h-t-b);
+        dim = dim_h;
+        int diff = (w-l-r) - dim;
         l += (diff/2);
         r += (diff/2);
     }

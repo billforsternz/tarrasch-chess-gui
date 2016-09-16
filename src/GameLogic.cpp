@@ -196,7 +196,7 @@ void GameLogic::ShowNewDocument()
     canvas->RedrawClocks();
     GAME_RESULT result = RESULT_NONE;
     TERMINAL terminal_score;
-    DRAWTYPE draw_type1, draw_type2;
+//    DRAWTYPE draw_type1, draw_type2;
     bool gameover = false; 
     gd.master_position.Evaluate(terminal_score);
     gameover = (terminal_score==TERMINAL_WCHECKMATE || terminal_score==TERMINAL_BCHECKMATE ||
@@ -3079,7 +3079,6 @@ void GameLogic::DoPopup( wxPoint &point, vector<thc::Move> &target_moves,
         canvas->popup = new PopupControl( objs.frame, strs,terses,book,popup_mode,hover,ID_POPUP,point );
     else
         canvas->popup = new PopupControl( objs.canvas->pb, strs,terses,book,popup_mode,hover,ID_POPUP,point );
-    //Why doesn't this compile? canvas->popup = new PopupControl( (popup_mode==BOOK_HOVER ? objs.frame : objs.canvas->pb), strs,terses,book,popup_mode,hover,ID_POPUP,point );
 }
 
 bool GameLogic::CheckPopup( thc::Move &move )

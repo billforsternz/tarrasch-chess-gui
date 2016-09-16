@@ -1,6 +1,11 @@
 15/9/2016
 
+Fixed todo
+Lose the sunken border effect
 Doing scandi prep, load game (instead of use game) by mistake. Tried closing tab - crash
+Swap sides swaps labels
+
+
 Got into a situation with Kibitzer stopped and suggestions horizontal - looks bad
 Need to get click on players, clocks working again
 Can we control multiple instances?
@@ -12,13 +17,13 @@ Board minimum width is controlled by pitch=15
 Add duplicate game thing
 Check all bitmaps have white pieces on left
 Layout is non-volatile
-Lose the sunken border effect
 Get click on square working again
 Edit colours, including highlight colours
 Bring colours into other chess boards
 Alt F underlining etc
 6 custom commands
 New tab button next to book moves?
+Pensioner bug
 
 10/9/2016
 
