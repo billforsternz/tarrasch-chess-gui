@@ -27,6 +27,7 @@ public:
     GraphicBoardResizable *gb;
 
 private:
+    void Layout( const wxSize &siz, wxRect &board );
     wxFont       *font1;
     wxFont       *font2;
     wxFont       *font3;

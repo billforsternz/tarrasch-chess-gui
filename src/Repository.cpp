@@ -162,6 +162,10 @@ Repository::Repository( bool use_defaults )
         config->Read("NonVolatileY",                      &nv.m_y );
         config->Read("NonVolatileW",                      &nv.m_w );
         config->Read("NonVolatileH",                      &nv.m_h );
+        config->Read("NonVolatilePanel1",                 &nv.m_panel1 );
+        config->Read("NonVolatilePanel2",                 &nv.m_panel2 );
+        config->Read("NonVolatilePanel3",                 &nv.m_panel3 );
+        config->Read("NonVolatilePanel4",                 &nv.m_panel4 );
         config->Read("NonVolatileCol0",                   &nv.m_col0 );
         config->Read("NonVolatileCol1",                   &nv.m_col1 );
         config->Read("NonVolatileCol2",                   &nv.m_col2 );
@@ -246,6 +250,10 @@ Repository::~Repository()
     config->Write("NonVolatileY",                     nv.m_y );
     config->Write("NonVolatileW",                     nv.m_w );
     config->Write("NonVolatileH",                     nv.m_h );
+    config->Write("NonVolatilePanel1",                nv.m_panel1 );
+    config->Write("NonVolatilePanel2",                nv.m_panel2 );
+    config->Write("NonVolatilePanel3",                nv.m_panel3 );
+    config->Write("NonVolatilePanel4",                nv.m_panel4 );
     config->Write("NonVolatileCol0",                  nv.m_col0 );
     config->Write("NonVolatileCol1",                  nv.m_col1 );
     config->Write("NonVolatileCol2",                  nv.m_col2 );

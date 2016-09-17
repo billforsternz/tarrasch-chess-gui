@@ -222,6 +222,10 @@ struct NonVolatile
     int         m_y;
     int         m_w;
     int         m_h;
+    int         m_panel1;
+    int         m_panel2;
+    int         m_panel3;
+    int         m_panel4;
     int         m_col0;
     int         m_col1;
     int         m_col2;
@@ -242,6 +246,10 @@ struct NonVolatile
         m_y = -1;
         m_w = -1;
         m_h = -1;
+        m_panel1 = -1;
+        m_panel2 = -1;
+        m_panel3 = -1;
+        m_panel4 = -1;
         m_col0 = -1;
         m_col1 = -1;
         m_col2 = -1;

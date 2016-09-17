@@ -25,7 +25,8 @@ GraphicBoardResizable::GraphicBoardResizable
     wxWindowID id,
     const wxPoint& point,
     const wxSize& size
-)   : wxControl( parent, id, point, size, wxBORDER_SIMPLE ) //wxBORDER_NONE /*BORDER_COMMON*/ )
+)   : wxControl( parent, id, point, size, wxBORDER_NONE ) //wxBORDER_SIMPLE ) //wxBORDER_NONE /*BORDER_COMMON*/ )
+            // for the moment we get a strange artifact effect on resize sometimes unless wxBORDER_NONE
 {
     pickup_file    = 0;
     pickup_rank    = 0;

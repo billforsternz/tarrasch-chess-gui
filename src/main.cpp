@@ -100,7 +100,7 @@ CtrlBoxBookMoves *gbl_book_moves;
 class PanelNotebook: public wxWindow
 {
 public:
-    PanelNotebook( wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size );
+    PanelNotebook( wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size, int book_moves_width_ );
 #ifdef AUI_NOTEBOOK
     void OnTabSelected( wxAuiNotebookEvent& event );
     void OnTabClose( wxAuiNotebookEvent& event );
@@ -110,6 +110,7 @@ public:
     void OnSize( wxSizeEvent &evt );
     wxNotebook      *notebook;
 #endif
+    int book_moves_width;
     DECLARE_EVENT_TABLE()
 };
 
@@ -131,7 +132,8 @@ PanelNotebook::PanelNotebook
     wxWindow *parent, 
     wxWindowID id,
     const wxPoint &point,
-    const wxSize &siz
+    const wxSize &siz,
+    int book_moves_width_
 )
     : wxWindow( parent, id, point, siz, wxNO_BORDER )
 {
@@ -139,18 +141,18 @@ PanelNotebook::PanelNotebook
     // a weird erasure effect occurs on the first tab header when creating subsequent tabs. Making the
     // wxNotebook think it's less short fixes this - and it still appears nice and short through the
     // short panel parenting it. [Removed this when changing to wxAuiNotebook]
-    const int BOOK_MOVES_WIDTH = 105;
+    book_moves_width = book_moves_width_;
 #ifdef AUI_NOTEBOOK
     notebook = new wxAuiNotebook(this, wxID_ANY, wxPoint(5,0), wxSize(siz.x,siz.y), 
         wxAUI_NB_TOP | wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | /*wxAUI_NB_SCROLL_BUTTONS |*/ wxAUI_NB_CLOSE_ON_ALL_TABS );
 #else
-    notebook = new wxNotebook(this, wxID_ANY, wxPoint(5,0), wxSize(siz.x-BOOK_MOVES_WIDTH-10,siz.y*5) );
+    notebook = new wxNotebook(this, wxID_ANY, wxPoint(5,0), wxSize(siz.x-book_moves_width-10,siz.y*5) );
 #endif
     wxTextCtrl *notebook_page1 = new wxTextCtrl(notebook, wxID_ANY,"", wxDefaultPosition, wxDefaultSize /*wxPoint(0,0), wxSize((90*siz.x)/100,(90*siz.y)/100)*/, wxNO_BORDER );
     notebook->AddPage(notebook_page1,"New Game",true);
 
-    wxPoint pt(siz.x-BOOK_MOVES_WIDTH-2,5);
-    wxSize  sz(BOOK_MOVES_WIDTH,siz.y-5);
+    wxPoint pt(siz.x-book_moves_width-2,5);
+    wxSize  sz(book_moves_width,siz.y-5);
     gbl_book_moves = new CtrlBoxBookMoves( this,
                           wxID_ANY,
                           pt,
@@ -161,11 +163,10 @@ void PanelNotebook::OnSize( wxSizeEvent &evt )
 {
     wxSize siz = evt.GetSize();
     wxSize sz1;
-    const int BOOK_MOVES_WIDTH = 105;
-    sz1.x = siz.x-BOOK_MOVES_WIDTH-10;
+    sz1.x = siz.x-book_moves_width-10;
     sz1.y = siz.y*5;
     notebook->SetSize(sz1);
-    wxPoint pt(siz.x-BOOK_MOVES_WIDTH-2,5);
+    wxPoint pt(siz.x-book_moves_width-2,5);
     gbl_book_moves->SetPosition(pt);
 }
 
@@ -327,7 +328,7 @@ void RedirectIOToConsole()
 class ChessFrame: public wxFrame
 {
 public:
-    ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
+    ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& size, bool pos_siz_restored );
     ~ChessFrame()
     {
         context->resize_ready = false;   // stops a bogus resize during shutdown on mac
@@ -523,14 +524,57 @@ bool ChessApp::OnInit()
     wxDisplaySize(&disp_width, &disp_height);
     cprintf( "Display size = %d x %d\n", disp_width, disp_height );
     objs.repository = new Repository;
+
+    // Use these as fallbacks/defaults
+    bool pos_siz_restored = false;
     int xx = (disp_width * 10) /100;
     int yy = (disp_height * 10) /100;
     int ww = (disp_width * 80) /100;
     int hh = (disp_height * 80) /100;
     wxPoint pt(xx,yy);
     wxSize  sz(ww,hh);
+
+    // Save restore windows logic
+    if( objs.repository->nv.m_x>=0 &&
+        objs.repository->nv.m_y>=0 &&
+        objs.repository->nv.m_w>=0 &&
+        objs.repository->nv.m_h>=0
+      )
+    {
+        if( objs.repository->nv.m_x + objs.repository->nv.m_w <= disp_width &&
+            objs.repository->nv.m_y + objs.repository->nv.m_h <= disp_height
+          )
+        {
+            pos_siz_restored = true;
+            pt.x = objs.repository->nv.m_x;
+            pt.y = objs.repository->nv.m_y;
+            sz.x = objs.repository->nv.m_w;
+            sz.y = objs.repository->nv.m_h;
+        }
+    }
+
+    // Try to detect and restore a MAXIMISED frame (initial x,y slightly negative, initial w,h slightly larger than display)
+    bool  maximize = false;
+    if( !pos_siz_restored &&
+        objs.repository->nv.m_x>=-8 &&
+        objs.repository->nv.m_y>=-8 &&
+        objs.repository->nv.m_w>=0 &&
+        objs.repository->nv.m_h>=0 &&
+        objs.repository->nv.m_x + objs.repository->nv.m_w <= disp_width+8 &&
+        objs.repository->nv.m_y + objs.repository->nv.m_h <= disp_height+8
+      )
+    {
+        pos_siz_restored = true;
+        maximize = true;
+    }
+    objs.repository->nv.m_x = pt.x;
+    objs.repository->nv.m_y = pt.y;
+    objs.repository->nv.m_w = sz.x;
+    objs.repository->nv.m_h = sz.y;
     ChessFrame *frame = new ChessFrame (_T("Tarrasch Chess GUI V3 -- Beta version use cautiously"),
-                                  pt, sz );
+                                  pt, sz, pos_siz_restored );
+    if( maximize )
+        frame->Maximize();
     objs.frame = frame;
     SetTopWindow (frame);
     frame->Show(true);
@@ -747,7 +791,7 @@ END_EVENT_TABLE()
 
 
 
-ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
+ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& size, bool pos_siz_restored )
     : wxFrame((wxFrame *)NULL, wxID_ANY, title, pos, size ) //, wxDEFAULT_FRAME_STYLE|wxCLIP_CHILDREN|
                                                             //        wxNO_FULL_REPAINT_ON_RESIZE )
 {
@@ -1022,11 +1066,23 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     // notify wxAUI which frame to use
     m_mgr.SetManagedWindow(this);
 
+    // Some dynamic sizing code
+    wxButton dummy( this, wxID_ANY, "Dummy" );
+    wxFont font_temp( 10, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD,   false );
+    dummy.SetFont(font_temp);
+    wxClientDC dc(&dummy);
+    wxCoord width, height, descent, external_leading;
+    dc.GetTextExtent( "1000 Book moves", &width, &height, &descent, &external_leading );
+    int min_book_moves_width = (width*110) / 100;
+    cprintf( "Calculated book moves width (was 105)=%d\n", min_book_moves_width );
+    wxSize sz_dummy = dummy.GetSize();
+    int min_notebook_height = (sz_dummy.y*115) / 100;
+    cprintf( "min_notebook_height (was 29) =%d\n", min_notebook_height );
     int height_context  = 120 < hh/2 ? 120 : hh/2;
-    int height_notebook = 29  < hh/4 ? 29  : hh/4;
+    int height_notebook = min_notebook_height  < hh/4 ? min_notebook_height  : hh/4;
     int height_board    = hh - height_context - height_notebook;
 
-    PanelNotebook *skinny = new PanelNotebook( this, -1, wxDefaultPosition, wxSize(ww,height_notebook) );
+    PanelNotebook *skinny = new PanelNotebook( this, -1, wxDefaultPosition, wxSize(ww,height_notebook),min_book_moves_width );
 
     PanelBoard *pb = new PanelBoard( this,
                             wxID_ANY,
@@ -1057,34 +1113,6 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     objs.tabs->TabNew( blank );
     objs.cws->Init( &objs.gl->undo, &objs.gl->gd, &objs.gl->gc_pgn, &objs.gl->gc_clipboard ); 
     context->SetPlayers( "", "" );
-
-    // Save restore windows logic - needs revamp for new aui/splitters/panels organisation
-    wxSize  parent_sz    = GetSize();
-    wxPoint parent_pos   = GetPosition();
-    if( objs.repository->nv.m_x>=0 &&
-        objs.repository->nv.m_y>=0 &&
-        objs.repository->nv.m_w>=0 &&
-        objs.repository->nv.m_h>=0
-      )
-    {
-        int disp_width, disp_height;
-        wxDisplaySize(&disp_width, &disp_height);
-        if( objs.repository->nv.m_x+objs.repository->nv.m_w <= disp_width &&
-            objs.repository->nv.m_y+objs.repository->nv.m_h <= disp_height
-          )
-        {
-        /*    wxPoint pos_( objs.repository->nv.m_x, objs.repository->nv.m_y );
-            wxSize  sz_ ( objs.repository->nv.m_w, objs.repository->nv.m_h );
-            if( sz_.x < parent_sz_base.x )
-                sz_.x = parent_sz_base.x;  // minimum startup width
-            parent->SetPosition(parent_pos = pos_);
-            parent->SetSize    (parent_sz  = sz_); */
-        }
-    }
-    objs.repository->nv.m_x = parent_pos.x;
-    objs.repository->nv.m_y = parent_pos.y;
-    objs.repository->nv.m_w = parent_sz.x;
-    objs.repository->nv.m_h = parent_sz.y;
     context->resize_ready = true;
  
     // add the panes to the manager Note: Experience shows there is no point trying to change a panel's fundamental characteristics
@@ -1092,11 +1120,12 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     m_mgr.AddPane(skinny, //wxBOTTOM);    //, wxT("Pane Number Two"));
                   wxAuiPaneInfo().
                   Name(wxT("test7")).CaptionVisible(false). //(wxT("Tree Pane")).
-                  Top().Layer(1).Position(0).Fixed().Resizable(false).
+                  Top().Layer(1).Position(0).DockFixed().
+                 // Top().Layer(1).Position(0).Fixed().Resizable(false).
                   CloseButton(false).MaximizeButton(false));
     m_mgr.AddPane(pb, //wxLEFT );         //, wxT("Pane Number One"));
 // CreateTreeCtrl(),
-                  wxAuiPaneInfo().
+                  wxAuiPaneInfo().MinSize(200,200).
                   Name(wxT("test8")).CaptionVisible(false). //(wxT("Tree Pane")).
                   Left().Layer(1).Position(1).
                   CloseButton(false).MaximizeButton(false));
@@ -1112,44 +1141,83 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     m_mgr.SetDockSizeConstraint(1.0,1.0);
     m_mgr.Update();
 
- /*   wxString persp = m_mgr.SavePerspective();
-    const char *txt = persp.c_str();
-    FILE *f = fopen( "c:/temp/persp.txt", "wb" );
-    fputs(txt,f);
-    fclose(f); */
-
-/*    std::string s(txt);
-    size_t idx = s.find("state=2099196");
-    if( idx != std::string::npos )
+    // If we restored a non-volatile window size and location, try to restore non-volatile panel
+    //  locations
+    if( pos_siz_restored )
     {
-        std::string t = s.substr(0,idx);
-        std::string u = s.substr(idx+12);
-        std::string v = t + "state=768" + u;
-        wxString persp2(v.c_str());
-        m_mgr.LoadPerspective( persp2, true );
-    } */
-
-/*    std::string s(txt);
-    size_t idx = s.find("dock_size(4,0,0)=456");
-    if( idx != std::string::npos )
-    {
-        cprintf( "dock idx=%u\n", idx ); 
-        std::string t = s.substr(0,idx) + "dock_size(4,0,0)=792|dock_size(5,0,0)=456|dock_size(3,0,0)=104|";
-        wxString persp2(t.c_str());
-        m_mgr.LoadPerspective( persp2, true );
-    } */
+        wxString persp = m_mgr.SavePerspective();
+        const char *txt = persp.c_str();
+        std::string s(txt);
+        int panel1 = objs.repository->nv.m_panel1;
+        int panel2 = objs.repository->nv.m_panel2;
+        int panel3 = objs.repository->nv.m_panel3;
+        int panel4 = objs.repository->nv.m_panel4;
+        if( panel1>0 && panel2>0 && panel3>0 && panel4>0 )
+        {
+            int idx1 = s.find( "dock_size(1,1,0)=" );
+            int idx2 = s.find( "dock_size(4,1,0)=" );
+            int idx3 = s.find( "dock_size(5,0,0)=" );
+            int idx4 = s.find( "dock_size(3,1,0)=" );
+            if( idx1 != std::string::npos &&
+                idx2 != std::string::npos &&
+                idx3 != std::string::npos &&
+                idx4 != std::string::npos &&
+                idx2>idx1 && idx3>idx2 && idx4>idx3
+              )
+            {
+                char temp[100];
+                sprintf( temp, "dock_size(1,1,0)=%d|dock_size(4,1,0)=%d|dock_size(5,0,0)=%d|dock_size(3,1,0)=%d|", panel1, panel2, panel3, panel4 );
+                std::string s2 = s.substr(0,idx1) + std::string(temp);
+                wxString persp2(s2.c_str());
+                m_mgr.LoadPerspective( persp2, true );
+            }
+        }
+    }
 }
 
 void ChessFrame::OnClose( wxCloseEvent& WXUNUSED(event) )
 {
-//    wxString persp = m_mgr.SavePerspective();
-//    const char *txt = persp.c_str();
-//    FILE *f = fopen( "c:/temp/persp.txt", "wb" );
-//    fputs(txt,f);
-//    fclose(f);
+
+    // Save the panel layout for text time
+    int panel1=0, panel2=0, panel3=0, panel4=0;
+    wxString persp = m_mgr.SavePerspective();
+    const char *txt = persp.c_str();
+    std::string s(txt);
+    int len = strlen("dock_size(1,1,0)=");
+    int idx = s.find( "dock_size(1,1,0)=" );
+    if( idx != std::string::npos )
+        panel1 = atoi(txt+idx+len);
+    idx = s.find( "dock_size(4,1,0)=" );
+    if( idx != std::string::npos )
+        panel2 = atoi(txt+idx+len);
+    idx = s.find( "dock_size(5,0,0)=" );
+    if( idx != std::string::npos )
+        panel3 = atoi(txt+idx+len);
+    idx = s.find( "dock_size(3,1,0)=" );
+    if( idx != std::string::npos )
+        panel4 = atoi(txt+idx+len);
+    if( panel1>0 && panel2>0 && panel3>0 && panel4>0 )
+    {
+        objs.repository->nv.m_panel1 = panel1;
+        objs.repository->nv.m_panel2 = panel2;
+        objs.repository->nv.m_panel3 = panel3;
+        objs.repository->nv.m_panel4 = panel4;
+    }
+
+    FILE *f = fopen( "c:/temp/persp.txt", "wb" );
+    fputs(txt,f);
+    fclose(f);
     bool okay = objs.gl->OnExit();
     if( okay )
+    {
+        wxSize sz = GetSize();
+        wxPoint pt = GetPosition();
+        objs.repository->nv.m_x = pt.x;
+        objs.repository->nv.m_y = pt.y;
+        objs.repository->nv.m_w = sz.x;
+        objs.repository->nv.m_h = sz.y;
         Destroy();  // only exit if OnExit() worked okay (eg, if it wasn't cancelled)
+    }
 }
 
 void ChessFrame::OnQuit (wxCommandEvent &)

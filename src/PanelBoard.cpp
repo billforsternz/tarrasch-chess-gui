@@ -95,24 +95,18 @@ PanelBoard::PanelBoard
     coordh     = new wxStaticText(this,wxID_ANY,"h");
     coordh->SetFont( *font4 );
 
-    // Calculate approximate size but will be recalculated with OnSize later
-    int w = siz.x;
-    int h = siz.y;
-    int x = ((5*w)/100);
-    int y = ((5*h)/100);
-    w = ((90*w)/100)&~7;
-    h = ((90*h)/100)&~7;
-    if( w < h )
-        h = w;
-    else
-        w = h;
+    // Position controls, calculate board location
+    wxRect board;
+    Layout( siz, board );
+
+    // Create board
     gb = new GraphicBoardResizable( this,
                             wxID_ANY,
-                            wxPoint(x,y), wxSize(w,h) );
+                            wxPoint(board.x,board.y), wxSize(board.width,board.height) );
 }
 
 
-void PanelBoard::OnSize( wxSizeEvent &evt )
+void PanelBoard::Layout( const wxSize &siz, wxRect &board )
 {
 /*                                 |
                                    v
@@ -148,11 +142,8 @@ void PanelBoard::OnSize( wxSizeEvent &evt )
            = h-t-b  whichever is smaller
 
 */
-    wxSize siz = evt.GetSize();
     int w = siz.x;
     int h = siz.y;
-    cprintf( "Parent: resize x=%d, y=%d\n", w, h );
-
     wxClientDC dc0(board_title);
     wxCoord txt_width, txt_height, txt_descent, txt_external_leading;
     dc0.GetTextExtent( "Ready", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
@@ -211,15 +202,16 @@ void PanelBoard::OnSize( wxSizeEvent &evt )
     int origin_y = t;
     int x = origin_x;
     int y = origin_y;
-    gb->SetPosition(wxPoint(x,y));
-    wxSize sz(dim,dim);
-    gb->SetBoardSize(sz);
+    board.x = x;
+    board.y = y;
+    board.width = dim;
+    board.height = dim;
 
     // Board title
     x = origin_x;
     y = origin_y - board_title_y_offset;
     board_title->SetPosition( wxPoint(x,y) );
-    sz = board_title->GetSize();
+    wxSize sz = board_title->GetSize();
     sz.x = dim;
     sz.y = t1_height;
     board_title->SetSize(sz);
@@ -292,6 +284,20 @@ void PanelBoard::OnSize( wxSizeEvent &evt )
     name_bottom->SetPosition(wxPoint(x,y));
     x = origin_x + dim - time_x_offset;
     time_bottom->SetPosition(wxPoint(x,y));
+}
+
+
+void PanelBoard::OnSize( wxSizeEvent &evt )
+{
+    wxSize siz = evt.GetSize();
+    int w = siz.x;
+    int h = siz.y;
+    cprintf( "Parent: resize x=%d, y=%d\n", w, h );
+    wxRect board;
+    Layout( siz, board );
+    gb->SetPosition(wxPoint(board.x,board.y));
+    wxSize sz(board.width,board.height);
+    gb->SetBoardSize(sz);
     RedrawClocks();
 }
 
