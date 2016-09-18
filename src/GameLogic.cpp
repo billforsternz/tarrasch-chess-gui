@@ -492,7 +492,6 @@ void GameLogic::CmdKibitz()
     {
         if( !kibitz )
         {
-            objs.canvas->SetMinimumKibitzSize();
             wxString intro = "Kibitzing starting up";
             canvas->Kibitz( 0, intro );
             canvas->kibitz_ctrl->Show(true );
@@ -534,8 +533,7 @@ void GameLogic::CmdKibitz()
         }
         if( kibitz )
         {
-            bool horiz = false;
-            objs.canvas->PositionButtons(horiz);
+            objs.canvas->PositionButtons();
             canvas->kibitz_ctrl->Show(true );
             canvas->kibitz_button1->Show(true);
             canvas->kibitz_button2->Show(true);
@@ -2713,9 +2711,10 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
                         }
                         else
                         {
-                            b1 = "Play engine as white";        b1_cmd = ID_CMD_PLAY_WHITE;
-                            b2 = "Play engine as black";        b2_cmd = ID_CMD_PLAY_BLACK;
-                            b3 = "Setup a position";            b3_cmd = ID_CMD_SET_POSITION;
+                            b1 = "Play white against engine";        b1_cmd = ID_CMD_PLAY_WHITE;
+                            b2 = "Play black against engine";        b2_cmd = ID_CMD_PLAY_BLACK;
+                            b3 = "Setup a position";                    b3_cmd = ID_CMD_SET_POSITION;
+                            b4 = "Search database for this position";   b4_cmd = ID_DATABASE_SEARCH;
                         }
                         break;
         }
@@ -2761,7 +2760,7 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
     }
     canvas->SetChessPosition( gd.master_position );
     if( suggestions )
-        canvas->box->SetLabel("Suggestions");
+        canvas->box->SetLabel( "Enter moves, comments and variations freely - or ..." );
     if( title && !show )
         canvas->SetBoardTitle( title, red );
     if( !b1 )
@@ -2819,8 +2818,7 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
         canvas->kibitz_button2->Show(false);
     }
     #endif
-    bool horiz=!kibitz;
-    canvas->PositionButtons(horiz);
+    canvas->PositionButtons();
     canvas->button1->Refresh();
     canvas->button2->Refresh();
     canvas->button3->Refresh();

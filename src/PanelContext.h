@@ -50,15 +50,8 @@ public:
     void RedrawClocks()                                     { pb->RedrawClocks(); }
     void SetBoardTitle( const char *txt, bool highlight=false )   { pb->SetBoardTitle( txt, highlight ); }
     void Layout( wxSize const &siz );
-    int  PositionButtons( bool horiz=true );
+    void PositionButtons();
     void BookUpdate( bool suppress );
-    void OnChar( wxKeyEvent &event );
-    void OnMouseLeftDown (wxMouseEvent & event);
-    void OnMouseMove (wxMouseEvent & event);
-    void OnMouseWheel( wxMouseEvent &event );
-    void OnPaint (wxPaintEvent & event);
-    void OnEraseBackground( wxEraseEvent &event );
-    void OnMouseCaptureLost( wxMouseCaptureLostEvent &event );
     void OnTabSelected( wxBookCtrlEvent &event );
     void OnButton1( wxCommandEvent &event );
     void OnButton2( wxCommandEvent &event );
@@ -70,8 +63,6 @@ public:
     void KibitzScroll( const wxString &txt );
     void SetFocusOnList() { if(lb) lb->SetFocus(); }
     void OnSize( wxSizeEvent &evt );
-    void OnMove();
-    void SetMinimumKibitzSize();
 
 public:
     bool            resize_ready;
@@ -79,6 +70,9 @@ public:
     PanelBoard      *pb;
     CtrlChessTxt    *lb;
     PopupControl    *popup;
+    wxPanel         *suggestions_page;
+    wxPanel         *kibitz_page;
+    wxNotebook      *context_notebook;
     wxStaticBox     *box;
     wxStaticText    *kibitz0;
     wxStaticText    *kibitz1;
@@ -108,14 +102,12 @@ public:
     wxNotebook       *notebook;
     #endif
 private:
-    wxSize        parent_sz_base;
     int           button_width_delta;
     wxFont       *font1;
     wxFont       *font2;
     wxFont       *font3;
     wxFont       *font_book;
     wxFont       *font_clock;
-    bool          box_horiz;
     void         ButtonCmd( int cmd );
     DECLARE_EVENT_TABLE()
 };

@@ -336,6 +336,8 @@ public:
     }  
     void OnIdle(wxIdleEvent& event);
     void OnMove       (wxMoveEvent &event);
+    void OnMouseWheel( wxMouseEvent &event );
+    void OnChar( wxKeyEvent &event );
     void OnTimeout    (wxTimerEvent& event);
     void OnQuit       (wxCommandEvent &);
     void OnClose      (wxCloseEvent &);
@@ -787,6 +789,8 @@ BEGIN_EVENT_TABLE(ChessFrame, wxFrame)
     EVT_IDLE (ChessFrame::OnIdle)
     EVT_TIMER( TIMER_ID, ChessFrame::OnTimeout)
     EVT_MOVE (ChessFrame::OnMove)
+    EVT_CHAR( ChessFrame::OnChar )
+    EVT_MOUSEWHEEL( ChessFrame::OnMouseWheel )
 END_EVENT_TABLE()
 
 
@@ -1386,8 +1390,8 @@ void CustomLog( const char *txt )
 
 void ChessFrame::OnMove( wxMoveEvent &WXUNUSED(event) )
 {
-    if( objs.canvas )
-        objs.canvas->OnMove();
+ //   if( objs.canvas )
+ //       objs.canvas->OnMove();
 }
 
 void ChessFrame::OnIdle( wxIdleEvent& event )
@@ -2233,4 +2237,16 @@ void ChessFrame::OnUpdateTraining(wxUpdateUIEvent &event )
 {
     bool enabled = objs.gl ? objs.gl->UpdateOptions()  : false;
     event.Enable(enabled);
+}
+
+void ChessFrame::OnMouseWheel( wxMouseEvent &event )
+{
+    if( objs.canvas )
+        objs.canvas->lb->GetEventHandler()->ProcessEvent(event);
+}
+
+void ChessFrame::OnChar( wxKeyEvent &event )
+{
+    if( objs.canvas )
+        objs.canvas->lb->GetEventHandler()->ProcessEvent(event);
 }
