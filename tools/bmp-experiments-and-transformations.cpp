@@ -139,6 +139,15 @@ int main()
         }
     }
 #endif
+//#define ONE_ICON
+#ifdef ONE_ICON
+    const char *filename = "../icon.bmp";
+    BmpHeader *in = ReadFile( buf, filename );
+    if( in )
+    {
+        Convert2Xpm( in, "icon.xmp" );
+    }
+#endif
 #define BULK_FILES
 #ifdef BULK_FILES
     const char *files[] =
