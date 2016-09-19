@@ -10,6 +10,9 @@
 #include <time.h> // time_t
 #include <stdio.h>
 #include <stdarg.h>
+#include <wx/filename.h>
+#include "Objects.h"
+#include "Repository.h"
 #include "CompressMoves.h"
 #include "PgnRead.h"
 #include "CompactGame.h"
@@ -1173,7 +1176,15 @@ bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
             {
                 nbr_deleted++;
                 if( !pgn_dup )
-                    pgn_dup = fopen("TarraschDbDuplicateFile.pgn","wt");
+                {
+                    wxFileName wfn(objs.repository->log.m_file.c_str());
+                    if( !wfn.IsOk() )
+                        wfn.SetFullName("TarraschDbDuplicatesFile.pgn");
+                    wfn.SetExt("pgn");
+                    wfn.SetName("TarraschDbDuplicatesFile");
+                    wxString dups_filename = wfn.GetFullPath();
+                    pgn_dup = fopen(dups_filename.c_str(),"wt");
+                }
                 GameDocument  the_game;
                 CompactGame pact;
                 games[i]->GetCompactGame( pact );

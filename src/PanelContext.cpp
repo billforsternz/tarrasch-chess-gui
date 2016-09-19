@@ -33,7 +33,7 @@ bool view_flags_book_moves;
 //-----------------------------------------------------------------------------
 // Event table
 //-----------------------------------------------------------------------------
-BEGIN_EVENT_TABLE(PanelContext, wxPanel)
+BEGIN_EVENT_TABLE(PanelContext, wxWindow)//Panel)
     EVT_SIZE( PanelContext::OnSize )
     EVT_NOTEBOOK_PAGE_CHANGED( wxID_ANY, PanelContext::OnTabSelected)   //user selects a tab
     EVT_BUTTON(ID_BUTTON1,PanelContext::OnButton1)
@@ -42,6 +42,7 @@ BEGIN_EVENT_TABLE(PanelContext, wxPanel)
     EVT_BUTTON(ID_BUTTON4,PanelContext::OnButton4)
     EVT_BUTTON(ID_KIBITZ_BUTTON1,PanelContext::OnKibitzButton1)
     EVT_BUTTON(ID_KIBITZ_BUTTON2,PanelContext::OnKibitzButton2)
+    EVT_BUTTON(ID_KIBITZ_BUTTON3,PanelContext::OnKibitzButton3)
 END_EVENT_TABLE()
 
 IMPLEMENT_CLASS( wxStaticTextSub, wxStaticText )
@@ -90,7 +91,7 @@ PanelContext::PanelContext
     PanelBoard *pb_,
     CtrlChessTxt *lb_
 )
-    : wxPanel( parent, id, point, siz, wxNO_BORDER )
+    : wxWindow( parent, id, point, siz, wxNO_BORDER )
 {
     resize_ready = false;
     popup = NULL;
@@ -98,7 +99,9 @@ PanelContext::PanelContext
     lb = lb_;
 
     context_notebook = new wxNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize );
+    wxColour icon_light(255,226,179);
     suggestions_page = new wxPanel(context_notebook, wxID_ANY, wxPoint(0,0), wxSize((90*siz.x)/100,(90*siz.y)/100), wxNO_BORDER );
+    /*suggestions_page->*/SetBackgroundColour(icon_light);
     kibitz_page      = new wxPanel(context_notebook, wxID_ANY, wxPoint(0,0), wxSize((90*siz.x)/100,(90*siz.y)/100), wxNO_BORDER );
 
     // Add pages to notebook
@@ -161,20 +164,44 @@ PanelContext::PanelContext
     dbg_printf( "Kibitz box font height=%d, descent=%d, external_leading=%d\n", height, descent, external_leading );
 
     // Create kibitz buttons
-    kibitz_button1 = new wxButton( kibitz_page, ID_KIBITZ_BUTTON1, "Capture one",  wxDefaultPosition, wxDefaultSize );
+    kibitz_button1 = new wxButton( kibitz_page, ID_KIBITZ_BUTTON1, "Capture top",  wxDefaultPosition, wxDefaultSize );
     kibitz_button2 = new wxButton( kibitz_page, ID_KIBITZ_BUTTON2, "Capture all",  wxDefaultPosition, wxDefaultSize );
+    kibitz_button3 = new wxButton( kibitz_page, ID_KIBITZ_BUTTON3, "Stop",  wxDefaultPosition, wxDefaultSize );
 
     // Fit everything to size
     Layout( siz );
 }
 
+void PanelContext::SetKibitzPage()
+{
+    context_notebook->ChangeSelection(1);
+}
+
+void PanelContext::SetKibitzButtons( bool kibitz_ )
+{
+    kibitz = kibitz_;
+    kibitz_button3->SetLabel( kibitz ? "Stop" : "Start" );
+    kibitz_ctrl->Show(true );
+    kibitz_button1->Show(true);
+    kibitz_button2->Show(true);
+    kibitz_button3->Show(true);
+}
+
+void PanelContext::ClearStaleKibitz()
+{
+    kibitz_ctrl->Show(false);
+    kibitz_button1->Show(false);
+    kibitz_button2->Show(false);
+}
 
 void PanelContext::OnTabSelected( wxBookCtrlEvent& event )
 {
     int idx = event.GetSelection();
-    lb->SetFocus();
+    bool kibitz_selected = (idx==1);
+    if( objs.gl )
+        objs.gl->KibitzTabChanged( kibitz_selected );
+    SetFocusOnList();
 }
-
 
 void PanelContext::OnSize( wxSizeEvent &evt )
 {
@@ -191,17 +218,23 @@ void PanelContext::OnSize( wxSizeEvent &evt )
 void PanelContext::Layout( wxSize const &siz )
 {
     // Position suggestion box and buttons
-    PositionButtons();
+    PositionSuggestionButtons();
 
     // Make kibitz buttons the same width
     wxSize button1_size = kibitz_button1->GetSize();    
     wxSize button2_size = kibitz_button2->GetSize();    
+    wxSize button3_size = kibitz_button3->GetSize();    
+    size_t max_width;
     if( button1_size.x > button2_size.x )
-        button2_size.x = button1_size.x;
+        max_width = (button1_size.x > button3_size.x) ? button1_size.x : button3_size.x;
     else
-        button1_size.x = button2_size.x;
+        max_width = (button2_size.x > button3_size.x) ? button2_size.x : button3_size.x;
+    button1_size.x = max_width;
+    button2_size.x = max_width;
+    button3_size.x = max_width;
     kibitz_button1->SetSize( button1_size);    
     kibitz_button2->SetSize( button2_size);    
+    kibitz_button3->SetSize( button3_size);    
 
     // Size Kibitz box
     wxPoint kpos;
@@ -219,15 +252,20 @@ void PanelContext::Layout( wxSize const &siz )
     // Position kibitz buttons
     kpos.x += ksiz.x;
     kpos.x += SPACER*2;
-    kpos.y += (ksiz.y - button1_size.y*2 - SPACER*2)/2;
+    //kpos.y += (ksiz.y - button1_size.y*2 - SPACER*2)/2;
 
+    kibitz_button3->SetPosition(kpos);
+    kpos.y += button1_size.y;
+    kpos.y += SPACER*2;
     kibitz_button1->SetPosition(kpos);
+
     kpos.y += button1_size.y;
     kpos.y += SPACER*2;
     kibitz_button2->SetPosition(kpos);
 }
 
-void PanelContext::PositionButtons() 
+
+void PanelContext::PositionSuggestionButtons() 
 {
     int i;
     wxSize sz;
@@ -382,6 +420,15 @@ void PanelContext::OnKibitzButton1( wxCommandEvent& WXUNUSED(event) )
 void PanelContext::OnKibitzButton2( wxCommandEvent& WXUNUSED(event) )
 {
     objs.gl->CmdKibitzCaptureAll();
+}
+
+void PanelContext::OnKibitzButton3( wxCommandEvent& WXUNUSED(event) )
+{
+    if( kibitz )
+        objs.gl->KibitzStop();
+    else
+        objs.gl->KibitzStart();
+    SetFocusOnList();
 }
 
 void wxStaticTextSub::OnMouseLeftDown( wxMouseEvent &WXUNUSED(event) )

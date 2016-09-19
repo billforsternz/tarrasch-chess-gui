@@ -34,7 +34,7 @@ public:
     void OnMouseLeftDown( wxMouseEvent &event );
 };
 
-class PanelContext: public wxPanel
+class PanelContext: public wxWindow //wxPanel
 {
 public:
     PanelContext( wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size, PanelBoard *pb_, CtrlChessTxt *lb_ );
@@ -50,8 +50,11 @@ public:
     void RedrawClocks()                                     { pb->RedrawClocks(); }
     void SetBoardTitle( const char *txt, bool highlight=false )   { pb->SetBoardTitle( txt, highlight ); }
     void Layout( wxSize const &siz );
-    void PositionButtons();
+    void PositionSuggestionButtons();
     void BookUpdate( bool suppress );
+    void SetKibitzPage();
+    void SetKibitzButtons( bool kibitz_ );
+    void ClearStaleKibitz();
     void OnTabSelected( wxBookCtrlEvent &event );
     void OnButton1( wxCommandEvent &event );
     void OnButton2( wxCommandEvent &event );
@@ -59,6 +62,7 @@ public:
     void OnButton4( wxCommandEvent &event );
     void OnKibitzButton1( wxCommandEvent &event );
     void OnKibitzButton2( wxCommandEvent &event );
+    void OnKibitzButton3( wxCommandEvent &event );
     void Kibitz( int idx, const wxString &txt );
     void KibitzScroll( const wxString &txt );
     void SetFocusOnList() { if(lb) lb->SetFocus(); }
@@ -91,6 +95,7 @@ public:
     wxListCtrl      *kibitz_ctrl;
     wxButton        *kibitz_button1;
     wxButton        *kibitz_button2;
+    wxButton        *kibitz_button3;
     int              button1_cmd;
     int              button2_cmd;
     int              button3_cmd;
@@ -102,6 +107,7 @@ public:
     wxNotebook       *notebook;
     #endif
 private:
+    bool          kibitz;
     int           button_width_delta;
     wxFont       *font1;
     wxFont       *font2;

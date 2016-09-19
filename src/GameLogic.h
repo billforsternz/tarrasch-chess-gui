@@ -106,6 +106,9 @@ public:
     void CmdTabNew();
     void CmdTabClose();
     void CmdTabInclude();
+    void KibitzStart();
+    void KibitzStop();
+    void KibitzTabChanged( bool kibitz_selected );
     void CmdKibitz();
     void CmdClearKibitz( bool hide_window=false );
     void CmdPlayers();

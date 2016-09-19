@@ -1208,9 +1208,9 @@ void ChessFrame::OnClose( wxCloseEvent& WXUNUSED(event) )
         objs.repository->nv.m_panel4 = panel4;
     }
 
-    FILE *f = fopen( "c:/temp/persp.txt", "wb" );
-    fputs(txt,f);
-    fclose(f);
+    //FILE *f = fopen( "c:/temp/persp.txt", "wb" );
+    //fputs(txt,f);
+    //fclose(f);
     bool okay = objs.gl->OnExit();
     if( okay )
     {

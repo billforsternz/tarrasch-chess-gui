@@ -107,7 +107,7 @@ void CreateDatabaseDialog::CreateControls()
     // Label for file
     wxStaticText* db_file_label = new wxStaticText ( this, wxID_STATIC,
                                                         create_mode ?
-                                                            wxT("&Choose a new database file") :
+                                                            wxT("&Name a new database file") :
                                                             wxT("&Choose an existing database file"),
                                                         wxDefaultPosition, wxDefaultSize, 0 );
     box_sizer->Add(db_file_label, 0, wxALIGN_LEFT|wxALL, 5);
@@ -115,7 +115,7 @@ void CreateDatabaseDialog::CreateControls()
     // File picker controls
     wxFilePickerCtrl *picker_db = new wxFilePickerCtrl( this, ID_CREATE_DB_PICKER_DB, db_filename,
                                                         create_mode ?
-                                                            wxT("Select database to create") :
+                                                            wxT("Locate and name a database to create") :
                                                             wxT("Select database to add games to"),
                                                         "*.tdb", wxDefaultPosition, wxDefaultSize,
                                                         create_mode ?
@@ -279,11 +279,23 @@ void CreateDatabaseDialog::OnCreateDatabase()
     if( ok )
     {
         BinDbReadBegin( true );
-        ofile = fopen( db_name.c_str(), "wb" );
+        wxString fullpath = db_filename;
+        wxFileName wfn(db_filename);
+        if( wfn.IsOk() && wfn.HasName() )
+        {
+            wxString cwd  = wxGetCwd();
+            wfn.SetExt("tdb");
+            wxString path = wxPathOnly(db_filename);
+            bool no_path = (path=="");
+            if( no_path )
+                wfn.SetPath(cwd);
+            fullpath = wfn.GetFullPath();
+        }
+        ofile = fopen( fullpath.c_str(), "wb" );
         if( !ofile )
         {
-            error_msg = "Cannot open ";
-            error_msg += db_name;
+            error_msg = "Cannot create ";
+            error_msg += fullpath;
             ok = false;
         }
     }
@@ -552,6 +564,7 @@ void CreateDatabaseDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
     wxT("appending more games to them with the Append to database command. ")
     wxT("Tarrasch automatically rejects duplicate games and games played by ")
     wxT("players with insufficiently high Elo ratings. ")
+    wxT("Rejected duplicate games are saved in file TarraschDbDuplicatesFile.pgn. ")
     wxT("Since most historical games don't have rating information, games with ")
     wxT("no rating information at all are not rejected. ")
     wxT("For best results, create databases with older .pgn files first, and ")

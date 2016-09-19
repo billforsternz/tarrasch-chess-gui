@@ -484,60 +484,75 @@ void GameLogic::CmdSwapSides()
     }
 }
 
+void GameLogic::KibitzStart()
+{
+    wxString intro = "Kibitzing starting up";
+    canvas->Kibitz( 0, intro );
+    canvas->kibitz_ctrl->Show(true );
+    canvas->Update();
+    bool okay = true;
+    if( state!=THINKING && state!=PONDERING )
+    {
+        okay = StartEngine();
+        if( !okay )
+            canvas->Kibitz( 0, "" );
+        else
+        {
+            char buf[128];
+            strcpy( buf, gd.master_position.ForsythPublish().c_str() );
+            thc::ChessPosition pos = gd.master_position;
+            objs.rybka->Kibitz( pos, buf );
+        }
+    }
+    if( okay )
+    {
+        kibitz = true;
+        kibitz_pos = gd.master_position;
+        objs.rybka->SuspendResume(true);
+        KibitzClearDisplay( true );
+    }
+    canvas->SetKibitzButtons( kibitz );
+}
+
+void GameLogic::KibitzStop()
+{
+    wxString intro;
+    if( state==THINKING || state==PONDERING )
+        intro.sprintf( "Analysis by %s [stopped]", engine_name );
+    else
+        intro.sprintf( "Kibitzing by %s [stopped]", engine_name );
+    canvas->Kibitz( 0, intro );
+    kibitz = false;
+    if( state!=THINKING && state!=PONDERING )
+        objs.rybka->KibitzStop();
+    canvas->SetKibitzButtons( kibitz );
+}
+
+void GameLogic::KibitzTabChanged( bool kibitz_selected )
+{
+    if( kibitz_selected )
+    {
+        if( !kibitz )
+            KibitzStart();
+    }
+    else
+    {
+        if( kibitz )
+            KibitzStop();
+    }
+}
+
 void GameLogic::CmdKibitz()
 {
     Atomic begin;
-    wxString txt;
-    if( CmdUpdateKibitz(txt) )
+    wxString dummy;
+    if( CmdUpdateKibitz(dummy) )
     {
+        canvas->SetKibitzPage();
         if( !kibitz )
-        {
-            wxString intro = "Kibitzing starting up";
-            canvas->Kibitz( 0, intro );
-            canvas->kibitz_ctrl->Show(true );
-            canvas->Update();
-            bool okay = true;
-            if( state!=THINKING && state!=PONDERING )
-            {
-                okay = StartEngine();
-                if( !okay )
-                    canvas->Kibitz( 0, "" );
-                else
-                {
-                    char buf[128];
-                    strcpy( buf, gd.master_position.ForsythPublish().c_str() );
-                    thc::ChessPosition pos = gd.master_position;
-                    objs.rybka->Kibitz( pos, buf );
-                }
-            }
-            if( okay )
-            {
-                kibitz = true;
-                kibitz_pos = gd.master_position;
-                objs.rybka->SuspendResume(true);
-                KibitzClearDisplay( true );
-            }
-        }
+            KibitzStart();
         else
-        {
-            wxString intro;
-            if( state==THINKING || state==PONDERING )
-                intro.sprintf( "Analysis by %s [stopped]", engine_name );
-            else
-                intro.sprintf( "Kibitzing by %s [stopped]", engine_name );
-            canvas->Kibitz( 0, intro );
-            kibitz = false;
-            if( state!=THINKING && state!=PONDERING )
-                objs.rybka->KibitzStop();
-            //objs.rybka->SuspendResume(false);
-        }
-        if( kibitz )
-        {
-            objs.canvas->PositionButtons();
-            canvas->kibitz_ctrl->Show(true );
-            canvas->kibitz_button1->Show(true);
-            canvas->kibitz_button2->Show(true);
-        }
+            KibitzStop();
     }
 }
 
@@ -549,13 +564,7 @@ void GameLogic::CmdClearKibitz( bool hide_window )
     KibitzClearDisplay();
     KibitzClearMultiPV();
     kibitz_text_to_clear = false;
-    if( hide_window )
-    {
-        canvas->PositionButtons();
-        canvas->kibitz_ctrl->Show(false);
-        canvas->kibitz_button1->Show(false);
-        canvas->kibitz_button2->Show(false);
-    }
+    canvas->SetKibitzButtons( kibitz );
 }
 
 void GameLogic::CmdMoveNow()
@@ -2760,7 +2769,7 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
     }
     canvas->SetChessPosition( gd.master_position );
     if( suggestions )
-        canvas->box->SetLabel( "Enter moves, comments and variations freely - or ..." );
+        canvas->box->SetLabel( b1 && b2 && b3 && b4 ? "Enter moves, comments and variations freely - or ..." : "Suggestions" );
     if( title && !show )
         canvas->SetBoardTitle( title, red );
     if( !b1 )
@@ -2805,9 +2814,7 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
     else if( !from_mouse_move )
     {
         kibitz_text_to_clear = false;
-        canvas->kibitz_ctrl->Show(false);
-        canvas->kibitz_button1->Show(false);
-        canvas->kibitz_button2->Show(false);
+        canvas->ClearStaleKibitz();
     }
     #endif
     #if 0 // manual_kibitz_clear
@@ -2818,7 +2825,7 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
         canvas->kibitz_button2->Show(false);
     }
     #endif
-    canvas->PositionButtons();
+    canvas->PositionSuggestionButtons();
     canvas->button1->Refresh();
     canvas->button2->Refresh();
     canvas->button3->Refresh();
