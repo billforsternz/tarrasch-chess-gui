@@ -9,7 +9,7 @@
 
 #include "wx/wx.h"
 
-#define USING_KINGBASE
+//#define USING_KINGBASE
 #ifdef  USING_KINGBASE
 #define MASTER_VERSION "V3 Nightly 2016-09-19-a(k)"  // 'k' indicates default .tdb is kingbase
 #else
