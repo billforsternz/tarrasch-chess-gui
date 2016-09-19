@@ -122,6 +122,7 @@ public:
     void CmdEditPromoteRestToVariation();
     void CmdEditDemoteToComment();
     void CmdEditDeleteRestOfVariation();
+    void CmdEditDeleteVariation();
     void CmdKibitzCaptureOne();
     void CmdKibitzCaptureAll();
 

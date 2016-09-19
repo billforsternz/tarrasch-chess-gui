@@ -151,8 +151,8 @@ PanelNotebook::PanelNotebook
     wxTextCtrl *notebook_page1 = new wxTextCtrl(notebook, wxID_ANY,"", wxDefaultPosition, wxDefaultSize /*wxPoint(0,0), wxSize((90*siz.x)/100,(90*siz.y)/100)*/, wxNO_BORDER );
     notebook->AddPage(notebook_page1,"New Game",true);
 
-    wxPoint pt(siz.x-book_moves_width-2,5);
-    wxSize  sz(book_moves_width,siz.y-5);
+    wxPoint pt(siz.x-book_moves_width-2,8);
+    wxSize  sz(book_moves_width,siz.y-8);
     gbl_book_moves = new CtrlBoxBookMoves( this,
                           wxID_ANY,
                           pt,
@@ -166,7 +166,7 @@ void PanelNotebook::OnSize( wxSizeEvent &evt )
     sz1.x = siz.x-book_moves_width-10;
     sz1.y = siz.y*5;
     notebook->SetSize(sz1);
-    wxPoint pt(siz.x-book_moves_width-2,5);
+    wxPoint pt(siz.x-book_moves_width-2,8);
     gbl_book_moves->SetPosition(pt);
 }
 
@@ -459,6 +459,8 @@ public:
         void OnUpdateEditGamePrefix( wxUpdateUIEvent &);
     void OnEditCopyGamePGNToClipboard (wxCommandEvent &);
         void OnUpdateEditCopyGamePGNToClipboard(wxUpdateUIEvent &);
+    void OnEditDeleteVariation (wxCommandEvent &);
+        void OnUpdateEditDeleteVariation( wxUpdateUIEvent &);
     void OnEditPromote (wxCommandEvent &);
         void OnUpdateEditPromote( wxUpdateUIEvent &);
     void OnEditDemote (wxCommandEvent &);
@@ -484,9 +486,7 @@ private:
 // Application class
 //-----------------------------------------------------------------------------
 
-#ifndef NEW_USER_INTERFACE
 IMPLEMENT_APP(ChessApp)
-#endif
 
 extern void JobBegin();
 extern void JobEnd();
@@ -731,6 +731,8 @@ BEGIN_EVENT_TABLE(ChessFrame, wxFrame)
         EVT_UPDATE_UI (ID_EDIT_GAME_PREFIX,             ChessFrame::OnUpdateEditGamePrefix)
     EVT_MENU(ID_COPY_GAME_PGN_TO_CLIPBOARD, ChessFrame::OnEditCopyGamePGNToClipboard)
         EVT_UPDATE_UI(ID_COPY_GAME_PGN_TO_CLIPBOARD,    ChessFrame::OnUpdateEditCopyGamePGNToClipboard)
+    EVT_MENU (ID_EDIT_DELETE_VARIATION,     ChessFrame::OnEditDeleteVariation)
+        EVT_UPDATE_UI (ID_EDIT_DELETE_VARIATION,        ChessFrame::OnUpdateEditDeleteVariation)
     EVT_MENU (ID_EDIT_PROMOTE,              ChessFrame::OnEditPromote)
         EVT_UPDATE_UI (ID_EDIT_PROMOTE,                 ChessFrame::OnUpdateEditPromote)
     EVT_MENU (ID_EDIT_DEMOTE,               ChessFrame::OnEditDemote)
@@ -831,6 +833,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     menu_edit->Append (ID_EDIT_GAME_DETAILS,         _T("Edit game details"));
     menu_edit->Append (ID_EDIT_GAME_PREFIX,          _T("Edit game prefix"));
     menu_edit->Append (ID_COPY_GAME_PGN_TO_CLIPBOARD,_T("Copy game to system clipboard (PGN)"));
+    menu_edit->Append (ID_EDIT_DELETE_VARIATION,     _T("Delete variation"));
     menu_edit->Append (ID_EDIT_PROMOTE,              _T("Promote variation"));
     menu_edit->Append (ID_EDIT_DEMOTE,               _T("Demote variation"));
     menu_edit->Append (ID_EDIT_DEMOTE_TO_COMMENT,    _T("Demote rest of variation to comment\tAlt-D"));
@@ -1015,11 +1018,11 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 
     // Position book moves control to right
     // toolbar->SetToolSeparation(100); // note that this approach doesn't work
-    wxSize sz0 = GetSize(); // frame size
-    wxSize sz1 = toolbar->GetMargins();
-    wxSize sz2 = toolbar->GetToolSize();
-    int space1 = toolbar->GetToolPacking();
-    int nbr_tools = toolbar->GetToolsCount() - nbr_separators;
+    //wxSize sz0 = GetSize(); // frame size
+    //wxSize sz1 = toolbar->GetMargins();
+    //wxSize sz2 = toolbar->GetToolSize();
+    //int space1 = toolbar->GetToolPacking();
+    //int nbr_tools = toolbar->GetToolsCount() - nbr_separators;
 /*    const int SEPARATOR_WIDTH = 8;  // Can only be calculated after Realize(), so done
                                     //  offline below
     const int BOOK_MOVES_WIDTH = 105;
@@ -1158,10 +1161,10 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
         int panel4 = objs.repository->nv.m_panel4;
         if( panel1>0 && panel2>0 && panel3>0 && panel4>0 )
         {
-            int idx1 = s.find( "dock_size(1,1,0)=" );
-            int idx2 = s.find( "dock_size(4,1,0)=" );
-            int idx3 = s.find( "dock_size(5,0,0)=" );
-            int idx4 = s.find( "dock_size(3,1,0)=" );
+            size_t idx1 = s.find( "dock_size(1,1,0)=" );
+            size_t idx2 = s.find( "dock_size(4,1,0)=" );
+            size_t idx3 = s.find( "dock_size(5,0,0)=" );
+            size_t idx4 = s.find( "dock_size(3,1,0)=" );
             if( idx1 != std::string::npos &&
                 idx2 != std::string::npos &&
                 idx3 != std::string::npos &&
@@ -1188,7 +1191,7 @@ void ChessFrame::OnClose( wxCloseEvent& WXUNUSED(event) )
     const char *txt = persp.c_str();
     std::string s(txt);
     int len = strlen("dock_size(1,1,0)=");
-    int idx = s.find( "dock_size(1,1,0)=" );
+    size_t idx = s.find( "dock_size(1,1,0)=" );
     if( idx != std::string::npos )
         panel1 = atoi(txt+idx+len);
     idx = s.find( "dock_size(4,1,0)=" );
@@ -1593,6 +1596,11 @@ void ChessFrame::OnEditCopyGamePGNToClipboard(wxCommandEvent &)
     objs.gl->CmdEditCopyGamePGNToClipboard();
 }
 
+void ChessFrame::OnEditDeleteVariation (wxCommandEvent &)
+{
+    objs.gl->CmdEditDeleteVariation();
+}
+
 void ChessFrame::OnEditPromote (wxCommandEvent &)
 {
     objs.gl->CmdEditPromote();
@@ -1729,6 +1737,12 @@ void ChessFrame::OnUpdateEditGamePrefix( wxUpdateUIEvent &event )
 }
 
 void ChessFrame::OnUpdateEditCopyGamePGNToClipboard(wxUpdateUIEvent &event)
+{
+    bool enabled = true;
+    event.Enable(enabled);
+}
+
+void ChessFrame::OnUpdateEditDeleteVariation( wxUpdateUIEvent &event )
 {
     bool enabled = true;
     event.Enable(enabled);

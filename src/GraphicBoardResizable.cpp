@@ -503,10 +503,10 @@ void GraphicBoardResizable::SetChessPosition( char *position_ascii )
     wxNativePixelData bmdata(my_chess_bmp);
     wxNativePixelData::Iterator p(bmdata);
     byte *src = buf_board;
-    for( int row=0; row<height; row++ )
+    for( unsigned int row=0; row<height; row++ )
     {
         p.MoveTo(bmdata, 0, row );
-        for( int col=0; col<width; col++ )
+        for( unsigned int col=0; col<width; col++ )
         {
             p.Red()   = *src++; 
             p.Green() = *src++; 
@@ -811,10 +811,10 @@ void GraphicBoardResizable::SetPositionEx( thc::ChessPosition pos, bool blank_ot
     wxNativePixelData bmdata(my_chess_bmp);
     wxNativePixelData::Iterator p(bmdata);
     byte *src = buf_board;
-    for( int row=0; row<height; row++ )
+    for( unsigned int row=0; row<height; row++ )
     {
         p.MoveTo(bmdata, 0, row );
-        for( int col=0; col<width; col++ )
+        for( unsigned int col=0; col<width; col++ )
         {
             p.Red()   = *src++; 
             p.Green() = *src++; 

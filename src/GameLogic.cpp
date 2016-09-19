@@ -556,7 +556,7 @@ void GameLogic::CmdKibitz()
     }
 }
 
-void GameLogic::CmdClearKibitz( bool hide_window )
+void GameLogic::CmdClearKibitz( bool WXUNUSED(hide_window) )
 {
     Atomic begin;
     if( !kibitz )
@@ -1781,6 +1781,12 @@ void GameLogic::CmdEditDeleteRestOfVariation()
 {
     Atomic begin;
     gd.DeleteRestOfVariation();
+}
+
+void GameLogic::CmdEditDeleteVariation()
+{
+    Atomic begin;
+    gd.DeleteVariation();
 }
 
 bool GameLogic::CmdUpdateWhiteResigns()

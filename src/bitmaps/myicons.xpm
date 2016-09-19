@@ -310,6 +310,8 @@ static const char *flip_xpm[] = {
 };
 
 
+// This one was drawn with the text editor
+#if 0
 static const char *database_xpm[] = {
 /* columns rows colors chars-per-pixel */
 "16 16 6 1",
@@ -339,6 +341,67 @@ static const char *database_xpm[] = {
 "   `&&&&&&&&&`   ",
 "      ,,,        "
 };
+#endif
+
+static const char *database_xpm[] = {
+"16 16 39 1",
+"  c None",    
+"! c #000000",
+"# c #393738",
+"$ c #484647",
+"% c #4a4849",
+"& c #4b494a",
+"( c #4f4d4e",
+") c #555354",
+"* c #565455",
+"+ c #575556",
+", c #626061",
+"- c #6c6a6b",
+". c #6e6c6f",
+"/ c #6f6d6e",
+"0 c #747273",
+"1 c #767475",
+"2 c #777576",
+"3 c #7a7879",
+"4 c #7c7a7b",
+"5 c #7d7b7c",
+"6 c #7e7c7d",
+"7 c #7f7d7e",
+"8 c #807e7f",
+"9 c #868485",
+": c #969495",
+"; c #979596",
+"< c #9f9d9e",
+"= c #a6a4a5",
+"> c #aeacad",
+"? c #b4b2b3",
+"@ c #b6b4b5",
+"A c #c3c1c2",
+"B c #c4c2c3",
+"C c #c9c7c8",
+"D c #cccacb",
+"E c #d3d1d2",
+"F c #dedcdd",
+"G c #e1dfe0",
+"H c #e2e0e1",
+"    !!!!!!!!    ",
+"  !!HHHHHHHH!!  ",
+" !HHHHHHHHHHHH! ",
+"#HHHHHHHHHHHHHH$",
+"#HHHHHHHHHHHEEE$",
+"0#HHHHHHFEEA?<#$",
+"0/##HHEC>=:9##%$",
+"0/9B#!!#####46%$",
+"0/9BGGGGD;.330%+",
+"0/9BGGGGD;.551%&",
+"0/9BGGGGD;.880%%",
+"0/9BGGGGD;.77-%*",
+"#/9BGGGGD;.44,$#",
+" #9BGGGGD;.22)#@",
+"  ##GGGGD;.-##@@",
+"    #!!!###(    "
+};
+
 
 
 static const char *bill_help_xpm[] = {

@@ -1950,6 +1950,36 @@ void GameDocument::DeleteRestOfVariation()
     }
 }
 
+void GameDocument::DeleteVariation()
+{
+    unsigned long pos = GetInsertionPoint();
+    thc::ChessRules cr;
+    std::string title;
+    bool at_move0;
+    MoveTree *found = Locate( pos, cr, title, at_move0 );
+    if( found )
+    {
+        thc::ChessRules cr2;
+        int ivar;
+        int imove;
+        MoveTree *parent = tree.Parent( found, cr2, ivar, imove );
+        if( parent )
+        {
+            std::string str;
+            tree.DeleteVariation(found);
+            pos = gv.GetMoveOffset(parent);
+            if( tree.variations.size() == 0 ) // deleted main variation ?
+            {
+                VARIATION empty_variation;
+                tree.variations.push_back( empty_variation );
+            }
+            Rebuild();
+            gl->atom.Undo();
+            gl->atom.Redisplay( pos );
+        }
+    }
+}
+
 // A start position, a vector of moves, leading to a final position    
 void GameDocument::GetSummary( thc::ChessPosition &start_position_, std::vector<GAME_MOVE> &game_moves, thc::ChessPosition &end_pos )
 {

@@ -11,9 +11,9 @@
 
 #define USING_KINGBASE
 #ifdef  USING_KINGBASE
-#define MASTER_VERSION "V3 Nightly 2016-08-20-a(k)"  // 'k' indicates default .tdb is kingbase
+#define MASTER_VERSION "V3 Nightly 2016-09-19-a(k)"  // 'k' indicates default .tdb is kingbase
 #else
-#define MASTER_VERSION "V3 Nightly 2016-08-20-a(g)"  // 'g' indicates default .tdb is great players database
+#define MASTER_VERSION "V3 Nightly 2016-09-19-a(g)"  // 'g' indicates default .tdb is great players database
 #endif
 #define DEFAULT_ENGINE "stockfish 7 32bit.exe"
 #define DEFAULT_ENGINE_64 "stockfish 7 x64.exe"
@@ -27,9 +27,7 @@
 #endif
 
 // Conditional compiles
-//#define NEW_USER_INTERFACE
-#define DURING_DEVELOPMENT  // if defined we get a console window for cprintf()
-#define RESIZABLE_BOARD     // At the moment we are just getting started on RESIZABLE_BOARD - it's not usable
+//#define DURING_DEVELOPMENT  // if defined we get a console window for cprintf()
 //#define AUI_NOTEBOOK      // Define this to get X close boxes on tabs - when it's ready
 
 // Misc
@@ -86,6 +84,7 @@ enum
     ID_GAMES_CLIPBOARD,
     ID_EDIT_GAME_DETAILS,
     ID_EDIT_GAME_PREFIX,
+    ID_EDIT_DELETE_VARIATION,             
     ID_EDIT_PROMOTE,             
     ID_EDIT_DEMOTE,              
     ID_EDIT_DEMOTE_TO_COMMENT,   
