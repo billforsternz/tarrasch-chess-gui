@@ -636,62 +636,38 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
         wxMessageBox( "Cannot read file", "Error", wxOK|wxICON_ERROR );
     else
     {
-        bool have_game = false;
         if(
             ( gc_pgn.gds.size()==1 && objs.repository->general.m_straight_to_game )  ||
             ( gc_pgn.gds.size()>0  && objs.repository->general.m_straight_to_first_game )
           )
         {
-            GameDocument *gd_file = gc_pgn.gds[0]->GetGameDocumentPtr();
-            have_game = gd_file && gd_file->in_memory;
-            if( !have_game && gd_file )
-            {
-                FILE *pgn_in = pf.ReopenRead( gd_file->pgn_handle );
-                if( pgn_in )
-                {
-                    long fposn2 = gd_file->fposn2;
-                    long end    = gd_file->fposn3;
-                    fseek(pgn_in,fposn2,SEEK_SET);
-                    long len = end-fposn2;
-                    char *buf = new char [len];
-                    if( len == (long)fread(buf,1,len,pgn_in) )
-                    {
-                        std::string s(buf,len);
-                        thc::ChessRules cr;
-                        int nbr_converted;
-                        gd = *gd_file;
-                        gd.PgnParse(true,nbr_converted,s,cr,NULL);
-                        make_smart_ptr( GameDocument,new_smart_ptr,gd);
-                        gc_pgn.gds[0] = std::move(new_smart_ptr);
-                        have_game = true;
-                    }
-                    pf.Close( &gc_clipboard );
-                    delete[] buf;
-                }
-            }
-            if( have_game )
-            {
-                objs.log->SaveGame(&gd,editing_log);
-                objs.session->SaveGame(&gd);
-                IndicateNoCurrentDocument();
+			objs.log->SaveGame(&gd, editing_log);
+			objs.session->SaveGame(&gd);
+			IndicateNoCurrentDocument();
+			
+			GameDocument *gd_file = gc_pgn.gds[0]->IsGameDocument();
+			GameDocument new_gd;
+			if (gd_file)
+				new_gd = *gd_file;
+			else
+			{
+				gc_pgn.gds[0]->ConvertToGameDocument(new_gd);
+				make_smart_ptr(GameDocument, new_smart_ptr, new_gd);
+				gc_pgn.gds[0] = std::move(new_smart_ptr);
+			}
 
-                //@ Loading up a game
-                uint32_t temp = ++game_being_edited_tag;
-                gd_file->SetGameBeingEdited( temp );
-                gc_pgn.gds[0]->SetGameBeingEdited( temp );
-                GameDocument new_gd;
-                gd_file->GetGameDocumentFromFile(new_gd);
-                gd_file->selected = true;
-                this->file_game_idx = 0;    // game 0
-                if( is_empty )
-                    gd = new_gd;
-                else
-                    tabs->TabNew(new_gd);
-                tabs->SetInfile(true);
-                ShowNewDocument();
-            }
+            //@ Loading up a game
+            uint32_t temp = ++game_being_edited_tag;
+            gc_pgn.gds[0]->SetGameBeingEdited( temp );
+            this->file_game_idx = 0;    // game 0
+            if( is_empty )
+                gd = new_gd;
+            else
+                tabs->TabNew(new_gd);
+            tabs->SetInfile(true);
+            ShowNewDocument();
         }
-        if( !have_game )
+		else
         {
             wxPoint pt(0,0);
             wxSize sz = objs.frame->GetSize();
@@ -738,55 +714,32 @@ void GameLogic::NextGamePreviousGame( int idx )
 {
     Atomic begin;
     bool editing_log = objs.gl->EditingLog();
-    bool have_game = false;
-    GameDocument *ptr = gc_pgn.gds[idx]->GetGameDocumentPtr();
-    if( ptr )
-    {
-        GameDocument gd_file = *ptr;
-        have_game = gd_file.in_memory;
-        if( !have_game )
-        {
-            FILE *pgn_in = pf.ReopenRead( gd_file.pgn_handle );
-            if( pgn_in )
-            {
-                long fposn2 = gd_file.fposn2;
-                long end    = gd_file.fposn3;
-                fseek(pgn_in,fposn2,SEEK_SET);
-                long len = end-fposn2;
-                char *buf = new char [len];
-                if( len == (long)fread(buf,1,len,pgn_in) )
-                {
-                    std::string s(buf,len);
-                    thc::ChessRules cr;
-                    int nbr_converted;
-                    gd_file.PgnParse(true,nbr_converted,s,cr,NULL);
-                    make_smart_ptr( GameDocument,new_smart_ptr,gd_file);
-                    gc_pgn.gds[idx] = std::move(new_smart_ptr);
-                    have_game = true;
-                }
-                pf.Close( &gc_clipboard );
-                delete[] buf;
-            }
-        }
-        if( have_game )
-        {
-            PutBackDocument();
-            objs.log->SaveGame(&gd,editing_log);
-            objs.session->SaveGame(&gd);
-            IndicateNoCurrentDocument();
 
-            //@ Loading up a game
-            uint32_t temp = ++game_being_edited_tag;
-            gd_file.SetGameBeingEdited( temp );
-            gd = gd_file;
-            smart_ptr<ListableGame> smp = gc_pgn.gds[idx];
-            smp->SetSelected(true);
-            smp->SetGameBeingEdited( temp );
-            this->file_game_idx = idx;
-            tabs->SetInfile(true);
-            ShowNewDocument();
-        }
-    }
+	PutBackDocument();
+	objs.log->SaveGame(&gd, editing_log);
+	objs.session->SaveGame(&gd);
+	IndicateNoCurrentDocument();
+
+	GameDocument *gd_file = gc_pgn.gds[idx]->IsGameDocument();
+	GameDocument new_gd;
+	if (gd_file)
+		new_gd = *gd_file;
+	else
+	{
+		gc_pgn.gds[idx]->ConvertToGameDocument(new_gd);
+		make_smart_ptr(GameDocument, new_smart_ptr, new_gd);
+		gc_pgn.gds[idx] = std::move(new_smart_ptr);
+	}
+
+    //@ Loading up a game
+    uint32_t temp = ++game_being_edited_tag;
+    new_gd.SetGameBeingEdited( temp );
+	gd = new_gd;
+    smart_ptr<ListableGame> smp = gc_pgn.gds[idx];
+    smp->SetGameBeingEdited( temp );
+    this->file_game_idx = idx;
+    tabs->SetInfile(true);
+    ShowNewDocument();
     atom.StatusUpdate();
 }
 
@@ -882,14 +835,12 @@ void GameLogic::IndicateNoCurrentDocument()
         smart_ptr<ListableGame> smp = gc_pgn.gds[i];
         if( smp->GetGameBeingEdited() == gd.game_being_edited )
              smp->SetGameBeingEdited(0);
-        smp->SetSelected(false);
     }
     for( size_t i=0; i<gc_clipboard.gds.size(); i++ )
     {
         smart_ptr<ListableGame> smp = gc_clipboard.gds[i];
         if( smp->GetGameBeingEdited() == gd.game_being_edited )
              smp->SetGameBeingEdited(0);
-        smp->SetSelected(false);
     }
 }
 

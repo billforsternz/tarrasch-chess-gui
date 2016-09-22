@@ -27,10 +27,10 @@ class GameDocument : public ListableGame
 public:
     GameDocument( GameLogic *gl );
     GameDocument();
-	virtual GameDocument        *GetGameDocumentPtr()           { return this; }
-    virtual bool IsInMemory()        { return true; }
-    virtual long GetFposn()          { return fposn0; }
-    virtual void SetFposn(long posn) { fposn0=posn; }
+	virtual GameDocument  *IsGameDocument()   { return this; }
+	virtual void ConvertToGameDocument(GameDocument &gd)   { gd = *this; }
+    virtual long GetFposn()					  { return fposn0; }
+    virtual void SetFposn(long posn)		  { fposn0=posn; }
     virtual Roster &RefRoster() { return r; }
     virtual std::vector<thc::Move> &RefMoves()
     {
@@ -93,12 +93,9 @@ public:
         game_details_edited = src.game_details_edited;
         game_prefix_edited  = src.game_prefix_edited;
         modified        = src.modified;
-        in_memory       = src.in_memory;
         game_being_edited    = src.game_being_edited;
         pgn_handle      = src.pgn_handle;
         sort_idx        = src.sort_idx;
-        focus           = false; //src.focus;
-        selected        = src.selected;
         game_nbr        = src.game_nbr;
         r               = src.r;
         start_position  = src.start_position;
@@ -135,7 +132,7 @@ public:
  
     void FleshOutDate();
     virtual void Init( const thc::ChessPosition &start_position );
-    void GetGameDocumentFromFile( GameDocument &gd );
+    //void GetGameDocumentFromFile( GameDocument &gd );
 
     // Data
     Roster      r;  // white, black, event, site, date etc.
@@ -143,10 +140,7 @@ public:
     bool        game_details_edited;
     bool        game_prefix_edited;
     bool        modified;
-    bool        in_memory;
     uint32_t    game_being_edited;
-    bool        selected;
-    bool        focus;
     int         pgn_handle;
     int         sort_idx;
     int         game_nbr;

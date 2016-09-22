@@ -37,9 +37,6 @@ void GameDocument::Init( const thc::ChessPosition &start_position_ )
     game_prefix_edited  = false;
     modified            = false;
     game_being_edited   = 0;
-    in_memory  = false;
-    focus      = false;
-    selected   = false;
     pgn_handle = 0;
     game_nbr   = 0;
     sort_idx   = 0;
@@ -190,33 +187,6 @@ std::string RemoveLineEnds( std::string &s )
         }
     }
     return t;
-}
-
-void GameDocument::GetGameDocumentFromFile( GameDocument &read_from_file )
-{
-    GameDocument temp = *this;
-    if( !temp.in_memory )
-    {
-        temp.in_memory = true;
-        FILE *pgn_in = gl->pf.ReopenRead( temp.pgn_handle );
-        if( pgn_in )
-        {
-            fseek(pgn_in,temp.fposn2,SEEK_SET);
-            long len = temp.fposn3-temp.fposn2;
-            char *buf = new char [len];
-            if( len == (long)fread(buf,1,len,pgn_in) )
-            {
-                std::string s(buf,len);
-                thc::ChessRules cr;
-                int nbr_converted;
-                temp.PgnParse(true,nbr_converted,s,cr,NULL);
-            }
-            gl->pf.Close( &gl->gc_clipboard );
-            delete[] buf;
-        }
-    }
-    read_from_file = temp;
-    cprintf( "white = %s, moves = %d\n", read_from_file.r.white.c_str(), read_from_file.tree.variations[0].size() );
 }
 
 std::string GameDocument::Description()
@@ -902,7 +872,6 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
     if( was_empty && okay && buffered_comment!="" )
         tree.game_move.comment = buffered_comment;  // just a comment
     Rebuild();
-    in_memory = true;
     gbl_plast_move = NULL;
     if( (*pvar).size() > 0 )
         gbl_plast_move = &(*pvar)[(*pvar).size()-1];

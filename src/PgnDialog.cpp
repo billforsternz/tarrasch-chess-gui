@@ -122,7 +122,7 @@ wxSizer *PgnDialog::GdvAddExtraControls()
 void PgnDialog::GetCachedDocumentRaw( int idx, GameDocument &gd )
 {
     smart_ptr<ListableGame> &mb = gc->gds[idx];
-    gd = *mb->GetGameDocumentPtr();
+    mb->ConvertToGameDocument(gd);
 }
 
 GameDocument * PgnDialog::GetCachedDocument( int idx )
@@ -243,20 +243,25 @@ void PgnDialog::GdvListColClick( int compare_col_ )
 
 bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx_ )
 {
+
+
     int selected_game_ = track->focus_idx;
     if( selected_game_ != -1 )
     {
-        uint32_t temp = ++gl->game_being_edited_tag;
-        GameDocument *ptr = gc->gds[selected_game_]->GetGameDocumentPtr();
-        if( ptr )
-        {
-            gc->gds[selected_game_]->SetGameBeingEdited( temp );
-            gd = *ptr;
-            gd.SetGameBeingEdited( temp );
-            gd.SetNonZeroStartPosition(track->focus_offset);
-            gd.selected = false;
-            file_game_idx_ = selected_game_; //this->file_game_idx;    // update this only if loading game from current file
-        }
+		GameDocument *gd_file = gc->gds[selected_game_]->IsGameDocument();
+		if (gd_file)
+			gd = *gd_file;
+		else
+		{
+			gc->gds[selected_game_]->ConvertToGameDocument(gd);
+			make_smart_ptr(GameDocument, new_smart_ptr, gd);
+			gc->gds[selected_game_] = std::move(new_smart_ptr);
+		}
+		uint32_t temp = ++gl->game_being_edited_tag;
+        gc->gds[selected_game_]->SetGameBeingEdited( temp );
+        gd.SetGameBeingEdited( temp );
+        gd.SetNonZeroStartPosition(track->focus_offset);
+        file_game_idx_ = selected_game_; //this->file_game_idx;    // update this only if loading game from current file
     }
     return selected_game_ != -1;
 }

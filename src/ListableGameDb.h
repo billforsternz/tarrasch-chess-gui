@@ -73,13 +73,11 @@ public:
         pact.game_id = game_id;
     }
     
-	virtual GameDocument  *GetGameDocumentPtr()
-    {
-        static GameDocument  the_game;
-        CompactGame pact;
-        GetCompactGame( pact );
-        pact.Upscale(the_game);
-        return &the_game;
+	virtual void ConvertToGameDocument(GameDocument &gd)
+	{
+		CompactGame pact;
+		GetCompactGame(pact);
+		pact.Upscale(gd);
     }
 
     virtual bool HaveStartPosition() { return false; }
@@ -128,9 +126,6 @@ public:
     virtual const char *BlackElo()  { return pack.BlackElo(); }
     virtual const char *Fen()       { return pack.Fen();      }
     virtual const char *CompressedMoves() {return pack.Blob();  }
-    
-    virtual bool IsDbGameOnly() { return true; }   // a horrible kludge
-    virtual bool IsInMemory()   { return true; }
 };
 
 

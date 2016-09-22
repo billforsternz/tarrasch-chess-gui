@@ -110,7 +110,6 @@ void CentralWorkSaver::AddGameToFile()
     bool editing_log = objs.gl->EditingLog();
     objs.log->SaveGame(gd,editing_log);         // ...and this now because we need to set...
     objs.gl->IndicateNoCurrentDocument();
-    gd->in_memory = true;
     uint32_t temp = ++objs.gl->game_being_edited_tag;
     gd->SetGameBeingEdited(temp);
     gd->modified = false;           // ...modified=false, which could mean the game

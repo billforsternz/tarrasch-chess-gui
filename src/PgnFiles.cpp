@@ -324,7 +324,7 @@ void PgnFiles::Close( GamesCache *gc_clipboard )
         for( int i=0; i<sz; i++ )
         {
             int pgn_handle;
-            bool is_pgn = gc_clipboard->gds[i]->GetPgnHandle( pgn_handle );  //REFACTOR int pgn_handle = GameDocument *ptr = gc_clipboard->gds[i]->GetGameDocumentPtr();
+            bool is_pgn = gc_clipboard->gds[i]->GetPgnHandle( pgn_handle );
             if( is_pgn && pgn_handle == handle_replace )
                 gc_clipboard->gds[i]->SetPgnHandle( handle );
         }

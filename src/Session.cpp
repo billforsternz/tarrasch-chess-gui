@@ -23,15 +23,14 @@ void Session::SaveGame( GameDocument *gd )
 {
     if( !gd->IsEmpty() )
     {
-        gd->in_memory = true;
         gd->FleshOutDate();
         gd->FleshOutMoves();
         bool diff=true;
         int sz = objs.gl->gc_session.gds.size();
         if( sz )
         {
-            GameDocument *p = objs.gl->gc_session.gds[sz-1]->GetGameDocumentPtr();
-            if(p)
+            GameDocument *p = objs.gl->gc_session.gds[sz-1]->IsGameDocument();
+            if( p )
                 diff = gd->IsDiff( *p );
         }
         if( diff )

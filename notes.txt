@@ -28,6 +28,8 @@ Bring colours into other chess boards
 Alt F underlining etc
 6 custom commands
 New tab button next to book moves?
+Info boxes have weird first paragraph
+Change Rybka to UciEngine everywhere
 
 10/9/2016
 

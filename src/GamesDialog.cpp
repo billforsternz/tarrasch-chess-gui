@@ -1002,28 +1002,29 @@ void GamesDialog::OnEditGameDetails( wxCommandEvent& WXUNUSED(event) )
     int idx = track->focus_idx;
     if( idx != -1 )
     {
-        GameDocument *ptr = gc->gds[idx]->GetGameDocumentPtr();
-        if( ptr )
+		GameDocument temp;
+		GameDocument *ptr = gc->gds[idx]->IsGameDocument();
+		if( ptr )
+			temp = *ptr;
+		else
+			gc->gds[idx]->ConvertToGameDocument(temp);
+        GameDetailsDialog dialog( this );
+        if( dialog.Run( temp ) )
         {
-            GameDetailsDialog dialog( this );
-            GameDocument temp = *ptr;
-            if( dialog.Run( temp ) )
-            {
-                list_ctrl->SetItem( idx, 1, temp.r.white );
-                list_ctrl->SetItem( idx, 2, temp.r.white_elo );
-                list_ctrl->SetItem( idx, 3, temp.r.black );
-                list_ctrl->SetItem( idx, 4, temp.r.black_elo );
-                list_ctrl->SetItem( idx, 5, temp.r.date );
-                list_ctrl->SetItem( idx, 6, objs.repository->nv.m_event_not_site ? temp.r.event : temp.r.site );
-                list_ctrl->SetItem( idx, 7, temp.r.round );
-                list_ctrl->SetItem( idx, 8, temp.r.result );
-                list_ctrl->SetItem( idx, 9, temp.r.eco );
-                temp.modified = true;
-                make_smart_ptr( GameDocument, new_smart_ptr, temp);
-                gc->gds[idx] = std::move(new_smart_ptr);
-                objs.gl->GameRedisplayPlayersResult();
-                Goto(idx);
-            }
+            list_ctrl->SetItem( idx, 1, temp.r.white );
+            list_ctrl->SetItem( idx, 2, temp.r.white_elo );
+            list_ctrl->SetItem( idx, 3, temp.r.black );
+            list_ctrl->SetItem( idx, 4, temp.r.black_elo );
+            list_ctrl->SetItem( idx, 5, temp.r.date );
+            list_ctrl->SetItem( idx, 6, objs.repository->nv.m_event_not_site ? temp.r.event : temp.r.site );
+            list_ctrl->SetItem( idx, 7, temp.r.round );
+            list_ctrl->SetItem( idx, 8, temp.r.result );
+            list_ctrl->SetItem( idx, 9, temp.r.eco );
+            temp.modified = true;
+			make_smart_ptr(GameDocument, new_smart_ptr, temp);
+			gc->gds[idx] = std::move(new_smart_ptr);
+            objs.gl->GameRedisplayPlayersResult();
+            Goto(idx);
         }
     }
 }
@@ -1121,8 +1122,9 @@ void GamesDialog::OnCutOrDelete( bool cut )
             for( size_t j=0; j<games_to_cut.size(); j++ )
             {
                 int idx = games_to_cut[j];
-                idx -= j;
+                idx -= j;					//@ suspicious
                 gc->gds.erase(iter+idx);
+				iter = gc->gds.begin();
             }
             sz-=nbr_cut;
             list_ctrl->SetItemCount(sz);

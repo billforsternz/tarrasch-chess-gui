@@ -29,18 +29,13 @@ public:
     virtual ~ListableGame() {}
     virtual uint32_t GetGameId() { return 0; }
     virtual bool IsDbGameOnly() { return false; }                   // a horrible kludge
-    virtual GameDocument *GetGameDocumentPtr()  {
-        cprintf("FIXME DANGER WILL ROBINSON 3\n");  return NULL; }
-    virtual long GetFposn() { return 0; }
+	virtual GameDocument *IsGameDocument()  { return NULL; }		// return ptr to this if and only if this is type GameDocument
+	virtual void ConvertToGameDocument(GameDocument &) {}
+	virtual long GetFposn() { return 0; }
     virtual void SetFposn( long UNUSED(posn) ) {}
     virtual bool GetPgnHandle( int &UNUSED(pgn_handle) ) { return false; }
     virtual void SetPgnHandle( int UNUSED(pgn_handle) )  {}
-    virtual bool IsInMemory()        { return false; }
     virtual bool IsModified()        { return false; }
-    virtual void SetSelected( bool UNUSED(selected) ) {}
-    virtual void SetFocused( bool UNUSED(focused) ) {}
-    virtual bool GetSelected() { return false; }
-    virtual bool GetFocused() { return false; }
     virtual void SetGameBeingEdited( uint32_t UNUSED(game_being_edited) ) {}
     virtual uint32_t GetGameBeingEdited() { return 0; }
     virtual void *LoadIntoMemory( void *UNUSED(context), bool UNUSED(end) )  {return 0;}

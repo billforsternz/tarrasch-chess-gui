@@ -56,13 +56,12 @@ public:
         pack.Pack(pact);
     }
     
-	virtual GameDocument  *GetGameDocumentPtr()
-    {
-        static GameDocument  the_game;
-        cprintf("FIXME DANGER WILL ROBINSON (ptr to static 1)\n");
-        ReadGameFromPgn( pgn_handle, fposn, the_game );
-        return &the_game;
-    }
+	virtual void ConvertToGameDocument(GameDocument &gd)
+	{
+		ReadGameFromPgn(pgn_handle, fposn, gd);
+	}
+
+
     virtual Roster &RefRoster()
     {
         static CompactGame pact;
