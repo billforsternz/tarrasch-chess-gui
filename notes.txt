@@ -30,6 +30,13 @@ Alt F underlining etc
 New tab button next to book moves?
 Info boxes have weird first paragraph
 Change Rybka to UciEngine everywhere
+Check ANSI names in pgn
+Select All in games dialogs
+aa_carlsen or was it aaa_carlsen ordering messed up
+Remove small board option
+Add more ratings filters
+Buttons same width
+Ticking clock is red
 
 10/9/2016
 

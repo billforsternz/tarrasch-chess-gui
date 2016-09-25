@@ -682,9 +682,6 @@ void GamesDialog::OnListColClick( wxListEvent &event )
     GdvListColClick( compare_col_ );
 }
 
-
-
-
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_OK
 void GamesDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
 {
@@ -754,6 +751,7 @@ void GamesDialog::LoadGameOne( int idx, int focus_offset )
     ReadItemWithSingleLineCache( idx, info );
     GameDocument gd;
     gd.r = info.r;
+	gd.game_id = info.game_id;
     gd.LoadFromMoveList( info.moves, focus_offset );
     db_game = gd;
     db_game_set = true;
@@ -1227,6 +1225,7 @@ void GamesDialog::OnDelete( wxCommandEvent& WXUNUSED(event) )
 
 void GamesDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
 {
+	dirty = true;
     int idx_focus=focus_idx;
     int sz=gc->gds.size();
     if( list_ctrl && list_ctrl->GetItemCount()==sz && 0<=idx_focus && idx_focus<sz )
@@ -1236,7 +1235,8 @@ void GamesDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
         for( int i=sz2-1; i>=0; i-- )
         {                                 
             gc->gds.insert( iter, gc_clipboard->gds[i] );
-            gc->file_irrevocably_modified = true;
+			iter = gc->gds.begin() + idx_focus;
+			gc->file_irrevocably_modified = true;
         }
         sz += sz2;
         list_ctrl->SetItemCount(sz);
@@ -2261,6 +2261,7 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
 
 void GamesDialog::ColumnSort( int compare_col_, std::vector< smart_ptr<ListableGame> > &displayed_games )
 {
+	dirty = true;
     uint32_t sz = displayed_games.size();
     uint32_t game_id_restore = GAME_ID_SENTINEL;    // no game should match this
     if( sz > 1 )

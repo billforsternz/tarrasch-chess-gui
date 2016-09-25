@@ -61,7 +61,6 @@ void GraphicBoardResizable::Init
 
     wxColour icon_light(255,226,179);
     wxColour legacy_dark(200,200,200);
-    wxColour icon_dark(220,162,116);
     wxColour magic(255,0,255);
     wxBrush light_brush(icon_light);
     dc.SetBrush( light_brush );
@@ -811,10 +810,10 @@ void GraphicBoardResizable::SetPositionEx( thc::ChessPosition pos, bool blank_ot
     wxNativePixelData bmdata(my_chess_bmp);
     wxNativePixelData::Iterator p(bmdata);
     byte *src = buf_board;
-    for( unsigned int row=0; row<height; row++ )
+    for( unsigned int row2=0; row2<height; row2++ )
     {
-        p.MoveTo(bmdata, 0, row );
-        for( unsigned int col=0; col<width; col++ )
+        p.MoveTo(bmdata, 0, row2 );
+        for( unsigned int col2=0; col2<width; col2++ )
         {
             p.Red()   = *src++; 
             p.Green() = *src++; 

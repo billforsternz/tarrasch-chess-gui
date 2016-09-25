@@ -296,9 +296,9 @@ void PanelContext::PositionSuggestionButtons()
         const char *label = ws.c_str();
         wxCoord width, height, descent, external_leading;
         dc1.GetTextExtent( label, &width, &height, &descent, &external_leading );
-        wxSize sz = button->GetSize();
-        sz.x = width + button_width_delta;
-        button->SetSize(sz);
+        wxSize sz2 = button->GetSize();
+        sz2.x = width + button_width_delta;
+        button->SetSize(sz2);
     }
 
     // Position buttons

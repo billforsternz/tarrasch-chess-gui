@@ -98,6 +98,7 @@ public:
         sort_idx        = src.sort_idx;
         game_nbr        = src.game_nbr;
         r               = src.r;
+		game_id         = src.game_id;
         start_position  = src.start_position;
         master_position = src.master_position;
         fposn0          = src.fposn0;

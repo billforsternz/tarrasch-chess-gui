@@ -22,18 +22,8 @@
 
 static uint32_t game_id_bottom = 0;
 static uint32_t game_id_top    = GAME_ID_SENTINEL-1;
-uint32_t GameIdAllocateBottom( uint32_t count )
-{
-    if( game_id_bottom+count >= game_id_top )
-    {
-        game_id_bottom = 0;
-        game_id_top    = GAME_ID_SENTINEL-1;
-    }
-    uint32_t temp = game_id_bottom;
-    game_id_bottom += count;
-    return temp;
-}
 
+// Database game ids are allocated from the top
 uint32_t GameIdAllocateTop( uint32_t count )
 {
     if( game_id_top-count <= game_id_bottom )
@@ -44,6 +34,20 @@ uint32_t GameIdAllocateTop( uint32_t count )
     game_id_top -= count;
     return game_id_top;
 }
+
+// Other game ids are allocated from the bottom
+uint32_t GameIdAllocateBottom(uint32_t count)
+{
+	if (game_id_bottom + count >= game_id_top)
+	{
+		game_id_bottom = 0;
+		game_id_top = GAME_ID_SENTINEL - 1;
+	}
+	uint32_t temp = game_id_bottom;
+	game_id_bottom += count;
+	return temp;
+}
+
 
 static FILE         *bin_file;      //temp
 

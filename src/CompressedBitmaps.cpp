@@ -188,7 +188,7 @@ CompressedXpmProcessor::CompressedXpmProcessor( const CompressedXpm *encoded )
         uint8_t c = *src++;
         len--;
         bool arbitrary_data=false;
-        char proxy=' ';
+        proxy=' ';
         uint32_t n=0;
         if( c == 0xc0 )   // This is the kludge code - search for "kludge" for explanation
         {
@@ -284,14 +284,14 @@ CompressedXpmProcessor::CompressedXpmProcessor( const CompressedXpm *encoded )
             {
                 for( uint32_t i=0; i<n && i<10; i++ )
                 {
-                    char c = buf[i];
-                    if( c == ' ' )
+                    char ch = buf[i];
+                    if( ch == ' ' )
                         cprintf( "magenta " );
                     else
                     {
                         for( int j=0; j<16; j++ )
                         {
-                            if( c == proxy_colours[j] )
+                            if( ch == proxy_colours[j] )
                             {
                                 cprintf( "%02x ", j );
                                 break;
