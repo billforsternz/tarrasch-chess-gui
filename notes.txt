@@ -1,3 +1,19 @@
+28/9/2016
+
+New simple test plan for testing workflow as games cycle through files and tabs
+Cycle randomly through following tasks;
+1. Play moves to create game
+2. Load games from a file
+3. Save moves to a file
+4. Edit game from a file
+5. Load game from a database search
+6. Copy games to clipboard
+7. Delete games from clipboard
+8. Delete games from file
+9. Paste games into file
+10. Paste current game into file
+11. Edit game details
+
 15/9/2016
 
 Todo (done)
@@ -14,7 +30,10 @@ Layout is non-volatile
 Get click on square working again
 Improve selection of new database file in create database dialog
 Add delete variation command
-Improved database icon
+Improved database icon in toolbar
+Show all by player not sorted sensibly within player
+Save all doesn't work for show all by player - remove it
+Cut, delete, paste should change nbr of games in a list
 
 Todo (not yet)
 --------------
@@ -32,11 +51,14 @@ Info boxes have weird first paragraph
 Change Rybka to UciEngine everywhere
 Check ANSI names in pgn
 Select All in games dialogs
-aa_carlsen or was it aaa_carlsen ordering messed up
 Remove small board option
 Add more ratings filters
 Buttons same width
 Ticking clock is red
+Claude: Permissions error moving files to documents
+Claude: Aggressive smaller resize from top left causes crash.
+Add Claude to credits.
+Clipboard as temp*orary* database
 
 10/9/2016
 

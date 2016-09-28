@@ -65,8 +65,6 @@ public:
         SetAttributes(moves_blob,len12);
     }
 
-    virtual uint32_t GetGameId()  { return game_id; }
-
     virtual void GetCompactGame( CompactGame &pact )
     {
         pack.Unpack(pact);

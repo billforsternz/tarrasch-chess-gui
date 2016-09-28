@@ -22,15 +22,14 @@ uint32_t GameIdAllocateTop( uint32_t count );
 uint32_t GameIdAllocateBottom( uint32_t count );
 #define UNUSED(x)
 
+class GameDocument;
 class ListableGame
 {
 public:
-    ListableGame() { /*transpo_nbr=0;*/ game_attributes=0; }
+    ListableGame() { /*transpo_nbr=0;*/ game_attributes=0; game_id=0; }
     virtual ~ListableGame() {}
-    virtual uint32_t GetGameId() { return 0; }
-    virtual bool IsDbGameOnly() { return false; }                   // a horrible kludge
 	virtual GameDocument *IsGameDocument()  { return NULL; }		// return ptr to this if and only if this is type GameDocument
-	virtual void ConvertToGameDocument(GameDocument &) {}
+	virtual void ConvertToGameDocument(GameDocument &UNUSED(gd)) {}
 	virtual long GetFposn() { return 0; }
     virtual void SetFposn( long UNUSED(posn) ) {}
     virtual bool GetPgnHandle( int &UNUSED(pgn_handle) ) { return false; }

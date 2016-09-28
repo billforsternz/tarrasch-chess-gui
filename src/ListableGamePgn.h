@@ -26,6 +26,7 @@ public:
     virtual long GetFposn() { return fposn; }
     virtual void SetFposn( long posn ) { fposn=posn; }
     virtual bool GetPgnHandle( int &pgn_handle_ ) { pgn_handle_=this->pgn_handle; return true; }
+    virtual void SetPgnHandle( int pgn_handle_ )  { this->pgn_handle = pgn_handle_; }
     virtual void *LoadIntoMemory( void *context, bool end )
     {
         if( pack.Empty() )

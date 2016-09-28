@@ -456,12 +456,12 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, ProgressBar *
                 continue;   // a partial game in the clipboard
             DoSearchFoundGame dsfg;
             dsfg.idx = i;
-            dsfg.game_id = p->GetGameId();
+            dsfg.game_id = p->game_id;
             dsfg.offset_first=0;
             dsfg.offset_last=0;
             /* Roster r = in_memory_game_cache[i]->RefRoster();
             cprintf( "idx=%d, white=%s[%s], black=%s[%s], blob=%s\n",
-                        in_memory_game_cache[i]->GetGameId(),
+                        in_memory_game_cache[i]->game_id,
                         in_memory_game_cache[i]->White(),  r.white.c_str(),
                         in_memory_game_cache[i]->Black(),  r.black.c_str(),
                         in_memory_game_cache[i]->CompressedMoves() ); */
@@ -685,7 +685,7 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
             //    debug_trigger = true;
             DoSearchFoundGame dsfg;
             dsfg.idx = i;
-            dsfg.game_id = p->GetGameId();
+            dsfg.game_id = p->game_id;
             dsfg.offset_first=0;
             dsfg.offset_last=0;
             bool promotion_in_game = (p->game_attributes!=0);

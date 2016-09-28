@@ -154,7 +154,7 @@ public:
     void Refresh() { SetGroomedPosition(); NewState(state); }
     bool EngineChanged(); // return true if in-game
     void StatusUpdate( int idx=-1 );
-    void StatusWarning();
+    void StatusInit();
     bool EditingLog();
 
 private:

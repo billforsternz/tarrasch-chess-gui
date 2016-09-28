@@ -20,7 +20,7 @@
 #include "ListableGameBinDb.h"
 #include "BinDb.h"
 
-static uint32_t game_id_bottom = 0;
+static uint32_t game_id_bottom = 1;	// reserve 0 as a special value
 static uint32_t game_id_top    = GAME_ID_SENTINEL-1;
 
 // Database game ids are allocated from the top
@@ -28,7 +28,7 @@ uint32_t GameIdAllocateTop( uint32_t count )
 {
     if( game_id_top-count <= game_id_bottom )
     {
-        game_id_bottom = 0;
+        game_id_bottom = 1;
         game_id_top    = GAME_ID_SENTINEL-1;
     }
     game_id_top -= count;
@@ -40,7 +40,7 @@ uint32_t GameIdAllocateBottom(uint32_t count)
 {
 	if (game_id_bottom + count >= game_id_top)
 	{
-		game_id_bottom = 0;
+		game_id_bottom = 1;
 		game_id_top = GAME_ID_SENTINEL - 1;
 	}
 	uint32_t temp = game_id_bottom;
@@ -1003,16 +1003,12 @@ static bool predicate_sorts_by_game_moves( const smart_ptr<ListableGame> &e1, co
 
 static bool predicate_sorts_by_player( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 )
 {
-	bool ret = e1->WhiteBin() < e2->WhiteBin();
-    predicate_count++;
-    if( (predicate_count & 0xffff) == 0 )
-        sort_progress_probe();
-    return ret;
-}
-
-static bool predicate_sorts_by_game_id( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 )
-{
-	bool ret = e1->GetGameId() < e2->GetGameId();
+	bool ret;
+	bool eq  = e1->WhiteBin() == e2->WhiteBin();
+	if( eq )
+		ret = e1->game_id < e2->game_id;   // This means the "Show all by player" feature shows each players game in db order
+	else
+		ret = e1->WhiteBin() < e2->WhiteBin();
     predicate_count++;
     if( (predicate_count & 0xffff) == 0 )
         sort_progress_probe();
@@ -1061,8 +1057,8 @@ void BinDbDatabaseInitialSort( std::vector< smart_ptr<ListableGame> > &games_, b
     ProgressBar progress_bar( "Sorting", desc, true );
     //progress_bar.DrawNow();
     BinDbShowDebugOrder( games_, "Initial sort before");
-    sort_before( games_.begin(), games_.end(), sort_by_player_name ? predicate_sorts_by_player : predicate_sorts_by_game_id, &progress_bar );
-    std::sort( games_.begin(), games_.end(), sort_by_player_name ? predicate_sorts_by_player : predicate_sorts_by_game_id );
+    sort_before( games_.begin(), games_.end(), sort_by_player_name ? predicate_sorts_by_player : predicate_sorts_by_id, &progress_bar );
+    std::sort( games_.begin(), games_.end(), sort_by_player_name ? predicate_sorts_by_player : predicate_sorts_by_id );
     sort_after();
     BinDbShowDebugOrder( games_, "Initial sort after");
 }

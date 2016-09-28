@@ -277,7 +277,8 @@ void GamesListCtrl::OnChar( wxKeyEvent &event )
     if( update )
     {
         RefreshItem(track->focus_idx);
-        browse_map[track->info.game_id] = track->focus_offset;
+		if( track->info.game_id != 0 )	// only map games that have a real game_id
+	        browse_map[track->info.game_id] = track->focus_offset;
         if( mini_board )
         {
             std::string previous_move;
@@ -1001,11 +1002,7 @@ void GamesDialog::OnEditGameDetails( wxCommandEvent& WXUNUSED(event) )
     if( idx != -1 )
     {
 		GameDocument temp;
-		GameDocument *ptr = gc->gds[idx]->IsGameDocument();
-		if( ptr )
-			temp = *ptr;
-		else
-			gc->gds[idx]->ConvertToGameDocument(temp);
+		gc->gds[idx]->ConvertToGameDocument(temp);
         GameDetailsDialog dialog( this );
         if( dialog.Run( temp ) )
         {
@@ -1128,6 +1125,9 @@ void GamesDialog::OnCutOrDelete( bool cut )
             list_ctrl->SetItemCount(sz);
             Goto( 0<=idx_focus && idx_focus<sz ? idx_focus : 0 );
             list_ctrl->RefreshItems(0,sz-1);
+			char buf[80];
+			sprintf(buf,"%d games",sz);
+		    title_ctrl->SetLabel( buf );
         }
     }
     dbg_printf( "%d games %s\n", nbr_cut, cut?"cut":"deleted" );
@@ -1191,6 +1191,9 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
             list_ctrl->SetItemState( insert_idx, 0, wxLIST_STATE_SELECTED );
             Goto( insert_idx );
             list_ctrl->RefreshItems(0,sz-1);
+			char buf[80];
+			sprintf(buf,"%d games",sz);
+		    title_ctrl->SetLabel( buf );
         }
     } 
 }
@@ -1242,6 +1245,9 @@ void GamesDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
         list_ctrl->SetItemCount(sz);
         Goto(idx_focus);
         list_ctrl->RefreshItems(0,sz-1);
+		char buf[80];
+  		sprintf(buf,"%d games",sz);
+		title_ctrl->SetLabel( buf );
     }
 }
 

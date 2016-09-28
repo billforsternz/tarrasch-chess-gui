@@ -644,7 +644,8 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
 			objs.log->SaveGame(&gd, editing_log);
 			objs.session->SaveGame(&gd);
 			IndicateNoCurrentDocument();
-			
+
+			// Upgrade first element of games cache to a GameDocument, if necessary
 			GameDocument *gd_file = gc_pgn.gds[0]->IsGameDocument();
 			GameDocument new_gd;
 			if (gd_file)
@@ -676,8 +677,14 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
             PgnDialog dialog( objs.frame, &gc_pgn, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );   // GamesDialog instance
             std::string title = "File: " + filename;
             if( !dialog.ShowModalOk(title) )
-                gc_pgn.pgn_filename = "";
-            else
+			{
+#define CANCEL_PGN_DIALOG_CANCELS_FILE	// if this is defined, open file -> pgn dialog -> cancel doesn't load the file
+#ifdef CANCEL_PGN_DIALOG_CANCELS_FILE
+				gc_pgn.gds.clear();
+				gc_pgn.pgn_filename = "";
+#endif
+			}
+			else
             {
                 objs.log->SaveGame(&gd,editing_log);
                 objs.session->SaveGame(&gd);
@@ -720,6 +727,7 @@ void GameLogic::NextGamePreviousGame( int idx )
 	objs.session->SaveGame(&gd);
 	IndicateNoCurrentDocument();
 
+	// Upgrade next/previous element of games cache to a GameDocument, if necessary
 	GameDocument *gd_file = gc_pgn.gds[idx]->IsGameDocument();
 	GameDocument new_gd;
 	if (gd_file)
@@ -1914,12 +1922,12 @@ void GameLogic::OnIdle()
     {
         not_first_time = true;
         extern wxString argv1;
+        StatusInit();
         if( argv1 != "" )
         {
             std::string filename( argv1.c_str() );
             CmdFileOpenInner( filename );
         }
-        StatusWarning();
         SetFocusOnList();
         objs.canvas->notebook->AdvanceSelection();
         objs.canvas->lb->SetFocus();
@@ -2812,7 +2820,7 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
     atom.Focus();
 }
 
-void GameLogic::StatusWarning()
+void GameLogic::StatusInit()
 {
     if( objs.frame )
     {

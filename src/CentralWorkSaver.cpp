@@ -374,8 +374,8 @@ void CentralWorkSaver::Save( bool prompt, bool save_as, bool open_file )
     {
         if( !prompt ) 
         {
-            // if we are being asked to save, then save
-            SaveFile(prompt,file_exists?FILE_EXISTS_GAME_UNCHANGED:FILE_NEW_GAME_NEW,save_as);
+            // if user is asking to save, then save
+            SaveFile(prompt,file_exists?(game_in_file?FILE_EXISTS_GAME_UNCHANGED:FILE_EXISTS_GAME_NEW):FILE_NEW_GAME_NEW,save_as);
         }
         else
         {

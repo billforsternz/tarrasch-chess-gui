@@ -127,9 +127,18 @@ wxSizer *DbDialog::GdvAddExtraControls()
                                    wxDefaultPosition, wxDefaultSize, 0 );
     vsiz_panel_button1->Add(btn4, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-    wxButton* save_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save all"),
-        wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_button1->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    if( db_req == REQ_PLAYERS )	// Save all button assumes games are in the gc_db_displayed_games cache. Not true if REQ_PLAYERS
+	{
+		wxStaticText* spacer1 = new wxStaticText( this, wxID_ANY, wxT(""),
+										 wxDefaultPosition, wxDefaultSize, 0 );
+		vsiz_panel_button1->Add(spacer1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+	}
+	else
+	{
+		wxButton* save_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save all"),
+			wxDefaultPosition, wxDefaultSize, 0 );
+		vsiz_panel_button1->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+	}
     
     filter_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX,
                                  wxT("&Clipboard as temp database"), wxDefaultPosition, wxDefaultSize, 0 );

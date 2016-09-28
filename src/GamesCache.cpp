@@ -362,7 +362,7 @@ void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &new_doc )
     gd.fposn0 = fposn;
     gd.SetPgnHandle(pgn_handle);
     new_doc = gd;
-    // objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
+    objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
 }
 
 
@@ -809,17 +809,10 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
             int diagram_base = 0;
             int mv_base = 0;
             int neg_base = -2;
-			for (int i = 0; i < gds_nbr; i++)
+			for( int i=0; i<gds_nbr; i++ )
 			{
 				GameDocument gd;
-				GameDocument *ptr = gds[i]->IsGameDocument();
-				if (ptr)
-					gd = *ptr;
-				else
-				{
-					gds[i]->ConvertToGameDocument(gd);
-					ptr = &gd;
-				}
+				gds[i]->ConvertToGameDocument(gd);
 				thc::ChessPosition tmp;
 
 				int publish_options = 0;
