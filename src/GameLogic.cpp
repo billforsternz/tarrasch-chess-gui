@@ -263,6 +263,7 @@ void GameLogic::CmdPlayWhite()
                 chess_clock.SetTimes( white_millisecs_time, black_millisecs_time );
             }
         }
+		bool show_title=true;
         if( cr.white )
         {
             if( move_txt == "" )
@@ -273,10 +274,11 @@ void GameLogic::CmdPlayWhite()
         }
         else
         {
+			show_title = false;
             NewState( StartThinking(NULL) );
         }
         objs.canvas->RedrawClocks();
-        SetGroomedPosition();
+        SetGroomedPosition(show_title);
         LabelPlayers( true, is_new_game_main );
     }
 }
@@ -308,6 +310,7 @@ void GameLogic::CmdPlayBlack()
                 chess_clock.SetTimes( white_millisecs_time, black_millisecs_time );
             }
         }
+		bool show_title=true;
         if( !cr.white )
         {
             if( move_txt == "" )
@@ -317,9 +320,12 @@ void GameLogic::CmdPlayBlack()
             NewState( HUMAN );
         }
         else
+		{
+			show_title = false;
             NewState( StartThinking(NULL) );
+		}
         objs.canvas->RedrawClocks();
-        SetGroomedPosition();
+        SetGroomedPosition( show_title );
         LabelPlayers( true, is_new_game_main );
     }
 }
@@ -3298,7 +3304,8 @@ void GameLogic::SetGroomedPosition( bool show_title )
         }
     }
     canvas->SetChessPosition( view_pos );
-    canvas->SetBoardTitle( title );
+	if( show_title )
+		canvas->SetBoardTitle( title );
     if( canvas->resize_ready && tabs && show_title )
         tabs->SetTitle( gd );
  }

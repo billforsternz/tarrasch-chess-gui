@@ -156,6 +156,12 @@ Repository::Repository( bool use_defaults )
         ReadBool    ("GeneralUseLargeFont",               general.m_large_font    );
         ReadBool    ("GeneralNoAutoFlip",                 general.m_no_auto_flip  );
         ReadBool    ("GeneralEmitBellWhenEngineMoves",    general.m_bell  );
+		config->Read("GeneralLightColourRed",            &general.m_light_colour_r );
+		config->Read("GeneralLightColourGreen",          &general.m_light_colour_g );
+		config->Read("GeneralLightColourBlue",           &general.m_light_colour_b );
+		config->Read("GeneralDarkColourRed",             &general.m_dark_colour_r );
+		config->Read("GeneralDarkColourGreen",           &general.m_dark_colour_g );
+		config->Read("GeneralDarkColourBlue",            &general.m_dark_colour_b );
 
         // NonVolatile
         config->Read("NonVolatileX",                      &nv.m_x );
@@ -244,6 +250,12 @@ Repository::~Repository()
     config->Write("GeneralUseLargeFont",              (int)general.m_large_font   );
     config->Write("GeneralNoAutoFlip",                (int)general.m_no_auto_flip );
     config->Write("GeneralEmitBellWhenEngineMoves",   (int)general.m_bell  );
+	config->Write("GeneralLightColourRed",            general.m_light_colour_r );
+	config->Write("GeneralLightColourGreen",          general.m_light_colour_g );
+	config->Write("GeneralLightColourBlue",           general.m_light_colour_b );
+	config->Write("GeneralDarkColourRed",             general.m_dark_colour_r );
+	config->Write("GeneralDarkColourGreen",           general.m_dark_colour_g );
+	config->Write("GeneralDarkColourBlue",            general.m_dark_colour_b );
 
     // NonVolatile
     config->Write("NonVolatileX",                     nv.m_x );

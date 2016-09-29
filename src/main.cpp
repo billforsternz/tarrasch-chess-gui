@@ -2171,15 +2171,19 @@ void ChessFrame::OnGeneral(wxCommandEvent &)
         objs.repository->general = dialog.dat;
         //if( changed )
         //    objs.gl->SetGroomedPosition();
-        dbg_printf( "notation language=%s, no italics=%d, straight to game=%d\n",
-                                 dialog.dat.m_notation_language.c_str(),
-                                 dialog.dat.m_no_italics,
+        const char *s=dialog.dat.m_notation_language.c_str();
+        cprintf( "notation language=%s, no italics=%d, straight to game=%d\n",
+                                 s, dialog.dat.m_no_italics,
                                  dialog.dat.m_straight_to_game );
         const char *to = LangCheckDiffEnd();
         bool after_large_font = objs.repository->general.m_large_font;
         bool after_no_italics = objs.repository->general.m_no_italics;
         RefreshLanguageFont( from, before_large_font, before_no_italics,
                              to,   after_large_font,  after_no_italics );
+
+		// Change board colours
+		wxSize sz = objs.canvas->pb->gb->GetSize();
+		objs.canvas->pb->gb->SetBoardSize(sz);
     }
     SetFocusOnList();
 }

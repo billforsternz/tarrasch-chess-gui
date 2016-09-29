@@ -198,6 +198,8 @@ void PanelBoard::Layout( const wxSize &siz, wxRect &board )
     }
 
     // Position of the board
+	if( dim < 15*8 )
+		dim = 15*8;
     int origin_x = l;
     int origin_y = t;
     int x = origin_x;

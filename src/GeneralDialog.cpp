@@ -9,7 +9,9 @@
 #include "wx/valgen.h"
 #include "wx/msgdlg.h"
 #include "wx/statline.h"
+#include "wx/clrpicker.h"
 #include "Appdefs.h"
+#include "DebugPrintf.h"
 #include "Lang.h"
 #include "GeneralDialog.h"
 using namespace std;
@@ -22,7 +24,10 @@ IMPLEMENT_CLASS( GeneralDialog, wxDialog )
 BEGIN_EVENT_TABLE( GeneralDialog, wxDialog )
     EVT_BUTTON   ( wxID_HELP, GeneralDialog::OnHelpClick )
     EVT_BUTTON   ( wxID_OK, GeneralDialog::OnOkClick )
+    EVT_BUTTON   ( ID_RESTORE_LIGHT, GeneralDialog::OnRestoreLight )
+    EVT_BUTTON   ( ID_RESTORE_DARK , GeneralDialog::OnRestoreDark  )
     EVT_COMBOBOX ( ID_NOTATION_LANGUAGE,  GeneralDialog::OnNotationLanguage )
+	EVT_COLOURPICKER_CHANGED( wxID_ANY, GeneralDialog::OnColourPicker )
 END_EVENT_TABLE()
 
 // GeneralDialog constructor
@@ -118,12 +123,32 @@ void GeneralDialog::CreateControls()
     notation_language_sizer->Add(notation_language_ctrl,  0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     box_sizer->Add(notation_language_sizer, 0, wxALIGN_LEFT|wxALL, 5);
 
-    // Use small board graphics
-    wxCheckBox* use_small_board_box = new wxCheckBox( this, ID_SMALL_BOARD,
-       wxT("Use small chess board (requires restart)"), wxDefaultPosition, wxDefaultSize, 0 );
-    use_small_board_box->SetValue( dat.m_small_board );
-    box_sizer->Add( use_small_board_box, 0,
-        wxALL, 5);
+    // Colour Pickers
+    wxBoxSizer* colour_sizer1  = new wxBoxSizer(wxHORIZONTAL);
+    wxStaticText* colour_label1 = new wxStaticText ( this, wxID_STATIC,
+        "Light Square Colour", wxDefaultPosition, wxDefaultSize, 0 );
+	wxColour light(dat.m_light_colour_r,dat.m_light_colour_g,dat.m_light_colour_b);
+    light_picker = new wxColourPickerCtrl( this, wxID_ANY, light );
+    colour_sizer1->Add(colour_label1, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
+    colour_sizer1->Add(10, 5, 1, wxALL, 0);
+    colour_sizer1->Add(light_picker,  0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
+    wxButton *restore_light = new wxButton ( this, ID_RESTORE_LIGHT, "Restore Default",
+        wxDefaultPosition, wxDefaultSize, 0 );
+    colour_sizer1->Add(restore_light, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+	box_sizer->Add(colour_sizer1, 0, wxALIGN_LEFT|wxALL, 5);
+
+    wxBoxSizer* colour_sizer2  = new wxBoxSizer(wxHORIZONTAL);
+    wxStaticText* colour_label2 = new wxStaticText ( this, wxID_STATIC,
+        "Dark Square Colour", wxDefaultPosition, wxDefaultSize, 0 );
+	wxColour dark(dat.m_dark_colour_r,dat.m_dark_colour_g,dat.m_dark_colour_b);
+    dark_picker = new wxColourPickerCtrl( this, wxID_ANY, dark );
+    colour_sizer2->Add(colour_label2, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
+    colour_sizer2->Add(10, 5, 1, wxALL, 0);
+    colour_sizer2->Add(dark_picker,  0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
+    wxButton *restore_dark = new wxButton ( this, ID_RESTORE_DARK, "Restore Default",
+        wxDefaultPosition, wxDefaultSize, 0 );
+    colour_sizer2->Add(restore_dark, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    box_sizer->Add(colour_sizer2, 0, wxALIGN_LEFT|wxALL, 5);
 
     // Use large font for chess text
     wxCheckBox* use_large_font_box = new wxCheckBox( this, ID_LARGE_FONT,
@@ -195,12 +220,8 @@ void GeneralDialog::CreateControls()
 // Set the validators for the dialog controls
 void GeneralDialog::SetDialogValidators()
 {
-    //FindWindow(ID_NOTATION_LANGUAGE)->SetValidator(
-    //    wxTextValidator(wxFILTER_ASCII, &dat.m_notation_language));
     FindWindow(ID_LARGE_FONT)->SetValidator(
         wxGenericValidator(& dat.m_large_font));
-    FindWindow(ID_SMALL_BOARD)->SetValidator(
-        wxGenericValidator(& dat.m_small_board));
     FindWindow(ID_NO_ITALICS)->SetValidator(
         wxGenericValidator(& dat.m_no_italics));
     FindWindow(ID_STRAIGHT_TO_GAME)->SetValidator(
@@ -229,8 +250,8 @@ void GeneralDialog::SetDialogHelp()
     FindWindow(ID_STRAIGHT_TO_FIRST_GAME)->SetHelpText(help3b);
     FindWindow(ID_STRAIGHT_TO_FIRST_GAME)->SetToolTip(help3b);
     wxString help4 = "Set this to use small board graphics on a large screen (takes effect at next restart)";
-    FindWindow(ID_SMALL_BOARD)->SetHelpText(help4);
-    FindWindow(ID_SMALL_BOARD)->SetToolTip(help4);
+    //FindWindow(ID_SMALL_BOARD)->SetHelpText(help4);
+    //FindWindow(ID_SMALL_BOARD)->SetToolTip(help4);
     wxString help5 = "Set this to use a larger font in the moves window";
     FindWindow(ID_LARGE_FONT)->SetHelpText(help5);
     FindWindow(ID_LARGE_FONT)->SetToolTip(help5);
@@ -261,6 +282,14 @@ void GeneralDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_OK
 void GeneralDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
 {
+	wxColour light = light_picker->GetColour();
+	dat.m_light_colour_r = light.Red();
+	dat.m_light_colour_g = light.Green();
+	dat.m_light_colour_b = light.Blue();
+	wxColour dark  = dark_picker->GetColour();
+	dat.m_dark_colour_r = dark.Red();
+	dat.m_dark_colour_g = dark.Green();
+	dat.m_dark_colour_b = dark.Blue();
     wxString txt = this->notation_language_ctrl->GetValue();
     if( LangValidateString( txt ) )
     {
@@ -279,6 +308,18 @@ void GeneralDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
     }
 }
 
+void GeneralDialog::OnRestoreLight( wxCommandEvent& WXUNUSED(event) )
+{
+	wxColour light(255,226,179);
+	light_picker->SetColour( light );
+}
+
+void GeneralDialog::OnRestoreDark( wxCommandEvent& WXUNUSED(event) )
+{
+	wxColour dark(220,162,116);
+	dark_picker->SetColour( dark );
+}
+
 void GeneralDialog::OnNotationLanguage( wxCommandEvent& WXUNUSED(event) )
 {
 /*  wxString txt = this->notation_language_ctrl->GetValue();
@@ -293,3 +334,7 @@ void GeneralDialog::OnNotationLanguage( wxCommandEvent& WXUNUSED(event) )
     ok_button->SetFocus(); */
 }
 
+void GeneralDialog::OnColourPicker( wxColourPickerEvent& WXUNUSED(event) )
+{
+	cprintf( "GeneralDialog::OnColourPicker()\n" );
+}

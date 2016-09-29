@@ -20,7 +20,6 @@ public:
                   const wxSize& size );
 	~GraphicBoardResizable();
     void Init( const wxSize& size );
-    void Init2( const wxSize& size );
 
 	// Find a square within the graphic board
 	void HitTest( wxPoint hit, char &file, char &rank );
@@ -58,6 +57,9 @@ public:
 private:
 
 	// Data members
+	wxColour	 light_colour;
+	wxColour	 dark_colour;
+	wxSize       current_size;
     wxBrush      brush;
 	wxMemoryDC   dcmem;
     wxPen        pen;

@@ -7,6 +7,7 @@
 #ifndef GENERAL_DIALOG_H
 #define GENERAL_DIALOG_H
 #include "wx/spinctrl.h"
+#include "wx/clrpicker.h"
 #include "thc.h"
 #include "SuspendEngine.h"
 #include "Repository.h"
@@ -20,10 +21,11 @@ enum
     ID_NO_ITALICS        = 10002,
     ID_STRAIGHT_TO_GAME  = 10003,
     ID_LARGE_FONT        = 10004, 
-    ID_SMALL_BOARD       = 10005,
-    ID_NO_AUTO_FLIP      = 10006,
-    ID_STRAIGHT_TO_FIRST_GAME  = 10007,
-    ID_EMIT_BELL         = 10008
+    ID_RESTORE_LIGHT     = 10005,
+    ID_RESTORE_DARK      = 10006,
+    ID_NO_AUTO_FLIP      = 10007,
+    ID_STRAIGHT_TO_FIRST_GAME  = 10008,
+    ID_EMIT_BELL         = 10009
 };
 
 // GeneralDialog class declaration
@@ -69,7 +71,11 @@ public:
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_OK
     void OnOkClick( wxCommandEvent& event );
 
+    void OnRestoreLight( wxCommandEvent& event );
+    void OnRestoreDark( wxCommandEvent& event );
     void OnNotationLanguage( wxCommandEvent& event );
+	void OnColourPicker( wxColourPickerEvent& event );
+
     wxArrayString   labels;
 
     // Data members
@@ -79,6 +85,10 @@ public:
     wxString        combo_label;
     GeneralConfig   dat;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
+
+private:
+	wxColourPickerCtrl* light_picker;
+	wxColourPickerCtrl* dark_picker;
 };
 
 #endif    // GENERAL_DIALOG_H

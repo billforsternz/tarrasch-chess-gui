@@ -27,7 +27,7 @@
 #endif
 
 // Conditional compiles
-//#define DURING_DEVELOPMENT  // if defined we get a console window for cprintf()
+#define DURING_DEVELOPMENT  // if defined we get a console window for cprintf()
 //#define AUI_NOTEBOOK      // Define this to get X close boxes on tabs - when it's ready
 
 // Misc

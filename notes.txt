@@ -34,6 +34,11 @@ Improved database icon in toolbar
 Show all by player not sorted sensibly within player
 Save all doesn't work for show all by player - remove it
 Cut, delete, paste should change nbr of games in a list
+Claude: Aggressive smaller resize from top left causes crash.
+Claude: Start game with engine to move - doesn't say Engine Thinking
+Edit colours
+Improved anti-aliasing without white jaggies around pieces
+Remove small board option
 
 Todo (not yet)
 --------------
@@ -42,7 +47,7 @@ Can we control multiple instances?
 Get close box on tabs
 Efficient undo
 Check all bitmaps have white pieces on left
-Edit colours, including highlight colours
+Highlight colours
 Bring colours into other chess boards
 Alt F underlining etc
 6 custom commands
@@ -51,12 +56,11 @@ Info boxes have weird first paragraph
 Change Rybka to UciEngine everywhere
 Check ANSI names in pgn
 Select All in games dialogs
-Remove small board option
 Add more ratings filters
 Buttons same width
 Ticking clock is red
 Claude: Permissions error moving files to documents
-Claude: Aggressive smaller resize from top left causes crash.
+Claude: Settings, particularly GUI layout non-volatility imperfect
 Add Claude to credits.
 Clipboard as temp*orary* database
 

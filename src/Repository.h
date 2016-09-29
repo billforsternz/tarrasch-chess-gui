@@ -198,6 +198,12 @@ struct GeneralConfig
     bool        m_no_italics;
     bool        m_straight_to_game;
     bool        m_straight_to_first_game;
+	int         m_light_colour_r;
+	int         m_light_colour_g;
+	int         m_light_colour_b;
+	int         m_dark_colour_r;
+	int         m_dark_colour_g;
+	int         m_dark_colour_b;
     bool        m_small_board;
     bool        m_large_font;
     bool        m_no_auto_flip;
@@ -205,6 +211,12 @@ struct GeneralConfig
     GeneralConfig()
     {
         m_notation_language  = "KQRNB (English)";
+		m_light_colour_r = 255; // wxColour(255,226,179);
+		m_light_colour_g = 226; // wxColour(255,226,179);
+		m_light_colour_b = 179; // wxColour(255,226,179);
+		m_dark_colour_r = 220;  // wxColour(220,162,116);
+		m_dark_colour_g = 162;  // wxColour(220,162,116);
+		m_dark_colour_b = 116;  // wxColour(220,162,116);
         m_no_italics         = false;
         m_straight_to_game   = false;
         m_straight_to_first_game = false;

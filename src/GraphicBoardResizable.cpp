@@ -47,15 +47,15 @@ void GraphicBoardResizable::Init
 
 {
 	current_size = size;
-	int r = objs.repository->general.m_light_colour_r;
-	int g = objs.repository->general.m_light_colour_g;
-	int b = objs.repository->general.m_light_colour_b;
-	wxColour c1(r,g,b);
+	int r1 = objs.repository->general.m_light_colour_r;
+	int g1 = objs.repository->general.m_light_colour_g;
+	int b1 = objs.repository->general.m_light_colour_b;
+	wxColour c1(r1,g1,b1);
 	light_colour = c1;
-	r = objs.repository->general.m_dark_colour_r;
-	g = objs.repository->general.m_dark_colour_g;
-	b = objs.repository->general.m_dark_colour_b;
-	wxColour c2(r,g,b);
+	int r2 = objs.repository->general.m_dark_colour_r;
+	int g2 = objs.repository->general.m_dark_colour_g;
+	int b2 = objs.repository->general.m_dark_colour_b;
+	wxColour c2(r2,g2,b2);
 	dark_colour = c2;
     const char **xpm=0;
     int min = size.x<size.y ? size.x : size.y;
@@ -86,10 +86,10 @@ void GraphicBoardResizable::Init
         "Pp#qK   ",
     };
     dc.SetBackgroundMode( wxPENSTYLE_TRANSPARENT );
-    for( int i=0; i<2; i++ )
+    for( int board_idx=0; board_idx<2; board_idx++ )
     {
-        const char *s = board[i];
-        bool dark = ((i&1)==1);
+        const char *s = board[board_idx];
+        bool dark = ((board_idx&1)==1);
         x = 0;
         for( int j=0; j<8; j++ )
         {
@@ -182,46 +182,6 @@ void GraphicBoardResizable::Init
                         byte r = src.Red();
                         byte g = src.Green();
                         byte b = src.Blue();
-						if( r==g && r==b )
-						{
-							int adjust = r;
-#if 0
-							if( 0<adjust && adjust<255 ) // if not already black or white
-							{
-								adjust /= 2;  // make near white (255)  grey (128)
-								r = static_cast<int>(adjust);
-								g = r;
-								b = r;
-							}
-#endif
-#if 0
-							if( 0<adjust && adjust<255 ) // if not already black or white
-							{
-								adjust -= 128;  // make near white (255)  grey (128)
-								if( adjust < -120 )
-									adjust = 4;
-								else if( adjust < -100 )
-									adjust = 8;
-								else if( adjust < -80 )
-									adjust =12;
-								else if( adjust < -60 )
-									adjust =16;
-								else if( adjust < -40 )
-									adjust = 20;
-								else if( adjust < -20 )
-									adjust = 24;
-								else if( adjust < 0 )
-									adjust = 28;
-								else if( adjust < 20 )
-									adjust = 32;
-								else if( adjust < 40 )
-									adjust = 36;
-								r = static_cast<int>(adjust);
-								g = r;
-								b = r;
-							}
-#endif
-						}
                         dst.m_ptr[2] = r;
                         dst.m_ptr[1] = g;
                         dst.m_ptr[0] = b;
@@ -230,71 +190,228 @@ void GraphicBoardResizable::Init
                     }
                 }
 
-                // Replace the magenta background, whilst using it to calc mask
-                bool before=false;
+				// Use the magenta background, to calculate mask
                 for( int row=0; row<pix; row++ )
                 {
                     dst.MoveTo(pixels_dst, x, y+row );
-                    before = false;
                     for( int col=0; col<pix; col++ )
                     {
                         byte r = dst.Red();
                         byte g = dst.Green();
                         byte b = dst.Blue();
                         bool magenta = (r==255 && g==0 && b==255);
-                        if( magenta )//|| before )
-                        {
-                            if( dark )
-                            {
-                                r = 220;
-                                g = 162;
-                                b = 116;
-                            }
-                            else
-                            {
-                                r = 255;
-                                g = 226;
-                                b = 179;
-                            }
-                            dst.m_ptr[2] = r;
-                            dst.m_ptr[1] = g;
-                            dst.m_ptr[0] = b;
-                        }
-                 /*     else if( before && r==g && r==b )
-                        {
-                            float lightening_factor = r<128 ? 1.0 : ((r*0.2)/128);
-                            #define max(a,b) ((a)>(b) ? (a) : (b))
-                            if( dark )
-                            {
-                                dst.m_ptr[2] = (byte)max( 255, 220 * lightening_factor );
-                                dst.m_ptr[1] = (byte)max( 255, 162 * lightening_factor );
-                                dst.m_ptr[0] = (byte)max( 255, 116 * lightening_factor );
-                            }
-                            else
-                            {
-                                dst.m_ptr[2] = (byte)max( 255, 255 * lightening_factor );
-                                dst.m_ptr[1] = (byte)max( 255, 226 * lightening_factor );
-                                dst.m_ptr[0] = (byte)max( 255, 179 * lightening_factor );
-                            }
-                        }  */
                         str += (magenta?'0':'1');
                         dst++;
-                        before = magenta;
                     }
                 }
 
                 // Save the mask
                 *p_str = str;
                 *p_mask = p_str->c_str();
-             /* if( c == 'K'  )
+
+				// Make a string of similar format as the mask, to represent distance from nearest magenta pixel
+				//  mask: "0000011111111...." '0' = magenta, '1' = not magenta
+				//  dist: "0000012345678...." '0' = magenta, '1'-'9'(max) = distance from nearest magenta pixel, up or down
+
+				/*	The dist string for a white king 'K' ends up like this;
+
+			  	   "0000000000000000000000000000000000000000000000000000000000000000000000
+					0000000000000000000000000000000000000000000000000000000000000000000000
+					0000000000000000000000000000000000000000000000000000000000000000000000
+					0000000000000000000000000000000000000000000000000000000000000000000000
+					0000000000000000000000000000000000000000000000000000000000000000000000
+					0000000000000000000000000111111111111111111110000000000000000000000000
+					0000000000000000000000000122222222222222222210000000000000000000000000
+					0000000000000000000000000123333333333333333210000000000000000000000000
+					0000000000000000000000000123444444444444443210000000000000000000000000
+					0000000000000000000000000123455555555555543210000000000000000000000000
+					0000000000000000000000000123456666666666543210000000000000000000000000
+					0000000000000000000000000123456777777776543210000000000000000000000000
+					0000000000000000000000000123456788888876543210000000000000000000000000
+					0000000000000000000000000123456789999876543210000000000000000000000000
+					0000000000000000000000000123456789999876543210000000000000000000000000
+					0000000000011111111100000123456789999876543210000011111111100000000000
+					0000000011122222222211000123456789999876543210001122222222211100000000
+					0000000122233333333322110123456789999876543210112233333333322210000000
+					0000001233344444444433221234567899999987654321223344444444433321000000
+					0000012344455555555544332345678999999998765432334455555555544432100000
+					0000123455566666666655443456789999999999876543445566666666655543210000
+					0000123456677777777766554567899999999999987654556677777777766543210000
+					0001234567788888888877665678999999999999998765667788888888877654321000
+					0001234567899999999988776789999999999999999876778899999999987654321000
+					0001234567899999999999887899999999999999999987889999999999987654321000
+					0001234567899999999999998999999999999999999998999999999999987654321000
+					0001234567899999999999999999999999999999999999999999999999987654321000
+					0001234567899999999999999999999999999999999999999999999999987654321000
+					0001234567899999999999999999999999999999999999999999999999987654321000
+					0001234567899999999999999999999999999999999999999999999999987654321000
+					0001234567899999999999999999999999999999999999999999999999987654321000
+					0000123456789999999999999999999999999999999999999999999999876543210000
+					0000123456789999999999999999999999999999999999999999999999876543210000
+					0000012345678999999999999999999999999999999999999999999999876543210000
+					0000012345678999999999999999999999999999999999999999999998765432100000
+					0000012345678999999999999999999999999999999999999999999998765432100000
+					0000001234567899999999999999999999999999999999999999999987654321000000
+					0000000123456789999999999999999999999999999999999999999876543210000000
+					0000000123456789999999999999999999999999999999999999999876543210000000
+					0000000012345678999999999999999999999999999999999999998765432100000000
+					0000000001234567899999999999999999999999999999999999987654321000000000
+					0000000000123456789999999999999999999999999999999999876543210000000000
+					0000000000012345678999999999999999999999999999999998765432100000000000
+					0000000000001234567899999999999999999999999999999987654321000000000000
+					0000000000000123456789999999999999999999999999999876543210000000000000
+					0000000000000012345678999999999999999999999999998765432100000000000000
+					0000000000000012345678999999999999999999999999998765432100000000000000
+					0000000000000012345678999999999999999999999999998765432100000000000000
+					0000000000000012345678999999999999999999999999998765432100000000000000
+					0000000000000012345678999999999999999999999999998765432100000000000000
+					0000000000000012345678999999999999999999999999998765432100000000000000
+					0000000000000012345678999999999999999999999999998765432100000000000000
+					0000000000000012345678999999999999999999999999998765432100000000000000
+					0000000000000012345678999999999999999999999999998765432100000000000000
+					0000000000000012345678999999999999999999999999998765432100000000000000
+					0000000000000012345678999999999999999999999999998765432100000000000000
+					0000000000000012345678999999999999999999999999998765432100000000000000
+					0000000000000012345678888888899999999999988888888765432100000000000000
+					0000000000000012345667777777788888888888877777777665432100000000000000
+					0000000000000012344556666666677777777777766666666554432100000000000000
+					0000000000000001233445555555566666666666655555555443321000000000000000
+					0000000000000000122334444444455555555555544444444332210000000000000000
+					0000000000000000011223333333344444444444433333333221100000000000000000
+					0000000000000000000112222222233333333333322222222110000000000000000000
+					0000000000000000000001111111122222222222211111111000000000000000000000
+					0000000000000000000000000000011111111111100000000000000000000000000000
+					0000000000000000000000000000000000000000000000000000000000000000000000
+					0000000000000000000000000000000000000000000000000000000000000000000000
+					0000000000000000000000000000000000000000000000000000000000000000000000
+					0000000000000000000000000000000000000000000000000000000000000000000000"
+					*/
+
+				std::string dist = str;
+                for( int row=0; row<pix; row++ )	// Left to right
+				{
+					char dh='0'; // distance from magenta
+                    for( int col=0; col<pix; col++ )
+					{
+						int offset = row*pix + col;
+						char ch = str[offset];
+						if( ch == '0' ) // magenta ?
+							dh = '0';
+						else
+							dh = (dh<'9'?dh+1:'9');
+						dist[offset] = dh;
+					}
+				}
+                for( int row=0; row<pix; row++ )   // then right to left
+				{
+					char dh='0'; // distance from magenta
+                    for( int col=pix-1; col>=0; col-- )
+					{
+						int offset = row*pix + col;
+						char ch = str[offset];
+						if( ch == '0' ) // magenta ?
+							dh = '0';
+						else
+						{
+							dh = (dh<'9'?dh+1:'9');
+							if( dist[offset] < dh ) // take minimum value
+								dh = dist[offset];
+						}
+						dist[offset] = dh;
+					}
+				}
+                for( int col=0; col<pix; col++ )	// then up to down
+				{
+					char dh='0'; // distance from magenta
+	                for( int row=0; row<pix; row++ )
+					{
+						int offset = row*pix + col;
+						char ch = str[offset];
+						if( ch == '0' ) // magenta ?
+							dh = '0';
+						else
+						{
+							dh = (dh<'9'?dh+1:'9');
+							if( dist[offset] < dh ) // take minimum value
+								dh = dist[offset];
+						}
+						dist[offset] = dh;
+					}
+				}
+                for( int col=0; col<pix; col++ )	// then down to up
+				{
+					char dh='0'; // distance from magenta
+	                for( int row=pix-1; row>=0; row-- )
+					{
+						int offset = row*pix + col;
+						char ch = str[offset];
+						if( ch == '0' ) // magenta ?
+							dh = '0';
+						else
+						{
+							dh = (dh<'9'?dh+1:'9');
+							if( dist[offset] < dh ) // take minimum value
+								dh = dist[offset];
+						}
+						dist[offset] = dh;
+					}
+				}
+
+				// Adjust greyscale anti-alias values near the magenta background, squeeze them from
+				//  range bright white to black into range grey to black - this avoids a nasty white
+				//  jaggy around every piece - it originates from the original .pdf render which assumes
+				//  a white background
+                for( int row=0; row<pix; row++ )
                 {
-                    for( int i=0; i<str.length(); i++ )
+                    dst.MoveTo(pixels_dst, x, y+row );
+                    for( int col=0; col<pix; col++ )
+                    {
+                        byte r = dst.Red();
+                        byte g = dst.Green();
+                        byte b = dst.Blue();
+						if( r==g && r==b )
+						{
+							int adjust = r;
+							if( 0<adjust && adjust<255 ) // if not already black or white
+							{
+								int offset = row*pix + col;
+								char ch = dist[offset];
+								if( ch < '3' )	// only if near magenta background - retain full
+												// anti-aliasing dynamic range inside the piece
+								{
+									adjust /= 2;  // make near white (255)  grey (128)
+									r = static_cast<int>(adjust);
+									g = r;
+									b = r;
+									#if 1  // Disable this only if you want a bad look!
+									dst.m_ptr[2] = r;
+									dst.m_ptr[1] = g;
+									dst.m_ptr[0] = b;
+									#endif
+								}
+							}
+                        }
+                        dst++;
+                    }
+                }
+
+				// Show mask and dist strings during debug
+		     /*	if( c == 'K'  )
+                {
+                    for( size_t i=0; i<str.length(); i++ )
                     {
                         cprintf( "%c", str[i] );
                         if( ((i+1) % pix) == 0 )
                             cprintf("\n");
                     }
-                }  */
+                    cprintf("\n");
+                    for( size_t i=0; i<dist.length(); i++ )
+                    {
+                        cprintf( "%c", dist[i] );
+                        if( ((i+1) % pix) == 0 )
+                            cprintf("\n");
+                    }
+                } */
             }
             dark = !dark;
             x += pix;
