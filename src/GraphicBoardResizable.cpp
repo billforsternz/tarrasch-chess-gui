@@ -17,6 +17,7 @@
 #include "GameLogic.h"
 #include "thc.h"
 #include "Objects.h"
+#include "Repository.h"
 
 // Initialise the graphic board
 GraphicBoardResizable::GraphicBoardResizable
@@ -45,6 +46,17 @@ void GraphicBoardResizable::Init
 )
 
 {
+	current_size = size;
+	int r = objs.repository->general.m_light_colour_r;
+	int g = objs.repository->general.m_light_colour_g;
+	int b = objs.repository->general.m_light_colour_b;
+	wxColour c1(r,g,b);
+	light_colour = c1;
+	r = objs.repository->general.m_dark_colour_r;
+	g = objs.repository->general.m_dark_colour_g;
+	b = objs.repository->general.m_dark_colour_b;
+	wxColour c2(r,g,b);
+	dark_colour = c2;
     const char **xpm=0;
     int min = size.x<size.y ? size.x : size.y;
     pix = min/8;
@@ -59,10 +71,9 @@ void GraphicBoardResizable::Init
     xpm = (const char **)processor.GetXpm();
     wxBitmap lookup(xpm);
 
-    wxColour icon_light(255,226,179);
     wxColour legacy_dark(200,200,200);
     wxColour magic(255,0,255);
-    wxBrush light_brush(icon_light);
+    wxBrush light_brush(light_colour);
     dc.SetBrush( light_brush );
     dc.SetPen(*wxTRANSPARENT_PEN);
     dc.DrawRectangle(0,0,my_chess_bmp_.GetWidth(),my_chess_bmp_.GetHeight());
@@ -85,8 +96,7 @@ void GraphicBoardResizable::Init
             char c = *s++;
             if( c == '#' )  // dark square
             {
-                wxColour icon_dark(220,162,116);
-                wxBrush dark_brush(icon_dark);
+                wxBrush dark_brush(dark_colour);
                 dc.SetBrush( dark_brush );
                 dc.DrawRectangle(x<0?0:x, y, pix, pix );
             }
@@ -172,6 +182,46 @@ void GraphicBoardResizable::Init
                         byte r = src.Red();
                         byte g = src.Green();
                         byte b = src.Blue();
+						if( r==g && r==b )
+						{
+							int adjust = r;
+#if 0
+							if( 0<adjust && adjust<255 ) // if not already black or white
+							{
+								adjust /= 2;  // make near white (255)  grey (128)
+								r = static_cast<int>(adjust);
+								g = r;
+								b = r;
+							}
+#endif
+#if 0
+							if( 0<adjust && adjust<255 ) // if not already black or white
+							{
+								adjust -= 128;  // make near white (255)  grey (128)
+								if( adjust < -120 )
+									adjust = 4;
+								else if( adjust < -100 )
+									adjust = 8;
+								else if( adjust < -80 )
+									adjust =12;
+								else if( adjust < -60 )
+									adjust =16;
+								else if( adjust < -40 )
+									adjust = 20;
+								else if( adjust < -20 )
+									adjust = 24;
+								else if( adjust < 0 )
+									adjust = 28;
+								else if( adjust < 20 )
+									adjust = 32;
+								else if( adjust < 40 )
+									adjust = 36;
+								r = static_cast<int>(adjust);
+								g = r;
+								b = r;
+							}
+#endif
+						}
                         dst.m_ptr[2] = r;
                         dst.m_ptr[1] = g;
                         dst.m_ptr[0] = b;
@@ -1025,11 +1075,10 @@ void GraphicBoardResizable::Init2
     dc.SelectObject(my_chess_bmp_);
     dc.SetMapMode(wxMM_TEXT);
 
-    wxColour icon_light(255,226,179);
     wxColour legacy_dark(200,200,200);
     wxColour icon_dark(220,162,116);
     wxColour magic(255,0,255);
-    wxBrush light_brush(icon_light);
+    wxBrush light_brush(light_colour);
     dc.SetBrush( light_brush );
     //dc.SetBrush( *wxWHITE_BRUSH );
 
@@ -1084,10 +1133,8 @@ void GraphicBoardResizable::Init2
             char c = xlat[d];
             if( d == '#' )  // dark square
             {
-                wxColour icon_light(255,226,179);
                 wxColour legacy_dark(200,200,200);
-                wxColour icon_dark(220,162,116);
-                wxBrush dark_brush(icon_dark);
+                wxBrush dark_brush(dark_colour);
                 dc.SetBrush( dark_brush );
                 //dc.SetBrush( *wxCYAN_BRUSH );
                 //dc.SetPen(*wxCYAN_PEN);
