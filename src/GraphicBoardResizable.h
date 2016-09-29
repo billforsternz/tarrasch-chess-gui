@@ -32,6 +32,7 @@ public:
     void Draw();
     void OnPaint(wxPaintEvent& WXUNUSED(evt));
     void SetBoardSize( wxSize &sz );
+	void Redraw() { wxSize sz=GetSize(); SetBoardSize(sz); }
 
 	// Get/Set orientation
 	void SetNormalOrientation( bool _normal_orientation )
@@ -53,6 +54,8 @@ public:
     void OnMouseLeftDown (wxMouseEvent & event);
     void OnMouseLeftUp (wxMouseEvent & event);
     void OnMouseMove (wxMouseEvent & event);
+
+
 
 private:
 

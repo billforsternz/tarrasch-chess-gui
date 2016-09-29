@@ -36,7 +36,7 @@
 #include "Session.h"
 #include "Log.h"
 #include "thc.h"
-#include "Rybka.h"
+#include "UciInterface.h"
 #include "DebugPrintf.h"
 #include "AutoTimer.h"
 #include "Book.h"
@@ -599,10 +599,10 @@ int ChessApp::OnExit()
     wxMutex *ptr_mutex_tiny_database = KillWorkerThread();
     wxMutexLocker lock(*ptr_mutex_tiny_database);
     cprintf( "ChessApp::OnExit() if we did wait, that wait is now over\n" );
-    if( objs.rybka )
+    if( objs.uci_interface )
     {
-        delete objs.rybka;
-        objs.rybka = NULL;
+        delete objs.uci_interface;
+        objs.uci_interface = NULL;
     }
     JobEnd();
     if( objs.gl )
@@ -1236,7 +1236,7 @@ void ChessFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
     wxString msg;
     msg.Printf(
-        "This is the Tarrasch Chess GUI V3. Tarrasch is intended to be "
+        "\nThis is the Tarrasch Chess GUI V3. Tarrasch is intended to be "
         "an easy to use yet powerful system for playing, analysing and "
         "training with UCI standard chess engines. Tarrasch now supports "
         "useful database features."
@@ -1274,7 +1274,7 @@ void ChessFrame::OnHelp(wxCommandEvent& WXUNUSED(event))
 {
     wxString msg;
     msg.Printf(
-        "Tarrasch is firstly an electronic chessboard. You can start "
+        "\nTarrasch is firstly an electronic chessboard. You can start "
         "from the standard starting position or set up any (legal) "
         "position easily. You can move the pieces around freely. A "
         "built in chess clock can be turned on, useful if you want to "
@@ -1316,7 +1316,7 @@ void ChessFrame::OnHelp(wxCommandEvent& WXUNUSED(event))
         "\"Options\"."
         "\n\n"
         "To turn on commentary (kibitzing in chess parlance), use "
-        "the \"Commands\" menu or the Robot button. You can even "
+        "the \"Commands\" menu or the Robot button or select the Engine Analysis tab at the bottom. You can even "
         "get the chess engine to provide commentary when you are "
         "playing against it."
     );
@@ -1327,7 +1327,7 @@ void ChessFrame::OnCredits(wxCommandEvent& WXUNUSED(event))
 {
     wxString msg;
     msg.Printf(
-        "Program design and implementation: Bill Forster."
+        "\nProgram design and implementation: Bill Forster."
         "\n\n"
         "Foundation supporter: Yves Catineau."
         "\n\n"
@@ -1335,7 +1335,7 @@ void ChessFrame::OnCredits(wxCommandEvent& WXUNUSED(event))
         "Lukasz Berezowski, Eric Ziegler, Laurence Dayton, Albrecht Schmidt, "
         "Lloyd Standish and David Beagan."
         "\n\n"
-        "Foundation tester: Iliya Kristoff."
+        "Testers: Iliya Kristoff, Claude Tamplenizza."
         "\n\n"
         "Thanks to David L Brown and the Good Companions for the chess "
         "graphics."
@@ -1975,6 +1975,7 @@ void ChessFrame::OnOptionsReset(wxCommandEvent &)
     bool after_no_italics = objs.repository->general.m_no_italics;
     RefreshLanguageFont( from, before_large_font, before_no_italics,
                            to,  after_large_font,  after_no_italics );
+	context->pb->gb->Redraw();
     SetFocusOnList();
 }
 
@@ -2182,8 +2183,7 @@ void ChessFrame::OnGeneral(wxCommandEvent &)
                              to,   after_large_font,  after_no_italics );
 
 		// Change board colours
-		wxSize sz = objs.canvas->pb->gb->GetSize();
-		objs.canvas->pb->gb->SetBoardSize(sz);
+		objs.canvas->pb->gb->Redraw();
     }
     SetFocusOnList();
 }

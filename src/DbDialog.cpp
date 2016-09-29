@@ -141,7 +141,7 @@ wxSizer *DbDialog::GdvAddExtraControls()
 	}
     
     filter_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX,
-                                 wxT("&Clipboard as temp database"), wxDefaultPosition, wxDefaultSize, 0 );
+                                 wxT("&Clipboard as temporary database"), wxDefaultPosition, wxDefaultSize, 0 );
     vsiz_panel_button1->Add(filter_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     filter_ctrl->SetValue( objs.gl->db_clipboard );
     wxStaticText* spacer1 = new wxStaticText( this, wxID_ANY, wxT(""),
@@ -331,7 +331,7 @@ void DbDialog::GdvHelpClick()
 
     wxString helpText =
     db_req == REQ_PLAYERS ?
-    "Use this panel to navigate the current database. Use Load Game to "
+    "\nUse this panel to navigate the current database. Use Load Game to "
     "load a game into a new tab and Use Game to add the game as a variation "
     "in the current tab."
     "\n\n"
@@ -344,7 +344,7 @@ void DbDialog::GdvHelpClick()
     "are provided to add a player's games to the clipboard."
     "\n\n"
     :
-    "Use this panel to navigate the current database. Use Load Game to "
+    "\nUse this panel to navigate the current database. Use Load Game to "
     "load a game into a new tab and Use Game to add the game as a variation "
     "in the current tab."
     "\n\n"

@@ -21,7 +21,7 @@
 #include "Book.h"
 #include "GameLogic.h"
 #include "Lang.h"
-#include "Rybka.h"
+#include "UciInterface.h"
 #include "DebugPrintf.h"
 #include "CtrlBoxBookMoves.h"
 #include "PopupControl.h"
@@ -223,10 +223,10 @@ void GameLogic::ShowNewDocument()
     objs.repository->player.m_white = gd.r.white;
     objs.repository->player.m_black = gd.r.black;
     LabelPlayers(false,true);
-    if( objs.rybka )
+    if( objs.uci_interface )
     {
-        delete objs.rybka;  // Allow a different engine to be loaded (if engine option changed)
-        objs.rybka = NULL;
+        delete objs.uci_interface;  // Allow a different engine to be loaded (if engine option changed)
+        objs.uci_interface = NULL;
     }
     engine_name[0] = '\0';
     glc.Set(result);
@@ -339,10 +339,10 @@ bool GameLogic::EngineChanged()
         kibitz = false;
         CmdClearKibitz();
     }
-    if( objs.rybka )
+    if( objs.uci_interface )
     {
-        delete objs.rybka;
-        objs.rybka = NULL;
+        delete objs.uci_interface;
+        objs.uci_interface = NULL;
     }
     if( state==HUMAN || state==PONDERING )
     {
@@ -507,14 +507,14 @@ void GameLogic::KibitzStart()
             char buf[128];
             strcpy( buf, gd.master_position.ForsythPublish().c_str() );
             thc::ChessPosition pos = gd.master_position;
-            objs.rybka->Kibitz( pos, buf );
+            objs.uci_interface->Kibitz( pos, buf );
         }
     }
     if( okay )
     {
         kibitz = true;
         kibitz_pos = gd.master_position;
-        objs.rybka->SuspendResume(true);
+        objs.uci_interface->SuspendResume(true);
         KibitzClearDisplay( true );
     }
     canvas->SetKibitzButtons( kibitz );
@@ -530,7 +530,7 @@ void GameLogic::KibitzStop()
     canvas->Kibitz( 0, intro );
     kibitz = false;
     if( state!=THINKING && state!=PONDERING )
-        objs.rybka->KibitzStop();
+        objs.uci_interface->KibitzStop();
     canvas->SetKibitzButtons( kibitz );
 }
 
@@ -576,8 +576,8 @@ void GameLogic::CmdClearKibitz( bool WXUNUSED(hide_window) )
 void GameLogic::CmdMoveNow()
 {
     Atomic begin;
-    if( state==THINKING && objs.rybka )
-        objs.rybka->MoveNow();
+    if( state==THINKING && objs.uci_interface )
+        objs.uci_interface->MoveNow();
     else if( state == FAKE_BOOK_DELAY )
         fake_book_delay = 0;
 }
@@ -1299,8 +1299,8 @@ void GameLogic::FullUndo( GAME_STATE game_state )
         case PONDERING:         // Human move, but the engine is thinking
         case HUMAN:		        // Human move
         {
-            if( objs.rybka )
-                objs.rybka->ForceStop();
+            if( objs.uci_interface )
+                objs.uci_interface->ForceStop();
             int white_millisecs_time;
             int black_millisecs_time;
             if( glc.human_is_white )
@@ -1371,8 +1371,8 @@ void GameLogic::FullUndo( GAME_STATE game_state )
         case THINKING:
         case FAKE_BOOK_DELAY:
         {
-            if( objs.rybka )
-                objs.rybka->ForceStop();
+            if( objs.uci_interface )
+                objs.uci_interface->ForceStop();
             int white_millisecs_time;
             int black_millisecs_time;
             if( glc.human_is_white )
@@ -1874,20 +1874,20 @@ bool GameLogic::UpdateOptions()
 bool GameLogic::StartEngine()
 {
     bool okay=true;
-    if( objs.rybka == NULL )
+    if( objs.uci_interface == NULL )
     {
-        objs.rybka = new Rybka( objs.repository->engine.m_file.c_str());
-        okay = objs.rybka->Start();
+        objs.uci_interface = new UciInterface( objs.repository->engine.m_file.c_str());
+        okay = objs.uci_interface->Start();
         memset( engine_name, 0, sizeof(engine_name) );
         if( okay )
         {
-            const char *name = objs.rybka->EngineName();
+            const char *name = objs.uci_interface->EngineName();
             strncpy( engine_name, name?name:"Computer", sizeof(engine_name)-1 );
         }
         else
         {
-            delete objs.rybka;
-            objs.rybka = NULL;
+            delete objs.uci_interface;
+            objs.uci_interface = NULL;
         }
     }
     return okay;
@@ -2077,7 +2077,7 @@ void GameLogic::OnIdle()
     else if( state == PONDERING )
     {
         if( !kibitz )
-            objs.rybka->Run();
+            objs.uci_interface->Run();
         else
         {
             bool run=true;
@@ -2085,13 +2085,13 @@ void GameLogic::OnIdle()
             {
                 char buf[256];
                 bool cleared;
-                bool have_data = objs.rybka->KibitzPeekEngineToMove( run, cleared, buf, sizeof(buf)-1 );
+                bool have_data = objs.uci_interface->KibitzPeekEngineToMove( run, cleared, buf, sizeof(buf)-1 );
                 run = false;
                 if( cleared )
                     KibitzClearDisplay(true);
                 if( !have_data )
                     break;
-                dbg_printf( "Rybka kibitz engine to move; txt=%s\n", buf );
+                dbg_printf( "UciInterface kibitz engine to move; txt=%s\n", buf );
                 KibitzUpdateEngineToMove( true, buf );
             }
         }
@@ -2105,18 +2105,18 @@ void GameLogic::OnIdle()
             {
                 char buf[256];
                 bool cleared;
-                bool have_data = objs.rybka->KibitzPeekEngineToMove( run, cleared, buf, sizeof(buf)-1 );
+                bool have_data = objs.uci_interface->KibitzPeekEngineToMove( run, cleared, buf, sizeof(buf)-1 );
                 run = false;
                 if( cleared )
                     KibitzClearDisplay( true );
                 if( !have_data )
                     break;
-                dbg_printf( "Rybka kibitz engine to move; txt=%s\n", buf );
+                dbg_printf( "UciInterface kibitz engine to move; txt=%s\n", buf );
                 KibitzUpdateEngineToMove( false, buf );
             }
         }
         thc::Move ponder;
-        thc::Move bestmove = objs.rybka->CheckBestMove( ponder );
+        thc::Move bestmove = objs.uci_interface->CheckBestMove( ponder );
         if( bestmove.Valid() )
         {
             release_printf( "Engine returns. bestmove is %s, ponder is %s\n",
@@ -2212,7 +2212,7 @@ void GameLogic::OnIdle()
             {
                 char buf[256];
                 bool cleared;
-                bool have_data = objs.rybka->KibitzPeek( run, idx, cleared, buf, sizeof(buf)-1 );
+                bool have_data = objs.uci_interface->KibitzPeek( run, idx, cleared, buf, sizeof(buf)-1 );
                 run = false;    // don't run multiple times
                 if( cleared )   // do a complete clear, once
                 {   
@@ -2226,7 +2226,7 @@ void GameLogic::OnIdle()
                             do
                             {
                                 bool hav_dat;
-                                hav_dat = objs.rybka->KibitzPeek( false, j, cleared, buf, sizeof(buf)-1 );
+                                hav_dat = objs.uci_interface->KibitzPeek( false, j, cleared, buf, sizeof(buf)-1 );
                                 if( !hav_dat )
                                     break;
                             } while(!cleared);
@@ -2237,7 +2237,7 @@ void GameLogic::OnIdle()
                     break;
                 else
                 {
-                    dbg_printf( "Rybka kibitz; idx=%d, txt=%s\n", idx, buf );
+                    dbg_printf( "UciInterface kibitz; idx=%d, txt=%s\n", idx, buf );
                     KibitzUpdate( idx, buf );
                 }
             }
@@ -2479,8 +2479,8 @@ void GameLogic::BookHover( wxPoint& WXUNUSED(point) )
         bool have_book_moves = objs.book->Lookup( gd.master_position, book_moves );
         if( have_book_moves )
         {
-            if( objs.rybka )
-                objs.rybka->SuspendResume(false);   // suspend
+            if( objs.uci_interface )
+                objs.uci_interface->SuspendResume(false);   // suspend
             vector<thc::Move> menu; // empty
             wxPoint pt_base = objs.canvas->book_moves->GetParent()->GetPosition();
             wxPoint pt   = objs.canvas->book_moves->GetPosition();
@@ -2503,8 +2503,8 @@ bool GameLogic::MouseDown( char file, char rank, wxPoint &point )     // return 
     Atomic begin(false);
     bool slide = false;
     char slide_piece;
-    if( objs.rybka && state!=THINKING )
-        objs.rybka->SuspendResume( false );  // suspend if not already
+    if( objs.uci_interface && state!=THINKING )
+        objs.uci_interface->SuspendResume( false );  // suspend if not already
 	switch( state )
 	{
         case RESET: state = MANUAL;
@@ -2817,11 +2817,11 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
             char buf[128];
             strcpy( buf, pos.ForsythPublish().c_str() );
             kibitz_pos = pos;
-            objs.rybka->Kibitz( pos, buf );
+            objs.uci_interface->Kibitz( pos, buf );
         }
     }
-    if( objs.rybka && (state==MANUAL||state==HUMAN||state==PONDERING||state==THINKING||(kibitz&&state==GAMEOVER) ) )
-        objs.rybka->SuspendResume( true );  // resume if suspended
+    if( objs.uci_interface && (state==MANUAL||state==HUMAN||state==PONDERING||state==THINKING||(kibitz&&state==GAMEOVER) ) )
+        objs.uci_interface->SuspendResume( true );  // resume if suspended
     atom.StatusUpdate();
     atom.Focus();
 }
@@ -3336,7 +3336,7 @@ GAME_STATE GameLogic::StartThinking( const thc::Move *human_move )
     if( human_or_pondering==PONDERING && human_move && *human_move==ponder_move )
     {
         thc::ChessPosition pos = gd.master_position;
-        ponderhit = objs.rybka->Ponderhit( pos );
+        ponderhit = objs.uci_interface->Ponderhit( pos );
     }
     if( ponderhit )
         ret = THINKING;
@@ -3506,14 +3506,14 @@ GAME_STATE GameLogic::StartThinking( const thc::Move *human_move )
                     cr = move_list_startpos;
                     strcpy( forsyth, cr.ForsythPublish().c_str() );
                 }
-                objs.rybka->StartThinking( false, pos, use_startpos?NULL:forsyth, smoves, wtime_ms, btime_ms, winc_ms, binc_ms );   // ms,ms,inc_ms,inc_ms
+                objs.uci_interface->StartThinking( false, pos, use_startpos?NULL:forsyth, smoves, wtime_ms, btime_ms, winc_ms, binc_ms );   // ms,ms,inc_ms,inc_ms
             }
             else
             {
                 bool use_startpos = pos.CmpStrict(std_startpos);
                 if( !use_startpos )
                     strcpy( forsyth, gd.master_position.ForsythPublish().c_str() );
-                objs.rybka->StartThinking( false, pos, use_startpos?NULL:forsyth, wtime_ms, btime_ms, winc_ms, binc_ms );   // ms,ms,inc_ms,inc_ms
+                objs.uci_interface->StartThinking( false, pos, use_startpos?NULL:forsyth, wtime_ms, btime_ms, winc_ms, binc_ms );   // ms,ms,inc_ms,inc_ms
             }
             ret = THINKING;
         }
@@ -3599,7 +3599,7 @@ bool GameLogic::StartPondering( thc::Move ponder )
             cr = move_list_startpos;
             strcpy( forsyth, cr.ForsythPublish().c_str() );
         }
-        objs.rybka->StartThinking( true, pos, use_startpos?NULL:forsyth, smoves, wtime_ms, btime_ms, winc_ms, binc_ms );   // ms,ms,inc_ms,inc_ms
+        objs.uci_interface->StartThinking( true, pos, use_startpos?NULL:forsyth, smoves, wtime_ms, btime_ms, winc_ms, binc_ms );   // ms,ms,inc_ms,inc_ms
         pondering = true;
     }
     return pondering;

@@ -436,7 +436,7 @@ void PatternDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
 
     wxString helpText(
       parm->material_balance ?
-      "Use this panel to search the database for games where a specified material balance occurs at some point. "
+      "\nUse this panel to search the database for games where a specified material balance occurs at some point. "
       "Put the pieces you want on the board, and the search will locate games where only those pieces remained "
       "on the board at a certain point in the game."
       "\n\n"
@@ -444,7 +444,7 @@ void PatternDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
       "For example, if you put a dark squared bishop on the board, you can insist the search only finds positions with a dark squared bishop (but by "
       "default any bishop will do)."
      :
-      "Use this panel to search the database for games where a specified pattern (arrangement of some pieces) occurs at some point. "
+      "\nUse this panel to search the database for games where a specified pattern (arrangement of some pieces) occurs at some point. "
       "Put the pieces you want on the board, and the search will locate games where those pieces occupied those squares. "
       "The material balance search is also available, and is more flexible (but also more complicated). To make the material balance "
       "search more like the pattern search, lock down the position of pieces you care about with right clicks." 

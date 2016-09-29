@@ -203,7 +203,7 @@ void LogDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
      */
 
     wxString helpText =
-      wxT("Use this panel to select a .pgn file to save a record\n")
+      wxT("\nUse this panel to select a .pgn file to save a record\n")
       wxT("of activity. You can subsequently access the log using\n")
       wxT("the File - Open log file menu command\n" );
 

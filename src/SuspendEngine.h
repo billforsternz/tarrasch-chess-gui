@@ -8,7 +8,7 @@
 #ifndef SUSPEND_ENGINE_H
 #define SUSPEND_ENGINE_H
 #include "Objects.h"
-#include "Rybka.h"
+#include "UciInterface.h"
 
 class SuspendEngine
 {
@@ -18,9 +18,9 @@ public:
     SuspendEngine()
     {
         suspended=false;
-        if( objs.rybka && !objs.rybka->IsSuspended() )
+        if( objs.uci_interface && !objs.uci_interface->IsSuspended() )
         {
-            objs.rybka->SuspendResume(false);
+            objs.uci_interface->SuspendResume(false);
             suspended = true;
         }
     }
@@ -28,8 +28,8 @@ public:
     // Destructor - resume if we suspended
     ~SuspendEngine()
     {
-        if( objs.rybka && suspended )
-            objs.rybka->SuspendResume(true);
+        if( objs.uci_interface && suspended )
+            objs.uci_interface->SuspendResume(true);
     }
 
 private:

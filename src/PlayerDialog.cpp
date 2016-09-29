@@ -215,7 +215,7 @@ void PlayerDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
      */
 
     wxString helpText =
-      wxT("Use this panel to name the players involved in the\n")
+      wxT("\nUse this panel to name the players involved in the\n")
       wxT("onscreen games.\n\n")
       wxT("A shortcut to this dialog is available; simply\n")
       wxT("click on a player name.\n");

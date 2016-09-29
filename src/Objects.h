@@ -14,7 +14,7 @@ class  PanelContext;
 class  CentralWorkSaver;
 class  wxListCtrl;
 class  PopupControl;
-class  Rybka;
+class  UciInterface;
 class  wxFrame;
 class  Repository;
 class  Book;
@@ -28,7 +28,7 @@ class Objects
 public:
     GameLogic    *gl;
     Tabs         *tabs;
-    Rybka        *rybka;
+    UciInterface        *uci_interface;
     wxFrame      *frame;
     PanelContext *canvas;
     Repository   *repository;

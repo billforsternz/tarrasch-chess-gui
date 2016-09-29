@@ -552,7 +552,7 @@ void CreateDatabaseDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
      */
     
     wxString helpText =
-    wxT("Tarrasch database files (.tdb files) are compact game collections. ")
+    wxT("\nTarrasch database files (.tdb files) are compact game collections. ")
     wxT("At the moment only complete games are supported (i.e. no game fragments). ")
     wxT("Similarly no comments or variations are supported at this time. ")
     wxT("Tarrasch uses one database file at a time (the current database). ")

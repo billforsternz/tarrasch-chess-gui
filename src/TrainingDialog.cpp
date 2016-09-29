@@ -261,7 +261,7 @@ void TrainingDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
      */
 
     wxString helpText =
-      wxT("Use this panel to make life harder for yourself! The\n")
+      wxT("\nUse this panel to make life harder for yourself! The\n")
       wxT("payoff to this kind of training is improved ability to\n")
       wxT("visualise positions.\n\n")
       wxT("The tools available include a lag between the play and\n")

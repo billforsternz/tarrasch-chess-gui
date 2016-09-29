@@ -168,7 +168,7 @@
     <ClCompile Include="src\LegacyDb.cpp" />
     <ClCompile Include="src\Log.cpp" />
     <ClCompile Include="src\LogDialog.cpp" />
-    <ClCompile Include="src\MacRybka.cpp" />
+    <ClCompile Include="src\UnixUciInterface.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MaintenanceDialog.cpp" />
     <ClCompile Include="src\MemoryPositionSearch.cpp" />
@@ -193,7 +193,7 @@
     <ClCompile Include="src\thc.cpp" />
     <ClCompile Include="src\TrainingDialog.cpp" />
     <ClCompile Include="src\Undo.cpp" />
-    <ClCompile Include="src\WinRybka.cpp" />
+    <ClCompile Include="src\WinUciInterface.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\Tarrasch.rc" />
@@ -277,7 +277,7 @@
     <ClInclude Include="src\ProgressBar.h" />
     <ClInclude Include="src\Repository.h" />
     <ClInclude Include="src\Roster.h" />
-    <ClInclude Include="src\Rybka.h" />
+    <ClInclude Include="src\UciInterface.h" />
     <ClInclude Include="src\Session.h" />
     <ClInclude Include="src\sqlite3.h" />
     <ClInclude Include="src\SuspendEngine.h" />

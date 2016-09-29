@@ -792,7 +792,7 @@ void PositionDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
      */
 
     wxString helpText =
-      wxT("Use this panel to specify a new position. ")
+      wxT("\nUse this panel to specify a new position. ")
       wxT("Note that the orientation of the board is the same as the main ")
       wxT("program board. So it is now possible to set up a position from ")
       wxT("Black's point of view (flip the main board first).");

@@ -1,23 +1,23 @@
 /****************************************************************************
- * Run UCI chess engine, eg Rybka
+ * Run UCI chess engine, eg Stockfish
  *  Author:  Bill Forster
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#ifndef RYBKA_H
-#define RYBKA_H
+#ifndef UCI_INTERFACE_H
+#define UCI_INTERFACE_H
 #include "Portability.h"
 #include "kibitzq.h"
 #include "Appdefs.h"
 #include "thc.h"
 #include "wx/wx.h"
 
-class Rybka
+class UciInterface
 {
 private:
     bool first;
     bool okay;
-    enum RYBKA_STATE
+    enum UCI_INTERFACE_STATE
     {
         INIT,
         WAIT_UCIOKAY,
@@ -44,7 +44,7 @@ private:
         WAIT_READYOK_Q,
         SEND_FORCE_STOP
     };
-    RYBKA_STATE gbl_state;
+    UCI_INTERFACE_STATE gbl_state;
     wxString gbl_smoves;
     char  gbl_forsyth[124];
     char  gbl_go[100];
@@ -64,8 +64,8 @@ private:
 
 public:
     bool debug_trigger;
-    Rybka( const char *filename_uci_exe );
-    ~Rybka();
+    UciInterface( const char *filename_uci_exe );
+    ~UciInterface();
     bool Start();  // return true if okay
     bool IsSuspended() { return suspended; }
     void SuspendResume( bool resume );
@@ -83,10 +83,10 @@ public:
     void Stop();
     bool Run(); // return true if running
 private:
-    void NewState( const char *comment, RYBKA_STATE new_state );
+    void NewState( const char *comment, UCI_INTERFACE_STATE new_state );
     void line_out( const char *s );
     void user_hook_out( const char *s );
-    const char *user_hook_in();         // Input to Rybka
+    const char *user_hook_in();         // Input to UciInterface
     bool WaitingForUciok( const char *s );
     void OptionIn( const char *s );
     char engine_name[80];
@@ -121,8 +121,8 @@ private:
     bool send_stop;
     thc::ChessPosition pos_engine_to_move;
     thc::ChessPosition pos_kibitz;
-    RYBKA_STATE readyok_next_state;
+    UCI_INTERFACE_STATE readyok_next_state;
     unsigned long readyok_basetime;
 };
 
-#endif // RYBKA_H
+#endif // UCI_INTERFACE_H

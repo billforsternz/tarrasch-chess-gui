@@ -39,6 +39,9 @@ Claude: Start game with engine to move - doesn't say Engine Thinking
 Edit colours
 Improved anti-aliasing without white jaggies around pieces
 Remove small board option
+Add Claude to credits.
+Bug fix: Cannot initially drag pieces in board setup
+Bug fix: Info boxes have weird first paragraph
 
 Todo (not yet)
 --------------
@@ -52,7 +55,6 @@ Bring colours into other chess boards
 Alt F underlining etc
 6 custom commands
 New tab button next to book moves?
-Info boxes have weird first paragraph
 Change Rybka to UciEngine everywhere
 Check ANSI names in pgn
 Select All in games dialogs
@@ -61,7 +63,6 @@ Buttons same width
 Ticking clock is red
 Claude: Permissions error moving files to documents
 Claude: Settings, particularly GUI layout non-volatility imperfect
-Add Claude to credits.
 Clipboard as temp*orary* database
 
 10/9/2016

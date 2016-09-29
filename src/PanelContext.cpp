@@ -16,7 +16,7 @@
 #include "GameLogic.h"
 #include "CentralWorkSaver.h"
 #include "thc.h"
-#include "Rybka.h"
+#include "UciInterface.h"
 #include "DebugPrintf.h"
 #include "Log.h"
 #include "Session.h"

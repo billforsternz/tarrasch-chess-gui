@@ -1,5 +1,5 @@
 /****************************************************************************
- * Run UCI chess engine, eg Rybka
+ * Run UCI chess engine, eg Stockfish - Windows version
  *  Author:  Bill Forster
  *  Licence: See licencing information in thc::ChessPosition.cpp
  *  Copyright 2010-2016, Triple Happy Ltd.  All rights reserved.
@@ -7,13 +7,14 @@
 #include <stdio.h>
 #include "Portability.h"
 
+// Can be included in Unix builds if convenient because the whole thing is conditionally compiled
 #ifdef THC_WINDOWS
 #include <windows.h>
 #include <tlhelp32.h>
 #include <conio.h>
 #include <string.h>
 #include <winbase.h>
-#include "Rybka.h"
+#include "UciInterface.h"
 #include "DebugPrintf.h"
 #include "Repository.h"
 #include "Objects.h"
@@ -24,30 +25,30 @@ using namespace thc;
 
 State transition notes:
 
-Rybka::Start()
+UciInterface::Start()
     notes: busy waits for READY (can loop forever), is slow, needs okay
     INIT ->  WAIT_UCI  -> READY
     (tx:uci) (rx:uciokay)
 
-Rybka::Stop()
+UciInterface::Stop()
     notes: busy waits for process not running (protection against loop forever), is slow, needs okay
     ? -> SEND_QUIT_1 -> SEND_QUIT_2             -> WAIT_FINISHED
          (tx:stop)      (tx:isready,rx:readyok)    (tx:quit)
          [stop is optional - only after go infinite/go ponder or if start state is WAIT_EVALUATION]
 
-Rybka::StartThinking()
+UciInterface::StartThinking()
     notes: kicks off go command, two versions (with/without smoves), needs okay, for playing against engine
     ? -> SEND_PLAY_ENGINE1 -> SEND_PLAY_ENGINE2  -> SEND_PLAY_ENGINE3 -> SEND_PLAY_ENGINE4 -> WAIT_EVALUATION -> READY
          (tx:stop)            (tx:options)          (tx:position)        (:go)                (rx:bestmove)
          [stop is optional - only after go infinite/go ponder]
 
-Rybka::Kibitz()
+UciInterface::Kibitz()
     notes: kicks off go infinite command,  never sends smoves, needs okay
     ? -> SEND_KIBITZ1 -> SEND_KIBITZ2  -> SEND_KIBITZ3 -> SEND_KIBITZ4 -> KIBITZING
          (tx:stop)       (tx:MultiPV)     (tx:position)   (tx:go infinite)
          [stop is optional - only after go infinite/go ponder]
 
-Rybka::KibitzStop()
+UciInterface::KibitzStop()
     notes: needs okay, does one Run() immediately
     ? -> SEND_KIBITZ_STOP -> READY
          (tx:stop)
@@ -179,7 +180,7 @@ wchar_t *convertCharArrayToLPCWSTR(const char* charArray)
 }
 
 //---------------------------------------------------------------------------
-Rybka::Rybka( const char *filename_uci_exe )
+UciInterface::UciInterface( const char *filename_uci_exe )
 {
     this->filename_uci_exe = filename_uci_exe;
     engine_name[0] = '\0';
@@ -238,7 +239,7 @@ Rybka::Rybka( const char *filename_uci_exe )
         if( is_exe && program_type==SCS_64BIT_BINARY )
         {
             wxString caption( "Error running UCI engine" );
-            wxString detail ( "It is not possible to run a 64 bit UCI engine on a 32 bit Windows system\r\n"
+            wxString detail ( "\nIt is not possible to run a 64 bit UCI engine on a 32 bit Windows system\r\n"
                               "Suggestion: Use the Options> Engine menu and Browse button to find a 32 bit engine instead\r\n" );
             wxMessageBox( detail, caption, wxOK|wxICON_ERROR );
             return;
@@ -300,7 +301,7 @@ Rybka::Rybka( const char *filename_uci_exe )
     }
 }
 
-void Rybka::SuspendResume( bool resume )
+void UciInterface::SuspendResume( bool resume )
 { 
     HANDLE        hThreadSnap = NULL; 
     THREADENTRY32 te32        = {0}; 
@@ -351,7 +352,7 @@ void Rybka::SuspendResume( bool resume )
 } 
 
 
-bool Rybka::Start()
+bool UciInterface::Start()
 {
     if( okay )
     {
@@ -375,7 +376,7 @@ bool Rybka::Start()
     return okay;
 }
 
-void Rybka::StartThinking( bool ponder, thc::ChessPosition &pos, const char *forsyth, long wtime_ms, long btime_ms, long winc_ms, long binc_ms )
+void UciInterface::StartThinking( bool ponder, thc::ChessPosition &pos, const char *forsyth, long wtime_ms, long btime_ms, long winc_ms, long binc_ms )
 {
     pos_engine_to_move = pos;
     if( forsyth )
@@ -395,7 +396,7 @@ void Rybka::StartThinking( bool ponder, thc::ChessPosition &pos, const char *for
         NewState( "go (no smoves)", SEND_PLAY_ENGINE1 );
 }
 
-void Rybka::StartThinking( bool ponder, thc::ChessPosition &pos, const char *forsyth, wxString &smoves, long wtime_ms, long btime_ms, long winc_ms, long binc_ms )
+void UciInterface::StartThinking( bool ponder, thc::ChessPosition &pos, const char *forsyth, wxString &smoves, long wtime_ms, long btime_ms, long winc_ms, long binc_ms )
 {
     pos_engine_to_move = pos;
     if( forsyth )
@@ -417,7 +418,7 @@ void Rybka::StartThinking( bool ponder, thc::ChessPosition &pos, const char *for
         NewState( "go (smoves)", SEND_PLAY_ENGINE1 );
 }
 
-bool Rybka::Ponderhit( thc::ChessPosition &pos )
+bool UciInterface::Ponderhit( thc::ChessPosition &pos )
 {
     bool ok = false;
     release_printf( "Ponderhit\n" );
@@ -440,7 +441,7 @@ bool Rybka::Ponderhit( thc::ChessPosition &pos )
     return ok;
 }
 
-void Rybka::MoveNow()
+void UciInterface::MoveNow()
 {
     release_printf( "MoveNow\n" );
     if( gbl_state==SEND_PLAY_ENGINE1 ||
@@ -460,7 +461,7 @@ void Rybka::MoveNow()
     }
 }
 
-void Rybka::ForceStop()
+void UciInterface::ForceStop()
 {
     release_printf( "ForceStop\n" );
     if( gbl_state==SEND_PLAY_ENGINE1 ||
@@ -494,7 +495,7 @@ void Rybka::ForceStop()
     }
 }
 
-void Rybka::KibitzStop()
+void UciInterface::KibitzStop()
 {
     if( okay )
     {
@@ -503,7 +504,7 @@ void Rybka::KibitzStop()
     }
 }
 
-void Rybka::Kibitz( thc::ChessPosition &pos, const char *forsyth )
+void UciInterface::Kibitz( thc::ChessPosition &pos, const char *forsyth )
 {
     bool skip=false;
     if( gbl_state==SEND_KIBITZ1 ||
@@ -530,7 +531,7 @@ void Rybka::Kibitz( thc::ChessPosition &pos, const char *forsyth )
     }
 }
 
-bool Rybka::KibitzPeek( bool run, int multi_idx, bool &cleared, char buf[], unsigned int max_strlen )
+bool UciInterface::KibitzPeek( bool run, int multi_idx, bool &cleared, char buf[], unsigned int max_strlen )
 {
     if( multi_idx < 0 )
         multi_idx = 0;
@@ -544,7 +545,7 @@ bool Rybka::KibitzPeek( bool run, int multi_idx, bool &cleared, char buf[], unsi
     return have_data;    
 }
 
-bool Rybka::KibitzPeekEngineToMove( bool run, bool &cleared, char buf[], unsigned int max_strlen )
+bool UciInterface::KibitzPeekEngineToMove( bool run, bool &cleared, char buf[], unsigned int max_strlen )
 {
     cleared = kq_engine_to_move.TestCleared();
     bool have_data = false;
@@ -555,7 +556,7 @@ bool Rybka::KibitzPeekEngineToMove( bool run, bool &cleared, char buf[], unsigne
     return have_data;    
 }
 
-thc::Move Rybka::CheckBestMove( thc::Move &ponder )
+thc::Move UciInterface::CheckBestMove( thc::Move &ponder )
 {
     thc::Move move;
     move.Invalid();
@@ -574,7 +575,7 @@ thc::Move Rybka::CheckBestMove( thc::Move &ponder )
     return move;
 }
 
-void Rybka::Stop()
+void UciInterface::Stop()
 {
     debug_trigger = true;
     if( !okay )
@@ -607,7 +608,7 @@ void Rybka::Stop()
     }
 }
 
-bool Rybka::Run()
+bool UciInterface::Run()
 {
     bool running;
     char buf[1024];        //i/o buffer
@@ -690,7 +691,7 @@ bool Rybka::Run()
     return running;
 }
 
-Rybka::~Rybka()
+UciInterface::~UciInterface()
 {
     if( okay )
     {
@@ -715,7 +716,7 @@ Rybka::~Rybka()
 #define DEPTH_STR "8"
 
 // Send the commands to engine at the correct time
-const char *Rybka::user_hook_in()
+const char *UciInterface::user_hook_in()
 {
     static char buf[1024];
     const char *s=NULL;
@@ -1168,7 +1169,7 @@ const char *Rybka::user_hook_in()
 }
 
 // Collect output from engine and break into lines
-void Rybka::user_hook_out( const char *s )
+void UciInterface::user_hook_out( const char *s )
 {
     static char buf[1024];
     static int idx;
@@ -1189,7 +1190,7 @@ void Rybka::user_hook_out( const char *s )
 
 // Interpret the output lines from UCI engine, print the relevant lines
 //  and advance the state machine when appropriate
-void Rybka::line_out( const char *s )
+void UciInterface::line_out( const char *s )
 {
     const char *p, *temp;
     release_printf( "out: %s\n", s );
@@ -1304,7 +1305,7 @@ void Rybka::line_out( const char *s )
     }
 }
 
-bool Rybka::WaitingForUciok( const char *s )
+bool UciInterface::WaitingForUciok( const char *s )
 {
     bool uciokay = false;
     if( strstr(s,"id name ") )
@@ -1317,7 +1318,7 @@ bool Rybka::WaitingForUciok( const char *s )
     return uciokay;
 }
 
-void Rybka::OptionIn( const char *s )
+void UciInterface::OptionIn( const char *s )
 {
     const char *parm;
 
@@ -1607,9 +1608,9 @@ const char *str_pattern_smart( const char *str, const char *pattern )
     return( ultimate_success ? str : NULL );
 }
 
-void Rybka::NewState( const char *comment, RYBKA_STATE new_state )
+void UciInterface::NewState( const char *comment, UCI_INTERFACE_STATE new_state )
 {
-    RYBKA_STATE state;
+    UCI_INTERFACE_STATE state;
     const char *s1="", *s2="", *s;
     state = gbl_state;
     for( int i=0; i<2; i++ )

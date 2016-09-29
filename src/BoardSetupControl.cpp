@@ -85,6 +85,7 @@ BoardSetupControl::BoardSetupControl
         cprintf( "Normal orientation = %s\n", normal_orientation?"true":"false" );
         bs = new BoardSetup( &chess_bmp, this, 46, 11, normal_orientation );  // Note XBORDER, YBORDER now passed as parameters
         SetCustomCursor( normal_orientation?'P':'p' );
+		state = UP_CURSOR_SIDE;
     }
 }
 

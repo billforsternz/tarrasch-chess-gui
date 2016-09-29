@@ -150,7 +150,7 @@ void PgnDialog::GdvHelpClick()
      */
 
     wxString helpText =
-    "Use this panel to preview the games in a .pgn file."
+    "\nUse this panel to preview the games in a .pgn file."
     "\n\n"
     "Two special features are provided at the moment. ECO calculates ECO codes. Note "
     "that existing ECO codes are overwritten. Since different chess programs may differ "
