@@ -1,3 +1,5 @@
+#if 0	// No longer needed - delete soon
+
 /******************************************************************************
  * Access text version of board bitmap
  *  Author:  Bill Forster
@@ -26,3 +28,5 @@ public:
 };
 
 #endif //BOARD_BITMAP_H
+
+#endif

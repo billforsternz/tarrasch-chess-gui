@@ -4,8 +4,8 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#ifndef __t2__MiniBoard__
-#define __t2__MiniBoard__
+#ifndef MINI_BOARD_H
+#define MINI_BOARD_H
 
 #include "wx/wx.h"
 #include "BoardSetup.h"
@@ -31,4 +31,4 @@ private:
     DECLARE_EVENT_TABLE()
 };
 
-#endif /* defined(__t2__MiniBoard__) */
+#endif MINI_BOARD_H

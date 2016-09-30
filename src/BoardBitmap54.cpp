@@ -1,3 +1,5 @@
+#if 0	// No longer needed - delete soon
+
 /****************************************************************************
  * Text version of board bitmap
  *  54 pixel squares version
@@ -978,3 +980,5 @@ const char *BoardBitmap54::GetBlackPawnMask()
 {
     return black_pawn_mask;
 }
+
+#endif

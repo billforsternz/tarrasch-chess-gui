@@ -1,3 +1,5 @@
+#if 0	// No longer needed - delete soon
+
 /****************************************************************************
  * Text version of board bitmap
  *  40 pixel squares version
@@ -28,3 +30,5 @@ public:
 };
 
 #endif // BOARD_BITMAP_40_H
+
+#endif

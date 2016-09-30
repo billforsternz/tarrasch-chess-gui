@@ -1,3 +1,5 @@
+#if 0	// No longer needed - delete soon
+
 /****************************************************************************
  * Control - The graphic chess board that is the centre-piece of the GUI
  *  Still working on making it a more-self contained and reusable control
@@ -1160,3 +1162,4 @@ BEGIN_EVENT_TABLE(GraphicBoard, wxControl)
 //    EVT_ERASE_BACKGROUND(GraphicBoard::OnEraseBackground)
 //    EVT_TIMER( TIMER_ID, GraphicBoard::OnTimeout)
 END_EVENT_TABLE()
+#endif
