@@ -379,7 +379,8 @@ void GraphicBoardResizable::Init
 								if( ch < '3' )	// only if near magenta background - retain full
 												// anti-aliasing dynamic range inside the piece
 								{
-									adjust /= 2;  // make near white (255)  grey (128)
+									//adjust /= 2;  // make near white (255)  grey (128)
+									adjust = (adjust * 80) / 128;	// experimental 64 = 50% is too much, 92 = 75% not enough ?
 									r = static_cast<int>(adjust);
 									g = r;
 									b = r;
