@@ -165,6 +165,7 @@
     <ClCompile Include="src\LegacyDb.cpp" />
     <ClCompile Include="src\Log.cpp" />
     <ClCompile Include="src\LogDialog.cpp" />
+    <ClCompile Include="src\sqlite3.c" />
     <ClCompile Include="src\UnixUciInterface.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MaintenanceDialog.cpp" />
@@ -185,7 +186,6 @@
     <ClCompile Include="src\PositionDialog.cpp" />
     <ClCompile Include="src\Repository.cpp" />
     <ClCompile Include="src\Session.cpp" />
-    <ClCompile Include="src\sqlite3.c" />
     <ClCompile Include="src\Tabs.cpp" />
     <ClCompile Include="src\thc.cpp" />
     <ClCompile Include="src\TrainingDialog.cpp" />
@@ -270,9 +270,9 @@
     <ClInclude Include="src\ProgressBar.h" />
     <ClInclude Include="src\Repository.h" />
     <ClInclude Include="src\Roster.h" />
+    <ClInclude Include="src\sqlite3.h" />
     <ClInclude Include="src\UciInterface.h" />
     <ClInclude Include="src\Session.h" />
-    <ClInclude Include="src\sqlite3.h" />
     <ClInclude Include="src\SuspendEngine.h" />
     <ClInclude Include="src\Tabs.h" />
     <ClInclude Include="src\thc.h" />

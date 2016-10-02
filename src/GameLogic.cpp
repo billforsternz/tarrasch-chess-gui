@@ -90,15 +90,23 @@ GameLogic::GameLogic( PanelContext *canvas, CtrlChessTxt *lb )
         if( error )
             wxMessageBox( error_msg, "Error loading book", wxOK|wxICON_ERROR );
         canvas->BookUpdate( false );
-    }
+    }				   
 }
 
 bool GameLogic::OnExit()
 {
     bool editing_log = objs.gl->EditingLog();
     bool okay = objs.cws->Exit();
-    if( okay ) // if exiting
-        objs.log->SaveGame( &gd, editing_log );
+    if( okay )
+	{	// if exiting
+		cprintf( "ChessApp::OnExit(): May wait for tiny database load here...\n" );
+		extern wxMutex *KillWorkerThread();
+		wxMutex *ptr_mutex_tiny_database = KillWorkerThread();
+		wxMutexLocker lock(*ptr_mutex_tiny_database);
+		cprintf( "ChessApp::OnExit() if we did wait, that wait is now over\n" );
+
+		objs.log->SaveGame( &gd, editing_log );
+	}
     return okay;
 }
 

@@ -18,6 +18,7 @@ public:
                   wxWindowID id,
                   const wxPoint& point,
                   const wxSize& size );
+	GraphicBoardResizable( int pix_ );
 	~GraphicBoardResizable();
     void Init( const wxSize& size );
 
@@ -54,8 +55,7 @@ public:
     void OnMouseLeftDown (wxMouseEvent & event);
     void OnMouseLeftUp (wxMouseEvent & event);
     void OnMouseMove (wxMouseEvent & event);
-
-
+    wxBitmap     my_chess_bmp;
 
 private:
 
@@ -66,7 +66,6 @@ private:
     wxBrush      brush;
 	wxMemoryDC   dcmem;
     wxPen        pen;
-    wxBitmap     my_chess_bmp;
 	byte         *buf_board;
 	byte         *buf_box;
 	unsigned long width_bytes, height, width, xborder, yborder, density;

@@ -1185,7 +1185,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 void ChessFrame::OnClose( wxCloseEvent& WXUNUSED(event) )
 {
 
-    // Save the panel layout for text time
+    // Save the panel layout for next time
     int panel1=0, panel2=0, panel3=0, panel4=0;
     wxString persp = m_mgr.SavePerspective();
     const char *txt = persp.c_str();

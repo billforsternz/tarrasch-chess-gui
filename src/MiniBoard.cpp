@@ -11,8 +11,10 @@
 #include "thc.h"
 #include "DebugPrintf.h"
 #include "BoardSetup.h"
+#include "GraphicBoardResizable.h"
+//#include "Objects.h"
+//#include "PanelContext.h"
 #include "MiniBoard.h"
-#include "bitmaps/miniboard_bitmap.xpm"
 using namespace std;
 using namespace thc;
 
@@ -26,10 +28,13 @@ MiniBoard::MiniBoard
     bs = NULL;
     wxClientDC dc(parent);
     //chess_bmp = static_chess_bmp; //wxBitmap( board_setup_bitmap_xpm );
-    chess_bmp = wxBitmap( miniboard_bitmap_xpm );
-    wxSize  size( chess_bmp.GetWidth(), chess_bmp.GetHeight() );
+    //chess_bmp = wxBitmap( miniboard_bitmap_xpm );
+	//objs.canvas->pb->gb->GenerateMiniboard( 34, chess_bmp );
+	GraphicBoardResizable gb(34);		// TEMP TEMP 34 must match SQUARE_HEIGHT _WIDTH in BoardSetup.cpp
+	chess_bmp = gb.my_chess_bmp;
+    wxSize size( chess_bmp.GetWidth(), chess_bmp.GetHeight() );
     SetSize( size );
-    bs = new BoardSetup( &chess_bmp, this, 2, 2 );
+    bs = new BoardSetup( &chess_bmp, this, 0, 0 );
 }
 
 MiniBoard::~MiniBoard()

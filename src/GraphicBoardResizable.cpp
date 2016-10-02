@@ -40,6 +40,30 @@ GraphicBoardResizable::GraphicBoardResizable
     Init( size );
 }
 
+GraphicBoardResizable::GraphicBoardResizable( int pix_ )
+{
+    pickup_file    = 0;
+    pickup_rank    = 0;
+    pickup_point.x = 0;
+    pickup_point.y = 0;
+    sliding = false;
+    buf_board = 0;
+    buf_box = 0;
+    strcpy( _position_ascii, "rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR" );
+	wxSize size( pix_*8, pix_*8 );
+	Init( size );
+	SetChessPosition( 
+        "rnbqnrk "
+        "pp    b "
+        "    N   "
+        "   qk   "
+        "   QK   "
+        "        "
+        "PP      "
+        "RNBQKBNR"
+	);
+}
+
 void GraphicBoardResizable::Init
 (
     const wxSize& size
@@ -487,6 +511,15 @@ void GraphicBoardResizable::Init
 	//	"        "		 "PP      "
 	//	"        "		 "RNBQKBNR"
 	//
+	//	"rnbqnrk "
+	//	"pp	   b "
+	//	"    N	 "
+	//	"	qk	 "
+	//	"	QK	 "
+	//	"        "
+	//	"PP		 "
+	//	"RNBQKBNR"
+	//
 	// Store these pieces from the board to their fixed
 	//  positions in the 'box'
 	Get( 'c','7', 'b','8' );  // preload black squares in the box
@@ -549,7 +582,6 @@ void GraphicBoardResizable::Init
 	Get( 'd','8', 'd','4', white_queen_mask );  // White queen on black square
     my_chess_bmp = my_chess_bmp_;
 }
-
 
 // Cleanup
 GraphicBoardResizable::~GraphicBoardResizable()

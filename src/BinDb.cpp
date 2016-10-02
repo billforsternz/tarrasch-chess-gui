@@ -1437,10 +1437,11 @@ void BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > 
                                         ) */
             )
         {
-            cprintf( "%d games (%d include promotion)\n", nbr_games, nbr_promotion_games );
+			if( !kill_background_load )
+				cprintf( "%d games (%d include promotion)\n", nbr_games, nbr_promotion_games );
         }
     }
-    if( do_reverse )
+    if( do_reverse && !kill_background_load )
         std::reverse( mega_cache.begin(), mega_cache.end() );
 }
 
