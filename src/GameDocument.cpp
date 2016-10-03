@@ -1740,7 +1740,7 @@ void GameDocument::UseGame( const thc::ChessPosition &cp, const std::vector<thc:
     unsigned long pos_restore = pos;
     thc::ChessRules cr;
     std::string title;
-    bool at_move0;
+    bool at_move0=false;
     MoveTree save=tree;
 
     MoveTree *found = Locate( pos, cr, title, at_move0 );
@@ -1820,7 +1820,7 @@ void GameDocument::UseGame( const thc::ChessPosition &cp, const std::vector<thc:
                 cprintf( "Parent found, ivar=%d, imove=%d\n", ivar, imove );
                 VARIATION &variation = parent->variations[ivar];
                 int nbr_common_moves=0;
-                for( size_t j=imove+1, k=0; j<variation.size() && k<combined.size(); j++, k++ )
+                for( size_t j=imove+(at_move0?0:1), k=0; j<variation.size() && k<combined.size(); j++, k++ )
                 {
                     MoveTree m = variation[j];
                     if( m.game_move.move == combined[k] )
@@ -1848,7 +1848,7 @@ void GameDocument::UseGame( const thc::ChessPosition &cp, const std::vector<thc:
                 else
                 {
                     cprintf( "Branch, nbr_common_moves=%d, combined.size()=%d\n", nbr_common_moves, combined.size() );
-                    MoveTree &branch_point = *(variation.begin() + offset_last_common_move + 1);
+                    MoveTree &branch_point = *(variation.begin() + offset_last_common_move + (at_move0?0:1));
                     std::vector<MoveTree> sub_variation;
                     bool first=true;
                     for( size_t j=nbr_common_moves; j<combined.size(); j++ )
@@ -1870,8 +1870,7 @@ void GameDocument::UseGame( const thc::ChessPosition &cp, const std::vector<thc:
 
     // Rebuild
     Rebuild();
-    //if( !no_changes )
-    //    gl->atom.Undo();
+    gl->atom.Undo();
     pos = pos_restore;
     gl->atom.Redisplay( pos );
 }

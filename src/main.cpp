@@ -15,7 +15,9 @@
 #include <fstream>
 #include <time.h>
 #endif
+#include <locale>
 #include "wx/wx.h"
+#include "wx/intl.h"
 #include "wx/file.h"
 #include "wx/listctrl.h"
 #include "wx/clipbrd.h"
@@ -492,7 +494,8 @@ extern void JobBegin();
 extern void JobEnd();
 
 wxString argv1;  // can pass a .pgn file on command line
-bool gbl_small_screen_detected;  // nasty global variable hack, sorry
+bool gbl_spelling_us;			// True for US spelling
+const char *gbl_spell_colour;	// "colour" or "color"
 
 bool ChessApp::OnInit()
 {
@@ -521,6 +524,10 @@ bool ChessApp::OnInit()
         #endif
     }
     #endif
+	int lang = wxLocale::GetSystemLanguage();
+	gbl_spelling_us = (lang==wxLANGUAGE_ENGLISH_US);
+	gbl_spell_colour = gbl_spelling_us ? "color" : "colour";
+	cprintf( "Spelling uses US English? %s\n", gbl_spelling_us?"Yes":"No" );
     wxString error_msg;
     int disp_width, disp_height;
     wxDisplaySize(&disp_width, &disp_height);
@@ -1281,7 +1288,7 @@ void ChessFrame::OnHelp(wxCommandEvent& WXUNUSED(event))
         "play an old fashioned normal game of chess with a friend."
         "\n\n"
         "Tarrasch has an opening book, you can easily see the \"book\" "
-        "moves early in a game. Tarrasch uses the color green when "
+        "moves early in a game. Tarrasch uses the %s green when "
         "listing or suggesting book moves. The book can be turned off "
         "using menu \"Options\". That menu allows control over all "
         "optional features, including blindfold and delayed display "
@@ -1318,7 +1325,7 @@ void ChessFrame::OnHelp(wxCommandEvent& WXUNUSED(event))
         "To turn on commentary (kibitzing in chess parlance), use "
         "the \"Commands\" menu or the Robot button or select the Engine Analysis tab at the bottom. You can even "
         "get the chess engine to provide commentary when you are "
-        "playing against it."
+        "playing against it.", gbl_spell_colour
     );
     wxMessageBox(msg, "Tarrasch Chess GUI Help", wxOK|wxICON_INFORMATION|wxCENTRE, this);
 }

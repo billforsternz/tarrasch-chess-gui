@@ -42,20 +42,23 @@ Remove small board option
 Add Claude to credits.
 Bug fix: Cannot initially drag pieces in board setup
 Bug fix: Info boxes have weird first paragraph
+Clipboard as temp*orary* database
+Check all bitmaps have white pieces on left
+Change Rybka to UciEngine everywhere
 
 Todo (not yet)
 --------------
+32 bit icons
+Extra NAGs eg unclear
 Need to get click on players, clocks working again
 Can we control multiple instances?
 Get close box on tabs
 Efficient undo
-Check all bitmaps have white pieces on left
 Highlight colours
 Bring colours into other chess boards
 Alt F underlining etc
 6 custom commands
 New tab button next to book moves?
-Change Rybka to UciEngine everywhere
 Check ANSI names in pgn
 Select All in games dialogs
 Add more ratings filters
@@ -63,7 +66,18 @@ Buttons same width
 Ticking clock is red
 Claude: Permissions error moving files to documents
 Claude: Settings, particularly GUI layout non-volatility imperfect
-Clipboard as temp*orary* database
+Get rid of edit game prefix
+Idea: in database next move pane asterisk moves that mimic the current game.
+Dynamic US spelling (basically because of color)
+Add Pro-Dao
+Do database create and append on top of existing database
+Bug: First game of 2015-summer-g.pgn not processed
+Allocate control block frees unused blocks
+Append adds extra blank line
+6 engine parms instead of 4
+pgn column sorting - prompt to load (except col 0), handle cancelling differently
+add stat for how many transpos pulled in when drilling down
+Pickup ratings field from earlier in tournament when entering games.
 
 10/9/2016
 

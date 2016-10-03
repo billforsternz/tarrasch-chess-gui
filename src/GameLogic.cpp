@@ -90,7 +90,7 @@ GameLogic::GameLogic( PanelContext *canvas, CtrlChessTxt *lb )
         if( error )
             wxMessageBox( error_msg, "Error loading book", wxOK|wxICON_ERROR );
         canvas->BookUpdate( false );
-    }				   
+    }
 }
 
 bool GameLogic::OnExit()

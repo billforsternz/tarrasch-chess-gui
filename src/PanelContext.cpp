@@ -494,9 +494,7 @@ void PanelContext::Kibitz( int idx, const wxString &txt )
                 const char *temp = txt.c_str();
                 release_printf( "kibitz4 = %s\n", temp );
                 //kibitz4->SetLabel(txt);
-                extern bool gbl_small_screen_detected;
-                if( !gbl_small_screen_detected )      // on a small screen show only 3
-                    kibitz_ctrl->SetItem( 4, 0, txt );
+                kibitz_ctrl->SetItem( 4, 0, txt );
             }
             break;
         }

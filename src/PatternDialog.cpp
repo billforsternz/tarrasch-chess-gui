@@ -143,7 +143,7 @@ void PatternDialog::CreateControls()
     if( b_bishops )
     {
         bishops_same_colour = new wxCheckBox( this, ID_PATTERN_BISHOPS_SAME_COLOUR,
-           wxT("&Bishops must be same colour"), wxDefaultPosition, wxDefaultSize, 0 );
+           gbl_spelling_us?"Bishops must be same color":"Bishops must be same colour", wxDefaultPosition, wxDefaultSize, 0 );
         bishops_same_colour->SetValue( parm->bishops_must_be_same_colour );
     }
     if( b_white )
@@ -342,10 +342,12 @@ void PatternDialog::SetDialogHelp()
     wxString help1 = "Set to include mirror images of this pattern in search";
     FindWindow(ID_PATTERN_INC_REFLECTION)->SetHelpText(help1);
     FindWindow(ID_PATTERN_INC_REFLECTION)->SetToolTip(help1);
-    wxString help2 = "Set to include reversed colours form of this pattern in search";
+    wxString help2 = gbl_spelling_us?"Set to include reversed colors form of this pattern in search"
+								    :"Set to include reversed colours form of this pattern in search";
     FindWindow(ID_PATTERN_INC_REVERSE)->SetHelpText(help2);
     FindWindow(ID_PATTERN_INC_REVERSE)->SetToolTip(help2);
-    wxString help3 = "Set to forbid extra pieces - setting this makes pattern search the same as position search (with extra options - eg reversed colours)";
+    wxString help3 = gbl_spelling_us?"Set to forbid extra pieces - setting this makes pattern search the same as position search (with extra options - eg reversed colors)"
+								    :"Set to forbid extra pieces - setting this makes pattern search the same as position search (with extra options - eg reversed colours)";
     if( b_dont_allow_more )
     {
         FindWindow(ID_PATTERN_DONT_ALLOW_MORE)->SetHelpText(help3);

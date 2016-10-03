@@ -155,4 +155,7 @@ enum
     ID_PGN_LISTBOX
 };
 
+extern bool gbl_spelling_us;			// True for US spelling
+extern const char *gbl_spell_colour;	// "colour" or "color"
+
 #endif // APPDEFS_H

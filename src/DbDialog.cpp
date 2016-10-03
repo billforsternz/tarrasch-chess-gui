@@ -733,6 +733,19 @@ void DbDialog::StatsCalculate()
         }
     }
 
+	// Play through the current game, and find the last instance of a user move in this position
+	CompactGame pact;
+	objs.gl->gd.GetCompactGame( pact );
+	thc::Move user_move;
+	user_move.Invalid();
+	thc::ChessRules scan(pact.start_position);
+	for( size_t i=0; i<pact.moves.size(); i++ )
+	{
+		if( scan == cr_to_match )
+			user_move = pact.moves[i];
+		scan.PlayMove( pact.moves[i] );
+	}
+
     // Sort the stats according to number of games
     std::multimap< MOVE_STATS,  char > dst = flip_and_sort_map(stats);
     std::multimap< MOVE_STATS,  char >::reverse_iterator it;
@@ -764,7 +777,8 @@ void DbDialog::StatsCalculate()
         if( !cr_to_match.white )
             s = "..." + s;
         char buf[200];
-        sprintf( buf, "%s: %d %s, white scores %.1f%% +%d -%d =%d",
+        sprintf( buf, "%s%s: %d %s, white scores %.1f%% +%d -%d =%d",
+			    mv==user_move ? ">" : " ",
                 s.c_str(),
                 nbr_games,
                 nbr_games==1 ? "game" : "games",
@@ -934,9 +948,9 @@ void DbDialog::PatternSearch()
     else
     {
         if( stats_.nbr_reversed_games == 0 )
-            sprintf( buf, "%s (stats adjusted for reverse colour games, but none found)", base );
+            sprintf( buf, "%s (stats adjusted for reverse %s games, but none found)", base, gbl_spell_colour );
         else
-            sprintf( buf, "%s (stats adjusted for %d reverse colour game%s)", base, stats_.nbr_reversed_games, stats_.nbr_reversed_games>1 ? "s": "" );
+            sprintf( buf, "%s (stats adjusted for %d reverse %s game%s)", base, stats_.nbr_reversed_games, gbl_spell_colour, stats_.nbr_reversed_games>1 ? "s": "" );
     }
     title_ctrl->SetLabel( buf );
     int top = list_ctrl->GetTopItem();

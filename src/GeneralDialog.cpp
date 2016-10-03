@@ -126,7 +126,7 @@ void GeneralDialog::CreateControls()
     // Colour Pickers
     wxBoxSizer* colour_sizer1  = new wxBoxSizer(wxHORIZONTAL);
     wxStaticText* colour_label1 = new wxStaticText ( this, wxID_STATIC,
-        "Light Square Colour", wxDefaultPosition, wxDefaultSize, 0 );
+        gbl_spelling_us ? "Light Square Color" : "Light Square Colour", wxDefaultPosition, wxDefaultSize, 0 );
 	wxColour light(dat.m_light_colour_r,dat.m_light_colour_g,dat.m_light_colour_b);
     light_picker = new wxColourPickerCtrl( this, wxID_ANY, light );
     colour_sizer1->Add(colour_label1, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
@@ -139,7 +139,7 @@ void GeneralDialog::CreateControls()
 
     wxBoxSizer* colour_sizer2  = new wxBoxSizer(wxHORIZONTAL);
     wxStaticText* colour_label2 = new wxStaticText ( this, wxID_STATIC,
-        "Dark Square Colour", wxDefaultPosition, wxDefaultSize, 0 );
+        gbl_spelling_us ? "Dark Square Color" : "Dark Square Colour", wxDefaultPosition, wxDefaultSize, 0 );
 	wxColour dark(dat.m_dark_colour_r,dat.m_dark_colour_g,dat.m_dark_colour_b);
     dark_picker = new wxColourPickerCtrl( this, wxID_ANY, dark );
     colour_sizer2->Add(colour_label2, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
