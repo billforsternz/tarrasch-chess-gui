@@ -13,6 +13,8 @@
 #include <string>
 #include <set>
 #include <map>
+#include <clocale>
+
 
 #define BUF_SIZE 20000000
 
@@ -110,6 +112,23 @@ static void StaticTest();
 
 int main()
 {
+	const char *xxx = std::setlocale(LC_ALL, NULL);
+	setlocale (LC_MONETARY,"");
+	struct lconv * lc;
+	lc=localeconv();
+    std::string sym(lc->int_curr_symbol);
+    bool us_english = (sym=="USD" || sym=="PHP");
+	printf( "US English? %s\n", us_english?"Yes":"No" );
+	printf ("Local Currency Symbol: %s\n",lc->currency_symbol);
+	printf ("International Currency Symbol: %s\n",lc->int_curr_symbol);
+
+	//std::string loc = std::locale("").name();
+	//printf( "Locale %s\n", loc.c_str() );
+	setlocale (LC_MONETARY,"");
+
+	const char *s = std::setlocale(LC_ALL, NULL);
+	printf( "Locale=\n%s\n\n", s );
+
     char *buf = (char *)malloc(BUF_SIZE);
     if( !buf )
     {
@@ -139,7 +158,7 @@ int main()
         }
     }
 #endif
-//#define ONE_ICON
+#define ONE_ICON
 #ifdef ONE_ICON
     const char *filename = "../icon.bmp";
     BmpHeader *in = ReadFile( buf, filename );
@@ -148,7 +167,7 @@ int main()
         Convert2Xpm( in, "icon.xmp" );
     }
 #endif
-#define BULK_FILES
+//#define BULK_FILES
 #ifdef BULK_FILES
     const char *files[] =
     {
