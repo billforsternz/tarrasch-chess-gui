@@ -29,7 +29,6 @@ public:
 
 	// Initialise, shutdown
 	GameLogic( PanelContext *canvas, CtrlChessTxt *lb );
-    void Init();
 
     // The user hovers over the book moves rectangle
     void BookHover( wxPoint &point );
@@ -190,7 +189,6 @@ private:
     GAME_STATE human_or_pondering;  // most recent value of state if state==HUMAN || state==PONDERING
     char src_file;
     char src_rank;
-    char slide_buf[80];
     PanelContext *canvas;
     thc::ChessPosition pre_popup_position;
     unsigned long t1_start_delay;

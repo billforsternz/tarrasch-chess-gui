@@ -19,13 +19,13 @@ public:
     bool renumber;
     bool file_irrevocably_modified;
 
-    GamesCache() { state=PREFIX; renumber=false; resume_previous_window=false; loaded=false; top_item=0;
-                    file_irrevocably_modified=false; }
+    GamesCache() { state=PREFIX; renumber=false; loaded=false;
+                    file_irrevocably_modified=false; pgn_handle=0; }
     void Debug( const char *intro_message );
     bool Load( std::string &filename );
     bool Reload() { return Load(pgn_filename); }
     bool Load( FILE *pgn_file );
-    bool FileCreate( std::string &filename, GameDocument &gd );
+    void FileCreate( std::string &filename );
     void FileSave( GamesCache *gc_clipboard );
     void FileSaveAs( std::string &filename, GamesCache *gc_clipboard );
     //void FileSaveGameAs( std::string &filename, GamesCache *gc_clipboard );
@@ -35,25 +35,11 @@ public:
     void Eco( GamesCache *gc_clipboard );
     bool IsLoaded();
     bool IsSynced();
-    void KillResumePreviousWindow()
-    {
-        resume_previous_window=false;
-    }
-    void PrepareForResumePreviousWindow( int top_item_ )
-    {
-        resume_previous_window=true; this->top_item = top_item_;
-    }
-    bool IsResumingPreviousWindow( int &top_item_ )
-    {
-        top_item_=this->top_item; return resume_previous_window; 
-    }
 
     // Helpers
     int  pgn_handle;
 private:
     enum {PREFIX,HEADER,INGAME} state;
-    bool resume_previous_window;
-    int  top_item;
     bool loaded;
 
     // Check whether text s is a valid header, return true if it is,

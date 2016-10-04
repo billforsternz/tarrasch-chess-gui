@@ -572,6 +572,7 @@ wxString GameDetailsDialog::remember_site;
 bool GameDetailsDialog::Run( GameDocument &gd )
 {
     bool ok=false;
+	Roster before = gd.r;
     white     = gd.r.white;          // "White"
     black     = gd.r.black;          // "Black"
     event     = gd.r.event;          // "Event"
@@ -671,6 +672,18 @@ bool GameDetailsDialog::Run( GameDocument &gd )
         gd.r.eco        = eco;          // "ECO"
         gd.r.white_elo  = white_elo;    // "WhiteElo"
         gd.r.black_elo  = black_elo;    // "BlackElo"
+		bool same = gd.r.white == before.white &&
+					gd.r.black == before.black &&
+					gd.r.event == before.event &&
+					gd.r.site == before.site &&
+					gd.r.result == before.result &&
+					gd.r.round == before.round &&
+					gd.r.date == before.date &&
+					gd.r.eco == before.eco &&
+					gd.r.white_elo == before.white_elo &&
+					gd.r.black_elo == before.black_elo &&
+					gd.r.fen == before.fen;
+		gd.game_details_edited = !same;
     }
     return ok;
 }

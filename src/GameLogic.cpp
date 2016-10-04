@@ -2533,10 +2533,6 @@ bool GameLogic::MouseDown( char file, char rank, wxPoint &point )     // return 
             {
                 slide = true;
                 slide_piece = toupper(slide_piece);
-                if( slide_piece != 'P' )
-                    sprintf( slide_buf, "Sliding %c%c%c", slide_piece, file, rank );
-                else
-                    sprintf( slide_buf, "Sliding %c%c", file, rank );
                 NewState( (state==HUMAN||state==PONDERING) ? SLIDING : SLIDING_MANUAL );
             }
             else

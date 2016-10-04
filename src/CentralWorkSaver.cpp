@@ -279,7 +279,6 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                                     gc->FileSave( gc_clipboard );
                                 else
                                     gc->FileSaveAs( filename, gc_clipboard );
-                                gc->KillResumePreviousWindow();
                                 gd->modified = false;
                                 gd->game_prefix_edited = false;
                                 gd->game_details_edited = false;
@@ -313,7 +312,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                     if( !::wxFileExists( wx_filename ) )
                     {
                         AddGameToFile();
-                        gc->FileCreate( filename, *gd );
+                        gc->FileCreate( filename );
                         gd->modified = false;
                         gd->game_prefix_edited = false;
                         gd->game_details_edited = false;
@@ -348,7 +347,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                             if( append )
                                 gc->FileSave( gc_clipboard );
                             else
-                                gc->FileSaveAs( filename, gc_clipboard );
+		                        gc->FileCreate( filename );
                             gd->modified = false;
                             gd->game_prefix_edited = false;
                             gd->game_details_edited = false;

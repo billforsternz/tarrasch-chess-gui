@@ -536,8 +536,6 @@ void GamesDialog::CreateControls()
     gc->col_flags.push_back(col_flag);                       // Note that Ply and Moves are inverted here for compatibility with T2 (on T2 there is no Ply so nv.m_col10 is Moves)
     list_ctrl->SetColumnWidth(11, cols[10] );   // "Moves"
     gc->col_flags.push_back(col_flag);
-    //int top_item;
-    //bool resuming = gc->IsResumingPreviousWindow(top_item);
     box_sizer->Add(list_ctrl, 0, wxGROW|wxALL, 5);
 
     // A dividing line before the details

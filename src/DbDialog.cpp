@@ -316,19 +316,11 @@ void DbDialog::GdvSaveAllToAFile()
 // Games Dialog Override - Cancel
 void DbDialog::GdvOnCancel()
 {
-    // Todo - check whether this does anything (useful)
-    gc->PrepareForResumePreviousWindow( list_ctrl->GetTopItem() );
 }
 
 // Games Dialog Override - Help
 void DbDialog::GdvHelpClick()
 {
-    // Normally we would wish to display proper online help.
-    // For this example, we're just using a message box.
-    /*
-    wxGetApp().GetHelpController().DisplaySection(wxT("Personal record dialog"));
-     */
-
     wxString helpText =
     db_req == REQ_PLAYERS ?
     "\nUse this panel to navigate the current database. Use Load Game to "

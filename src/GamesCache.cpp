@@ -43,7 +43,6 @@ static bool operator < (const smart_ptr<GameDocument>& left,
 bool GamesCache::Load(std::string &filename )
 {
     file_irrevocably_modified = false;
-    resume_previous_window = false;
     loaded = false;
     FILE *pgn_file = objs.gl->pf.OpenRead( filename, pgn_handle );
     if( pgn_file )
@@ -450,16 +449,9 @@ bool GamesCache::Tagline( GameDocument &gd,  const char *s )
 }
 
 // Create a new file
-bool GamesCache::FileCreate( std::string &filename, GameDocument &gd )
+void GamesCache::FileCreate( std::string &filename )
 {
-    resume_previous_window = false;
     loaded = false;
-
-    gds.clear();
-    gd.pgn_handle = 0;
-    gd.game_id = GameIdAllocateBottom(1);
-    make_smart_ptr( GameDocument, new_doc, gd );
-    gds.push_back( std::move(new_doc) );
     FILE *pgn_out = objs.gl->pf.OpenCreate( filename, pgn_handle );
     if( pgn_out )
     {
@@ -469,7 +461,6 @@ bool GamesCache::FileCreate( std::string &filename, GameDocument &gd )
         objs.gl->pf.Close(NULL);    // close all handles (gc_clipboard
                                     //  only needed for ReopenModify())
     }
-    return loaded;
 }
 
 // Save the existing file
