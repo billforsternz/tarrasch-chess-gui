@@ -13,6 +13,21 @@ Cycle randomly through following tasks;
 9. Paste games into file
 10. Paste current game into file
 11. Edit game details
+12. New tab, play moves in tab
+13. Add tab to file
+14. Close tab
+
+Generate 100 random numbers from 1-14 with browserling.com/tools
+
+10*, 8*, 2*, 4*, 12*, 11*, 9*, 6*, 3*, 10*, 10*, 1*, 12, 13, 8, 10-, 10-, 12, 3, 13, 1,
+7, 6, 1, 9, 14, 4, 2, 13, 4, 9, 11, 10, 7, 11, 10, 11, 6, 4, 10, 9
+13, 6, 11, 11, 10, 11, 11, 5, 6, 2, 8, 10, 4, 8, 8, 2, 7, 4, 6, 11
+6, 7, 14, 2, 10, 6, 5, 11, 8, 7, 12, 12, 12, 10, 1, 2, 12, 13, 3, 9
+12, 11, 13, 13, 7, 13, 13, 2, 8, 12, 9, 12, 1, 4, 7, 9, 3, 8, 1, 9
+
+bug: Save in pgn dialog doesn't change File modified in status
+bug: change to tab doesn't relocate us with blue arrows
+bug: change file in file dialog doesn't change tab infile status
 
 15/9/2016
 
@@ -45,6 +60,8 @@ Bug fix: Info boxes have weird first paragraph
 Clipboard as temp*orary* database
 Check all bitmaps have white pieces on left
 Change Rybka to UciEngine everywhere
+Idea: in database next move pane asterisk moves that mimic the current game.
+Dynamic US spelling (basically because of color)
 
 Todo (not yet)
 --------------
@@ -67,17 +84,18 @@ Ticking clock is red
 Claude: Permissions error moving files to documents
 Claude: Settings, particularly GUI layout non-volatility imperfect
 Get rid of edit game prefix
-Idea: in database next move pane asterisk moves that mimic the current game.
-Dynamic US spelling (basically because of color)
 Add Pro-Dao
 Do database create and append on top of existing database
-Bug: First game of 2015-summer-g.pgn not processed
 Allocate control block frees unused blocks
 Append adds extra blank line
 6 engine parms instead of 4
 pgn column sorting - prompt to load (except col 0), handle cancelling differently
-add stat for how many transpos pulled in when drilling down
+Add stat for how many transpos pulled in when drilling down
 Pickup ratings field from earlier in tournament when entering games.
+Bug: First game of 2015-summer-g.pgn not processed
+Check weird ChessBase pgn format supported for both preview and loaded game.
+Bug: Make moves, save game (overwrite) - this tab not in file.
+pgn_handle not cleared by constructor - check others
 
 10/9/2016
 

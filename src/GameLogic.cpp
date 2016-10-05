@@ -81,6 +81,7 @@ GameLogic::GameLogic( PanelContext *canvas, CtrlChessTxt *lb )
     thc::ChessPosition temp;
     gd.Init( temp );
     file_game_idx = -1;
+	games_in_file_idx = -1;
     tabs->SetInfile(false);
     ShowNewDocument();
     if( objs.repository->book.m_enabled )
@@ -132,11 +133,11 @@ void GameLogic::CmdFileNew()
     bool editing_log = objs.gl->EditingLog();
     if( objs.cws->FileNew() )
     {
+		// #Workflow gd and gc_pgn cleared
         gc_pgn.gds.clear();
         gc_pgn.pgn_filename = "";
         objs.log->SaveGame( &gd, editing_log );
         objs.session->SaveGame( &gd );
-        IndicateNoCurrentDocument();
         thc::ChessPosition temp;
         gd.Init( temp );
         this->file_game_idx = -1;
@@ -152,9 +153,9 @@ void GameLogic::CmdNewGame()
     bool editing_log = objs.gl->EditingLog();
     if( objs.cws->GameNew() )
     {
+		// #Workflow) gd cleared, and so doesn't correspond to a file cache gd
         objs.log->SaveGame( &gd, editing_log );
         objs.session->SaveGame( &gd );
-        IndicateNoCurrentDocument();
         thc::ChessPosition temp;
         gd.Init( temp );
         ShowNewDocument();
@@ -177,9 +178,9 @@ void GameLogic::CmdSetPosition()
             bool okay = pos.Forsyth( after ); // "7K/8/7k/8/P7/8/8/8 b KQ a3 0 9" );
             if( okay )
             {
+				// #Workflow) gd cleared, and so doesn't correspond to a file cache gd
                 objs.log->SaveGame( &gd, editing_log );
                 objs.session->SaveGame( &gd );
-                IndicateNoCurrentDocument();
                 gd.Init( pos );
                 tabs->SetInfile(false);
                 ShowNewDocument();
@@ -443,12 +444,24 @@ void GameLogic::CmdTabClose()
 void GameLogic::CmdTabClose()
 {
     Atomic begin;
-    tabs->TabSelected( tabs->TabDelete() );
-    Undo temp = undo;
-    ShowNewDocument();  // clears undo
-    undo = temp;
-    atom.NotUndoAble(); // don't save an undo position
-    undo.ShowStackSize( "CmdTabClose()" );
+	int nbr_tabs = tabs->GetNbrTabs();
+	int current_idx = tabs->GetCurrentIdx();
+	if( nbr_tabs>1 && current_idx<nbr_tabs )
+	{
+		bool editing_log = objs.gl->EditingLog();
+		if( objs.cws->FileNew() )
+		{
+			objs.log->SaveGame( &gd, editing_log );
+			objs.session->SaveGame( &gd );
+			tabs->TabSelected( tabs->TabDelete() );
+			Undo temp = undo;
+			ShowNewDocument();  // clears undo
+			undo = temp;
+			atom.NotUndoAble(); // don't save an undo position
+			undo.ShowStackSize( "CmdTabClose()" );
+		}
+	}
+    atom.StatusUpdate();
 }
 #endif
 
@@ -657,7 +670,6 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
         {
 			objs.log->SaveGame(&gd, editing_log);
 			objs.session->SaveGame(&gd);
-			IndicateNoCurrentDocument();
 
 			// Upgrade first element of games cache to a GameDocument, if necessary
 			GameDocument *gd_file = gc_pgn.gds[0]->IsGameDocument();
@@ -671,9 +683,9 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
 				gc_pgn.gds[0] = std::move(new_smart_ptr);
 			}
 
-            //@ Loading up a game
-            uint32_t temp = ++game_being_edited_tag;
-            gc_pgn.gds[0]->SetGameBeingEdited( temp );
+			// #Workflow)
+			// Set edit correspondence between new_gd and game in file cache
+            SetGameBeingEdited( new_gd, *gc_pgn.gds[0] );
             this->file_game_idx = 0;    // game 0
             if( is_empty )
                 gd = new_gd;
@@ -722,13 +734,13 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
 bool GameLogic::CmdUpdateNextGame()
 {
     int nbr = gc_pgn.gds.size();
-    return( gc_pgn.gds.size()>1 && file_game_idx!=-1 && 0<=file_game_idx+1 && file_game_idx+1<nbr );
+    return( nbr>1 && games_in_file_idx!=-1 && 0<=games_in_file_idx+1 && games_in_file_idx+1<nbr );
 }
 
 bool GameLogic::CmdUpdatePreviousGame()
 {
     int nbr = gc_pgn.gds.size();
-    return( gc_pgn.gds.size()>1 && file_game_idx!=-1 && 0<=file_game_idx-1 && file_game_idx-1<nbr );
+    return( nbr>1 && games_in_file_idx!=-1 && 0<=games_in_file_idx-1 && games_in_file_idx-1<nbr );
 }
 
 void GameLogic::NextGamePreviousGame( int idx )
@@ -739,7 +751,6 @@ void GameLogic::NextGamePreviousGame( int idx )
 	PutBackDocument();
 	objs.log->SaveGame(&gd, editing_log);
 	objs.session->SaveGame(&gd);
-	IndicateNoCurrentDocument();
 
 	// Upgrade next/previous element of games cache to a GameDocument, if necessary
 	GameDocument *gd_file = gc_pgn.gds[idx]->IsGameDocument();
@@ -753,12 +764,10 @@ void GameLogic::NextGamePreviousGame( int idx )
 		gc_pgn.gds[idx] = std::move(new_smart_ptr);
 	}
 
-    //@ Loading up a game
-    uint32_t temp = ++game_being_edited_tag;
-    new_gd.SetGameBeingEdited( temp );
+	// #Workflow)
+	// Set new edit correspondence, gd to next/previous game in file
 	gd = new_gd;
-    smart_ptr<ListableGame> smp = gc_pgn.gds[idx];
-    smp->SetGameBeingEdited( temp );
+    SetGameBeingEdited( gd, *gc_pgn.gds[idx] );
     this->file_game_idx = idx;
     tabs->SetInfile(true);
     ShowNewDocument();
@@ -769,7 +778,7 @@ void GameLogic::CmdNextGame()
 {
     if( CmdUpdateNextGame() )
     {
-        int idx = file_game_idx+1;
+        int idx = games_in_file_idx+1;
         NextGamePreviousGame(idx);
         StatusUpdate(idx);
     }
@@ -779,7 +788,7 @@ void GameLogic::CmdPreviousGame()
 {
     if( CmdUpdatePreviousGame() )
     {
-        int idx = file_game_idx-1;
+        int idx = games_in_file_idx-1;
         NextGamePreviousGame(idx);
         StatusUpdate(idx);
     }
@@ -829,11 +838,17 @@ void GameLogic::PutBackDocument()
             new_doc.modified = gd.modified || undo.IsModified();
 			cprintf( "PutBackDocument %d 1, modified=%s\n", i, new_doc.modified?"true":"false" );
             make_smart_ptr( GameDocument, new_smart_ptr, new_doc);
+
+			// #Workflow) Set edited game relationship remains
             gc_pgn.gds[i] = std::move(new_smart_ptr);
+			SetGameBeingEdited( gd, *gc_pgn.gds[i] );
 			cprintf( "PutBackDocument %d 2, modified=%s\n", i, gc_pgn.gds[i]->IsModified()?"true":"false" );
             return;
         }
     }
+	// #Workflow) Don't edit clipboard games in place - make new versions of game instead perhaps
+
+/*
     for( size_t i=0; i<gc_clipboard.gds.size(); i++ )
     {
         smart_ptr<ListableGame> smp = gc_clipboard.gds[i];
@@ -847,23 +862,7 @@ void GameLogic::PutBackDocument()
             gc_clipboard.gds[i] = std::move(new_smart_ptr);
             return;
         }
-    }
-}
-
-void GameLogic::IndicateNoCurrentDocument()
-{
-    for( size_t i=0; i<gc_pgn.gds.size(); i++ )
-    {
-        smart_ptr<ListableGame> smp = gc_pgn.gds[i];
-        if( smp->GetGameBeingEdited() == gd.game_being_edited )
-             smp->SetGameBeingEdited(0);
-    }
-    for( size_t i=0; i<gc_clipboard.gds.size(); i++ )
-    {
-        smart_ptr<ListableGame> smp = gc_clipboard.gds[i];
-        if( smp->GetGameBeingEdited() == gd.game_being_edited )
-             smp->SetGameBeingEdited(0);
-    }
+    } */
 }
 
 void GameLogic::CmdGamesCurrent()
@@ -2843,7 +2842,10 @@ void GameLogic::StatusInit()
 
 void GameLogic::StatusUpdate( int idx )
 {
-    if( objs.frame )
+	games_in_file_idx = -1;
+	int tabs_current_idx = tabs->GetCurrentIdx();
+	bool tab_in_file=false;
+	if( objs.frame )
     {
         bool file_loaded =  gc_pgn.pgn_filename != "";
         bool refresh=false;
@@ -2863,32 +2865,66 @@ void GameLogic::StatusUpdate( int idx )
         str = "";
         if( file_loaded )
         {
+            size_t nbr = gc_pgn.gds.size();
+			char *dbg = NULL;
+			char dbg_buf[200];
+			if( nbr == 2 )
+				cprintf( "Trigger\n" );
+            if( gc_pgn.gds.size() < 10 )
+				dbg = dbg_buf;
             for( size_t i=0; i<gc_pgn.gds.size(); i++ )
             {
                 ListableGame *ptr = gc_pgn.gds[i].get();
-                uint32_t game_being_edited = ptr->GetGameBeingEdited();
-                if( ptr && ptr->IsModified() )
+				if( dbg )
+				{
+					sprintf( dbg, "> %s-%s", ptr->White(), ptr->Black() );
+					dbg = dbg+strlen(dbg);
+				}
+				if( !ptr->IsGameDocument() )
+				{
+					if( dbg )
+					{
+						sprintf( dbg, ": Not Game Document" );
+						dbg = dbg+strlen(dbg);
+					}
+				}
+				else
                 {
-                    nbr_modified++;
-  					//cprintf( "StatusUpdate A> i=%d, game_being_edited=%lu, modified\n", i, game_being_edited );
-                }
-                else if( ptr && game_being_edited )
-                {
+                    uint32_t game_being_edited = ptr->GetGameBeingEdited();
+                    bool game_modified = ptr->IsModified();
+                    if( game_modified )
+                        nbr_modified++;
+					if( dbg )
+					{
+						sprintf( dbg, ": %u", game_being_edited );
+						dbg = dbg+strlen(dbg);
+					}
                     GameDocument *pd = tabs->Begin();
                     Undo *pu = tabs->BeginUndo();
                     int tab_idx=0;
                     while( pd && pu )
                     {
-            			//cprintf( "StatusUpdate B(%d)> i=%d, game_being_edited=%lu, pd->game_being_edited=%lu\n", tab_idx, i, game_being_edited, pd->game_being_edited );
-                        if( game_being_edited == pd->game_being_edited )
+                        if( game_being_edited != pd->game_being_edited )
+						{
+							if( dbg )
+							{
+	  							sprintf( dbg, ": %u", pd->game_being_edited );
+								dbg = dbg+strlen(dbg);
+							}
+						}
+						else
                         {
-            				//cprintf( "StatusUpdate C(%d)> i=%d, game_being_edited=%lu, modified(%s,%s,%s,%s)\n", tab_idx, i, game_being_edited,
-                            //        pd->game_details_edited?"true":"false", pd->game_prefix_edited?"true":"false", pd->modified?"true":"false", pu->IsModified()?"true":"false" );
-                            bool doc_modified = (pd->game_details_edited || pd->game_prefix_edited || pd->modified || pu->IsModified());
-                            if( doc_modified )
-                            {
-                                nbr_modified++;
-                            }
+							if( tab_idx == tabs_current_idx )
+							{
+								tab_in_file = true;
+								idx = i;
+							}
+                            bool doc_modified = (pd->game_details_edited || pd->modified || pu->IsModified());
+							if( dbg )
+							{
+	  							sprintf( dbg, ": Edit match, %s tab %s", tab_in_file?"Current":"Not current", doc_modified?"Modified":"Not modified" );
+								dbg = dbg+strlen(dbg);
+							}
                             break;
                         }
                         pd = tabs->Next();
@@ -2896,25 +2932,48 @@ void GameLogic::StatusUpdate( int idx )
                         tab_idx++;
                     }
                 }
+				if( dbg )
+				{
+					cprintf( "%s\n", dbg_buf );
+					dbg = dbg_buf;
+				}
             }
             bool doc_modified = (nbr_modified > 0);
             if( doc_modified )
                 str = "*";
             char buf[80];
             if( idx >= 0 )
-                sprintf( buf, doc_modified?"* Game %d of %ld":"Game %d of %ld", idx+1, gc_pgn.gds.size() );
-            else if( nbr_modified )
-            {
-                sprintf( buf, doc_modified?"* File games: %ld (%d modified)":"File games: %ld (%d modified)",
-                     gc_pgn.gds.size(), nbr_modified );
-            }
-            else
-            {
-                sprintf( buf, doc_modified?"* File games: %ld":"File games: %ld",
-                     gc_pgn.gds.size() );
-            }
-            if( !tabs->GetInfile() )
-                sprintf( buf, " ( this tab not in file ) " );
+			{
+				games_in_file_idx = idx;
+				if( nbr_modified )
+				{
+					sprintf( buf, doc_modified?"* Game %d of %ld (%d modified)":"Game %d of %ld (%d modified)",
+							idx+1, gc_pgn.gds.size(), nbr_modified );
+				}
+				else
+				{
+					sprintf( buf, doc_modified?"* Game %d of %ld":"Game %d of %ld",
+							idx+1, gc_pgn.gds.size() );
+				}
+			}
+			else
+			{
+				if( nbr_modified )
+				{
+					sprintf( buf, doc_modified?"* File games: %ld (%d modified)":"File games: %ld (%d modified)",
+						 gc_pgn.gds.size(), nbr_modified );
+				}
+				else
+				{
+					sprintf( buf, doc_modified?"* File games: %ld":"File games: %ld",
+						 gc_pgn.gds.size() );
+				}
+			}
+            if( !tab_in_file )
+			{
+	            bool tab_modified = gd.modified || undo.IsModified();
+                sprintf( buf, " %s( this tab not in file ) ", tab_modified?"*":"" );
+			}
             str = buf;
         }
         if( str != status_field2 )

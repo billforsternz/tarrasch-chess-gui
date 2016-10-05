@@ -49,9 +49,10 @@ public:
     bool IsManual() {return state==MANUAL;}
     void ShowNewDocument();
     void PutBackDocument();
-    void IndicateNoCurrentDocument();
     void GameRedisplayPlayersResult();
     bool InHumanEngineGame( bool &human_is_white );
+	void SetGameBeingEdited( GameDocument &first, ListableGame &second ) { int tag = ++game_being_edited_tag;
+		first.game_being_edited=tag; second.SetGameBeingEdited(tag); }
 
 	// Idle routine
 	void OnIdle();
@@ -216,6 +217,7 @@ private:
     void KibitzClearDisplay( bool intro=false );
     void KibitzIntro();
     void KibitzClearMultiPV();
+    uint32_t game_being_edited_tag;
 
     // public data
 public:
@@ -223,7 +225,7 @@ public:
     CtrlChessTxt *lb;
     Tabs *tabs;
     int file_game_idx;
-    uint32_t game_being_edited_tag;
+	int	games_in_file_idx;
     thc::Move ponder_move;
     GameLifecycle glc;
     GameDocument gd;

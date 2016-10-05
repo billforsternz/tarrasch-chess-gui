@@ -510,6 +510,21 @@ void GamesCache::FileSaveAllAsAFile( std::string &filename )
     }
 }
 
+bool GamesCache::TestGameInCache( const GameDocument &gd )
+{
+    bool in_cache=false;
+    for( unsigned int i=0; i<gds.size(); i++ )
+    {
+        ListableGame *ptr = gds[i].get();
+        if( ptr && ptr->GetGameBeingEdited()==gd.game_being_edited && gd.game_being_edited )
+        {
+            in_cache = true;
+            break;
+        }
+    }
+    return in_cache;
+}
+
 
 // Save common
 void GamesCache::FileSaveInner( GamesCache *UNUSED(gc_clipboard), FILE *UNUSED(pgn_in), FILE *pgn_out )
@@ -521,6 +536,7 @@ void GamesCache::FileSaveInner( GamesCache *UNUSED(gc_clipboard), FILE *UNUSED(p
     buf = new char [buflen];
     int gds_nbr = gds.size();
     long write_posn=0;
+	bool saving_work_file = (this==&objs.gl->gc_pgn);
     ProgressBar pb( "Saving file", "Saving file" );
     for( int i=0; i<gds_nbr; i++ )
     {
@@ -559,6 +575,25 @@ void GamesCache::FileSaveInner( GamesCache *UNUSED(gc_clipboard), FILE *UNUSED(p
 		else
 		{
 			GameDocument *ptr = mptr->IsGameDocument();
+			GameDocument *save_changes_back_to_tab = NULL;
+			if( ptr && saving_work_file )
+			{
+				GameDocument *p = objs.tabs->Begin();
+				Undo *pu = objs.tabs->BeginUndo();
+				while( p )
+				{
+					if( ptr->game_being_edited!=0 && (ptr->game_being_edited == p->game_being_edited)  )
+					{
+						*ptr = *p;
+						if( pu )
+							pu->Clear(*ptr);
+						save_changes_back_to_tab = p;
+						break;
+					}
+					p = objs.tabs->Next();
+					pu = objs.tabs->NextUndo();
+				}
+			}
 			if (!ptr)
 			{
 				mptr->ConvertToGameDocument(gd_temp);
@@ -603,26 +638,43 @@ void GamesCache::FileSaveInner( GamesCache *UNUSED(gc_clipboard), FILE *UNUSED(p
             game_len += str.length();
             ptr->fposn3 = write_posn + game_len;
                     
-            // Fix a nasty bug in T2 up to and including V2.01. A later PutBackDocument()
+			if( save_changes_back_to_tab )
+				*save_changes_back_to_tab = *ptr;
+
+#if 0
+			// Now use a more radical than old comment below indicates - update docs being edited directly
+			//  see save_changes_back_to_tab
+			// Fix a nasty bug in T2 up to and including V2.01. A later PutBackDocument()
             //  was overwriting the correctly calculated values of fposn0 etc. with stale
             //  values. Fix is to update those stale values here.
             GameDocument *p = objs.tabs->Begin();
+            Undo *pu = objs.tabs->BeginUndo();
             while( p )
             {
                 if( ptr->game_being_edited!=0 && (ptr->game_being_edited == p->game_being_edited)  )
                 {
-                    p->fposn0 = ptr->fposn0;  
+					*p = *ptr;
+
+                    /* p->fposn0 = ptr->fposn0;  
                     p->fposn1 = ptr->fposn1;  
                     p->fposn2 = ptr->fposn2;  
                     p->fposn3 = ptr->fposn3;  
-                    p->pgn_handle = ptr->pgn_handle;
+                    p->pgn_handle = ptr->pgn_handle; */
+
+					// Also indicate the document is saved inside tab, including clear document undo on file save (a little old fashioned I know)
+					/* p->modified = false;
+					p->game_prefix_edited = false;
+					p->game_details_edited = false; */
+					if( pu )
+						pu->Clear(*ptr);
                 }
                 p = objs.tabs->Next();
+                pu = objs.tabs->NextUndo();
             }
+#endif
         }
         write_posn += game_len;
     }
-    
     delete[] buf;
 }
 

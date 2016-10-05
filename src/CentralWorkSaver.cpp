@@ -75,17 +75,7 @@ bool CentralWorkSaver::TestGameModified()
 
 bool CentralWorkSaver::TestGameInFile()
 {
-    bool in_file=false;
-    for( unsigned int i=0; i<gc->gds.size(); i++ )
-    {
-        ListableGame *ptr = gc->gds[i].get();
-        if( ptr && ptr->GetGameBeingEdited()==gd->game_being_edited && gd->game_being_edited )
-        {
-            in_file = true;
-            break;
-        }
-    }
-    return in_file;
+    return gc->TestGameInCache(*gd);
 }
 
 void CentralWorkSaver::AddTabToFile()
@@ -109,9 +99,6 @@ void CentralWorkSaver::AddGameToFile()
     objs.session->SaveGame(gd);     // must do this...
     bool editing_log = objs.gl->EditingLog();
     objs.log->SaveGame(gd,editing_log);         // ...and this now because we need to set...
-    objs.gl->IndicateNoCurrentDocument();
-    uint32_t temp = ++objs.gl->game_being_edited_tag;
-    gd->SetGameBeingEdited(temp);
     gd->modified = false;           // ...modified=false, which could mean the game
                                     // not getting to log or session later (not satisfactory I know - too many flags)
     int nbr = gc->gds.size();
@@ -119,8 +106,12 @@ void CentralWorkSaver::AddGameToFile()
     gd->game_id = GameIdAllocateBottom(1);
     make_smart_ptr( GameDocument, new_smart_ptr, *gd );  // smart_ptr event: document->cache
     gc->gds.push_back( std::move(new_smart_ptr) );
-    objs.gl->file_game_idx = gc->gds.size()-1;
-    objs.gl->tabs->SetInfile(true);
+    nbr = gc->gds.size();
+    objs.gl->file_game_idx = nbr-1;
+
+	// #Workflow
+	// Set edit correspondence between currently edited document and game added to end of file
+    objs.gl->SetGameBeingEdited(*gd, *gc->gds[nbr-1] );
 }
 
 // ...(see above) Or put it back where it came from

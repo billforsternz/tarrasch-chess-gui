@@ -15,8 +15,7 @@ struct TabElement
     GameDocument gd;
     Undo undo;
     unsigned long pos;
-    bool infile;
-    TabElement(GameLogic *gl) : undo(gl) { pos=0; infile=false; }
+    TabElement(GameLogic *gl) : undo(gl) { pos=0; }
 };
 
 class Tabs
@@ -38,6 +37,7 @@ public:
         iter_undo = 0;
     }
     int  GetCurrentIdx() { return current_idx; }
+    int  GetNbrTabs() { return nbr_tabs; }
     void TabNew( GameDocument &new_gd );
     bool TabSelected( int idx );
 #ifdef AUI_NOTEBOOK
@@ -45,14 +45,14 @@ public:
 #else
     int  TabDelete();
 #endif
-    void SetInfile( bool infile ) { if( current_idx<nbr_tabs ) v[current_idx].infile = infile; }
-    bool GetInfile() { return current_idx<nbr_tabs ? v[current_idx].infile : false; }
-    bool GetInfile(int idx) { return idx<nbr_tabs ? v[idx].infile : false; }
+    void SetInfile( bool UNUSED(infile) ) {}	// later delete
     void SetTitle( GameDocument &gd );
     GameDocument *Begin();
     Undo         *BeginUndo();
     GameDocument *Next();
     Undo         *NextUndo();
+	GameDocument *Current() { return &v[current_idx].gd; }
+	Undo		 *CurrentUndo() { return &v[current_idx].undo; }
 };
 
 

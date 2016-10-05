@@ -99,8 +99,6 @@ Undo *Tabs::NextUndo()
     return p;
 }
 
-
-
 void Tabs::SetTitle( GameDocument &gd )
 {
     const int TAB_TITLE_LENGTH=20;

@@ -35,6 +35,8 @@ public:
     void Eco( GamesCache *gc_clipboard );
     bool IsLoaded();
     bool IsSynced();
+	bool TestGameInCache( const GameDocument &gd );
+
 
     // Helpers
     int  pgn_handle;

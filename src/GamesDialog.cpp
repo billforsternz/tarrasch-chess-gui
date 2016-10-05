@@ -1164,22 +1164,23 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
     if( list_ctrl && list_ctrl->GetItemCount()==sz && 0<=focus_idx && focus_idx<sz )
     {
         int insert_idx = focus_idx;
-        cprintf( "insert_idex=%d\n", insert_idx );
+        cprintf( "insert_idx=%d\n", insert_idx );
         std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin() + insert_idx;
         GameDocument gd = objs.gl->gd;
         gd.modified = true;
         GameDetailsDialog dialog( this );
         if( dialog.Run(gd) )
         {
-            uint32_t temp = ++objs.gl->game_being_edited_tag;
-            gd.SetGameBeingEdited( temp );
-            objs.gl->gd = gd;
-            objs.gl->GameRedisplayPlayersResult();
             gd.game_nbr = 0;
             gd.modified = true;
             gc->file_irrevocably_modified = true;
             gd.game_id = GameIdAllocateBottom(1);
             make_smart_ptr( GameDocument, new_doc, gd );
+
+			// #Workflow Paste game into working file, create edit relationship if not already editing same game
+			bool already_in = gc->TestGameInCache(gd);
+			if( gc==&objs.gl->gc_pgn && !already_in )
+				objs.gl->SetGameBeingEdited(gd,*new_doc);
             gc->gds.insert( iter, std::move(new_doc) );
             sz++;
             list_ctrl->SetItemCount( sz );
@@ -1191,6 +1192,8 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
             list_ctrl->RefreshItems(0,sz-1);
 			char buf[80];
 			sprintf(buf,"%d games",sz);
+            objs.gl->gd = gd;
+            objs.gl->GameRedisplayPlayersResult();
 		    title_ctrl->SetLabel( buf );
         }
     } 
@@ -1235,6 +1238,7 @@ void GamesDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
         std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin() + idx_focus;
         for( int i=sz2-1; i>=0; i-- )
         {                                 
+			gc_clipboard->gds[i]->SetGameBeingEdited(0);	// #Workflow, don't initially have edit relationships with pasted games
             gc->gds.insert( iter, gc_clipboard->gds[i] );
 			iter = gc->gds.begin() + idx_focus;
 			gc->file_irrevocably_modified = true;
