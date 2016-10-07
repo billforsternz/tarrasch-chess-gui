@@ -54,15 +54,7 @@ public:
     virtual void GdvNextMove( int idx );
 
     // Return true if a game has been selected
-    bool LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx );
-
-    // PgnDialog member variables
-public:
-
-private:
-
-    // Data members
-    int file_game_idx;
+    bool LoadGame( GameLogic *gl, GameDocument& gd );
 };
 
 #endif    // PGN_DIALOG_H

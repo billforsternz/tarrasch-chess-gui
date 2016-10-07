@@ -293,7 +293,6 @@ public:
     int nbr_games_in_list_ctrl;
     
 protected:
-    int file_game_idx;
     bool db_game_set;
     GamesCache  *gc;
     GamesCache  *gc_clipboard;

@@ -224,7 +224,6 @@ public:
     GAME_STATE state;
     CtrlChessTxt *lb;
     Tabs *tabs;
-    int file_game_idx;
 	int	games_in_file_idx;
     thc::Move ponder_move;
     GameLifecycle glc;

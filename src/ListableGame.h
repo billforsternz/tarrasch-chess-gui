@@ -36,7 +36,7 @@ public:
     virtual void SetPgnHandle( int UNUSED(pgn_handle) )  {}
     virtual bool IsModified()        { return false; }
     virtual void SetGameBeingEdited( uint32_t UNUSED(game_being_edited) ) {}
-    virtual uint32_t GetGameBeingEdited() { return 0; }
+    virtual uint32_t GetGameBeingEdited() { return 0; }	   // only GameDocuments amongst ListableGames can be edited
     virtual void *LoadIntoMemory( void *UNUSED(context), bool UNUSED(end) )  {return 0;}
     virtual const char *White() {return "";}
     virtual const char *Black() {return "";}

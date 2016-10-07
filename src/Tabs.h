@@ -45,14 +45,11 @@ public:
 #else
     int  TabDelete();
 #endif
-    void SetInfile( bool UNUSED(infile) ) {}	// later delete
     void SetTitle( GameDocument &gd );
     GameDocument *Begin();
     Undo         *BeginUndo();
     GameDocument *Next();
     Undo         *NextUndo();
-	GameDocument *Current() { return &v[current_idx].gd; }
-	Undo		 *CurrentUndo() { return &v[current_idx].undo; }
 };
 
 

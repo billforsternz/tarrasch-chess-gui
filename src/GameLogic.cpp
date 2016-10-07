@@ -80,9 +80,7 @@ GameLogic::GameLogic( PanelContext *canvas, CtrlChessTxt *lb )
     //human_is_white = false;
     thc::ChessPosition temp;
     gd.Init( temp );
-    file_game_idx = -1;
 	games_in_file_idx = -1;
-    tabs->SetInfile(false);
     ShowNewDocument();
     if( objs.repository->book.m_enabled )
     {
@@ -140,8 +138,6 @@ void GameLogic::CmdFileNew()
         objs.session->SaveGame( &gd );
         thc::ChessPosition temp;
         gd.Init( temp );
-        this->file_game_idx = -1;
-        tabs->SetInfile(false);
         ShowNewDocument();
     }
     atom.StatusUpdate();
@@ -182,7 +178,6 @@ void GameLogic::CmdSetPosition()
                 objs.log->SaveGame( &gd, editing_log );
                 objs.session->SaveGame( &gd );
                 gd.Init( pos );
-                tabs->SetInfile(false);
                 ShowNewDocument();
             }
         }
@@ -383,7 +378,6 @@ void GameLogic::CmdTabNew()
     {
         GameDocument blank;
         tabs->TabNew(blank);
-        tabs->SetInfile(false);
         ShowNewDocument();
         atom.NotUndoAble();  // don't save an undo position
     }
@@ -686,12 +680,10 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
 			// #Workflow)
 			// Set edit correspondence between new_gd and game in file cache
             SetGameBeingEdited( new_gd, *gc_pgn.gds[0] );
-            this->file_game_idx = 0;    // game 0
             if( is_empty )
                 gd = new_gd;
             else
                 tabs->TabNew(new_gd);
-            tabs->SetInfile(true);
             ShowNewDocument();
         }
 		else
@@ -715,13 +707,12 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
                 objs.log->SaveGame(&gd,editing_log);
                 objs.session->SaveGame(&gd);
                 GameDocument new_gd;
-                if( dialog.LoadGame(this,new_gd,this->file_game_idx) )
+                if( dialog.LoadGame(this,new_gd) )
                 {
                     if( is_empty )
                         gd = new_gd;
                     else
                         tabs->TabNew(new_gd);
-                    tabs->SetInfile(true);
                     ShowNewDocument();
                 }
             }
@@ -768,8 +759,6 @@ void GameLogic::NextGamePreviousGame( int idx )
 	// Set new edit correspondence, gd to next/previous game in file
 	gd = new_gd;
     SetGameBeingEdited( gd, *gc_pgn.gds[idx] );
-    this->file_game_idx = idx;
-    tabs->SetInfile(true);
     ShowNewDocument();
     atom.StatusUpdate();
 }
@@ -835,14 +824,12 @@ void GameLogic::PutBackDocument()
             gd.FleshOutDate();
             gd.FleshOutMoves();
             GameDocument new_doc = gd;
-            new_doc.modified = gd.modified || undo.IsModified();
-			cprintf( "PutBackDocument %d 1, modified=%s\n", i, new_doc.modified?"true":"false" );
+			new_doc.modified = undo.IsModified();
             make_smart_ptr( GameDocument, new_smart_ptr, new_doc);
 
 			// #Workflow) Set edited game relationship remains
             gc_pgn.gds[i] = std::move(new_smart_ptr);
 			SetGameBeingEdited( gd, *gc_pgn.gds[i] );
-			cprintf( "PutBackDocument %d 2, modified=%s\n", i, gc_pgn.gds[i]->IsModified()?"true":"false" );
             return;
         }
     }
@@ -857,7 +844,7 @@ void GameLogic::PutBackDocument()
             gd.FleshOutDate();
             gd.FleshOutMoves();
             GameDocument new_doc = gd;
-            new_doc.modified = gd.modified || undo.IsModified();
+            new_doc.modified = undo.IsModified();
             make_smart_ptr( GameDocument, new_smart_ptr, new_doc );
             gc_clipboard.gds[i] = std::move(new_smart_ptr);
             return;
@@ -894,9 +881,8 @@ void GameLogic::CmdGamesCurrent()
             objs.log->SaveGame(&gd,editing_log);
             objs.session->SaveGame(&gd);
             PutBackDocument();
-            if( dialog.LoadGame(this,gd,this->file_game_idx) )
+            if( dialog.LoadGame(this,gd) )
             {
-                tabs->SetInfile(true);
                 ShowNewDocument();
             }
         }
@@ -1030,7 +1016,6 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req, PatternParamete
                 if( dialog.LoadGameTwo(new_gd) )
                 {
                     tabs->TabNew(new_gd);
-                    tabs->SetInfile(false);
                     ShowNewDocument();
                 }
                 objs.session->SaveGame(&temp2);      // ...modify session only after loading old game
@@ -1181,9 +1166,8 @@ void GameLogic::CmdGamesSession()
             //objs.session->SaveGame(&gd);        //careful...
             GameDocument temp = gd;
             PutBackDocument();
-            if( dialog.LoadGame(this,gd,this->file_game_idx) )
+            if( dialog.LoadGame(this,gd) )
             {
-                tabs->SetInfile(this->file_game_idx >= 0);
                 ShowNewDocument();
             }
             objs.session->SaveGame(&temp);      // ...modify session only after loading old game
@@ -1211,9 +1195,8 @@ void GameLogic::CmdGamesClipboard()
             objs.log->SaveGame(&gd,editing_log);
             objs.session->SaveGame(&gd);
             PutBackDocument();
-            if( dialog.LoadGame(this,gd,this->file_game_idx) )
+            if( dialog.LoadGame(this,gd) )
             {
-                tabs->SetInfile(this->file_game_idx >= 0);
                 ShowNewDocument();
             }
         }
@@ -1791,13 +1774,13 @@ bool GameLogic::CmdUpdateTabNew()
 
 bool GameLogic::CmdUpdateTabClose()
 {
-    bool enabled = (state==MANUAL || state==RESET || state==HUMAN || state==PONDERING || state==GAMEOVER);
+    bool enabled = (tabs->GetNbrTabs()>1) && (state==MANUAL || state==RESET || state==HUMAN || state==PONDERING || state==GAMEOVER);
     return enabled;
 }
 
 bool GameLogic::CmdUpdateTabInclude()
 {
-    bool enabled = (state==MANUAL || state==RESET || state==HUMAN || state==PONDERING || state==GAMEOVER);
+    bool enabled = (gc_pgn.pgn_filename != "") && (state==MANUAL || state==RESET || state==HUMAN || state==PONDERING || state==GAMEOVER);
     return enabled;
 }
 
@@ -2863,7 +2846,13 @@ void GameLogic::StatusUpdate( int idx )
 
         int nbr_modified=0;
         str = "";
-        if( file_loaded )
+        if( !file_loaded )
+		{
+	        bool tab_modified = undo.IsModified();
+            if( tab_modified )
+				str = "*";
+		}
+        else
         {
             size_t nbr = gc_pgn.gds.size();
 			char *dbg = NULL;
@@ -2919,7 +2908,7 @@ void GameLogic::StatusUpdate( int idx )
 								tab_in_file = true;
 								idx = i;
 							}
-                            bool doc_modified = (pd->game_details_edited || pd->modified || pu->IsModified());
+                            bool doc_modified = (pd->game_details_edited || pd->game_prefix_edited || pu->IsModified());
 							if( dbg )
 							{
 	  							sprintf( dbg, ": Edit match, %s tab %s", tab_in_file?"Current":"Not current", doc_modified?"Modified":"Not modified" );
@@ -2971,7 +2960,7 @@ void GameLogic::StatusUpdate( int idx )
 			}
             if( !tab_in_file )
 			{
-	            bool tab_modified = gd.modified || undo.IsModified();
+	            bool tab_modified = undo.IsModified();
                 sprintf( buf, " %s( this tab not in file ) ", tab_modified?"*":"" );
 			}
             str = buf;

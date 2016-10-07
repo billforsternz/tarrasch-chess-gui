@@ -241,7 +241,7 @@ void PgnDialog::GdvListColClick( int compare_col_ )
         GamesDialog::GdvListColClick( compare_col_ );
 }
 
-bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx_ )
+bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd )
 {
     int selected_game_ = track->focus_idx;
     if( selected_game_ != -1 )
@@ -261,7 +261,6 @@ bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd, int &file_game_idx_ )
 		if( gc == &gl->gc_pgn )
 			gl->SetGameBeingEdited( gd, *gc->gds[selected_game_] );
         gd.SetNonZeroStartPosition(track->focus_offset);
-        file_game_idx_ = selected_game_; //this->file_game_idx;    // update this only if loading game from current file
     }
     return selected_game_ != -1;
 }

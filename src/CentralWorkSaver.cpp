@@ -107,7 +107,6 @@ void CentralWorkSaver::AddGameToFile()
     make_smart_ptr( GameDocument, new_smart_ptr, *gd );  // smart_ptr event: document->cache
     gc->gds.push_back( std::move(new_smart_ptr) );
     nbr = gc->gds.size();
-    objs.gl->file_game_idx = nbr-1;
 
 	// #Workflow
 	// Set edit correspondence between currently edited document and game added to end of file
@@ -216,7 +215,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                             else if( fm == FILE_EXISTS_GAME_MODIFIED )
                                 PutBackDocument();
                             gc->FileSaveAs( filename, gc_clipboard );
-                            gd->modified = false;
+		                    gd->modified = false;
                             gd->game_prefix_edited = false;
                             gd->game_details_edited = false;
                             undo->Clear(*gd);
@@ -253,15 +252,12 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                                 }
                                 else
                                 {
-                                    int existing_nbr = gc->gds.size();
-                                
                                     // Append copied temp games to newly loaded file
                                     for( size_t i=0; i<gds_temp.size(); i++ )
                                     {
                                         smart_ptr<ListableGame> smp = gds_temp[i];
                                         gc->gds.push_back( smp );
                                     }
-                                    objs.gl->file_game_idx += existing_nbr;
                                 }
                             }
                             if( ok )
@@ -270,7 +266,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                                     gc->FileSave( gc_clipboard );
                                 else
                                     gc->FileSaveAs( filename, gc_clipboard );
-                                gd->modified = false;
+			                    gd->modified = false;
                                 gd->game_prefix_edited = false;
                                 gd->game_details_edited = false;
                                 undo->Clear(*gd);
@@ -304,7 +300,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                     {
                         AddGameToFile();
                         gc->FileCreate( filename );
-                        gd->modified = false;
+	                    gd->modified = false;
                         gd->game_prefix_edited = false;
                         gd->game_details_edited = false;
                         undo->Clear(*gd);
@@ -339,7 +335,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                                 gc->FileSave( gc_clipboard );
                             else
 		                        gc->FileCreate( filename );
-                            gd->modified = false;
+		                    gd->modified = false;
                             gd->game_prefix_edited = false;
                             gd->game_details_edited = false;
                             undo->Clear(*gd);

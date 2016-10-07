@@ -330,7 +330,6 @@ GamesDialog::GamesDialog
         this->cr_base = *cr;
     }
     single_line_cache_idx = -1;
-    file_game_idx = -1;
     nbr_games_in_list_ctrl = 0;
     compare_col = 0;
     dirty = true;
@@ -1013,7 +1012,7 @@ void GamesDialog::OnEditGameDetails( wxCommandEvent& WXUNUSED(event) )
             list_ctrl->SetItem( idx, 7, temp.r.round );
             list_ctrl->SetItem( idx, 8, temp.r.result );
             list_ctrl->SetItem( idx, 9, temp.r.eco );
-            temp.modified = true;
+            temp.game_details_edited = true;
 			make_smart_ptr(GameDocument, new_smart_ptr, temp);
 			gc->gds[idx] = std::move(new_smart_ptr);
             objs.gl->GameRedisplayPlayersResult();
@@ -1161,18 +1160,18 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
 {
     dirty = true;
     int sz=gc->gds.size();
-    if( list_ctrl && list_ctrl->GetItemCount()==sz && 0<=focus_idx && focus_idx<sz )
+    if( list_ctrl && list_ctrl->GetItemCount()==sz && 0<=focus_idx && focus_idx<(sz>=1?sz:1) )
     {
         int insert_idx = focus_idx;
         cprintf( "insert_idx=%d\n", insert_idx );
         std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin() + insert_idx;
         GameDocument gd = objs.gl->gd;
-        gd.modified = true;
         GameDetailsDialog dialog( this );
         if( dialog.Run(gd) )
         {
             gd.game_nbr = 0;
-            gd.modified = true;
+			gd.modified = objs.gl->undo.IsModified();
+			gd.game_details_edited = true;
             gc->file_irrevocably_modified = true;
             gd.game_id = GameIdAllocateBottom(1);
             make_smart_ptr( GameDocument, new_doc, gd );

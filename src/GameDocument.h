@@ -92,8 +92,8 @@ public:
         gl = src.gl;
         game_details_edited = src.game_details_edited;
         game_prefix_edited  = src.game_prefix_edited;
-        modified        = src.modified;
-        game_being_edited    = src.game_being_edited;
+        modified            = src.modified;
+        game_being_edited   = src.game_being_edited;
         pgn_handle      = src.pgn_handle;
         sort_idx        = src.sort_idx;
         game_nbr        = src.game_nbr;
@@ -263,6 +263,9 @@ public:
     MoveTree  tree;                     // the moves
     GameView gv;
     MoveTree    *gbl_plast_move;
+
+// We really should use private more in this project. Excellent refactoring opportunity
+private:
 };
         
 #endif //GAME_DOCUMENT_H

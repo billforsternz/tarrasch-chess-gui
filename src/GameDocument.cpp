@@ -35,7 +35,6 @@ void GameDocument::Init( const thc::ChessPosition &start_position_ )
     non_zero_start_pos = 0;
     game_details_edited = false;
     game_prefix_edited  = false;
-    modified            = false;
     game_being_edited   = 0;
     pgn_handle = 0;
     game_nbr   = 0;
