@@ -87,18 +87,18 @@ public:
     // For now at least, the following are used for fast sorting on column headings
     //  (only available after LoadInMemory() called - games are loaded from file
     //   when user clicks on a column heading
-    virtual const char *White()     { if(!in_memory) LoadIntoMemory(NULL,false); return pack.White();    }
-    virtual const char *Black()     { if(!in_memory) LoadIntoMemory(NULL,false); return pack.Black();    }
-    virtual const char *Event()     { if(!in_memory) LoadIntoMemory(NULL,false); return pack.Event();    }
-    virtual const char *Site()      { if(!in_memory) LoadIntoMemory(NULL,false); return pack.Site();     }
-    virtual const char *Result()    { if(!in_memory) LoadIntoMemory(NULL,false); return pack.Result();   }
-    virtual const char *Round()     { if(!in_memory) LoadIntoMemory(NULL,false); return pack.Round() ;   }
-    virtual const char *Date()      { if(!in_memory) LoadIntoMemory(NULL,false); return pack.Date();     }
-    virtual const char *Eco()       { if(!in_memory) LoadIntoMemory(NULL,false); return pack.Eco();      }
-    virtual const char *WhiteElo()  { if(!in_memory) LoadIntoMemory(NULL,false); return pack.WhiteElo(); }
-    virtual const char *BlackElo()  { if(!in_memory) LoadIntoMemory(NULL,false); return pack.BlackElo(); }
-    virtual const char *Fen()       { if(!in_memory) LoadIntoMemory(NULL,false); return pack.Fen();      }
-    virtual const char *CompressedMoves() { if(!in_memory) LoadIntoMemory(NULL,false); return pack.Blob();  }
+    virtual const char *White()     { if(!in_memory) LoadIntoMemory(NULL,true); return pack.White();    }
+    virtual const char *Black()     { if(!in_memory) LoadIntoMemory(NULL,true); return pack.Black();    }
+    virtual const char *Event()     { if(!in_memory) LoadIntoMemory(NULL,true); return pack.Event();    }
+    virtual const char *Site()      { if(!in_memory) LoadIntoMemory(NULL,true); return pack.Site();     }
+    virtual const char *Result()    { if(!in_memory) LoadIntoMemory(NULL,true); return pack.Result();   }
+    virtual const char *Round()     { if(!in_memory) LoadIntoMemory(NULL,true); return pack.Round() ;   }
+    virtual const char *Date()      { if(!in_memory) LoadIntoMemory(NULL,true); return pack.Date();     }
+    virtual const char *Eco()       { if(!in_memory) LoadIntoMemory(NULL,true); return pack.Eco();      }
+    virtual const char *WhiteElo()  { if(!in_memory) LoadIntoMemory(NULL,true); return pack.WhiteElo(); }
+    virtual const char *BlackElo()  { if(!in_memory) LoadIntoMemory(NULL,true); return pack.BlackElo(); }
+    virtual const char *Fen()       { if(!in_memory) LoadIntoMemory(NULL,true); return pack.Fen();      }
+    virtual const char *CompressedMoves() { if(!in_memory) LoadIntoMemory(NULL,true); return pack.Blob();  }
 };
 
 

@@ -342,7 +342,7 @@ void GamesDialog::Init()
     list_ctrl_stats = NULL;
     list_ctrl = NULL;
     selected_game = -1;
-    db_game_set = false;
+    preview_game_set = false;
     activated_at_least_once = false;
     transpo_activated = false;
     wxAcceleratorEntry entries[5];
@@ -706,7 +706,7 @@ void GamesDialog::Goto( int idx )
     if( list_ctrl )
     {
         int sz = list_ctrl->GetItemCount();
-        if(  0<=idx && idx<sz )
+        if(  0<=idx && idx<(sz>=1?sz:1) )
         {
 
             // Move focus to a new location
@@ -743,7 +743,9 @@ void GamesDialog::ReadItemWithSingleLineCache( int item, CompactGame &info )
     }
 }
 
-void GamesDialog::LoadGameOne( int idx, int focus_offset )
+// LoadGameForPreview() LoadGameFromPreview() is a two step alternative to single LoadGame(), loads main variation
+//  only so suitable only for database cache which holds compact games not full games
+void GamesDialog::LoadGameForPreview( int idx, int focus_offset )
 {
     static CompactGame info;
     ReadItemWithSingleLineCache( idx, info );
@@ -751,10 +753,9 @@ void GamesDialog::LoadGameOne( int idx, int focus_offset )
     gd.r = info.r;
 	gd.game_id = info.game_id;
     gd.LoadFromMoveList( info.moves, focus_offset );
-    db_game = gd;
-    db_game_set = true;
+    preview_game = gd;
+    preview_game_set = true;
 }
-
 
 void GamesDialog::OnListSelected( wxListEvent &event )
 {
@@ -763,7 +764,7 @@ void GamesDialog::OnListSelected( wxListEvent &event )
         int idx = event.m_itemIndex;
         cprintf( "GamesDialog::OnListSelected(%d)\n", idx );
         list_ctrl->SetItemState( idx, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
-        LoadGameOne( idx, track->focus_offset );
+        LoadGameForPreview( idx, track->focus_offset );
         TransferDataToWindow();
         AcceptAndClose();
     }
@@ -789,7 +790,7 @@ void GamesDialog::OnOk()
 {
     if( list_ctrl )
     {
-        LoadGameOne( track->focus_idx, track->focus_offset );
+        LoadGameForPreview( track->focus_idx, track->focus_offset );
         TransferDataToWindow();
         AcceptAndClose();
     }
@@ -977,20 +978,20 @@ bool GamesDialog::ShowModalOk( std::string title )
     return ok;
 }
 
-// This is used to load games from the database
-bool GamesDialog::LoadGameTwo( GameDocument &gd )
+// LoadGameForPreview() LoadGameFromPreview() is a two step alternative to single LoadGame(). Loads the main variation
+//  only so suitable only for database cache which holds compact games not full games
+bool GamesDialog::LoadGameFromPreview( GameDocument &gd )
 {
-    if( db_game_set )
-        gd = db_game;
-    return db_game_set;
+    if( preview_game_set )
+        gd = preview_game;
+    return preview_game_set;
 }
-
 
 void GamesDialog::OnListSelected( int idx )
 {
     cprintf( "DbDialog::OnListSelected(%d)\n", idx );
     list_ctrl->SetItemState( idx, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED );
-    LoadGameOne( idx, track->focus_offset );
+    LoadGameForPreview( idx, track->focus_offset );
 }
 
 void GamesDialog::OnEditGameDetails( wxCommandEvent& WXUNUSED(event) )
@@ -1170,7 +1171,7 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
         if( dialog.Run(gd) )
         {
             gd.game_nbr = 0;
-			gd.modified = objs.gl->undo.IsModified();
+			gd.modified |= objs.gl->undo.IsModified();
 			gd.game_details_edited = true;
             gc->file_irrevocably_modified = true;
             gd.game_id = GameIdAllocateBottom(1);
@@ -1231,7 +1232,7 @@ void GamesDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
 	dirty = true;
     int idx_focus=focus_idx;
     int sz=gc->gds.size();
-    if( list_ctrl && list_ctrl->GetItemCount()==sz && 0<=idx_focus && idx_focus<sz )
+    if( list_ctrl && list_ctrl->GetItemCount()==sz && 0<=idx_focus && idx_focus<(sz>=1?sz:1) )
     {
         int sz2 = gc_clipboard->gds.size();
         std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin() + idx_focus;

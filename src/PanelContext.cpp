@@ -35,7 +35,7 @@ bool view_flags_book_moves;
 //-----------------------------------------------------------------------------
 BEGIN_EVENT_TABLE(PanelContext, wxWindow)//Panel)
     EVT_SIZE( PanelContext::OnSize )
-    EVT_NOTEBOOK_PAGE_CHANGED( wxID_ANY, PanelContext::OnTabSelected)   //user selects a tab
+    EVT_NOTEBOOK_PAGE_CHANGED( wxID_ANY, PanelContext::OnTabSelected)   //user selects Suggestion or Engine Analysis
     EVT_BUTTON(ID_BUTTON1,PanelContext::OnButton1)
     EVT_BUTTON(ID_BUTTON2,PanelContext::OnButton2)
     EVT_BUTTON(ID_BUTTON3,PanelContext::OnButton3)

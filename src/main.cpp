@@ -499,6 +499,7 @@ const char *gbl_spell_colour;	// "colour" or "color"
 
 bool ChessApp::OnInit()
 {
+	//_CrtSetBreakAlloc(1050656);
     srand(time(NULL));
     //_CrtSetBreakAlloc( 198300 ); //563242 );
     //_CrtSetBreakAlloc( 195274 );

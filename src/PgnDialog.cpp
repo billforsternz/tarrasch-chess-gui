@@ -256,8 +256,8 @@ bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd )
 			gc->gds[selected_game_] = std::move(new_smart_ptr);
 		}
 
-		// #Workflow)
-		// Game pulled out of game dialog, if it's the working file dialog establish edit relationship
+		// #Workflow)  Game pulled out of game dialog
+		// if it's the working file dialog establish edit relationship
 		if( gc == &gl->gc_pgn )
 			gl->SetGameBeingEdited( gd, *gc->gds[selected_game_] );
         gd.SetNonZeroStartPosition(track->focus_offset);

@@ -237,8 +237,8 @@ public:
     bool ShowModalOk( std::string title );
     
     // Return true if a game has been selected
-    bool LoadGameTwo(  GameDocument &gd );
-    void LoadGameOne( int idx, int focus_offset=0 );
+    bool LoadGameFromPreview(  GameDocument &gd );
+    void LoadGameForPreview( int idx, int focus_offset=0 );
  
     // Helpers
     void OnOk();
@@ -293,10 +293,10 @@ public:
     int nbr_games_in_list_ctrl;
     
 protected:
-    bool db_game_set;
+    bool preview_game_set;
     GamesCache  *gc;
     GamesCache  *gc_clipboard;
-    GameDocument db_game;
+    GameDocument preview_game;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
 };
 

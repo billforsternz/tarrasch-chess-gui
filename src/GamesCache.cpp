@@ -277,13 +277,17 @@ void pgn_read_hook( const char *fen, const char *white, const char *black, const
 
 void *ReadGameFromPgnInLoop( int pgn_handle, long fposn, CompactGame &pact, void *context, bool end )
 {
+	static int new_count;
     static FILE *pgn_file;
     static int save_pgn_handle;
     PgnRead *pgn;
     if( context )
         pgn = static_cast<PgnRead*>( context );
     else
+	{
         pgn = new PgnRead('R'); 
+		cprintf( "new count = %d\n", ++new_count );
+	}
     if( pgn_file && pgn_handle!=save_pgn_handle )
     {
         objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
@@ -304,6 +308,7 @@ void *ReadGameFromPgnInLoop( int pgn_handle, long fposn, CompactGame &pact, void
         pgn_file = NULL;
         save_pgn_handle = 0;
         delete pgn;
+		cprintf( "new count = %d\n", --new_count );
         pgn = 0;
     }
     //cprintf( "ReadGameFromPgnInLoop(%d,%s) %ld (%s-%s)\n", pgn_handle, end?"true":"false", fposn, pact.r.white.c_str(), pact.r.black.c_str() );
