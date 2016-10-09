@@ -762,7 +762,7 @@ void GameLogic::NextGamePreviousGame( int idx )
 		int handle = tabs->Iterate(0,pd,pu);
         while( pd && pu )
         {
-            if( gd_file->game_being_edited == pd->game_being_edited )
+            if( gd_file->game_being_edited>0 && gd_file->game_being_edited==pd->game_being_edited )
 			{
 				if( tab_idx != tabs->GetCurrentIdx() )
 					switch_tabs = true;
@@ -897,7 +897,7 @@ void GameLogic::CmdGamesCurrent()
     bool ok=CmdUpdateGamesCurrent();
     if( ok )
     {
-        if( !gc_pgn.IsSynced() )
+        if( !gc_pgn.IsLoaded() )
         {
             if( !gc_pgn.Reload() )
             {
@@ -2901,21 +2901,10 @@ void GameLogic::StatusUpdate( int idx )
 	if( objs.frame )
     {
         bool file_loaded =  gc_pgn.pgn_filename != "";
-        bool refresh=false;
-        std::string str;
-        str = "File: ";
-        if( !file_loaded )
-            str += "(none)";
-        else
-            str += gc_pgn.pgn_filename;
-        if( str != status_field1 )
-        {
-            status_field1 = str;
-            refresh=true;
-        }
 	    bool tab_modified = false;
-        int nbr_modified=0;
-        str = "";
+        int  nbr_modified=0;
+        bool refresh=false;
+		std::string str;
         if( !file_loaded )
 		{
 	        tab_modified = undo.IsModified();
@@ -2925,35 +2914,43 @@ void GameLogic::StatusUpdate( int idx )
         else
         {
             size_t nbr = gc_pgn.gds.size();
+#ifdef _DEBUG	// performance sensitive - could be looping through a big file as user types - every character
 			char *dbg = NULL;
 			char dbg_buf[200];
             if( nbr < 20 )
 				dbg = dbg_buf;
+#endif
             for( size_t i=0; i<nbr; i++ )
             {
                 ListableGame *ptr = gc_pgn.gds[i].get();
+				#ifdef _DEBUG
 				if( dbg )
 				{
 					sprintf( dbg, "> %s-%s", ptr->White(), ptr->Black() );
 					dbg = dbg+strlen(dbg);
 				}
+				#endif
 				if( !ptr->IsGameDocument() )
 				{
+				#ifdef _DEBUG
 					if( dbg )
 					{
 						sprintf( dbg, ": Not Game Document" );
 						dbg = dbg+strlen(dbg);
 					}
+				#endif
 				}
 				else
                 {
                     uint32_t game_being_edited = ptr->GetGameBeingEdited();
                     bool game_modified = ptr->IsModified();
+					#ifdef _DEBUG
 					if( dbg )
 					{
 						sprintf( dbg, ": %u", game_being_edited );
 						dbg = dbg+strlen(dbg);
 					}
+					#endif
 
 					// Loop through tabs looking for this game
                     GameDocument *pd;
@@ -2962,11 +2959,11 @@ void GameLogic::StatusUpdate( int idx )
                     int handle = tabs->Iterate(0,pd,pu);
                     while( pd && pu )
                     {
-                        if( game_being_edited == pd->game_being_edited )
+                        if( game_being_edited>0 && game_being_edited==pd->game_being_edited )
                         {
 							// Woo hoo, found the game in a tab 
 							// It might be sitting in the tab modified
-                            game_modified |= (pd->game_details_edited || pd->game_prefix_edited || pu->IsModified());
+                            game_modified |= (pd->IsModified() || pu->IsModified());
 
 							// It might be the current tab
 							if( tab_idx == tabs_current_idx )
@@ -2975,20 +2972,24 @@ void GameLogic::StatusUpdate( int idx )
 								tab_modified = game_modified;
 								idx = i;
 							}
+							#ifdef _DEBUG
 							if( dbg )
 							{
 	  							sprintf( dbg, ": Edit match, %s tab %s", tab_in_file?"Current":"Not current", game_modified?"modified":"not modified" );
 								dbg = dbg+strlen(dbg);
 							}
+							#endif
                             break;
                         }
 						else
 						{
+							#ifdef _DEBUG
 							if( dbg )
 							{
 	  							sprintf( dbg, ": %u", pd->game_being_edited );
 								dbg = dbg+strlen(dbg);
 							}
+							#endif
 						}
                         tabs->Iterate(handle,pd,pu);
                         tab_idx++;
@@ -2996,17 +2997,17 @@ void GameLogic::StatusUpdate( int idx )
                     if( game_modified )
                         nbr_modified++;
                 }
+				#ifdef _DEBUG
 				if( dbg )
 				{
 					cprintf( "%s\n", dbg_buf );
 					dbg = dbg_buf;
 				}
+				#endif
             }
-            bool doc_modified = (nbr_modified > 0);
-            if( doc_modified )
-                str = "*";
-            char buf[80];
-            if( idx >= 0 )
+            str = (nbr_modified > 0) ? "*" : "";
+            char buf[200];
+            if( tab_in_file )
 			{
 				games_in_file_idx = idx;
 				if( nbr_modified )
@@ -3022,19 +3023,6 @@ void GameLogic::StatusUpdate( int idx )
 			}
 			else
 			{
-				if( nbr_modified )
-				{
-					sprintf( buf, doc_modified?"* File games: %ld (%d modified)":"File games: %ld (%d modified)",
-						 gc_pgn.gds.size(), nbr_modified );
-				}
-				else
-				{
-					sprintf( buf, doc_modified?"* File games: %ld":"File games: %ld",
-						 gc_pgn.gds.size() );
-				}
-			}
-            if( !tab_in_file )
-			{
 	            tab_modified = gd.IsModified() || undo.IsModified();
                 sprintf( buf, " %s( this tab not in file ) ", tab_modified?"*":"" );
 			}
@@ -3043,6 +3031,17 @@ void GameLogic::StatusUpdate( int idx )
         if( str != status_field2 )
         {
             status_field2 = str;
+            refresh=true;
+        }
+		bool file_modified = gc_pgn.file_irrevocably_modified || (nbr_modified>0);
+        str = file_modified ? "* File: " :  "File: ";
+        if( !file_loaded )
+            str += "(none)";
+        else
+            str += gc_pgn.pgn_filename;
+        if( str != status_field1 )
+        {
+            status_field1 = str;
             refresh=true;
         }
         if( refresh )

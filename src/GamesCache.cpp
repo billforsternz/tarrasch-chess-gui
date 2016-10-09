@@ -44,6 +44,7 @@ bool GamesCache::Load(std::string &filename )
 {
     file_irrevocably_modified = false;
     loaded = false;
+    pgn_filename = "";
     FILE *pgn_file = objs.gl->pf.OpenRead( filename, pgn_handle );
     if( pgn_file )
     {
@@ -58,11 +59,6 @@ bool GamesCache::Load(std::string &filename )
 bool GamesCache::IsLoaded()
 {
     return loaded;
-}
-
-bool GamesCache::IsSynced()
-{
-    return( IsLoaded() && objs.gl->pf.IsAvailable(pgn_handle) );
 }
 
 static GamesCache *gc_fixme;
@@ -457,6 +453,7 @@ bool GamesCache::Tagline( GameDocument &gd,  const char *s )
 void GamesCache::FileCreate( std::string &filename )
 {
     loaded = false;
+    pgn_filename = "";
     FILE *pgn_out = objs.gl->pf.OpenCreate( filename, pgn_handle );
     if( pgn_out )
     {
@@ -505,7 +502,6 @@ void GamesCache::FileSaveGameAs( std::string &filename, GamesCache *gc_clipboard
 // Save all as a new file
 void GamesCache::FileSaveAllAsAFile( std::string &filename )
 {
-    renumber = true;   // save session or clipboard in order files are listed
     FILE *pgn_out = objs.gl->pf.OpenCreate( filename, pgn_handle );
     if( pgn_out )
     {

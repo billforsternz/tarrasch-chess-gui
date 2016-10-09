@@ -96,7 +96,6 @@ public:
         game_being_edited   = src.game_being_edited;
         pgn_handle      = src.pgn_handle;
         sort_idx        = src.sort_idx;
-        game_nbr        = src.game_nbr;
         r               = src.r;
 		game_id         = src.game_id;
         start_position  = src.start_position;
@@ -144,7 +143,6 @@ public:
     uint32_t    game_being_edited;
     int         pgn_handle;
     int         sort_idx;
-    int         game_nbr;
    
     thc::ChessPosition start_position;  // the start position
     unsigned long fposn0;       // offset of prefix in .pgn file

@@ -15,11 +15,9 @@ public:
     std::vector< smart_ptr<ListableGame> >  gds;
     std::vector<int>           col_flags;
     std::string                pgn_filename;
-    int game_nbr;
-    bool renumber;
     bool file_irrevocably_modified;
 
-    GamesCache() { state=PREFIX; renumber=false; loaded=false;
+    GamesCache() { state=PREFIX; loaded=false;
                     file_irrevocably_modified=false; pgn_handle=0; }
     void Debug( const char *intro_message );
     bool Load( std::string &filename );
@@ -34,7 +32,6 @@ public:
     void Publish( GamesCache *gc_clipboard );
     void Eco( GamesCache *gc_clipboard );
     bool IsLoaded();
-    bool IsSynced();
 	bool TestGameInCache( const GameDocument &gd );
 
 

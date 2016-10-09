@@ -25,8 +25,8 @@ private:
     int current_idx;
     int nbr_tabs;
 	int iter_buf[16];
+	bool iter_exclude_foreground[16];
 	int next_handle;
-	bool iter_exclude_foreground;
     
 public:
     GameLogic *gl;
@@ -35,7 +35,6 @@ public:
         current_idx=0;
         nbr_tabs=0;
 		next_handle = 1;
-		iter_exclude_foreground = false;
     }
     int  GetCurrentIdx() { return current_idx; }
     int  GetNbrTabs() { return nbr_tabs; }

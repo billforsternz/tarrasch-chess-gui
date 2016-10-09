@@ -1170,7 +1170,6 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
         GameDetailsDialog dialog( this );
         if( dialog.Run(gd) )
         {
-            gd.game_nbr = 0;
 			gd.modified |= objs.gl->undo.IsModified();
 			gd.game_details_edited = true;
             gc->file_irrevocably_modified = true;

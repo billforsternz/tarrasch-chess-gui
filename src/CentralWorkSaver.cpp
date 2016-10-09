@@ -166,7 +166,6 @@ void CentralWorkSaver::AddGameToFile()
     gd->modified = false;           // ...modified=false, which could mean the game
                                     // not getting to log or session later (not satisfactory I know - too many flags)
     int nbr = gc->gds.size();
-    gd->game_nbr = nbr + 1;
     gd->game_id = GameIdAllocateBottom(1);
     make_smart_ptr( GameDocument, new_smart_ptr, *gd );  // smart_ptr event: document->cache
     gc->gds.push_back( std::move(new_smart_ptr) );
@@ -361,7 +360,6 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                     wxString dir2;
                     wxFileName::SplitPath( fd.GetPath(), &dir2, NULL, NULL );
                     objs.repository->nv.m_doc_dir = dir2;
-                    gd->game_nbr = 0;
                     wxString wx_filename = fd.GetPath();
                     std::string filename( (const char *)wx_filename.c_str() );
 

@@ -63,18 +63,22 @@ bool Tabs::TabSelected( int idx )
     return okay;
 }
 
+// Walk through the tabs. Initiate (and set exclude_foreground parameter to indicate whether
+//  you want to exclude the current tab) with handle=0, then use return value as handle for
+//  subsequent calls until gd (and undo) return as NULL. The handle mechanism allows
+//  nesting, i.e. more than one Iterate() series can occur at once.
 int Tabs::Iterate( int handle, GameDocument *&gd, Undo *&undo, bool exclude_foreground )
 {
 	if( handle == 0 )
 	{
-		iter_exclude_foreground = exclude_foreground;
 		handle = next_handle++;
 		if( next_handle >= sizeof(iter_buf)/(sizeof(iter_buf[0])) )
 			next_handle = 1;
 		iter_buf[handle] = 0;
+		iter_exclude_foreground[handle] = exclude_foreground;
 	}
 	int iter = iter_buf[handle];
-	if( iter_exclude_foreground && iter==current_idx )
+	if( iter_exclude_foreground[handle] && iter==current_idx )
 		iter++;
     int sz=v.size();
     if( 0<=iter && iter<sz )
@@ -103,6 +107,8 @@ void Tabs::SetTitle( GameDocument &gd )
     else
     {
         gd.gv.ToString( s );
+		if( s.length()>1 && s[s.length()-1] == '*' )
+			s.pop_back();	// remove '*' at end
         if( s.length() < 4 )
         {
             s = "New Game";
