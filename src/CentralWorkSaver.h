@@ -39,6 +39,7 @@ private:
 	bool TestModifiedOrphanTabs( int &nbr_orphans );
     void AddGameToFile();
     void PutBackDocument();
+	void AddOrphansToFile();
 
     enum FILE_MODE
     {
@@ -48,7 +49,7 @@ private:
         FILE_NEW_GAME_NEW,
     };
 
-    void Save( bool prompt, bool save_as, bool open_file=false );
+    void Save( bool prompt, bool save_as, bool open_file );
 
     // Prompt user whether to save game, allow game detail editing, returns wxYES or wxNO or wxCANCEL
     int SaveGamePrompt( bool prompt, FILE_MODE fm, bool save_as );
@@ -61,6 +62,7 @@ private:
     GamesCache   *gc;
     GamesCache   *gc_clipboard;
     bool         any_cancel;
+	bool		 save_orphans;
 };
 
 #endif    // TOP_LEVEL_CONTEXT_H

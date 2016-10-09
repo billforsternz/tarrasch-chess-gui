@@ -65,14 +65,15 @@ bool CentralWorkSaver::TestFileModified()
                 break;
             }
 
-			// Is any game sitting modified in a tab ?
+			// Is any game sitting modified in a non-current tab ?
 			Tabs *tabs = objs.gl->tabs;
 			GameDocument *pd = tabs->Begin();
 			Undo *pu = tabs->BeginUndo();
 			uint32_t game_being_edited = ptr->GetGameBeingEdited();
+			int idx=0;
 			while( game_being_edited>0 && pd && pu )
 			{
-				if( game_being_edited == pd->game_being_edited )
+				if( idx!=tabs->GetCurrentIdx() && game_being_edited == pd->game_being_edited )
 				{
 					if( pd->IsModified() )
 						modified = true;
@@ -80,6 +81,7 @@ bool CentralWorkSaver::TestFileModified()
 				}
 				pd = tabs->Next();
 				pu = tabs->NextUndo();
+				idx++;
 			}
         }
     }
@@ -107,7 +109,7 @@ bool CentralWorkSaver::TestModifiedOrphanTabs( int &nbr_orphans )
 	while( pd && pu )
 	{
 		bool modified = pd->IsModified() || pu->IsModified();
-		if( modified && idx!=tabs->GetCurrentIdx() !gc->TestGameInCache(*pd) )
+		if( modified && idx!=tabs->GetCurrentIdx() && !gc->TestGameInCache(*pd) )
 			nbr_orphans++;
 		pd = tabs->Next();
 		pu = tabs->NextUndo();
@@ -125,7 +127,7 @@ void CentralWorkSaver::AddOrphansToFile()
 	while( pd && pu )
 	{
 		bool modified = pd->IsModified() || pu->IsModified();
-		if( modified && idx!=tabs->GetCurrentIdx() !gc->TestGameInCache(*pd) )
+		if( modified && idx!=tabs->GetCurrentIdx() && !gc->TestGameInCache(*pd) )
 		{
 			// Copy and paste a subset of AddGameToFile()
 			pd->pgn_handle = 0;
@@ -194,11 +196,11 @@ int CentralWorkSaver::SaveGamePrompt( bool prompt, FILE_MODE fm, bool save_as )
         wxString msg;
         if( save_as || fm==FILE_NEW_GAME_NEW )
         {
-            msg = saving_orphans?:"Save game and other modified tabs?":"Save game ?";
+            msg = save_orphans?"Save game and other modified tabs?":"Save game ?";
         }
         else
         {
-            msg = saving_orphans?:"Save game and other modified tabs to":"Save game to";
+            msg = save_orphans?"Save game and other modified tabs to ":"Save game to ";
             msg += gc->pgn_filename;
             msg += " ?";
         }
@@ -249,7 +251,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                         AddGameToFile();
                     else if( fm == FILE_EXISTS_GAME_MODIFIED )
                         PutBackDocument();
-					if( saving_orphans )
+					if( save_orphans )
 						AddOrphansToFile();
                     gc->FileSave( gc_clipboard );
                     gd->modified = false;
@@ -279,7 +281,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                                 AddGameToFile();
                             else if( fm == FILE_EXISTS_GAME_MODIFIED )
                                 PutBackDocument();
-							if( saving_orphans )
+							if( save_orphans )
 								AddOrphansToFile();
                             gc->FileSaveAs( filename, gc_clipboard );
 		                    gd->modified = false;
@@ -305,7 +307,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                                     AddGameToFile();
                                 else if( fm == FILE_EXISTS_GAME_MODIFIED )
                                     PutBackDocument();
-								if( saving_orphans )
+								if( save_orphans )
 									AddOrphansToFile();
                             }
                             if( ok && append )
@@ -368,7 +370,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                     if( !::wxFileExists( wx_filename ) )
                     {
                         AddGameToFile();
-						if( saving_orphans )
+						if( save_orphans )
 							AddOrphansToFile();
                         gc->FileCreate( filename );
 	                    gd->modified = false;
@@ -402,7 +404,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                         if( ok )
                         {
                             AddGameToFile();
-							if( saving_orphans )
+							if( save_orphans )
 								AddOrphansToFile();
                             if( append )
                                 gc->FileSave( gc_clipboard );
@@ -444,9 +446,13 @@ void CentralWorkSaver::Save( bool prompt, bool save_as, bool open_file )
         }
         else
         {
-            // else only prompt if file modified
+            // Prompt user to save if file modified
             if( file_exists && file_modified )
                 SaveFile(prompt,FILE_EXISTS_GAME_UNCHANGED,save_as);
+
+			// Or to save orphans
+			else if( save_orphans )
+                SaveFile(prompt,file_exists?(game_in_file?FILE_EXISTS_GAME_UNCHANGED:FILE_EXISTS_GAME_NEW):FILE_NEW_GAME_NEW,save_as);
         }
     }
     else
@@ -482,83 +488,12 @@ void CentralWorkSaver::Save( bool prompt, bool save_as, bool open_file )
     }
 }
 
-// Save the user's games in a file
-//  prompt
-//   Set to indicate the user has not chosen a save or save as command and so needs to be prompted to
-//   save (eg user has gone File New, prompt him to save existing work)
-//  save_as
-//   Set to indicate user wants to "save as", i.e. save to a new file
-//  open_file
-//   Set to indicate save (may be) needed because user is opening file
-void CentralWorkSaver::SaveExit()
-{
-	bool prompt=true;
-	bool save_as=false;
-    bool file_exists   = TestFileExists();
-    bool game_modified = TestGameModified();
-    bool file_modified = TestFileModified();
-    bool game_in_file  = TestGameInFile();
-    if( !game_modified )
-    {
-        // only prompt if file modified
-        if( file_exists && file_modified )
-            SaveFileExit(prompt,FILE_EXISTS_GAME_UNCHANGED,save_as);
-    }
-    else
-    {
-        if( !file_exists )
-        {
-            // file doesn't exist, game is modified
-            int answer = SaveGamePrompt(prompt,FILE_NEW_GAME_NEW,true);
-            if( answer == wxYES )
-                SaveFileExit(false,FILE_NEW_GAME_NEW,true);
-        }
-        else
-        {
-            // file exists, game is modified
-            FILE_MODE fm = game_in_file ? FILE_EXISTS_GAME_MODIFIED : FILE_EXISTS_GAME_NEW;
-            int answer = SaveGamePromptExit(prompt,fm,save_as);
-            if( answer != wxCANCEL )
-            {
-                bool file_prompt = false;   // normally prompt only on game
-                if( answer == wxNO )
-                {
-                    file_prompt = true;   // do need to ask user if they want to save file
-                    fm = FILE_EXISTS_GAME_UNCHANGED;
-                }
-                if( file_modified || answer==wxYES )
-                    SaveFileExit( file_prompt, fm, save_as );
-            }
-        }
-    }
-}
-
 bool CentralWorkSaver::Exit()
 {
     any_cancel = false;
 	int nbr_orphans;
-	bool orphans = TestModifiedOrphanTabs( nbr_orphans );
-	bool multi_tabs = objs.gl->tabs->GetNbrTabs() > 1;
-	const char *pre_msg=NULL;
-	if( orphans && TestFileExists() && !TestGameInFile() && nbr_orphans==1 )
-		;
-	else if( orphans && !TestFileExists() && !TestGameInFile() && nbr_orphans==1 )
-		;
-	else if( orphans && TestFileExists() )
-		pre_msg = "You have modified tabs that aren't included in the current file, do you want to go back and save them?";
-	else if( orphans )
-		pre_msg = "You have modified games, do you want to go back and save them?";
-	if( pre_msg )
-	{
-		any_cancel = true;
-        int answer = wxMessageBox( pre_msg, "Yes to go back, No to exit and discard games",  wxYES_NO|wxCANCEL, objs.frame );
-		if( answer == wxNO )
-			any_cancel = false;
-    }
-	else
-	{
-	    Save(true/*prompt*/,false/*save_as*/,false/*open_file*/);
-	}
+	save_orphans = TestModifiedOrphanTabs( nbr_orphans );
+	Save(true/*prompt*/,false/*save_as*/,false/*open_file*/);
     bool okay = !any_cancel;
     return okay; 
 }
@@ -566,6 +501,7 @@ bool CentralWorkSaver::Exit()
 bool CentralWorkSaver::FileNew()
 {
     any_cancel = false;
+	save_orphans = false;
     Save(true/*prompt*/,false/*save_as*/,false/*open_file*/);
     bool okay = !any_cancel;
     return okay; 
@@ -574,6 +510,7 @@ bool CentralWorkSaver::FileNew()
 bool CentralWorkSaver::FileOpen()
 {
     any_cancel = false;
+	save_orphans = false;
     Save(true/*prompt*/,false/*save_as*/,true/*open_file*/);
     bool okay = !any_cancel;
     return okay; 
@@ -582,6 +519,7 @@ bool CentralWorkSaver::FileOpen()
 bool CentralWorkSaver::FileSave()
 {
     any_cancel = false;
+	save_orphans = false;
     Save(false/*prompt*/,false/*save_as*/,false/*open_file*/);
     bool okay = !any_cancel;
     return okay; 
@@ -590,6 +528,7 @@ bool CentralWorkSaver::FileSave()
 bool CentralWorkSaver::FileSaveAs()
 {
     any_cancel = false;
+	save_orphans = false;
     Save(false/*prompt*/,true/*save_as*/,false/*open_file*/);
     bool okay = !any_cancel;
     return okay; 
@@ -674,6 +613,7 @@ bool CentralWorkSaver::PositionNew() { return GameNew(); }
 bool CentralWorkSaver::GameNew()
 {
     any_cancel = false;
+	save_orphans = false;
     bool file_exists   = TestFileExists();
     bool game_modified = TestGameModified();
     bool game_in_file  = TestGameInFile();
