@@ -583,20 +583,20 @@ void GamesCache::FileSaveInner( GamesCache *UNUSED(gc_clipboard), FILE *UNUSED(p
 			GameDocument *save_changes_back_to_tab = NULL;
 			if( ptr && saving_work_file )
 			{
-				GameDocument *p = objs.tabs->Begin();
-				Undo *pu = objs.tabs->BeginUndo();
-				while( p )
+				GameDocument *pd;
+				Undo *pu;
+				int handle = objs.tabs->Iterate(0,pd,pu);
+				while( pd && pu )
 				{
-					if( ptr->game_being_edited!=0 && (ptr->game_being_edited == p->game_being_edited)  )
+					if( ptr->game_being_edited!=0 && (ptr->game_being_edited == pd->game_being_edited)  )
 					{
-						*ptr = *p;
+						*ptr = *pd;
 						if( pu )
 							pu->Clear(*ptr);
-						save_changes_back_to_tab = p;
+						save_changes_back_to_tab = pd;
 						break;
 					}
-					p = objs.tabs->Next();
-					pu = objs.tabs->NextUndo();
+					objs.tabs->Iterate(handle,pd,pu);
 				}
 			}
 			if (!ptr)
@@ -609,7 +609,7 @@ void GamesCache::FileSaveInner( GamesCache *UNUSED(gc_clipboard), FILE *UNUSED(p
             ptr->game_prefix_edited = false;
             ptr->game_details_edited = false;
             ptr->pgn_handle = pgn_handle;  // irrespective of where it came from, now this
-                                            //  game is in this file
+                                           //  game is in this file
             ptr->fposn0 = write_posn;      // at this position
             std::string s = ptr->prefix_txt;
             int len = s.length();
@@ -652,8 +652,9 @@ void GamesCache::FileSaveInner( GamesCache *UNUSED(gc_clipboard), FILE *UNUSED(p
 			// Fix a nasty bug in T2 up to and including V2.01. A later PutBackDocument()
             //  was overwriting the correctly calculated values of fposn0 etc. with stale
             //  values. Fix is to update those stale values here.
-            GameDocument *p = objs.tabs->Begin();
-            Undo *pu = objs.tabs->BeginUndo();
+            GameDocument *p;
+            Undo *pu;
+			int handle = objs.tabs->Iterate(0,p,pu);
             while( p )
             {
                 if( ptr->game_being_edited!=0 && (ptr->game_being_edited == p->game_being_edited)  )
@@ -673,8 +674,7 @@ void GamesCache::FileSaveInner( GamesCache *UNUSED(gc_clipboard), FILE *UNUSED(p
 					if( pu )
 						pu->Clear(*ptr);
                 }
-                p = objs.tabs->Next();
-                pu = objs.tabs->NextUndo();
+				objs.tabs->Iterate(handle,p,pu);
             }
 #endif
         }

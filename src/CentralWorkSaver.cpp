@@ -65,23 +65,24 @@ bool CentralWorkSaver::TestFileModified()
                 break;
             }
 
-			// Is any game sitting modified in a non-current tab ?
-			Tabs *tabs = objs.gl->tabs;
-			GameDocument *pd = tabs->Begin();
-			Undo *pu = tabs->BeginUndo();
+			// Is the file game sitting modified in a tab ?
 			uint32_t game_being_edited = ptr->GetGameBeingEdited();
-			int idx=0;
-			while( game_being_edited>0 && pd && pu )
+			if( game_being_edited )
 			{
-				if( idx!=tabs->GetCurrentIdx() && game_being_edited == pd->game_being_edited )
+				Tabs *tabs = objs.gl->tabs;
+				GameDocument *pd;
+				Undo *pu;
+				int handle = tabs->Iterate(0,pd,pu);
+				while( pd && pu )
 				{
-					if( pd->IsModified() )
-						modified = true;
-					break;
+					if( game_being_edited == pd->game_being_edited )
+					{
+						if( pd->IsModified() || pu->IsModified() )
+							modified = true;
+						break;
+					}
+					tabs->Iterate(handle,pd,pu);
 				}
-				pd = tabs->Next();
-				pu = tabs->NextUndo();
-				idx++;
 			}
         }
     }
@@ -103,17 +104,16 @@ bool CentralWorkSaver::TestModifiedOrphanTabs( int &nbr_orphans )
 {
 	nbr_orphans = 0;
 	Tabs *tabs = objs.gl->tabs;
-	GameDocument *pd = tabs->Begin();
-	Undo *pu = tabs->BeginUndo();
-	int idx=0;
+	bool exclude_current_tab=true;
+	GameDocument *pd;
+	Undo *pu;
+	int handle = tabs->Iterate(0,pd,pu,exclude_current_tab);
 	while( pd && pu )
 	{
 		bool modified = pd->IsModified() || pu->IsModified();
-		if( modified && idx!=tabs->GetCurrentIdx() && !gc->TestGameInCache(*pd) )
+		if( modified && !gc->TestGameInCache(*pd) )
 			nbr_orphans++;
-		pd = tabs->Next();
-		pu = tabs->NextUndo();
-		idx++;
+		tabs->Iterate(handle,pd,pu);
 	}
 	return nbr_orphans>0;
 }
@@ -121,13 +121,14 @@ bool CentralWorkSaver::TestModifiedOrphanTabs( int &nbr_orphans )
 void CentralWorkSaver::AddOrphansToFile()
 {
 	Tabs *tabs = objs.gl->tabs;
-	GameDocument *pd = tabs->Begin();
-	Undo *pu = tabs->BeginUndo();
-	int idx=0;
+	GameDocument *pd;
+	Undo *pu;
+	bool exclude_current_tab=true;
+	int handle = tabs->Iterate(0,pd,pu,exclude_current_tab);
 	while( pd && pu )
 	{
 		bool modified = pd->IsModified() || pu->IsModified();
-		if( modified && idx!=tabs->GetCurrentIdx() && !gc->TestGameInCache(*pd) )
+		if( modified && !gc->TestGameInCache(*pd) )
 		{
 			// Copy and paste a subset of AddGameToFile()
 			pd->pgn_handle = 0;
@@ -137,9 +138,7 @@ void CentralWorkSaver::AddOrphansToFile()
 			make_smart_ptr( GameDocument, new_smart_ptr, *pd );
 			gc->gds.push_back( std::move(new_smart_ptr) );
 		}
-		pd = tabs->Next();
-		pu = tabs->NextUndo();
-		idx++;
+		tabs->Iterate(handle,pd,pu);
 	}
 }
 

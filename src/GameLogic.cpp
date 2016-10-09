@@ -757,19 +757,19 @@ void GameLogic::NextGamePreviousGame( int idx )
 	{
 		new_gd = *gd_file;
 #ifdef CHANGE_TABS_ON_NEXT_PREVIOUS_GAME
-        GameDocument *pd = tabs->Begin();
-        Undo *pu = tabs->BeginUndo();
+        GameDocument *pd;
+        Undo *pu;
+		int handle = tabs->Iterate(0,pd,pu);
         while( pd && pu )
         {
             if( gd_file->game_being_edited == pd->game_being_edited )
 			{
 				if( tab_idx != tabs->GetCurrentIdx() )
 					switch_tabs = true;
-				break;
             }
-            pd = tabs->Next();
-            pu = tabs->NextUndo();
-            tab_idx++;
+			if( !switch_tabs )
+				tab_idx++;
+			tabs->Iterate(handle,pd,pu);
         }
 #endif
 	}
@@ -2956,9 +2956,10 @@ void GameLogic::StatusUpdate( int idx )
 					}
 
 					// Loop through tabs looking for this game
-                    GameDocument *pd = tabs->Begin();
-                    Undo *pu = tabs->BeginUndo();
+                    GameDocument *pd;
+                    Undo *pu;
                     int tab_idx=0;
+                    int handle = tabs->Iterate(0,pd,pu);
                     while( pd && pu )
                     {
                         if( game_being_edited == pd->game_being_edited )
@@ -2989,8 +2990,7 @@ void GameLogic::StatusUpdate( int idx )
 								dbg = dbg+strlen(dbg);
 							}
 						}
-                        pd = tabs->Next();
-                        pu = tabs->NextUndo();
+                        tabs->Iterate(handle,pd,pu);
                         tab_idx++;
                     }
                     if( game_modified )

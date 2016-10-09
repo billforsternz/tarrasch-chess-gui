@@ -24,8 +24,9 @@ private:
     std::vector<TabElement> v;
     int current_idx;
     int nbr_tabs;
-    int iter_doc;
-    int iter_undo;
+	int iter_buf[16];
+	int next_handle;
+	bool iter_exclude_foreground;
     
 public:
     GameLogic *gl;
@@ -33,8 +34,8 @@ public:
     {
         current_idx=0;
         nbr_tabs=0;
-        iter_doc = 0;
-        iter_undo = 0;
+		next_handle = 1;
+		iter_exclude_foreground = false;
     }
     int  GetCurrentIdx() { return current_idx; }
     int  GetNbrTabs() { return nbr_tabs; }
@@ -46,10 +47,7 @@ public:
     int  TabDelete();
 #endif
     void SetTitle( GameDocument &gd );
-    GameDocument *Begin();
-    Undo         *BeginUndo();
-    GameDocument *Next();
-    Undo         *NextUndo();
+	int  Iterate( int handle, GameDocument *&gd, Undo *&undo, bool exclude_foreground=false );
 };
 
 

@@ -63,41 +63,34 @@ bool Tabs::TabSelected( int idx )
     return okay;
 }
 
-GameDocument *Tabs::Begin()
+int Tabs::Iterate( int handle, GameDocument *&gd, Undo *&undo, bool exclude_foreground )
 {
-    iter_doc = 0;
-    return Next();
-}
-
-Undo *Tabs::BeginUndo()
-{
-    iter_undo = 0;
-    return NextUndo();
-}
-
-GameDocument *Tabs::Next()
-{
-    GameDocument *p = NULL;
+	if( handle == 0 )
+	{
+		iter_exclude_foreground = exclude_foreground;
+		handle = next_handle++;
+		if( next_handle >= sizeof(iter_buf)/(sizeof(iter_buf[0])) )
+			next_handle = 1;
+		iter_buf[handle] = 0;
+	}
+	int iter = iter_buf[handle];
+	if( iter_exclude_foreground && iter==current_idx )
+		iter++;
     int sz=v.size();
-    if( 0<=iter_doc && iter_doc<sz )
+    if( 0<=iter && iter<sz )
     {
-        p = iter_doc==current_idx ? &gl->gd : &v[iter_doc].gd;
+        gd   = iter==current_idx ? &gl->gd : &v[iter].gd;
+        undo = iter==current_idx ? &gl->undo : &v[iter].undo;
+		iter_buf[handle] = ++iter;
     }
-    iter_doc++;
-    return p;
+	else
+	{
+        gd   = NULL;
+        undo = NULL;
+	}
+	return handle;
 }
 
-Undo *Tabs::NextUndo()
-{
-    Undo *p = NULL;
-    int sz = v.size();
-    if( 0<=iter_undo && iter_undo<sz )
-    {
-        p = iter_undo==current_idx ? &gl->undo : &v[iter_undo].undo;
-    }
-    iter_undo++;
-    return p;
-}
 
 void Tabs::SetTitle( GameDocument &gd )
 {
