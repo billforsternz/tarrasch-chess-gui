@@ -132,8 +132,6 @@ void CentralWorkSaver::AddOrphansToFile()
 		{
 			// Copy and paste a subset of AddGameToFile()
 			pd->pgn_handle = 0;
-			bool editing_log = objs.gl->EditingLog();
-			objs.log->SaveGame(pd,editing_log);
 			pd->game_id = GameIdAllocateBottom(1);
 			make_smart_ptr( GameDocument, new_smart_ptr, *pd );
 			gc->gds.push_back( std::move(new_smart_ptr) );
@@ -229,7 +227,27 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
         wxString msg = "Save modified games to ";
         msg += gc->pgn_filename;
         msg += " ?";
-        int answer = wxMessageBox( msg, "Confirm",  wxYES_NO|wxCANCEL, objs.frame );
+        int answer = wxMessageBox( msg, "'Yes' to save, 'No' to discard (be careful with 'No')",  wxYES_NO|wxCANCEL, objs.frame );
+
+		// If discard, save orphans to log
+        if( answer==wxNO && save_orphans )
+		{
+			Tabs *tabs = objs.gl->tabs;
+			GameDocument *pd;
+			Undo *pu;
+			bool exclude_current_tab=true;
+			int handle = tabs->Iterate(0,pd,pu,exclude_current_tab);
+			while( pd && pu )
+			{
+				bool modified = pd->IsModified() || pu->IsModified();
+				if( modified && !gc->TestGameInCache(*pd) )
+				{
+					bool editing_log = objs.gl->EditingLog();
+					objs.log->SaveGame(pd,editing_log);
+				}
+				tabs->Iterate(handle,pd,pu);
+			}
+		}
         if( answer == wxCANCEL )
             any_cancel = true;
         if( answer != wxYES )
@@ -434,6 +452,12 @@ void CentralWorkSaver::Save( bool prompt, bool save_as, bool open_file )
     bool game_modified = TestGameModified();
     bool file_modified = TestFileModified();
     bool game_in_file  = TestGameInFile();
+	if( just_closing_tab )  // if set limit how much this can save
+	{
+		if( !game_modified )
+			return;
+		file_modified = false;
+	}
     if( !game_modified )
     {
         if( !prompt ) 
@@ -490,15 +514,28 @@ bool CentralWorkSaver::Exit()
     any_cancel = false;
 	int nbr_orphans;
 	save_orphans = TestModifiedOrphanTabs( nbr_orphans );
+	just_closing_tab = false;
 	Save(true/*prompt*/,false/*save_as*/,false/*open_file*/);
     bool okay = !any_cancel;
     return okay; 
 }
 
+bool CentralWorkSaver::TabClose()
+{
+    any_cancel = false;
+	save_orphans = false;
+	just_closing_tab = true;
+    Save(true/*prompt*/,false/*save_as*/,false/*open_file*/);
+    bool okay = !any_cancel;
+    return okay; 
+}
+
+
 bool CentralWorkSaver::FileNew()
 {
     any_cancel = false;
 	save_orphans = false;
+	just_closing_tab = false;
     Save(true/*prompt*/,false/*save_as*/,false/*open_file*/);
     bool okay = !any_cancel;
     return okay; 
@@ -508,6 +545,7 @@ bool CentralWorkSaver::FileOpen()
 {
     any_cancel = false;
 	save_orphans = false;
+	just_closing_tab = false;
     Save(true/*prompt*/,false/*save_as*/,true/*open_file*/);
     bool okay = !any_cancel;
     return okay; 
@@ -517,6 +555,7 @@ bool CentralWorkSaver::FileSave()
 {
     any_cancel = false;
 	save_orphans = false;
+	just_closing_tab = false;
     Save(false/*prompt*/,false/*save_as*/,false/*open_file*/);
     bool okay = !any_cancel;
     return okay; 
@@ -526,6 +565,7 @@ bool CentralWorkSaver::FileSaveAs()
 {
     any_cancel = false;
 	save_orphans = false;
+	just_closing_tab = false;
     Save(false/*prompt*/,true/*save_as*/,false/*open_file*/);
     bool okay = !any_cancel;
     return okay; 

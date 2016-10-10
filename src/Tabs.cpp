@@ -85,6 +85,7 @@ int Tabs::Iterate( int handle, GameDocument *&gd, Undo *&undo, bool exclude_fore
     {
         gd   = iter==current_idx ? &gl->gd : &v[iter].gd;
         undo = iter==current_idx ? &gl->undo : &v[iter].undo;
+		pos_iterate = (iter==current_idx ? gl->gd.GetInsertionPoint() : v[iter].pos);
 		iter_buf[handle] = ++iter;
     }
 	else

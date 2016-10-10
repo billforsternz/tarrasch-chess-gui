@@ -27,6 +27,7 @@ private:
 	int iter_buf[16];
 	bool iter_exclude_foreground[16];
 	int next_handle;
+	unsigned long pos_iterate;
     
 public:
     GameLogic *gl;
@@ -38,6 +39,7 @@ public:
     }
     int  GetCurrentIdx() { return current_idx; }
     int  GetNbrTabs() { return nbr_tabs; }
+	unsigned long GetIteratePos() { return pos_iterate; }
     void TabNew( GameDocument &new_gd );
     bool TabSelected( int idx );
 #ifdef AUI_NOTEBOOK

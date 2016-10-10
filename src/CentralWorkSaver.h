@@ -18,7 +18,7 @@
 class CentralWorkSaver
 {    
 public:
-    CentralWorkSaver() {}
+	CentralWorkSaver() { any_cancel=false; save_orphans=false; just_closing_tab=false; }
     void Init( Undo *undo_, GameDocument *gd_, GamesCache *gc_, GamesCache *gc_clipboard_ ) {this->undo=undo_, this->gd=gd_; this->gc=gc_; this->gc_clipboard=gc_clipboard_;}
     void SetTitle();
     bool FileNew();
@@ -26,6 +26,7 @@ public:
     bool FileSave();
     bool FileSaveAs();
     bool FileSaveGameAs();
+    bool TabClose();
     bool GameNew();
     bool PositionNew();
     void AddTabToFile();
@@ -63,6 +64,7 @@ private:
     GamesCache   *gc_clipboard;
     bool         any_cancel;
 	bool		 save_orphans;
+	bool		 just_closing_tab;
 };
 
 #endif    // TOP_LEVEL_CONTEXT_H

@@ -443,7 +443,7 @@ void GameLogic::CmdTabClose()
 	if( nbr_tabs>1 && current_idx<nbr_tabs )
 	{
 		bool editing_log = objs.gl->EditingLog();
-		if( objs.cws->FileNew() )
+		if( objs.cws->TabClose() )
 		{
 			objs.log->SaveGame( &gd, editing_log );
 			objs.session->SaveGame( &gd );
@@ -741,71 +741,47 @@ void GameLogic::NextGamePreviousGame( int idx )
 {
     Atomic begin;
 
-	// If the next game is already present in a tab, switch to it
-//#define CHANGE_TABS_ON_NEXT_PREVIOUS_GAME
-#ifdef CHANGE_TABS_ON_NEXT_PREVIOUS_GAME
-	bool switch_tabs = false;
-	int tab_idx = 0;
-#endif
-
 	// Upgrade next/previous element of games cache to a GameDocument, if necessary
 	GameDocument *gd_file = gc_pgn.gds[idx]->IsGameDocument();
 	GameDocument new_gd;
-
-	// If not necessary, check to see whether game is already in a tab
-	if( gd_file )
-	{
-		new_gd = *gd_file;
-#ifdef CHANGE_TABS_ON_NEXT_PREVIOUS_GAME
-        GameDocument *pd;
-        Undo *pu;
-		int handle = tabs->Iterate(0,pd,pu);
-        while( pd && pu )
-        {
-            if( gd_file->game_being_edited>0 && gd_file->game_being_edited==pd->game_being_edited )
-			{
-				if( tab_idx != tabs->GetCurrentIdx() )
-					switch_tabs = true;
-            }
-			if( !switch_tabs )
-				tab_idx++;
-			tabs->Iterate(handle,pd,pu);
-        }
-#endif
-	}
-	else
+	if( !gd_file )
 	{
 		gc_pgn.gds[idx]->ConvertToGameDocument(new_gd);
 		make_smart_ptr(GameDocument, new_smart_ptr, new_gd);
 		gc_pgn.gds[idx] = std::move(new_smart_ptr);
 	}
 
-#ifdef CHANGE_TABS_ON_NEXT_PREVIOUS_GAME
-	if( switch_tabs )
-	{
-		canvas->notebook->ChangeSelection(tab_idx);
-		if( tabs->TabSelected(tab_idx) )
-		{
-			Undo temp = undo;
-			ShowNewDocument();   // clears undo
-			undo = temp;
-			atom.NotUndoAble();  // don't save an undo position
-		}
-	}
+	// Check to see if the document is being edited in another tab
 	else
-#endif
 	{
-		bool editing_log = objs.gl->EditingLog();
-		PutBackDocument();
-		objs.log->SaveGame(&gd, editing_log);
-		objs.session->SaveGame(&gd);
+		new_gd = *gd_file;
+        GameDocument *pd;
+        Undo *pu;
+		int handle = tabs->Iterate(0,pd,pu);
+        while( pd && pu )
+        {
 
-		// #Workflow)
-		// Set new edit correspondence, gd to next/previous game in file
-		gd = new_gd;
-		SetGameBeingEdited( gd, *gc_pgn.gds[idx] );
-		ShowNewDocument();
+			// If it is copy it over to this tab
+            if( gd_file->game_being_edited>0 && gd_file->game_being_edited==pd->game_being_edited )
+			{
+				new_gd = *pd;
+	            new_gd.non_zero_start_pos = tabs->GetIteratePos();
+				break;
+            }
+			tabs->Iterate(handle,pd,pu);
+        }
 	}
+
+	bool editing_log = objs.gl->EditingLog();
+	PutBackDocument();
+	objs.log->SaveGame(&gd, editing_log);
+	objs.session->SaveGame(&gd);
+
+	// #Workflow)
+	// Set new edit correspondence, gd to next/previous game in file
+	gd = new_gd;
+	SetGameBeingEdited( gd, *gc_pgn.gds[idx] );
+	ShowNewDocument();
     atom.StatusUpdate();
 }
 
