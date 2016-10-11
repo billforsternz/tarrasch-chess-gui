@@ -115,6 +115,10 @@ enum
     ID_ANNOT20,
     ID_COPY_GAME_PGN_TO_CLIPBOARD,
 	ID_BUTTON_TAB_NEW,
+	ID_STATIC_TXT_PLAYER1,
+	ID_STATIC_TXT_PLAYER2,
+	ID_STATIC_TXT_TIME1,
+	ID_STATIC_TXT_TIME2,
     ID_CMD_ABOUT = wxID_ABOUT   // important for possible Mac port that we use this apparently
 };
 

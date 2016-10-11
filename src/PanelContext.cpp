@@ -45,11 +45,6 @@ BEGIN_EVENT_TABLE(PanelContext, wxWindow)//Panel)
     EVT_BUTTON(ID_KIBITZ_BUTTON3,PanelContext::OnKibitzButton3)
 END_EVENT_TABLE()
 
-IMPLEMENT_CLASS( wxStaticTextSub, wxStaticText )
-BEGIN_EVENT_TABLE( wxStaticTextSub, wxStaticText )
-    EVT_LEFT_DOWN (wxStaticTextSub::OnMouseLeftDown)
-END_EVENT_TABLE()
-
 
 // Destructor
 PanelContext::~PanelContext()
@@ -429,11 +424,6 @@ void PanelContext::OnKibitzButton3( wxCommandEvent& WXUNUSED(event) )
     else
         objs.gl->KibitzStart();
     SetFocusOnList();
-}
-
-void wxStaticTextSub::OnMouseLeftDown( wxMouseEvent &WXUNUSED(event) )
-{
-    objs.gl->CmdPlayers();
 }
 
 void PanelContext::Kibitz( int idx, const wxString &txt )

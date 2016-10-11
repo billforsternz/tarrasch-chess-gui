@@ -1,7 +1,7 @@
 /****************************************************************************
  * Run UCI chess engine, eg Stockfish - Windows version
  *  Author:  Bill Forster
- *  Licence: See licencing information in thc::ChessPosition.cpp
+ *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2016, Triple Happy Ltd.  All rights reserved.
  ****************************************************************************/
 #include <stdio.h>

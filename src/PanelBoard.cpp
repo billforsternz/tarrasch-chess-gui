@@ -4,7 +4,9 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
+#include "Appdefs.h"
 #include "DebugPrintf.h"
+#include "GameLogic.h"
 #include "Repository.h"
 #include "Objects.h"
 #include "PanelBoard.h"
@@ -54,13 +56,13 @@ PanelBoard::PanelBoard
     who_bottom->SetFont( *font1 );
     board_title = new wxStaticText(this,wxID_ANY,"",wxDefaultPosition,wxDefaultSize,wxALIGN_CENTRE_HORIZONTAL+wxST_NO_AUTORESIZE);
     board_title->SetFont( *font2 );
-    name_top    = new wxStaticText(this,wxID_ANY,"Fischer, Robert");
+    name_top    = new wxStaticTextSub(this,ID_STATIC_TXT_PLAYER1,"Fischer, Robert");
     name_top->SetFont( *font2 );
-    name_bottom = new wxStaticText(this,wxID_ANY,"Botvinnik, Mikhail");
+    name_bottom = new wxStaticTextSub(this,ID_STATIC_TXT_PLAYER2,"Botvinnik, Mikhail");
     name_bottom->SetFont( *font2 );
-    time_top    = new wxStaticText(this,wxID_ANY,"");
+    time_top    = new wxStaticTextSub(this,ID_STATIC_TXT_TIME1,"");
     time_top->SetFont( *font2 );
-    time_bottom = new wxStaticText(this,wxID_ANY,"");
+    time_bottom = new wxStaticTextSub(this,ID_STATIC_TXT_TIME2,"");
     time_bottom->SetFont( *font2 );
     coord1     = new wxStaticText(this,wxID_ANY,"1");
     coord1->SetFont( *font4 );
@@ -472,3 +474,18 @@ PanelBoard::~PanelBoard()
         font4 = NULL;
     }
 }
+
+IMPLEMENT_CLASS( wxStaticTextSub, wxStaticText )
+BEGIN_EVENT_TABLE( wxStaticTextSub, wxStaticText )
+    EVT_LEFT_DOWN (wxStaticTextSub::OnMouseLeftDown)
+END_EVENT_TABLE()
+
+void wxStaticTextSub::OnMouseLeftDown( wxMouseEvent &WXUNUSED(event) )
+{
+	int id = GetId();
+	if( id==ID_STATIC_TXT_PLAYER1 || id==ID_STATIC_TXT_PLAYER2 )
+		objs.gl->CmdPlayers();
+	else if( id==ID_STATIC_TXT_TIME1 || id==ID_STATIC_TXT_TIME2 )
+		objs.gl->CmdClocks();
+}
+

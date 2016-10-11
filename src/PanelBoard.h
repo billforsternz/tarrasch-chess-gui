@@ -9,6 +9,19 @@
 #include "wx/wx.h"
 #include "GraphicBoardResizable.h"
 
+class wxStaticTextSub: public wxStaticText
+{
+    DECLARE_CLASS( wxStaticTextSub )
+    DECLARE_EVENT_TABLE()
+public:
+    wxStaticTextSub( wxWindow *parent, wxWindowID id, const wxString &label )
+        : wxStaticText( parent, id, label )
+    {
+    }
+    void OnMouseLeftDown( wxMouseEvent &event );
+};
+
+
 class PanelBoard: public wxPanel
 {
 public:
@@ -36,8 +49,8 @@ private:
     wxStaticText    *who_top;
     wxStaticText    *who_bottom;
     wxStaticText    *board_title;
-    wxStaticText    *name_top;
-    wxStaticText    *name_bottom;
+    wxStaticTextSub *name_top;
+    wxStaticTextSub *name_bottom;
     wxStaticText    *time_top;
     wxStaticText    *time_bottom;
     wxStaticText    *coord1;

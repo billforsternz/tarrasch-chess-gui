@@ -22,18 +22,6 @@ class PopupControl;
 class CtrlBox;
 class CtrlBoxBookMoves;
 
-class wxStaticTextSub: public wxStaticText
-{
-    DECLARE_CLASS( wxStaticTextSub )
-    DECLARE_EVENT_TABLE()
-public:
-    wxStaticTextSub( wxWindow *parent, wxWindowID id, const wxString &label, const wxPoint &pos, const wxSize &size, long style )
-        : wxStaticText( parent, id, label, pos, size, style )
-    {
-    }
-    void OnMouseLeftDown( wxMouseEvent &event );
-};
-
 class PanelContext: public wxWindow //wxPanel
 {
 public:
