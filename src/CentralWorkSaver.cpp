@@ -142,7 +142,7 @@ void CentralWorkSaver::AddOrphansToFile()
 
 void CentralWorkSaver::AddTabToFile()
 {
-    //if( !TestGameInFile() )
+    if( !TestGameInFile() )
     {
         if( gd->r.white == "" ) // if( !game_details_edited )
         {
@@ -200,7 +200,7 @@ int CentralWorkSaver::SaveGamePrompt( bool prompt, FILE_MODE fm, bool save_as )
             msg += gc->pgn_filename;
             msg += " ?";
         }
-        answer = wxMessageBox( msg, "Yes to save, No to discard",  wxYES_NO|wxCANCEL, objs.frame );
+        answer = wxMessageBox( msg, "'Yes' to save, 'No' to discard (be careful with 'No')",  wxYES_NO|wxCANCEL, objs.frame );
     }
     if( answer == wxYES )
     {

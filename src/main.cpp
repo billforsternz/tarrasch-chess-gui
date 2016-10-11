@@ -110,9 +110,12 @@ public:
 #else
     void OnTabSelected( wxBookCtrlEvent& event );
     void OnSize( wxSizeEvent &evt );
-    wxNotebook      *notebook;
+    wxNotebook *notebook;
 #endif
+	void OnTabNew( wxCommandEvent& event );
     int book_moves_width;
+    int new_tab_button_width;
+	wxButton *new_tab_button;
     DECLARE_EVENT_TABLE()
 };
 
@@ -125,6 +128,7 @@ BEGIN_EVENT_TABLE(PanelNotebook, wxWindow)
 #else
     EVT_NOTEBOOK_PAGE_CHANGED( wxID_ANY, PanelNotebook::OnTabSelected)   //user selects a tab
 #endif
+    EVT_BUTTON( ID_BUTTON_TAB_NEW, PanelNotebook::OnTabNew )
 END_EVENT_TABLE()
 
 
@@ -144,11 +148,18 @@ PanelNotebook::PanelNotebook
     // wxNotebook think it's less short fixes this - and it still appears nice and short through the
     // short panel parenting it. [Removed this when changing to wxAuiNotebook]
     book_moves_width = book_moves_width_;
+	new_tab_button = new wxButton( this, ID_BUTTON_TAB_NEW, "New Tab" );
+    wxClientDC dc(new_tab_button);
+    wxCoord width, height, descent, external_leading;
+    dc.GetTextExtent( "New Tab", &width, &height, &descent, &external_leading );
+    new_tab_button_width = (width*130) / 100;
+	//wxSize butt_sz = new_tab_button->GetSize();
+	//new_tab_button_width = butt_sz.x;
 #ifdef AUI_NOTEBOOK
     notebook = new wxAuiNotebook(this, wxID_ANY, wxPoint(5,0), wxSize(siz.x,siz.y), 
         wxAUI_NB_TOP | wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | /*wxAUI_NB_SCROLL_BUTTONS |*/ wxAUI_NB_CLOSE_ON_ALL_TABS );
 #else
-    notebook = new wxNotebook(this, wxID_ANY, wxPoint(5,0), wxSize(siz.x-book_moves_width-10,siz.y*5) );
+    notebook = new wxNotebook(this, wxID_ANY, wxPoint(5,0), wxSize(siz.x-book_moves_width-10-new_tab_button_width-10,siz.y*5) );
 #endif
     wxTextCtrl *notebook_page1 = new wxTextCtrl(notebook, wxID_ANY,"", wxDefaultPosition, wxDefaultSize /*wxPoint(0,0), wxSize((90*siz.x)/100,(90*siz.y)/100)*/, wxNO_BORDER );
     notebook->AddPage(notebook_page1,"New Game",true);
@@ -159,19 +170,32 @@ PanelNotebook::PanelNotebook
                           wxID_ANY,
                           pt,
                           sz );
+	pt.x -= (new_tab_button_width+10);
+	sz.x  =  new_tab_button_width;
+	new_tab_button->SetPosition(pt);
+	new_tab_button->SetSize(sz);
 }
 
 void PanelNotebook::OnSize( wxSizeEvent &evt )
 {
     wxSize siz = evt.GetSize();
     wxSize sz1;
-    sz1.x = siz.x-book_moves_width-10;
+    sz1.x = siz.x-book_moves_width-10-new_tab_button_width-10;
     sz1.y = siz.y*5;
     notebook->SetSize(sz1);
+    wxSize  sz(book_moves_width,siz.y-8);
     wxPoint pt(siz.x-book_moves_width-2,8);
     gbl_book_moves->SetPosition(pt);
+	pt.x -= (new_tab_button_width+10);
+	sz.x  =  new_tab_button_width;
+	new_tab_button->SetPosition(pt);
+	new_tab_button->SetSize(sz);
 }
 
+void PanelNotebook::OnTabNew( wxCommandEvent& WXUNUSED(event) )
+{
+	objs.gl->CmdTabNew();
+}
 
 #ifdef AUI_NOTEBOOK
 void PanelNotebook::OnTabClose( wxAuiNotebookEvent& event )
@@ -839,7 +863,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     menu_edit->Append (wxID_REDO,                    _T("Redo\tCtrl+Y"));
     menu_edit->Append (wxID_DELETE,                  _T("Delete comment text or remainder of variation\tDel"));
     menu_edit->Append (ID_EDIT_GAME_DETAILS,         _T("Edit game details"));
-    menu_edit->Append (ID_EDIT_GAME_PREFIX,          _T("Edit game prefix"));
+//    menu_edit->Append (ID_EDIT_GAME_PREFIX,          _T("Edit game prefix"));
     menu_edit->Append (ID_COPY_GAME_PGN_TO_CLIPBOARD,_T("Copy game to system clipboard (PGN)"));
     menu_edit->Append (ID_EDIT_DELETE_VARIATION,     _T("Delete variation"));
     menu_edit->Append (ID_EDIT_PROMOTE,              _T("Promote variation"));

@@ -706,7 +706,7 @@ void GamesDialog::Goto( int idx )
     if( list_ctrl )
     {
         int sz = list_ctrl->GetItemCount();
-        if(  0<=idx && idx<(sz>=1?sz:1) )
+        if(  0<=idx && idx<sz )
         {
 
             // Move focus to a new location

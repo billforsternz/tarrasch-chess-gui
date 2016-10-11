@@ -391,10 +391,17 @@ void Repository::SetDirectories()
 #ifdef WINDOWS_FIX_LATER
     if( !ini_exists )
     {
+#if 0
         bool okay = wxRenameFile( exe_dir+"/book.pgn", doc_dir+"/book.pgn" );   // rename === move
         cprintf( "Move book.pgn %s\n", okay?"okay":"error" );
         okay = wxRenameFile( exe_dir+"/book.pgn_compiled", doc_dir+"/book.pgn_compiled" );
         cprintf( "Move book.pgn_compiled %s\n", okay?"okay":"error" );
+#endif
+		// rename can fail embarrassingly for permissions reasons
+        bool okay = wxCopyFile( exe_dir+"/book.pgn", doc_dir+"/book.pgn" );
+        cprintf( "Copy book.pgn %s\n", okay?"okay":"error" );
+        okay = wxCopyFile( exe_dir+"/book.pgn_compiled", doc_dir+"/book.pgn_compiled" );
+        cprintf( "Copy book.pgn_compiled %s\n", okay?"okay":"error" );
     }
 #endif
 
@@ -415,8 +422,8 @@ void Repository::SetDirectories()
     }
     if( replace )
     {
-        cprintf( "wxRenameFile(\"%s\",\"%s\") IN\n", exe_db.c_str(), doc_db.c_str() );
-        bool okay = wxRenameFile( wxString(exe_db), wxString(doc_db) );   // Rename === Move
-        cprintf( "wxRenameFileFile() OUT %s\n", okay?"okay":"error" );
+        cprintf( "wxCopyFile(\"%s\",\"%s\") IN\n", exe_db.c_str(), doc_db.c_str() );
+        bool okay = wxCopyFile( wxString(exe_db), wxString(doc_db) );
+        cprintf( "wxCopyFile() OUT %s\n", okay?"okay":"error" );
     }
 }

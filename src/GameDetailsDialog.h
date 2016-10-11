@@ -6,12 +6,14 @@
  ****************************************************************************/
 #ifndef GAME_DETAILS_DIALOG_H
 #define GAME_DETAILS_DIALOG_H
-
+#include <map>
+#include <string>
 #include "wx/spinctrl.h"
 #include "wx/statline.h"
 #include "MoveTree.h"   // for PGN_RESULT
 #include "SuspendEngine.h"
 #include "GameDocument.h"
+#include "GamesCache.h"
 
 // Control identifiers
 enum
@@ -75,6 +77,7 @@ public:
 
     // wxEVT_UPDATE_UI event handler for ID_???
     //void On???Update( wxUpdateUIEvent& event );
+	void OnChildFocus(wxChildFocusEvent& );
 
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_RESET
     void OnResetClick( wxCommandEvent& event );
@@ -113,6 +116,10 @@ public:
     wxString    white_elo;      // WhiteElo
     wxString    black_elo;      // BlackElo
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
+
+private:
+	std::map< std::string, std::string > lookup_elo;
+	wxWindow *previous_child_window;
 };
 
 #endif    // GAME_DETAILS_DIALOG_H

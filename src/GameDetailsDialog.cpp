@@ -10,6 +10,8 @@
 #include "wx/valgen.h"
 #include "Appdefs.h"
 #include "Eco.h"
+#include "Objects.h"
+#include "GameLogic.h"
 #include "GameDetailsDialog.h"
 
 // GameDetailsDialog type definition
@@ -19,6 +21,7 @@ IMPLEMENT_CLASS( GameDetailsDialog, wxDialog )
 BEGIN_EVENT_TABLE( GameDetailsDialog, wxDialog )
     EVT_BUTTON( ID_GAME_DETAILS_RESET, GameDetailsDialog::OnResetClick )
     EVT_BUTTON( wxID_HELP, GameDetailsDialog::OnHelpClick )
+	EVT_CHILD_FOCUS( GameDetailsDialog::OnChildFocus )
     EVT_BUTTON( wxID_OK, GameDetailsDialog::OnOkClick )
 END_EVENT_TABLE()
 
@@ -49,6 +52,7 @@ void GameDetailsDialog::Init()
     result      = "";               // Result
     white_elo   = "";               // WhiteElo
     black_elo   = "";               // BlackElo
+	previous_child_window = NULL;
 }
 
 // Create dialog
@@ -373,6 +377,30 @@ void GameDetailsDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
       wxOK|wxICON_INFORMATION, this);
 }
 
+void GameDetailsDialog::OnChildFocus( wxChildFocusEvent& evt )
+{
+	wxWindow *window = evt.GetWindow();
+	bool leaving_white = (window!=previous_child_window && previous_child_window==white_ctrl);
+	bool leaving_black = (window!=previous_child_window && previous_child_window==black_ctrl);
+	previous_child_window = window;
+	cprintf( "OnChildFocus() in: leaving_white=%s leaving_black=%s\n", leaving_white?"true":"false", leaving_black?"true":"false" );
+	if( leaving_white )
+	{
+		std::string w = white_ctrl->GetValue();
+		std::string we = white_elo_ctrl->GetValue();
+		if( we=="" && lookup_elo.count(w)>0 )
+			white_elo_ctrl->SetValue(lookup_elo[w].c_str());
+	}
+	if( leaving_black )
+	{
+		std::string b = black_ctrl->GetValue();
+		std::string be = black_elo_ctrl->GetValue();
+		if( be=="" && lookup_elo.count(b)>0 )
+			black_elo_ctrl->SetValue(lookup_elo[b].c_str());
+	}
+	cprintf( "OnChildFocus() out\n" );
+}
+
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_OK
 void GameDetailsDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
 {
@@ -605,6 +633,33 @@ bool GameDetailsDialog::Run( GameDocument &gd )
         event = remember_event;
     if( site=="" )
         site = remember_site;
+
+	// Auto fill out elo field if possible
+	GamesCache *gc = &objs.gl->gc_pgn;
+	if( gc->pgn_filename != "" )
+	{
+		int nbr = gc->gds.size();
+		if( nbr > 1000 )   // don't read huge pgn files in there entirety in order to auto-fill in elo field
+			nbr=1000;
+		void *context=NULL;
+		cprintf( "Loading games into memory\n" );
+	    for( int i=0; i<nbr; i++ )
+            context = gc->gds[i]->LoadIntoMemory( context, i+1 >= nbr );
+		cprintf( "Building map begin\n" );
+		lookup_elo.clear();
+		for( int i=0; i<nbr; i++ )
+		{
+            const char *player = gc->gds[i]->White();
+            const char *elo    = gc->gds[i]->WhiteElo();
+			if( player && *player && elo && *elo )
+				lookup_elo[std::string(player)] = std::string(elo);
+            player = gc->gds[i]->Black();
+            elo    = gc->gds[i]->BlackElo();
+			if( player && *player && elo && *elo )
+				lookup_elo[std::string(player)] = std::string(elo);
+		}
+		cprintf( "Building map end\n" );
+	}
     if( wxID_OK == ShowModal() )
     {
         ok = true;
