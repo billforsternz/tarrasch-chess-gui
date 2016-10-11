@@ -11,9 +11,9 @@
 
 //#define USING_KINGBASE
 #ifdef  USING_KINGBASE
-#define MASTER_VERSION "V3 Nightly 2016-09-19-a(k)"  // 'k' indicates default .tdb is kingbase
+#define MASTER_VERSION "V3 Beta 2016-10-11-a(k)"  // 'k' indicates default .tdb is kingbase
 #else
-#define MASTER_VERSION "V3 Nightly 2016-09-19-a(g)"  // 'g' indicates default .tdb is great players database
+#define MASTER_VERSION "V3 Beta 2016-10-11-a(g)"  // 'g' indicates default .tdb is great players database
 #endif
 #define DEFAULT_ENGINE "stockfish 7 32bit.exe"
 #define DEFAULT_ENGINE_64 "stockfish 7 x64.exe"
@@ -27,7 +27,7 @@
 #endif
 
 // Conditional compiles
-#define DURING_DEVELOPMENT  // if defined we get a console window for cprintf()
+//#define DURING_DEVELOPMENT  // if defined we get a console window for cprintf()
 //#define AUI_NOTEBOOK      // Define this to get X close boxes on tabs - when it's ready
 
 // Misc
