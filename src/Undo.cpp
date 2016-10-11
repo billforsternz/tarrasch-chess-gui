@@ -35,46 +35,6 @@ Undo::Undo( const Undo& copy_from_me )
     gl                = copy_from_me.gl;
     stack             = copy_from_me.stack;
     it_saved = copy_from_me.it_saved;
-#if 0 // FIXME - should work but crashes
-    if( copy_from_me.it_saved < copy_from_me.stack.begin() )
-        cprintf( "Gotcha 1\n");
-    if( copy_from_me.it_saved > copy_from_me.stack.end() )
-        cprintf( "Gotcha 2\n");
-    it_saved = stack.begin() + (copy_from_me.it_saved - copy_from_me.stack.begin());
-    cprintf( "it_saved offset=%d, stack.end() offset=%d\n", it_saved-stack.begin(), stack.end()-stack.begin() );
-    assert_todo_fix( it_saved >= stack.begin() );
-#endif
-#if 0 // work's on Mac not on Windows (previous comment was "work in progress, but seems okay"
-    std::deque<RestorePoint>::iterator it;
-    std::deque<RestorePoint>::const_iterator it2;
-    for( it=stack.begin(), it2=copy_from_me.stack.begin(); it!=stack.end() && it2!=copy_from_me.stack.end(); it++, it2++ )
-    {
-        if( it2 == copy_from_me.it_saved )
-        {
-            it_saved = it;
-            break;
-        }
-    }
-#endif
-#if 0  // another attempt - remove all these if the simple fix of making it_saved an "int" instead of an iterator works
-    std::deque<RestorePoint>::const_iterator it2;
-    std::deque<RestorePoint>::const_iterator it3 = (std::deque<RestorePoint>::const_iterator)copy_from_me.it_saved;
-    it_saved=stack.begin();
-    it2 = copy_from_me.stack.begin();
-    while( true )
-    {
-        bool not_end1 = (it_saved!=stack.end());
-        bool not_end2 = (it2!=copy_from_me.stack.end());
-        if( !not_end1 || !not_end2 )
-            break;
-        if( it2 == it3 )
-        {
-            break;
-        }
-        it_saved++;
-        it2++;
-    }
-#endif
 }
 
 Undo & Undo::operator= (const Undo & copy_from_me )
@@ -84,55 +44,6 @@ Undo & Undo::operator= (const Undo & copy_from_me )
     gl                = copy_from_me.gl;
     stack             = copy_from_me.stack;
     it_saved          = copy_from_me.it_saved;
-#if 0 // FIXME - should work but crashes
-    if( copy_from_me.it_saved < copy_from_me.stack.begin() )
-        cprintf( "Gotcha 1\n");
-    if( copy_from_me.it_saved > copy_from_me.stack.end() )
-        cprintf( "Gotcha 2\n");
-    it_saved = stack.begin() + (copy_from_me.it_saved - copy_from_me.stack.begin());
-    cprintf( "it_saved offset=%d, stack.end() offset=%d\n", it_saved-stack.begin(), stack.end()-stack.begin() );
-    assert_todo_fix( it_saved >= stack.begin() );
-#endif
-#if 0 // work's on Mac not on Windows (previous comment was "work in progress, but seems okay"
-    std::deque<RestorePoint>::iterator it;
-    std::deque<RestorePoint>::const_iterator it2;
-    for( it=stack.begin(), it2=copy_from_me.stack.begin(); it!=stack.end() && it2!=copy_from_me.stack.end(); it++, it2++ )
-    {
-        if( it2 == copy_from_me.it_saved )
-        {
-            it_saved = it;
-            break;
-        }
-    }
-#endif
-#if 0  // another attempt - remove all these if the simple fix of making it_saved an "int" instead of an iterator works
-    std::deque<RestorePoint>::const_iterator it2;
-    std::deque<RestorePoint>::const_iterator it3 = (std::deque<RestorePoint>::const_iterator)copy_from_me.it_saved;
-    it_saved=stack.begin();
-    it2 = copy_from_me.stack.begin();
-    while( true )
-    {
-        bool not_end1 = (it_saved!=stack.end());
-        bool not_end2 = (it2!=copy_from_me.stack.end());
-        if( !not_end1 || !not_end2 )
-            break;
-        if( it2 == it3 )
-        {
-            break;
-        }
-        it_saved++;
-        it2++;
-    }
-    std::deque<RestorePoint>::const_iterator it2 = copy_from_me.stack.begin();
-    if( copy_from_me.it_saved == copy_from_me.stack.begin() )
-        cprintf( "Ha!");
-    while( it2 != copy_from_me.stack.end() )
-    {
-        if( it2 == copy_from_me.it_saved )
-            cprintf( "Haha!" );
-        it2++;
-    }
-#endif
     return *this;
 }
 
