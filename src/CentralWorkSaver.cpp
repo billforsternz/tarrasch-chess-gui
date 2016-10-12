@@ -224,9 +224,15 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
     bool ok=true;
     if( prompt )
     {
-        wxString msg = "Save modified games to ";
-        msg += gc->pgn_filename;
-        msg += " ?";
+        wxString msg = "Save modified games";
+		if( !TestFileExists() )
+			msg += "?";
+		else
+		{
+			msg += " to ";
+			msg += gc->pgn_filename;
+			msg += " ?";
+		}
         int answer = wxMessageBox( msg, "'Yes' to save, 'No' to discard (be careful with 'No')",  wxYES_NO|wxCANCEL, objs.frame );
 
 		// If discard, save orphans to log
