@@ -54,7 +54,7 @@ public:
     void Init();
 
     // Run dialog
-    bool Run( GameDocument &gd );
+    bool Run( GameDocument &gd, bool push_changes_to_tabs=false );
 
     // Creation
     bool Create( wxWindow* parent,

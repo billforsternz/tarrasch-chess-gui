@@ -459,7 +459,7 @@ void GamesCache::FileCreate( std::string &filename )
     {
         loaded = true;
         pgn_filename = filename;
-        FileSaveInner( NULL, NULL, pgn_out );
+        FileSaveInner( pgn_out );
         objs.gl->pf.Close(NULL);    // close all handles (gc_clipboard
                                     //  only needed for ReopenModify())
     }
@@ -473,7 +473,7 @@ void GamesCache::FileSave( GamesCache *gc_clipboard )
     bool ok = objs.gl->pf.ReopenModify( pgn_handle, pgn_in, pgn_out );
     if( ok )
     {
-        FileSaveInner( gc_clipboard, pgn_in, pgn_out );
+        FileSaveInner( pgn_out );
         objs.gl->pf.Close( gc_clipboard );    // close all handles
     }
 }
@@ -487,7 +487,7 @@ void GamesCache::FileSaveAs( std::string &filename, GamesCache *gc_clipboard )
     if( ok )
     {
         pgn_filename = filename;
-        FileSaveInner( gc_clipboard, pgn_in, pgn_out );
+        FileSaveInner( pgn_out );
         objs.gl->pf.Close( gc_clipboard );    // close all handles
     }
 }
@@ -505,7 +505,7 @@ void GamesCache::FileSaveAllAsAFile( std::string &filename )
     FILE *pgn_out = objs.gl->pf.OpenCreate( filename, pgn_handle );
     if( pgn_out )
     {
-        FileSaveInner( NULL, NULL, pgn_out );
+        FileSaveInner( pgn_out );
         objs.gl->pf.Close(NULL);    // close all handles (gc_clipboard
                                     //  only needed for ReopenModify())
     }
@@ -528,7 +528,7 @@ bool GamesCache::TestGameInCache( const GameDocument &gd )
 
 
 // Save common
-void GamesCache::FileSaveInner( GamesCache *UNUSED(gc_clipboard), FILE *UNUSED(pgn_in), FILE *pgn_out )
+void GamesCache::FileSaveInner( FILE *pgn_out )
 {
     char *buf;
 	GameDocument gd_temp;

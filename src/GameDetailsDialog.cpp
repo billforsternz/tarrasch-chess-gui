@@ -597,7 +597,7 @@ void GameDetailsDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
 
 wxString GameDetailsDialog::remember_event;
 wxString GameDetailsDialog::remember_site;
-bool GameDetailsDialog::Run( GameDocument &gd )
+bool GameDetailsDialog::Run( GameDocument &gd, bool push_changes_to_tabs )
 {
     bool ok=false;
 	Roster before = gd.r;
@@ -612,12 +612,16 @@ bool GameDetailsDialog::Run( GameDocument &gd )
     white_elo = gd.r.white_elo;      // "WhiteElo"
     black_elo = gd.r.black_elo;      // "BlackElo"
     if( result!="1-0" && result!="0-1" && result!="1/2-1/2" )
+	{
         result = "(no result)";
+		before.result="*";		// don't set game_details_edited unnecessarily
+	}
     if( eco=="" )
     {
         CompactGame pact;
         gd.GetCompactGame(pact);
         eco = eco_calculate( pact.moves );
+		before.eco = eco;		// don't set game_details_edited unnecessarily
     }
     if( date=="" )
     {
@@ -628,11 +632,18 @@ bool GameDetailsDialog::Run( GameDocument &gd )
         char buf[20];
         sprintf( buf, "%04d.%02d.%02d", timeinfo->tm_year+1900, timeinfo->tm_mon+1, timeinfo->tm_mday );
         date = buf;
+		before.date = date;    // don't set game_details_edited unnecessarily
     }
     if( event=="" )
+	{
         event = remember_event;
+		before.event = event; // don't set game_details_edited unnecessarily
+	}
     if( site=="" )
+	{
         site = remember_site;
+		before.site = site;   // don't set game_details_edited unnecessarily
+	}
 
 	// Auto fill out elo field if possible
 	GamesCache *gc = &objs.gl->gc_pgn;
@@ -738,7 +749,25 @@ bool GameDetailsDialog::Run( GameDocument &gd )
 					gd.r.white_elo == before.white_elo &&
 					gd.r.black_elo == before.black_elo &&
 					gd.r.fen == before.fen;
-		gd.game_details_edited = !same;
+		gd.game_details_edited |= !same;
+
+		// Push the changes out to the document immediately
+		if( push_changes_to_tabs && gd.game_details_edited )
+		{
+ 			GameDocument *pd;
+			Undo *pu;
+			int handle = objs.tabs->Iterate(0,pd,pu);
+			while( pd && pu )
+			{
+				if( gd.game_being_edited!=0 && (gd.game_being_edited == pd->game_being_edited)  )
+				{
+					pd->r = gd.r;
+					pd->game_details_edited = gd.game_details_edited;
+					break;
+				}
+				objs.tabs->Iterate(handle,pd,pu);
+			}
+		}
     }
     return ok;
 }

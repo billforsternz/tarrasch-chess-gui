@@ -200,13 +200,13 @@ int CentralWorkSaver::SaveGamePrompt( bool prompt, FILE_MODE fm, bool save_as )
             msg += gc->pgn_filename;
             msg += " ?";
         }
-        answer = wxMessageBox( msg, "'Yes' to save, 'No' to discard (be careful with 'No')",  wxYES_NO|wxCANCEL, objs.frame );
+        answer = wxMessageBox( msg, "'Yes' to save, 'No' to discard",  wxYES_NO|wxCANCEL, objs.frame );
     }
     if( answer == wxYES )
     {
         if( gd->r.white == "" ) // if( !game_details_edited )
         {
-            GameDetailsDialog dialog(objs.frame);
+            GameDetailsDialog dialog(objs.frame,true);
             if( dialog.Run(*gd) )
                 objs.gl->GameRedisplayPlayersResult();
             else
@@ -233,7 +233,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
 			msg += gc->pgn_filename;
 			msg += " ?";
 		}
-        int answer = wxMessageBox( msg, "'Yes' to save, 'No' to discard (be careful with 'No')",  wxYES_NO|wxCANCEL, objs.frame );
+        int answer = wxMessageBox( msg, "'Yes' to save, 'No' to discard",  wxYES_NO|wxCANCEL, objs.frame );
 
 		// If discard, save orphans to log
         if( answer==wxNO && save_orphans )

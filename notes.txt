@@ -97,6 +97,20 @@ Bug: First game of 2015-summer-g.pgn not processed
 Check weird ChessBase pgn format supported for both preview and loaded game.
 Bug: Make moves, save game (overwrite) - this tab not in file.
 pgn_handle not cleared by constructor - check others
+e8Q as well as e8=Q
+Paste tags
+reduce sleep in engine state machine
+Bugs:
+    Ian's a-file bug
+    Training (partial blindfold - 2 move lag) bug
+    Undo and move now don't play well together
+    a) Paste current game into clipboard (incidentally - if White isn't "" don't put up game details for editing please)
+    b) Open a new file
+    c) Two bogus save requests ensue.
+    Working with a chessbase pgn with unicode intro can leave single line [Event ""] artifacts is file later
+    Paste game into current file, edit game details, save - changes not reflected?
+
+
 
 10/9/2016
 

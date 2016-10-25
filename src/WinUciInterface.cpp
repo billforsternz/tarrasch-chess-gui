@@ -1161,8 +1161,9 @@ const char *UciInterface::user_hook_in()
     {
         release_printf( "in: %s\n", s );
         last_command_was_go_infinite = (
-                                            0 == memcmp(s,"go infinite",11) ||
-                                            0 == memcmp(s,"go ponder",9)
+                                            0 == memcmp(s,"go ",3)
+                                            //0 == memcmp(s,"go infinite",11) ||
+                                            //0 == memcmp(s,"go ponder",9)
                                        );
     }
     return s;
