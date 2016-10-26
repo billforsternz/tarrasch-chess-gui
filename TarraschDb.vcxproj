@@ -133,6 +133,7 @@
     <ClCompile Include="src\Book.cpp" />
     <ClCompile Include="src\BookDialog.cpp" />
     <ClCompile Include="src\CentralWorkSaver.cpp" />
+    <ClCompile Include="src\ChessBoardBitmap.cpp" />
     <ClCompile Include="src\ClipboardDialog.cpp" />
     <ClCompile Include="src\ClockDialog.cpp" />
     <ClCompile Include="src\CompactGame.cpp" />
@@ -207,6 +208,7 @@
     <ClInclude Include="src\Book.h" />
     <ClInclude Include="src\BookDialog.h" />
     <ClInclude Include="src\CentralWorkSaver.h" />
+    <ClInclude Include="src\ChessBoardBitmap.h" />
     <ClInclude Include="src\ClipboardDialog.h" />
     <ClInclude Include="src\ClockDialog.h" />
     <ClInclude Include="src\CompactGame.h" />

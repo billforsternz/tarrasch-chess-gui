@@ -372,6 +372,10 @@ bool GameLogic::EngineChanged()
 
 void GameLogic::CmdTabNew()
 {
+#ifdef NEW_TAB_LAUNCHES_TESTBED
+	void Testbed();
+	Testbed();
+#else
     Atomic begin;
     GameDocument temp = gd;
     PutBackDocument();
@@ -382,6 +386,7 @@ void GameLogic::CmdTabNew()
         atom.NotUndoAble();  // don't save an undo position
     }
     objs.session->SaveGame(&temp);      // ...modify session only after loading old game
+#endif
 }
 
 void GameLogic::OnTabSelected( int idx )

@@ -27,8 +27,12 @@
 #endif
 
 // Conditional compiles
-#define DURING_DEVELOPMENT  // if defined we get a console window for cprintf()
-//#define AUI_NOTEBOOK      // Define this to get X close boxes on tabs - when it's ready
+#define DURING_DEVELOPMENT			// If defined we get a console window for cprintf()
+//#define AUI_NOTEBOOK				// Define this to get X close boxes on tabs - when it's ready
+#define NEW_TAB_LAUNCHES_TESTBED	// If defined new tab feature actually launches testbed window instead
+#ifndef DURING_DEVELOPMENT
+#undef  NEW_TAB_LAUNCHES_TESTBED	// Never unless during development
+#endif
 
 // Misc
 #define NBR_KIBITZ_LINES 4
