@@ -16,7 +16,7 @@ class ChessBoardBitmap
 public:
 
 	// Con/De structor
-	ChessBoardBitmap( int pix_ );
+	ChessBoardBitmap();
 	~ChessBoardBitmap();
     void Init( const wxSize& size );
 	void BuildBoardSetupBitmap( wxBitmap &bm );

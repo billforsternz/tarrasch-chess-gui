@@ -14,6 +14,7 @@
 #include "PanelContext.h"
 #include "Objects.h"
 #include "BoardSetup.h"
+#include "ChessBoardBitmap.h"
 #include "BoardSetupControl.h"
 #include "bitmaps/board_setup_bitmap.xpm"
 #include "bitmaps/custom_cursors.xpm"
@@ -77,7 +78,10 @@ BoardSetupControl::BoardSetupControl
     if(true)
     {
         //chess_bmp = static_chess_bmp; //wxBitmap( board_setup_bitmap_xpm );
-        chess_bmp = wxBitmap( board_setup_bitmap_xpm );
+        //chess_bmp = wxBitmap( board_setup_bitmap_xpm );
+		ChessBoardBitmap cbm;
+		cbm.BuildBoardSetupBitmap(chess_bmp);
+
     #endif
         wxSize  size( chess_bmp.GetWidth(), chess_bmp.GetHeight() );
         SetSize( size );
