@@ -18,8 +18,10 @@ public:
 	// Con/De structor
 	ChessBoardBitmap();
 	~ChessBoardBitmap();
-    void Init( const wxSize& size );
-	void BuildBoardSetupBitmap( wxBitmap &bm );
+    void Init( int pix );
+	void BuildMiniboardBitmap( int pix, wxBitmap &bm );
+	void BuildBoardSetupBitmap( int pix, wxBitmap &bm );
+	void BuildCustomCursors( int pix );
 
 	// Setup a position	on the graphic board
 	void SetChessPosition( char *position_ascii );
@@ -41,7 +43,19 @@ public:
     // Setup a position	on the graphic board
     void SetPositionEx( thc::ChessPosition pos, bool blank_other_squares, char pickup_file, char pickup_rank, wxPoint shift );
 
-    wxBitmap     my_chess_bmp;
+    wxBitmap    my_chess_bmp;
+	wxImage		white_king_cursor;	
+	wxImage		white_queen_cursor;	
+	wxImage		white_rook_cursor;	
+	wxImage		white_bishop_cursor;
+	wxImage		white_knight_cursor;
+	wxImage		white_pawn_cursor;	
+	wxImage		black_king_cursor;	
+	wxImage		black_queen_cursor;	
+	wxImage		black_rook_cursor;	
+	wxImage		black_bishop_cursor;
+	wxImage		black_knight_cursor;
+	wxImage		black_pawn_cursor;	
 
 private:
 
@@ -98,8 +112,6 @@ private:
     char         pickup_rank;
     wxPoint      pickup_point;
     thc::ChessPosition     slide_pos;
-    int          PIX;
-    int          pix;
 };
 
 #endif // CHESS_BOARD_BITMAP_H

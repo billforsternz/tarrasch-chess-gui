@@ -8,6 +8,7 @@
 #ifndef BOARD_SETUP_CONTROL_H
 #define BOARD_SETUP_CONTROL_H
 #include "wx/wx.h"
+#include "ChessBoardBitmap.h"
 #include "BoardSetup.h"
 
 class BoardSetupControl : public wxControl
@@ -39,6 +40,7 @@ private:
     wxTimer      m_timer;
     wxBitmap     chess_bmp;
     BoardSetup   *bs;
+	ChessBoardBitmap cbb;
     char         cursor;
     char         wait_cursor;
     int          wait_offset;

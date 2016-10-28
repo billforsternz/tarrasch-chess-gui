@@ -169,7 +169,6 @@ BoardSetup::BoardSetup( wxBitmap *bitmap, wxWindow *parent, int XBORDER, int YBO
 	Get( 'd','4', 'd','4' );  // White queen on black square
     if( !normal_orientation )
         SwapPickupPieces();
-    Debug();
 }
 
 // Cleanup
@@ -558,124 +557,6 @@ void BoardSetup::SwapPickupPieces()
     }
 }
 
-// Wake up this stuff to generate some board .xpm data
-//  (the link between original .bmps and generated .xpms
-//   has been muddied and perhaps even lost)  
-#if 1
-void BoardSetup::Debug()
-{
-}
-#else
-#define nbrof(a) ( sizeof(a) / sizeof((a)[0]) )
-void BoardSetup::Debug()
-{
-    //#define TUNE_IT_FIRST
-    #ifdef  TUNE_IT_FIRST
-    static char codes[1000];
-    static int reds[1000];
-    static int greens[1000];
-    static int blues[1000];
-    int nbr_of=0;
-    #else
-    static char codes[] = " .-,`~o{}=+&$*@#";
-    static int reds[]   = {0xff,0xf5,0xec,0xe1,0xd7,0xcc,0xc0,0xb4,0xa7,0x99,0x8b,0x7a,0x68,0x53,0x39,0x00};
-    static int greens[] = {0xff,0xf5,0xec,0xe1,0xd7,0xcc,0xc0,0xb4,0xa7,0x99,0x8b,0x7a,0x68,0x53,0x39,0x00};
-    static int blues[]  = {0xff,0xf5,0xec,0xe1,0xd7,0xcc,0xc0,0xb4,0xa7,0x99,0x8b,0x7a,0x68,0x53,0x39,0x00};
-    int nbr_of=nbrof(reds);
-    #endif
-    static int done;
-    if( done == 0 )
-    {
-        done = 1;
-        FILE *f;
-        f = fopen("bitmap3.txt","wt");
-        if( f )
-        {
-            byte a,b,c,x, *p;
-            int row,col;
-            #ifdef TUNE_IF_FIRST
-            for( row=0; row<height; row++ )
-            {
-                p = buf_board + row*width_bytes;
-                for( col=0; col<width; col++ )
-                {
-                    a = *p++;
-                    b = *p++;
-                    c = *p++;
-                    double min_diff_so_far = 100000000000.0;
-                    int min_i_so_far = 0;
-                    for( int i=0; i<nbr_of; i++ )
-                    {
-                        double diff1 = ((double)a - (double)reds[i]);
-                        double diff2 = ((double)b - (double)greens[i]);
-                        double diff3 = ((double)c - (double)blues[i]);
-                        double diff = diff1*diff1 + diff2*diff2 + diff3*diff3;
-                        if( diff < min_diff_so_far )
-                        {
-                            min_diff_so_far = diff;
-                            min_i_so_far = i;
-                        }
-                    }
-                    if( reds[min_i_so_far]==a && greens[min_i_so_far]==b &&  blues[min_i_so_far]==c )
-                        ;
-                    else
-                    {
-                        codes[nbr_of]  = ' '+nbr_of;
-                        reds[nbr_of]   = a;
-                        greens[nbr_of] = b;
-                        blues[nbr_of]  = c;
-                        if( nbr_of+1 < nbrof(reds) )
-                            nbr_of++;
-                    }
-                }
-            }
-            #endif
-            fprintf( f, "static char *board_setup_bitmap_xpm[] = {\n" );
-            fprintf( f, "\"%d %d %d 1\",\n", width, height, nbr_of );
-            for( int i=0; i<nbr_of; i++ )
-            {
-                fprintf( f, "\"%c c #%02x%02x%02x\",\n", codes[i], reds[i], greens[i], blues[i] );
-            }
-            for( row=0; row<height; row++ )
-            {
-                p = buf_board + row*width_bytes;
-                for( col=0; col<width; col++ )
-                {
-                    a = *p++;
-                    b = *p++;
-                    c = *p++;
-                    double min_diff_so_far = 100000000000.0;
-                    int min_i_so_far = 0;
-                    for( int i=0; i<nbr_of; i++ )
-                    {
-                        double diff1 = ((double)a - (double)reds[i]);
-                        double diff2 = ((double)b - (double)greens[i]);
-                        double diff3 = ((double)c - (double)blues[i]);
-                        double diff = diff1*diff1 + diff2*diff2 + diff3*diff3;
-                        if( diff < min_diff_so_far )
-                        {
-                            min_diff_so_far = diff;
-                            min_i_so_far = i;
-                        }
-                    }
-                    if( col == 0 )
-                        fprintf( f, "\"" );
-                    if( reds[min_i_so_far]==a && greens[min_i_so_far]==b &&  blues[min_i_so_far]==c )
-                        fprintf( f, "%c", codes[min_i_so_far] );
-                    else
-                        fprintf( f, "[ #%02x%02x%02x ]", a, b, c );
-                }
-                if( row+1 < height )
-                    fprintf( f, "\",\n" );
-                else
-                    fprintf( f, "\"\n" );
-            }
-            fprintf( f, "};\n" );
-            fclose(f);
-        }
-    }
-}
-#endif
 
 
 

@@ -18,7 +18,6 @@
 #include "thc.h"
 #include "Objects.h"
 #include "Repository.h"
-#include "bitmaps/board_setup_bitmap.xpm"
 
 // Initialise the graphic board
 ChessBoardBitmap::ChessBoardBitmap()
@@ -64,11 +63,55 @@ void bmpCopy( wxBitmap &from, int x1, int y1, wxBitmap &to,	int x2, int y2, int 
 }
 
 
-void  ChessBoardBitmap::BuildBoardSetupBitmap( wxBitmap &bm )
+void imageCopy( wxBitmap &from, int x1, int y1, wxImage &to, int x2, int y2, int w, int h, const char *mask=NULL );
+void imageCopy( wxBitmap &from, int x1, int y1, wxImage &to, int x2, int y2, int w, int h, const char *mask )
 {
-	int pix_ = 34;
-	wxSize size( pix_*8, pix_*8 );
-	Init( size );
+    wxNativePixelData pixels_src(from);
+    wxNativePixelData::Iterator src(pixels_src);
+    for( int row=0; row<h; row++ )
+    {
+        src.MoveTo(pixels_src, x1, y1+row );
+        for( int col=0; col<w; col++ )
+        {
+			byte r = 0;
+			byte g = 0;
+			byte b = 0;
+			bool transparent = true;
+			if( mask==NULL || *mask == '1' )
+			{
+			  	r = src.Red();
+				g = src.Green();
+				b = src.Blue();
+				transparent = false;
+			}
+			to.SetRGB(x2+col, y2+row, r,g,b);
+			to.SetAlpha(x2+col, y2+row, transparent?wxIMAGE_ALPHA_TRANSPARENT:wxIMAGE_ALPHA_OPAQUE );
+            src++;
+			if( mask != NULL )
+				mask++;
+        }
+    }
+}
+
+void ChessBoardBitmap::BuildMiniboardBitmap( int pix, wxBitmap &bm )
+{
+	Init( pix );
+	SetChessPosition( 
+        "rnbqnrk "
+        "pp    b "
+        "    N   "
+        "   qk   "
+        "   QK   "
+        "        "
+        "PP      "
+        "RNBQKBNR"
+	);
+	bm = my_chess_bmp;
+}
+
+void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm )
+{
+	Init( pix );
 	SetChessPosition( 
         "rnbqnrk "
         "pp    b "
@@ -86,33 +129,22 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( wxBitmap &bm )
     dc.SelectObject(board_setup);
     dc.SetMapMode(wxMM_TEXT);
 
-	// Set all of board_setup to white
+	// Set all of board_setup to white, with one pixel black border
     wxColour white(255,255,255);
     wxBrush white_brush(white);
     dc.SetBrush( white_brush );
     dc.SetPen(*wxBLACK_PEN);
     dc.DrawRectangle(0,0,board_setup.GetWidth(),board_setup.GetHeight());
 
-	// Draw a border line around the extreme edge
-/*	wxPoint tl(0,0);
-	wxPoint tr(board_setup.GetWidth()-1,0);
-	wxPoint bl(0,board_setup.GetHeight()-1);
-	wxPoint br(board_setup.GetWidth()-1,board_setup.GetHeight()-1);
-    dc.SetPen(*wxBLACK_PEN);
-	dc.DrawLine(tl,tr);
-	dc.DrawLine(tl,bl);
-	dc.DrawLine(tr,br);
-	dc.DrawLine(bl,br); */
-
 	// Copy a chess board into the centre part
-	bmpCopy( my_chess_bmp, 0, 0, board_setup, (364-8*pix_)/2, (294-8*pix_)/2, 8*pix_, 8*pix_ );
+	bmpCopy( my_chess_bmp, 0, 0, board_setup, (364-8*pix)/2, (294-8*pix)/2, 8*pix, 8*pix );
 
 	// Make square b5 a nice blue colour
 	wxColour ocean_blue(112,146,190);
     wxBrush ocean_blue_brush(ocean_blue);
     dc.SetBrush( ocean_blue_brush );
     dc.SetPen(*wxTRANSPARENT_PEN);
-    dc.DrawRectangle( (364-8*pix_)/2 + pix_, (294-8*pix_)/2 + 3*pix_, pix_, pix_ );
+    dc.DrawRectangle( (364-8*pix)/2 + pix, (294-8*pix)/2 + 3*pix, pix, pix );
 
 	// Add pieces to be picked up on the side
 	for( int i=0; i<6; i++ )
@@ -137,7 +169,7 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( wxBitmap &bm )
 		}
 		int x = file-'a';
 		int y = '8'-rank;
-		bmpCopy( my_chess_bmp, x*pix_, y*pix_, board_setup, 8, 20 + i*44, pix_, pix_, mask );
+		bmpCopy( my_chess_bmp, x*pix, y*pix, board_setup, 8, 20 + i*44, pix, pix, mask );
 	}
 	for( int i=0; i<6; i++ )
 	{
@@ -161,19 +193,81 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( wxBitmap &bm )
 		}
 		int x = file-'a';
 		int y = '8'-rank;
-		bmpCopy( my_chess_bmp, x*pix_, y*pix_, board_setup, 325, 20 + i*44, pix_, pix_, mask );
+		bmpCopy( my_chess_bmp, x*pix, y*pix, board_setup, 325, 20 + i*44, pix, pix, mask );
 	}
 	bm = board_setup;
 }
 
-
-
-void ChessBoardBitmap::Init
-(
-    const wxSize& size
-)
-
+void ChessBoardBitmap::BuildCustomCursors( int pix )
 {
+	Init( pix );
+	SetChessPosition( 
+        "rnbqnrk "
+        "pp    b "
+        "    N   "
+        "   qk   "
+        "   QK   "
+        "        "
+        "PP      "
+        "RNBQKBNR"
+	);
+
+	for( int i=0; i<12; i++ )
+	{
+		char file, rank;
+		const char *mask;
+		wxImage *ptr;
+		switch(i)
+		{
+			default:
+			case 0: file='e';	rank='4';
+					mask = white_king_mask;
+					ptr  = &white_king_cursor;		break;
+			case 1: file='d';	rank='1';
+			        mask = white_queen_mask;
+			        ptr  = &white_queen_cursor;		break;
+			case 2: file='h';	rank='1';
+			        mask = white_rook_mask;
+			        ptr  = &white_rook_cursor;		break;
+			case 3: file='f';	rank='1';
+			        mask = white_bishop_mask;
+			        ptr  = &white_bishop_cursor;	break;
+			case 4: file='b';	rank='1';
+			        mask = white_knight_mask;
+			        ptr  = &white_knight_cursor;	break;
+			case 5: file='a';	rank='2';
+			        mask = white_pawn_mask;
+			        ptr  = &white_pawn_cursor;		break;
+			case 6: file='g';	rank='8';
+					mask = black_king_mask;
+					ptr  = &black_king_cursor;		break;
+			case 7: file='d';	rank='5';
+			        mask = black_queen_mask;
+			        ptr  = &black_queen_cursor;		break;
+			case 8: file='a';	rank='8';
+			        mask = black_rook_mask;
+			        ptr  = &black_rook_cursor;		break;
+			case 9: file='c';	rank='8';
+			        mask = black_bishop_mask;
+			        ptr  = &black_bishop_cursor;	break;
+			case 10: file='e';	rank='8';
+			        mask = black_knight_mask;
+			        ptr  = &black_knight_cursor;	break;
+			case 11: file='b';	rank='7';
+			        mask = black_pawn_mask;
+			        ptr  = &black_pawn_cursor;		break;
+		}
+		ptr->Create( pix, pix, false );
+		ptr->InitAlpha();
+		int x = file-'a';
+		int y = '8'-rank;
+		imageCopy( my_chess_bmp, x*pix, y*pix, *ptr, 0, 0, pix, pix, mask );
+	}
+}
+
+void ChessBoardBitmap::Init( int pix )
+{
+	wxSize size(pix*8,pix*8);
 	current_size = size;
 	int r1 = objs.repository->general.m_light_colour_r;
 	int g1 = objs.repository->general.m_light_colour_g;
@@ -186,8 +280,6 @@ void ChessBoardBitmap::Init
 	wxColour c2(r2,g2,b2);
 	dark_colour = c2;
     const char **xpm=0;
-    int min = size.x<size.y ? size.x : size.y;
-    pix = min/8;
     wxBitmap my_chess_bmp_;
     my_chess_bmp_.Create(pix*8,pix*8,24);
     int pitch;
@@ -1362,8 +1454,8 @@ void Testbed()
 void Testbed()
 {
     wxBitmap bm;
-	ChessBoardBitmap cbm;
-	cbm.BuildBoardSetupBitmap(bm);
+	ChessBoardBitmap cbb;
+	cbb.BuildBoardSetupBitmap(34,bm);
 	TestbedDialog dialog(bm);
 	dialog.Run();
 }

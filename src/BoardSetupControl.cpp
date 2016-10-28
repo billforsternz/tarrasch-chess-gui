@@ -16,8 +16,6 @@
 #include "BoardSetup.h"
 #include "ChessBoardBitmap.h"
 #include "BoardSetupControl.h"
-#include "bitmaps/board_setup_bitmap.xpm"
-#include "bitmaps/custom_cursors.xpm"
 
 BoardSetupControl::BoardSetupControl
 (
@@ -49,48 +47,17 @@ BoardSetupControl::BoardSetupControl
     this->position_setup = position_setup;
     memset( lockdown, 0, sizeof(lockdown) );
     wxClientDC dc(parent);
-//    dc.SetFont(*wxNORMAL_FONT);
-//    wxSize  size( max_w, n*max_h );
-//    wxPoint pos = point;
-//    SetPosition( pos );
-//    SetSize    ( size );
-    dbg_printf( "*BoardSetupControl::CaptureMouse*\n" );
-    //CaptureMouse();
-
-    // try to find the directory with our images
-    #if 0
-    wxString dir;
-    if ( wxFile::Exists(wxT("./position_setup.bmp")) )
-        dir = wxT("./");
-    else if ( wxFile::Exists(wxT("../position_setup.bmp")) )
-        dir = wxT("../");
-    else
-        wxLogWarning(wxT("Can't find image files in either '.' or '..'!"));
-
-    wxImage image;
-    if ( !image.LoadFile( dir + _T("position_setup.bmp"), wxBITMAP_TYPE_BMP ) )
-        wxLogError(wxT("Can't load BMP image"));
-    else
-    {
-        chess_bmp = wxBitmap( image );
-        image.Destroy();
-    #else
-    if(true)
-    {
-        //chess_bmp = static_chess_bmp; //wxBitmap( board_setup_bitmap_xpm );
-        //chess_bmp = wxBitmap( board_setup_bitmap_xpm );
-		ChessBoardBitmap cbm;
-		cbm.BuildBoardSetupBitmap(chess_bmp);
-
-    #endif
-        wxSize  size( chess_bmp.GetWidth(), chess_bmp.GetHeight() );
-        SetSize( size );
-        bool normal_orientation = objs.canvas->GetNormalOrientation();
-        cprintf( "Normal orientation = %s\n", normal_orientation?"true":"false" );
-        bs = new BoardSetup( &chess_bmp, this, 46, 11, normal_orientation );  // Note XBORDER, YBORDER now passed as parameters
-        SetCustomCursor( normal_orientation?'P':'p' );
-		state = UP_CURSOR_SIDE;
-    }
+    //chess_bmp = static_chess_bmp; //wxBitmap( board_setup_bitmap_xpm );
+    //chess_bmp = wxBitmap( board_setup_bitmap_xpm );
+	cbb.BuildBoardSetupBitmap(34,chess_bmp);
+	cbb.BuildCustomCursors(34);
+    wxSize  size( chess_bmp.GetWidth(), chess_bmp.GetHeight() );
+    SetSize( size );
+    bool normal_orientation = objs.canvas->GetNormalOrientation();
+    cprintf( "Normal orientation = %s\n", normal_orientation?"true":"false" );
+    bs = new BoardSetup( &chess_bmp, this, 46, 11, normal_orientation );  // Note XBORDER, YBORDER now passed as parameters
+    SetCustomCursor( normal_orientation?'P':'p' );
+	state = UP_CURSOR_SIDE;
 }
 
 BoardSetupControl::~BoardSetupControl()
@@ -495,27 +462,26 @@ void BoardSetupControl::OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(ev
 
 void BoardSetupControl::SetCustomCursor( char piece )
 {
-    const char * const *ptr;
+    wxImage *ptr;
     switch( piece )
     {
         default:
-        case 'P':   ptr = white_pawn_xpm;    break;
-        case 'N':   ptr = white_knight_xpm;  break;
-        case 'B':   ptr = white_bishop_xpm;  break;
-        case 'R':   ptr = white_rook_xpm;    break;
-        case 'Q':   ptr = white_queen_xpm;   break;
-        case 'K':   ptr = white_king_xpm;    break;
-        case 'p':   ptr = black_pawn_xpm;    break;
-        case 'n':   ptr = black_knight_xpm;  break;
-        case 'b':   ptr = black_bishop_xpm;  break;
-        case 'r':   ptr = black_rook_xpm;    break;
-        case 'q':   ptr = black_queen_xpm;   break;
-        case 'k':   ptr = black_king_xpm;    break;
+        case 'P':   ptr = &cbb.white_pawn_cursor;    break;
+        case 'N':   ptr = &cbb.white_knight_cursor;  break;
+        case 'B':   ptr = &cbb.white_bishop_cursor;  break;
+        case 'R':   ptr = &cbb.white_rook_cursor;    break;
+        case 'Q':   ptr = &cbb.white_queen_cursor;   break;
+        case 'K':   ptr = &cbb.white_king_cursor;    break;
+        case 'p':   ptr = &cbb.black_pawn_cursor;    break;
+        case 'n':   ptr = &cbb.black_knight_cursor;  break;
+        case 'b':   ptr = &cbb.black_bishop_cursor;  break;
+        case 'r':   ptr = &cbb.black_rook_cursor;    break;
+        case 'q':   ptr = &cbb.black_queen_cursor;   break;
+        case 'k':   ptr = &cbb.black_king_cursor;    break;
     }
-    wxImage image( ptr );
-    image.SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_X,17);
-    image.SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_Y,17);
-    wxCursor temp(image);
+    ptr->SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_X,17);
+    ptr->SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_Y,17);
+    wxCursor temp(*ptr);
     SetCursor( temp );    
 }
 
