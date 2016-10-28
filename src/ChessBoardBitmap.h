@@ -24,7 +24,7 @@ public:
 	void BuildCustomCursors( int pix );
 
 	// Setup a position	on the graphic board
-	void SetChessPosition( char *position_ascii );
+	void SetChessPosition( const char *position_ascii );
 
 	// Get/Set orientation
 	void SetNormalOrientation( bool _normal_orientation )

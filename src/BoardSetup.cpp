@@ -101,72 +101,11 @@ BoardSetup::BoardSetup( wxBitmap *bitmap, wxWindow *parent, int XBORDER, int YBO
     }
 #endif
 
-	// Read from position on left below (the .bmp resource) into the box
-	//  at right. The box has all the piece/colour combinations we need
-    //  (eg only two pawns from each side are needed, one of each colour).
-    //  Also note that the two squares marked with * are the two empty
-	//	squares (one of each colour) we need.
-	//
-	//	"rnbqnrk "		 "rnbqkbnr"
-	//	"ppppppbp"		 "pp      "
-	//	"    N p "		 "        "
-	//	" @ qk   "		 " @ qk   "
-	//	"  PQK   "		 "   QK   "
-	//	"  N     "		 "**      "
-	//	"PP   PPP"		 "PP      "
-	//	"R BQKBNR"		 "RNBQKBNR"
-	//
-	// Store these pieces from the board to their fixed
-	//  positions in the 'box'
-    Get( 'b','5', 'b','5' );    // @ = a special blue square, for highlights
-	Get( 'h','1', 'h','1' );
-	Get( 'g','1', 'g','1' );
-	Get( 'f','1', 'f','1' );
-	Get( 'e','1', 'e','1' );
-	Get( 'd','1', 'd','1' );
-	Get( 'c','1', 'c','1' );
-    //Get( 'c','3', 'b','1' ); // Relocating from c3 to b1 shifts
-							   //  this white knight to wrong colour
-	Get( 'a','1', 'a','1' );
-	
-	//Get( 'h','2', 'h','2' ); // Only need pawns on a2, b2
-	//Get( 'g','2', 'g','2' );
-	//Get( 'f','2', 'f','2' );
-	//Get( 'e','5', 'e','2' );
-	//Get( 'd','4', 'd','2' );
-	//Get( 'c','4', 'c','2' );
-	Get( 'b','2', 'b','2' );
-	Get( 'a','2', 'a','2' );
+	// Do an initial copy of all pieces into the box
+	for( char file='a'; file<='h'; file++ )
+		for( char rank='1'; rank<='8'; rank++ )
+			Get(file,rank,file,rank);
 
-	//Get( 'h','7', 'h','7' ); // Only need pawns on a7, b7
-	//Get( 'g','6', 'g','7' );
-	//Get( 'f','7', 'f','7' );
-	//Get( 'e','7', 'e','7' );
-	//Get( 'd','7', 'd','7' );
-	//Get( 'c','7', 'c','7' );
-	Get( 'b','7', 'b','7' );
-	Get( 'a','7', 'a','7' );
-
-	Get( 'f','8', 'h','8' );
-	Get( 'e','8', 'g','8' );
-	Get( 'g','7', 'f','8' );
-	Get( 'g','8', 'e','8' );
-	Get( 'd','8', 'd','8' );
-	Get( 'c','8', 'c','8' );
-	Get( 'b','8', 'b','8' );
-	Get( 'a','8', 'a','8' );
-
-	Get( 'c','2', 'c','2' );  // square with red highlight box	
-	Get( 'a','3', 'a','3' );  // empty black square
-	Get( 'b','3', 'b','3' );  // empty white square
-	Get( 'c','3', 'c','3' );  // square with cross 
-	Get( 'd','3', 'd','3' );  // square with cross 
-    
-	Get( 'e','6', 'b','1' );  // White knight on white square
-	Get( 'e','5', 'e','5' );  // Black king on black square
-	Get( 'e','4', 'e','4' );  // White king on white square
-	Get( 'd','5', 'd','5' );  // Black queen on white square
-	Get( 'd','4', 'd','4' );  // White queen on black square
     if( !normal_orientation )
         SwapPickupPieces();
 }

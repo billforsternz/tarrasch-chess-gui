@@ -19,6 +19,17 @@
 #include "Objects.h"
 #include "Repository.h"
 
+// A standard arrangement of pieces we use to get all combinations of pieces/square colours "pieces in the box"
+static const char *box_position =
+        "rnbqkbnr"
+        "pp      "
+        "        "
+        "   qk   "
+        "   QK   "
+        "        "
+        "PP      "
+        "RNBQKBNR";
+
 // Initialise the graphic board
 ChessBoardBitmap::ChessBoardBitmap()
 {
@@ -96,32 +107,14 @@ void imageCopy( wxBitmap &from, int x1, int y1, wxImage &to, int x2, int y2, int
 void ChessBoardBitmap::BuildMiniboardBitmap( int pix, wxBitmap &bm )
 {
 	Init( pix );
-	SetChessPosition( 
-        "rnbqnrk "
-        "pp    b "
-        "    N   "
-        "   qk   "
-        "   QK   "
-        "        "
-        "PP      "
-        "RNBQKBNR"
-	);
+	SetChessPosition( box_position );
 	bm = my_chess_bmp;
 }
 
 void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm )
 {
 	Init( pix );
-	SetChessPosition( 
-        "rnbqnrk "
-        "pp    b "
-        "    N   "
-        "   qk   "
-        "   QK   "
-        "        "
-        "PP      "
-        "RNBQKBNR"
-	);
+	SetChessPosition( box_position );
 	
     wxBitmap board_setup;
 	board_setup.Create(364,294,24);
@@ -178,7 +171,7 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm )
 		switch(i)
 		{
 			default:
-			case 5: file='g';	rank='8';
+			case 5: file='e';	rank='8';
 					mask = black_king_mask;		break;
 			case 4: file='d';	rank='5';
 			        mask = black_queen_mask;	break;
@@ -186,7 +179,7 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm )
 			        mask = black_rook_mask;		break;
 			case 2: file='c';	rank='8';
 			        mask = black_bishop_mask;	break;
-			case 1: file='e';	rank='8';
+			case 1: file='g';	rank='8';
 			        mask = black_knight_mask;	break;
 			case 0: file='b';	rank='7';
 			        mask = black_pawn_mask;		break;
@@ -201,17 +194,7 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm )
 void ChessBoardBitmap::BuildCustomCursors( int pix )
 {
 	Init( pix );
-	SetChessPosition( 
-        "rnbqnrk "
-        "pp    b "
-        "    N   "
-        "   qk   "
-        "   QK   "
-        "        "
-        "PP      "
-        "RNBQKBNR"
-	);
-
+	SetChessPosition( box_position );
 	for( int i=0; i<12; i++ )
 	{
 		char file, rank;
@@ -238,7 +221,7 @@ void ChessBoardBitmap::BuildCustomCursors( int pix )
 			case 5: file='a';	rank='2';
 			        mask = white_pawn_mask;
 			        ptr  = &white_pawn_cursor;		break;
-			case 6: file='g';	rank='8';
+			case 6: file='e';	rank='8';
 					mask = black_king_mask;
 					ptr  = &black_king_cursor;		break;
 			case 7: file='d';	rank='5';
@@ -250,7 +233,7 @@ void ChessBoardBitmap::BuildCustomCursors( int pix )
 			case 9: file='c';	rank='8';
 			        mask = black_bishop_mask;
 			        ptr  = &black_bishop_cursor;	break;
-			case 10: file='e';	rank='8';
+			case 10: file='g';	rank='8';
 			        mask = black_knight_mask;
 			        ptr  = &black_knight_cursor;	break;
 			case 11: file='b';	rank='7';
@@ -692,6 +675,23 @@ void ChessBoardBitmap::Init( int pix )
 	ClearHighlight1();
 	ClearHighlight2();
 
+	// The location of the pieces in the bitmap, a8 = top left, c7=#
+	// is a dark square, the rest of the board is light coloured, the
+	// background colour of the 12 squares with pieces is irrelevant,
+	// we use the mask to eliminate the background
+    // "rNbQkBnR",
+    // "Pp#qK",
+
+	// The box, colours are as per a normal chess board h1=white etc
+	// "rnbqkbnr"
+	// "pp......"
+	// "........"
+	// "...qk..."
+	// "...QK..."
+	// "........"
+	// "PP......"
+	// "RNBQKBNR"
+
 	// Read from position on left below (the .bmp resource) into the box
 	//  at right. The box has all the piece/colour combinations we need
     //  (eg only two pawns from each side are needed, one of each colour).
@@ -707,18 +707,11 @@ void ChessBoardBitmap::Init( int pix )
 	//	"        "		 "PP      "
 	//	"        "		 "RNBQKBNR"
 	//
-	//	"rnbqnrk "
-	//	"pp	   b "
-	//	"    N	 "
-	//	"	qk	 "
-	//	"	QK	 "
-	//	"        "
-	//	"PP		 "
-	//	"RNBQKBNR"
-	//
 	// Store these pieces from the board to their fixed
 	//  positions in the 'box'
-	Get( 'c','7', 'b','8' );  // preload black squares in the box
+
+	// Copy empty black square to all used black squares in the box
+	Get( 'c','7', 'b','8' );
 	Get( 'c','7', 'd','8' );
 	Get( 'c','7', 'f','8' );
 	Get( 'c','7', 'h','8' );
@@ -730,7 +723,9 @@ void ChessBoardBitmap::Init( int pix )
 	Get( 'c','7', 'c','1' );
 	Get( 'c','7', 'e','1' );
 	Get( 'c','7', 'g','1' );
-	Get( 'f','7', 'a','8' );  // preload white squares in the box
+
+	// Copy empty white square to all used white squares in the box
+	Get( 'f','7', 'a','8' );  
 	Get( 'f','7', 'c','8' );
 	Get( 'f','7', 'e','8' );
 	Get( 'f','7', 'g','8' );
@@ -742,40 +737,38 @@ void ChessBoardBitmap::Init( int pix )
 	Get( 'f','7', 'd','1' );
 	Get( 'f','7', 'f','1' );
 	Get( 'f','7', 'h','1' );
-    
+
+	// Copy white pieces to the box
 	Get( 'h','8', 'h','1', white_rook_mask );
 	Get( 'b','8', 'g','1', white_knight_mask );
 	Get( 'f','8', 'f','1', white_bishop_mask );
 	Get( 'e','7', 'e','1', white_king_mask );
+	Get( 'e','7', 'e','4', white_king_mask  );		// White king on white square
 	Get( 'd','8', 'd','1', white_queen_mask );
+	Get( 'd','8', 'd','4', white_queen_mask );		// White queen on black square
 	Get( 'f','8', 'c','1', white_bishop_mask );
     Get( 'b','8', 'b','1', white_knight_mask );
 	Get( 'h','8', 'a','1', white_rook_mask );
-	
-	Get( 'a','7', 'a','2', white_pawn_mask );    // Only need pawns on a2, b2
+	Get( 'a','7', 'a','2', white_pawn_mask );		// Only need pawns on a2, b2
 	Get( 'a','7', 'b','2', white_pawn_mask );
 
-	Get( 'b','7', 'a','7', black_pawn_mask );    // Only need pawns on a7, b7
-	Get( 'b','7', 'b','7', black_pawn_mask );
-
+	// Copy black pieces to the box
 	Get( 'a','8', 'h','8', black_rook_mask );
 	Get( 'g','8', 'g','8', black_knight_mask );
 	Get( 'c','8', 'f','8', black_bishop_mask );
 	Get( 'e','8', 'e','8', black_king_mask );
+	Get( 'e','8', 'e','5', black_king_mask  );		// Black king on black square
 	Get( 'd','7', 'd','8', black_queen_mask );
+	Get( 'd','7', 'd','5', black_queen_mask );		// Black queen on white square
 	Get( 'c','8', 'c','8', black_bishop_mask );
     Get( 'g','8', 'b','8', black_knight_mask );
 	Get( 'a','8', 'a','8', black_rook_mask );
+	Get( 'b','7', 'a','7', black_pawn_mask );		// Only need pawns on a7, b7
+	Get( 'b','7', 'b','7', black_pawn_mask );
 
+	// Two empty squares
 	Get( 'c','7', 'a','3' );  // empty black square
 	Get( 'f','7', 'b','3' );  // empty white square
-//	Get( 'c','3', 'c','3' );  // square with cross 
-//	Get( 'd','3', 'd','3' );  // square with cross 
-    
-	Get( 'e','8', 'e','5', black_king_mask  );  // Black king on black square
-	Get( 'e','7', 'e','4', white_king_mask  );  // White king on white square
-	Get( 'd','7', 'd','5', black_queen_mask );  // Black queen on white square
-	Get( 'd','8', 'd','4', white_queen_mask );  // White queen on black square
     my_chess_bmp = my_chess_bmp_;
 }
 
@@ -787,7 +780,7 @@ ChessBoardBitmap::~ChessBoardBitmap()
 }
 
 // Setup a position	on the graphic board
-void ChessBoardBitmap::SetChessPosition( char *position_ascii )
+void ChessBoardBitmap::SetChessPosition( const char *position_ascii )
 {
 #if 0 // Setup a custom position here
     #define CUSTOM_POSITION "rnbqnrk|pp4b|4N|3qk|3QK|8|PPxx|R1BQKBNR| w KQkq - 0 1"
