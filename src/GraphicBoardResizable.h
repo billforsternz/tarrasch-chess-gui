@@ -55,6 +55,7 @@ public:
     void OnMouseLeftDown (wxMouseEvent & event);
     void OnMouseLeftUp (wxMouseEvent & event);
     void OnMouseMove (wxMouseEvent & event);
+	void OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(event) );
     wxBitmap     my_chess_bmp;
 
 private:

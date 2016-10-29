@@ -16,7 +16,7 @@ IMPLEMENT_CLASS( CtrlBox, wxControl )
 BEGIN_EVENT_TABLE( CtrlBox, wxControl )
     EVT_PAINT(CtrlBox::OnPaint)
 //    EVT_SIZE(CtrlBox::OnSize)
-//    EVT_MOUSE_CAPTURE_LOST(CtrlBox::OnMouseCaptureLost)
+    EVT_MOUSE_CAPTURE_LOST(CtrlBox::OnMouseCaptureLost)
 //    EVT_MOUSE_EVENTS(CtrlBox::OnMouseEvent)
 //    EVT_LEFT_UP (CtrlBox::OnMouseLeftUp)
     EVT_LEFT_DOWN (CtrlBox::OnMouseLeftDown)
@@ -79,4 +79,10 @@ void CtrlBox::OnMouseLeftDown( wxMouseEvent &WXUNUSED(event) )
         objs.gl->CmdClocks();
 }
 
+
+void CtrlBox::OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(event) )
+{
+    //event.Skip(true);
+    //event.StopPropagation();
+}
 

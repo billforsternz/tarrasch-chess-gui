@@ -1196,6 +1196,14 @@ void GraphicBoardResizable::OnMouseLeftUp( wxMouseEvent &event )
 }
 
 
+void GraphicBoardResizable::OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(event) )
+{
+    //event.Skip(true);
+    //event.StopPropagation();
+}
+
+
+
 void GraphicBoardResizable::SetBoardSize( wxSize &sz )
 {
     cprintf( "Child: resize x=%d, y=%d\n", sz.x, sz.y );
@@ -1211,7 +1219,7 @@ void GraphicBoardResizable::SetBoardSize( wxSize &sz )
 
 BEGIN_EVENT_TABLE(GraphicBoardResizable, wxControl)
     EVT_PAINT(GraphicBoardResizable::OnPaint)
-//    EVT_MOUSE_CAPTURE_LOST(GraphicBoardResizable::OnMouseCaptureLost)
+    EVT_MOUSE_CAPTURE_LOST(GraphicBoardResizable::OnMouseCaptureLost)
 //    EVT_MOUSE_EVENTS(GraphicBoardResizable::OnMouseEvent)
     EVT_LEFT_UP (GraphicBoardResizable::OnMouseLeftUp)
     EVT_LEFT_DOWN (GraphicBoardResizable::OnMouseLeftDown)

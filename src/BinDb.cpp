@@ -510,9 +510,6 @@ uint8_t BinDbReadBegin( bool use_packed_control_block )
     return cb_idx;
 }
 
-//TODO fix sad global variable
-int gbl_elo_cutoff=2000;
-
 bool bin_db_append( const char *fen, const char *event, const char *site, const char *date, const char *round,
                   const char *white, const char *black, const char *result, const char *white_elo, const char *black_elo, const char *eco,
                   int nbr_moves, thc::Move *moves )
@@ -524,11 +521,65 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
         return false;
     if( nbr_moves < 3 )    // skip 'games' with zero, one or two moves
         return false;           // not inserted, not error
-    int elo_w = Elo2Bin(white_elo);
-    int elo_b = Elo2Bin(black_elo);
-    if( 0<elo_w && elo_w<gbl_elo_cutoff && 0<elo_b && elo_b<gbl_elo_cutoff )
-        // if any elo information, need at least one good player
-        return false;   // not inserted, not error
+	int yyyy=0;		// declare here just to avoid unnecessary recalc
+	uint32_t date_bin=0;
+	int elo_w = Elo2Bin(white_elo);
+	int elo_b = Elo2Bin(black_elo);
+	bool elo_cutoff_ignore = objs.repository->database.m_elo_cutoff_ignore;
+	if( !elo_cutoff_ignore )
+	{
+		int elo_cutoff		       = objs.repository->database.m_elo_cutoff;
+		int elo_cutoff_before_year = objs.repository->database.m_elo_cutoff_before_year;
+		bool elo_cutoff_one	   = objs.repository->database.m_elo_cutoff_one;
+		bool elo_cutoff_both   = objs.repository->database.m_elo_cutoff_both;
+		bool elo_cutoff_fail   = objs.repository->database.m_elo_cutoff_fail;
+		bool elo_cutoff_pass   = objs.repository->database.m_elo_cutoff_pass;
+		bool elo_cutoff_pass_before = objs.repository->database.m_elo_cutoff_pass_before;
+		bool elo_w_pass = (elo_w >= elo_cutoff);
+		bool elo_b_pass = (elo_b >= elo_cutoff);
+		if( elo_w==0 || elo_b==0 )
+		{
+			if( elo_cutoff_fail )
+			{
+				if( elo_w == 0 )
+					elo_w_pass = false;
+				if( elo_b == 0 )
+					elo_b_pass = false;
+			}
+			else if( elo_cutoff_pass )
+			{
+				if( elo_w == 0 )
+					elo_w_pass = true;
+				if( elo_b == 0 )
+					elo_b_pass = true;
+			}
+			else if( elo_cutoff_pass_before )
+			{
+				date_bin = Date2Bin(date);
+				// Use 19 bits with format yyyyyyyyyymmmmddddd
+				// y year, 10 bits, values are 0=unknown, 1-1000 are years 1501-2500 (so fixed offset of 1500), 1001-1023 are reserved
+				// m month, 4 bits, values are 0=unknown, 1=January..12=December, 13-15 reserved
+				// d day,   5 bits, values are valid, 0=unknown, 1-31 = conventional date days
+				yyyy = (date_bin>>9);
+				if( 1<=yyyy && yyyy<=1000 )
+					yyyy += 1500; 
+				else
+					yyyy = 1500;	// note that yyyy=0 is not possible if yyyy has been calculated (see use of yyyy to avoid recalculation below)
+				bool old_game = (yyyy < elo_cutoff_before_year);
+				if( elo_w == 0 )
+					elo_w_pass = old_game;
+				if( elo_b == 0 )
+					elo_b_pass = old_game;
+			}
+		}
+		bool discard=false;
+		if( elo_cutoff_one )
+			discard = elo_w_pass||elo_b_pass;
+		else if( elo_cutoff_both )
+			discard = elo_w_pass&&elo_b_pass;
+		if( discard )
+			return false;   // not inserted, not error
+	}
     const char *s =  white;
     while( *s==' ' )
         s++;
@@ -559,7 +610,7 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
         ssite,
         swhite,
         sblack,
-        Date2Bin(date),
+        yyyy==0 ? Date2Bin(date) : date_bin,
         Round2Bin(round),
         Result2Bin(result),
         Eco2Bin(eco),

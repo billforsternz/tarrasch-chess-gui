@@ -16,7 +16,7 @@ IMPLEMENT_CLASS( CtrlBox2, wxTextCtrl )
 BEGIN_EVENT_TABLE( CtrlBox2, wxTextCtrl )
 //    EVT_PAINT(CtrlBox2::OnPaint)
 //    EVT_SIZE(CtrlBox2::OnSize)
-//    EVT_MOUSE_CAPTURE_LOST(CtrlBox2::OnMouseCaptureLost)
+    EVT_MOUSE_CAPTURE_LOST(CtrlBox2::OnMouseCaptureLost)
 //    EVT_MOUSE_EVENTS(CtrlBox2::OnMouseEvent)
 //    EVT_LEFT_UP (CtrlBox2::OnMouseLeftUp)
     EVT_SET_CURSOR(CtrlBox2::OnSetCursor)
@@ -91,5 +91,11 @@ void CtrlBox2::OnSetCursor( wxSetCursorEvent &event )
     SetCursor(x);
     event.Skip();   // let wxWidgets continue to process the event, somehow
                     //  it stops the native control setting the beam cursor
+}
+
+void CtrlBox2::OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(event) )
+{
+    //event.Skip(true);
+    //event.StopPropagation();
 }
 

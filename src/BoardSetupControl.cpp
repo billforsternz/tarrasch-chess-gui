@@ -454,6 +454,7 @@ void BoardSetupControl::OnSize(wxSizeEvent& WXUNUSED(evt))
 {
     Refresh();
 }
+
 void BoardSetupControl::OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(event) )
 {
     //event.Skip(true);

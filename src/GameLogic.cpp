@@ -2699,8 +2699,8 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
         case GAMEOVER:
         case MANUAL:  show=true;
     }
-    if( show )
-        SetGroomedPosition();
+    //if( show )
+    //    SetGroomedPosition();
     int b1_cmd=0;
     int b2_cmd=0;
     int b3_cmd=0;
@@ -2775,7 +2775,9 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
                         break;
 
     }
-    canvas->SetChessPosition( gd.master_position );
+	SetGroomedPosition();
+    //if( !show )
+	//    canvas->SetChessPosition( gd.master_position );
     if( suggestions )
         canvas->box->SetLabel( b1 && b2 && b3 && b4 ? "Enter moves, comments and variations freely - or ..." : "Suggestions" );
     if( title && !show )
@@ -3410,6 +3412,7 @@ void GameLogic::SetGroomedPosition( bool show_title )
             }
         }
     }
+	cprintf( "SetGroomedPosition() calling SetChessPosition()\n" );
     canvas->SetChessPosition( view_pos );
 	if( show_title )
 		canvas->SetBoardTitle( title );

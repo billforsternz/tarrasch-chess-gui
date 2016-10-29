@@ -161,19 +161,71 @@ void CreateDatabaseDialog::CreateControls()
         box_sizer->Add(picker6, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
     }
 
+
+	wxBoxSizer* h1 = new wxBoxSizer(wxHORIZONTAL);
+    wxBoxSizer* v1 = new wxBoxSizer(wxVERTICAL);
+    wxBoxSizer* v2 = new wxBoxSizer(wxVERTICAL);
+    wxBoxSizer* v3 = new wxBoxSizer(wxVERTICAL);
+    wxBoxSizer* v4 = new wxBoxSizer(wxVERTICAL);
+
     // Label for elo cutoff
     wxStaticText* elo_cutoff_label = new wxStaticText ( this, wxID_STATIC,
-        wxT("Elo cutoff (if Elo values present, at least one player must meet this threshold)"), wxDefaultPosition, wxDefaultSize, 0 );
-    box_sizer->Add(elo_cutoff_label, 0, wxALL, 5);
+        "Elo cutoff", wxDefaultPosition, wxDefaultSize, 0 );
+    v1->Add(elo_cutoff_label, 0, wxALL, 5);
 
     // A spin control for the elo cutoff
     elo_cutoff_spin = new wxSpinCtrl ( this, ID_CREATE_ELO_CUTOFF,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 0, 4000, 2000 );
     elo_cutoff_spin->SetValue( objs.repository->database.m_elo_cutoff );
-    box_sizer->Add(elo_cutoff_spin, 0, wxALL, 5);
+    v1->Add(elo_cutoff_spin, 0, wxALL, 5);
 
-    // A dividing line before the OK and Cancel buttons
+    // Radio options
+    ignore = new wxRadioButton( this, wxID_ANY,
+        "Ignore Elo cutoff", wxDefaultPosition, wxDefaultSize, wxRB_GROUP );
+    ignore->SetValue( objs.repository->database.m_elo_cutoff_ignore );
+    at_least_one = new wxRadioButton( this, wxID_ANY,
+        "At least one player", wxDefaultPosition, wxDefaultSize, 0 );
+    at_least_one->SetValue( objs.repository->database.m_elo_cutoff_one );
+    both = new wxRadioButton( this, wxID_ANY,
+        "Both players", wxDefaultPosition, wxDefaultSize,  0 );
+    both->SetValue( objs.repository->database.m_elo_cutoff_both );
+
+    // Unrated players
+    fail = new wxRadioButton( this, wxID_ANY,
+        "Unrated players fail Elo cutoff", wxDefaultPosition, wxDefaultSize,  wxRB_GROUP );
+    fail->SetValue( objs.repository->database.m_elo_cutoff_fail );
+    pass = new wxRadioButton( this, wxID_ANY,
+        "Unrated players pass Elo cutoff", wxDefaultPosition, wxDefaultSize,  0 );
+    pass->SetValue( objs.repository->database.m_elo_cutoff_pass );
+    pass_before = new wxRadioButton( this, wxID_ANY,
+        "Unrated pass if game played before", wxDefaultPosition, wxDefaultSize,  0 );
+    pass_before->SetValue( objs.repository->database.m_elo_cutoff_pass_before );
+    wxStaticText* spacer1 = new wxStaticText ( this, wxID_ANY,
+        " ", wxDefaultPosition, wxDefaultSize, 0 );
+    wxStaticText* spacer2 = new wxStaticText ( this, wxID_ANY,
+        " ", wxDefaultPosition, wxDefaultSize, 0 );
+    before_year = new wxSpinCtrl ( this, wxID_ANY,
+        wxEmptyString, wxDefaultPosition, wxSize(60, -1),
+        wxSP_ARROW_KEYS, 1400, 2500, 1990 );
+    before_year->SetValue( objs.repository->database.m_elo_cutoff_before_year );
+
+	v2->Add(ignore, 0, wxALL, 5);
+    v2->Add(at_least_one, 0, wxALL, 5);
+    v2->Add(both, 0, wxALL, 5);
+	v3->Add(fail, 0, wxALL, 5);
+    v3->Add(pass, 0, wxALL, 5);
+    v3->Add(pass_before, 0, wxALL, 5);
+    v4->Add(spacer1, 0, wxALL, 5);
+    v4->Add(spacer2, 0, wxALL, 5);
+    v4->Add(before_year, 0, wxALL, 0);
+    h1->Add(v1, 0, wxGROW|wxALL, 5);
+    h1->Add(v2, 0, wxGROW|wxALL, 5);
+    h1->Add(v3, 0, wxGROW|wxALL, 5);
+    h1->Add(v4, 0, wxGROW|wxALL, 5);
+    box_sizer->Add(h1, 0, wxGROW|wxALL, 5);
+
+	// A dividing line before the OK and Cancel buttons
     wxStaticLine* line2 = new wxStaticLine ( this, wxID_STATIC,
                                            wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
     box_sizer->Add(line2, 0, wxGROW|wxALL, 5);
@@ -213,10 +265,14 @@ void CreateDatabaseDialog::SetDialogHelp()
 // wxID_OK handler
 void CreateDatabaseDialog::OnOk( wxCommandEvent& WXUNUSED(event) )
 {
-    int elo_cutoff = elo_cutoff_spin->GetValue();
-    extern int gbl_elo_cutoff;
-    gbl_elo_cutoff = elo_cutoff;
-    objs.repository->database.m_elo_cutoff = elo_cutoff;
+    objs.repository->database.m_elo_cutoff        = elo_cutoff_spin->GetValue();
+	objs.repository->database.m_elo_cutoff_ignore = ignore->GetValue();
+	objs.repository->database.m_elo_cutoff_one    = at_least_one->GetValue();
+	objs.repository->database.m_elo_cutoff_both   = both->GetValue();
+	objs.repository->database.m_elo_cutoff_fail   = fail->GetValue();
+	objs.repository->database.m_elo_cutoff_pass   = pass->GetValue();
+	objs.repository->database.m_elo_cutoff_pass_before = pass_before->GetValue();
+	objs.repository->database.m_elo_cutoff_before_year = before_year->GetValue();
     if( create_mode )
         OnCreateDatabase();
     else

@@ -398,6 +398,7 @@ void PanelBoard::SetChessPosition( thc::ChessPosition &pos )
 
 void PanelBoard::SetChessPosition()
 {
+	cprintf( "PanelBoard::SetChessPosition()\n" );
     bool normal = gb->GetNormalOrientation();
     gb->SetChessPosition( save_position.squares );
     gb->Draw();

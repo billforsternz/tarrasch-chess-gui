@@ -31,6 +31,7 @@ private:
     wxString txt;
     void OnMouseLeftDown( wxMouseEvent & event );
     void OnSetCursor( wxSetCursorEvent & event );
+	void OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(event) );
 
 public:
     bool     hack_its_a_clock;

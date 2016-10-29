@@ -28,6 +28,7 @@ private:
     wxString txt;
     void OnMouseLeftDown (wxMouseEvent& WXUNUSED(event));
     void OnEraseBackGround(wxEraseEvent& WXUNUSED(event)) {};
+	void OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(event) );
 
 public:
     bool     hack_its_a_clock;

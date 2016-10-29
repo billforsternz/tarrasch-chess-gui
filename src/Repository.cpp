@@ -143,8 +143,15 @@ Repository::Repository( bool use_defaults )
         ReadBool    ("TrainingBlindfoldHideBlackPieces",  training.m_blindfold_hide_black_pieces );
 
         // Database
-        config->Read("DatabaseFile",          &database.m_file          );
-        config->Read("DatabaseEloCutoff",     &database.m_elo_cutoff    );
+        config->Read("DatabaseFile",				&database.m_file          );
+        config->Read("DatabaseEloCutoff",			&database.m_elo_cutoff    );
+        config->Read("DatabaseEloCutoffBeforeYear", &database.m_elo_cutoff_before_year );
+        ReadBool    ("DatabaseEloCutoffIgnore",		database.m_elo_cutoff_ignore );
+        ReadBool    ("DatabaseEloCutoffOne",		database.m_elo_cutoff_one    );
+        ReadBool    ("DatabaseEloCutoffBoth",		database.m_elo_cutoff_both );
+        ReadBool    ("DatabaseEloCutoffFail",		database.m_elo_cutoff_fail );
+        ReadBool    ("DatabaseEloCutoffPass",		database.m_elo_cutoff_pass );
+        ReadBool    ("DatabaseEloCutoffPassBefore", database.m_elo_cutoff_pass_before );
         
         // General
         config->Read("GeneralNotationLanguage",          &general.m_notation_language );
@@ -282,8 +289,15 @@ Repository::~Repository()
     config->Write("NonVolatileEventNotSite",          (int)nv.m_event_not_site );
 
     // Database
-    config->Write("DatabaseFile",       database.m_file          );
-    config->Write("DatabaseEloCutoff",  database.m_elo_cutoff    );
+    config->Write("DatabaseFile",				 database.m_file       );
+    config->Write("DatabaseEloCutoff",			 database.m_elo_cutoff );
+    config->Write("DatabaseEloCutoffBeforeYear", database.m_elo_cutoff_before_year );
+    config->Write("DatabaseEloCutoffIgnore",	 (int)database.m_elo_cutoff_ignore );
+    config->Write("DatabaseEloCutoffOne",		 (int)database.m_elo_cutoff_one    );
+    config->Write("DatabaseEloCutoffBoth",		 (int)database.m_elo_cutoff_both );
+    config->Write("DatabaseEloCutoffFail",		 (int)database.m_elo_cutoff_fail );
+    config->Write("DatabaseEloCutoffPass",		 (int)database.m_elo_cutoff_pass );
+    config->Write("DatabaseEloCutoffPassBefore", (int)database.m_elo_cutoff_pass_before );
     
     // Engine
     config->Write("EngineExeFile",      engine.m_file   );

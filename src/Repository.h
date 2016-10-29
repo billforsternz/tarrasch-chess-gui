@@ -185,11 +185,25 @@ struct DatabaseConfig
 {
     wxString    m_file;
     int         m_elo_cutoff;
+	bool        m_elo_cutoff_ignore;
+	bool        m_elo_cutoff_one;
+	bool        m_elo_cutoff_both;
+	bool        m_elo_cutoff_fail;
+	bool        m_elo_cutoff_pass;
+	bool        m_elo_cutoff_pass_before;
+    int         m_elo_cutoff_before_year;
     DatabaseConfig()
     {
         m_file = DEFAULT_DATABASE;
         m_elo_cutoff = 2000;
-    }
+		m_elo_cutoff_ignore = false;
+		m_elo_cutoff_one = true;
+		m_elo_cutoff_both = false;
+		m_elo_cutoff_fail = false;
+		m_elo_cutoff_pass = true;
+		m_elo_cutoff_pass_before = false;
+		m_elo_cutoff_before_year = 1990;
+	}
 };
 
 struct GeneralConfig

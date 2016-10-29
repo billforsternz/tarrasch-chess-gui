@@ -95,7 +95,15 @@ public:
     bool db_created_ok;
     std::string db_name;
     bool create_tiny_db;
-    wxSpinCtrl* elo_cutoff_spin;
+    wxSpinCtrl    *elo_cutoff_spin;
+    wxSpinCtrl    *before_year;
+    wxRadioButton *ignore;
+    wxRadioButton *at_least_one;
+    wxRadioButton *both;
+    wxRadioButton *fail;
+    wxRadioButton *pass;
+    wxRadioButton *pass_before;
+
 };
 
 #endif    // CREATE_DATABASE_DIALOG_H
