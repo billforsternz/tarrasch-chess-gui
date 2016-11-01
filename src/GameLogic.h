@@ -6,6 +6,8 @@
  ****************************************************************************/
 #ifndef GAMELOGIC_H
 #define GAMELOGIC_H
+#include "wx/wx.h"
+#include "wx/filehistory.h"
 #include "Appdefs.h"
 #include "Book.h"
 #include "PopupControl.h"
@@ -28,7 +30,7 @@ class GameLogic
 public:
 
 	// Initialise, shutdown
-	GameLogic( PanelContext *canvas, CtrlChessTxt *lb );
+	GameLogic( PanelContext *canvas, CtrlChessTxt *lb, wxMenu *menu_file );
 
     // The user hovers over the book moves rectangle
     void BookHover( wxPoint &point );
@@ -73,6 +75,7 @@ public:
     void CmdExamineGame();
     void CmdFileNew();
     void CmdFileOpen();
+    void CmdFileOpenMru( int mru_idx );
     void CmdFileOpenLog();
     void CmdFileOpenInner( std::string &filename );
     void CmdFileSave();
@@ -218,6 +221,7 @@ private:
     void KibitzIntro();
     void KibitzClearMultiPV();
     uint32_t game_being_edited_tag;
+	wxFileHistory mru;
 
     // public data
 public:

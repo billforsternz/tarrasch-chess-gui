@@ -298,6 +298,7 @@ class Repository
 public:
     Repository( bool use_defaults=false );
     ~Repository();
+	wxConfig *GetConfig() { return config; }
     BookConfig      book;
     LogConfig       log;
     PlayerConfig    player;

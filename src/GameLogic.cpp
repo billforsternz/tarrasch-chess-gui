@@ -65,10 +65,13 @@ void ReportOnProgress
 
 
 // Initialise the game logic
-GameLogic::GameLogic( PanelContext *canvas, CtrlChessTxt *lb )
+GameLogic::GameLogic( PanelContext *canvas, CtrlChessTxt *lb, wxMenu *menu_file )
     : atom(this), gd(this), undo(this)
 {
-    state    = RESET;
+	mru.UseMenu(menu_file);
+	mru.AddFilesToMenu(menu_file);
+	mru.Load( *objs.repository->GetConfig() );
+	state    = RESET;
     db_clipboard = false;
     game_being_edited_tag = 0;
     engine_name[0] = '\0';
@@ -105,6 +108,7 @@ bool GameLogic::OnExit()
 		cprintf( "ChessApp::OnExit() if we did wait, that wait is now over\n" );
 
 		objs.log->SaveGame( &gd, editing_log );
+		mru.Save( *objs.repository->GetConfig() );
 	}
     return okay;
 }
@@ -623,6 +627,23 @@ void GameLogic::CmdFileOpen()
             wxFileName::SplitPath( fd.GetPath(), &dir2, NULL, NULL );
             objs.repository->nv.m_doc_dir = dir2;
             wxString wx_filename = fd.GetPath();
+			mru.AddFileToHistory( wx_filename );
+            std::string filename( wx_filename.c_str() );
+            CmdFileOpenInner( filename );
+        }
+    }
+    atom.StatusUpdate();
+}
+
+void GameLogic::CmdFileOpenMru( int mru_idx )
+{
+    Atomic begin;
+    if( objs.cws->FileOpen() )
+    {
+        wxString wx_filename = mru.GetHistoryFile(mru_idx);
+		if( !wx_filename.empty() )
+		{
+			mru.AddFileToHistory( wx_filename );
             std::string filename( wx_filename.c_str() );
             CmdFileOpenInner( filename );
         }

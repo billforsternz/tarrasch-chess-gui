@@ -23,6 +23,7 @@
 #include "wx/clipbrd.h"
 #include "wx/sysopt.h"
 #include "wx/log.h"
+#include "wx/filehistory.h"
 #include "Appdefs.h"
 #include "wx/aui/aui.h"
 #ifdef AUI_NOTEBOOK
@@ -446,6 +447,7 @@ public:
         void OnUpdateFileNew( wxUpdateUIEvent &);
     void OnFileOpen (wxCommandEvent &);
         void OnUpdateFileOpen(wxUpdateUIEvent &);
+	void OnFileOpenMru(wxCommandEvent&);
     void OnFileOpenLog (wxCommandEvent &);
         void OnUpdateFileOpenLog(wxUpdateUIEvent &);
     void OnFileSave (wxCommandEvent &);
@@ -728,6 +730,7 @@ BEGIN_EVENT_TABLE(ChessFrame, wxFrame)
         EVT_UPDATE_UI (wxID_NEW,                ChessFrame::OnUpdateFileNew)
     EVT_MENU (wxID_OPEN,                    ChessFrame::OnFileOpen)
         EVT_UPDATE_UI (wxID_OPEN,               ChessFrame::OnUpdateFileOpen)
+	EVT_MENU_RANGE(wxID_FILE1,wxID_FILE9, ChessFrame::OnFileOpenMru)
     EVT_MENU (ID_FILE_OPEN_LOG,             ChessFrame::OnFileOpenLog)
         EVT_UPDATE_UI (ID_FILE_OPEN_LOG,        ChessFrame::OnUpdateFileOpenLog)
     EVT_MENU (wxID_SAVE,                    ChessFrame::OnFileSave)
@@ -843,6 +846,8 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     wxMenu *menu_file     = new wxMenu;
     menu_file->Append (wxID_NEW,                    _T("New\tCtrl+N"));
     menu_file->Append (wxID_OPEN,                   _T("Open\tCtrl+O"));
+	wxMenu *menu_recent = new wxMenu;
+	menu_file->AppendSubMenu( menu_recent, "Open Recent" );
     menu_file->Append (ID_FILE_OPEN_LOG,            _T("Open log file"));
     menu_file->Append (wxID_SAVE,                   _T("Save\tCtrl+S"));
     menu_file->Append (wxID_SAVEAS,                 _T("Save as"));
@@ -1140,7 +1145,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     objs.book       = new Book;
     objs.cws        = new CentralWorkSaver;
     objs.tabs       = new Tabs;
-    GameLogic *gl   = new GameLogic( context, lb );
+    GameLogic *gl   = new GameLogic( context, lb, menu_recent );
 
     // Hook up connections to GameLogic
     objs.gl         = gl;
@@ -1534,6 +1539,12 @@ void ChessFrame::OnFileNew (wxCommandEvent &)
 void ChessFrame::OnFileOpen (wxCommandEvent &)
 {
     objs.gl->CmdFileOpen();
+}
+
+void ChessFrame::OnFileOpenMru(wxCommandEvent& event)
+{
+	int mru_idx = (event.GetId() - wxID_FILE1);
+    objs.gl->CmdFileOpenMru( mru_idx );
 }
 
 void ChessFrame::OnFileOpenLog (wxCommandEvent &)

@@ -265,28 +265,28 @@ Repository::~Repository()
 	config->Write("GeneralDarkSquaresBlue",            general.m_dark_colour_b );
 
     // NonVolatile
-    config->Write("NonVolatileX",                     nv.m_x );
-    config->Write("NonVolatileY",                     nv.m_y );
-    config->Write("NonVolatileW",                     nv.m_w );
-    config->Write("NonVolatileH",                     nv.m_h );
-    config->Write("NonVolatilePanel1",                nv.m_panel1 );
-    config->Write("NonVolatilePanel2",                nv.m_panel2 );
-    config->Write("NonVolatilePanel3",                nv.m_panel3 );
-    config->Write("NonVolatilePanel4",                nv.m_panel4 );
-    config->Write("NonVolatileCol0",                  nv.m_col0 );
-    config->Write("NonVolatileCol1",                  nv.m_col1 );
-    config->Write("NonVolatileCol2",                  nv.m_col2 );
-    config->Write("NonVolatileCol3",                  nv.m_col3 );
-    config->Write("NonVolatileCol4",                  nv.m_col4 );
-    config->Write("NonVolatileCol5",                  nv.m_col5 );
-    config->Write("NonVolatileCol6",                  nv.m_col6 );
-    config->Write("NonVolatileCol7",                  nv.m_col7 );
-    config->Write("NonVolatileCol8",                  nv.m_col8 );
-    config->Write("NonVolatileCol9",                  nv.m_col9 );
-    config->Write("NonVolatileCol10",                 nv.m_col10 );
-    config->Write("NonVolatileCol11",                 nv.m_col11 );
-    config->Write("NonVolatileDocDir",                nv.m_doc_dir );
-    config->Write("NonVolatileEventNotSite",          (int)nv.m_event_not_site );
+    config->Write("NonVolatileX",                   nv.m_x );
+    config->Write("NonVolatileY",                   nv.m_y );
+    config->Write("NonVolatileW",                   nv.m_w );
+    config->Write("NonVolatileH",                   nv.m_h );
+    config->Write("NonVolatilePanel1",              nv.m_panel1 );
+    config->Write("NonVolatilePanel2",              nv.m_panel2 );
+    config->Write("NonVolatilePanel3",              nv.m_panel3 );
+    config->Write("NonVolatilePanel4",              nv.m_panel4 );
+    config->Write("NonVolatileCol0",                nv.m_col0 );
+    config->Write("NonVolatileCol1",                nv.m_col1 );
+    config->Write("NonVolatileCol2",                nv.m_col2 );
+    config->Write("NonVolatileCol3",                nv.m_col3 );
+    config->Write("NonVolatileCol4",                nv.m_col4 );
+    config->Write("NonVolatileCol5",                nv.m_col5 );
+    config->Write("NonVolatileCol6",                nv.m_col6 );
+    config->Write("NonVolatileCol7",                nv.m_col7 );
+    config->Write("NonVolatileCol8",                nv.m_col8 );
+    config->Write("NonVolatileCol9",                nv.m_col9 );
+    config->Write("NonVolatileCol10",               nv.m_col10 );
+    config->Write("NonVolatileCol11",               nv.m_col11 );
+    config->Write("NonVolatileDocDir",              nv.m_doc_dir );
+    config->Write("NonVolatileEventNotSite",        (int)nv.m_event_not_site );
 
     // Database
     config->Write("DatabaseFile",				 database.m_file       );
