@@ -6,9 +6,21 @@
  ****************************************************************************/
 #ifndef TABS_H
 #define TABS_H
+#include "wx/wx.h"
 #include "GameLogic.h"
 #include "Undo.h"
 #include <vector>
+
+class NotebookPage: public wxTextCtrl
+{
+public:
+    NotebookPage( wxWindow *parent, wxWindowID id, const wxPoint &pos, const wxSize &siz ) :
+		wxTextCtrl(parent, id,"", pos, siz, wxNO_BORDER )
+	{
+	}
+	void RedirectFocus(wxFocusEvent& event);
+    DECLARE_EVENT_TABLE()
+};
 
 struct TabElement
 {
@@ -44,9 +56,8 @@ public:
     bool TabSelected( int idx );
 #ifdef AUI_NOTEBOOK
     void TabDelete( int idx, bool system_will_delete_notebook_page );
-#else
-    int  TabDelete();
 #endif
+    int  TabDelete();
     void SetTitle( GameDocument &gd );
 	int  Iterate( int handle, GameDocument *&gd, Undo *&undo, bool exclude_foreground=false );
 };

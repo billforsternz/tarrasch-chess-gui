@@ -408,7 +408,8 @@ void GameLogic::OnTabSelected( int idx )
 }
 
 
-#ifdef AUI_NOTEBOOK
+//#ifdef AUI_NOTEBOOK
+#if 0
 void GameLogic::OnTabClose( int idx )
 {
     cprintf( "OnTabClose(%d)\n",idx);

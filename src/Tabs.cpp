@@ -4,8 +4,18 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#include "Tabs.h"
 #include "GameLogic.h"
+#include "Objects.h"
+#include "Tabs.h"
+
+BEGIN_EVENT_TABLE(NotebookPage,wxTextCtrl)
+	EVT_SET_FOCUS(RedirectFocus)
+END_EVENT_TABLE()
+
+void NotebookPage::RedirectFocus(wxFocusEvent& WXUNUSED(event))
+{
+	objs.gl->SetFocusOnList();
+}
 
 void Tabs::TabNew( GameDocument &new_gd )
 {
@@ -25,7 +35,7 @@ void Tabs::TabNew( GameDocument &new_gd )
         gl->gd = new_gd;
         gl->undo = e.undo; // blank
         current_idx = nbr_tabs-1;
-        wxTextCtrl *notebook_page1 = new wxTextCtrl(objs.canvas->notebook, wxID_ANY,"", wxDefaultPosition, wxDefaultSize /*objs.canvas->notebook->GetPosition(), objs.canvas->notebook->GetSize()*/, wxNO_BORDER );
+        NotebookPage *notebook_page1 = new NotebookPage(objs.canvas->notebook, wxID_ANY,wxDefaultPosition, wxDefaultSize);
         //wxWindow *notebook_page1 = new wxWindow(objs.canvas->notebook, wxID_ANY );
         objs.canvas->notebook->AddPage(notebook_page1,"New Game",true);
     }
@@ -149,7 +159,7 @@ void Tabs::TabDelete( int idx, bool system_will_delete_notebook_page )
     }
 }
 
-#else
+#endif
 int Tabs::TabDelete()
 {
     if( nbr_tabs>1 && current_idx<nbr_tabs )
@@ -169,4 +179,4 @@ int Tabs::TabDelete()
     }
     return( current_idx );
 }
-#endif
+

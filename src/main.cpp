@@ -31,6 +31,7 @@
 #else
 #include "wx/notebook.h"
 #endif
+#include "Tabs.h"
 #include "PanelBoard.h"
 #include "PanelContext.h"
 #include "GameLogic.h"
@@ -110,10 +111,10 @@ public:
     wxAuiNotebook   *notebook;
 #else
     void OnTabSelected( wxBookCtrlEvent& event );
-    void OnSize( wxSizeEvent &evt );
     wxNotebook *notebook;
 #endif
 	void OnTabNew( wxCommandEvent& event );
+    void OnSize( wxSizeEvent &evt );
     int book_moves_width;
     int new_tab_button_width;
 	wxButton *new_tab_button;
@@ -158,11 +159,11 @@ PanelNotebook::PanelNotebook
 	//new_tab_button_width = butt_sz.x;
 #ifdef AUI_NOTEBOOK
     notebook = new wxAuiNotebook(this, wxID_ANY, wxPoint(5,0), wxSize(siz.x,siz.y), 
-        wxAUI_NB_TOP | wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | /*wxAUI_NB_SCROLL_BUTTONS |*/ wxAUI_NB_CLOSE_ON_ALL_TABS );
+        wxAUI_NB_TOP | /*wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | wxAUI_NB_SCROLL_BUTTONS |*/ wxAUI_NB_CLOSE_ON_ACTIVE_TAB );
 #else
     notebook = new wxNotebook(this, wxID_ANY, wxPoint(5,0), wxSize(siz.x-book_moves_width-10-new_tab_button_width-10,siz.y*5) );
 #endif
-    wxTextCtrl *notebook_page1 = new wxTextCtrl(notebook, wxID_ANY,"", wxDefaultPosition, wxDefaultSize /*wxPoint(0,0), wxSize((90*siz.x)/100,(90*siz.y)/100)*/, wxNO_BORDER );
+    NotebookPage *notebook_page1 = new NotebookPage(notebook, wxID_ANY, wxDefaultPosition, wxDefaultSize );
     notebook->AddPage(notebook_page1,"New Game",true);
 
     wxPoint pt(siz.x-book_moves_width-2,8);
@@ -201,9 +202,21 @@ void PanelNotebook::OnTabNew( wxCommandEvent& WXUNUSED(event) )
 #ifdef AUI_NOTEBOOK
 void PanelNotebook::OnTabClose( wxAuiNotebookEvent& event )
 {
-    int idx = event.GetSelection();
-    if( objs.gl )
+	if(	objs.tabs->GetNbrTabs() > 1 )
+	{
+#if 1
+		event.Veto();				// stop system closing tab
+		objs.gl->CmdTabClose();		// Okay if always close active tab
+#else
+		int idx = event.GetSelection();
         objs.gl->OnTabClose(idx);
+#endif
+	}
+	else
+	{
+		event.Veto();			// never close last tab
+		objs.frame->Close();	// same as exit from main menu
+	}
 }
 
 void PanelNotebook::OnTabSelected( wxAuiNotebookEvent& event )
@@ -1042,66 +1055,8 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     toolbar->AddSeparator();
     nbr_separators++;
     ADD_TOOL( ID_HELP_HELP,  bmp_help, "Help");
-
-    #if 0 // Wake up this code to generate some icon .xpm data
-          //  (the link between original .bmps and generated .xpms
-          //   has been muddied and perhaps even lost)
-    extern void TempCreateXpm( wxBitmap &bmp, const char *name );
-    wxBitmap temp_bmp( "myicons.bmp", wxBITMAP_TYPE_BMP );
-    TempCreateXpm( temp_bmp, "myicons_base" );
-    wxBitmap temp_bmp4( "extra_icons.bmp", wxBITMAP_TYPE_BMP );
-    TempCreateXpm( temp_bmp4, "extra_icons" );
-    #endif
-
-    // Position book moves control to right
-    // toolbar->SetToolSeparation(100); // note that this approach doesn't work
-    //wxSize sz0 = GetSize(); // frame size
-    //wxSize sz1 = toolbar->GetMargins();
-    //wxSize sz2 = toolbar->GetToolSize();
-    //int space1 = toolbar->GetToolPacking();
-    //int nbr_tools = toolbar->GetToolsCount() - nbr_separators;
-/*    const int SEPARATOR_WIDTH = 8;  // Can only be calculated after Realize(), so done
-                                    //  offline below
-    const int BOOK_MOVES_WIDTH = 105;
-    int x1 = nbr_tools*sz2.x + (nbr_tools-1)*space1 + nbr_separators*SEPARATOR_WIDTH;    // where we are now
-    int x2 = (sz0.x - BOOK_MOVES_WIDTH - 20);                                            // where we want to be
-    nbr_separators = (x2-x1)/SEPARATOR_WIDTH;
-    for( int i=0; i<nbr_separators; i++ )
-        toolbar->AddSeparator(); */
-
     toolbar->Realize();
     SetToolBar(toolbar);
-
-    // Some old Debug only code to calculate SEPARATOR_WIDTH note that
-    //  GetPosition() of controls in toolbar is useless until Realize()
-    #if 0 
-    int space2 = toolbar->GetToolSeparation();
-    nbr_tools = toolbar->GetToolsCount();
-    int x,y;
-    gbl_book_moves->GetPosition( &x, &y );
-    int nbr_buttons = nbr_tools - nbr_separators - 1;   // -1 is gbl_book_moves control
-    float width_separator = ( x - sz1.x - nbr_buttons*sz2.x -(nbr_tools-1)*space1
-                            ) / ((double)nbr_separators);
-    dbg_printf( "width of separator = %f (should be integer)\n", width_separator );
-    dbg_printf( "margin.x=%d, nbr_tools=%d, nbr_separators=%d, toolsize.x=%d, packing=%d, separation=%d\n",
-            sz1.x, nbr_tools, nbr_separators, sz2.x, space1, space2 );
-    int w,h;
-    int X, Y;
-    wxWindow *pw = gbl_book_moves;
-    for(int i=0; ; i++ )
-    {
-        pw->GetSize( &w, &h );
-        pw->GetPosition( &x, &y );
-        pw->GetScreenPosition( &X, &Y );
-        bool top = pw->IsTopLevel();
-        dbg_printf( "Book moves(%d,%s) w=%d, h=%d, X=%d, Y=%d, x=%d, y=%d\n", i, top?"top":"child",w, h, X, Y, x, y );
-        if( top )
-            break;
-        pw = pw->GetParent();
-        if( !pw )
-            break;
-    }
-    #endif
 
     wxSize csz = GetClientSize();
     int hh = csz.y;
