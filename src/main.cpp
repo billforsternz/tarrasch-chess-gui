@@ -108,7 +108,7 @@ public:
 #ifdef AUI_NOTEBOOK
     void OnTabSelected( wxAuiNotebookEvent& event );
     void OnTabClose( wxAuiNotebookEvent& event );
-    wxAuiNotebook   *notebook;
+    wxAuiNotebook	*notebook;
 #else
     void OnTabSelected( wxBookCtrlEvent& event );
     wxNotebook *notebook;
@@ -158,8 +158,10 @@ PanelNotebook::PanelNotebook
 	//wxSize butt_sz = new_tab_button->GetSize();
 	//new_tab_button_width = butt_sz.x;
 #ifdef AUI_NOTEBOOK
-    notebook = new wxAuiNotebook(this, wxID_ANY, wxPoint(5,0), wxSize(siz.x,siz.y), 
+    notebook = new wxAuiNotebook(this, wxID_ANY, wxPoint(5,0),  wxSize(siz.x-book_moves_width-10-new_tab_button_width-10,siz.y*5),
         wxAUI_NB_TOP | /*wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | wxAUI_NB_SCROLL_BUTTONS |*/ wxAUI_NB_CLOSE_ON_ACTIVE_TAB );
+
+
 #else
     notebook = new wxNotebook(this, wxID_ANY, wxPoint(5,0), wxSize(siz.x-book_moves_width-10-new_tab_button_width-10,siz.y*5) );
 #endif
