@@ -1,7 +1,11 @@
 /****************************************************************************
  * Control - The graphic chess board that is the centre-piece of the GUI
  *  Still working on making it a more-self contained and reusable control
+ *  Author:  Bill Forster
+ *  License: MIT license. Full text of license is in associated file LICENSE
+ *  Copyright 2010-2016, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
+
 #ifndef GRAPHICBOARD_RESIZABLE_H
 #define GRAPHICBOARD_RESIZABLE_H
 
@@ -55,14 +59,6 @@ public:
     void OnMouseLeftUp (wxMouseEvent & event);
     void OnMouseMove (wxMouseEvent & event);
 	void OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(event) );
-
-	// Helpers
-	unsigned long   Offset( char file, char rank );
-	void Get( char src_file, char src_rank, char dst_file, char dst_rank, const char *mask = NULL );
-	void Put( char src_file, char src_rank, char dst_file, char dst_rank );
-
-    // Put a shifted, masked piece from box onto board
-    void PutEx( char piece, char dst_file, char dst_rank, wxPoint shift );
 
 private:
     DECLARE_EVENT_TABLE()

@@ -3,7 +3,7 @@
  *  Still working on making it a more-self contained and reusable control
  *  Author:  Bill Forster
  *  License: MIT license. Full text of license is in associated file LICENSE
- *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
+ *  Copyright 2010-2016, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
 
 #include "wx/wx.h"
@@ -64,26 +64,6 @@ void GraphicBoardResizable::Draw()
     Update();
 }
 
-// Calculate an offset into the wxBitmap's image buffer
-unsigned long GraphicBoardResizable::Offset( char file, char rank )
-{
-	return cbb.Offset( file, rank );
-}
-
-// Get a piece from board, put into box
-void GraphicBoardResizable::Get( char src_file, char src_rank, char dst_file, char dst_rank, const char *mask )
-{
-	cbb.Get( src_file, src_rank, dst_file, dst_rank, mask );
-}
-	
-
-// Put a piece from box onto board
-void GraphicBoardResizable::Put( char src_file, char src_rank, char dst_file, char dst_rank )
-{
-	cbb.Put( src_file, src_rank, dst_file, dst_rank );
-}
-
-
 // Figure out which square is clicked on the board
 void GraphicBoardResizable::HitTest( wxPoint hit, char &file, char &rank )
 {
@@ -141,13 +121,13 @@ void GraphicBoardResizable::HitTestEx( char &file, char &rank, wxPoint shift )
     HitTest( adjusted, file, rank );
     //dbg_printf( "Ex result: file=%c rank=%c\n", file, rank );
 }
-
+/*
 // Put a shifted, masked piece from box onto board
 void GraphicBoardResizable::PutEx( char piece,	char dst_file, char dst_rank, wxPoint shift )
 {
 	cbb.PutEx( piece, dst_file, dst_rank, shift );
 }
-
+  */
 void GraphicBoardResizable::OnMouseLeftDown( wxMouseEvent &event )
 {
     wxPoint point = event.GetPosition();
