@@ -37,8 +37,18 @@ ChessBoardBitmap::ChessBoardBitmap()
     pickup_rank    = 0;
     pickup_point.x = 0;
     pickup_point.y = 0;
+    sliding = false;
     buf_board = 0;
     buf_box = 0;
+}
+
+// Cleanup
+ChessBoardBitmap::~ChessBoardBitmap()
+{
+	if( buf_board )
+		delete(buf_board);
+	if( buf_box )
+		delete(buf_box);
 }
 
 
@@ -632,8 +642,6 @@ void ChessBoardBitmap::Init( int pix )
     width_bytes = row_stride;
     if( width )
 	    density  = width_bytes/width;
-	xborder	     = (width_bytes%8) / 2;
-	yborder	     = (height%8) / 2;
 
     dc.SetBrush( *wxBLUE_BRUSH );
     dc.SetPen(*wxTRANSPARENT_PEN);
@@ -772,13 +780,6 @@ void ChessBoardBitmap::Init( int pix )
     my_chess_bmp = my_chess_bmp_;
 }
 
-// Cleanup
-ChessBoardBitmap::~ChessBoardBitmap()
-{
-	delete(buf_board);
-	delete(buf_box);
-}
-
 // Setup a position	on the graphic board
 void ChessBoardBitmap::SetChessPosition( const char *position_ascii )
 {
@@ -904,9 +905,8 @@ unsigned long ChessBoardBitmap::Offset( char file, char rank )
 	byte col  = file-'a';		     // 0-7 => file a-h
 	byte row  = 7-(rank-'1');		 // 0-7 => rank 8-1
 	unsigned long offset =						
-		yborder * width_bytes
-      + ( row * (height/8) ) * width_bytes
-	  +	( xborder + col * (width_bytes/8) );
+        ( row * (height/8) ) * width_bytes
+	  +	( col * (width_bytes/8) );
 	return( offset );	
 }
 
@@ -985,7 +985,7 @@ void ChessBoardBitmap::Put( char src_file, char src_rank, char dst_file, char ds
 
 
 // Setup a position	on the graphic board
-void ChessBoardBitmap::SetPositionEx( thc::ChessPosition pos, bool blank_other_squares, char pickup_file_, char pickup_rank_, wxPoint shift )
+void ChessBoardBitmap::SetPositionEx( const thc::ChessPosition &pos, bool blank_other_squares, char pickup_file_, char pickup_rank_, wxPoint shift )
 {
 	char piece, save_piece=0;
 	int  file=0, rank=7;
@@ -1003,7 +1003,7 @@ void ChessBoardBitmap::SetPositionEx( thc::ChessPosition pos, bool blank_other_s
 				   "bwbwbwbw";
 
 	// Read string backwards for black at bottom
-    char *position_ascii = pos.squares; //_position_ascii;
+    const char *position_ascii = pos.squares; //_position_ascii;
 	if( !normal_orientation )
 		position_ascii += 63;
 

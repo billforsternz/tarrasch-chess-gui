@@ -41,9 +41,8 @@ public:
 	void ClearHighlight2()			   { highlight_file2='\0'; }
 
     // Setup a position	on the graphic board
-    void SetPositionEx( thc::ChessPosition pos, bool blank_other_squares, char pickup_file, char pickup_rank, wxPoint shift );
+    void SetPositionEx( const thc::ChessPosition &pos, bool blank_other_squares, char pickup_file, char pickup_rank, wxPoint shift );
 
-    wxBitmap    my_chess_bmp;
 	wxImage		white_king_cursor;	
 	wxImage		white_queen_cursor;	
 	wxImage		white_rook_cursor;	
@@ -57,22 +56,31 @@ public:
 	wxImage		black_knight_cursor;
 	wxImage		black_pawn_cursor;	
 
+
+public:
+    bool         sliding;
+    char         pickup_file;
+    char         pickup_rank;
+    wxPoint      pickup_point;
+    thc::ChessPosition     slide_pos;
+	wxSize        current_size;
+	byte         *buf_board;
+	byte         *buf_box;
+	unsigned long width_bytes, height, width, density;
+	bool		  normal_orientation;
+	char		 highlight_file1, highlight_rank1;
+	char		 highlight_file2, highlight_rank2;
+    wxBitmap      my_chess_bmp;
+    char          _position_ascii[100];
+
 private:
 
 	// Data members
 	wxColour	 light_colour;
 	wxColour	 dark_colour;
-	wxSize       current_size;
     wxBrush      brush;
 	wxMemoryDC   dcmem;
     wxPen        pen;
-	byte         *buf_board;
-	byte         *buf_box;
-	unsigned long width_bytes, height, width, xborder, yborder, density;
-	bool		 normal_orientation;
-	char		 highlight_file1, highlight_rank1;
-	char		 highlight_file2, highlight_rank2;
-    char         _position_ascii[100];
     std::string  str_white_king_mask;
     const char  *white_king_mask;
     std::string  str_white_queen_mask;
@@ -99,19 +107,13 @@ private:
     const char  *black_pawn_mask;
 
 	// Helpers
+public:
 	unsigned long   Offset( char file, char rank );
 	void Get( char src_file, char src_rank, char dst_file, char dst_rank, const char *mask = NULL );
 	void Put( char src_file, char src_rank, char dst_file, char dst_rank );
 
     // Put a shifted, masked piece from box onto board
     void PutEx( char piece, char dst_file, char dst_rank, wxPoint shift );
-
-private:
-    bool         sliding;
-    char         pickup_file;
-    char         pickup_rank;
-    wxPoint      pickup_point;
-    thc::ChessPosition     slide_pos;
 };
 
 #endif // CHESS_BOARD_BITMAP_H
