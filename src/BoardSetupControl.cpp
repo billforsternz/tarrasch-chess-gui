@@ -40,7 +40,6 @@ BoardSetupControl::BoardSetupControl
     state = UP_IDLE;
     cursor = 0;
     wait_cursor = 0;
-    bs = NULL;
     movements = 0;
     long_clearing_click = false;
     this->support_lockdown = support_lockdown;
@@ -49,22 +48,14 @@ BoardSetupControl::BoardSetupControl
     wxClientDC dc(parent);
     //chess_bmp = static_chess_bmp; //wxBitmap( board_setup_bitmap_xpm );
     //chess_bmp = wxBitmap( board_setup_bitmap_xpm );
-	cbb.BuildBoardSetupBitmap(34,chess_bmp);
+    bool normal_orientation = objs.canvas->GetNormalOrientation();
+    cprintf( "Normal orientation = %s\n", normal_orientation?"true":"false" );
+	cbb.BuildBoardSetupBitmap(34,chess_bmp,cp.squares,normal_orientation);
 	cbb.BuildCustomCursors(34);
     wxSize  size( chess_bmp.GetWidth(), chess_bmp.GetHeight() );
     SetSize( size );
-    bool normal_orientation = objs.canvas->GetNormalOrientation();
-    cprintf( "Normal orientation = %s\n", normal_orientation?"true":"false" );
-    bs = new BoardSetup( &chess_bmp, this, 46, 11, normal_orientation );  // Note XBORDER, YBORDER now passed as parameters
     SetCustomCursor( normal_orientation?'P':'p' );
 	state = UP_CURSOR_SIDE;
-}
-
-BoardSetupControl::~BoardSetupControl()
-{
-    if( bs )
-        delete bs;
-    //ReleaseMouse();
 }
 
 void BoardSetupControl::SetState( const char *action, State new_state )
@@ -121,12 +112,25 @@ extern void PositionSetupVeryUglyTemporaryCallback();
 extern void DatabaseSearchVeryUglyTemporaryCallback( int offset );
 void BoardSetupControl::UpdateBoard()
 {
-    bs->Set(cp,lockdown);
-    bs->Draw();
+    bool normal_orientation = objs.canvas->GetNormalOrientation();
+	cbb.BuildBoardSetupBitmap(34,chess_bmp,cp.squares,normal_orientation);
+    Refresh(false);
+    Update();
     if( position_setup )
         PositionSetupVeryUglyTemporaryCallback();
     else if( support_lockdown )
         DatabaseSearchVeryUglyTemporaryCallback(-1);
+}
+
+void BoardSetupControl::Set( const thc::ChessPosition &cp_, const bool *lockdown_ )
+{
+    bool normal_orientation = objs.canvas->GetNormalOrientation();
+    this->cp = cp_;
+    if( lockdown_ )
+        memcpy(this->lockdown,lockdown_,64);
+	cbb.BuildBoardSetupBitmap(34,chess_bmp,cp.squares,normal_orientation);
+    Refresh(false);
+    Update();
 }
 
 void BoardSetupControl::OnMouseMove( wxMouseEvent& event )
@@ -134,7 +138,7 @@ void BoardSetupControl::OnMouseMove( wxMouseEvent& event )
     movements++;
     wxPoint point = event.GetPosition();
     char piece='\0', file='\0', rank='\0';
-    bool hit = bs->HitTest( point, piece, file, rank );
+    bool hit = HitTest( point, piece, file, rank );
 /*  if( !hit )
         dbg_printf( "no hit; x=%d, y=%d\n", point.x, point.y );
     else
@@ -240,7 +244,7 @@ void BoardSetupControl::OnMouseLeftUp( wxMouseEvent& event )
     dbg_printf( "Up\n" );
     wxPoint point = event.GetPosition();
     char piece='\0', file='\0', rank='\0';
-    bool hit = bs->HitTest( point, piece, file, rank );
+    bool hit = HitTest( point, piece, file, rank );
     if( state==UP_CURSOR_BOARD || state==UP_CURSOR_SIDE || state==UP_CURSOR_SIDE_WAIT )
         OnMouseLeftDown(event);  // This is very important. If you double click
                                  //  we want events as follows; down up down up
@@ -329,7 +333,7 @@ void BoardSetupControl::OnMouseLeftDown( wxMouseEvent& event )
     long_clearing_click = false;
     wxPoint point = event.GetPosition();
     char piece='\0', file='\0', rank='\0';
-    bool hit = bs->HitTest( point, piece, file, rank );
+    bool hit = HitTest( point, piece, file, rank );
     if( !hit )
         dbg_printf( "no hit; x=%d, y=%d\n", point.x, point.y );
     else
@@ -406,7 +410,7 @@ void BoardSetupControl::OnMouseRightDown( wxMouseEvent& event )
     if( support_lockdown )
     {
         char piece='\0', file='\0', rank='\0';
-        bool hit = bs->HitTest( point, piece, file, rank );
+        bool hit = HitTest( point, piece, file, rank );
         if( hit )
         {
             cprintf( "hit; x=%d, y=%d -> piece=%c, file=%c, rank=%c\n",
@@ -424,6 +428,9 @@ void BoardSetupControl::OnMouseRightDown( wxMouseEvent& event )
         }
     }
 }
+
+
+
 
 
 void BoardSetupControl::OnPaint( wxPaintEvent& WXUNUSED(event) )
@@ -492,6 +499,97 @@ void BoardSetupControl::ClearCustomCursor()
     this->cursor = 0;
     wxCursor temp(wxCURSOR_ARROW);
     SetCursor( temp );    
+}
+
+
+// Figure out whether a piece or square is pointed to
+bool BoardSetupControl::HitTest( wxPoint &point, char &piece, char &file, char &rank )
+{
+    bool normal_orientation = objs.canvas->GetNormalOrientation();
+	wxSize sz = GetSize();
+	int w = sz.x;
+	int h = sz.y;
+    int xborder  = 46;
+    int yborder  = 11;
+	int w_board  = w - 46 - 46;
+	int h_board  = h - 11 - 11;
+    bool hit = false;
+    piece = '\0';
+    file  = '\0';
+    rank  = '\0';
+	unsigned long row = ( (point.y - yborder) / (h_board/8) );
+
+    // Main board
+    if( xborder<=point.x && point.x< w-xborder )
+    {
+        hit = true;
+	    unsigned long col = ( (point.x-xborder) / (w_board/8) );
+        if( !normal_orientation )
+        {
+            row = 7-row;
+            col = 7-col;
+        }
+		rank = '1'+ (int)(7-row);
+		file = 'a'+ (int)col;
+    }
+
+    // Maybe pickup pieces
+    else
+    {
+        int spacer_width = (xborder - (w_board/8) ) / 2;
+        int top = yborder+9; // offset before first piece
+        int found = -1;
+	    int y = point.y - yborder;
+        for( int i=0; i<6; i++ )    // six pieces
+        {
+            if( top<=y && y<top+(w_board/8) )
+            {
+                found = i;
+                break;
+            }
+            top += h_board/8;
+            top += 10;  // gap between pieces
+        }
+
+        // Right side pickup pieces
+        if( found>=0 &&
+             (w - xborder + spacer_width)
+                 < point.x && point.x <
+             (w - spacer_width)
+          )
+        {
+            hit = true;
+            switch( found )
+            {
+                default:    hit = false;    break;
+                case 0:     piece = normal_orientation?'p':'P';    break;
+                case 1:     piece = normal_orientation?'n':'N';    break;
+                case 2:     piece = normal_orientation?'b':'B';    break;
+                case 3:     piece = normal_orientation?'r':'R';    break;
+                case 4:     piece = normal_orientation?'q':'Q';    break;
+                case 5:     piece = normal_orientation?'k':'K';    break;
+            }
+        }
+
+        // Left side pickup pieces
+        else if( found>=0 &&
+                 (unsigned)spacer_width < point.x && point.x < (unsigned)(xborder - spacer_width)
+          )
+        {
+            hit = true;
+            switch( found )
+            {
+                default:    hit = false;    break;
+                case 0:     piece = normal_orientation?'K':'k';    break;
+                case 1:     piece = normal_orientation?'Q':'q';    break;
+                case 2:     piece = normal_orientation?'R':'r';    break;
+                case 3:     piece = normal_orientation?'B':'b';    break;
+                case 4:     piece = normal_orientation?'N':'n';    break;
+                case 5:     piece = normal_orientation?'P':'p';    break;
+            }
+        }
+    }
+    return hit;
 }
 
 

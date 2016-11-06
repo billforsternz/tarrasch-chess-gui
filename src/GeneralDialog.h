@@ -11,7 +11,6 @@
 #include "thc.h"
 #include "SuspendEngine.h"
 #include "Repository.h"
-class BoardSetupControl;
 
 // Control identifiers
 enum

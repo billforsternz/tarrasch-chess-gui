@@ -11,6 +11,8 @@
 #include "BoardSetup.h"
 #include "thc.h"
 
+#if 0
+
 #define SQUARE_HEIGHT 34
 #define SQUARE_WIDTH  34
 
@@ -58,6 +60,10 @@ BoardSetup::BoardSetup( wxBitmap *bitmap, wxWindow *parent, int XBORDER, int YBO
 
 	xborder	     = XBORDER * density;
 	yborder	     = YBORDER;
+	if( xborder==0 && yborder==0 )
+		cprintf( "!!!! Both xborder and yborder==0 !!!!\n" );
+	else
+		cprintf( "**** xborder=%d yborder==%d ****\n",xborder,yborder );
 
     // Highlight dimensions
     unsigned long thickness = SQUARE_HEIGHT/16;
@@ -105,9 +111,6 @@ BoardSetup::BoardSetup( wxBitmap *bitmap, wxWindow *parent, int XBORDER, int YBO
 	for( char file='a'; file<='h'; file++ )
 		for( char rank='1'; rank<='8'; rank++ )
 			Get(file,rank,file,rank);
-
-    if( !normal_orientation )
-        SwapPickupPieces();
 }
 
 // Cleanup
@@ -449,7 +452,7 @@ bool BoardSetup::HitTest( wxPoint &point, char &piece, char &file, char &rank )
     return hit;
 }
 
-
+/*
 // To help make it clear the orientation is reversed - swap the pickup pieces on the
 //  left (normally white) and right (normally black) of the board.
 void BoardSetup::SwapPickupPieces()
@@ -496,8 +499,9 @@ void BoardSetup::SwapPickupPieces()
     }
 }
 
+*/
 
 
-
+#endif
 
 

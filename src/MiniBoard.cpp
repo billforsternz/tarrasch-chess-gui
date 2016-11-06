@@ -18,42 +18,68 @@
 using namespace std;
 using namespace thc;
 
+// Initialise the MiniBoard
 MiniBoard::MiniBoard
 (
- wxWindow* parent,
- wxWindowID     id, //= wxID_ANY,
- const wxPoint &point //= wxDefaultPosition
- )  : wxControl( parent, id, point, wxDefaultSize, wxBORDER_NONE )
+    wxWindow *parent,
+    wxWindowID id,
+    const wxPoint& point,
+    const wxSize& size
+)   : wxControl( parent, id, point, size, wxBORDER_NONE )
 {
-    bs = NULL;
-    wxClientDC dc(parent);
-	ChessBoardBitmap cbb;		
-	cbb.BuildMiniboardBitmap( 34, chess_bmp );				// TEMP TEMP 34 must match SQUARE_HEIGHT _WIDTH in BoardSetup.cpp
-    wxSize size( chess_bmp.GetWidth(), chess_bmp.GetHeight() );
-    SetSize( size );
-    bs = new BoardSetup( &chess_bmp, this, 0, 0 );
+    strcpy( cbb._position_ascii, "rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR" );
+	wxSize sz=size;
+    //strcpy( cbb._position_ascii, "rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR" );
+	if( sz.x<=0 || sz.y<=0 )
+	{
+		sz = wxSize(34*8,34*8);
+		SetSize(sz);
+	}
+	cbb.current_size = sz;
+    int min = sz.x<sz.y ? sz.x : sz.y;
+    int pix_ = min/8;
+    cbb.Init( pix_ );
+//	cbb.SetChessPosition( "rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR", true );
+//	thc::ChessPosition cp_;
+//	Set(cp_);
 }
-
-MiniBoard::~MiniBoard()
-{
-    if( bs )
-        delete bs;
-}
-
-void MiniBoard::UpdateBoard()
-{
-    bs->Set(cp);
-    bs->Draw();
-}
-
 
 void MiniBoard::OnPaint( wxPaintEvent& WXUNUSED(event) )
 {
     wxPaintDC dc(this);
-    if( chess_bmp.Ok() )
+    if( cbb.my_chess_bmp.Ok() )
     {
-        dc.DrawBitmap( chess_bmp, 0, 0, true );
+        dc.DrawBitmap( cbb.my_chess_bmp, 0, 0, true );// board_rect.x, board_rect.y, true );
     }
+}
+
+void MiniBoard::OnSize( wxSizeEvent &evt )
+{
+    wxSize size = evt.GetSize();
+/*	cbb.current_size = size;
+    int min = size.x<size.y ? size.x : size.y;
+    int pix_ = min/8;
+    cbb.Init( pix_ );
+
+  */
+	    cprintf( "Child: resize x=%d, y=%d\n", size.x, size.y );
+    char temp[ sizeof(cbb._position_ascii) + 1 ];
+    strcpy( temp, cbb._position_ascii );
+    SetSize(size);
+	cbb.current_size = size;
+    int min = size.x<size.y ? size.x : size.y;
+    int pix_ = min/8;
+    cbb.Init( pix_ );
+    cbb.SetChessPosition( temp, true );
+    Refresh(false);
+    Update();
+
+}
+
+void MiniBoard::UpdateBoard()
+{
+    Refresh(false);
+    Update();
 }
 
 void MiniBoard::OnEraseBackground(wxEraseEvent& WXUNUSED(evt))
@@ -61,14 +87,8 @@ void MiniBoard::OnEraseBackground(wxEraseEvent& WXUNUSED(evt))
     // intentionally empty
 }
 
-void MiniBoard::OnSize(wxSizeEvent& WXUNUSED(evt))
-{
-    Refresh();
-}
-
 BEGIN_EVENT_TABLE(MiniBoard, wxControl)
 EVT_PAINT(MiniBoard::OnPaint)
 EVT_SIZE(MiniBoard::OnSize)
 EVT_ERASE_BACKGROUND(MiniBoard::OnEraseBackground)
 END_EVENT_TABLE()
-

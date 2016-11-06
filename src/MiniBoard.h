@@ -8,25 +8,29 @@
 #define MINI_BOARD_H
 
 #include "wx/wx.h"
-#include "BoardSetup.h"
+#include "ChessBoardBitmap.h"
 
 class MiniBoard : public wxControl
 {
 public:
     MiniBoard( wxWindow* parent,
-                      wxWindowID id = wxID_ANY,
-                      const wxPoint& point = wxDefaultPosition );
-    ~MiniBoard();
-    void Set( const thc::ChessPosition &cp_ ) { if(bs) {this->cp=cp_; bs->Set(cp_); bs->Draw();} }
-    thc::ChessPosition cp;
+                wxWindowID id = wxID_ANY,
+                const wxPoint& point = wxDefaultPosition,
+                const wxSize&  size = wxDefaultSize );
+    void Set( const thc::ChessPosition &cp_ )
+	{
+		this->cp=cp_;
+		cbb.SetChessPosition( cp.squares, true );
+		UpdateBoard();
+	}
     
 private:
-    wxBitmap     chess_bmp;
-    BoardSetup   *bs;
+    thc::ChessPosition cp;
+    ChessBoardBitmap   cbb;
     void UpdateBoard();
-    void OnPaint(wxPaintEvent& WXUNUSED(evt));
-    void OnEraseBackground(wxEraseEvent& WXUNUSED(evt));
-    void OnSize(wxSizeEvent& WXUNUSED(evt));
+    void OnPaint(wxPaintEvent &evt );
+	void OnSize( wxSizeEvent &evt );
+    void OnEraseBackground(wxEraseEvent &evt );
 private:
     DECLARE_EVENT_TABLE()
 };

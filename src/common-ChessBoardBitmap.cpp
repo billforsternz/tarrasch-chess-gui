@@ -19,36 +19,6 @@
 #include "Objects.h"
 #include "Repository.h"
 
-// The simplest possible testbed dialog
-
-// TestbedDialog class declaration
-class TestbedDialog: public wxDialog
-{    
-    DECLARE_CLASS( TestbedDialog )
-    DECLARE_EVENT_TABLE()
-
-public:
-	wxBitmap bm_;
-
-    // Constructors
-    TestbedDialog( wxBitmap &bm, wxWindow* parent = objs.frame,
-      wxWindowID id = wxID_ANY,
-      const wxString& caption = "Testbed Dialog",
-      const wxPoint& pos = wxDefaultPosition,
-      const wxSize& size = wxDefaultSize,
-      long style = wxCAPTION|wxRESIZE_BORDER|wxSYSTEM_MENU|wxCLOSE_BOX );
-
-    // Run dialog
-    bool Run();
-
-    // Creates the controls and sizers
-    void CreateControls();
-
-	// wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_OK
-    void OnOkClick( wxCommandEvent& event );
-};
-
-
 // A standard arrangement of pieces we use to get all combinations of pieces/square colours "pieces in the box"
 static const char *box_position =
         "rnbqkbnr"
@@ -147,15 +117,15 @@ void imageCopy( wxBitmap &from, int x1, int y1, wxImage &to, int x2, int y2, int
 void ChessBoardBitmap::BuildMiniboardBitmap( int pix, wxBitmap &bm )
 {
 	Init( pix );
-	SetChessPosition( box_position, true );
+	SetChessPosition( box_position );
 	bm = my_chess_bmp;
 }
 
-void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char *chess_position, bool normal_orientation )
+void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm )
 {
-	cprintf( "In BuildBoardSetupBitmap(), normal orientation=%s, copying main chess position begin\n", normal_orientation?"true":"false" );
 	Init( pix );
-	SetChessPosition( chess_position, normal_orientation );
+	SetChessPosition( box_position );
+	
     wxBitmap board_setup;
 	board_setup.Create(364,294,24);
     wxMemoryDC dc;
@@ -171,17 +141,13 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
 
 	// Copy a chess board into the centre part
 	bmpCopy( my_chess_bmp, 0, 0, board_setup, (364-8*pix)/2, (294-8*pix)/2, 8*pix, 8*pix );
-	cprintf( "In BuildBoardSetupBitmap(), copying main chess position end\n" );
-	SetChessPosition( box_position, true );
 
-/*
 	// Make square b5 a nice blue colour
 	wxColour ocean_blue(112,146,190);
     wxBrush ocean_blue_brush(ocean_blue);
     dc.SetBrush( ocean_blue_brush );
     dc.SetPen(*wxTRANSPARENT_PEN);
     dc.DrawRectangle( (364-8*pix)/2 + pix, (294-8*pix)/2 + 3*pix, pix, pix );
-*/
 
 	// Add pieces to be picked up on the side
 	for( int i=0; i<6; i++ )
@@ -191,90 +157,18 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
 		switch(i)
 		{
 			default:
-			case 0:
-			{
-				if( normal_orientation )
-				{
-					file='e';	rank='4';
-					mask = white_king_mask;
-				}
-				else
-				{
-			        file='e';	rank='8';
-					mask = black_king_mask;		
-				}
-				break;
-			}
-			case 1:
-			{
-				if( normal_orientation )
-				{
-					file='d';	rank='1';
-			        mask = white_queen_mask;	
-				}
-				else
-				{
-			        file='d';	rank='5';
-			        mask = black_queen_mask;	
-				}
-				break;
-			}
-			case 2:
-			{
-				if( normal_orientation )
-				{
-					file='h';	rank='1';
-			        mask = white_rook_mask;		
-				}
-				else
-				{
-			        file='a';	rank='8';
-			        mask = black_rook_mask;		
-				}
-				break;
-			}
-			case 3:
-			{
-				if( normal_orientation )
-				{
-					file='f';	rank='1';
-			        mask = white_bishop_mask;	
-				}
-				else
-				{
-			        file='c';	rank='8';
-			        mask = black_bishop_mask;	
-				}
-				break;
-			}
-			case 4:
-			{
-				if( normal_orientation )
-				{
-					file='b';	rank='1';
-			        mask = white_knight_mask;	
-				}
-				else
-				{
-			        file='g';	rank='8';
-			        mask = black_knight_mask;	
-				}
-				break;
-			}
-			case 5:
-			{
-				if( normal_orientation )
-				{
-					file='a';	rank='2';
-			        mask = white_pawn_mask;		
-				}
-				else
-				{
-			        file='b';	rank='7';
-			        mask = black_pawn_mask;		
-				}
-				break;
-			}
+			case 0: file='e';	rank='4';
+					mask = white_king_mask;		break;
+			case 1: file='d';	rank='1';
+			        mask = white_queen_mask;	break;
+			case 2: file='h';	rank='1';
+			        mask = white_rook_mask;		break;
+			case 3: file='f';	rank='1';
+			        mask = white_bishop_mask;	break;
+			case 4: file='b';	rank='1';
+			        mask = white_knight_mask;	break;
+			case 5: file='a';	rank='2';
+			        mask = white_pawn_mask;		break;
 		}
 		int x = file-'a';
 		int y = '8'-rank;
@@ -287,90 +181,18 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
 		switch(i)
 		{
 			default:
-			case 5:
-			{
-				if( normal_orientation )
-				{
-					file='e';	rank='8';
-					mask = black_king_mask;		
-				}
-				else
-				{
-			        file='e';	rank='4';
-					mask = white_king_mask;
-				}
-				break;
-			}
-			case 4:
-			{
-				if( normal_orientation )
-				{
-					file='d';	rank='5';
-			        mask = black_queen_mask;	
-				}
-				else
-				{
-			        file='d';	rank='1';
-			        mask = white_queen_mask;	
-				}
-				break;
-			}
-			case 3:
-			{
-				if( normal_orientation )
-				{
-					file='a';	rank='8';
-			        mask = black_rook_mask;		
-				}
-				else
-				{
-			        file='h';	rank='1';
-			        mask = white_rook_mask;		
-				}
-				break;
-			}
-			case 2:
-			{
-				if( normal_orientation )
-				{
-					file='c';	rank='8';
-			        mask = black_bishop_mask;	
-				}
-				else
-				{
-			        file='f';	rank='1';
-			        mask = white_bishop_mask;	
-				}
-				break;
-			}
-			case 1:
-			{
-				if( normal_orientation )
-				{
-					file='g';	rank='8';
-			        mask = black_knight_mask;	
-				}
-				else
-				{
-			        file='b';	rank='1';
-			        mask = white_knight_mask;	
-				}
-				break;
-			}
-			case 0:
-			{
-				if( normal_orientation )
-				{
-					file='b';	rank='7';
-			        mask = black_pawn_mask;		
-				}
-				else
-				{
-			        file='a';	rank='2';
-			        mask = white_pawn_mask;		
-				}
-				break;
-			}
+			case 5: file='e';	rank='8';
+					mask = black_king_mask;		break;
+			case 4: file='d';	rank='5';
+			        mask = black_queen_mask;	break;
+			case 3: file='a';	rank='8';
+			        mask = black_rook_mask;		break;
+			case 2: file='c';	rank='8';
+			        mask = black_bishop_mask;	break;
+			case 1: file='g';	rank='8';
+			        mask = black_knight_mask;	break;
+			case 0: file='b';	rank='7';
+			        mask = black_pawn_mask;		break;
 		}
 		int x = file-'a';
 		int y = '8'-rank;
@@ -382,7 +204,7 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
 void ChessBoardBitmap::BuildCustomCursors( int pix )
 {
 	Init( pix );
-	SetChessPosition( box_position, true );
+	SetChessPosition( box_position );
 	for( int i=0; i<12; i++ )
 	{
 		char file, rank;
@@ -959,8 +781,15 @@ void ChessBoardBitmap::Init( int pix )
 }
 
 // Setup a position	on the graphic board
-void ChessBoardBitmap::SetChessPosition( const char *position_ascii, bool normal_orientation )
+void ChessBoardBitmap::SetChessPosition( const char *position_ascii )
 {
+#if 0 // Setup a custom position here
+    #define CUSTOM_POSITION "rnbqnrk|pp4b|4N|3qk|3QK|8|PPxx|R1BQKBNR| w KQkq - 0 1"
+    thc::ChessPosition pos;
+    pos.Forsyth( CUSTOM_POSITION );
+    position_ascii = pos.squares;
+#endif
+
 	char piece;
 	int  file=0, rank=7;
 	char rev_file='h', rev_rank='1';	// tracks reverse orientation
@@ -1433,16 +1262,40 @@ void BitmapWindow::OnPaint( wxPaintEvent& WXUNUSED(event) )
 {
     wxPaintDC dc(this);
     if( bm_.Ok() )
-	{
-        dc.DrawBitmap( bm_, 0, 0, true );// board_rect.x, board_rect.y, true );
-		cprintf( "bm_.Ok() is true\n" );
-	}
-	else
     {
-		cprintf( "bm_.Ok() is false\n" );
+        dc.DrawBitmap( bm_, 0, 0, true );// board_rect.x, board_rect.y, true );
     }
 }
 
+
+// The simplest possible testbed dialog
+
+// TestbedDialog class declaration
+class TestbedDialog: public wxDialog
+{    
+    DECLARE_CLASS( TestbedDialog )
+    DECLARE_EVENT_TABLE()
+
+public:
+	wxBitmap bm_;
+
+    // Constructors
+    TestbedDialog( wxBitmap &bm, wxWindow* parent = objs.frame,
+      wxWindowID id = wxID_ANY,
+      const wxString& caption = "Testbed Dialog",
+      const wxPoint& pos = wxDefaultPosition,
+      const wxSize& size = wxDefaultSize,
+      long style = wxCAPTION|wxRESIZE_BORDER|wxSYSTEM_MENU|wxCLOSE_BOX );
+
+    // Run dialog
+    bool Run();
+
+    // Creates the controls and sizers
+    void CreateControls();
+
+	// wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_OK
+    void OnOkClick( wxCommandEvent& event );
+};
 
 
 // TestbedDialog type definition
@@ -1526,8 +1379,8 @@ void TestbedDialog::CreateControls()
     //wxBoxSizer* H1 = new wxBoxSizer(wxHORIZONTAL);
     //wxBoxSizer* V1 = new wxBoxSizer(wxVERTICAL);
     wxFlexGridSizer *HV1 = new wxFlexGridSizer( 10, 2, 0, 0 );
-    #define WIDTH 700
-    #define HEIGHT 500
+    #define WIDTH 600
+    #define HEIGHT 400
     wxSize sz=wxSize(WIDTH,HEIGHT);
 
     // Text control for prefix_txt
@@ -1595,8 +1448,7 @@ void Testbed()
 {
     wxBitmap bm;
 	ChessBoardBitmap cbb;
-	thc::ChessPosition cp;
-	cbb.BuildBoardSetupBitmap(34,bm,cp.squares,true);
+	cbb.BuildBoardSetupBitmap(34,bm);
 	TestbedDialog dialog(bm);
 	dialog.Run();
 }

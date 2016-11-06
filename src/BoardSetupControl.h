@@ -20,26 +20,16 @@ public:
                   wxWindow* parent,
                   wxWindowID id = wxID_ANY,
                   const wxPoint& point = wxDefaultPosition );
-    ~BoardSetupControl();
-    void Set( const thc::ChessPosition &cp_, const bool *lockdown_=0 )
-    {
-        this->cp = cp_;
-        if( lockdown_ )
-            memcpy(this->lockdown,lockdown_,64);
-        if( bs )
-        {
-            bs->Set(cp_,lockdown_);
-            bs->Draw();
-        }
-    }
+    void Set( const thc::ChessPosition &cp_, const bool *lockdown_=0 );
     thc::ChessPosition cp;
     bool         lockdown[64];
     void ClearCustomCursor();
+    // Figure out whether a piece or square is pointed to
+    bool HitTest( wxPoint &point, char &piece, char &file, char &rank );
 
 private:
     wxTimer      m_timer;
     wxBitmap     chess_bmp;
-    BoardSetup   *bs;
 	ChessBoardBitmap cbb;
     char         cursor;
     char         wait_cursor;

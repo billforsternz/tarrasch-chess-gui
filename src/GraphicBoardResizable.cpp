@@ -54,7 +54,7 @@ void GraphicBoardResizable::Init( int pix_ )
 // Setup a position	on the graphic board
 void GraphicBoardResizable::SetChessPosition( char *position_ascii )
 {
-	cbb.SetChessPosition( position_ascii );
+	cbb.SetChessPosition( position_ascii, cbb.normal_orientation );
 }
 
 // Draw the graphic board

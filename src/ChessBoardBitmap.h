@@ -20,11 +20,11 @@ public:
 	~ChessBoardBitmap();
     void Init( int pix );
 	void BuildMiniboardBitmap( int pix, wxBitmap &bm );
-	void BuildBoardSetupBitmap( int pix, wxBitmap &bm );
+	void BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char *chess_position, bool normal_orientation );
 	void BuildCustomCursors( int pix );
 
 	// Setup a position	on the graphic board
-	void SetChessPosition( const char *position_ascii );
+	void SetChessPosition( const char *position_ascii, bool normal_orientation );
 
 	// Get/Set orientation
 	void SetNormalOrientation( bool _normal_orientation )
