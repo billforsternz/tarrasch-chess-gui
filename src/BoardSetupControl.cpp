@@ -13,7 +13,6 @@
 #include "DebugPrintf.h"
 #include "PanelContext.h"
 #include "Objects.h"
-#include "BoardSetup.h"
 #include "ChessBoardBitmap.h"
 #include "BoardSetupControl.h"
 
@@ -113,7 +112,7 @@ extern void DatabaseSearchVeryUglyTemporaryCallback( int offset );
 void BoardSetupControl::UpdateBoard()
 {
     bool normal_orientation = objs.canvas->GetNormalOrientation();
-	cbb.BuildBoardSetupBitmap(34,chess_bmp,cp.squares,normal_orientation);
+	cbb.BuildBoardSetupBitmap(34,chess_bmp,cp.squares,normal_orientation,lockdown);
     Refresh(false);
     Update();
     if( position_setup )
@@ -128,7 +127,7 @@ void BoardSetupControl::Set( const thc::ChessPosition &cp_, const bool *lockdown
     this->cp = cp_;
     if( lockdown_ )
         memcpy(this->lockdown,lockdown_,64);
-	cbb.BuildBoardSetupBitmap(34,chess_bmp,cp.squares,normal_orientation);
+	cbb.BuildBoardSetupBitmap(34,chess_bmp,cp.squares,normal_orientation,lockdown);
     Refresh(false);
     Update();
 }

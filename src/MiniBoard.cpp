@@ -10,10 +10,7 @@
 #include "Appdefs.h"
 #include "thc.h"
 #include "DebugPrintf.h"
-#include "BoardSetup.h"
 #include "ChessBoardBitmap.h"
-//#include "Objects.h"
-//#include "PanelContext.h"
 #include "MiniBoard.h"
 using namespace std;
 using namespace thc;

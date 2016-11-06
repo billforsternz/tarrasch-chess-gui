@@ -19,12 +19,12 @@ public:
 	ChessBoardBitmap();
 	~ChessBoardBitmap();
     void Init( int pix );
-	void BuildMiniboardBitmap( int pix, wxBitmap &bm );
-	void BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char *chess_position, bool normal_orientation );
+	void BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char *chess_position, bool normal_orientation, const bool *highlight=0 );
 	void BuildCustomCursors( int pix );
 
 	// Setup a position	on the graphic board
-	void SetChessPosition( const char *position_ascii, bool normal_orientation );
+	void SetChessPosition( const char *position_ascii, bool normal_orientation, const bool *highlight=0 );
+    void SetPositionEx( const thc::ChessPosition &pos, bool blank_other_squares, char pickup_file, char pickup_rank, wxPoint shift );
 
 	// Get/Set orientation
 	void SetNormalOrientation( bool _normal_orientation )
@@ -41,7 +41,6 @@ public:
 	void ClearHighlight2()			   { highlight_file2='\0'; }
 
     // Setup a position	on the graphic board
-    void SetPositionEx( const thc::ChessPosition &pos, bool blank_other_squares, char pickup_file, char pickup_rank, wxPoint shift );
 
 	wxImage		white_king_cursor;	
 	wxImage		white_queen_cursor;	
@@ -105,12 +104,20 @@ private:
     const char  *black_rook_mask;
     std::string  str_black_pawn_mask;
     const char  *black_pawn_mask;
+    unsigned long highlight_y_lo1;
+    unsigned long highlight_y_lo2;
+    unsigned long highlight_y_hi2;
+    unsigned long highlight_y_hi1;
+    unsigned long highlight_x_lo1;
+    unsigned long highlight_x_lo2;
+	unsigned long highlight_x_hi2;
+    unsigned long highlight_x_hi1;
 
 	// Helpers
 public:
 	unsigned long   Offset( char file, char rank );
 	void Get( char src_file, char src_rank, char dst_file, char dst_rank, const char *mask = NULL );
-	void Put( char src_file, char src_rank, char dst_file, char dst_rank );
+	void Put( char src_file, char src_rank, char dst_file, char dst_rank, bool highlight_f );
 
     // Put a shifted, masked piece from box onto board
     void PutEx( char piece, char dst_file, char dst_rank, wxPoint shift );

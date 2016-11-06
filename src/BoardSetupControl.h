@@ -9,7 +9,6 @@
 #define BOARD_SETUP_CONTROL_H
 #include "wx/wx.h"
 #include "ChessBoardBitmap.h"
-#include "BoardSetup.h"
 
 class BoardSetupControl : public wxControl
 {

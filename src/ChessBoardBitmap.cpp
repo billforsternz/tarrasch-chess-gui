@@ -144,18 +144,11 @@ void imageCopy( wxBitmap &from, int x1, int y1, wxImage &to, int x2, int y2, int
     }
 }
 
-void ChessBoardBitmap::BuildMiniboardBitmap( int pix, wxBitmap &bm )
-{
-	Init( pix );
-	SetChessPosition( box_position, true );
-	bm = my_chess_bmp;
-}
-
-void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char *chess_position, bool normal_orientation )
+void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char *chess_position, bool normal_orientation, const bool *highlight )
 {
 	cprintf( "In BuildBoardSetupBitmap(), normal orientation=%s, copying main chess position begin\n", normal_orientation?"true":"false" );
 	Init( pix );
-	SetChessPosition( chess_position, normal_orientation );
+	SetChessPosition( chess_position, normal_orientation, highlight );
     wxBitmap board_setup;
 	board_setup.Create(364,294,24);
     wxMemoryDC dc;
@@ -173,15 +166,6 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
 	bmpCopy( my_chess_bmp, 0, 0, board_setup, (364-8*pix)/2, (294-8*pix)/2, 8*pix, 8*pix );
 	cprintf( "In BuildBoardSetupBitmap(), copying main chess position end\n" );
 	SetChessPosition( box_position, true );
-
-/*
-	// Make square b5 a nice blue colour
-	wxColour ocean_blue(112,146,190);
-    wxBrush ocean_blue_brush(ocean_blue);
-    dc.SetBrush( ocean_blue_brush );
-    dc.SetPen(*wxTRANSPARENT_PEN);
-    dc.DrawRectangle( (364-8*pix)/2 + pix, (294-8*pix)/2 + 3*pix, pix, pix );
-*/
 
 	// Add pieces to be picked up on the side
 	for( int i=0; i<6; i++ )
@@ -471,10 +455,23 @@ void ChessBoardBitmap::Init( int pix )
     //
     int x = 0;
     int y = 0;
+
+	// Highlight dimensions
+    unsigned long thickness = pix/16;
+    unsigned long indent    = thickness;
+    highlight_y_lo1 = indent;
+    highlight_y_lo2 = highlight_y_lo1 + thickness;
+    highlight_y_hi2 = pix - indent;
+    highlight_y_hi1 = highlight_y_hi2 - thickness;
+    highlight_x_lo1 = indent;
+    highlight_x_lo2 = highlight_x_lo1 + thickness;
+	highlight_x_hi2 = pix - indent;
+    highlight_x_hi1 = highlight_x_hi2 - thickness;
+
     const char *board[] =
     {
         "rNbQkBnR",
-        "Pp#qK   ",
+        "Pp#qK  %",
     };
     dc.SetBackgroundMode( wxPENSTYLE_TRANSPARENT );
     for( int board_idx=0; board_idx<2; board_idx++ )
@@ -495,6 +492,14 @@ void ChessBoardBitmap::Init( int pix )
             {
                 // whole board already initialised to light colour
             }
+			else if( c == '%' )
+			{
+				// Make square h7 now (b5 in box) a nice blue colour
+				wxColour ocean_blue(112,146,190);
+				wxBrush ocean_blue_brush(ocean_blue);
+				dc.SetBrush( ocean_blue_brush );
+                dc.DrawRectangle(x<0?0:x, y, pix, pix );
+			}
             else
             {
                 // fill square with magenta
@@ -955,13 +960,15 @@ void ChessBoardBitmap::Init( int pix )
 	// Two empty squares
 	Get( 'c','7', 'a','3' );  // empty black square
 	Get( 'f','7', 'b','3' );  // empty white square
+
+	// Highlight colour in b5
+	Get( 'h','7', 'b','5' );  // blue square
     my_chess_bmp = my_chess_bmp_;
 }
 
 // Setup a position	on the graphic board
-void ChessBoardBitmap::SetChessPosition( const char *position_ascii, bool normal_orientation )
+void ChessBoardBitmap::SetChessPosition( const char *position_ascii, bool normal_orientation, const bool *highlight )
 {
-	char piece;
 	int  file=0, rank=7;
 	char rev_file='h', rev_rank='1';	// tracks reverse orientation
 	char src_file, src_rank;
@@ -975,10 +982,15 @@ void ChessBoardBitmap::SetChessPosition( const char *position_ascii, bool normal
 				   "wbwbwbwb"
 				   "bwbwbwbw";
     strcpy( _position_ascii, position_ascii );
+    const bool *highlight_ptr = highlight;
 
 	// Read string backwards for black at bottom
 	if( !normal_orientation )
+	{
 		position_ascii += 63;
+        if( highlight_ptr )
+            highlight_ptr += 63;
+	}
 
 	// Loop through all squares
 	for( int i=0; i<64; i++ )
@@ -996,10 +1008,20 @@ void ChessBoardBitmap::SetChessPosition( const char *position_ascii, bool normal
 		}
 
 		// Find the piece occupying this square
+		char piece = *position_ascii;
+        bool highlight_f = highlight_ptr ? *highlight_ptr : false;
 		if( normal_orientation )
-			piece = *position_ascii++;
-		else
-			piece = *position_ascii--;
+        {
+			position_ascii++;
+            if( highlight_ptr )
+                highlight_ptr++;
+        }
+        else
+        {
+			position_ascii--;
+            if( highlight_ptr )
+                highlight_ptr--;
+        }
 
 		// Is the square black ?
 		if( *colour++ == 'b' )
@@ -1047,7 +1069,7 @@ void ChessBoardBitmap::SetChessPosition( const char *position_ascii, bool normal
 			}
 		}
 
-	    Put( src_file, src_rank, dst_file, dst_rank );
+	    Put( src_file, src_rank, dst_file, dst_rank, highlight_f );
 	}
 
 	// Copy from the image buffer into the wxBitmap
@@ -1065,8 +1087,6 @@ void ChessBoardBitmap::SetChessPosition( const char *position_ascii, bool normal
             p++;
         }
     }
-
-    // Now use GDI to add highlights (removed)
 }
 
 
@@ -1113,14 +1133,12 @@ void ChessBoardBitmap::Get( char src_file, char src_rank, char dst_file, char ds
 }
 
 // Put a piece from box onto board
-void ChessBoardBitmap::Put( char src_file, char src_rank, char dst_file, char dst_rank )
+void ChessBoardBitmap::Put( char src_file, char src_rank, char dst_file, char dst_rank, bool highlight_f )
 {
-//	if( density != 4 )
-//	{
-
-		// 16 bit (and other) graphics code
-		unsigned int i, j, k;
-		byte *src, *dst;
+	unsigned int i, j, k;
+	byte *src, *dst, *src_blue;
+	if( !highlight_f )	// optimisation - much simpler
+	{
 		for( i=0; i < height/8; i++ )
 		{
 			src			  =
@@ -1128,30 +1146,41 @@ void ChessBoardBitmap::Put( char src_file, char src_rank, char dst_file, char ds
 			dst			  =
 				(byte *)(buf_board + Offset(dst_file,dst_rank) + i*width_bytes);
 			for( j=0; j < width_bytes/(8*density); j++ )
-            {
-                for( k=0; k<density; k++ )
-			        *dst++ = *src++;
-            }
+			{
+				for( k=0; k<density; k++ )
+					*dst++ = *src++;
+			}
 		}
-#if 0
 	}
 	else
 	{
-
-		// 32 bit graphics code
-		unsigned int i, j;
-		uint32_t *src, *dst;
 		for( i=0; i < height/8; i++ )
 		{
 			src			  =
-				(uint32_t *)(buf_box   + Offset(src_file,src_rank) + i*width_bytes);
+				(byte *)(buf_box   + Offset(src_file,src_rank) + i*width_bytes);
+			src_blue     =
+				(byte *)(buf_box   + Offset('b','5')           + i*width_bytes);
 			dst			  =
-				(uint32_t *)(buf_board + Offset(dst_file,dst_rank) + i*width_bytes);
-			for( j=0; j < width_bytes/32; j++ )
-			    *dst++ = *src++;
+				(byte *)(buf_board + Offset(dst_file,dst_rank) + i*width_bytes);
+			for( j=0; j < (width_bytes)/(8*density); j++ )
+			{
+				bool yhit =         (highlight_y_lo1<=i && i<highlight_y_lo2) ||
+									(highlight_y_hi1<=i && i<highlight_y_hi2);
+				bool xhit =         (highlight_x_lo1<=j && j<highlight_x_lo2) ||
+									(highlight_x_hi1<=j && j<highlight_x_hi2);
+				bool yrange =       (highlight_y_lo1<=i && i<highlight_y_hi2);
+				bool xrange =       (highlight_x_lo1<=j && j<highlight_x_hi2);
+				bool blue =         highlight_f && ((xhit && yrange) || (yhit && xrange));
+				for( k=0; k<density; k++ )
+				{
+					uint8_t dat = blue ? *src_blue : dat = *src;
+       				*dst++ = dat;
+					src++;
+					src_blue++;
+				}
+			}
 		}
 	}
-#endif
 }
 
 
@@ -1272,7 +1301,7 @@ void ChessBoardBitmap::SetPositionEx( const thc::ChessPosition &pos, bool blank_
 		}
 
 		// Copy from the box into the image buffer of the wxBitmap
-		Put( src_file, src_rank, dst_file, dst_rank );
+		Put( src_file, src_rank, dst_file, dst_rank, false );
 	}
 
     // Copy the picked up piece into place
