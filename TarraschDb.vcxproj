@@ -128,7 +128,6 @@
   <ItemGroup>
     <ClCompile Include="src\Atom.cpp" />
     <ClCompile Include="src\BinDb.cpp" />
-    <ClCompile Include="src\BoardSetup.cpp" />
     <ClCompile Include="src\BoardSetupControl.cpp" />
     <ClCompile Include="src\Book.cpp" />
     <ClCompile Include="src\BookDialog.cpp" />
@@ -204,7 +203,6 @@
     <ClInclude Include="src\BinaryBlock.h" />
     <ClInclude Include="src\BinaryConversions.h" />
     <ClInclude Include="src\BinDb.h" />
-    <ClInclude Include="src\BoardSetup.h" />
     <ClInclude Include="src\BoardSetupControl.h" />
     <ClInclude Include="src\Book.h" />
     <ClInclude Include="src\BookDialog.h" />
