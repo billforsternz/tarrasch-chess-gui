@@ -49,20 +49,23 @@ bool CentralWorkSaver::TestFileExists()
     return( gc->pgn_filename != "" );
 }
 
-bool CentralWorkSaver::TestFileModified()
+bool CentralWorkSaver::TestFileModified( int &nbr_modified_games, int &nbr_modified_games_in_tabs )
 {
     bool modified=false;
+	nbr_modified_games=0;
+	nbr_modified_games_in_tabs=0;
     if( gc->pgn_filename != "" )
     {
         modified = gc->file_irrevocably_modified;
-        for( unsigned int i=0; !modified && i<gc->gds.size(); i++ )
+        for( unsigned int i=0; i<gc->gds.size(); i++ )
         {
 			// Is any game sitting modified in the cache ?
             ListableGame *ptr = gc->gds[i].get();
             if( ptr && ptr->IsModified() )
             {
                 modified = true;
-                break;
+				nbr_modified_games++;
+                continue;
             }
 
 			// Is the file game sitting modified in a tab ?
@@ -78,7 +81,11 @@ bool CentralWorkSaver::TestFileModified()
 					if( game_being_edited == pd->game_being_edited )
 					{
 						if( pd->IsModified() || pu->IsModified() )
+						{
 							modified = true;
+							nbr_modified_games_in_tabs++;
+							nbr_modified_games++;
+						}
 						break;
 					}
 					tabs->Iterate(handle,pd,pu);
@@ -456,7 +463,9 @@ void CentralWorkSaver::Save( bool prompt, bool save_as, bool open_file )
 {
     bool file_exists   = TestFileExists();
     bool game_modified = TestGameModified();
-    bool file_modified = TestFileModified();
+	int nbr_modified_games=0;
+	int nbr_modified_games_in_tabs=0;
+    bool file_modified = TestFileModified( nbr_modified_games, nbr_modified_games_in_tabs );
     bool game_in_file  = TestGameInFile();
 	if( just_closing_tab )  // if set limit how much this can save
 	{
@@ -507,6 +516,10 @@ void CentralWorkSaver::Save( bool prompt, bool save_as, bool open_file )
                     file_prompt = prompt;   // but user doesn't want to save game, may need
                                             //  to ask if they want to save file
                     fm = FILE_EXISTS_GAME_UNCHANGED;
+
+					// Handle as a special case a single game in file modified - if we don't want to save game don't offer to save file
+					if( file_modified && game_in_file && game_modified && nbr_modified_games==1 && nbr_modified_games_in_tabs==1 && !gc->file_irrevocably_modified )
+						file_modified=false;
                 }
                 if( file_modified || answer==wxYES )
                     SaveFile( file_prompt, fm, save_as );
