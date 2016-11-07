@@ -144,11 +144,10 @@ void imageCopy( wxBitmap &from, int x1, int y1, wxImage &to, int x2, int y2, int
     }
 }
 
-void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char *chess_position, bool normal_orientation, const bool *highlight )
+void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char *chess_position, bool normal_orientation_, const bool *highlight )
 {
-	cprintf( "In BuildBoardSetupBitmap(), normal orientation=%s, copying main chess position begin\n", normal_orientation?"true":"false" );
 	Init( pix );
-	SetChessPosition( chess_position, normal_orientation, highlight );
+	SetChessPosition( chess_position, normal_orientation_, highlight );
     wxBitmap board_setup;
 	board_setup.Create(364,294,24);
     wxMemoryDC dc;
@@ -164,7 +163,6 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
 
 	// Copy a chess board into the centre part
 	bmpCopy( my_chess_bmp, 0, 0, board_setup, (364-8*pix)/2, (294-8*pix)/2, 8*pix, 8*pix );
-	cprintf( "In BuildBoardSetupBitmap(), copying main chess position end\n" );
 	SetChessPosition( box_position, true );
 
 	// Add pieces to be picked up on the side
@@ -177,7 +175,7 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
 			default:
 			case 0:
 			{
-				if( normal_orientation )
+				if( normal_orientation_ )
 				{
 					file='e';	rank='4';
 					mask = white_king_mask;
@@ -191,7 +189,7 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
 			}
 			case 1:
 			{
-				if( normal_orientation )
+				if( normal_orientation_ )
 				{
 					file='d';	rank='1';
 			        mask = white_queen_mask;	
@@ -205,7 +203,7 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
 			}
 			case 2:
 			{
-				if( normal_orientation )
+				if( normal_orientation_ )
 				{
 					file='h';	rank='1';
 			        mask = white_rook_mask;		
@@ -219,7 +217,7 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
 			}
 			case 3:
 			{
-				if( normal_orientation )
+				if( normal_orientation_ )
 				{
 					file='f';	rank='1';
 			        mask = white_bishop_mask;	
@@ -233,7 +231,7 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
 			}
 			case 4:
 			{
-				if( normal_orientation )
+				if( normal_orientation_ )
 				{
 					file='b';	rank='1';
 			        mask = white_knight_mask;	
@@ -247,7 +245,7 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
 			}
 			case 5:
 			{
-				if( normal_orientation )
+				if( normal_orientation_ )
 				{
 					file='a';	rank='2';
 			        mask = white_pawn_mask;		
@@ -273,7 +271,7 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
 			default:
 			case 5:
 			{
-				if( normal_orientation )
+				if( normal_orientation_ )
 				{
 					file='e';	rank='8';
 					mask = black_king_mask;		
@@ -287,7 +285,7 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
 			}
 			case 4:
 			{
-				if( normal_orientation )
+				if( normal_orientation_ )
 				{
 					file='d';	rank='5';
 			        mask = black_queen_mask;	
@@ -301,7 +299,7 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
 			}
 			case 3:
 			{
-				if( normal_orientation )
+				if( normal_orientation_ )
 				{
 					file='a';	rank='8';
 			        mask = black_rook_mask;		
@@ -315,7 +313,7 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
 			}
 			case 2:
 			{
-				if( normal_orientation )
+				if( normal_orientation_ )
 				{
 					file='c';	rank='8';
 			        mask = black_bishop_mask;	
@@ -329,7 +327,7 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
 			}
 			case 1:
 			{
-				if( normal_orientation )
+				if( normal_orientation_ )
 				{
 					file='g';	rank='8';
 			        mask = black_knight_mask;	
@@ -343,7 +341,7 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
 			}
 			case 0:
 			{
-				if( normal_orientation )
+				if( normal_orientation_ )
 				{
 					file='b';	rank='7';
 			        mask = black_pawn_mask;		
@@ -967,7 +965,7 @@ void ChessBoardBitmap::Init( int pix )
 }
 
 // Setup a position	on the graphic board
-void ChessBoardBitmap::SetChessPosition( const char *position_ascii, bool normal_orientation, const bool *highlight )
+void ChessBoardBitmap::SetChessPosition( const char *position_ascii, bool normal_orientation_, const bool *highlight )
 {
 	int  file=0, rank=7;
 	char rev_file='h', rev_rank='1';	// tracks reverse orientation
@@ -985,7 +983,7 @@ void ChessBoardBitmap::SetChessPosition( const char *position_ascii, bool normal
     const bool *highlight_ptr = highlight;
 
 	// Read string backwards for black at bottom
-	if( !normal_orientation )
+	if( !normal_orientation_ )
 	{
 		position_ascii += 63;
         if( highlight_ptr )
@@ -1010,7 +1008,7 @@ void ChessBoardBitmap::SetChessPosition( const char *position_ascii, bool normal
 		// Find the piece occupying this square
 		char piece = *position_ascii;
         bool highlight_f = highlight_ptr ? *highlight_ptr : false;
-		if( normal_orientation )
+		if( normal_orientation_ )
         {
 			position_ascii++;
             if( highlight_ptr )

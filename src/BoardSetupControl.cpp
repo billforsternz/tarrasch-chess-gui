@@ -572,7 +572,7 @@ bool BoardSetupControl::HitTest( wxPoint &point, char &piece, char &file, char &
 
         // Left side pickup pieces
         else if( found>=0 &&
-                 (unsigned)spacer_width < point.x && point.x < (unsigned)(xborder - spacer_width)
+                 (unsigned)spacer_width < (unsigned)point.x && (unsigned)point.x < (unsigned)(xborder - spacer_width)
           )
         {
             hit = true;
