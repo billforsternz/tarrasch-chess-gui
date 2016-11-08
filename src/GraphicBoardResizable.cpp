@@ -30,10 +30,18 @@ GraphicBoardResizable::GraphicBoardResizable
             // for the moment we get a strange artifact effect on resize sometimes unless wxBORDER_NONE
 {
     strcpy( cbb._position_ascii, "rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR" );
-	cbb.current_size = size;
-    int min = size.x<size.y ? size.x : size.y;
+	wxSize sz=size;
+		interactive = true;
+	if( sz.x<=0 || sz.y<=0 )
+	{
+		interactive = false;
+		sz = wxSize(34*8,34*8);
+		SetSize(sz);
+	}
+	cbb.current_size = sz;
+    int min = sz.x<sz.y ? sz.x : sz.y;
     int pix_ = min/8;
-    Init( pix_ );
+    cbb.Init( pix_ );
 }
 
 void GraphicBoardResizable::OnPaint( wxPaintEvent& WXUNUSED(event) )
@@ -130,6 +138,8 @@ void GraphicBoardResizable::PutEx( char piece,	char dst_file, char dst_rank, wxP
   */
 void GraphicBoardResizable::OnMouseLeftDown( wxMouseEvent &event )
 {
+    if( !interactive )
+		return;//	event.StopPropagation();
     wxPoint point = event.GetPosition();
     wxPoint click = point;
     wxPoint pos = GetPosition();
@@ -157,6 +167,8 @@ void GraphicBoardResizable::OnMouseLeftDown( wxMouseEvent &event )
 
 void GraphicBoardResizable::OnMouseMove( wxMouseEvent &event )
 {
+    if( !interactive )
+		return;//	event.StopPropagation();
     wxPoint point = event.GetPosition();
     if( cbb.sliding )
     {
@@ -171,6 +183,9 @@ void GraphicBoardResizable::OnMouseMove( wxMouseEvent &event )
 
 void GraphicBoardResizable::OnMouseLeftUp( wxMouseEvent &event )
 {
+    if( !interactive )
+		return;//	event.StopPropagation();
+
     cbb.sliding = false;
     wxPoint point = event.GetPosition();
     wxPoint click = point;

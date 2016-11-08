@@ -9,6 +9,7 @@
 
 #include "wx/wx.h"
 #include "ChessBoardBitmap.h"
+#include "GraphicBoardResizable.h"
 
 class MiniBoard : public wxControl
 {

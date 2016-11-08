@@ -84,7 +84,7 @@ public:
 public:
     GamesDialog   *parent;
     int initial_focus_offset;
-    MiniBoard *mini_board;
+    GraphicBoardResizable *mini_board;
     MiniBoardGame *track;
     
     // Focus changes to new item;
@@ -278,7 +278,7 @@ protected:
     wxTextCtrl *text_ctrl;
     wxListBox *list_ctrl_stats;
     wxListBox *list_ctrl_transpo;
-    MiniBoard *mini_board;
+    GraphicBoardResizable *mini_board;
     bool activated_at_least_once;
 
 private:    //TODO - move more vars to private

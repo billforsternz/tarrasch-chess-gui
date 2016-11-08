@@ -546,7 +546,7 @@ void GamesDialog::CreateControls()
     hsiz_panel = new wxBoxSizer(wxHORIZONTAL);
     box_sizer->Add(hsiz_panel, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxTOP, 10);
 
-    mini_board = new MiniBoard(this);
+    mini_board = new GraphicBoardResizable(this);
     list_ctrl->mini_board = mini_board;
     track = &mini_board_game;
     track->updated_position = cr;

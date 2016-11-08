@@ -20,10 +20,22 @@ public:
 
 	// Con/De structor
 	GraphicBoardResizable( wxWindow *parent,
-                  wxWindowID id,
-                  const wxPoint& point,
-                  const wxSize& size );
-    void Init( int pix_ );
+			//ADDED BEGIN
+                  wxWindowID id=wxID_ANY,
+                const wxPoint& point = wxDefaultPosition,
+                const wxSize&  size = wxDefaultSize );
+    void Set( const thc::ChessPosition &cp_ )
+	{
+		this->cp=cp_;
+		cbb.SetChessPosition( cp.squares, cbb.normal_orientation );
+		UpdateBoard();
+	}
+    thc::ChessPosition cp;
+	void UpdateBoard() { Refresh(false); Update(); }
+	bool interactive;
+			//ADDED END
+
+	void Init( int pix_ );
 
 	// Find a square within the graphic board
 	void HitTest( wxPoint hit, char &file, char &rank );
