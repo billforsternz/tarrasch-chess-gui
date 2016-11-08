@@ -34,7 +34,7 @@ public:
 
 private:
     bool TestFileExists();
-    bool TestFileModified( int &nbr_modified_games, int &nbr_modified_games_in_tabs );
+    bool TestFileModified();
     bool TestGameModified();
     bool TestGameInFile();
 	bool TestModifiedOrphanTabs( int &nbr_orphans );

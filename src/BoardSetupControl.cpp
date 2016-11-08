@@ -22,17 +22,9 @@ BoardSetupControl::BoardSetupControl
     bool support_lockdown,
     wxWindow* parent,
     wxWindowID     id, //= wxID_ANY,
-    const wxPoint &point //= wxDefaultPosition
-)  : wxControl( parent, id, point, wxDefaultSize, wxBORDER_NONE )
-/*
-#define wxDOUBLE_BORDER         wxBORDER_DOUBLE
-#define wxSUNKEN_BORDER         wxBORDER_SUNKEN
-#define wxRAISED_BORDER         wxBORDER_RAISED
-#define wxBORDER                wxBORDER_SIMPLE
-#define wxSIMPLE_BORDER         wxBORDER_SIMPLE
-#define wxSTATIC_BORDER         wxBORDER_STATIC
-#define wxNO_BORDER             wxBORDER_NONE */
-
+    const wxPoint &point, //= wxDefaultPosition
+    const wxSize  &size   //= wxDefaultSize
+)  : wxControl( parent, id, point, size, wxBORDER_NONE )
 {
     #define TIMER_ID 2000
     m_timer.SetOwner(this,TIMER_ID);
@@ -49,10 +41,11 @@ BoardSetupControl::BoardSetupControl
     //chess_bmp = wxBitmap( board_setup_bitmap_xpm );
     bool normal_orientation = objs.canvas->GetNormalOrientation();
     cprintf( "Normal orientation = %s\n", normal_orientation?"true":"false" );
-	cbb.BuildBoardSetupBitmap(34,chess_bmp,cp.squares,normal_orientation);
-	cbb.BuildCustomCursors(34);
-    wxSize  size( chess_bmp.GetWidth(), chess_bmp.GetHeight() );
-    SetSize( size );
+	wxSize sz_bmp(400,320); //(364,294);		
+	cbb.BuildBoardSetupBitmapDim( sz_bmp );
+	cbb.BuildBoardSetupBitmap(chess_bmp,cp.squares,normal_orientation);
+    SetSize( sz_bmp );
+	cbb.BuildCustomCursors();
     SetCustomCursor( normal_orientation?'P':'p' );
 	state = UP_CURSOR_SIDE;
 }
@@ -112,7 +105,7 @@ extern void DatabaseSearchVeryUglyTemporaryCallback( int offset );
 void BoardSetupControl::UpdateBoard()
 {
     bool normal_orientation = objs.canvas->GetNormalOrientation();
-	cbb.BuildBoardSetupBitmap(34,chess_bmp,cp.squares,normal_orientation,lockdown);
+	cbb.BuildBoardSetupBitmap(chess_bmp,cp.squares,normal_orientation,lockdown);
     Refresh(false);
     Update();
     if( position_setup )
@@ -127,7 +120,7 @@ void BoardSetupControl::Set( const thc::ChessPosition &cp_, const bool *lockdown
     this->cp = cp_;
     if( lockdown_ )
         memcpy(this->lockdown,lockdown_,64);
-	cbb.BuildBoardSetupBitmap(34,chess_bmp,cp.squares,normal_orientation,lockdown);
+	cbb.BuildBoardSetupBitmap(chess_bmp,cp.squares,normal_orientation,lockdown);
     Refresh(false);
     Update();
 }
@@ -486,8 +479,8 @@ void BoardSetupControl::SetCustomCursor( char piece )
         case 'q':   ptr = &cbb.black_queen_cursor;   break;
         case 'k':   ptr = &cbb.black_king_cursor;    break;
     }
-    ptr->SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_X,17);
-    ptr->SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_Y,17);
+    ptr->SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_X,cbb.dim_pix/2);
+    ptr->SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_Y,cbb.dim_pix/2);
     wxCursor temp(*ptr);
     SetCursor( temp );    
 }
@@ -505,24 +498,20 @@ void BoardSetupControl::ClearCustomCursor()
 bool BoardSetupControl::HitTest( wxPoint &point, char &piece, char &file, char &rank )
 {
     bool normal_orientation = objs.canvas->GetNormalOrientation();
-	wxSize sz = GetSize();
-	int w = sz.x;
-	int h = sz.y;
-    int xborder  = 46;
-    int yborder  = 11;
-	int w_board  = w - 46 - 46;
-	int h_board  = h - 11 - 11;
+	int w = cbb.dim_sz.x;
+    int xborder  = cbb.dim_board.x;
+    int yborder  = cbb.dim_board.y;
     bool hit = false;
     piece = '\0';
     file  = '\0';
     rank  = '\0';
-	unsigned long row = ( (point.y - yborder) / (h_board/8) );
+	unsigned long row = ( (point.y - yborder) / cbb.dim_pix );
 
     // Main board
     if( xborder<=point.x && point.x< w-xborder )
     {
         hit = true;
-	    unsigned long col = ( (point.x-xborder) / (w_board/8) );
+	    unsigned long col = ( (point.x-xborder) / cbb.dim_pix );
         if( !normal_orientation )
         {
             row = 7-row;
@@ -535,26 +524,21 @@ bool BoardSetupControl::HitTest( wxPoint &point, char &piece, char &file, char &
     // Maybe pickup pieces
     else
     {
-        int spacer_width = (xborder - (w_board/8) ) / 2;
-        int top = yborder+9; // offset before first piece
+        int top = cbb.dim_pickup_left.y; // offset before first piece
         int found = -1;
-	    int y = point.y - yborder;
         for( int i=0; i<6; i++ )    // six pieces
         {
-            if( top<=y && y<top+(w_board/8) )
+            if( top<=point.y && point.y<top+cbb.dim_pix )
             {
                 found = i;
                 break;
             }
-            top += h_board/8;
-            top += 10;  // gap between pieces
+            top += cbb.dim_pickup_pitch;
         }
 
         // Right side pickup pieces
         if( found>=0 &&
-             (w - xborder + spacer_width)
-                 < point.x && point.x <
-             (w - spacer_width)
+             cbb.dim_pickup_right.x  < point.x && point.x < cbb.dim_pickup_right.x+cbb.dim_pix
           )
         {
             hit = true;
@@ -572,7 +556,7 @@ bool BoardSetupControl::HitTest( wxPoint &point, char &piece, char &file, char &
 
         // Left side pickup pieces
         else if( found>=0 &&
-                 (unsigned)spacer_width < (unsigned)point.x && (unsigned)point.x < (unsigned)(xborder - spacer_width)
+             cbb.dim_pickup_left.x  < point.x && point.x < cbb.dim_pickup_left.x+cbb.dim_pix
           )
         {
             hit = true;

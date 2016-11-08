@@ -19,8 +19,9 @@ public:
 	ChessBoardBitmap();
 	~ChessBoardBitmap();
     void Init( int pix );
-	void BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char *chess_position, bool normal_orientation, const bool *highlight=0 );
-	void BuildCustomCursors( int pix );
+	void BuildBoardSetupBitmapDim( const wxSize sz );
+	void BuildBoardSetupBitmap( wxBitmap &bm, const char *chess_position, bool normal_orientation, const bool *highlight=0 );
+	void BuildCustomCursors();
 
 	// Setup a position	on the graphic board
 	void SetChessPosition( const char *position_ascii, bool normal_orientation, const bool *highlight=0 );
@@ -71,6 +72,14 @@ public:
 	char		 highlight_file2, highlight_rank2;
     wxBitmap      my_chess_bmp;
     char          _position_ascii[100];
+
+	// Dimensions of constructed board setup bitmap
+	wxSize		  dim_sz;
+	int			  dim_pix;
+	wxPoint		  dim_board;
+	wxPoint		  dim_pickup_left;
+	wxPoint		  dim_pickup_right;
+	int			  dim_pickup_pitch;
 
 private:
 

@@ -70,6 +70,7 @@ ChessBoardBitmap::ChessBoardBitmap()
     sliding = false;
     buf_board = 0;
     buf_box = 0;
+	normal_orientation = true;
 }
 
 // Cleanup
@@ -144,12 +145,56 @@ void imageCopy( wxBitmap &from, int x1, int y1, wxImage &to, int x2, int y2, int
     }
 }
 
-void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char *chess_position, bool normal_orientation_, const bool *highlight )
+// Calculate the dimensions of a BoardSetup bitmap for a given square size
+/*														   
+	   +---------------------------------------------+     	Input:
+	   |									  		 |	   	dim_sz = size of whole thing
+	   |	X								  	X    |	   	
+	   |			 +-----------------+	  		 |	   	Outputs:
+	   |	X		 |				   |		X    |	   	dim_pix = size of one chessboard square
+	   |	 		 |				   |	  	     |		dim_board = coordinates of 8x8 square board in the middle
+	   |	X		 |				   |	  	X    |		dim_pickup_left = coordinates of the top left X (one square sized)
+	   |	 		 |				   |	  	     |		dim_pickup_right = coordinates of the top right X (one square sized)
+	   |	X		 |				   |	  	X    |		dim_pickup_pitch = vertical distance between X pickup pieces
+	   |	 		 |				   |	  	     |
+	   |	X		 |				   |	  	X    |
+	   |	 		 +-----------------+		     |
+	   |	X								  	X    |
+ 	   |									  	     |
+	   +---------------------------------------------+
+
+*/
+void ChessBoardBitmap::BuildBoardSetupBitmapDim( const wxSize sz )
 {
-	Init( pix );
+	// Starting point was 364 * 294 pixel bitmap used 34 pix squares
+	dim_sz = sz;
+	uint32_t w = sz.x;
+	uint32_t h = sz.y;
+	uint32_t pix1 = (w*100) / (1000 + 50);	// divide by 10 (at least) / 10.7
+	uint32_t pix2 = (h*100) / (800 + 30);	// divide by 8 (at least) / 8.64
+	int pix = pix1<pix2 ? pix1 : pix2;	// min()
+	dim_pix = pix;
+	cprintf( "pix=%d, pix1=%d, pix2=%d\n", pix, pix1, pix2 );
+	uint32_t vert_gap = ((h - pix*6)*100)/700; // pix*6 + 7*vert_gap = h => vert_gap = (h - pix*6) / 7
+	uint32_t x = (w-8*pix)/2;
+	uint32_t y = (h-8*pix)/2;
+	uint32_t x1 = ((w-8*pix)/2 - pix)/2;
+	uint32_t y1 = vert_gap;
+	dim_pickup_pitch = pix+vert_gap;
+	dim_board.x = x;
+	dim_board.y = y;
+	dim_pickup_left.x = x1;
+	dim_pickup_left.y = y1;
+	dim_pickup_right.x = w-x1-pix;
+	dim_pickup_right.y = y1;
+}
+
+void ChessBoardBitmap::BuildBoardSetupBitmap( wxBitmap &bm, const char *chess_position, bool normal_orientation_, const bool *highlight )
+{
+	Init( dim_pix );
 	SetChessPosition( chess_position, normal_orientation_, highlight );
     wxBitmap board_setup;
-	board_setup.Create(364,294,24);
+	board_setup.Create(dim_sz.x,dim_sz.y,24);
     wxMemoryDC dc;
     dc.SelectObject(board_setup);
     dc.SetMapMode(wxMM_TEXT);
@@ -162,7 +207,7 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
     dc.DrawRectangle(0,0,board_setup.GetWidth(),board_setup.GetHeight());
 
 	// Copy a chess board into the centre part
-	bmpCopy( my_chess_bmp, 0, 0, board_setup, (364-8*pix)/2, (294-8*pix)/2, 8*pix, 8*pix );
+	bmpCopy( my_chess_bmp, 0, 0, board_setup, dim_board.x, dim_board.y, 8*dim_pix, 8*dim_pix );
 	SetChessPosition( box_position, true );
 
 	// Add pieces to be picked up on the side
@@ -260,7 +305,7 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
 		}
 		int x = file-'a';
 		int y = '8'-rank;
-		bmpCopy( my_chess_bmp, x*pix, y*pix, board_setup, 8, 20 + i*44, pix, pix, mask );
+		bmpCopy( my_chess_bmp, x*dim_pix, y*dim_pix, board_setup, dim_pickup_left.x, dim_pickup_left.y + i*dim_pickup_pitch, dim_pix, dim_pix, mask );
 	}
 	for( int i=0; i<6; i++ )
 	{
@@ -356,14 +401,13 @@ void  ChessBoardBitmap::BuildBoardSetupBitmap( int pix, wxBitmap &bm, const char
 		}
 		int x = file-'a';
 		int y = '8'-rank;
-		bmpCopy( my_chess_bmp, x*pix, y*pix, board_setup, 325, 20 + i*44, pix, pix, mask );
+		bmpCopy( my_chess_bmp, x*dim_pix, y*dim_pix, board_setup, dim_pickup_right.x, dim_pickup_right.y + i*dim_pickup_pitch, dim_pix, dim_pix, mask );
 	}
 	bm = board_setup;
 }
 
-void ChessBoardBitmap::BuildCustomCursors( int pix )
+void ChessBoardBitmap::BuildCustomCursors()
 {
-	Init( pix );
 	SetChessPosition( box_position, true );
 	for( int i=0; i<12; i++ )
 	{
@@ -410,11 +454,11 @@ void ChessBoardBitmap::BuildCustomCursors( int pix )
 			        mask = black_pawn_mask;
 			        ptr  = &black_pawn_cursor;		break;
 		}
-		ptr->Create( pix, pix, false );
+		ptr->Create( dim_pix, dim_pix, false );
 		ptr->InitAlpha();
 		int x = file-'a';
 		int y = '8'-rank;
-		imageCopy( my_chess_bmp, x*pix, y*pix, *ptr, 0, 0, pix, pix, mask );
+		imageCopy( my_chess_bmp, x*dim_pix, y*dim_pix, *ptr, 0, 0, dim_pix, dim_pix, mask );
 	}
 }
 
@@ -858,6 +902,7 @@ void ChessBoardBitmap::Init( int pix )
     }
 
 	// Orientation
+	bool save_normal_orientation = normal_orientation;
 	normal_orientation = true;
 
 	// Highlights squares
@@ -962,6 +1007,7 @@ void ChessBoardBitmap::Init( int pix )
 	// Highlight colour in b5
 	Get( 'h','7', 'b','5' );  // blue square
     my_chess_bmp = my_chess_bmp_;
+	normal_orientation = save_normal_orientation;
 }
 
 // Setup a position	on the graphic board
@@ -1623,7 +1669,8 @@ void Testbed()
     wxBitmap bm;
 	ChessBoardBitmap cbb;
 	thc::ChessPosition cp;
-	cbb.BuildBoardSetupBitmap(34,bm,cp.squares,true);
+	cbb.BuildBoardSetupBitmapDim(wxSize(364,294));
+	cbb.BuildBoardSetupBitmap(bm,cp.squares,true);
 	TestbedDialog dialog(bm);
 	dialog.Run();
 }

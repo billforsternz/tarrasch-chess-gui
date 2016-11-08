@@ -18,7 +18,8 @@ public:
                   bool support_lockdown,
                   wxWindow* parent,
                   wxWindowID id = wxID_ANY,
-                  const wxPoint& point = wxDefaultPosition );
+                  const wxPoint& point = wxDefaultPosition,
+				  const wxSize& size = wxDefaultSize );
     void Set( const thc::ChessPosition &cp_, const bool *lockdown_=0 );
     thc::ChessPosition cp;
     bool         lockdown[64];
