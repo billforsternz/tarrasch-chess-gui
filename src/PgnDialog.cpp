@@ -16,7 +16,7 @@
 #include "GamePrefixDialog.h"
 #include "GameLogic.h"
 #include "Objects.h"
-#include "MiniBoard.h"
+#include "CtrlChessBoard.h"
 #include "PgnFiles.h"
 #include "PgnDialog.h"
 #include <iostream>

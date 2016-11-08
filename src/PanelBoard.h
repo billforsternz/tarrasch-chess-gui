@@ -7,7 +7,7 @@
 #ifndef PANEL_BOARD_H
 #define PANEL_BOARD_H
 #include "wx/wx.h"
-#include "GraphicBoardResizable.h"
+#include "CtrlChessBoard.h"
 
 class wxStaticTextSub: public wxStaticText
 {
@@ -37,7 +37,7 @@ public:
     void BlackClock( const wxString &txt );
     void RedrawClocks();                   
     void SetBoardTitle( const char *txt, bool highlight=false );
-    GraphicBoardResizable *gb;
+    CtrlChessBoard *gb;
 
 private:
     void Layout( const wxSize &siz, wxRect &board );

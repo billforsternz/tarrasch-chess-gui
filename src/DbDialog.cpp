@@ -20,7 +20,7 @@
 #include "Objects.h"
 #include "Lang.h"
 #include "PgnFiles.h"
-#include "MiniBoard.h"
+#include "CtrlChessBoard.h"
 #include "DbDialog.h"
 #include "Database.h"
 #include <iostream>

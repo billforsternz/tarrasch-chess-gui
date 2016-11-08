@@ -15,7 +15,7 @@
 #include "GamesCache.h"
 #include "GameDocument.h"
 #include "Repository.h"
-#include "MiniBoard.h"
+#include "CtrlChessBoard.h"
 #include "Database.h"
 
 // Control identifiers
@@ -84,7 +84,7 @@ public:
 public:
     GamesDialog   *parent;
     int initial_focus_offset;
-    GraphicBoardResizable *mini_board;
+    CtrlChessBoard *mini_board;
     MiniBoardGame *track;
     
     // Focus changes to new item;
@@ -278,7 +278,7 @@ protected:
     wxTextCtrl *text_ctrl;
     wxListBox *list_ctrl_stats;
     wxListBox *list_ctrl_transpo;
-    GraphicBoardResizable *mini_board;
+    CtrlChessBoard *mini_board;
     bool activated_at_least_once;
 
 private:    //TODO - move more vars to private

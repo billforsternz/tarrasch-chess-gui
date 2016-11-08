@@ -13,7 +13,7 @@
 #include "Objects.h"
 #include "GameLogic.h"
 #include "thc.h"
-#include "BoardSetupControl.h"
+#include "CtrlChessPositionSetup.h"
 #include "Book.h"
 #include "Repository.h"
 #include "PatternDialog.h"
@@ -105,7 +105,7 @@ void PatternDialog::CreateControls()
     top_sizer->Add(box_sizer, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
 
     // The board setup bitmap
-    bsc = new BoardSetupControl(false,support_lockdown,this);
+    bsc = new CtrlChessPositionSetup(false,support_lockdown,this);
     bsc->Set( parm->cp, parm->lockdown );
 
     // Intermediate sizers

@@ -128,7 +128,6 @@
   <ItemGroup>
     <ClCompile Include="src\Atom.cpp" />
     <ClCompile Include="src\BinDb.cpp" />
-    <ClCompile Include="src\BoardSetupControl.cpp" />
     <ClCompile Include="src\Book.cpp" />
     <ClCompile Include="src\BookDialog.cpp" />
     <ClCompile Include="src\CentralWorkSaver.cpp" />
@@ -142,6 +141,8 @@
     <ClCompile Include="src\CtrlBox.cpp" />
     <ClCompile Include="src\CtrlBox2.cpp" />
     <ClCompile Include="src\CtrlBoxBookMoves.cpp" />
+    <ClCompile Include="src\CtrlChessBoard.cpp" />
+    <ClCompile Include="src\CtrlChessPositionSetup.cpp" />
     <ClCompile Include="src\CtrlChessTxt.cpp" />
     <ClCompile Include="src\Database.cpp" />
     <ClCompile Include="src\DbDialog.cpp" />
@@ -160,7 +161,6 @@
     <ClCompile Include="src\GamesDialog.cpp" />
     <ClCompile Include="src\GameView.cpp" />
     <ClCompile Include="src\GeneralDialog.cpp" />
-    <ClCompile Include="src\GraphicBoardResizable.cpp" />
     <ClCompile Include="src\Lang.cpp" />
     <ClCompile Include="src\LegacyDb.cpp" />
     <ClCompile Include="src\Log.cpp" />
@@ -171,7 +171,6 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MaintenanceDialog.cpp" />
     <ClCompile Include="src\MemoryPositionSearch.cpp" />
-    <ClCompile Include="src\MiniBoard.cpp" />
     <ClCompile Include="src\MoveTree.cpp" />
     <ClCompile Include="src\PackedGame.cpp" />
     <ClCompile Include="src\PackedGameBinDb.cpp" />
@@ -203,7 +202,6 @@
     <ClInclude Include="src\BinaryBlock.h" />
     <ClInclude Include="src\BinaryConversions.h" />
     <ClInclude Include="src\BinDb.h" />
-    <ClInclude Include="src\BoardSetupControl.h" />
     <ClInclude Include="src\Book.h" />
     <ClInclude Include="src\BookDialog.h" />
     <ClInclude Include="src\CentralWorkSaver.h" />
@@ -217,6 +215,8 @@
     <ClInclude Include="src\CtrlBox.h" />
     <ClInclude Include="src\CtrlBox2.h" />
     <ClInclude Include="src\CtrlBoxBookMoves.h" />
+    <ClInclude Include="src\CtrlChessBoard.h" />
+    <ClInclude Include="src\CtrlChessPositionSetup.h" />
     <ClInclude Include="src\CtrlChessTxt.h" />
     <ClInclude Include="src\Database.h" />
     <ClInclude Include="src\DbDialog.h" />
@@ -238,7 +238,6 @@
     <ClInclude Include="src\GameState.h" />
     <ClInclude Include="src\GameView.h" />
     <ClInclude Include="src\GeneralDialog.h" />
-    <ClInclude Include="src\GraphicBoardResizable.h" />
     <ClInclude Include="src\kibitzq.h" />
     <ClInclude Include="src\Lang.h" />
     <ClInclude Include="src\LegacyDb.h" />
@@ -251,7 +250,6 @@
     <ClInclude Include="src\MaintenanceDialog.h" />
     <ClInclude Include="src\MemoryPositionSearch.h" />
     <ClInclude Include="src\MemoryPositionSearchSide.h" />
-    <ClInclude Include="src\MiniBoard.h" />
     <ClInclude Include="src\MoveTree.h" />
     <ClInclude Include="src\NavigationKey.h" />
     <ClInclude Include="src\Objects.h" />

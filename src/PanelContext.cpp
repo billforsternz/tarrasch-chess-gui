@@ -11,7 +11,7 @@
 #include "CtrlBox.h"
 #include "CtrlBox2.h"
 #include "CtrlBoxBookMoves.h"
-#include "GraphicBoardResizable.h"
+#include "CtrlChessBoard.h"
 #include "PanelContext.h"
 #include "GameLogic.h"
 #include "CentralWorkSaver.h"

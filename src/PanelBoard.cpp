@@ -102,7 +102,7 @@ PanelBoard::PanelBoard
     Layout( siz, board );
 
     // Create board
-    gb = new GraphicBoardResizable( this,
+    gb = new CtrlChessBoard( this,
                             wxID_ANY,
                             wxPoint(board.x,board.y), wxSize(board.width,board.height) );
 }

@@ -13,14 +13,14 @@
 #include "Portability.h"
 #include "DebugPrintf.h"
 #include "CompressedBitmaps.h"
-#include "GraphicBoardResizable.h"
+#include "CtrlChessBoard.h"
 #include "GameLogic.h"
 #include "thc.h"
 #include "Objects.h"
 #include "Repository.h"
 
 // Initialise the graphic board
-GraphicBoardResizable::GraphicBoardResizable
+CtrlChessBoard::CtrlChessBoard
 (
     wxWindow *parent,
     wxWindowID id,
@@ -44,7 +44,7 @@ GraphicBoardResizable::GraphicBoardResizable
     cbb.Init( pix_ );
 }
 
-void GraphicBoardResizable::OnPaint( wxPaintEvent& WXUNUSED(event) )
+void CtrlChessBoard::OnPaint( wxPaintEvent& WXUNUSED(event) )
 {
     wxPaintDC dc(this);
     if( cbb.my_chess_bmp.Ok() )
@@ -54,26 +54,26 @@ void GraphicBoardResizable::OnPaint( wxPaintEvent& WXUNUSED(event) )
 }
 
 // Setup a position	on the graphic board
-void GraphicBoardResizable::Init( int pix_ )
+void CtrlChessBoard::Init( int pix_ )
 {
 	cbb.Init( pix_ );
 }
 
 // Setup a position	on the graphic board
-void GraphicBoardResizable::SetChessPosition( char *position_ascii )
+void CtrlChessBoard::SetChessPosition( char *position_ascii )
 {
 	cbb.SetChessPosition( position_ascii, cbb.normal_orientation );
 }
 
 // Draw the graphic board
-void GraphicBoardResizable::Draw()
+void CtrlChessBoard::Draw()
 {
     Refresh(false);
     Update();
 }
 
 // Figure out which square is clicked on the board
-void GraphicBoardResizable::HitTest( wxPoint hit, char &file, char &rank )
+void CtrlChessBoard::HitTest( wxPoint hit, char &file, char &rank )
 {
 	unsigned long row = ( hit.y / (cbb.height/8) );
 	unsigned long col = ( (hit.x*cbb.density) / (cbb.width_bytes/8) );
@@ -91,7 +91,7 @@ void GraphicBoardResizable::HitTest( wxPoint hit, char &file, char &rank )
 }
 
 // Figure out which square is at shift offset from this square
-void GraphicBoardResizable::HitTestEx( char &file, char &rank, wxPoint shift )
+void CtrlChessBoard::HitTestEx( char &file, char &rank, wxPoint shift )
 {
 	long row, y, col, x;
 	if( cbb.normal_orientation )
@@ -131,12 +131,12 @@ void GraphicBoardResizable::HitTestEx( char &file, char &rank, wxPoint shift )
 }
 /*
 // Put a shifted, masked piece from box onto board
-void GraphicBoardResizable::PutEx( char piece,	char dst_file, char dst_rank, wxPoint shift )
+void CtrlChessBoard::PutEx( char piece,	char dst_file, char dst_rank, wxPoint shift )
 {
 	cbb.PutEx( piece, dst_file, dst_rank, shift );
 }
   */
-void GraphicBoardResizable::OnMouseLeftDown( wxMouseEvent &event )
+void CtrlChessBoard::OnMouseLeftDown( wxMouseEvent &event )
 {
     if( !interactive )
 		return;//	event.StopPropagation();
@@ -165,7 +165,7 @@ void GraphicBoardResizable::OnMouseLeftDown( wxMouseEvent &event )
     }
 }
 
-void GraphicBoardResizable::OnMouseMove( wxMouseEvent &event )
+void CtrlChessBoard::OnMouseMove( wxMouseEvent &event )
 {
     if( !interactive )
 		return;//	event.StopPropagation();
@@ -181,7 +181,7 @@ void GraphicBoardResizable::OnMouseMove( wxMouseEvent &event )
     }
 }
 
-void GraphicBoardResizable::OnMouseLeftUp( wxMouseEvent &event )
+void CtrlChessBoard::OnMouseLeftUp( wxMouseEvent &event )
 {
     if( !interactive )
 		return;//	event.StopPropagation();
@@ -210,7 +210,7 @@ void GraphicBoardResizable::OnMouseLeftUp( wxMouseEvent &event )
 }
 
 
-void GraphicBoardResizable::OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(event) )
+void CtrlChessBoard::OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(event) )
 {
     //event.Skip(true);
     //event.StopPropagation();
@@ -218,7 +218,7 @@ void GraphicBoardResizable::OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSE
 
 
 
-void GraphicBoardResizable::SetBoardSize( wxSize &size )
+void CtrlChessBoard::SetBoardSize( wxSize &size )
 {
     cprintf( "Child: resize x=%d, y=%d\n", size.x, size.y );
     char temp[ sizeof(cbb._position_ascii) + 1 ];
@@ -234,15 +234,15 @@ void GraphicBoardResizable::SetBoardSize( wxSize &size )
 }
 
 
-BEGIN_EVENT_TABLE(GraphicBoardResizable, wxControl)
-    EVT_PAINT(GraphicBoardResizable::OnPaint)
-    EVT_MOUSE_CAPTURE_LOST(GraphicBoardResizable::OnMouseCaptureLost)
-//    EVT_MOUSE_EVENTS(GraphicBoardResizable::OnMouseEvent)
-    EVT_LEFT_UP (GraphicBoardResizable::OnMouseLeftUp)
-    EVT_LEFT_DOWN (GraphicBoardResizable::OnMouseLeftDown)
-    EVT_MOTION (GraphicBoardResizable::OnMouseMove)
-//    EVT_ERASE_BACKGROUND(GraphicBoardResizable::OnEraseBackground)
-//    EVT_TIMER( TIMER_ID, GraphicBoardResizable::OnTimeout)
+BEGIN_EVENT_TABLE(CtrlChessBoard, wxControl)
+    EVT_PAINT(CtrlChessBoard::OnPaint)
+    EVT_MOUSE_CAPTURE_LOST(CtrlChessBoard::OnMouseCaptureLost)
+//    EVT_MOUSE_EVENTS(CtrlChessBoard::OnMouseEvent)
+    EVT_LEFT_UP (CtrlChessBoard::OnMouseLeftUp)
+    EVT_LEFT_DOWN (CtrlChessBoard::OnMouseLeftDown)
+    EVT_MOTION (CtrlChessBoard::OnMouseMove)
+//    EVT_ERASE_BACKGROUND(CtrlChessBoard::OnEraseBackground)
+//    EVT_TIMER( TIMER_ID, CtrlChessBoard::OnTimeout)
 END_EVENT_TABLE()
 
 

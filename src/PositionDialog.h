@@ -9,7 +9,7 @@
 #include "wx/spinctrl.h"
 #include "thc.h"
 #include "SuspendEngine.h"
-class BoardSetupControl;
+class CtrlChessPositionSetup;
 
 // Control identifiers
 enum
@@ -124,7 +124,7 @@ private:
     wxComboBox*     predefined_positions_ctrl;
     wxButton*       ok_button;
     wxTextCtrl*     fen_ctrl;
-    BoardSetupControl *bsc;
+    CtrlChessPositionSetup *bsc;
     thc::ChessPosition  m_pos;
     wxString        combo_label;
     wxArrayString   labels;

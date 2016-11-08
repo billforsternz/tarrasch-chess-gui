@@ -14,7 +14,7 @@
 #include "GamesCache.h"
 #include "GameDocument.h"
 #include "Repository.h"
-#include "MiniBoard.h"
+#include "CtrlChessBoard.h"
 #include "CompressMoves.h"
 #include "ListableGameDb.h"
 #include "PatternMatch.h"

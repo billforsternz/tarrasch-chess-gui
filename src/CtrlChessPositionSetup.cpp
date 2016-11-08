@@ -14,9 +14,9 @@
 #include "PanelContext.h"
 #include "Objects.h"
 #include "ChessBoardBitmap.h"
-#include "BoardSetupControl.h"
+#include "CtrlChessPositionSetup.h"
 
-BoardSetupControl::BoardSetupControl
+CtrlChessPositionSetup::CtrlChessPositionSetup
 (
     bool position_setup,    // either position setup (true) or database search (false)
     bool support_lockdown,
@@ -50,7 +50,7 @@ BoardSetupControl::BoardSetupControl
 	state = UP_CURSOR_SIDE;
 }
 
-void BoardSetupControl::SetState( const char *action, State new_state )
+void CtrlChessPositionSetup::SetState( const char *action, State new_state )
 {
     bool timer_running = false;
     bool timer_running_before=false;
@@ -102,7 +102,7 @@ void BoardSetupControl::SetState( const char *action, State new_state )
 // Later - learn how to do this by sending an event to parent instead
 extern void PositionSetupVeryUglyTemporaryCallback();
 extern void DatabaseSearchVeryUglyTemporaryCallback( int offset );
-void BoardSetupControl::UpdateBoard()
+void CtrlChessPositionSetup::UpdateBoard()
 {
     bool normal_orientation = objs.canvas->GetNormalOrientation();
 	cbb.BuildBoardSetupBitmap(chess_bmp,cp.squares,normal_orientation,lockdown);
@@ -114,7 +114,7 @@ void BoardSetupControl::UpdateBoard()
         DatabaseSearchVeryUglyTemporaryCallback(-1);
 }
 
-void BoardSetupControl::Set( const thc::ChessPosition &cp_, const bool *lockdown_ )
+void CtrlChessPositionSetup::Set( const thc::ChessPosition &cp_, const bool *lockdown_ )
 {
     bool normal_orientation = objs.canvas->GetNormalOrientation();
     this->cp = cp_;
@@ -125,7 +125,7 @@ void BoardSetupControl::Set( const thc::ChessPosition &cp_, const bool *lockdown
     Update();
 }
 
-void BoardSetupControl::OnMouseMove( wxMouseEvent& event )
+void CtrlChessPositionSetup::OnMouseMove( wxMouseEvent& event )
 {
     movements++;
     wxPoint point = event.GetPosition();
@@ -203,7 +203,7 @@ b) square = empty
 c) square = curs on release (may be different square)
 */
 
-void BoardSetupControl::OnTimeout( wxTimerEvent& WXUNUSED(event) )
+void CtrlChessPositionSetup::OnTimeout( wxTimerEvent& WXUNUSED(event) )
 {
     dbg_printf( "Timeout\n" );
     long_clearing_click = false;
@@ -231,7 +231,7 @@ void BoardSetupControl::OnTimeout( wxTimerEvent& WXUNUSED(event) )
     }
 }
 
-void BoardSetupControl::OnMouseLeftUp( wxMouseEvent& event )
+void CtrlChessPositionSetup::OnMouseLeftUp( wxMouseEvent& event )
 {
     dbg_printf( "Up\n" );
     wxPoint point = event.GetPosition();
@@ -319,7 +319,7 @@ void BoardSetupControl::OnMouseLeftUp( wxMouseEvent& event )
     long_clearing_click = false;
 }
 
-void BoardSetupControl::OnMouseLeftDown( wxMouseEvent& event )
+void CtrlChessPositionSetup::OnMouseLeftDown( wxMouseEvent& event )
 {
     dbg_printf( "Down\n" );
     long_clearing_click = false;
@@ -396,7 +396,7 @@ void BoardSetupControl::OnMouseLeftDown( wxMouseEvent& event )
 }
 
 
-void BoardSetupControl::OnMouseRightDown( wxMouseEvent& event )
+void CtrlChessPositionSetup::OnMouseRightDown( wxMouseEvent& event )
 {
     wxPoint point = event.GetPosition();
     if( support_lockdown )
@@ -425,7 +425,7 @@ void BoardSetupControl::OnMouseRightDown( wxMouseEvent& event )
 
 
 
-void BoardSetupControl::OnPaint( wxPaintEvent& WXUNUSED(event) )
+void CtrlChessPositionSetup::OnPaint( wxPaintEvent& WXUNUSED(event) )
 {
     wxPaintDC dc(this);
 //    wxSize size = GetClientSize();
@@ -444,23 +444,23 @@ void BoardSetupControl::OnPaint( wxPaintEvent& WXUNUSED(event) )
     }
 }
 
-void BoardSetupControl::OnEraseBackground(wxEraseEvent& WXUNUSED(evt))
+void CtrlChessPositionSetup::OnEraseBackground(wxEraseEvent& WXUNUSED(evt))
 {
     // intentionally empty
 }
 
-void BoardSetupControl::OnSize(wxSizeEvent& WXUNUSED(evt))
+void CtrlChessPositionSetup::OnSize(wxSizeEvent& WXUNUSED(evt))
 {
     Refresh();
 }
 
-void BoardSetupControl::OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(event) )
+void CtrlChessPositionSetup::OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(event) )
 {
     //event.Skip(true);
     //event.StopPropagation();
 }
 
-void BoardSetupControl::SetCustomCursor( char piece )
+void CtrlChessPositionSetup::SetCustomCursor( char piece )
 {
     wxImage *ptr;
     switch( piece )
@@ -485,7 +485,7 @@ void BoardSetupControl::SetCustomCursor( char piece )
     SetCursor( temp );    
 }
 
-void BoardSetupControl::ClearCustomCursor()
+void CtrlChessPositionSetup::ClearCustomCursor()
 {
     SetState( "ClearCustomCursor", UP_IDLE );
     this->cursor = 0;
@@ -495,7 +495,7 @@ void BoardSetupControl::ClearCustomCursor()
 
 
 // Figure out whether a piece or square is pointed to
-bool BoardSetupControl::HitTest( wxPoint &point, char &piece, char &file, char &rank )
+bool CtrlChessPositionSetup::HitTest( wxPoint &point, char &piece, char &file, char &rank )
 {
     bool normal_orientation = objs.canvas->GetNormalOrientation();
 	int w = cbb.dim_sz.x;
@@ -576,16 +576,16 @@ bool BoardSetupControl::HitTest( wxPoint &point, char &piece, char &file, char &
 }
 
 
-BEGIN_EVENT_TABLE(BoardSetupControl, wxControl)
-    EVT_PAINT(BoardSetupControl::OnPaint)
-    EVT_SIZE(BoardSetupControl::OnSize)
-    EVT_MOUSE_CAPTURE_LOST(BoardSetupControl::OnMouseCaptureLost)
-//    EVT_MOUSE_EVENTS(BoardSetupControl::OnMouseEvent)
-    EVT_LEFT_UP (BoardSetupControl::OnMouseLeftUp)
-    EVT_LEFT_DOWN (BoardSetupControl::OnMouseLeftDown)
-    EVT_RIGHT_DOWN (BoardSetupControl::OnMouseRightDown)
-    EVT_MOTION (BoardSetupControl::OnMouseMove)
-    EVT_ERASE_BACKGROUND(BoardSetupControl::OnEraseBackground)
-    EVT_TIMER( TIMER_ID, BoardSetupControl::OnTimeout)
+BEGIN_EVENT_TABLE(CtrlChessPositionSetup, wxControl)
+    EVT_PAINT(CtrlChessPositionSetup::OnPaint)
+    EVT_SIZE(CtrlChessPositionSetup::OnSize)
+    EVT_MOUSE_CAPTURE_LOST(CtrlChessPositionSetup::OnMouseCaptureLost)
+//    EVT_MOUSE_EVENTS(CtrlChessPositionSetup::OnMouseEvent)
+    EVT_LEFT_UP (CtrlChessPositionSetup::OnMouseLeftUp)
+    EVT_LEFT_DOWN (CtrlChessPositionSetup::OnMouseLeftDown)
+    EVT_RIGHT_DOWN (CtrlChessPositionSetup::OnMouseRightDown)
+    EVT_MOTION (CtrlChessPositionSetup::OnMouseMove)
+    EVT_ERASE_BACKGROUND(CtrlChessPositionSetup::OnEraseBackground)
+    EVT_TIMER( TIMER_ID, CtrlChessPositionSetup::OnTimeout)
 END_EVENT_TABLE()
 

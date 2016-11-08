@@ -10,7 +10,7 @@
 #include "thc.h"
 #include "PatternMatch.h"
 #include "SuspendEngine.h"
-class BoardSetupControl;
+class CtrlChessPositionSetup;
 
 // Control identifiers
 enum
@@ -131,7 +131,7 @@ private:
     wxRadioButton*  either_to_move;
     wxSpinCtrl*     move_count_ctrl;
     wxButton*       ok_button;
-    BoardSetupControl *bsc;
+    CtrlChessPositionSetup *bsc;
     bool            support_lockdown;
     int             offset_persist;
 

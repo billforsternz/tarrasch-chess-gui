@@ -24,7 +24,7 @@
 #include "GameLogic.h"
 #include "Objects.h"
 #include "PgnFiles.h"
-#include "MiniBoard.h"
+#include "CtrlChessBoard.h"
 #include "DbDialog.h"
 #include "Lang.h"
 #include "GamesDialog.h"
@@ -546,7 +546,7 @@ void GamesDialog::CreateControls()
     hsiz_panel = new wxBoxSizer(wxHORIZONTAL);
     box_sizer->Add(hsiz_panel, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxTOP, 10);
 
-    mini_board = new GraphicBoardResizable(this);
+    mini_board = new CtrlChessBoard(this);
     list_ctrl->mini_board = mini_board;
     track = &mini_board_game;
     track->updated_position = cr;

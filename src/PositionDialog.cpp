@@ -13,7 +13,7 @@
 #include "Objects.h"
 #include "GameLogic.h"
 #include "thc.h"
-#include "BoardSetupControl.h"
+#include "CtrlChessPositionSetup.h"
 #include "Book.h"
 #include "Repository.h"
 #include "PositionDialog.h"
@@ -348,7 +348,7 @@ void PositionDialog::CreateControls()
     box_sizer->Add(predefined_positions_sizer, 0, wxALIGN_LEFT|wxALL, 5);
 
     // The board setup bitmap
-    bsc = new BoardSetupControl(true,false,this);
+    bsc = new CtrlChessPositionSetup(true,false,this);
     bsc->Set( m_pos );
 
     // Intermediate sizers

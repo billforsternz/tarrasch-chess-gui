@@ -5,15 +5,15 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#ifndef BOARD_SETUP_CONTROL_H
-#define BOARD_SETUP_CONTROL_H
+#ifndef CTRL_CHESS_POSITION_SETUP_H
+#define CTRL_CHESS_POSITION_SETUP_H
 #include "wx/wx.h"
 #include "ChessBoardBitmap.h"
 
-class BoardSetupControl : public wxControl
+class CtrlChessPositionSetup : public wxControl
 {
 public:
-    BoardSetupControl(
+    CtrlChessPositionSetup(
                   bool position_setup,    // either position setup (true) or database search (false)
                   bool support_lockdown,
                   wxWindow* parent,
@@ -65,4 +65,4 @@ private:
     DECLARE_EVENT_TABLE()
 };
 
-#endif // BOARD_SETUP_CONTROL_H
+#endif // CTRL_CHESS_POSITION_SETUP_H
