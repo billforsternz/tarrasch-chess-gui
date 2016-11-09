@@ -545,8 +545,8 @@ void GamesDialog::CreateControls()
     // Create a panel beneath the list control, containing everything else
     hsiz_panel = new wxBoxSizer(wxHORIZONTAL);
     box_sizer->Add(hsiz_panel, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxTOP, 10);
-
-    mini_board = new CtrlChessBoard(false,this);	// non interactive CtrlChessBoard
+	bool normal_orientation = objs.canvas->GetNormalOrientation();
+    mini_board = new CtrlChessBoard(false,normal_orientation,this);	// non interactive CtrlChessBoard
     list_ctrl->mini_board = mini_board;
     track = &mini_board_game;
     track->updated_position = cr;

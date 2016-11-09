@@ -19,13 +19,14 @@ public:
 
 	// Con/De structor
 	CtrlChessBoard( bool interactive_,
+					bool normal_orientation,
 					wxWindow *parent,
 					wxWindowID id=wxID_ANY,
 					const wxPoint& point = wxDefaultPosition,
 					const wxSize&  size = wxDefaultSize );
     void SetChessPosition( const thc::ChessPosition &cp )
 	{
-		cbb.SetChessPosition( cp.squares );
+		cbb.SetChessPosition( cp );
 		UpdateBoard();
 	}
 
@@ -39,8 +40,8 @@ public:
 	void Redraw() { wxSize sz=GetSize(); SetBoardSize(sz); }
 
 	// Get/Set orientation
-	void SetNormalOrientation( bool _normal_orientation )
-					{ cbb.normal_orientation = _normal_orientation; }
+	void SetNormalOrientation( bool normal_orientation )
+					{ cbb.normal_orientation = normal_orientation; }
 	bool GetNormalOrientation()
 					{ return cbb.normal_orientation; }
 

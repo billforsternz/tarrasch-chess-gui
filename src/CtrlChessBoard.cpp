@@ -21,6 +21,7 @@
 CtrlChessBoard::CtrlChessBoard
 (
 	bool interactive_,
+	bool normal_orientation,
     wxWindow *parent,
     wxWindowID id,
     const wxPoint& point,
@@ -28,7 +29,6 @@ CtrlChessBoard::CtrlChessBoard
 )   : wxControl( parent, id, point, size, wxBORDER_NONE ) //wxBORDER_SIMPLE ) //wxBORDER_NONE /*BORDER_COMMON*/ )
             // for the moment we get a strange artifact effect on resize sometimes unless wxBORDER_NONE
 {
-    strcpy( cbb._position_ascii, "rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR" );
 	wxSize sz=size;
 	interactive = interactive_;
 	if( sz.x<=0 || sz.y<=0 )
@@ -39,7 +39,8 @@ CtrlChessBoard::CtrlChessBoard
 	cbb.current_size = sz;
     int min = sz.x<sz.y ? sz.x : sz.y;
     int pix = min/8;
-    cbb.ChessBoardCreate( pix );
+	thc::ChessPosition cp;
+    cbb.ChessBoardCreate( pix, cp, normal_orientation );
 }
 
 void CtrlChessBoard::OnPaint( wxPaintEvent& WXUNUSED(event) )
@@ -132,7 +133,7 @@ void CtrlChessBoard::OnMouseLeftDown( wxMouseEvent &event )
             cbb.pickup_rank  = rank;
             cbb.pickup_point = point;
             cbb.sliding = true;
-            cbb.slide_pos = objs.gl->gd.master_position;
+            cbb.pos_slide = objs.gl->gd.master_position;
             OnMouseMove(event);     // Draw the position in case peeking allowed
         }
     }
@@ -149,7 +150,7 @@ void CtrlChessBoard::OnMouseMove( wxMouseEvent &event )
         point.x -= cbb.pickup_point.x;
         point.y -= cbb.pickup_point.y;
         bool blank_other_squares = objs.gl->ShowSlidingPieceOnly();
-        cbb.SetPositionEx( cbb.slide_pos, blank_other_squares, cbb.pickup_file, cbb.pickup_rank, point );
+        cbb.SetPositionEx( cbb.pos_slide, blank_other_squares, cbb.pickup_file, cbb.pickup_rank, point );
         UpdateBoard();
     }
 }
@@ -191,14 +192,11 @@ void CtrlChessBoard::OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(event
 void CtrlChessBoard::SetBoardSize( wxSize &size )
 {
     cprintf( "Child: resize x=%d, y=%d\n", size.x, size.y );
-    thc::ChessPosition temp;
-    strcpy( temp.squares, cbb._position_ascii );
     SetSize(size);
 	cbb.current_size = size;
     int min = size.x<size.y ? size.x : size.y;
     int pix = min/8;
-    cbb.ChessBoardCreate( pix );
-    SetChessPosition( temp );
+    cbb.ChessBoardCreate( pix, cbb.pos_current, cbb.normal_orientation );
 }
 
 BEGIN_EVENT_TABLE(CtrlChessBoard, wxControl)

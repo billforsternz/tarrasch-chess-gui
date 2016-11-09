@@ -24,8 +24,8 @@ private:
     wxBitmap  chess_board_bmp;
 public:
 	wxBitmap *GetChessBoardBmp() { return &chess_board_bmp; }
-    void ChessBoardCreate( int pix );
-	void SetChessPosition( const char *position_ascii, const bool *highlight=0 );
+    void ChessBoardCreate( int pix, const thc::ChessPosition &cp, bool normal_orientation, const bool *highlight=0 );
+	void SetChessPosition( const thc::ChessPosition &pos, const bool *highlight=0 );
     void SetPositionEx( const thc::ChessPosition &pos, bool blank_other_squares, char pickup_file, char pickup_rank, wxPoint shift );
 
 	// Board Setup bitmap
@@ -33,8 +33,8 @@ private:
     wxBitmap  board_setup_bmp;
 public:
 	wxBitmap *GetBoardSetupBmp() { return &board_setup_bmp; }
-	void BoardSetupCreate( const wxSize sz, const char *chess_position, bool normal_orientation, const bool *highlight=0 );
-	void BoardSetupUpdate( const char *chess_position, const bool *highlight=0 );
+	void BoardSetupCreate( const wxSize sz, const thc::ChessPosition &cp, bool normal_orientation, const bool *highlight=0 );
+	void BoardSetupUpdate( const thc::ChessPosition &cp, const bool *highlight=0 );
 	void BoardSetupGetCustomCursor( char piece, wxImage &img );
 	bool BoardSetupHitTest( const wxPoint &point, char &piece, char &file, char &rank );
 
@@ -62,10 +62,10 @@ public:
     char         pickup_file;
     char         pickup_rank;
     wxPoint      pickup_point;
-    thc::ChessPosition     slide_pos;
 	wxSize        current_size;
 	unsigned long width_bytes, height, width, density;
-    char          _position_ascii[100];
+    thc::ChessPosition	pos_slide;
+    thc::ChessPosition	pos_current;
 private:
 	byte         *buf_board;
 	byte         *buf_box;

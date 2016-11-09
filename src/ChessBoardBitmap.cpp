@@ -49,17 +49,6 @@ public:
 };
 
 
-// A standard arrangement of pieces we use to get all combinations of pieces/square colours "pieces in the box"
-static const char *box_position =
-        "rnbqkbnr"
-        "pp      "
-        "        "
-        "   qk   "
-        "   QK   "
-        "        "
-        "PP      "
-        "RNBQKBNR";
-
 // Initialise the graphic board
 ChessBoardBitmap::ChessBoardBitmap()
 {
@@ -189,21 +178,20 @@ void ChessBoardBitmap::BoardSetupDim( const wxSize sz )
 	dim_pickup_right.y = y1;
 }
 
-void ChessBoardBitmap::BoardSetupUpdate( const char *chess_position, const bool *highlight )
+void ChessBoardBitmap::BoardSetupUpdate( const thc::ChessPosition &cp, const bool *highlight )
 {
 	// Update the chess board bitmap
-	SetChessPosition( chess_position, highlight );
+	SetChessPosition( cp, highlight );
 
 	// Copy the chess board bitmap into the centre part of the board setup bitmap
 	bmpCopy( chess_board_bmp, 0, 0, board_setup_bmp, dim_board.x, dim_board.y, 8*dim_pix, 8*dim_pix );
 }
 
-void ChessBoardBitmap::BoardSetupCreate( const wxSize sz, const char *chess_position, bool normal_orientation_, const bool *highlight )
+void ChessBoardBitmap::BoardSetupCreate( const wxSize sz,  const thc::ChessPosition &cp, bool normal_orientation_, const bool *highlight )
 {
-	normal_orientation = normal_orientation_;
 	BoardSetupDim( sz );
-	ChessBoardCreate( dim_pix );
-	SetChessPosition( chess_position, highlight );
+	ChessBoardCreate( dim_pix, cp, normal_orientation_, highlight );
+	normal_orientation = true;		// temporarily while we setup box
     wxBitmap board_setup;
 	board_setup.Create(dim_sz.x,dim_sz.y,24);
     wxMemoryDC dc;
@@ -219,7 +207,21 @@ void ChessBoardBitmap::BoardSetupCreate( const wxSize sz, const char *chess_posi
 
 	// Copy a chess board into the centre part
 	bmpCopy( chess_board_bmp, 0, 0, board_setup, dim_board.x, dim_board.y, 8*dim_pix, 8*dim_pix );
-	SetChessPosition( box_position );
+
+	// Set a position with all combinations of pieces and square colours "pieces in the box"
+	static const char *box_position =
+        "rnbqkbnr"
+        "pp      "
+        "        "
+        "   qk   "
+        "   QK   "
+        "        "
+        "PP      "
+        "RNBQKBNR";
+	thc::ChessPosition box;
+	strcpy( box.squares, box_position );
+	SetChessPosition( box );
+	normal_orientation = normal_orientation_;
 
 	// Add pieces to be picked up on the side
 	for( int i=0; i<6; i++ )
@@ -452,8 +454,9 @@ bool ChessBoardBitmap::BoardSetupHitTest( const wxPoint &point, char &piece, cha
     return hit;
 }
 
-void ChessBoardBitmap::ChessBoardCreate( int pix )
+void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, bool normal_orientation_, const bool *highlight )
 {
+	normal_orientation = true;		// during early stages
 	wxSize size(pix*8,pix*8);
 	current_size = size;
 	int r1 = objs.repository->general.m_light_colour_r;
@@ -891,10 +894,6 @@ void ChessBoardBitmap::ChessBoardCreate( int pix )
         }
     }
 
-	// Orientation
-	bool save_normal_orientation = normal_orientation;
-	normal_orientation = true;
-
 	// Highlights squares
 	ClearHighlight1();
 	ClearHighlight2();
@@ -997,11 +996,14 @@ void ChessBoardBitmap::ChessBoardCreate( int pix )
 	// Highlight colour in b5
 	Get( 'h','7', 'b','5' );  // blue square
     chess_board_bmp = new_chess_board_bmp;
-	normal_orientation = save_normal_orientation;
+
+	// Setup the position
+	normal_orientation = normal_orientation_;
+	SetChessPosition( cp, highlight );
 }
 
 // Setup a position	on the graphic board
-void ChessBoardBitmap::SetChessPosition( const char *position_ascii, const bool *highlight )
+void ChessBoardBitmap::SetChessPosition( const thc::ChessPosition &pos, const bool *highlight )
 {
 	int  file=0, rank=7;
 	char rev_file='h', rev_rank='1';	// tracks reverse orientation
@@ -1015,13 +1017,14 @@ void ChessBoardBitmap::SetChessPosition( const char *position_ascii, const bool 
 				   "bwbwbwbw"
 				   "wbwbwbwb"
 				   "bwbwbwbw";
-    strcpy( _position_ascii, position_ascii );
+    pos_current = pos;
     const bool *highlight_ptr = highlight;
+    const char *piece_ptr = pos.squares;
 
 	// Read string backwards for black at bottom
 	if( !normal_orientation )
 	{
-		position_ascii += 63;
+		piece_ptr += 63;
         if( highlight_ptr )
             highlight_ptr += 63;
 	}
@@ -1042,17 +1045,17 @@ void ChessBoardBitmap::SetChessPosition( const char *position_ascii, const bool 
 		}
 
 		// Find the piece occupying this square
-		char piece = *position_ascii;
+		char piece = *piece_ptr;
         bool highlight_f = highlight_ptr ? *highlight_ptr : false;
 		if( normal_orientation )
         {
-			position_ascii++;
+			piece_ptr++;
             if( highlight_ptr )
                 highlight_ptr++;
         }
         else
         {
-			position_ascii--;
+			piece_ptr--;
             if( highlight_ptr )
                 highlight_ptr--;
         }
@@ -1233,9 +1236,9 @@ void ChessBoardBitmap::SetPositionEx( const thc::ChessPosition &pos, bool blank_
 				   "bwbwbwbw";
 
 	// Read string backwards for black at bottom
-    const char *position_ascii = pos.squares; //_position_ascii;
+    const char *piece_ptr = pos.squares;
 	if( !normal_orientation )
-		position_ascii += 63;
+		piece_ptr += 63;
 
 	// Loop through all squares
 	for( int i=0; i<64; i++ )
@@ -1245,9 +1248,9 @@ void ChessBoardBitmap::SetPositionEx( const thc::ChessPosition &pos, bool blank_
 
 		// Find the piece occupying this square
 		if( normal_orientation )
-			piece = *position_ascii++;
+			piece = *piece_ptr++;
 		else
-			piece = *position_ascii--;
+			piece = *piece_ptr--;
 
         // Is this square highlighted ? Does it contain a picked up piece ?
 		if( normal_orientation )
@@ -1654,7 +1657,7 @@ void Testbed()
 {
 	ChessBoardBitmap cbb;
 	thc::ChessPosition cp;
-	cbb.BoardSetupCreate(wxSize(364,294),cp.squares,true);
+	cbb.BoardSetupCreate(wxSize(364,294),cp,true);
 	TestbedDialog dialog(*cbb.GetBoardSetupBmp());
 	dialog.Run();
 }

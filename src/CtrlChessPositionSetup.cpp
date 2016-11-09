@@ -39,7 +39,7 @@ CtrlChessPositionSetup::CtrlChessPositionSetup
     wxClientDC dc(parent);
     bool normal_orientation = objs.canvas->GetNormalOrientation();
 	wxSize sz_bmp(400,320); //(364,294);		
-	cbb.BoardSetupCreate( sz_bmp, cp.squares, normal_orientation );
+	cbb.BoardSetupCreate( sz_bmp, cp, normal_orientation );
     SetSize( sz_bmp );
     SetCustomCursor( normal_orientation?'P':'p' );
 	state = UP_CURSOR_SIDE;
@@ -99,7 +99,7 @@ extern void PositionSetupVeryUglyTemporaryCallback();
 extern void DatabaseSearchVeryUglyTemporaryCallback( int offset );
 void CtrlChessPositionSetup::UpdateBoard()
 {
-	cbb.BoardSetupUpdate(cp.squares,lockdown);
+	cbb.BoardSetupUpdate(cp,lockdown);
     Refresh(false);
     Update();
     if( position_setup )
@@ -113,7 +113,7 @@ void CtrlChessPositionSetup::Set( const thc::ChessPosition &cp_, const bool *loc
     this->cp = cp_;
     if( lockdown_ )
         memcpy(this->lockdown,lockdown_,64);
-	cbb.BoardSetupUpdate(cp.squares,lockdown);
+	cbb.BoardSetupUpdate(cp,lockdown);
     Refresh(false);
     Update();
 }
