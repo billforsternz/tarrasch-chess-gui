@@ -18,15 +18,25 @@ public:
 	// Con/De structor
 	ChessBoardBitmap();
 	~ChessBoardBitmap();
-    void Init( int pix );
-	void BoardSetupUpdate( wxBitmap &bm, const char *chess_position, const bool *highlight=0 );
-	void BoardSetupCreate( const wxSize sz, wxBitmap &bm, const char *chess_position, bool normal_orientation, const bool *highlight=0 );
-	void BoardSetupGetCustomCursor( char piece, wxImage &img );
-	bool BoardSetupHitTest( const wxPoint &point, char &piece, char &file, char &rank );
 
-	// Setup a position	on the graphic board
+	// Chessboard bitmap
+private:
+    wxBitmap  chess_board_bmp;
+public:
+	wxBitmap *GetChessBoardBmp() { return &chess_board_bmp; }
+    void ChessBoardCreate( int pix );
 	void SetChessPosition( const char *position_ascii, const bool *highlight=0 );
     void SetPositionEx( const thc::ChessPosition &pos, bool blank_other_squares, char pickup_file, char pickup_rank, wxPoint shift );
+
+	// Board Setup bitmap
+private:
+    wxBitmap  board_setup_bmp;
+public:
+	wxBitmap *GetBoardSetupBmp() { return &board_setup_bmp; }
+	void BoardSetupCreate( const wxSize sz, const char *chess_position, bool normal_orientation, const bool *highlight=0 );
+	void BoardSetupUpdate( const char *chess_position, const bool *highlight=0 );
+	void BoardSetupGetCustomCursor( char piece, wxImage &img );
+	bool BoardSetupHitTest( const wxPoint &point, char &piece, char &file, char &rank );
 
 	// Get/Set orientation
 	void SetNormalOrientation( bool _normal_orientation )
@@ -56,7 +66,6 @@ public:
 	wxSize        current_size;
 	unsigned long width_bytes, height, width, density;
     char          _position_ascii[100];
-    wxBitmap      my_chess_bmp;
 private:
 	byte         *buf_board;
 	byte         *buf_box;

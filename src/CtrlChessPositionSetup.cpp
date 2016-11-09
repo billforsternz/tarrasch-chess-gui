@@ -37,11 +37,9 @@ CtrlChessPositionSetup::CtrlChessPositionSetup
     this->position_setup = position_setup;
     memset( lockdown, 0, sizeof(lockdown) );
     wxClientDC dc(parent);
-    //chess_bmp = static_chess_bmp; //wxBitmap( board_setup_bitmap_xpm );
-    //chess_bmp = wxBitmap( board_setup_bitmap_xpm );
     bool normal_orientation = objs.canvas->GetNormalOrientation();
 	wxSize sz_bmp(400,320); //(364,294);		
-	cbb.BoardSetupCreate( sz_bmp, chess_bmp, cp.squares, normal_orientation );
+	cbb.BoardSetupCreate( sz_bmp, cp.squares, normal_orientation );
     SetSize( sz_bmp );
     SetCustomCursor( normal_orientation?'P':'p' );
 	state = UP_CURSOR_SIDE;
@@ -101,7 +99,7 @@ extern void PositionSetupVeryUglyTemporaryCallback();
 extern void DatabaseSearchVeryUglyTemporaryCallback( int offset );
 void CtrlChessPositionSetup::UpdateBoard()
 {
-	cbb.BoardSetupUpdate(chess_bmp,cp.squares,lockdown);
+	cbb.BoardSetupUpdate(cp.squares,lockdown);
     Refresh(false);
     Update();
     if( position_setup )
@@ -115,7 +113,7 @@ void CtrlChessPositionSetup::Set( const thc::ChessPosition &cp_, const bool *loc
     this->cp = cp_;
     if( lockdown_ )
         memcpy(this->lockdown,lockdown_,64);
-	cbb.BoardSetupUpdate(chess_bmp,cp.squares,lockdown);
+	cbb.BoardSetupUpdate(cp.squares,lockdown);
     Refresh(false);
     Update();
 }
@@ -416,26 +414,12 @@ void CtrlChessPositionSetup::OnMouseRightDown( wxMouseEvent& event )
     }
 }
 
-
-
-
-
 void CtrlChessPositionSetup::OnPaint( wxPaintEvent& WXUNUSED(event) )
 {
     wxPaintDC dc(this);
-//    wxSize size = GetClientSize();
-//  dc.SetFont(*wxNORMAL_FONT);
-//    dc.SetBrush(*wxWHITE_BRUSH);
-//    dc.SetPen(*wxLIGHT_GREY_PEN);
-//    dc.SetBrush(*wxLIGHT_GREY_BRUSH);
-//    dc.DrawRectangle( 0, y, size.x, y+height );
-//    dc.DrawLine(0, y+height, size.x, y+height );
-    if( chess_bmp.Ok() )
+    if( cbb.GetBoardSetupBmp()->Ok() )
     {
-        //bool dont_redraw = (captured&&suppress_redraw);
-        //if( dont_redraw )
-        //    dbg_printf( "OMG " );
-        dc.DrawBitmap( chess_bmp, 0, 0, true );
+        dc.DrawBitmap( *cbb.GetBoardSetupBmp(), 0, 0, true );
     }
 }
 

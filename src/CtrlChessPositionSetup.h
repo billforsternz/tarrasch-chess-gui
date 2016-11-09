@@ -29,7 +29,6 @@ public:
 
 private:
     wxTimer      m_timer;
-    wxBitmap     chess_bmp;
 	ChessBoardBitmap cbb;
     char         cursor;
     char         wait_cursor;

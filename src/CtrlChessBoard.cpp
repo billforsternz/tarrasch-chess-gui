@@ -39,15 +39,15 @@ CtrlChessBoard::CtrlChessBoard
 	cbb.current_size = sz;
     int min = sz.x<sz.y ? sz.x : sz.y;
     int pix = min/8;
-    cbb.Init( pix );
+    cbb.ChessBoardCreate( pix );
 }
 
 void CtrlChessBoard::OnPaint( wxPaintEvent& WXUNUSED(event) )
 {
     wxPaintDC dc(this);
-    if( cbb.my_chess_bmp.Ok() )
+    if( cbb.GetChessBoardBmp()->Ok() )
     {
-        dc.DrawBitmap( cbb.my_chess_bmp, 0, 0, true );// board_rect.x, board_rect.y, true );
+        dc.DrawBitmap( *cbb.GetChessBoardBmp(), 0, 0, true );
     }
 }
 
@@ -182,14 +182,11 @@ void CtrlChessBoard::OnMouseLeftUp( wxMouseEvent &event )
     }
 }
 
-
 void CtrlChessBoard::OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(event) )
 {
     //event.Skip(true);
     //event.StopPropagation();
 }
-
-
 
 void CtrlChessBoard::SetBoardSize( wxSize &size )
 {
@@ -200,10 +197,9 @@ void CtrlChessBoard::SetBoardSize( wxSize &size )
 	cbb.current_size = size;
     int min = size.x<size.y ? size.x : size.y;
     int pix = min/8;
-    cbb.Init( pix );
+    cbb.ChessBoardCreate( pix );
     SetChessPosition( temp );
 }
-
 
 BEGIN_EVENT_TABLE(CtrlChessBoard, wxControl)
     EVT_PAINT(CtrlChessBoard::OnPaint)
