@@ -102,7 +102,7 @@ PanelBoard::PanelBoard
     Layout( siz, board );
 
     // Create board
-    gb = new CtrlChessBoard( this,
+    gb = new CtrlChessBoard( true, this,
                             wxID_ANY,
                             wxPoint(board.x,board.y), wxSize(board.width,board.height) );
 }
@@ -400,8 +400,7 @@ void PanelBoard::SetChessPosition()
 {
 	cprintf( "PanelBoard::SetChessPosition()\n" );
     bool normal = gb->GetNormalOrientation();
-    gb->SetChessPosition( save_position.squares );
-    gb->Draw();
+    gb->SetChessPosition( save_position );
     if( normal )
     {
         name_bottom->SetLabel( white_player.c_str() );

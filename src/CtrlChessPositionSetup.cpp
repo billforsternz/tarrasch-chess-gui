@@ -40,9 +40,8 @@ CtrlChessPositionSetup::CtrlChessPositionSetup
     //chess_bmp = static_chess_bmp; //wxBitmap( board_setup_bitmap_xpm );
     //chess_bmp = wxBitmap( board_setup_bitmap_xpm );
     bool normal_orientation = objs.canvas->GetNormalOrientation();
-    cprintf( "Normal orientation = %s\n", normal_orientation?"true":"false" );
 	wxSize sz_bmp(400,320); //(364,294);		
-	cbb.BoardSetupCreate( sz_bmp, chess_bmp,cp.squares,normal_orientation);
+	cbb.BoardSetupCreate( sz_bmp, chess_bmp, cp.squares, normal_orientation );
     SetSize( sz_bmp );
     SetCustomCursor( normal_orientation?'P':'p' );
 	state = UP_CURSOR_SIDE;
@@ -102,8 +101,7 @@ extern void PositionSetupVeryUglyTemporaryCallback();
 extern void DatabaseSearchVeryUglyTemporaryCallback( int offset );
 void CtrlChessPositionSetup::UpdateBoard()
 {
-    bool normal_orientation = objs.canvas->GetNormalOrientation();
-	cbb.BoardSetupUpdate(chess_bmp,cp.squares,normal_orientation,lockdown);
+	cbb.BoardSetupUpdate(chess_bmp,cp.squares,lockdown);
     Refresh(false);
     Update();
     if( position_setup )
@@ -114,11 +112,10 @@ void CtrlChessPositionSetup::UpdateBoard()
 
 void CtrlChessPositionSetup::Set( const thc::ChessPosition &cp_, const bool *lockdown_ )
 {
-    bool normal_orientation = objs.canvas->GetNormalOrientation();
     this->cp = cp_;
     if( lockdown_ )
         memcpy(this->lockdown,lockdown_,64);
-	cbb.BoardSetupUpdate(chess_bmp,cp.squares,normal_orientation,lockdown);
+	cbb.BoardSetupUpdate(chess_bmp,cp.squares,lockdown);
     Refresh(false);
     Update();
 }

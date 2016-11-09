@@ -189,9 +189,9 @@ void ChessBoardBitmap::BoardSetupDim( const wxSize sz )
 	dim_pickup_right.y = y1;
 }
 
-void ChessBoardBitmap::BoardSetupUpdate( wxBitmap &bm, const char *chess_position, bool normal_orientation_, const bool *highlight )
+void ChessBoardBitmap::BoardSetupUpdate( wxBitmap &bm, const char *chess_position, const bool *highlight )
 {
-	SetChessPosition( chess_position, normal_orientation_, highlight );
+	SetChessPosition( chess_position, highlight );
 
 	// Copy a chess board into the centre part
 	bmpCopy( my_chess_bmp, 0, 0, bm, dim_board.x, dim_board.y, 8*dim_pix, 8*dim_pix );
@@ -199,9 +199,10 @@ void ChessBoardBitmap::BoardSetupUpdate( wxBitmap &bm, const char *chess_positio
 
 void ChessBoardBitmap::BoardSetupCreate( const wxSize sz, wxBitmap &bm, const char *chess_position, bool normal_orientation_, const bool *highlight )
 {
+	normal_orientation = normal_orientation_;
 	BoardSetupDim( sz );
 	Init( dim_pix );
-	SetChessPosition( chess_position, normal_orientation_, highlight );
+	SetChessPosition( chess_position, highlight );
     wxBitmap board_setup;
 	board_setup.Create(dim_sz.x,dim_sz.y,24);
     wxMemoryDC dc;
@@ -217,99 +218,37 @@ void ChessBoardBitmap::BoardSetupCreate( const wxSize sz, wxBitmap &bm, const ch
 
 	// Copy a chess board into the centre part
 	bmpCopy( my_chess_bmp, 0, 0, board_setup, dim_board.x, dim_board.y, 8*dim_pix, 8*dim_pix );
-	SetChessPosition( box_position, true );
+	SetChessPosition( box_position );
 
 	// Add pieces to be picked up on the side
 	for( int i=0; i<6; i++ )
 	{
 		const char *mask;
 		char file, rank;
-		switch(i)
+		if( normal_orientation )
 		{
-			default:
-			case 0:
+			switch(i)
 			{
-				if( normal_orientation_ )
-				{
-					file='e';	rank='4';
-					mask = white_king_mask;
-				}
-				else
-				{
-			        file='e';	rank='8';
-					mask = black_king_mask;		
-				}
-				break;
+				default:
+				case 0:		file='e';	rank='4';	mask = white_king_mask;		break;
+				case 1:		file='d';	rank='1';   mask = white_queen_mask;	break;
+				case 2:		file='h';	rank='1';   mask = white_rook_mask;		break;
+				case 3:		file='f';	rank='1';   mask = white_bishop_mask;	break;
+				case 4:		file='b';	rank='1';   mask = white_knight_mask;	break;
+				case 5:		file='a';	rank='2';   mask = white_pawn_mask;		break;
 			}
-			case 1:
+		}
+		else
+		{
+			switch(i)
 			{
-				if( normal_orientation_ )
-				{
-					file='d';	rank='1';
-			        mask = white_queen_mask;	
-				}
-				else
-				{
-			        file='d';	rank='5';
-			        mask = black_queen_mask;	
-				}
-				break;
-			}
-			case 2:
-			{
-				if( normal_orientation_ )
-				{
-					file='h';	rank='1';
-			        mask = white_rook_mask;		
-				}
-				else
-				{
-			        file='a';	rank='8';
-			        mask = black_rook_mask;		
-				}
-				break;
-			}
-			case 3:
-			{
-				if( normal_orientation_ )
-				{
-					file='f';	rank='1';
-			        mask = white_bishop_mask;	
-				}
-				else
-				{
-			        file='c';	rank='8';
-			        mask = black_bishop_mask;	
-				}
-				break;
-			}
-			case 4:
-			{
-				if( normal_orientation_ )
-				{
-					file='b';	rank='1';
-			        mask = white_knight_mask;	
-				}
-				else
-				{
-			        file='g';	rank='8';
-			        mask = black_knight_mask;	
-				}
-				break;
-			}
-			case 5:
-			{
-				if( normal_orientation_ )
-				{
-					file='a';	rank='2';
-			        mask = white_pawn_mask;		
-				}
-				else
-				{
-			        file='b';	rank='7';
-			        mask = black_pawn_mask;		
-				}
-				break;
+				default:
+				case 0:		file='e';	rank='8';	mask = black_king_mask;		break;
+				case 1:     file='d';	rank='5';   mask = black_queen_mask;	break;
+				case 2:     file='a';	rank='8';   mask = black_rook_mask;		break;
+				case 3:     file='c';	rank='8';	mask = black_bishop_mask;	break;
+				case 4:     file='g';	rank='8';	mask = black_knight_mask;	break;
+				case 5:     file='b';	rank='7';   mask = black_pawn_mask;		break;
 			}
 		}
 		int x = file-'a';
@@ -320,92 +259,30 @@ void ChessBoardBitmap::BoardSetupCreate( const wxSize sz, wxBitmap &bm, const ch
 	{
 		const char *mask;
 		char file, rank;
-		switch(i)
+		if( normal_orientation )
 		{
-			default:
-			case 5:
+			switch(i)
 			{
-				if( normal_orientation_ )
-				{
-					file='e';	rank='8';
-					mask = black_king_mask;		
-				}
-				else
-				{
-			        file='e';	rank='4';
-					mask = white_king_mask;
-				}
-				break;
+				default:
+				case 5:		file='e';	rank='8';	mask = black_king_mask;		break;
+				case 4:		file='d';	rank='5';	mask = black_queen_mask;	break;
+				case 3:		file='a';	rank='8';	mask = black_rook_mask;		break;
+				case 2:		file='c';	rank='8';	mask = black_bishop_mask;	break;
+				case 1:		file='g';	rank='8';	mask = black_knight_mask;	break;
+				case 0:		file='b';	rank='7';	mask = black_pawn_mask;		break;
 			}
-			case 4:
+		}
+		else
+		{
+			switch(i)
 			{
-				if( normal_orientation_ )
-				{
-					file='d';	rank='5';
-			        mask = black_queen_mask;	
-				}
-				else
-				{
-			        file='d';	rank='1';
-			        mask = white_queen_mask;	
-				}
-				break;
-			}
-			case 3:
-			{
-				if( normal_orientation_ )
-				{
-					file='a';	rank='8';
-			        mask = black_rook_mask;		
-				}
-				else
-				{
-			        file='h';	rank='1';
-			        mask = white_rook_mask;		
-				}
-				break;
-			}
-			case 2:
-			{
-				if( normal_orientation_ )
-				{
-					file='c';	rank='8';
-			        mask = black_bishop_mask;	
-				}
-				else
-				{
-			        file='f';	rank='1';
-			        mask = white_bishop_mask;	
-				}
-				break;
-			}
-			case 1:
-			{
-				if( normal_orientation_ )
-				{
-					file='g';	rank='8';
-			        mask = black_knight_mask;	
-				}
-				else
-				{
-			        file='b';	rank='1';
-			        mask = white_knight_mask;	
-				}
-				break;
-			}
-			case 0:
-			{
-				if( normal_orientation_ )
-				{
-					file='b';	rank='7';
-			        mask = black_pawn_mask;		
-				}
-				else
-				{
-			        file='a';	rank='2';
-			        mask = white_pawn_mask;		
-				}
-				break;
+				default:
+				case 5:		file='e';	rank='4';	mask = white_king_mask;		break;
+				case 4:		file='d';	rank='1';	mask = white_queen_mask;	break;
+				case 3:		file='h';	rank='1';	mask = white_rook_mask;		break;
+				case 2:		file='f';	rank='1';	mask = white_bishop_mask;	break;
+				case 1:		file='b';	rank='1';	mask = white_knight_mask;	break;
+				case 0:		file='a';	rank='2';	mask = white_pawn_mask;		break;
 			}
 		}
 		int x = file-'a';
@@ -1125,7 +1002,7 @@ void ChessBoardBitmap::Init( int pix )
 }
 
 // Setup a position	on the graphic board
-void ChessBoardBitmap::SetChessPosition( const char *position_ascii, bool normal_orientation_, const bool *highlight )
+void ChessBoardBitmap::SetChessPosition( const char *position_ascii, const bool *highlight )
 {
 	int  file=0, rank=7;
 	char rev_file='h', rev_rank='1';	// tracks reverse orientation
@@ -1143,7 +1020,7 @@ void ChessBoardBitmap::SetChessPosition( const char *position_ascii, bool normal
     const bool *highlight_ptr = highlight;
 
 	// Read string backwards for black at bottom
-	if( !normal_orientation_ )
+	if( !normal_orientation )
 	{
 		position_ascii += 63;
         if( highlight_ptr )
@@ -1168,7 +1045,7 @@ void ChessBoardBitmap::SetChessPosition( const char *position_ascii, bool normal
 		// Find the piece occupying this square
 		char piece = *position_ascii;
         bool highlight_f = highlight_ptr ? *highlight_ptr : false;
-		if( normal_orientation_ )
+		if( normal_orientation )
         {
 			position_ascii++;
             if( highlight_ptr )
@@ -1186,8 +1063,9 @@ void ChessBoardBitmap::SetChessPosition( const char *position_ascii, bool normal
 		{
 
 			// Find an appropriate black square piece in the box
-			switch(piece)
+			switch( piece )
 			{
+				default:	src_file='a';	src_rank='3';	break;
 				case 'R':	src_file='a';	src_rank='1';	break;
 				case 'N':	src_file='g';	src_rank='1';	break;
 				case 'B':	src_file='c';	src_rank='1';	break;
@@ -1200,8 +1078,6 @@ void ChessBoardBitmap::SetChessPosition( const char *position_ascii, bool normal
 				case 'q':   src_file='d';	src_rank='8';	break;
 				case 'k':   src_file='e';	src_rank='5';	break;
 				case 'p':   src_file='a';	src_rank='7';	break;
-                case 'x':   src_file='c';   src_rank='3';   break;
-				default:	src_file='a';	src_rank='3';	break;
 			}
 		}
 		else
@@ -1210,6 +1086,7 @@ void ChessBoardBitmap::SetChessPosition( const char *position_ascii, bool normal
 			// Find an appropriate white square piece in the box
 			switch(piece)
 			{
+				default:	src_file='b';	src_rank='3';	break;
 				case 'R':	src_file='h';	src_rank='1';	break;
 				case 'N':	src_file='b';	src_rank='1';	break;
 				case 'B':	src_file='f';	src_rank='1';	break;
@@ -1222,11 +1099,8 @@ void ChessBoardBitmap::SetChessPosition( const char *position_ascii, bool normal
 				case 'q':   src_file='d';	src_rank='5';	break;
 				case 'k':   src_file='e';	src_rank='8';	break;
 				case 'p':   src_file='b';	src_rank='7';	break;
-                case 'x':   src_file='d';   src_rank='3';   break;
-				default:	src_file='b';	src_rank='3';	break;
 			}
 		}
-
 	    Put( src_file, src_rank, dst_file, dst_rank, highlight_f );
 	}
 
@@ -1246,7 +1120,6 @@ void ChessBoardBitmap::SetChessPosition( const char *position_ascii, bool normal
         }
     }
 }
-
 
 // Calculate an offset into the wxBitmap's image buffer
 unsigned long ChessBoardBitmap::Offset( char file, char rank )

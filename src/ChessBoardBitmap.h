@@ -19,13 +19,13 @@ public:
 	ChessBoardBitmap();
 	~ChessBoardBitmap();
     void Init( int pix );
-	void BoardSetupUpdate( wxBitmap &bm, const char *chess_position, bool normal_orientation_, const bool *highlight );
+	void BoardSetupUpdate( wxBitmap &bm, const char *chess_position, const bool *highlight=0 );
 	void BoardSetupCreate( const wxSize sz, wxBitmap &bm, const char *chess_position, bool normal_orientation, const bool *highlight=0 );
 	void BoardSetupGetCustomCursor( char piece, wxImage &img );
 	bool BoardSetupHitTest( const wxPoint &point, char &piece, char &file, char &rank );
 
 	// Setup a position	on the graphic board
-	void SetChessPosition( const char *position_ascii, bool normal_orientation, const bool *highlight=0 );
+	void SetChessPosition( const char *position_ascii, const bool *highlight=0 );
     void SetPositionEx( const thc::ChessPosition &pos, bool blank_other_squares, char pickup_file, char pickup_rank, wxPoint shift );
 
 	// Get/Set orientation

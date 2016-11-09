@@ -18,9 +18,9 @@
 #include "Objects.h"
 #include "Repository.h"
 
-// Initialise the graphic board
 CtrlChessBoard::CtrlChessBoard
 (
+	bool interactive_,
     wxWindow *parent,
     wxWindowID id,
     const wxPoint& point,
@@ -30,17 +30,16 @@ CtrlChessBoard::CtrlChessBoard
 {
     strcpy( cbb._position_ascii, "rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR" );
 	wxSize sz=size;
-		interactive = true;
+	interactive = interactive_;
 	if( sz.x<=0 || sz.y<=0 )
 	{
-		interactive = false;
 		sz = wxSize(34*8,34*8);
 		SetSize(sz);
 	}
 	cbb.current_size = sz;
     int min = sz.x<sz.y ? sz.x : sz.y;
-    int pix_ = min/8;
-    cbb.Init( pix_ );
+    int pix = min/8;
+    cbb.Init( pix );
 }
 
 void CtrlChessBoard::OnPaint( wxPaintEvent& WXUNUSED(event) )
@@ -50,25 +49,6 @@ void CtrlChessBoard::OnPaint( wxPaintEvent& WXUNUSED(event) )
     {
         dc.DrawBitmap( cbb.my_chess_bmp, 0, 0, true );// board_rect.x, board_rect.y, true );
     }
-}
-
-// Setup a position	on the graphic board
-void CtrlChessBoard::Init( int pix_ )
-{
-	cbb.Init( pix_ );
-}
-
-// Setup a position	on the graphic board
-void CtrlChessBoard::SetChessPosition( char *position_ascii )
-{
-	cbb.SetChessPosition( position_ascii, cbb.normal_orientation );
-}
-
-// Draw the graphic board
-void CtrlChessBoard::Draw()
-{
-    Refresh(false);
-    Update();
 }
 
 // Figure out which square is clicked on the board
@@ -128,13 +108,7 @@ void CtrlChessBoard::HitTestEx( char &file, char &rank, wxPoint shift )
     HitTest( adjusted, file, rank );
     //dbg_printf( "Ex result: file=%c rank=%c\n", file, rank );
 }
-/*
-// Put a shifted, masked piece from box onto board
-void CtrlChessBoard::PutEx( char piece,	char dst_file, char dst_rank, wxPoint shift )
-{
-	cbb.PutEx( piece, dst_file, dst_rank, shift );
-}
-  */
+
 void CtrlChessBoard::OnMouseLeftDown( wxMouseEvent &event )
 {
     if( !interactive )
@@ -176,7 +150,7 @@ void CtrlChessBoard::OnMouseMove( wxMouseEvent &event )
         point.y -= cbb.pickup_point.y;
         bool blank_other_squares = objs.gl->ShowSlidingPieceOnly();
         cbb.SetPositionEx( cbb.slide_pos, blank_other_squares, cbb.pickup_file, cbb.pickup_rank, point );
-        Draw();
+        UpdateBoard();
     }
 }
 
@@ -220,16 +194,14 @@ void CtrlChessBoard::OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(event
 void CtrlChessBoard::SetBoardSize( wxSize &size )
 {
     cprintf( "Child: resize x=%d, y=%d\n", size.x, size.y );
-    char temp[ sizeof(cbb._position_ascii) + 1 ];
-    strcpy( temp, cbb._position_ascii );
+    thc::ChessPosition temp;
+    strcpy( temp.squares, cbb._position_ascii );
     SetSize(size);
 	cbb.current_size = size;
     int min = size.x<size.y ? size.x : size.y;
-    int pix_ = min/8;
-    Init( pix_ );
+    int pix = min/8;
+    cbb.Init( pix );
     SetChessPosition( temp );
-    Refresh();
-    Update();
 }
 
 
