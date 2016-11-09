@@ -164,7 +164,7 @@ void imageCopy( wxBitmap &from, int x1, int y1, wxImage &to, int x2, int y2, int
 	   +---------------------------------------------+
 
 */
-void ChessBoardBitmap::BuildBoardSetupBitmapDim( const wxSize sz )
+void ChessBoardBitmap::BoardSetupDim( const wxSize sz )
 {
 	// Starting point was 364 * 294 pixel bitmap used 34 pix squares
 	dim_sz = sz;
@@ -189,8 +189,17 @@ void ChessBoardBitmap::BuildBoardSetupBitmapDim( const wxSize sz )
 	dim_pickup_right.y = y1;
 }
 
-void ChessBoardBitmap::BuildBoardSetupBitmap( wxBitmap &bm, const char *chess_position, bool normal_orientation_, const bool *highlight )
+void ChessBoardBitmap::BoardSetupUpdate( wxBitmap &bm, const char *chess_position, bool normal_orientation_, const bool *highlight )
 {
+	SetChessPosition( chess_position, normal_orientation_, highlight );
+
+	// Copy a chess board into the centre part
+	bmpCopy( my_chess_bmp, 0, 0, bm, dim_board.x, dim_board.y, 8*dim_pix, 8*dim_pix );
+}
+
+void ChessBoardBitmap::BoardSetupCreate( const wxSize sz, wxBitmap &bm, const char *chess_position, bool normal_orientation_, const bool *highlight )
+{
+	BoardSetupDim( sz );
 	Init( dim_pix );
 	SetChessPosition( chess_position, normal_orientation_, highlight );
     wxBitmap board_setup;
@@ -404,11 +413,11 @@ void ChessBoardBitmap::BuildBoardSetupBitmap( wxBitmap &bm, const char *chess_po
 		bmpCopy( my_chess_bmp, x*dim_pix, y*dim_pix, board_setup, dim_pickup_right.x, dim_pickup_right.y + i*dim_pickup_pitch, dim_pix, dim_pix, mask );
 	}
 	bm = board_setup;
+	BoardSetupCustomCursorsCreate();
 }
 
-void ChessBoardBitmap::BuildCustomCursors()
+void ChessBoardBitmap::BoardSetupCustomCursorsCreate()
 {
-	SetChessPosition( box_position, true );
 	for( int i=0; i<12; i++ )
 	{
 		char file, rank;
@@ -461,6 +470,111 @@ void ChessBoardBitmap::BuildCustomCursors()
 		imageCopy( my_chess_bmp, x*dim_pix, y*dim_pix, *ptr, 0, 0, dim_pix, dim_pix, mask );
 	}
 }
+
+void ChessBoardBitmap::BoardSetupGetCustomCursor( char piece, wxImage &img )
+{
+	wxImage *ptr;
+    switch( piece )
+    {
+        default:
+        case 'P':   ptr = &white_pawn_cursor;    break;
+        case 'N':   ptr = &white_knight_cursor;  break;
+        case 'B':   ptr = &white_bishop_cursor;  break;
+        case 'R':   ptr = &white_rook_cursor;    break;
+        case 'Q':   ptr = &white_queen_cursor;   break;
+        case 'K':   ptr = &white_king_cursor;    break;
+        case 'p':   ptr = &black_pawn_cursor;    break;
+        case 'n':   ptr = &black_knight_cursor;  break;
+        case 'b':   ptr = &black_bishop_cursor;  break;
+        case 'r':   ptr = &black_rook_cursor;    break;
+        case 'q':   ptr = &black_queen_cursor;   break;
+        case 'k':   ptr = &black_king_cursor;    break;
+    }
+	img = *ptr;
+}
+
+
+// Figure out whether a piece or square is pointed to
+bool ChessBoardBitmap::BoardSetupHitTest( const wxPoint &point, char &piece, char &file, char &rank )
+{
+	int w = dim_sz.x;
+    int xborder  = dim_board.x;
+    int yborder  = dim_board.y;
+    bool hit = false;
+    piece = '\0';
+    file  = '\0';
+    rank  = '\0';
+	unsigned long row = ( (point.y - yborder) / dim_pix );
+
+    // Main board
+    if( xborder<=point.x && point.x< w-xborder )
+    {
+        hit = true;
+	    unsigned long col = ( (point.x-xborder) / dim_pix );
+        if( !normal_orientation )
+        {
+            row = 7-row;
+            col = 7-col;
+        }
+		rank = '1'+ (int)(7-row);
+		file = 'a'+ (int)col;
+    }
+
+    // Maybe pickup pieces
+    else
+    {
+        int top = dim_pickup_left.y; // offset before first piece
+        int found = -1;
+        for( int i=0; i<6; i++ )    // six pieces
+        {
+            if( top<=point.y && point.y<top+dim_pix )
+            {
+                found = i;
+                break;
+            }
+            top += dim_pickup_pitch;
+        }
+
+        // Right side pickup pieces
+        if( found>=0 &&
+             dim_pickup_right.x  < point.x && point.x < dim_pickup_right.x+dim_pix
+          )
+        {
+            hit = true;
+            switch( found )
+            {
+                default:    hit = false;    break;
+                case 0:     piece = normal_orientation?'p':'P';    break;
+                case 1:     piece = normal_orientation?'n':'N';    break;
+                case 2:     piece = normal_orientation?'b':'B';    break;
+                case 3:     piece = normal_orientation?'r':'R';    break;
+                case 4:     piece = normal_orientation?'q':'Q';    break;
+                case 5:     piece = normal_orientation?'k':'K';    break;
+            }
+        }
+
+        // Left side pickup pieces
+        else if( found>=0 &&
+             dim_pickup_left.x  < point.x && point.x < dim_pickup_left.x+dim_pix
+          )
+        {
+            hit = true;
+            switch( found )
+            {
+                default:    hit = false;    break;
+                case 0:     piece = normal_orientation?'K':'k';    break;
+                case 1:     piece = normal_orientation?'Q':'q';    break;
+                case 2:     piece = normal_orientation?'R':'r';    break;
+                case 3:     piece = normal_orientation?'B':'b';    break;
+                case 4:     piece = normal_orientation?'N':'n';    break;
+                case 5:     piece = normal_orientation?'P':'p';    break;
+            }
+        }
+    }
+    return hit;
+}
+
+
 
 void ChessBoardBitmap::Init( int pix )
 {
@@ -1669,8 +1783,7 @@ void Testbed()
     wxBitmap bm;
 	ChessBoardBitmap cbb;
 	thc::ChessPosition cp;
-	cbb.BuildBoardSetupBitmapDim(wxSize(364,294));
-	cbb.BuildBoardSetupBitmap(bm,cp.squares,true);
+	cbb.BoardSetupCreate(wxSize(364,294),bm,cp.squares,true);
 	TestbedDialog dialog(bm);
 	dialog.Run();
 }

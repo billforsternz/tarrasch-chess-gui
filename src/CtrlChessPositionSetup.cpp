@@ -42,10 +42,8 @@ CtrlChessPositionSetup::CtrlChessPositionSetup
     bool normal_orientation = objs.canvas->GetNormalOrientation();
     cprintf( "Normal orientation = %s\n", normal_orientation?"true":"false" );
 	wxSize sz_bmp(400,320); //(364,294);		
-	cbb.BuildBoardSetupBitmapDim( sz_bmp );
-	cbb.BuildBoardSetupBitmap(chess_bmp,cp.squares,normal_orientation);
+	cbb.BoardSetupCreate( sz_bmp, chess_bmp,cp.squares,normal_orientation);
     SetSize( sz_bmp );
-	cbb.BuildCustomCursors();
     SetCustomCursor( normal_orientation?'P':'p' );
 	state = UP_CURSOR_SIDE;
 }
@@ -105,7 +103,7 @@ extern void DatabaseSearchVeryUglyTemporaryCallback( int offset );
 void CtrlChessPositionSetup::UpdateBoard()
 {
     bool normal_orientation = objs.canvas->GetNormalOrientation();
-	cbb.BuildBoardSetupBitmap(chess_bmp,cp.squares,normal_orientation,lockdown);
+	cbb.BoardSetupUpdate(chess_bmp,cp.squares,normal_orientation,lockdown);
     Refresh(false);
     Update();
     if( position_setup )
@@ -120,7 +118,7 @@ void CtrlChessPositionSetup::Set( const thc::ChessPosition &cp_, const bool *loc
     this->cp = cp_;
     if( lockdown_ )
         memcpy(this->lockdown,lockdown_,64);
-	cbb.BuildBoardSetupBitmap(chess_bmp,cp.squares,normal_orientation,lockdown);
+	cbb.BoardSetupUpdate(chess_bmp,cp.squares,normal_orientation,lockdown);
     Refresh(false);
     Update();
 }
@@ -462,26 +460,11 @@ void CtrlChessPositionSetup::OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUS
 
 void CtrlChessPositionSetup::SetCustomCursor( char piece )
 {
-    wxImage *ptr;
-    switch( piece )
-    {
-        default:
-        case 'P':   ptr = &cbb.white_pawn_cursor;    break;
-        case 'N':   ptr = &cbb.white_knight_cursor;  break;
-        case 'B':   ptr = &cbb.white_bishop_cursor;  break;
-        case 'R':   ptr = &cbb.white_rook_cursor;    break;
-        case 'Q':   ptr = &cbb.white_queen_cursor;   break;
-        case 'K':   ptr = &cbb.white_king_cursor;    break;
-        case 'p':   ptr = &cbb.black_pawn_cursor;    break;
-        case 'n':   ptr = &cbb.black_knight_cursor;  break;
-        case 'b':   ptr = &cbb.black_bishop_cursor;  break;
-        case 'r':   ptr = &cbb.black_rook_cursor;    break;
-        case 'q':   ptr = &cbb.black_queen_cursor;   break;
-        case 'k':   ptr = &cbb.black_king_cursor;    break;
-    }
-    ptr->SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_X,cbb.dim_pix/2);
-    ptr->SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_Y,cbb.dim_pix/2);
-    wxCursor temp(*ptr);
+    wxImage img;
+	cbb.BoardSetupGetCustomCursor( piece, img );
+    img.SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_X,cbb.dim_pix/2);
+    img.SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_Y,cbb.dim_pix/2);
+    wxCursor temp(img);
     SetCursor( temp );    
 }
 
@@ -493,86 +476,11 @@ void CtrlChessPositionSetup::ClearCustomCursor()
     SetCursor( temp );    
 }
 
-
 // Figure out whether a piece or square is pointed to
-bool CtrlChessPositionSetup::HitTest( wxPoint &point, char &piece, char &file, char &rank )
+bool CtrlChessPositionSetup::HitTest( const wxPoint &point, char &piece, char &file, char &rank )
 {
-    bool normal_orientation = objs.canvas->GetNormalOrientation();
-	int w = cbb.dim_sz.x;
-    int xborder  = cbb.dim_board.x;
-    int yborder  = cbb.dim_board.y;
-    bool hit = false;
-    piece = '\0';
-    file  = '\0';
-    rank  = '\0';
-	unsigned long row = ( (point.y - yborder) / cbb.dim_pix );
-
-    // Main board
-    if( xborder<=point.x && point.x< w-xborder )
-    {
-        hit = true;
-	    unsigned long col = ( (point.x-xborder) / cbb.dim_pix );
-        if( !normal_orientation )
-        {
-            row = 7-row;
-            col = 7-col;
-        }
-		rank = '1'+ (int)(7-row);
-		file = 'a'+ (int)col;
-    }
-
-    // Maybe pickup pieces
-    else
-    {
-        int top = cbb.dim_pickup_left.y; // offset before first piece
-        int found = -1;
-        for( int i=0; i<6; i++ )    // six pieces
-        {
-            if( top<=point.y && point.y<top+cbb.dim_pix )
-            {
-                found = i;
-                break;
-            }
-            top += cbb.dim_pickup_pitch;
-        }
-
-        // Right side pickup pieces
-        if( found>=0 &&
-             cbb.dim_pickup_right.x  < point.x && point.x < cbb.dim_pickup_right.x+cbb.dim_pix
-          )
-        {
-            hit = true;
-            switch( found )
-            {
-                default:    hit = false;    break;
-                case 0:     piece = normal_orientation?'p':'P';    break;
-                case 1:     piece = normal_orientation?'n':'N';    break;
-                case 2:     piece = normal_orientation?'b':'B';    break;
-                case 3:     piece = normal_orientation?'r':'R';    break;
-                case 4:     piece = normal_orientation?'q':'Q';    break;
-                case 5:     piece = normal_orientation?'k':'K';    break;
-            }
-        }
-
-        // Left side pickup pieces
-        else if( found>=0 &&
-             cbb.dim_pickup_left.x  < point.x && point.x < cbb.dim_pickup_left.x+cbb.dim_pix
-          )
-        {
-            hit = true;
-            switch( found )
-            {
-                default:    hit = false;    break;
-                case 0:     piece = normal_orientation?'K':'k';    break;
-                case 1:     piece = normal_orientation?'Q':'q';    break;
-                case 2:     piece = normal_orientation?'R':'r';    break;
-                case 3:     piece = normal_orientation?'B':'b';    break;
-                case 4:     piece = normal_orientation?'N':'n';    break;
-                case 5:     piece = normal_orientation?'P':'p';    break;
-            }
-        }
-    }
-    return hit;
+	bool hit = cbb.BoardSetupHitTest( point, piece, file, rank );
+	return hit;
 }
 
 

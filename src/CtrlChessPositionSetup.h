@@ -25,7 +25,7 @@ public:
     bool         lockdown[64];
     void ClearCustomCursor();
     // Figure out whether a piece or square is pointed to
-    bool HitTest( wxPoint &point, char &piece, char &file, char &rank );
+    bool HitTest( const wxPoint &point, char &piece, char &file, char &rank );
 
 private:
     wxTimer      m_timer;

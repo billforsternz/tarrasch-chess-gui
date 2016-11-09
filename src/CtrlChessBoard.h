@@ -1,5 +1,5 @@
 /****************************************************************************
- * Control - General purpose, resizable chess board
+ * Control - A graphic chess board with (optional) moveable pieces
  *  Author:  Bill Forster
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2016, Bill Forster <billforsternz at gmail dot com>

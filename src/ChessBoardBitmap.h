@@ -19,9 +19,10 @@ public:
 	ChessBoardBitmap();
 	~ChessBoardBitmap();
     void Init( int pix );
-	void BuildBoardSetupBitmapDim( const wxSize sz );
-	void BuildBoardSetupBitmap( wxBitmap &bm, const char *chess_position, bool normal_orientation, const bool *highlight=0 );
-	void BuildCustomCursors();
+	void BoardSetupUpdate( wxBitmap &bm, const char *chess_position, bool normal_orientation_, const bool *highlight );
+	void BoardSetupCreate( const wxSize sz, wxBitmap &bm, const char *chess_position, bool normal_orientation, const bool *highlight=0 );
+	void BoardSetupGetCustomCursor( char piece, wxImage &img );
+	bool BoardSetupHitTest( const wxPoint &point, char &piece, char &file, char &rank );
 
 	// Setup a position	on the graphic board
 	void SetChessPosition( const char *position_ascii, bool normal_orientation, const bool *highlight=0 );
@@ -42,46 +43,23 @@ public:
 	void ClearHighlight2()			   { highlight_file2='\0'; }
 
     // Setup a position	on the graphic board
-
-	wxImage		white_king_cursor;	
-	wxImage		white_queen_cursor;	
-	wxImage		white_rook_cursor;	
-	wxImage		white_bishop_cursor;
-	wxImage		white_knight_cursor;
-	wxImage		white_pawn_cursor;	
-	wxImage		black_king_cursor;	
-	wxImage		black_queen_cursor;	
-	wxImage		black_rook_cursor;	
-	wxImage		black_bishop_cursor;
-	wxImage		black_knight_cursor;
-	wxImage		black_pawn_cursor;	
-
-
 public:
+	int			 dim_pix;
+	char		 highlight_file1, highlight_rank1;
+	char		 highlight_file2, highlight_rank2;
+	bool		 normal_orientation;
     bool         sliding;
     char         pickup_file;
     char         pickup_rank;
     wxPoint      pickup_point;
     thc::ChessPosition     slide_pos;
 	wxSize        current_size;
+	unsigned long width_bytes, height, width, density;
+    char          _position_ascii[100];
+    wxBitmap      my_chess_bmp;
+private:
 	byte         *buf_board;
 	byte         *buf_box;
-	unsigned long width_bytes, height, width, density;
-	bool		  normal_orientation;
-	char		 highlight_file1, highlight_rank1;
-	char		 highlight_file2, highlight_rank2;
-    wxBitmap      my_chess_bmp;
-    char          _position_ascii[100];
-
-	// Dimensions of constructed board setup bitmap
-	wxSize		  dim_sz;
-	int			  dim_pix;
-	wxPoint		  dim_board;
-	wxPoint		  dim_pickup_left;
-	wxPoint		  dim_pickup_right;
-	int			  dim_pickup_pitch;
-
-private:
 
 	// Data members
 	wxColour	 light_colour;
@@ -122,7 +100,29 @@ private:
 	unsigned long highlight_x_hi2;
     unsigned long highlight_x_hi1;
 
+	// Dimensions of constructed board setup bitmap
+	wxSize		  dim_sz;
+	wxPoint		  dim_board;
+	wxPoint		  dim_pickup_left;
+	wxPoint		  dim_pickup_right;
+	int			  dim_pickup_pitch;
+	wxImage		white_king_cursor;	
+	wxImage		white_queen_cursor;	
+	wxImage		white_rook_cursor;	
+	wxImage		white_bishop_cursor;
+	wxImage		white_knight_cursor;
+	wxImage		white_pawn_cursor;	
+	wxImage		black_king_cursor;	
+	wxImage		black_queen_cursor;	
+	wxImage		black_rook_cursor;	
+	wxImage		black_bishop_cursor;
+	wxImage		black_knight_cursor;
+	wxImage		black_pawn_cursor;	
+
 	// Helpers
+	void BoardSetupDim( const wxSize sz );
+	void BoardSetupCustomCursorsCreate();
+
 public:
 	unsigned long   Offset( char file, char rank );
 	void Get( char src_file, char src_rank, char dst_file, char dst_rank, const char *mask = NULL );

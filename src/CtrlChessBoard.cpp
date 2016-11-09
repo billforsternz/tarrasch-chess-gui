@@ -1,6 +1,5 @@
 /****************************************************************************
- * Control - The graphic chess board that is the centre-piece of the GUI
- *  Still working on making it a more-self contained and reusable control
+ * Control - A graphic chess board with (optional) moveable pieces
  *  Author:  Bill Forster
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2016, Bill Forster <billforsternz at gmail dot com>
