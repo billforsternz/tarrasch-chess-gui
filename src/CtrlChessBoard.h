@@ -24,9 +24,9 @@ public:
 					wxWindowID id=wxID_ANY,
 					const wxPoint& point = wxDefaultPosition,
 					const wxSize&  size = wxDefaultSize );
-    void SetChessPosition( const thc::ChessPosition &cp )
+    void SetChessPosition( const thc::ChessPosition &cp, const bool *highlight=0 )
 	{
-		cbb.SetChessPosition( cp );
+		cbb.SetChessPosition( cp, highlight );
 		UpdateBoard();
 	}
 
@@ -46,12 +46,10 @@ public:
 					{ return cbb.normal_orientation; }
 
 	// Set highlight squares
-	void SetHighlight1( char file, char rank ) { cbb.highlight_file1=file;
-											     cbb.highlight_rank1=rank; }
-	void SetHighlight2( char file, char rank ) { cbb.highlight_file2=file;
-	                                             cbb.highlight_rank2=rank; }
-	void ClearHighlight1()			   { cbb.highlight_file1='\0'; }
-	void ClearHighlight2()			   { cbb.highlight_file2='\0'; }
+	void SetHighlight1( thc::Square sq ) { cbb.SetHighlight1(sq); }
+	void SetHighlight2( thc::Square sq ) { cbb.SetHighlight2(sq); }
+	void ClearHighlight1()			     { cbb.ClearHighlight1(); }
+	void ClearHighlight2()			     { cbb.ClearHighlight2(); }
 
     void OnPaint(wxPaintEvent& WXUNUSED(evt));
     void OnMouseLeftDown (wxMouseEvent & event);

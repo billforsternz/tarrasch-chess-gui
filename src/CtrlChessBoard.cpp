@@ -194,7 +194,7 @@ void CtrlChessBoard::SetBoardSize( wxSize &size )
     SetSize(size);
     int min = size.x<size.y ? size.x : size.y;
     int pix = min/8;
-    cbb.CreateAsChessBoardOnly( wxSize(pix*8,pix*8), cbb.normal_orientation, cbb.pos_current );
+    cbb.CreateAsChessBoardOnly( wxSize(pix*8,pix*8), cbb.normal_orientation, cbb.pos_current, cbb.highlight_current );
 }
 
 BEGIN_EVENT_TABLE(CtrlChessBoard, wxControl)

@@ -61,6 +61,8 @@ ChessBoardBitmap::ChessBoardBitmap()
     buf_box = 0;
 	normal_orientation = true;
 	is_board_setup = false;
+	ClearHighlight1();
+	ClearHighlight2();
 }
 
 // Cleanup
@@ -214,26 +216,12 @@ void ChessBoardBitmap::BoardSetupCreate()
     dc.SetPen(*wxBLACK_PEN);
     dc.DrawRectangle(0,0,board_setup.GetWidth(),board_setup.GetHeight());
 
+	// Set the standard chess position on the chess board
 	thc::ChessPosition start_position;
 	SetChessPosition( start_position );
 
-	// Copy a chess board into the centre part
+	// Copy the chess board into the centre part
 	bmpCopy( chess_board_bmp, 0, 0, board_setup, dim_board.x, dim_board.y, 8*dim_pix, 8*dim_pix );
-
-	// Set a position with all combinations of pieces and square colours "pieces in the box"
-/*	static const char *box_position =
-        "rnbqkbnr"
-        "pp      "
-        "        "
-        "   qk   "
-        "   QK   "
-        "        "
-        "PP      "
-        "RNBQKBNR";
-	thc::ChessPosition box;
-	strcpy( box.squares, box_position );
-	SetChessPosition( box ); */
-	//normal_orientation = save_normal_orientation;
 
 	// Add pieces to be picked up on the left side
 	for( int i=0; i<6; i++ )
@@ -475,8 +463,6 @@ bool ChessBoardBitmap::BoardSetupHitTest( const wxPoint &point, char &piece, cha
 
 void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, const bool *highlight )
 {
-	bool save_normal_orientation = normal_orientation;
-	normal_orientation = true;		// temporarily while we setup box
 	wxSize size(pix*8,pix*8);
 	int r1 = objs.repository->general.m_light_colour_r;
 	int g1 = objs.repository->general.m_light_colour_g;
@@ -880,13 +866,6 @@ void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, 
     if( width )
 	    density  = width_bytes/width;
 
-    dc.SetBrush( *wxBLUE_BRUSH );
-    dc.SetPen(*wxTRANSPARENT_PEN);
-    dc.SetBackgroundMode( wxPENSTYLE_SOLID );
-    //dc.DrawRectangle(pix*3-2, pix*3-2, 10, 10 );
-    //bool ok = dc.FloodFill( pix*3, pix*3, *wxBLACK, wxFLOOD_BORDER );
-    //cprintf( "FloodFill returns %s\n", ok?"true":"false" );
-
    	// Allocate an image of the board
     if( buf_board )
         delete buf_board;
@@ -1017,7 +996,6 @@ void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, 
     chess_board_bmp = new_chess_board_bmp;
 
 	// Setup the position
-	normal_orientation = save_normal_orientation;
 	SetChessPosition( cp, highlight );
 }
 
@@ -1036,9 +1014,21 @@ void ChessBoardBitmap::SetChessPosition( const thc::ChessPosition &pos, const bo
 				   "bwbwbwbw"
 				   "wbwbwbwb"
 				   "bwbwbwbw";
-    pos_current = pos;
     const bool *highlight_ptr = highlight;
     const char *piece_ptr = pos.squares;
+    pos_current = pos;
+	if( highlight_ptr )
+		memcpy( highlight_current, highlight_ptr, sizeof(highlight_current) );
+	else
+		memset( highlight_current, 0, sizeof(highlight_current) );
+	int high1 = static_cast<int>( highlight_square1 );
+	int high2 = static_cast<int>( highlight_square2 );
+	if( 0<=high1 && high1<64 && 0<=high2 && high2<64 && highlight_ptr!=highlight_current )
+	{
+		highlight_current[high1] = true;
+		highlight_current[high2] = true;
+	}
+	highlight_ptr = highlight_current;
 
 	// Read string backwards for black at bottom
 	if( !normal_orientation )

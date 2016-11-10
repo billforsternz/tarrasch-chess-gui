@@ -3315,6 +3315,9 @@ bool GameLogic::MakeMove( thc::Move move, GAME_RESULT &result )
 void GameLogic::SetGroomedPosition( bool show_title )
 {
     bool ingame=false;
+	CtrlChessBoard *gb = objs.canvas->pb->gb;
+	gb->ClearHighlight1();
+	gb->ClearHighlight2();
     switch( state )
     {
         case RESET:                             break;
@@ -3361,6 +3364,8 @@ void GameLogic::SetGroomedPosition( bool show_title )
             GAME_MOVE *game_move = gd.GetSummary( cr, move_txt, 0 );
             if( game_move )
             {
+				gb->SetHighlight1(game_move->move.src);
+				gb->SetHighlight2(game_move->move.dst);
                 title.sprintf( "%s%s",
                      move_txt.c_str(), qualifier );
             }

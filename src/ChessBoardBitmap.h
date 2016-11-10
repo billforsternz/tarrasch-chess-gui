@@ -46,18 +46,15 @@ public:
 					{ return normal_orientation; }
 
 	// Set highlight squares
-	void SetHighlight1( char file, char rank ) { highlight_file1=file;
-											     highlight_rank1=rank; }
-	void SetHighlight2( char file, char rank ) { highlight_file2=file;
-	                                             highlight_rank2=rank; }
-	void ClearHighlight1()			   { highlight_file1='\0'; }
-	void ClearHighlight2()			   { highlight_file2='\0'; }
+	void SetHighlight1( thc::Square sq ) { highlight_square1=sq; }
+	void SetHighlight2( thc::Square sq ) { highlight_square2=sq; }
+	void ClearHighlight1()			     { highlight_square1=thc::SQUARE_INVALID; }
+	void ClearHighlight2()			     { highlight_square2=thc::SQUARE_INVALID; }
 
-    // Setup a position	on the graphic board
 public:
 	int			 dim_pix;
-	char		 highlight_file1, highlight_rank1;
-	char		 highlight_file2, highlight_rank2;
+	thc::Square	 highlight_square1;
+	thc::Square	 highlight_square2;
 	bool		 normal_orientation;
     bool         sliding;
     char         pickup_file;
@@ -66,6 +63,7 @@ public:
 	unsigned long width_bytes, height, width, density;
     thc::ChessPosition	pos_slide;
     thc::ChessPosition	pos_current;
+	bool				highlight_current[64];
 private:
 	bool         is_board_setup;
 	byte         *buf_board;
