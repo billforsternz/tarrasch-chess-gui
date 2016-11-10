@@ -19,23 +19,24 @@ public:
 	ChessBoardBitmap();
 	~ChessBoardBitmap();
 
+	// Create bitmap, either board setup bitmap or naked chessboard
+	void CreateAsChessBoardOnly( const wxSize sz, bool normal_orientation, const thc::ChessPosition &cp, const bool *highlight=0 );
+	void CreateAsBoardSetup( const wxSize sz, bool normal_orientation, const thc::ChessPosition &cp, const bool *highlight=0 );
+
 	// Chessboard bitmap
 private:
     wxBitmap  chess_board_bmp;
 public:
 	wxBitmap *GetChessBoardBmp() { return &chess_board_bmp; }
-    void ChessBoardCreate( int pix, const thc::ChessPosition &cp, bool normal_orientation, const bool *highlight=0 );
 	void SetChessPosition( const thc::ChessPosition &pos, const bool *highlight=0 );
-    void SetPositionEx( const thc::ChessPosition &pos, bool blank_other_squares, char pickup_file, char pickup_rank, wxPoint shift );
+    void SetChessPositionShiftedPiece( const thc::ChessPosition &pos, bool blank_other_squares, char pickup_file, char pickup_rank, wxPoint shift );
 
 	// Board Setup bitmap
 private:
     wxBitmap  board_setup_bmp;
 public:
 	wxBitmap *GetBoardSetupBmp() { return &board_setup_bmp; }
-	void BoardSetupCreate( const wxSize sz, const thc::ChessPosition &cp, bool normal_orientation, const bool *highlight=0 );
-	void BoardSetupUpdate( const thc::ChessPosition &cp, const bool *highlight=0 );
-	void BoardSetupGetCustomCursor( char piece, wxImage &img );
+	void GetCustomCursor( char piece, wxImage &img );
 	bool BoardSetupHitTest( const wxPoint &point, char &piece, char &file, char &rank );
 
 	// Get/Set orientation
@@ -62,11 +63,11 @@ public:
     char         pickup_file;
     char         pickup_rank;
     wxPoint      pickup_point;
-	wxSize        current_size;
 	unsigned long width_bytes, height, width, density;
     thc::ChessPosition	pos_slide;
     thc::ChessPosition	pos_current;
 private:
+	bool         is_board_setup;
 	byte         *buf_board;
 	byte         *buf_box;
 
@@ -110,11 +111,11 @@ private:
     unsigned long highlight_x_hi1;
 
 	// Dimensions of constructed board setup bitmap
-	wxSize		  dim_sz;
-	wxPoint		  dim_board;
-	wxPoint		  dim_pickup_left;
-	wxPoint		  dim_pickup_right;
-	int			  dim_pickup_pitch;
+	wxSize		dim_sz;
+	wxPoint		dim_board;
+	wxPoint		dim_pickup_left;
+	wxPoint		dim_pickup_right;
+	int			dim_pickup_pitch;
 	wxImage		white_king_cursor;	
 	wxImage		white_queen_cursor;	
 	wxImage		white_rook_cursor;	
@@ -130,9 +131,10 @@ private:
 
 	// Helpers
 	void BoardSetupDim( const wxSize sz );
+	void BoardSetupCreate();
 	void BoardSetupCustomCursorsCreate();
+    void ChessBoardCreate( int pix, const thc::ChessPosition &cp, const bool *highlight=0 );
 
-public:
 	unsigned long   Offset( char file, char rank );
 	void Get( char src_file, char src_rank, char dst_file, char dst_rank, const char *mask = NULL );
 	void Put( char src_file, char src_rank, char dst_file, char dst_rank, bool highlight_f );

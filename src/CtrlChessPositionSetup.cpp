@@ -38,8 +38,8 @@ CtrlChessPositionSetup::CtrlChessPositionSetup
     memset( lockdown, 0, sizeof(lockdown) );
     wxClientDC dc(parent);
     bool normal_orientation = objs.canvas->GetNormalOrientation();
-	wxSize sz_bmp(400,320); //(364,294);		
-	cbb.BoardSetupCreate( sz_bmp, cp, normal_orientation );
+	wxSize sz_bmp(400,320); //(364,294);
+	cbb.CreateAsBoardSetup( sz_bmp, normal_orientation, cp );
     SetSize( sz_bmp );
     SetCustomCursor( normal_orientation?'P':'p' );
 	state = UP_CURSOR_SIDE;
@@ -99,7 +99,7 @@ extern void PositionSetupVeryUglyTemporaryCallback();
 extern void DatabaseSearchVeryUglyTemporaryCallback( int offset );
 void CtrlChessPositionSetup::UpdateBoard()
 {
-	cbb.BoardSetupUpdate(cp,lockdown);
+	cbb.SetChessPosition(cp,lockdown);
     Refresh(false);
     Update();
     if( position_setup )
@@ -113,7 +113,7 @@ void CtrlChessPositionSetup::Set( const thc::ChessPosition &cp_, const bool *loc
     this->cp = cp_;
     if( lockdown_ )
         memcpy(this->lockdown,lockdown_,64);
-	cbb.BoardSetupUpdate(cp,lockdown);
+	cbb.SetChessPosition(cp,lockdown);
     Refresh(false);
     Update();
 }
@@ -442,7 +442,7 @@ void CtrlChessPositionSetup::OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUS
 void CtrlChessPositionSetup::SetCustomCursor( char piece )
 {
     wxImage img;
-	cbb.BoardSetupGetCustomCursor( piece, img );
+	cbb.GetCustomCursor( piece, img );
     img.SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_X,cbb.dim_pix/2);
     img.SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_Y,cbb.dim_pix/2);
     wxCursor temp(img);

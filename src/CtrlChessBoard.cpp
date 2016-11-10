@@ -36,11 +36,10 @@ CtrlChessBoard::CtrlChessBoard
 		sz = wxSize(34*8,34*8);
 		SetSize(sz);
 	}
-	cbb.current_size = sz;
     int min = sz.x<sz.y ? sz.x : sz.y;
     int pix = min/8;
 	thc::ChessPosition cp;
-    cbb.ChessBoardCreate( pix, cp, normal_orientation );
+    cbb.CreateAsChessBoardOnly( wxSize(pix*8,pix*8), normal_orientation, cp );
 }
 
 void CtrlChessBoard::OnPaint( wxPaintEvent& WXUNUSED(event) )
@@ -150,7 +149,7 @@ void CtrlChessBoard::OnMouseMove( wxMouseEvent &event )
         point.x -= cbb.pickup_point.x;
         point.y -= cbb.pickup_point.y;
         bool blank_other_squares = objs.gl->ShowSlidingPieceOnly();
-        cbb.SetPositionEx( cbb.pos_slide, blank_other_squares, cbb.pickup_file, cbb.pickup_rank, point );
+        cbb.SetChessPositionShiftedPiece( cbb.pos_slide, blank_other_squares, cbb.pickup_file, cbb.pickup_rank, point );
         UpdateBoard();
     }
 }
@@ -193,10 +192,9 @@ void CtrlChessBoard::SetBoardSize( wxSize &size )
 {
     cprintf( "Child: resize x=%d, y=%d\n", size.x, size.y );
     SetSize(size);
-	cbb.current_size = size;
     int min = size.x<size.y ? size.x : size.y;
     int pix = min/8;
-    cbb.ChessBoardCreate( pix, cbb.pos_current, cbb.normal_orientation );
+    cbb.CreateAsChessBoardOnly( wxSize(pix*8,pix*8), cbb.normal_orientation, cbb.pos_current );
 }
 
 BEGIN_EVENT_TABLE(CtrlChessBoard, wxControl)

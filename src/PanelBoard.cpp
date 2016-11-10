@@ -102,7 +102,9 @@ PanelBoard::PanelBoard
     Layout( siz, board );
 
     // Create board
-    gb = new CtrlChessBoard( true, true, this,
+	bool interactive = true;
+	bool normal_orientation = true;
+    gb = new CtrlChessBoard( interactive, normal_orientation, this,
                             wxID_ANY,
                             wxPoint(board.x,board.y), wxSize(board.width,board.height) );
 }

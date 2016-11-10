@@ -60,6 +60,7 @@ ChessBoardBitmap::ChessBoardBitmap()
     buf_board = 0;
     buf_box = 0;
 	normal_orientation = true;
+	is_board_setup = false;
 }
 
 // Cleanup
@@ -178,20 +179,28 @@ void ChessBoardBitmap::BoardSetupDim( const wxSize sz )
 	dim_pickup_right.y = y1;
 }
 
-void ChessBoardBitmap::BoardSetupUpdate( const thc::ChessPosition &cp, const bool *highlight )
+void ChessBoardBitmap::CreateAsChessBoardOnly( const wxSize sz, bool normal_orientation_, const thc::ChessPosition &cp, const bool *highlight )
 {
-	// Update the chess board bitmap
-	SetChessPosition( cp, highlight );
-
-	// Copy the chess board bitmap into the centre part of the board setup bitmap
-	bmpCopy( chess_board_bmp, 0, 0, board_setup_bmp, dim_board.x, dim_board.y, 8*dim_pix, 8*dim_pix );
+	normal_orientation = normal_orientation_;
+	int pix = sz.x/8;
+	ChessBoardCreate( pix, cp, highlight );
+	is_board_setup = false;
 }
 
-void ChessBoardBitmap::BoardSetupCreate( const wxSize sz,  const thc::ChessPosition &cp, bool normal_orientation_, const bool *highlight )
+void ChessBoardBitmap::CreateAsBoardSetup( const wxSize sz, bool normal_orientation_, const thc::ChessPosition &cp, const bool *highlight )
 {
+	normal_orientation = normal_orientation_;
 	BoardSetupDim( sz );
-	ChessBoardCreate( dim_pix, cp, normal_orientation_, highlight );
-	normal_orientation = true;		// temporarily while we setup box
+	ChessBoardCreate( dim_pix, cp, highlight );
+	BoardSetupCreate();
+	BoardSetupCustomCursorsCreate();
+	is_board_setup = true;
+}
+
+void ChessBoardBitmap::BoardSetupCreate()
+{
+	//bool save_normal_orientation = normal_orientation;
+	//normal_orientation = true;		// temporarily while we setup box
     wxBitmap board_setup;
 	board_setup.Create(dim_sz.x,dim_sz.y,24);
     wxMemoryDC dc;
@@ -205,11 +214,14 @@ void ChessBoardBitmap::BoardSetupCreate( const wxSize sz,  const thc::ChessPosit
     dc.SetPen(*wxBLACK_PEN);
     dc.DrawRectangle(0,0,board_setup.GetWidth(),board_setup.GetHeight());
 
+	thc::ChessPosition start_position;
+	SetChessPosition( start_position );
+
 	// Copy a chess board into the centre part
 	bmpCopy( chess_board_bmp, 0, 0, board_setup, dim_board.x, dim_board.y, 8*dim_pix, 8*dim_pix );
 
 	// Set a position with all combinations of pieces and square colours "pieces in the box"
-	static const char *box_position =
+/*	static const char *box_position =
         "rnbqkbnr"
         "pp      "
         "        "
@@ -220,20 +232,20 @@ void ChessBoardBitmap::BoardSetupCreate( const wxSize sz,  const thc::ChessPosit
         "RNBQKBNR";
 	thc::ChessPosition box;
 	strcpy( box.squares, box_position );
-	SetChessPosition( box );
-	normal_orientation = normal_orientation_;
+	SetChessPosition( box ); */
+	//normal_orientation = save_normal_orientation;
 
-	// Add pieces to be picked up on the side
+	// Add pieces to be picked up on the left side
 	for( int i=0; i<6; i++ )
 	{
 		const char *mask;
 		char file, rank;
 		if( normal_orientation )
 		{
-			switch(i)
+			switch(i)	// normal orientation left = White K,Q,R,B,N,P top to bottom
 			{
 				default:
-				case 0:		file='e';	rank='4';	mask = white_king_mask;		break;
+				case 0:		file='e';	rank='1';	mask = white_king_mask;		break;
 				case 1:		file='d';	rank='1';   mask = white_queen_mask;	break;
 				case 2:		file='h';	rank='1';   mask = white_rook_mask;		break;
 				case 3:		file='f';	rank='1';   mask = white_bishop_mask;	break;
@@ -243,32 +255,37 @@ void ChessBoardBitmap::BoardSetupCreate( const wxSize sz,  const thc::ChessPosit
 		}
 		else
 		{
-			switch(i)
+			switch(i)	// reverse orientation left = Black K,Q,R,B,N,P top to bottom
 			{
 				default:
 				case 0:		file='e';	rank='8';	mask = black_king_mask;		break;
-				case 1:     file='d';	rank='5';   mask = black_queen_mask;	break;
+				case 1:     file='d';	rank='8';   mask = black_queen_mask;	break;
 				case 2:     file='a';	rank='8';   mask = black_rook_mask;		break;
 				case 3:     file='c';	rank='8';	mask = black_bishop_mask;	break;
 				case 4:     file='g';	rank='8';	mask = black_knight_mask;	break;
 				case 5:     file='b';	rank='7';   mask = black_pawn_mask;		break;
 			}
 		}
-		int x = file-'a';
-		int y = '8'-rank;
+
+		// Top left = 0,0 is a8 if normal orientation h1 if reverse orientation
+		//            1,1 is b7 if normal orientation g2 if reverse orientation
+		int x = normal_orientation ? (file-'a') : ('h'-file);
+		int y = normal_orientation ? ('8'-rank) : (rank-'1');
 		bmpCopy( chess_board_bmp, x*dim_pix, y*dim_pix, board_setup, dim_pickup_left.x, dim_pickup_left.y + i*dim_pickup_pitch, dim_pix, dim_pix, mask );
 	}
+
+	// Add pieces to be picked up on the right side
 	for( int i=0; i<6; i++ )
 	{
 		const char *mask;
 		char file, rank;
 		if( normal_orientation )
 		{
-			switch(i)
+			switch(i)	// normal orientation right = Black K,Q,R,B,N,P bottom to top
 			{
 				default:
 				case 5:		file='e';	rank='8';	mask = black_king_mask;		break;
-				case 4:		file='d';	rank='5';	mask = black_queen_mask;	break;
+				case 4:		file='d';	rank='8';	mask = black_queen_mask;	break;
 				case 3:		file='a';	rank='8';	mask = black_rook_mask;		break;
 				case 2:		file='c';	rank='8';	mask = black_bishop_mask;	break;
 				case 1:		file='g';	rank='8';	mask = black_knight_mask;	break;
@@ -277,10 +294,10 @@ void ChessBoardBitmap::BoardSetupCreate( const wxSize sz,  const thc::ChessPosit
 		}
 		else
 		{
-			switch(i)
+			switch(i)	// reverse orientation right = White K,Q,R,B,N,P bottom to top
 			{
 				default:
-				case 5:		file='e';	rank='4';	mask = white_king_mask;		break;
+				case 5:		file='e';	rank='1';	mask = white_king_mask;		break;
 				case 4:		file='d';	rank='1';	mask = white_queen_mask;	break;
 				case 3:		file='h';	rank='1';	mask = white_rook_mask;		break;
 				case 2:		file='f';	rank='1';	mask = white_bishop_mask;	break;
@@ -288,12 +305,14 @@ void ChessBoardBitmap::BoardSetupCreate( const wxSize sz,  const thc::ChessPosit
 				case 0:		file='a';	rank='2';	mask = white_pawn_mask;		break;
 			}
 		}
-		int x = file-'a';
-		int y = '8'-rank;
+
+		// Top left = 0,0 is a8 if normal orientation h1 if reverse orientation
+		//            1,1 is b7 if normal orientation g2 if reverse orientation
+		int x = normal_orientation ? (file-'a') : ('h'-file);
+		int y = normal_orientation ? ('8'-rank) : (rank-'1');
 		bmpCopy( chess_board_bmp, x*dim_pix, y*dim_pix, board_setup, dim_pickup_right.x, dim_pickup_right.y + i*dim_pickup_pitch, dim_pix, dim_pix, mask );
 	}
 	board_setup_bmp = board_setup;
-	BoardSetupCustomCursorsCreate();
 }
 
 void ChessBoardBitmap::BoardSetupCustomCursorsCreate()
@@ -306,7 +325,7 @@ void ChessBoardBitmap::BoardSetupCustomCursorsCreate()
 		switch(i)
 		{
 			default:
-			case 0: file='e';	rank='4';
+			case 0: file='e';	rank='1';
 					mask = white_king_mask;
 					ptr  = &white_king_cursor;		break;
 			case 1: file='d';	rank='1';
@@ -327,7 +346,7 @@ void ChessBoardBitmap::BoardSetupCustomCursorsCreate()
 			case 6: file='e';	rank='8';
 					mask = black_king_mask;
 					ptr  = &black_king_cursor;		break;
-			case 7: file='d';	rank='5';
+			case 7: file='d';	rank='8';
 			        mask = black_queen_mask;
 			        ptr  = &black_queen_cursor;		break;
 			case 8: file='a';	rank='8';
@@ -345,13 +364,13 @@ void ChessBoardBitmap::BoardSetupCustomCursorsCreate()
 		}
 		ptr->Create( dim_pix, dim_pix, false );
 		ptr->InitAlpha();
-		int x = file-'a';
-		int y = '8'-rank;
+		int x = normal_orientation ? (file-'a') : ('h'-file);
+		int y = normal_orientation ? ('8'-rank) : (rank-'1');
 		imageCopy( chess_board_bmp, x*dim_pix, y*dim_pix, *ptr, 0, 0, dim_pix, dim_pix, mask );
 	}
 }
 
-void ChessBoardBitmap::BoardSetupGetCustomCursor( char piece, wxImage &img )
+void ChessBoardBitmap::GetCustomCursor( char piece, wxImage &img )
 {
 	wxImage *ptr;
     switch( piece )
@@ -454,11 +473,11 @@ bool ChessBoardBitmap::BoardSetupHitTest( const wxPoint &point, char &piece, cha
     return hit;
 }
 
-void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, bool normal_orientation_, const bool *highlight )
+void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, const bool *highlight )
 {
-	normal_orientation = true;		// during early stages
+	bool save_normal_orientation = normal_orientation;
+	normal_orientation = true;		// temporarily while we setup box
 	wxSize size(pix*8,pix*8);
-	current_size = size;
 	int r1 = objs.repository->general.m_light_colour_r;
 	int g1 = objs.repository->general.m_light_colour_g;
 	int b1 = objs.repository->general.m_light_colour_b;
@@ -998,7 +1017,7 @@ void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, 
     chess_board_bmp = new_chess_board_bmp;
 
 	// Setup the position
-	normal_orientation = normal_orientation_;
+	normal_orientation = save_normal_orientation;
 	SetChessPosition( cp, highlight );
 }
 
@@ -1121,6 +1140,10 @@ void ChessBoardBitmap::SetChessPosition( const thc::ChessPosition &pos, const bo
             p++;
         }
     }
+
+	// Copy the chess board bitmap into the centre part of the board setup bitmap
+	if( is_board_setup )
+		bmpCopy( chess_board_bmp, 0, 0, board_setup_bmp, dim_board.x, dim_board.y, 8*dim_pix, 8*dim_pix );
 }
 
 // Calculate an offset into the wxBitmap's image buffer
@@ -1218,7 +1241,7 @@ void ChessBoardBitmap::Put( char src_file, char src_rank, char dst_file, char ds
 
 
 // Setup a position	on the graphic board
-void ChessBoardBitmap::SetPositionEx( const thc::ChessPosition &pos, bool blank_other_squares, char pickup_file_, char pickup_rank_, wxPoint shift )
+void ChessBoardBitmap::SetChessPositionShiftedPiece( const thc::ChessPosition &pos, bool blank_other_squares, char pickup_file_, char pickup_rank_, wxPoint shift )
 {
 	char piece, save_piece=0;
 	int  file=0, rank=7;
@@ -1657,7 +1680,7 @@ void Testbed()
 {
 	ChessBoardBitmap cbb;
 	thc::ChessPosition cp;
-	cbb.BoardSetupCreate(wxSize(364,294),cp,true);
+	cbb.CreateAsBoardSetup(wxSize(364,294),true,cp);
 	TestbedDialog dialog(*cbb.GetBoardSetupBmp());
 	dialog.Run();
 }
