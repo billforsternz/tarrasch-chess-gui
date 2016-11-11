@@ -224,12 +224,15 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
     bool ok=true;
     if( prompt )
     {
-        wxString msg = "Save modified games";
+        wxString msg;
 		if( !TestFileExists() )
-			msg += "?";
+			msg = "Save modified tabs ?";
 		else
 		{
-			msg += " to ";
+			if( TestFileModified() || (TestGameInFile()&&TestGameModified()) )
+				msg = "Save modified games to ";
+			else
+				msg = "Save modified tabs to ";
 			msg += gc->pgn_filename;
 			msg += " ?";
 		}
