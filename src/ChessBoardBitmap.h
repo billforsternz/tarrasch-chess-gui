@@ -66,12 +66,17 @@ public:
 	bool				highlight_current[64];
 private:
 	bool         is_board_setup;
+	bool		 ok_to_copy_chess_board_to_board_setup;
 	byte         *buf_board;
 	byte         *buf_box;
+	enum { none, line_thin, line_thick, square_colour } highlight_mode;
 
 	// Data members
 	wxColour	 light_colour;
 	wxColour	 dark_colour;
+	wxColour	 highlight_light_colour;
+	wxColour	 highlight_dark_colour;
+	wxColour	 highlight_line_colour;
     wxBrush      brush;
 	wxMemoryDC   dcmem;
     wxPen        pen;

@@ -104,7 +104,18 @@ void GamesListCtrl::ReceiveFocus( int focus_idx )
         if( mini_board )
         {
             std::string previous_move;
-            CalculateMoveTxt( previous_move );
+			thc::Move previous_move_bin;
+            CalculateMoveTxt( previous_move, previous_move_bin );
+			if( previous_move_bin.Valid() )
+			{
+				mini_board->SetHighlight1(previous_move_bin.src);
+				mini_board->SetHighlight2(previous_move_bin.dst);
+			}
+			else
+			{
+				mini_board->ClearHighlight1();
+				mini_board->ClearHighlight2();
+			}
             mini_board->SetChessPosition( track->updated_position );
             std::string desc = track->info.Description();
             if( previous_move.length() > 0 )
@@ -124,24 +135,27 @@ void GamesListCtrl::ReceiveFocus( int focus_idx )
 std::string GamesListCtrl::CalculateMoveTxt() const
 {
     std::string previous_move_not_needed;
-    return CalculateMoveTxt(previous_move_not_needed,track->info,track->focus_offset,track->updated_position);
+    thc::Move previous_move_bin_not_needed;
+    return CalculateMoveTxt(previous_move_not_needed,track->info,track->focus_offset,track->updated_position,previous_move_bin_not_needed);
 }
 
-std::string GamesListCtrl::CalculateMoveTxt( std::string &previous_move ) const
+std::string GamesListCtrl::CalculateMoveTxt( std::string &previous_move, thc::Move &previous_move_bin ) const
 {
-    return CalculateMoveTxt(previous_move,track->info,track->focus_offset,track->updated_position);
+    return CalculateMoveTxt(previous_move,track->info,track->focus_offset,track->updated_position,previous_move_bin);
 }
 
 std::string GamesListCtrl::CalculateMoveTxt( CompactGame &info, int offset ) const
 {
     std::string previous_move_not_needed;
+    thc::Move previous_move_bin_not_needed;
     thc::ChessPosition updated_position_not_needed;
-    return CalculateMoveTxt(previous_move_not_needed,info, offset,updated_position_not_needed);
+    return CalculateMoveTxt(previous_move_not_needed,info, offset,updated_position_not_needed,previous_move_bin_not_needed);
 }
 
-std::string GamesListCtrl::CalculateMoveTxt( std::string &previous_move, CompactGame &info, int focus_offset, thc::ChessPosition &updated_position ) const
+std::string GamesListCtrl::CalculateMoveTxt( std::string &previous_move, CompactGame &info, int focus_offset, thc::ChessPosition &updated_position, thc::Move &previous_move_bin ) const
 {
     bool position_updated = false;
+	previous_move_bin.Invalid();
     std::string move_txt;
 	thc::ChessRules cr=info.GetStartPosition();
     int nbr_moves = info.moves.size();
@@ -166,7 +180,10 @@ std::string GamesListCtrl::CalculateMoveTxt( std::string &previous_move, Compact
                 s = std::string(buf) + s;
             }
             if( prev_move )
+			{
                 previous_move = s;
+				previous_move_bin = mv;
+			}
             else
             {
                 move_txt += s;
@@ -282,7 +299,18 @@ void GamesListCtrl::OnChar( wxKeyEvent &event )
         if( mini_board )
         {
             std::string previous_move;
-            CalculateMoveTxt( previous_move );
+			thc::Move previous_move_bin;
+            CalculateMoveTxt( previous_move, previous_move_bin );
+			if( previous_move_bin.Valid() )
+			{
+				mini_board->SetHighlight1(previous_move_bin.src);
+				mini_board->SetHighlight2(previous_move_bin.dst);
+			}
+			else
+			{
+				mini_board->ClearHighlight1();
+				mini_board->ClearHighlight2();
+			}
             mini_board->SetChessPosition( track->updated_position );
             std::string desc = track->info.Description();
             if( previous_move.length() > 0 )

@@ -37,7 +37,7 @@ public:
 	// Draw or Redraw the graphic board
 	void UpdateBoard() { Refresh(false); Update(); }	// light
     void SetBoardSize( wxSize &sz );					// heavy
-	void Redraw() { wxSize sz=GetSize(); SetBoardSize(sz); }
+	void Redraw() { wxSize sz=GetSize(); SetBoardSize(sz); UpdateBoard(); }
 
 	// Get/Set orientation
 	void SetNormalOrientation( bool normal_orientation )

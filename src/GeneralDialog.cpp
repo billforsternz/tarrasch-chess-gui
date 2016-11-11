@@ -26,6 +26,9 @@ BEGIN_EVENT_TABLE( GeneralDialog, wxDialog )
     EVT_BUTTON   ( wxID_OK, GeneralDialog::OnOkClick )
     EVT_BUTTON   ( ID_RESTORE_LIGHT, GeneralDialog::OnRestoreLight )
     EVT_BUTTON   ( ID_RESTORE_DARK , GeneralDialog::OnRestoreDark  )
+    EVT_BUTTON   ( ID_RESTORE_HIGHLIGHT_LIGHT, GeneralDialog::OnRestoreHighlightLight )
+    EVT_BUTTON   ( ID_RESTORE_HIGHLIGHT_DARK , GeneralDialog::OnRestoreHighlightDark  )
+    EVT_BUTTON   ( ID_RESTORE_HIGHLIGHT_LINE, GeneralDialog::OnRestoreHighlightLine )
     EVT_COMBOBOX ( ID_NOTATION_LANGUAGE,  GeneralDialog::OnNotationLanguage )
 	EVT_COLOURPICKER_CHANGED( wxID_ANY, GeneralDialog::OnColourPicker )
 END_EVENT_TABLE()
@@ -150,6 +153,61 @@ void GeneralDialog::CreateControls()
     colour_sizer2->Add(restore_dark, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     box_sizer->Add(colour_sizer2, 0, wxALIGN_LEFT|wxALL, 5);
 
+    wxBoxSizer* colour_sizer3  = new wxBoxSizer(wxHORIZONTAL);
+    wxStaticText* colour_label3 = new wxStaticText ( this, wxID_STATIC,
+        gbl_spelling_us ? "Highlighted Square Light Color" : "Highlighted Square Light Colour", wxDefaultPosition, wxDefaultSize, 0 );
+	wxColour highlight_light(dat.m_highlight_light_colour_r,dat.m_highlight_light_colour_g,dat.m_highlight_light_colour_b);
+    highlight_light_picker = new wxColourPickerCtrl( this, wxID_ANY, highlight_light );
+    colour_sizer3->Add(colour_label3, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
+    colour_sizer3->Add(10, 5, 1, wxALL, 0);
+    colour_sizer3->Add(highlight_light_picker,  0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
+    wxButton *restore_highlight_light = new wxButton ( this, ID_RESTORE_HIGHLIGHT_LIGHT, "Restore Default",
+        wxDefaultPosition, wxDefaultSize, 0 );
+    colour_sizer3->Add(restore_highlight_light, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    box_sizer->Add(colour_sizer3, 0, wxALIGN_LEFT|wxALL, 5);
+
+    wxBoxSizer* colour_sizer4  = new wxBoxSizer(wxHORIZONTAL);
+    wxStaticText* colour_label4 = new wxStaticText ( this, wxID_STATIC,
+        gbl_spelling_us ? "Highlighted Square Dark Color" : "Highlighted Square Dark Colour", wxDefaultPosition, wxDefaultSize, 0 );
+	wxColour highlight_dark(dat.m_highlight_dark_colour_r,dat.m_highlight_dark_colour_g,dat.m_highlight_dark_colour_b);
+    highlight_dark_picker = new wxColourPickerCtrl( this, wxID_ANY, highlight_dark );
+    colour_sizer4->Add(colour_label4, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
+    colour_sizer4->Add(10, 5, 1, wxALL, 0);
+    colour_sizer4->Add(highlight_dark_picker,  0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
+    wxButton *restore_highlight_dark = new wxButton ( this, ID_RESTORE_HIGHLIGHT_DARK, "Restore Default",
+        wxDefaultPosition, wxDefaultSize, 0 );
+    colour_sizer4->Add(restore_highlight_dark, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    box_sizer->Add(colour_sizer4, 0, wxALIGN_LEFT|wxALL, 5);
+
+    wxBoxSizer* colour_sizer5  = new wxBoxSizer(wxHORIZONTAL);
+    wxStaticText* colour_label5 = new wxStaticText ( this, wxID_STATIC,
+        gbl_spelling_us ? "Highlighted Square Line Color" : "Highlighted Square Line Colour", wxDefaultPosition, wxDefaultSize, 0 );
+	wxColour highlight_line(dat.m_highlight_line_colour_r,dat.m_highlight_line_colour_g,dat.m_highlight_line_colour_b);
+    highlight_line_picker = new wxColourPickerCtrl( this, wxID_ANY, highlight_line );
+    colour_sizer5->Add(colour_label5, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
+    colour_sizer5->Add(10, 5, 1, wxALL, 0);
+    colour_sizer5->Add(highlight_line_picker,  0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
+    wxButton *restore_highlight_line = new wxButton ( this, ID_RESTORE_HIGHLIGHT_LINE, "Restore Default",
+        wxDefaultPosition, wxDefaultSize, 0 );
+    colour_sizer5->Add(restore_highlight_line, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    box_sizer->Add(colour_sizer5, 0, wxALIGN_LEFT|wxALL, 5);
+
+    // Suppress highlight of last move
+    wxCheckBox* suppress_highlight = new wxCheckBox( this, ID_SUPPRESS_HIGHLIGHT,
+       "Don't highlight the most recent move on the chess board", wxDefaultPosition, wxDefaultSize, 0 );
+    suppress_highlight->SetValue( dat.m_suppress_highlight );
+    box_sizer->Add( suppress_highlight, 0,
+        wxALL, 5);
+
+    // Use line highlighting rather than colour highlighting
+    wxCheckBox* line_highlight = new wxCheckBox( this, ID_LINE_HIGHLIGHT,
+       gbl_spelling_us ?
+		"Highlight the most recent move with line graphics rather than square colours":
+		"Highlight the most recent move with line graphics rather than square colours", wxDefaultPosition, wxDefaultSize, 0 );
+    line_highlight->SetValue( dat.m_line_highlight );
+    box_sizer->Add( line_highlight, 0,
+        wxALL, 5);
+
     // Use large font for chess text
     wxCheckBox* use_large_font_box = new wxCheckBox( this, ID_LARGE_FONT,
        wxT("Use larger font in move window"), wxDefaultPosition, wxDefaultSize, 0 );
@@ -232,6 +290,10 @@ void GeneralDialog::SetDialogValidators()
         wxGenericValidator(& dat.m_bell));
     FindWindow(ID_NO_AUTO_FLIP)->SetValidator(
         wxGenericValidator(& dat.m_no_auto_flip));
+    FindWindow(ID_SUPPRESS_HIGHLIGHT)->SetValidator(
+        wxGenericValidator(& dat.m_suppress_highlight));
+    FindWindow(ID_LINE_HIGHLIGHT)->SetValidator(
+        wxGenericValidator(& dat.m_line_highlight));
 }
 
 // Sets the help text for the dialog controls
@@ -249,7 +311,7 @@ void GeneralDialog::SetDialogHelp()
     wxString help3b = "Set this to skip the game selection dialog and go straight to the first game";
     FindWindow(ID_STRAIGHT_TO_FIRST_GAME)->SetHelpText(help3b);
     FindWindow(ID_STRAIGHT_TO_FIRST_GAME)->SetToolTip(help3b);
-    wxString help4 = "Set this to use small board graphics on a large screen (takes effect at next restart)";
+    //wxString help4 = "Set this to use small board graphics on a large screen (takes effect at next restart)";
     //FindWindow(ID_SMALL_BOARD)->SetHelpText(help4);
     //FindWindow(ID_SMALL_BOARD)->SetToolTip(help4);
     wxString help5 = "Set this to use a larger font in the moves window";
@@ -261,6 +323,12 @@ void GeneralDialog::SetDialogHelp()
     wxString help7 = "Set this if you want the engine to emit a bell sound when it moves in human versus engine games";
     FindWindow(ID_EMIT_BELL)->SetHelpText(help7);
     FindWindow(ID_EMIT_BELL)->SetToolTip(help7);
+    wxString help8 = "Set this if you don't want the last move to be highlighted on the chess board";
+    FindWindow(ID_SUPPRESS_HIGHLIGHT)->SetHelpText(help8);
+    FindWindow(ID_SUPPRESS_HIGHLIGHT)->SetToolTip(help8);
+    wxString help9 = gbl_spelling_us ? "Set this if you prefer squares highlighted with a line rather than by color" : "Set this if you prefer squares highlighted with a line rather than by colour";
+    FindWindow(ID_LINE_HIGHLIGHT)->SetHelpText(help9);
+    FindWindow(ID_LINE_HIGHLIGHT)->SetToolTip(help9);
 }
 
 
@@ -290,6 +358,18 @@ void GeneralDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
 	dat.m_dark_colour_r = dark.Red();
 	dat.m_dark_colour_g = dark.Green();
 	dat.m_dark_colour_b = dark.Blue();
+	wxColour highlight_light = highlight_light_picker->GetColour();
+	dat.m_highlight_light_colour_r = highlight_light.Red();
+	dat.m_highlight_light_colour_g = highlight_light.Green();
+	dat.m_highlight_light_colour_b = highlight_light.Blue();
+	wxColour highlight_dark  = highlight_dark_picker->GetColour();
+	dat.m_highlight_dark_colour_r = highlight_dark.Red();
+	dat.m_highlight_dark_colour_g = highlight_dark.Green();
+	dat.m_highlight_dark_colour_b = highlight_dark.Blue();
+	wxColour highlight_line  = highlight_line_picker->GetColour();
+	dat.m_highlight_line_colour_r = highlight_line.Red();
+	dat.m_highlight_line_colour_g = highlight_line.Green();
+	dat.m_highlight_line_colour_b = highlight_line.Blue();
     wxString txt = this->notation_language_ctrl->GetValue();
     if( LangValidateString( txt ) )
     {
@@ -308,6 +388,8 @@ void GeneralDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
     }
 }
 
+// Note that the following colour constants violate DRY (Don't Repeat Yourself) - search project
+//  for "violate DRY" to find out why
 void GeneralDialog::OnRestoreLight( wxCommandEvent& WXUNUSED(event) )
 {
 	wxColour light(255,226,179);
@@ -318,6 +400,24 @@ void GeneralDialog::OnRestoreDark( wxCommandEvent& WXUNUSED(event) )
 {
 	wxColour dark(220,162,116);
 	dark_picker->SetColour( dark );
+}
+
+void GeneralDialog::OnRestoreHighlightLight( wxCommandEvent& WXUNUSED(event) )
+{
+	wxColour highlight_light(250,240,160);
+	highlight_light_picker->SetColour( highlight_light );
+}
+
+void GeneralDialog::OnRestoreHighlightDark( wxCommandEvent& WXUNUSED(event) )
+{
+	wxColour highlight_dark(196,160,130);
+	highlight_dark_picker->SetColour( highlight_dark );
+}
+
+void GeneralDialog::OnRestoreHighlightLine( wxCommandEvent& WXUNUSED(event) )
+{
+	wxColour highlight_line(112,146,190);
+	highlight_line_picker->SetColour( highlight_line );
 }
 
 void GeneralDialog::OnNotationLanguage( wxCommandEvent& WXUNUSED(event) )

@@ -61,6 +61,7 @@ ChessBoardBitmap::ChessBoardBitmap()
     buf_box = 0;
 	normal_orientation = true;
 	is_board_setup = false;
+	ok_to_copy_chess_board_to_board_setup = false;
 	ClearHighlight1();
 	ClearHighlight2();
 }
@@ -184,19 +185,20 @@ void ChessBoardBitmap::BoardSetupDim( const wxSize sz )
 void ChessBoardBitmap::CreateAsChessBoardOnly( const wxSize sz, bool normal_orientation_, const thc::ChessPosition &cp, const bool *highlight )
 {
 	normal_orientation = normal_orientation_;
+	is_board_setup = false;
 	int pix = sz.x/8;
 	ChessBoardCreate( pix, cp, highlight );
-	is_board_setup = false;
 }
 
 void ChessBoardBitmap::CreateAsBoardSetup( const wxSize sz, bool normal_orientation_, const thc::ChessPosition &cp, const bool *highlight )
 {
 	normal_orientation = normal_orientation_;
+	is_board_setup = true;
 	BoardSetupDim( sz );
 	ChessBoardCreate( dim_pix, cp, highlight );
 	BoardSetupCreate();
 	BoardSetupCustomCursorsCreate();
-	is_board_setup = true;
+	ok_to_copy_chess_board_to_board_setup = true;
 }
 
 void ChessBoardBitmap::BoardSetupCreate()
@@ -464,19 +466,38 @@ bool ChessBoardBitmap::BoardSetupHitTest( const wxPoint &point, char &piece, cha
 void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, const bool *highlight )
 {
 	wxSize size(pix*8,pix*8);
-	int r1 = objs.repository->general.m_light_colour_r;
-	int g1 = objs.repository->general.m_light_colour_g;
-	int b1 = objs.repository->general.m_light_colour_b;
+	int r0 = objs.repository->general.m_light_colour_r;
+	int g0 = objs.repository->general.m_light_colour_g;
+	int b0 = objs.repository->general.m_light_colour_b;
+	wxColour c0(r0,g0,b0);
+	light_colour = c0;
+	int r1 = objs.repository->general.m_dark_colour_r;
+	int g1 = objs.repository->general.m_dark_colour_g;
+	int b1 = objs.repository->general.m_dark_colour_b;
 	wxColour c1(r1,g1,b1);
-	light_colour = c1;
-	int r2 = objs.repository->general.m_dark_colour_r;
-	int g2 = objs.repository->general.m_dark_colour_g;
-	int b2 = objs.repository->general.m_dark_colour_b;
+	dark_colour = c1;
+	int r2 = objs.repository->general.m_highlight_light_colour_r;
+	int g2 = objs.repository->general.m_highlight_light_colour_g;
+	int b2 = objs.repository->general.m_highlight_light_colour_b;
 	wxColour c2(r2,g2,b2);
-	dark_colour = c2;
+	highlight_light_colour = c2;
+	int r3 = objs.repository->general.m_highlight_dark_colour_r;
+	int g3 = objs.repository->general.m_highlight_dark_colour_g;
+	int b3 = objs.repository->general.m_highlight_dark_colour_b;
+	wxColour c3(r3,g3,b3);
+	highlight_dark_colour = c3;
+	int r4 = objs.repository->general.m_highlight_line_colour_r;
+	int g4 = objs.repository->general.m_highlight_line_colour_g;
+	int b4 = objs.repository->general.m_highlight_line_colour_b;
+	wxColour c4(r4,g4,b4);
+	highlight_line_colour = c4;
     const char **xpm=0;
+
+	// Create a new bitmap of the right size
     wxBitmap new_chess_board_bmp;
     new_chess_board_bmp.Create(pix*8,pix*8,24);
+
+	// Create a bitmap with the 12 pieces, on a magenta background so we can build masks
     int pitch;
     const CompressedXpm *compressed_xpm = GetBestFit( pix, pitch );
     wxMemoryDC dc;
@@ -486,19 +507,32 @@ void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, 
     xpm = (const char **)processor.GetXpm();
     wxBitmap lookup(xpm);
 
-    wxColour legacy_dark(200,200,200);
-    wxColour magic(255,0,255);
+    // Start by filling our chessboard with the light square colour - transparent pen means
+	//  no unwanted single pixel line border
     wxBrush light_brush(light_colour);
     dc.SetBrush( light_brush );
     dc.SetPen(*wxTRANSPARENT_PEN);
     dc.DrawRectangle(0,0,new_chess_board_bmp.GetWidth(),new_chess_board_bmp.GetHeight());
-    //
-    int x = 0;
-    int y = 0;
 
-	// Highlight dimensions
+	// Line highlight characteristics
+	if( is_board_setup )
+		highlight_mode = line_thick;
+	else
+	{
+		if( objs.repository->general.m_suppress_highlight )
+			highlight_mode = none;
+		else
+			highlight_mode = objs.repository->general.m_line_highlight ? line_thin : square_colour;
+	}
     unsigned long thickness = pix/16;
     unsigned long indent    = thickness;
+	if( highlight_mode == line_thin )
+	{
+		indent = 0;
+		thickness = 1 + (pix/25);
+		if( thickness > 4 )
+			thickness = 4;
+	}
     highlight_y_lo1 = indent;
     highlight_y_lo2 = highlight_y_lo1 + thickness;
     highlight_y_hi2 = pix - indent;
@@ -508,12 +542,18 @@ void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, 
 	highlight_x_hi2 = pix - indent;
     highlight_x_hi1 = highlight_x_hi2 - thickness;
 
-    const char *board[] =
+	// Create a "box" containing all combinations of piece on square colour, subsequently
+	//  build positions by copying the right pieces from the box
+	const char *board[] =	// a picture of the bitmap comprising just 12 pieces on magenta
     {
         "rNbQkBnR",
-        "Pp#qK  %",
+        "Pp1qK234",			// 1,2,3,4 are placeholders - use them to make empty squares of
+							//  different colours, see big comment below about how the "box"
+							//  is organised
     };
     dc.SetBackgroundMode( wxPENSTYLE_TRANSPARENT );
+    int x = 0;
+    int y = 0;
     for( int board_idx=0; board_idx<2; board_idx++ )
     {
         const char *s = board[board_idx];
@@ -522,21 +562,28 @@ void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, 
         for( int j=0; j<8; j++ )
         {
             char c = *s++;
-            if( c == '#' )  // dark square
+            if( c == '1' )  // dark square (note we skip light colour since whole board already initialised to that)
             {
                 wxBrush dark_brush(dark_colour);
                 dc.SetBrush( dark_brush );
                 dc.DrawRectangle(x<0?0:x, y, pix, pix );
             }
-            else if( c == ' ' )  // light square
+            else if( c == '2' )  // highlight light square
             {
-                // whole board already initialised to light colour
+                wxBrush highlight_light_brush(highlight_light_colour);
+                dc.SetBrush( highlight_light_brush );
+                dc.DrawRectangle(x<0?0:x, y, pix, pix );
             }
-			else if( c == '%' )
+            else if( c == '3' )  // highlight dark square
+            {
+                wxBrush highlight_dark_brush(highlight_dark_colour);
+                dc.SetBrush( highlight_dark_brush );
+                dc.DrawRectangle(x<0?0:x, y, pix, pix );
+            }
+			else if( c == '4' )	// highlight line coloured square
 			{
-				// Make square h7 now (b5 in box) a nice blue colour
-				wxColour ocean_blue(112,146,190);
-				wxBrush ocean_blue_brush(ocean_blue);
+				// Make square h7 (h5 in box) a nice blue colour
+				wxBrush ocean_blue_brush(highlight_line_colour);
 				dc.SetBrush( ocean_blue_brush );
                 dc.DrawRectangle(x<0?0:x, y, pix, pix );
 			}
@@ -892,107 +939,153 @@ void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, 
         }
     }
 
-	// Highlights squares
-	ClearHighlight1();
-	ClearHighlight2();
-
-	// The location of the pieces in the bitmap, a8 = top left, c7=#
-	// is a dark square, the rest of the board is light coloured, the
-	// background colour of the 12 squares with pieces is irrelevant,
-	// we use the mask to eliminate the background
-    // "rNbQkBnR",
-    // "Pp#qK",
-
-	// The box, colours are as per a normal chess board h1=white etc
-	// "rnbqkbnr"
-	// "pp......"
-	// "........"
-	// "...qk..."
-	// "...QK..."
-	// "........"
-	// "PP......"
-	// "RNBQKBNR"
-
-	// Read from position on left below (the .bmp resource) into the box
+	// Read from position on left below (our looked up .bmp) into the box
 	//  at right. The box has all the piece/colour combinations we need
     //  (eg only two pawns from each side are needed, one of each colour).
-    //  Also note that the two squares marked with * are the two empty
-	//	squares (one of each colour) we need.
+    //  1,2,3 and 4 are empty squares used to setup colours.
+	//	
+    //  On the right squares marked with * are empty squares.
 	//
-	//	"rNbQkBnR"		 "rnbqkbnr"
-	//	"Pp*qK*  "		 "pp      "
-	//	"        "		 "        "
-	//	"        "		 "   qk   "
-	//	"        "		 "   QK   "
-	//	"        "		 "**      "
-	//	"        "		 "PP      "
-	//	"        "		 "RNBQKBNR"
+	//	"rNbQkBnR"		 "rnbqkbnr"	 <- normal colours
+	//	"Pp1qK234"		 "pp*qk   "	 <- normal colours
+	//	"        "		 "rnbqkbnr"	 <- highlight colours
+	//	"        "		 "pp*qk   "	 <- highlight colours
+	//	"        "		 "PP*QK   "	 <- highlight colours
+	//	"        "		 "RNBQKBNR"	 <- highlight colours
+	//	"        "		 "PP*QK   "	 <- normal colours
+	//	"        "		 "RNBQKBNR"  <- normal
 	//
 	// Store these pieces from the board to their fixed
 	//  positions in the 'box'
 
-	// Copy empty black square to all used black squares in the box
+	// Copy empty light square to all used normal light squares in the box
+	//  Note that '1'=c7, '2'=f7, '3'=g7, '4'=h7 are dark, highlight light
+	//  highlight dark, and  highlight line (ocean blue by default) colours
+	//  respectively and that the first six rows of the board (eg a6) are
+	//  initialised to light colour
+	Get( 'a','6', 'a','8' );  
+	Get( 'a','6', 'c','8' );
+	Get( 'a','6', 'e','8' );
+	Get( 'a','6', 'g','8' );
+	Get( 'a','6', 'b','7' );
+	Get( 'a','6', 'd','7' );
+	Get( 'a','6', 'a','2' );
+	Get( 'a','6', 'c','2' );
+	Get( 'a','6', 'e','2' );
+	Get( 'a','6', 'b','1' );
+	Get( 'a','6', 'd','1' );
+	Get( 'a','6', 'f','1' );
+	Get( 'a','6', 'h','1' );
+
+	// Copy empty dark square to all used normal dark squares in the box
 	Get( 'c','7', 'b','8' );
 	Get( 'c','7', 'd','8' );
 	Get( 'c','7', 'f','8' );
 	Get( 'c','7', 'h','8' );
 	Get( 'c','7', 'a','7' );
-	Get( 'c','7', 'e','5' );
-	Get( 'c','7', 'd','4' );
+	Get( 'c','7', 'c','7' );
+	Get( 'c','7', 'e','7' );
 	Get( 'c','7', 'b','2' );
+	Get( 'c','7', 'd','2' );
 	Get( 'c','7', 'a','1' );
 	Get( 'c','7', 'c','1' );
 	Get( 'c','7', 'e','1' );
 	Get( 'c','7', 'g','1' );
 
-	// Copy empty white square to all used white squares in the box
-	Get( 'f','7', 'a','8' );  
-	Get( 'f','7', 'c','8' );
-	Get( 'f','7', 'e','8' );
-	Get( 'f','7', 'g','8' );
-	Get( 'f','7', 'b','7' );
+	// Copy empty highlight light square to all used highlight light squares in the box
+	Get( 'f','7', 'a','6' );  
+	Get( 'f','7', 'c','6' );
+	Get( 'f','7', 'e','6' );
+	Get( 'f','7', 'g','6' );
+	Get( 'f','7', 'b','5' );
 	Get( 'f','7', 'd','5' );
+	Get( 'f','7', 'a','4' );
+	Get( 'f','7', 'c','4' );
 	Get( 'f','7', 'e','4' );
-	Get( 'f','7', 'a','2' );
-	Get( 'f','7', 'b','1' );
-	Get( 'f','7', 'd','1' );
-	Get( 'f','7', 'f','1' );
-	Get( 'f','7', 'h','1' );
+	Get( 'f','7', 'b','3' );
+	Get( 'f','7', 'd','3' );
+	Get( 'f','7', 'f','3' );
+	Get( 'f','7', 'h','3' );
 
-	// Copy white pieces to the box
+	// Copy empty highlight dark square to all used highlight dark squares in the box
+	Get( 'g','7', 'b','6' );
+	Get( 'g','7', 'd','6' );
+	Get( 'g','7', 'f','6' );
+	Get( 'g','7', 'h','6' );
+	Get( 'g','7', 'a','5' );
+	Get( 'g','7', 'c','5' );
+	Get( 'g','7', 'e','5' );
+	Get( 'g','7', 'b','4' );
+	Get( 'g','7', 'd','4' );
+	Get( 'g','7', 'a','3' );
+	Get( 'g','7', 'c','3' );
+	Get( 'g','7', 'e','3' );
+	Get( 'g','7', 'g','3' );
+
+	// Copy white pieces to the box (normal)
 	Get( 'h','8', 'h','1', white_rook_mask );
 	Get( 'b','8', 'g','1', white_knight_mask );
 	Get( 'f','8', 'f','1', white_bishop_mask );
 	Get( 'e','7', 'e','1', white_king_mask );
-	Get( 'e','7', 'e','4', white_king_mask  );		// White king on white square
+	Get( 'e','7', 'e','2', white_king_mask  );		// White king on white square
 	Get( 'd','8', 'd','1', white_queen_mask );
-	Get( 'd','8', 'd','4', white_queen_mask );		// White queen on black square
+	Get( 'd','8', 'd','2', white_queen_mask );		// White queen on black square
 	Get( 'f','8', 'c','1', white_bishop_mask );
     Get( 'b','8', 'b','1', white_knight_mask );
 	Get( 'h','8', 'a','1', white_rook_mask );
 	Get( 'a','7', 'a','2', white_pawn_mask );		// Only need pawns on a2, b2
 	Get( 'a','7', 'b','2', white_pawn_mask );
 
+	// Copy white pieces to the box (highlight)
+	Get( 'h','8', 'h','3', white_rook_mask );
+	Get( 'b','8', 'g','3', white_knight_mask );
+	Get( 'f','8', 'f','3', white_bishop_mask );
+	Get( 'e','7', 'e','3', white_king_mask );
+	Get( 'e','7', 'e','4', white_king_mask  );		// White king on white square
+	Get( 'd','8', 'd','3', white_queen_mask );
+	Get( 'd','8', 'd','4', white_queen_mask );		// White queen on black square
+	Get( 'f','8', 'c','3', white_bishop_mask );
+    Get( 'b','8', 'b','3', white_knight_mask );
+	Get( 'h','8', 'a','3', white_rook_mask );
+	Get( 'a','7', 'a','4', white_pawn_mask );		// Only need pawns on a4, b4
+	Get( 'a','7', 'b','4', white_pawn_mask );
+
 	// Copy black pieces to the box
 	Get( 'a','8', 'h','8', black_rook_mask );
 	Get( 'g','8', 'g','8', black_knight_mask );
 	Get( 'c','8', 'f','8', black_bishop_mask );
 	Get( 'e','8', 'e','8', black_king_mask );
-	Get( 'e','8', 'e','5', black_king_mask  );		// Black king on black square
+	Get( 'e','8', 'e','7', black_king_mask  );		// Black king on black square
 	Get( 'd','7', 'd','8', black_queen_mask );
-	Get( 'd','7', 'd','5', black_queen_mask );		// Black queen on white square
+	Get( 'd','7', 'd','7', black_queen_mask );		// Black queen on white square
 	Get( 'c','8', 'c','8', black_bishop_mask );
     Get( 'g','8', 'b','8', black_knight_mask );
 	Get( 'a','8', 'a','8', black_rook_mask );
 	Get( 'b','7', 'a','7', black_pawn_mask );		// Only need pawns on a7, b7
 	Get( 'b','7', 'b','7', black_pawn_mask );
 
-	// Two empty squares
-	Get( 'c','7', 'a','3' );  // empty black square
-	Get( 'f','7', 'b','3' );  // empty white square
+	// Copy black pieces to the box (highlight)
+	Get( 'a','8', 'h','6', black_rook_mask );
+	Get( 'g','8', 'g','6', black_knight_mask );
+	Get( 'c','8', 'f','6', black_bishop_mask );
+	Get( 'e','8', 'e','6', black_king_mask );
+	Get( 'e','8', 'e','5', black_king_mask  );		// Black king on black square
+	Get( 'd','7', 'd','6', black_queen_mask );
+	Get( 'd','7', 'd','5', black_queen_mask );		// Black queen on white square
+	Get( 'c','8', 'c','6', black_bishop_mask );
+    Get( 'g','8', 'b','6', black_knight_mask );
+	Get( 'a','8', 'a','6', black_rook_mask );
+	Get( 'b','7', 'a','5', black_pawn_mask );		// Only need pawns on a5, b5
+	Get( 'b','7', 'b','5', black_pawn_mask );
 
-	// Highlight colour in b5
-	Get( 'h','7', 'b','5' );  // blue square
+	// Empty squares
+	Get( 'a','6', 'c','2' );  // empty light square
+	Get( 'c','7', 'c','7' );  // empty dark square
+	Get( 'f','7', 'c','4' );  // empty highlight light square
+	Get( 'g','7', 'c','5' );  // empty highlight dark square
+
+	// Highlight line colour in h5
+	Get( 'h','7', 'h','5' );  // ocean blue by default
     chess_board_bmp = new_chess_board_bmp;
 
 	// Setup the position
@@ -1029,6 +1122,8 @@ void ChessBoardBitmap::SetChessPosition( const thc::ChessPosition &pos, const bo
 		highlight_current[high2] = true;
 	}
 	highlight_ptr = highlight_current;
+	if( highlight_mode == none )
+		highlight_ptr = 0;
 
 	// Read string backwards for black at bottom
 	if( !normal_orientation )
@@ -1069,47 +1164,93 @@ void ChessBoardBitmap::SetChessPosition( const thc::ChessPosition &pos, const bo
                 highlight_ptr--;
         }
 
-		// Is the square black ?
+		// Is the square dark ?
 		if( *colour++ == 'b' )
 		{
 
-			// Find an appropriate black square piece in the box
-			switch( piece )
+			// Find an appropriate dark square piece in the box
+			if( highlight_f && highlight_mode==square_colour )
 			{
-				default:	src_file='a';	src_rank='3';	break;
-				case 'R':	src_file='a';	src_rank='1';	break;
-				case 'N':	src_file='g';	src_rank='1';	break;
-				case 'B':	src_file='c';	src_rank='1';	break;
-				case 'Q':	src_file='d';	src_rank='4';	break;
-				case 'K':	src_file='e';	src_rank='1';	break;
-				case 'P':   src_file='b';	src_rank='2';	break;
-				case 'r':	src_file='h';	src_rank='8';	break;
-				case 'n':   src_file='b';	src_rank='8';	break;
-				case 'b':   src_file='f';	src_rank='8';	break;
-				case 'q':   src_file='d';	src_rank='8';	break;
-				case 'k':   src_file='e';	src_rank='5';	break;
-				case 'p':   src_file='a';	src_rank='7';	break;
+				highlight_f = false;	// stops line highlighting as well
+				switch( piece )
+				{
+					default:	src_file='c';	src_rank='5';	break;
+					case 'R':	src_file='a';	src_rank='3';	break;
+					case 'N':	src_file='g';	src_rank='3';	break;
+					case 'B':	src_file='c';	src_rank='3';	break;
+					case 'Q':	src_file='d';	src_rank='4';	break;
+					case 'K':	src_file='e';	src_rank='3';	break;
+					case 'P':   src_file='b';	src_rank='4';	break;
+					case 'r':	src_file='h';	src_rank='6';	break;
+					case 'n':   src_file='b';	src_rank='6';	break;
+					case 'b':   src_file='f';	src_rank='6';	break;
+					case 'q':   src_file='d';	src_rank='6';	break;
+					case 'k':   src_file='e';	src_rank='5';	break;
+					case 'p':   src_file='a';	src_rank='5';	break;
+				}
+			}
+			else
+			{
+				switch( piece )
+				{
+					default:	src_file='c';	src_rank='7';	break;
+					case 'R':	src_file='a';	src_rank='1';	break;
+					case 'N':	src_file='g';	src_rank='1';	break;
+					case 'B':	src_file='c';	src_rank='1';	break;
+					case 'Q':	src_file='d';	src_rank='2';	break;
+					case 'K':	src_file='e';	src_rank='1';	break;
+					case 'P':   src_file='b';	src_rank='2';	break;
+					case 'r':	src_file='h';	src_rank='8';	break;
+					case 'n':   src_file='b';	src_rank='8';	break;
+					case 'b':   src_file='f';	src_rank='8';	break;
+					case 'q':   src_file='d';	src_rank='8';	break;
+					case 'k':   src_file='e';	src_rank='7';	break;
+					case 'p':   src_file='a';	src_rank='7';	break;
+				}
 			}
 		}
 		else
 		{
 			
-			// Find an appropriate white square piece in the box
-			switch(piece)
+			// Find an appropriate light square piece in the box
+			if( highlight_f && highlight_mode==square_colour )
 			{
-				default:	src_file='b';	src_rank='3';	break;
-				case 'R':	src_file='h';	src_rank='1';	break;
-				case 'N':	src_file='b';	src_rank='1';	break;
-				case 'B':	src_file='f';	src_rank='1';	break;
-				case 'Q':	src_file='d';	src_rank='1';	break;
-				case 'K':	src_file='e';	src_rank='4';	break;
-				case 'P':   src_file='a';	src_rank='2';	break;
-				case 'r':	src_file='a';	src_rank='8';	break;
-				case 'n':   src_file='g';	src_rank='8';	break;
-				case 'b':   src_file='c';	src_rank='8';	break;
-				case 'q':   src_file='d';	src_rank='5';	break;
-				case 'k':   src_file='e';	src_rank='8';	break;
-				case 'p':   src_file='b';	src_rank='7';	break;
+				highlight_f = false;	// stops line highlighting as well
+				switch(piece)
+				{
+					default:	src_file='c';	src_rank='4';	break;
+					case 'R':	src_file='h';	src_rank='3';	break;
+					case 'N':	src_file='b';	src_rank='3';	break;
+					case 'B':	src_file='f';	src_rank='3';	break;
+					case 'Q':	src_file='d';	src_rank='3';	break;
+					case 'K':	src_file='e';	src_rank='4';	break;
+					case 'P':   src_file='a';	src_rank='4';	break;
+					case 'r':	src_file='a';	src_rank='6';	break;
+					case 'n':   src_file='g';	src_rank='6';	break;
+					case 'b':   src_file='c';	src_rank='6';	break;
+					case 'q':   src_file='d';	src_rank='5';	break;
+					case 'k':   src_file='e';	src_rank='6';	break;
+					case 'p':   src_file='b';	src_rank='5';	break;
+				}
+			}
+			else
+			{
+				switch(piece)
+				{
+					default:	src_file='c';	src_rank='2';	break;
+					case 'R':	src_file='h';	src_rank='1';	break;
+					case 'N':	src_file='b';	src_rank='1';	break;
+					case 'B':	src_file='f';	src_rank='1';	break;
+					case 'Q':	src_file='d';	src_rank='1';	break;
+					case 'K':	src_file='e';	src_rank='2';	break;
+					case 'P':   src_file='a';	src_rank='2';	break;
+					case 'r':	src_file='a';	src_rank='8';	break;
+					case 'n':   src_file='g';	src_rank='8';	break;
+					case 'b':   src_file='c';	src_rank='8';	break;
+					case 'q':   src_file='d';	src_rank='7';	break;
+					case 'k':   src_file='e';	src_rank='8';	break;
+					case 'p':   src_file='b';	src_rank='7';	break;
+				}
 			}
 		}
 	    Put( src_file, src_rank, dst_file, dst_rank, highlight_f );
@@ -1132,7 +1273,7 @@ void ChessBoardBitmap::SetChessPosition( const thc::ChessPosition &pos, const bo
     }
 
 	// Copy the chess board bitmap into the centre part of the board setup bitmap
-	if( is_board_setup )
+	if( is_board_setup && ok_to_copy_chess_board_to_board_setup )
 		bmpCopy( chess_board_bmp, 0, 0, board_setup_bmp, dim_board.x, dim_board.y, 8*dim_pix, 8*dim_pix );
 }
 
@@ -1205,7 +1346,7 @@ void ChessBoardBitmap::Put( char src_file, char src_rank, char dst_file, char ds
 			src			  =
 				(byte *)(buf_box   + Offset(src_file,src_rank) + i*width_bytes);
 			src_blue     =
-				(byte *)(buf_box   + Offset('b','5')           + i*width_bytes);
+				(byte *)(buf_box   + Offset('h','5')           + i*width_bytes);
 			dst			  =
 				(byte *)(buf_board + Offset(dst_file,dst_rank) + i*width_bytes);
 			for( j=0; j < (width_bytes)/(8*density); j++ )
@@ -1230,7 +1371,7 @@ void ChessBoardBitmap::Put( char src_file, char src_rank, char dst_file, char ds
 }
 
 
-// Setup a position	on the graphic board
+// Setup a position	on the graphic board with one piece being dragged
 void ChessBoardBitmap::SetChessPositionShiftedPiece( const thc::ChessPosition &pos, bool blank_other_squares, char pickup_file_, char pickup_rank_, wxPoint shift )
 {
 	char piece, save_piece=0;
@@ -1300,49 +1441,47 @@ void ChessBoardBitmap::SetChessPositionShiftedPiece( const thc::ChessPosition &p
 			rev_rank++;
 		}
 
-		// Is the square black ?
+		// Is the square dark ?
 		if( *colour++ == 'b' )
 		{
 
-			// Find an appropriate black square piece in the box
-			switch(piece)
+			// Find an appropriate dark square piece in the box
+			switch( piece )
 			{
+				default:	src_file='c';	src_rank='7';	break;
 				case 'R':	src_file='a';	src_rank='1';	break;
 				case 'N':	src_file='g';	src_rank='1';	break;
 				case 'B':	src_file='c';	src_rank='1';	break;
-				case 'Q':	src_file='d';	src_rank='4';	break;
+				case 'Q':	src_file='d';	src_rank='2';	break;
 				case 'K':	src_file='e';	src_rank='1';	break;
 				case 'P':   src_file='b';	src_rank='2';	break;
 				case 'r':	src_file='h';	src_rank='8';	break;
 				case 'n':   src_file='b';	src_rank='8';	break;
 				case 'b':   src_file='f';	src_rank='8';	break;
 				case 'q':   src_file='d';	src_rank='8';	break;
-				case 'k':   src_file='e';	src_rank='5';	break;
+				case 'k':   src_file='e';	src_rank='7';	break;
 				case 'p':   src_file='a';	src_rank='7';	break;
-                case 'x':   src_file='c';   src_rank='3';   break;
-				default:	src_file='a';	src_rank='3';	break;
 			}
 		}
 		else
 		{
 			
-			// Find an appropriate white square piece in the box
+			// Find an appropriate light square piece in the box
 			switch(piece)
 			{
+				default:	src_file='c';	src_rank='2';	break;
 				case 'R':	src_file='h';	src_rank='1';	break;
 				case 'N':	src_file='b';	src_rank='1';	break;
 				case 'B':	src_file='f';	src_rank='1';	break;
 				case 'Q':	src_file='d';	src_rank='1';	break;
-				case 'K':	src_file='e';	src_rank='4';	break;
+				case 'K':	src_file='e';	src_rank='2';	break;
 				case 'P':   src_file='a';	src_rank='2';	break;
 				case 'r':	src_file='a';	src_rank='8';	break;
 				case 'n':   src_file='g';	src_rank='8';	break;
 				case 'b':   src_file='c';	src_rank='8';	break;
-				case 'q':   src_file='d';	src_rank='5';	break;
+				case 'q':   src_file='d';	src_rank='7';	break;
 				case 'k':   src_file='e';	src_rank='8';	break;
 				case 'p':   src_file='b';	src_rank='7';	break;
-                case 'x':   src_file='d';   src_rank='3';   break;
-				default:	src_file='b';	src_rank='3';	break;
 			}
 		}
 
@@ -1381,8 +1520,6 @@ void ChessBoardBitmap::SetChessPositionShiftedPiece( const thc::ChessPosition &p
             p++;
         }
     }
-
-    // Now use GDI to add highlights (removed)
 }
 
 
@@ -1404,7 +1541,7 @@ void ChessBoardBitmap::PutEx( char piece,
                     mask = white_bishop_mask;           break;
 		case 'Q':	src_file='d';	src_rank='1';
                     mask = white_queen_mask;           	break;
-		case 'K':	src_file='e';	src_rank='4';
+		case 'K':	src_file='e';	src_rank='1';
                     mask = white_king_mask;           	break;
 		case 'P':   src_file='a';	src_rank='2';
                     mask = white_pawn_mask;           	break;
@@ -1414,13 +1551,13 @@ void ChessBoardBitmap::PutEx( char piece,
                     mask = black_knight_mask;           break;
 		case 'b':   src_file='c';	src_rank='8';
                     mask = black_bishop_mask;           break;
-		case 'q':   src_file='d';	src_rank='5';
+		case 'q':   src_file='d';	src_rank='8';
                     mask = black_queen_mask;           	break;
 		case 'k':   src_file='e';	src_rank='8';
                     mask = black_king_mask;           	break;
 		case 'p':   src_file='b';	src_rank='7';
                     mask = black_pawn_mask;           	break;
-		default:	src_file='b';	src_rank='3';
+		default:	src_file='c';	src_rank='2';
 	}
 
     //dbg_printf("%c%c\n", dst_file, dst_rank );

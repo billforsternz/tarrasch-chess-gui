@@ -22,9 +22,14 @@ enum
     ID_LARGE_FONT        = 10004, 
     ID_RESTORE_LIGHT     = 10005,
     ID_RESTORE_DARK      = 10006,
-    ID_NO_AUTO_FLIP      = 10007,
-    ID_STRAIGHT_TO_FIRST_GAME  = 10008,
-    ID_EMIT_BELL         = 10009
+    ID_RESTORE_HIGHLIGHT_LIGHT = 10007,
+    ID_RESTORE_HIGHLIGHT_DARK  = 10008,
+    ID_RESTORE_HIGHLIGHT_LINE  = 10009,
+    ID_NO_AUTO_FLIP			   = 10010,
+    ID_STRAIGHT_TO_FIRST_GAME  = 10011,
+    ID_EMIT_BELL               = 10012,
+	ID_SUPPRESS_HIGHLIGHT	   = 10013,
+	ID_LINE_HIGHLIGHT	       = 10014
 };
 
 // GeneralDialog class declaration
@@ -72,6 +77,9 @@ public:
 
     void OnRestoreLight( wxCommandEvent& event );
     void OnRestoreDark( wxCommandEvent& event );
+    void OnRestoreHighlightLight( wxCommandEvent& event );
+    void OnRestoreHighlightDark( wxCommandEvent& event );
+    void OnRestoreHighlightLine( wxCommandEvent& event );
     void OnNotationLanguage( wxCommandEvent& event );
 	void OnColourPicker( wxColourPickerEvent& event );
 
@@ -88,6 +96,9 @@ public:
 private:
 	wxColourPickerCtrl* light_picker;
 	wxColourPickerCtrl* dark_picker;
+	wxColourPickerCtrl* highlight_light_picker;
+	wxColourPickerCtrl* highlight_dark_picker;
+	wxColourPickerCtrl* highlight_line_picker;
 };
 
 #endif    // GENERAL_DIALOG_H

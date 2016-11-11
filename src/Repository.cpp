@@ -159,16 +159,26 @@ Repository::Repository( bool use_defaults )
         ReadBool    ("GeneralNoItalics",                  general.m_no_italics        );
         ReadBool    ("GeneralStraightToGame",             general.m_straight_to_game  );
         ReadBool    ("GeneralStraightToFirstGame",        general.m_straight_to_first_game  );
-        ReadBool    ("GeneralUseSmallBoard",              general.m_small_board   );
         ReadBool    ("GeneralUseLargeFont",               general.m_large_font    );
         ReadBool    ("GeneralNoAutoFlip",                 general.m_no_auto_flip  );
         ReadBool    ("GeneralEmitBellWhenEngineMoves",    general.m_bell  );
+		ReadBool    ("GeneralSuppressHighlight",		  general.m_suppress_highlight  );
+		ReadBool    ("GeneralLineHighlight",			  general.m_line_highlight  );
 		config->Read("GeneralLightSquaresRed",            &general.m_light_colour_r );
 		config->Read("GeneralLightSquaresGreen",          &general.m_light_colour_g );
 		config->Read("GeneralLightSquaresBlue",           &general.m_light_colour_b );
 		config->Read("GeneralDarkSquaresRed",             &general.m_dark_colour_r );
 		config->Read("GeneralDarkSquaresGreen",           &general.m_dark_colour_g );
 		config->Read("GeneralDarkSquaresBlue",            &general.m_dark_colour_b );
+		config->Read("GeneralHighlightLightSquaresRed",            &general.m_highlight_light_colour_r );
+		config->Read("GeneralHighlightLightSquaresGreen",          &general.m_highlight_light_colour_g );
+		config->Read("GeneralHighlightLightSquaresBlue",           &general.m_highlight_light_colour_b );
+		config->Read("GeneralHighlightDarkSquaresRed",             &general.m_highlight_dark_colour_r );
+		config->Read("GeneralHighlightDarkSquaresGreen",           &general.m_highlight_dark_colour_g );
+		config->Read("GeneralHighlightDarkSquaresBlue",            &general.m_highlight_dark_colour_b );
+		config->Read("GeneralHighlightLineSquaresRed",             &general.m_highlight_line_colour_r );
+		config->Read("GeneralHighlightLineSquaresGreen",           &general.m_highlight_line_colour_g );
+		config->Read("GeneralHighlightLineSquaresBlue",            &general.m_highlight_line_colour_b );
 
         // NonVolatile
         config->Read("NonVolatileX",                      &nv.m_x );
@@ -253,16 +263,26 @@ Repository::~Repository()
     config->Write("GeneralNoItalics",                 (int)general.m_no_italics       );
     config->Write("GeneralStraightToGame",            (int)general.m_straight_to_game );
     config->Write("GeneralStraightToFirstGame",       (int)general.m_straight_to_first_game );
-    config->Write("GeneralUseSmallBoard",             (int)general.m_small_board  );
     config->Write("GeneralUseLargeFont",              (int)general.m_large_font   );
     config->Write("GeneralNoAutoFlip",                (int)general.m_no_auto_flip );
     config->Write("GeneralEmitBellWhenEngineMoves",   (int)general.m_bell  );
+    config->Write("GeneralSuppressHighlight",		  (int)general.m_suppress_highlight  );
+    config->Write("GeneralLineHighlight",			  (int)general.m_line_highlight  );
 	config->Write("GeneralLightSquaresRed",            general.m_light_colour_r );
 	config->Write("GeneralLightSquaresGreen",          general.m_light_colour_g );
 	config->Write("GeneralLightSquaresBlue",           general.m_light_colour_b );
 	config->Write("GeneralDarkSquaresRed",             general.m_dark_colour_r );
 	config->Write("GeneralDarkSquaresGreen",           general.m_dark_colour_g );
 	config->Write("GeneralDarkSquaresBlue",            general.m_dark_colour_b );
+	config->Write("GeneralHighlightLightSquaresRed",            general.m_highlight_light_colour_r );
+	config->Write("GeneralHighlightLightSquaresGreen",          general.m_highlight_light_colour_g );
+	config->Write("GeneralHighlightLightSquaresBlue",           general.m_highlight_light_colour_b );
+	config->Write("GeneralHighlightDarkSquaresRed",             general.m_highlight_dark_colour_r );
+	config->Write("GeneralHighlightDarkSquaresGreen",           general.m_highlight_dark_colour_g );
+	config->Write("GeneralHighlightDarkSquaresBlue",            general.m_highlight_dark_colour_b );
+	config->Write("GeneralHighlightLineSquaresRed",             general.m_highlight_line_colour_r );
+	config->Write("GeneralHighlightLineSquaresGreen",           general.m_highlight_line_colour_g );
+	config->Write("GeneralHighlightLineSquaresBlue",            general.m_highlight_line_colour_b );
 
     // NonVolatile
     config->Write("NonVolatileX",                   nv.m_x );

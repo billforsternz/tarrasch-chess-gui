@@ -92,10 +92,10 @@ public:
     
     // Recipes to calculate move text
     std::string CalculateMoveTxt() const;
-    std::string CalculateMoveTxt( std::string &previous_move ) const;
+    std::string CalculateMoveTxt( std::string &previous_move, thc::Move &previous_move_bin  ) const;
     std::string CalculateMoveTxt( CompactGame &info, int offset ) const;
-    std::string CalculateMoveTxt( std::string &previous_move, CompactGame &info, int focus_offset, thc::ChessPosition &updated_position ) const;
-    
+    std::string CalculateMoveTxt( std::string &previous_move, CompactGame &info, int focus_offset, thc::ChessPosition &updated_position, thc::Move &previous_move_bin  ) const;
+
 protected:
     virtual wxString OnGetItemText( long item, long column) const;
 

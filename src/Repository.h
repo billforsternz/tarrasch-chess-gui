@@ -218,24 +218,46 @@ struct GeneralConfig
 	int         m_dark_colour_r;
 	int         m_dark_colour_g;
 	int         m_dark_colour_b;
-    bool        m_small_board;
+	int         m_highlight_light_colour_r;
+	int         m_highlight_light_colour_g;
+	int         m_highlight_light_colour_b;
+	int         m_highlight_dark_colour_r;
+	int         m_highlight_dark_colour_g;
+	int         m_highlight_dark_colour_b;
+	int         m_highlight_line_colour_r;
+	int         m_highlight_line_colour_g;
+	int         m_highlight_line_colour_b;
     bool        m_large_font;
     bool        m_no_auto_flip;
     bool        m_bell;
+	bool		m_suppress_highlight;
+	bool		m_line_highlight;
     GeneralConfig()
     {
         m_notation_language  = "KQRNB (English)";
-		m_light_colour_r = 255; // wxColour(255,226,179);
-		m_light_colour_g = 226; // wxColour(255,226,179);
-		m_light_colour_b = 179; // wxColour(255,226,179);
-		m_dark_colour_r = 220;  // wxColour(220,162,116);
-		m_dark_colour_g = 162;  // wxColour(220,162,116);
-		m_dark_colour_b = 116;  // wxColour(220,162,116);
+		// Note that the following colour constants violate DRY (Don't Repeat Yourself) - search project
+		//  for "violate DRY" to find out why
+		m_light_colour_r		   = 255;	// cream
+		m_light_colour_g		   = 226;
+		m_light_colour_b		   = 179;
+		m_dark_colour_r			   = 220; 	// brown
+		m_dark_colour_g			   = 162; 
+		m_dark_colour_b			   = 116; 
+		m_highlight_light_colour_r = 250;	// very light yellow
+		m_highlight_light_colour_g = 240;
+		m_highlight_light_colour_b = 160;
+		m_highlight_dark_colour_r  = 196;	// darker brown
+		m_highlight_dark_colour_g  = 160;
+		m_highlight_dark_colour_b  = 130;
+		m_highlight_line_colour_r  = 112;	// nice ocean blue
+		m_highlight_line_colour_g  = 146;
+		m_highlight_line_colour_b  = 190;
+		m_suppress_highlight = false;
+		m_line_highlight = false;
         m_no_italics         = false;
         m_straight_to_game   = false;
         m_straight_to_first_game = false;
         m_bell               = false;
-        m_small_board        = false;
         m_large_font         = false;
         m_no_auto_flip       = false;
     }
