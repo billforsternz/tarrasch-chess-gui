@@ -489,15 +489,17 @@ void GameLogic::CmdSwapSides()
         SetGroomedPosition();
         thc::ChessRules cr;
         string last_move_txt;
-        GAME_MOVE *last_move = gd.GetSummary( cr, last_move_txt );
+        GAME_MOVE *last_move = gd.GetSummaryXX( cr, last_move_txt );
         glc.Swap();
         wxString temp                   = objs.repository->player.m_black;
         objs.repository->player.m_black = objs.repository->player.m_white;
         objs.repository->player.m_white = temp;
         chess_clock.Swap( glc.human_is_white );
-        LabelPlayers();
-        if( last_move )
-        {
+        if( !last_move )
+	        LabelPlayers( false, true );
+		else
+		{
+	        LabelPlayers();
             long pos = atom.GetInsertionPoint();
             std::string txt;
             if( last_move->comment=="" )
@@ -946,7 +948,7 @@ void GameLogic::CmdGamesDatabase()
     thc::ChessRules cr;
     thc::ChessRules start_position;
     std::string title_txt;
-    gd.GetSummary( cr, title_txt );
+    gd.GetSummaryXX( cr, title_txt );
     DB_REQ db_req;
     if( cr == start_position )
         db_req = REQ_SHOW_ALL;
@@ -960,7 +962,7 @@ void GameLogic::CmdDatabaseSearch()
     thc::ChessRules cr;
     thc::ChessRules start_position;
     std::string title_txt;
-    gd.GetSummary( cr, title_txt );
+    gd.GetSummaryXX( cr, title_txt );
     if( cr == start_position )
         CmdDatabase( cr, REQ_SHOW_ALL );
     else
@@ -971,7 +973,7 @@ void GameLogic::CmdDatabasePattern()
 {
     thc::ChessRules cr;
     std::string title_txt;
-    gd.GetSummary( cr, title_txt );
+    gd.GetSummaryXX( cr, title_txt );
     pp_persist.OneTimeInit(false,cr);
     PatternParameters parm = pp_persist;
     bool do_search = false;
@@ -994,7 +996,7 @@ void GameLogic::CmdDatabaseMaterial()
 {
     thc::ChessRules cr;
     std::string title_txt;
-    gd.GetSummary( cr, title_txt );
+    gd.GetSummaryXX( cr, title_txt );
     pp_persist_material_balance.OneTimeInit(true,cr);
     PatternParameters parm = pp_persist_material_balance;
     bool do_search = false;
@@ -3359,20 +3361,22 @@ void GameLogic::SetGroomedPosition( bool show_title )
     {
         thc::ChessRules cr;
         string move_txt;
+        GAME_MOVE *game_move = gd.GetSummaryXX( cr, move_txt, lag_nbr );
+        if( game_move )
+        {
+			gb->SetHighlight1(game_move->move.src);
+			gb->SetHighlight2(game_move->move.dst);
+		}
         if( lag_nbr == 0 )
         {
-            GAME_MOVE *game_move = gd.GetSummary( cr, move_txt, 0 );
             if( game_move )
             {
-				gb->SetHighlight1(game_move->move.src);
-				gb->SetHighlight2(game_move->move.dst);
                 title.sprintf( "%s%s",
                      move_txt.c_str(), qualifier );
             }
         }
         else
         {
-            gd.GetSummary( cr, move_txt, lag_nbr );
             title.sprintf( "%s (%d half moves behind)%s",
                             move_txt.c_str(), lag_nbr, qualifier );
             view_pos = cr;

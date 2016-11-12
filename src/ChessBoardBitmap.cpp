@@ -1,5 +1,6 @@
 /****************************************************************************
- * Chess Board bitmap utilities
+ * Create and manipulate the chess board bitmaps displayed by the chess
+ * board controls (currently CtrlChessBoard and CtrlChessPositionSetup)
  *  Author:  Bill Forster
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2016, Bill Forster <billforsternz at gmail dot com>
@@ -163,8 +164,8 @@ void ChessBoardBitmap::BoardSetupDim( const wxSize sz )
 	dim_sz = sz;
 	uint32_t w = sz.x;
 	uint32_t h = sz.y;
-	uint32_t pix1 = (w*100) / (1000 + 50);	// divide by 10 (at least) / 10.7
-	uint32_t pix2 = (h*100) / (800 + 30);	// divide by 8 (at least) / 8.64
+	uint32_t pix1 = (w*100) / (1000 + 50);	// divide by 10 (at least)
+	uint32_t pix2 = (h*100) / (800 + 30);	// divide by 8 (at least)
 	int pix = pix1<pix2 ? pix1 : pix2;	// min()
 	dim_pix = pix;
 	cprintf( "pix=%d, pix1=%d, pix2=%d\n", pix, pix1, pix2 );
@@ -193,18 +194,19 @@ void ChessBoardBitmap::CreateAsChessBoardOnly( const wxSize sz, bool normal_orie
 void ChessBoardBitmap::CreateAsBoardSetup( const wxSize sz, bool normal_orientation_, const thc::ChessPosition &cp, const bool *highlight )
 {
 	normal_orientation = normal_orientation_;
+	ok_to_copy_chess_board_to_board_setup = false;
 	is_board_setup = true;
-	BoardSetupDim( sz );
-	ChessBoardCreate( dim_pix, cp, highlight );
-	BoardSetupCreate();
-	BoardSetupCustomCursorsCreate();
+	thc::ChessPosition start_position;
+	BoardSetupDim( sz );							// calculate dimenstions
+	ChessBoardCreate( dim_pix, start_position );	// create inner chess board first
+	BoardSetupCreate();								// then the surrounds, including the pickup pieces
+	BoardSetupCustomCursorsCreate();				// finally the pickup pieces
 	ok_to_copy_chess_board_to_board_setup = true;
+	SetChessPosition( cp, highlight );
 }
 
 void ChessBoardBitmap::BoardSetupCreate()
 {
-	//bool save_normal_orientation = normal_orientation;
-	//normal_orientation = true;		// temporarily while we setup box
     wxBitmap board_setup;
 	board_setup.Create(dim_sz.x,dim_sz.y,24);
     wxMemoryDC dc;
@@ -221,9 +223,6 @@ void ChessBoardBitmap::BoardSetupCreate()
 	// Set the standard chess position on the chess board
 	thc::ChessPosition start_position;
 	SetChessPosition( start_position );
-
-	// Copy the chess board into the centre part
-	bmpCopy( chess_board_bmp, 0, 0, board_setup, dim_board.x, dim_board.y, 8*dim_pix, 8*dim_pix );
 
 	// Add pieces to be picked up on the left side
 	for( int i=0; i<6; i++ )

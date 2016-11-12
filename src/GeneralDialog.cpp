@@ -181,7 +181,7 @@ void GeneralDialog::CreateControls()
 
     wxBoxSizer* colour_sizer5  = new wxBoxSizer(wxHORIZONTAL);
     wxStaticText* colour_label5 = new wxStaticText ( this, wxID_STATIC,
-        gbl_spelling_us ? "Highlighted Square Line Color" : "Highlighted Square Line Colour", wxDefaultPosition, wxDefaultSize, 0 );
+        gbl_spelling_us ? "Highlighted Square Border Color" : "Highlighted Square Border Colour", wxDefaultPosition, wxDefaultSize, 0 );
 	wxColour highlight_line(dat.m_highlight_line_colour_r,dat.m_highlight_line_colour_g,dat.m_highlight_line_colour_b);
     highlight_line_picker = new wxColourPickerCtrl( this, wxID_ANY, highlight_line );
     colour_sizer5->Add(colour_label5, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
@@ -202,8 +202,8 @@ void GeneralDialog::CreateControls()
     // Use line highlighting rather than colour highlighting
     wxCheckBox* line_highlight = new wxCheckBox( this, ID_LINE_HIGHLIGHT,
        gbl_spelling_us ?
-		"Highlight the most recent move with line graphics rather than square colours":
-		"Highlight the most recent move with line graphics rather than square colours", wxDefaultPosition, wxDefaultSize, 0 );
+		"Use borders rather than colors for square highlights":
+		"Use borders rather than colours for square highlights", wxDefaultPosition, wxDefaultSize, 0 );
     line_highlight->SetValue( dat.m_line_highlight );
     box_sizer->Add( line_highlight, 0,
         wxALL, 5);
