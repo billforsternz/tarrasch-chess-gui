@@ -25,7 +25,7 @@ public:
     void SetTicking( bool ticking_ ) { this->ticking = ticking_; }
 
     // Get the current displayed time
-    bool GetDisplay( wxString &txt, bool expire_show_neg );   // returns bool expired
+    bool GetDisplay( wxString &txt, bool expire_show_neg, bool &ticking );   // returns bool expired
 
     // Start and stop the clock
     void Start();

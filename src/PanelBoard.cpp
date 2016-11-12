@@ -49,8 +49,12 @@ PanelBoard::PanelBoard
     font4      = new wxFont( 8,  wxFONTFAMILY_SWISS,  wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false );
     white_clock_visible = false;
     black_clock_visible = false;
+    white_clock_red = false;
+    black_clock_red = false;
+    time_top_red = false;
+    time_bottom_red = false;
 
-    who_top     = new wxStaticText(this,wxID_ANY,"B");
+	who_top     = new wxStaticText(this,wxID_ANY,"B");
     who_top->SetFont( *font1 );
     who_bottom  = new wxStaticText(this,wxID_ANY,"W");
     who_bottom->SetFont( *font1 );
@@ -315,30 +319,42 @@ void PanelBoard::RedrawClocks()
     if( normal )
     {
         std::string temp(white_clock_visible ? white_clock_txt.c_str() : "");
-        if( temp !=  time_bottom_txt )
+		bool temp_red = white_clock_red;
+        if( temp !=  time_bottom_txt || temp_red !=  time_bottom_red )
         {
             time_bottom_txt = temp; 
+            time_bottom_red = temp_red; 
+			time_bottom->SetForegroundColour( temp_red ? *wxRED : *wxBLACK );
             time_bottom->SetLabel( time_bottom_txt.c_str() );
         }
         std::string temp2(black_clock_visible ? black_clock_txt.c_str() : "");
-        if( temp2 !=  time_top_txt )
+		bool temp_red2 = black_clock_red;
+        if( temp2 !=  time_top_txt  || temp_red2 !=  time_top_red )
         {
             time_top_txt = temp2;
+            time_top_red = temp_red2; 
+			time_top->SetForegroundColour( temp_red2 ? *wxRED : *wxBLACK );
             time_top->SetLabel( time_top_txt.c_str() );
         }
     }
     else
     {
         std::string temp(black_clock_visible ? black_clock_txt.c_str() : "");
+		bool temp_red = black_clock_red;
         if( temp != time_bottom_txt )
         {
             time_bottom_txt = temp; 
+            time_bottom_red = temp_red; 
+			time_bottom->SetForegroundColour( temp_red ? *wxRED : *wxBLACK );
             time_bottom->SetLabel( time_bottom_txt.c_str() );
         }
         std::string temp2(white_clock_visible ? white_clock_txt.c_str() : "");
-        if( temp2 !=  time_top_txt )
+		bool temp_red2 = white_clock_red;
+        if( temp2 !=  time_top_txt  || temp_red2 !=  time_top_red  )
         {
             time_top_txt = temp2;
+            time_top_red = temp_red2; 
+			time_top->SetForegroundColour( temp_red2 ? *wxRED : *wxBLACK );
             time_top->SetLabel( time_top_txt.c_str() );
         }
     }
@@ -351,15 +367,17 @@ void PanelBoard::ClocksVisible()
     RedrawClocks();
 }
 
-void PanelBoard::WhiteClock( const wxString &txt )
+void PanelBoard::WhiteClock( const wxString &txt, bool red )
 {
     white_clock_txt = std::string(txt.c_str());
+	white_clock_red = red;
     RedrawClocks();
 }
 
-void PanelBoard::BlackClock( const wxString &txt )
+void PanelBoard::BlackClock( const wxString &txt, bool red )
 {
     black_clock_txt = std::string(txt.c_str());
+	black_clock_red = red;
     RedrawClocks();
 }
 

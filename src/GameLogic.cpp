@@ -612,7 +612,14 @@ void GameLogic::CmdMoveNow()
 void GameLogic::CmdExamineGame()
 {
     Atomic begin;
-    NewState( MANUAL ); // same as simply clicking in game
+	unsigned long pos = atom.GetInsertionPoint();
+    std::string move_txt;
+    bool at_move0;
+    thc::ChessRules cr;
+    MoveTree *found = gd.Locate( pos, cr, move_txt, at_move0 );
+    SetManual(found,at_move0);
+	//objs.canvas->SetChessPosition( cr );
+    //objs.canvas->SetBoardTitle(title.c_str());
 }
 
 
@@ -2068,23 +2075,24 @@ void GameLogic::OnIdle()
         }
     }
     wxString txt;
-    expired = chess_clock.white.GetDisplay( txt, show_white_expired );  // Here expired means time_remaining <= 0 (see above)
-                                                                        // so expired can be true here but false above
+	bool ticking;
+    expired = chess_clock.white.GetDisplay( txt, show_white_expired, ticking );  // Here expired means time_remaining <= 0 (see above)
+																				 // so expired can be true here but false above
     bool white_is_computer_to_play_fixed = (white && chess_clock.fixed_period_mode && (state==PONDERING||state==THINKING));
     if( expired && white_is_computer_to_play_fixed && !fixed_expired )
     {
         fixed_expired = true;
         CmdMoveNow();
     }
-    canvas->WhiteClock( txt );
-    expired = chess_clock.black.GetDisplay( txt, show_black_expired );
+    canvas->WhiteClock( txt, ticking );
+    expired = chess_clock.black.GetDisplay( txt, show_black_expired, ticking );
     bool black_is_computer_to_play_fixed = (!white && chess_clock.fixed_period_mode && (state==PONDERING||state==THINKING));
     if( expired && black_is_computer_to_play_fixed && !fixed_expired )
     {
         fixed_expired = true;
         CmdMoveNow();
     }
-    canvas->BlackClock( txt );
+    canvas->BlackClock( txt, ticking );
     if( state==POPUP || state==POPUP_MANUAL )
     {
         thc::Move move;
@@ -2773,7 +2781,8 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
         case HUMAN:
         case PONDERING:
         case POPUP:
-                        canvas->box->SetLabel(reply_to.c_str());
+						canvas->box->SetForegroundColour(*wxRED);
+						canvas->box->SetLabel(reply_to.c_str());
                         suggestions = false;
                         b1 = "New Game";                    b1_cmd = ID_CMD_NEW_GAME;
                         b2 = "Swap sides";                  b2_cmd = ID_CMD_SWAP_SIDES;
@@ -2803,7 +2812,10 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
     //if( !show )
 	//    canvas->SetChessPosition( gd.master_position );
     if( suggestions )
+	{
+		canvas->box->SetForegroundColour(*wxBLACK);
         canvas->box->SetLabel( b1 && b2 && b3 && b4 ? "Enter moves, comments and variations freely - or ..." : "Suggestions" );
+	}
     if( title && !show )
         canvas->SetBoardTitle( title, red );
     if( !b1 )
@@ -2866,10 +2878,11 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
     canvas->button4->Refresh();
     canvas->BookUpdate( state==THINKING || state==FAKE_BOOK_DELAY );
     wxString txt;
-    chess_clock.white.GetDisplay( txt, true );
-    canvas->WhiteClock( txt );
-    chess_clock.black.GetDisplay( txt, true );
-    canvas->BlackClock( txt );
+	bool ticking;
+    chess_clock.white.GetDisplay( txt, true, ticking );
+    canvas->WhiteClock( txt, ticking );
+    chess_clock.black.GetDisplay( txt, true, ticking );
+    canvas->BlackClock( txt, ticking );
     canvas->ClocksVisible();
     if( kibitz && (state==MANUAL||state==HUMAN||state==PONDERING||state==THINKING||state==GAMEOVER) )
     {

@@ -62,9 +62,10 @@ void GameClockHalf::GetClock( int &time, int &increment, bool &running_, bool &v
 }
 
 // Get the current displayed time
-bool GameClockHalf::GetDisplay( wxString &txt, bool expire_show_neg  )   // returns bool expired
+bool GameClockHalf::GetDisplay( wxString &txt, bool expire_show_neg, bool &ticking_  )   // returns bool expired
 {
     bool expired=false;
+	ticking_ = ticking;
     if( millisecs_time == 0 )
     {
         expired = true;

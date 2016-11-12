@@ -33,8 +33,8 @@ public:
     void SetChessPosition( thc::ChessPosition &pos )        { pb->SetChessPosition(pos); }
     void SetChessPosition()                                 { pb->SetChessPosition(); }
     void ClocksVisible()                                    { pb->ClocksVisible(); }
-    void WhiteClock( const wxString &txt )                  { pb->WhiteClock(txt); }
-    void BlackClock( const wxString &txt )                  { pb->BlackClock(txt); }
+    void WhiteClock( const wxString &txt, bool red=false )  { pb->WhiteClock(txt,red); }
+    void BlackClock( const wxString &txt, bool red=false )  { pb->BlackClock(txt,red); }
     void RedrawClocks()                                     { pb->RedrawClocks(); }
     void SetBoardTitle( const char *txt, bool highlight=false )   { pb->SetBoardTitle( txt, highlight ); }
     void Layout( wxSize const &siz );
