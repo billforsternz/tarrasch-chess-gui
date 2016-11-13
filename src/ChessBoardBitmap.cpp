@@ -76,9 +76,8 @@ ChessBoardBitmap::~ChessBoardBitmap()
 		delete(buf_box);
 }
 
-
-void bmpCopy( wxBitmap &from, int x1, int y1, wxBitmap &to,	int x2, int y2, int w, int h, const char *mask=NULL );
-void bmpCopy( wxBitmap &from, int x1, int y1, wxBitmap &to,	int x2, int y2, int w, int h, const char *mask )
+// Simple bitmap copy
+void ChessBoardBitmap::BmpCopy( wxBitmap &from, int x1, int y1, wxBitmap &to,	int x2, int y2, int w, int h, const char *mask )
 {
     wxNativePixelData pixels_src(from);
     wxNativePixelData::Iterator src(pixels_src);
@@ -109,9 +108,71 @@ void bmpCopy( wxBitmap &from, int x1, int y1, wxBitmap &to,	int x2, int y2, int 
 }
 
 
-void imageCopy( wxBitmap &from, int x1, int y1, wxImage &to, int x2, int y2, int w, int h, const char *mask=NULL );
-void imageCopy( wxBitmap &from, int x1, int y1, wxImage &to, int x2, int y2, int w, int h, const char *mask )
+// Simple bitmap copy with a kludgey adjustment - assumes we are copying a chessboard square with a light coloured background
+void ChessBoardBitmap::BmpCopyAdjust( wxBitmap &from, int x1, int y1, wxBitmap &to,	int x2, int y2, int w, int h, const char *mask )
 {
+	int r_background = light_colour.Red();
+	int g_background = light_colour.Green();
+	int b_background = light_colour.Blue();
+    wxNativePixelData pixels_src(from);
+    wxNativePixelData::Iterator src(pixels_src);
+    wxNativePixelData pixels_dst(to);
+    wxNativePixelData::Iterator dst(pixels_dst);
+    for( int row=0; row<h; row++ )
+    {
+        src.MoveTo(pixels_src, x1, y1+row );
+        dst.MoveTo(pixels_dst, x2, y2+row );
+        for( int col=0; col<w; col++ )
+        {
+			if( mask==NULL || *mask != '0' )
+			{
+			  	byte r = src.Red();
+				byte g = src.Green();
+				byte b = src.Blue();
+
+				// Kludge I know, but ....  Undo the anti-aliasing adjustment to restore greyscale values
+				//  We want the pickup pieces to be the original greyscale piece bitmaps, with a white background
+				if( r!=g || r!=b )
+				{
+					int use = r;
+					int use_background = r_background;
+					if( g_background > use_background )		// divide by the largest number for better accuracy
+					{
+						use = g;
+						use_background = g_background;
+					}
+					if( b_background > use_background )
+					{
+						use = b;
+						use_background = b_background;
+					}
+					if( use_background > 0 )
+					{
+						int adjust = (use*255)/use_background;	// reverse adjustment from, eg r = (adjust*r_background) / 255;
+						r = adjust;
+						g = adjust;
+						b = adjust;
+					}
+				}
+				dst.m_ptr[2] = r;
+				dst.m_ptr[1] = g;
+				dst.m_ptr[0] = b;
+				// dst.m_ptr = src.m_ptr;
+			}
+            src++;
+            dst++;
+			if( mask != NULL )
+				mask++;
+        }
+    }
+}
+
+
+void ChessBoardBitmap::ImageCopyAdjust( wxBitmap &from, int x1, int y1, wxImage &to, int x2, int y2, int w, int h, const char *mask )
+{
+	int r_background = light_colour.Red();
+	int g_background = light_colour.Green();
+	int b_background = light_colour.Blue();
     wxNativePixelData pixels_src(from);
     wxNativePixelData::Iterator src(pixels_src);
     for( int row=0; row<h; row++ )
@@ -129,6 +190,31 @@ void imageCopy( wxBitmap &from, int x1, int y1, wxImage &to, int x2, int y2, int
 				g = src.Green();
 				b = src.Blue();
 				transparent = false;
+
+				// Kludge I know, but ....  Undo the anti-aliasing adjustment to restore greyscale values
+				//  We want the cursors to be the original greyscale piece bitmaps, with a white background
+				if( r!=g || r!=b )
+				{
+					int use = r;
+					int use_background = r_background;
+					if( g_background > use_background )		// divide by the largest number for better accuracy
+					{
+						use = g;
+						use_background = g_background;
+					}
+					if( b_background > use_background )
+					{
+						use = b;
+						use_background = b_background;
+					}
+					if( use_background > 0 )
+					{
+						int adjust = (use*255)/use_background;	// reverse adjustment from, eg r = (adjust*r_background) / 255;
+						r = adjust;
+						g = adjust;
+						b = adjust;
+					}
+				}
 			}
 			to.SetRGB(x2+col, y2+row, r,g,b);
 			to.SetAlpha(x2+col, y2+row, transparent?wxIMAGE_ALPHA_TRANSPARENT:wxIMAGE_ALPHA_OPAQUE );
@@ -265,7 +351,7 @@ void ChessBoardBitmap::BoardSetupCreate()
 		//            1,1 is b7 if normal orientation g2 if reverse orientation
 		int x = normal_orientation ? (file-'a') : ('h'-file);
 		int y = normal_orientation ? ('8'-rank) : (rank-'1');
-		bmpCopy( chess_board_bmp, x*dim_pix, y*dim_pix, board_setup, dim_pickup_left.x, dim_pickup_left.y + i*dim_pickup_pitch, dim_pix, dim_pix, mask );
+		BmpCopyAdjust( chess_board_bmp, x*dim_pix, y*dim_pix, board_setup, dim_pickup_left.x, dim_pickup_left.y + i*dim_pickup_pitch, dim_pix, dim_pix, mask );
 	}
 
 	// Add pieces to be picked up on the right side
@@ -304,7 +390,7 @@ void ChessBoardBitmap::BoardSetupCreate()
 		//            1,1 is b7 if normal orientation g2 if reverse orientation
 		int x = normal_orientation ? (file-'a') : ('h'-file);
 		int y = normal_orientation ? ('8'-rank) : (rank-'1');
-		bmpCopy( chess_board_bmp, x*dim_pix, y*dim_pix, board_setup, dim_pickup_right.x, dim_pickup_right.y + i*dim_pickup_pitch, dim_pix, dim_pix, mask );
+		BmpCopyAdjust( chess_board_bmp, x*dim_pix, y*dim_pix, board_setup, dim_pickup_right.x, dim_pickup_right.y + i*dim_pickup_pitch, dim_pix, dim_pix, mask );
 	}
 	board_setup_bmp = board_setup;
 }
@@ -356,11 +442,84 @@ void ChessBoardBitmap::BoardSetupCustomCursorsCreate()
 			        mask = black_pawn_mask;
 			        ptr  = &black_pawn_cursor;		break;
 		}
-		ptr->Create( dim_pix, dim_pix, false );
-		ptr->InitAlpha();
+
+		// Find a smaller rectangle, within dim_pix by dim_pix square, containing maximum extent of the actual piece
+		//
+		/*	eg
+				0000000000
+				0000000000
+				0000110000		 <-top=2
+				0001221000
+				0000110000
+				0000110000
+				0001221000
+				0011111100		   
+				0111111110		           
+				0000000000		 <-bottom=9
+				 ^       ^
+				 left=1  right=9
+		*/
+		const char *peek = mask;
+		int top = 1000000000;
+		int left = 1000000000;
+		int bottom = 0;
+		int right = 0;
+		for( int y=0; y<dim_pix; y++ )
+		{
+			for( int x=0; x<dim_pix; x++ )
+			{
+				bool hit = *peek!='0';
+				peek++;
+				if( hit )
+				{
+					if( top > y )
+						top = y;
+					if( bottom < y )
+						bottom = y;
+					if( left > x )
+						left = x;
+					if( right < x )
+						right = x;
+				}
+			}
+		}
+		right++;	// one beyond right as per convention
+		bottom++;	// one beyond bottom as per convention
+
+		// Coordinates on source chess board
 		int x = normal_orientation ? (file-'a') : ('h'-file);
 		int y = normal_orientation ? ('8'-rank) : (rank-'1');
-		imageCopy( chess_board_bmp, x*dim_pix, y*dim_pix, *ptr, 0, 0, dim_pix, dim_pix, mask );
+
+		// If we found a maximum extents rectangle, use that
+		if( bottom>top && right>left && 
+			0<=left && left<dim_pix && 
+			0<=right && right<dim_pix &&
+			0<=top && top<dim_pix &&
+			0<=bottom && bottom<dim_pix )
+		{
+			ptr->Create( right-left, bottom-top, false );
+			ptr->InitAlpha();
+			std::string s;
+			const char *peek2 = mask;  // need an adjusted mask covering the maximum extents rectangle only
+			for( int yy=0; yy<dim_pix; yy++ )
+			{
+				for( int xx=0; xx<dim_pix; xx++ )
+				{
+					char ch = *peek2++;
+					if( left<=xx && xx<right && top<=yy && yy<bottom )
+						s.push_back(ch);
+				}
+			}
+			ImageCopyAdjust( chess_board_bmp, x*dim_pix+left, y*dim_pix+top, *ptr, 0, 0, right-left, bottom-top, s.c_str() );
+		}
+
+		// Else just use the whole square
+		else
+		{
+			ptr->Create( dim_pix, dim_pix, false );
+			ptr->InitAlpha();
+			ImageCopyAdjust( chess_board_bmp, x*dim_pix, y*dim_pix, *ptr, 0, 0, dim_pix, dim_pix, mask );
+		}
 	}
 }
 
@@ -1257,7 +1416,7 @@ void ChessBoardBitmap::SetChessPosition( const thc::ChessPosition &pos, const bo
 
 	// Copy the chess board bitmap into the centre part of the board setup bitmap
 	if( is_board_setup && ok_to_copy_chess_board_to_board_setup )
-		bmpCopy( chess_board_bmp, 0, 0, board_setup_bmp, dim_board.x, dim_board.y, 8*dim_pix, 8*dim_pix );
+		BmpCopy( chess_board_bmp, 0, 0, board_setup_bmp, dim_board.x, dim_board.y, 8*dim_pix, 8*dim_pix );
 }
 
 // Calculate an offset into the wxBitmap's image buffer
@@ -1310,7 +1469,7 @@ void ChessBoardBitmap::Get( char src_file, char src_rank, char dst_file, char ds
 						if( ch < '3' )	// only if near magenta background - retain full
 										// anti-aliasing dynamic range inside the piece
 						{
-							// the value of adjust is represents a greyscale colour somewhere between
+							// the value of adjust represents a greyscale colour somewhere between
 							//  0 (black) and 255 (white) - make an equivalently scaled version of
 							//  the background colour 
 							r = (adjust*r_background) / 255;
