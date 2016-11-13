@@ -90,7 +90,7 @@ void bmpCopy( wxBitmap &from, int x1, int y1, wxBitmap &to,	int x2, int y2, int 
         dst.MoveTo(pixels_dst, x2, y2+row );
         for( int col=0; col<w; col++ )
         {
-			if( mask==NULL || *mask == '1' )
+			if( mask==NULL || *mask != '0' )
 			{
 			  	byte r = src.Red();
 				byte g = src.Green();
@@ -123,7 +123,7 @@ void imageCopy( wxBitmap &from, int x1, int y1, wxImage &to, int x2, int y2, int
 			byte g = 0;
 			byte b = 0;
 			bool transparent = true;
-			if( mask==NULL || *mask == '1' )
+			if( mask==NULL || *mask != '0' )
 			{
 			  	r = src.Red();
 				g = src.Green();

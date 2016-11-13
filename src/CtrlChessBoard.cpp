@@ -51,6 +51,11 @@ void CtrlChessBoard::OnPaint( wxPaintEvent& WXUNUSED(event) )
     }
 }
 
+void CtrlChessBoard::OnSize(wxSizeEvent& WXUNUSED(evt))
+{
+    Refresh();
+}
+
 // Figure out which square is clicked on the board
 void CtrlChessBoard::HitTest( wxPoint hit, char &file, char &rank )
 {
@@ -199,6 +204,7 @@ void CtrlChessBoard::SetBoardSize( wxSize &size )
 
 BEGIN_EVENT_TABLE(CtrlChessBoard, wxControl)
     EVT_PAINT(CtrlChessBoard::OnPaint)
+    EVT_SIZE(CtrlChessBoard::OnSize)
     EVT_MOUSE_CAPTURE_LOST(CtrlChessBoard::OnMouseCaptureLost)
 //    EVT_MOUSE_EVENTS(CtrlChessBoard::OnMouseEvent)
     EVT_LEFT_UP (CtrlChessBoard::OnMouseLeftUp)

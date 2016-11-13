@@ -52,6 +52,7 @@ public:
 	void ClearHighlight2()			     { cbb.ClearHighlight2(); }
 
     void OnPaint(wxPaintEvent& WXUNUSED(evt));
+    void OnSize(wxSizeEvent& WXUNUSED(evt));
     void OnMouseLeftDown (wxMouseEvent & event);
     void OnMouseLeftUp (wxMouseEvent & event);
     void OnMouseMove (wxMouseEvent & event);

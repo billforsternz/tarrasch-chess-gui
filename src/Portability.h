@@ -36,6 +36,4 @@
    int strcmpi( const char *s, const char *t ); // return 0 if case insensitive match
 #endif
 
-//#define release_printf cprintf //temp
-
 #endif // PORTABILITY_H
