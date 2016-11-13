@@ -139,7 +139,7 @@ void imageCopy( wxBitmap &from, int x1, int y1, wxImage &to, int x2, int y2, int
     }
 }
 
-// Calculate the dimensions of a BoardSetup bitmap for a given square size
+// Calculate the dimensions of a BoardSetup bitmap
 /*														   
 	   +---------------------------------------------+     	Input:
 	   |									  		 |	   	dim_sz = size of whole thing
@@ -220,8 +220,13 @@ void ChessBoardBitmap::BoardSetupCreate()
     dc.SetPen(*wxBLACK_PEN);
     dc.DrawRectangle(0,0,board_setup.GetWidth(),board_setup.GetHeight());
 
-	// Set the standard chess position on the chess board
+	// Set the standard chess position on the chess board. We use only light squared pieces,
+	//  but ideally we should put 12 pieces with a *white* background into the "box" and use
+	//  those - since the anti-aliasing adjustment is now customised per background colour
+	//  (the adjustment for a white background should actually be a NULL/do nothing adjustment)
 	thc::ChessPosition start_position;
+	start_position.squares[thc::e4] = 'K';	// better results with a white square
+	start_position.squares[thc::d5] = 'q';	// better results with a white square
 	SetChessPosition( start_position );
 
 	// Add pieces to be picked up on the left side
@@ -234,7 +239,7 @@ void ChessBoardBitmap::BoardSetupCreate()
 			switch(i)	// normal orientation left = White K,Q,R,B,N,P top to bottom
 			{
 				default:
-				case 0:		file='e';	rank='1';	mask = white_king_mask;		break;
+				case 0:		file='e';	rank='4';	mask = white_king_mask;		break;
 				case 1:		file='d';	rank='1';   mask = white_queen_mask;	break;
 				case 2:		file='h';	rank='1';   mask = white_rook_mask;		break;
 				case 3:		file='f';	rank='1';   mask = white_bishop_mask;	break;
@@ -248,7 +253,7 @@ void ChessBoardBitmap::BoardSetupCreate()
 			{
 				default:
 				case 0:		file='e';	rank='8';	mask = black_king_mask;		break;
-				case 1:     file='d';	rank='8';   mask = black_queen_mask;	break;
+				case 1:     file='d';	rank='5';   mask = black_queen_mask;	break;
 				case 2:     file='a';	rank='8';   mask = black_rook_mask;		break;
 				case 3:     file='c';	rank='8';	mask = black_bishop_mask;	break;
 				case 4:     file='g';	rank='8';	mask = black_knight_mask;	break;
@@ -274,7 +279,7 @@ void ChessBoardBitmap::BoardSetupCreate()
 			{
 				default:
 				case 5:		file='e';	rank='8';	mask = black_king_mask;		break;
-				case 4:		file='d';	rank='8';	mask = black_queen_mask;	break;
+				case 4:		file='d';	rank='5';	mask = black_queen_mask;	break;
 				case 3:		file='a';	rank='8';	mask = black_rook_mask;		break;
 				case 2:		file='c';	rank='8';	mask = black_bishop_mask;	break;
 				case 1:		file='g';	rank='8';	mask = black_knight_mask;	break;
@@ -286,7 +291,7 @@ void ChessBoardBitmap::BoardSetupCreate()
 			switch(i)	// reverse orientation right = White K,Q,R,B,N,P bottom to top
 			{
 				default:
-				case 5:		file='e';	rank='1';	mask = white_king_mask;		break;
+				case 5:		file='e';	rank='4';	mask = white_king_mask;		break;
 				case 4:		file='d';	rank='1';	mask = white_queen_mask;	break;
 				case 3:		file='h';	rank='1';	mask = white_rook_mask;		break;
 				case 2:		file='f';	rank='1';	mask = white_bishop_mask;	break;
@@ -314,7 +319,7 @@ void ChessBoardBitmap::BoardSetupCustomCursorsCreate()
 		switch(i)
 		{
 			default:
-			case 0: file='e';	rank='1';
+			case 0: file='e';	rank='4';
 					mask = white_king_mask;
 					ptr  = &white_king_cursor;		break;
 			case 1: file='d';	rank='1';
@@ -335,7 +340,7 @@ void ChessBoardBitmap::BoardSetupCustomCursorsCreate()
 			case 6: file='e';	rank='8';
 					mask = black_king_mask;
 					ptr  = &black_king_cursor;		break;
-			case 7: file='d';	rank='8';
+			case 7: file='d';	rank='5';
 			        mask = black_queen_mask;
 			        ptr  = &black_queen_cursor;		break;
 			case 8: file='a';	rank='8';
@@ -494,7 +499,8 @@ void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, 
 
 	// Create a new bitmap of the right size
     wxBitmap new_chess_board_bmp;
-    new_chess_board_bmp.Create(pix*8,pix*8,24);
+	density = 3;
+    new_chess_board_bmp.Create(pix*8,pix*8,density*8);
 
 	// Create a bitmap with the 12 pieces, on a magenta background so we can build masks
     int pitch;
@@ -687,10 +693,6 @@ void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, 
                     }
                 }
 
-                // Save the mask
-                *p_str = str;
-                *p_mask = p_str->c_str();
-
 				// Make a string of similar format as the mask, to represent distance from nearest magenta pixel
 				//  mask: "0000011111111...." '0' = magenta, '1' = not magenta
 				//  dist: "0000012345678...." '0' = magenta, '1'-'9'(max) = distance from nearest magenta pixel, up or down
@@ -839,11 +841,18 @@ void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, 
 					}
 				}
 
+				// Save the mask, in fact we now use the dist as the mask, so that the extra information
+				//  is available for anti-aliasing purposes
+                *p_str = dist;
+                *p_mask = p_str->c_str();
+
 				// Adjust greyscale anti-alias values near the magenta background, squeeze them from
 				//  range bright white to black into range grey to black - this avoids a nasty white
 				//  jaggy around every piece - it originates from the original .pdf render which assumes
 				//  a white background
-                for( int row=0; row<pix; row++ )
+           /*   This was the old approach - we now adjust anti-aliasing for each background colour
+				separately and store the results in the "box"
+				for( int row=0; row<pix; row++ )
                 {
                     dst.MoveTo(pixels_dst, x, y+row );
                     for( int col=0; col<pix; col++ )
@@ -851,35 +860,15 @@ void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, 
                         byte r = dst.Red();
                         byte g = dst.Green();
                         byte b = dst.Blue();
-						if( r==g && r==b )
-						{
-							int adjust = r;
-							if( 0<adjust && adjust<255 ) // if not already black or white
-							{
-								int offset = row*pix + col;
-								char ch = dist[offset];
-								if( ch < '3' )	// only if near magenta background - retain full
-												// anti-aliasing dynamic range inside the piece
-								{
-									//adjust /= 2;  // make near white (255)  grey (128)
-									adjust = (adjust * 80) / 128;	// experimental 64 = 50% is too much, 92 = 75% not enough ?
-									r = static_cast<int>(adjust);
-									g = r;
-									b = r;
-									#if 1  // Disable this only if you want a bad look!
-									dst.m_ptr[2] = r;
-									dst.m_ptr[1] = g;
-									dst.m_ptr[0] = b;
-									#endif
-								}
-							}
-                        }
+						dst.m_ptr[2] = r;
+						dst.m_ptr[1] = g;
+						dst.m_ptr[0] = b;
                         dst++;
                     }
-                }
+                } */
 
 				// Show mask and dist strings during debug
-		     /*	if( c == 'K'  )
+		     /* if( c == 'K'  )
                 {
                     for( size_t i=0; i<str.length(); i++ )
                     {
@@ -894,7 +883,7 @@ void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, 
                         if( ((i+1) % pix) == 0 )
                             cprintf("\n");
                     }
-                } */
+                }  */  
             }
             dark = !dark;
             x += pix;
@@ -903,15 +892,10 @@ void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, 
     }
 
     wxNativePixelData bmdata(new_chess_board_bmp);
-    height = bmdata.GetHeight();
-    width  = bmdata.GetWidth();
-    int row_stride = bmdata.GetRowStride();
-    if( row_stride < 0 )
-        row_stride = 0-row_stride;
-    width_bytes = row_stride;
-    if( width )
-	    density  = width_bytes/width;
-
+    height = pix*8;
+    width  = pix*8;
+    width_bytes = density*width;
+	
    	// Allocate an image of the board
     if( buf_board )
         delete buf_board;
@@ -1022,60 +1006,60 @@ void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, 
 	Get( 'g','7', 'g','3' );
 
 	// Copy white pieces to the box (normal)
-	Get( 'h','8', 'h','1', white_rook_mask );
-	Get( 'b','8', 'g','1', white_knight_mask );
-	Get( 'f','8', 'f','1', white_bishop_mask );
-	Get( 'e','7', 'e','1', white_king_mask );
-	Get( 'e','7', 'e','2', white_king_mask  );		// White king on white square
-	Get( 'd','8', 'd','1', white_queen_mask );
-	Get( 'd','8', 'd','2', white_queen_mask );		// White queen on black square
-	Get( 'f','8', 'c','1', white_bishop_mask );
-    Get( 'b','8', 'b','1', white_knight_mask );
-	Get( 'h','8', 'a','1', white_rook_mask );
-	Get( 'a','7', 'a','2', white_pawn_mask );		// Only need pawns on a2, b2
-	Get( 'a','7', 'b','2', white_pawn_mask );
+	Get( 'h','8', 'h','1', white_rook_mask,		&light_colour );
+	Get( 'b','8', 'g','1', white_knight_mask,	&dark_colour  );
+	Get( 'f','8', 'f','1', white_bishop_mask,	&light_colour );
+	Get( 'e','7', 'e','1', white_king_mask,		&dark_colour  );
+	Get( 'e','7', 'e','2', white_king_mask,		&light_colour );		// White king on white square
+	Get( 'd','8', 'd','1', white_queen_mask,	&light_colour );
+	Get( 'd','8', 'd','2', white_queen_mask,	&dark_colour  );		// White queen on black square
+	Get( 'f','8', 'c','1', white_bishop_mask,	&dark_colour  );
+    Get( 'b','8', 'b','1', white_knight_mask,   &light_colour );
+	Get( 'h','8', 'a','1', white_rook_mask,		&dark_colour  );
+	Get( 'a','7', 'a','2', white_pawn_mask,		&light_colour );		// Only need pawns on a2, b2
+	Get( 'a','7', 'b','2', white_pawn_mask,		&dark_colour  );
 
 	// Copy white pieces to the box (highlight)
-	Get( 'h','8', 'h','3', white_rook_mask );
-	Get( 'b','8', 'g','3', white_knight_mask );
-	Get( 'f','8', 'f','3', white_bishop_mask );
-	Get( 'e','7', 'e','3', white_king_mask );
-	Get( 'e','7', 'e','4', white_king_mask  );		// White king on white square
-	Get( 'd','8', 'd','3', white_queen_mask );
-	Get( 'd','8', 'd','4', white_queen_mask );		// White queen on black square
-	Get( 'f','8', 'c','3', white_bishop_mask );
-    Get( 'b','8', 'b','3', white_knight_mask );
-	Get( 'h','8', 'a','3', white_rook_mask );
-	Get( 'a','7', 'a','4', white_pawn_mask );		// Only need pawns on a4, b4
-	Get( 'a','7', 'b','4', white_pawn_mask );
+	Get( 'h','8', 'h','3', white_rook_mask,		&highlight_light_colour );
+	Get( 'b','8', 'g','3', white_knight_mask,	&highlight_dark_colour  );
+	Get( 'f','8', 'f','3', white_bishop_mask,	&highlight_light_colour );
+	Get( 'e','7', 'e','3', white_king_mask,		&highlight_dark_colour  );
+	Get( 'e','7', 'e','4', white_king_mask,		&highlight_light_colour );		// White king on white square
+	Get( 'd','8', 'd','3', white_queen_mask,	&highlight_light_colour );
+	Get( 'd','8', 'd','4', white_queen_mask,	&highlight_dark_colour  );		// White queen on black square
+	Get( 'f','8', 'c','3', white_bishop_mask,	&highlight_dark_colour  );
+    Get( 'b','8', 'b','3', white_knight_mask,	&highlight_light_colour );
+	Get( 'h','8', 'a','3', white_rook_mask,		&highlight_dark_colour  );
+	Get( 'a','7', 'a','4', white_pawn_mask,		&highlight_light_colour );		// Only need pawns on a4, b4
+	Get( 'a','7', 'b','4', white_pawn_mask,		&highlight_dark_colour  );
 
-	// Copy black pieces to the box
-	Get( 'a','8', 'h','8', black_rook_mask );
-	Get( 'g','8', 'g','8', black_knight_mask );
-	Get( 'c','8', 'f','8', black_bishop_mask );
-	Get( 'e','8', 'e','8', black_king_mask );
-	Get( 'e','8', 'e','7', black_king_mask  );		// Black king on black square
-	Get( 'd','7', 'd','8', black_queen_mask );
-	Get( 'd','7', 'd','7', black_queen_mask );		// Black queen on white square
-	Get( 'c','8', 'c','8', black_bishop_mask );
-    Get( 'g','8', 'b','8', black_knight_mask );
-	Get( 'a','8', 'a','8', black_rook_mask );
-	Get( 'b','7', 'a','7', black_pawn_mask );		// Only need pawns on a7, b7
-	Get( 'b','7', 'b','7', black_pawn_mask );
+	// Copy black pieces to the box (normal)
+	Get( 'a','8', 'h','8', black_rook_mask,		&dark_colour  );
+	Get( 'g','8', 'g','8', black_knight_mask,	&light_colour );
+	Get( 'c','8', 'f','8', black_bishop_mask,	&dark_colour  );
+	Get( 'e','8', 'e','8', black_king_mask,		&light_colour );
+	Get( 'e','8', 'e','7', black_king_mask,		&dark_colour  );		// Black king on black square
+	Get( 'd','7', 'd','8', black_queen_mask,	&dark_colour  );
+	Get( 'd','7', 'd','7', black_queen_mask,	&light_colour );		// Black queen on white square
+	Get( 'c','8', 'c','8', black_bishop_mask,	&light_colour );
+    Get( 'g','8', 'b','8', black_knight_mask,	&dark_colour  );
+	Get( 'a','8', 'a','8', black_rook_mask,		&light_colour );
+	Get( 'b','7', 'a','7', black_pawn_mask,		&dark_colour  );		// Only need pawns on a7, b7
+	Get( 'b','7', 'b','7', black_pawn_mask,		&light_colour );
 
 	// Copy black pieces to the box (highlight)
-	Get( 'a','8', 'h','6', black_rook_mask );
-	Get( 'g','8', 'g','6', black_knight_mask );
-	Get( 'c','8', 'f','6', black_bishop_mask );
-	Get( 'e','8', 'e','6', black_king_mask );
-	Get( 'e','8', 'e','5', black_king_mask  );		// Black king on black square
-	Get( 'd','7', 'd','6', black_queen_mask );
-	Get( 'd','7', 'd','5', black_queen_mask );		// Black queen on white square
-	Get( 'c','8', 'c','6', black_bishop_mask );
-    Get( 'g','8', 'b','6', black_knight_mask );
-	Get( 'a','8', 'a','6', black_rook_mask );
-	Get( 'b','7', 'a','5', black_pawn_mask );		// Only need pawns on a5, b5
-	Get( 'b','7', 'b','5', black_pawn_mask );
+	Get( 'a','8', 'h','6', black_rook_mask,		&highlight_dark_colour  );
+	Get( 'g','8', 'g','6', black_knight_mask,	&highlight_light_colour );
+	Get( 'c','8', 'f','6', black_bishop_mask,	&highlight_dark_colour  );
+	Get( 'e','8', 'e','6', black_king_mask,		&highlight_light_colour );
+	Get( 'e','8', 'e','5', black_king_mask,		&highlight_dark_colour  );		// Black king on black square
+	Get( 'd','7', 'd','6', black_queen_mask,	&highlight_dark_colour  );
+	Get( 'd','7', 'd','5', black_queen_mask,	&highlight_light_colour );		// Black queen on white square
+	Get( 'c','8', 'c','6', black_bishop_mask,	&highlight_light_colour );
+    Get( 'g','8', 'b','6', black_knight_mask,	&highlight_dark_colour  );
+	Get( 'a','8', 'a','6', black_rook_mask,		&highlight_light_colour );
+	Get( 'b','7', 'a','5', black_pawn_mask,		&highlight_dark_colour  );		// Only need pawns on a5, b5
+	Get( 'b','7', 'b','5', black_pawn_mask,		&highlight_light_colour );
 
 	// Empty squares
 	Get( 'a','6', 'c','2' );  // empty light square
@@ -1288,32 +1272,59 @@ unsigned long ChessBoardBitmap::Offset( char file, char rank )
 }
 
 // Get a piece from board, put into box
-void ChessBoardBitmap::Get( char src_file, char src_rank, char dst_file, char dst_rank, const char *mask )
+void ChessBoardBitmap::Get( char src_file, char src_rank, char dst_file, char dst_rank, const char *mask, const wxColour *background_colour )
 {
+	int r_background = background_colour ? background_colour->Red()   : 0;
+	int g_background = background_colour ? background_colour->Green() : 0;
+	int b_background = background_colour ? background_colour->Blue()  : 0;
 	unsigned int i, j;
 	byte *src, *dst;
 	for( i=0; i < height/8; i++ )
 	{
 		src = buf_board + Offset(src_file,src_rank) + i*width_bytes;
 		dst = buf_box   + Offset(dst_file,dst_rank) + i*width_bytes;
-        unsigned int density_idx = 0;
-		for( j=0; j < width_bytes/8; j++ )
+		for( j=0; j < width/8; j++ )
         {
-            if( !mask )
+            if( !mask  )
+			{
 			    *dst++ = *src++;
+			    *dst++ = *src++;
+			    *dst++ = *src++;
+			}
+            else if( *mask == '0' )
+			{
+				dst += 3;
+				src += 3;
+			}
             else
             {
-                if( *mask == '1' )
-			        *dst = *src;
-                dst++;
-                src++;
-                density_idx++;
-                if( density_idx >= density )
-                {
-                    density_idx = 0;
-                    mask++;
-                }    
+                char ch = *mask;
+                byte r = *src++;
+                byte g = *src++;
+                byte b = *src++;
+				if( r==g && r==b )	// if grey scale - r==g==b
+				{
+					int adjust = r;
+					if( 0<adjust && adjust<255 ) // if not already black or white
+					{
+						if( ch < '3' )	// only if near magenta background - retain full
+										// anti-aliasing dynamic range inside the piece
+						{
+							// the value of adjust is represents a greyscale colour somewhere between
+							//  0 (black) and 255 (white) - make an equivalently scaled version of
+							//  the background colour 
+							r = (adjust*r_background) / 255;
+							g = (adjust*g_background) / 255;
+							b = (adjust*b_background) / 255;
+						}
+					}
+				}
+			    *dst++ = r;
+			    *dst++ = g;
+			    *dst++ = b;
             }
+            if( mask )
+				mask++;
         }
 	}
 }
@@ -1530,31 +1541,34 @@ void ChessBoardBitmap::PutEx( char piece,
     const char *mask=black_rook_mask;
     
 	// Find an appropriate white square piece in the box
+	//  (Note we pick pieces from dark squares - pieces
+	//  from light squares have a whitish jaggy around them
+	//  on dark squares)
 	switch(piece)
 	{
-		case 'R':	src_file='h';	src_rank='1';
+		case 'R':	src_file='a';	src_rank='1';
                     mask = white_rook_mask;           	break;
-		case 'N':	src_file='b';	src_rank='1';
+		case 'N':	src_file='g';	src_rank='1';
                     mask = white_knight_mask;           break;
-		case 'B':	src_file='f';	src_rank='1';
+		case 'B':	src_file='c';	src_rank='1';
                     mask = white_bishop_mask;           break;
-		case 'Q':	src_file='d';	src_rank='1';
+		case 'Q':	src_file='d';	src_rank='2';
                     mask = white_queen_mask;           	break;
 		case 'K':	src_file='e';	src_rank='1';
                     mask = white_king_mask;           	break;
-		case 'P':   src_file='a';	src_rank='2';
+		case 'P':   src_file='b';	src_rank='2';
                     mask = white_pawn_mask;           	break;
-		case 'r':	src_file='a';	src_rank='8';
+		case 'r':	src_file='h';	src_rank='8';
                     mask = black_rook_mask;           	break;
-		case 'n':   src_file='g';	src_rank='8';
+		case 'n':   src_file='b';	src_rank='8';
                     mask = black_knight_mask;           break;
-		case 'b':   src_file='c';	src_rank='8';
+		case 'b':   src_file='f';	src_rank='8';
                     mask = black_bishop_mask;           break;
 		case 'q':   src_file='d';	src_rank='8';
                     mask = black_queen_mask;           	break;
-		case 'k':   src_file='e';	src_rank='8';
+		case 'k':   src_file='e';	src_rank='7';
                     mask = black_king_mask;           	break;
-		case 'p':   src_file='b';	src_rank='7';
+		case 'p':   src_file='a';	src_rank='7';
                     mask = black_pawn_mask;           	break;
 		default:	src_file='c';	src_rank='2';
 	}
@@ -1578,7 +1592,7 @@ void ChessBoardBitmap::PutEx( char piece,
             dst += shift.x*density;
 			for( j=0; j < width_bytes/(8*density); j++ )
             {
-                if( *mask++ == '1' )
+                if( *mask++ != '0' )
                     memcpy( dst, src, density );
                 src += density;
                 dst += density;
@@ -1605,7 +1619,7 @@ void ChessBoardBitmap::PutEx( char piece,
             dst += shift.x;
 			for( j=0; j < width_bytes/32; j++ )
             {
-                if( *mask++ == '1' )
+                if( *mask++ != '0' )
                     *dst = *src;
                 dst++;
                 src++;

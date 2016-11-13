@@ -139,7 +139,7 @@ private:
     void ChessBoardCreate( int pix, const thc::ChessPosition &cp, const bool *highlight=0 );
 
 	unsigned long   Offset( char file, char rank );
-	void Get( char src_file, char src_rank, char dst_file, char dst_rank, const char *mask = NULL );
+	void Get( char src_file, char src_rank, char dst_file, char dst_rank, const char *mask=NULL, const wxColour *background_colour=NULL );
 	void Put( char src_file, char src_rank, char dst_file, char dst_rank, bool highlight_f );
 
     // Put a shifted, masked piece from box onto board
