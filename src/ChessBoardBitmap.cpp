@@ -76,44 +76,13 @@ ChessBoardBitmap::~ChessBoardBitmap()
 		delete(buf_box);
 }
 
-// Simple bitmap copy
-void ChessBoardBitmap::BmpCopy( wxBitmap &from, int x1, int y1, wxBitmap &to,	int x2, int y2, int w, int h, const char *mask )
+// Simple bitmap copy with a kludgey extra feature, if a background colour is provided, it is used to reverse the anti-aliasing adjustment
+//  back to grey scale
+void ChessBoardBitmap::BmpCopy( wxColour *background, wxBitmap &from, int x1, int y1, wxBitmap &to,	int x2, int y2, int w, int h, const char *mask )
 {
-    wxNativePixelData pixels_src(from);
-    wxNativePixelData::Iterator src(pixels_src);
-    wxNativePixelData pixels_dst(to);
-    wxNativePixelData::Iterator dst(pixels_dst);
-    for( int row=0; row<h; row++ )
-    {
-        src.MoveTo(pixels_src, x1, y1+row );
-        dst.MoveTo(pixels_dst, x2, y2+row );
-        for( int col=0; col<w; col++ )
-        {
-			if( mask==NULL || *mask != '0' )
-			{
-			  	byte r = src.Red();
-				byte g = src.Green();
-				byte b = src.Blue();
-				dst.m_ptr[2] = r;
-				dst.m_ptr[1] = g;
-				dst.m_ptr[0] = b;
-				// dst.m_ptr = src.m_ptr;
-			}
-            src++;
-            dst++;
-			if( mask != NULL )
-				mask++;
-        }
-    }
-}
-
-
-// Simple bitmap copy with a kludgey adjustment - assumes we are copying a chessboard square with a light coloured background
-void ChessBoardBitmap::BmpCopyAdjust( wxBitmap &from, int x1, int y1, wxBitmap &to,	int x2, int y2, int w, int h, const char *mask )
-{
-	int r_background = light_colour.Red();
-	int g_background = light_colour.Green();
-	int b_background = light_colour.Blue();
+	int r_background = background ? background->Red()   : 0;
+	int g_background = background ? background->Green() : 0;
+	int b_background = background ? background->Blue()  : 0;
     wxNativePixelData pixels_src(from);
     wxNativePixelData::Iterator src(pixels_src);
     wxNativePixelData pixels_dst(to);
@@ -130,9 +99,9 @@ void ChessBoardBitmap::BmpCopyAdjust( wxBitmap &from, int x1, int y1, wxBitmap &
 				byte g = src.Green();
 				byte b = src.Blue();
 
-				// Kludge I know, but ....  Undo the anti-aliasing adjustment to restore greyscale values
-				//  We want the pickup pieces to be the original greyscale piece bitmaps, with a white background
-				if( r!=g || r!=b )
+				// Kludge I know, but ....  Optionally undo the anti-aliasing adjustment to restore greyscale values
+				//  Restores the original greyscale piece bitmaps, optimised for a white background
+				if( background && r!=g || r!=b )
 				{
 					int use = r;
 					int use_background = r_background;
@@ -167,12 +136,13 @@ void ChessBoardBitmap::BmpCopyAdjust( wxBitmap &from, int x1, int y1, wxBitmap &
     }
 }
 
-
-void ChessBoardBitmap::ImageCopyAdjust( wxBitmap &from, int x1, int y1, wxImage &to, int x2, int y2, int w, int h, const char *mask )
+// Simple image copy with a kludgey extra feature, if a background colour is provided, it is used to reverse the anti-aliasing adjustment
+//  back to grey scale
+void ChessBoardBitmap::ImageCopy( wxColour *background, wxBitmap &from, int x1, int y1, wxImage &to, int x2, int y2, int w, int h, const char *mask )
 {
-	int r_background = light_colour.Red();
-	int g_background = light_colour.Green();
-	int b_background = light_colour.Blue();
+	int r_background = background ? background->Red()   : 0;
+	int g_background = background ? background->Green() : 0;
+	int b_background = background ? background->Blue()  : 0;
     wxNativePixelData pixels_src(from);
     wxNativePixelData::Iterator src(pixels_src);
     for( int row=0; row<h; row++ )
@@ -191,9 +161,9 @@ void ChessBoardBitmap::ImageCopyAdjust( wxBitmap &from, int x1, int y1, wxImage 
 				b = src.Blue();
 				transparent = false;
 
-				// Kludge I know, but ....  Undo the anti-aliasing adjustment to restore greyscale values
-				//  We want the cursors to be the original greyscale piece bitmaps, with a white background
-				if( r!=g || r!=b )
+				// Kludge I know, but ....  Optionally undo the anti-aliasing adjustment to restore greyscale values
+				//  Restores the original greyscale piece bitmaps, optimised for a white background
+				if( background && r!=g || r!=b )
 				{
 					int use = r;
 					int use_background = r_background;
@@ -306,16 +276,18 @@ void ChessBoardBitmap::BoardSetupCreate()
     dc.SetPen(*wxBLACK_PEN);
     dc.DrawRectangle(0,0,board_setup.GetWidth(),board_setup.GetHeight());
 
-	// Set the standard chess position on the chess board. We use only light squared pieces,
-	//  but ideally we should put 12 pieces with a *white* background into the "box" and use
-	//  those - since the anti-aliasing adjustment is now customised per background colour
-	//  (the adjustment for a white background should actually be a NULL/do nothing adjustment)
+	// To get access to all possible piece/ colour combinations set the standard chess position
+	//  on the chess board plus extra kings and queens
 	thc::ChessPosition start_position;
-	start_position.squares[thc::e4] = 'K';	// better results with a white square
-	start_position.squares[thc::d5] = 'q';	// better results with a white square
+	start_position.squares[thc::d2] = 'Q';
+	start_position.squares[thc::e2] = 'K';
+	start_position.squares[thc::d7] = 'q';
+	start_position.squares[thc::e7] = 'k';
 	SetChessPosition( start_position );
 
-	// Add pieces to be picked up on the left side
+	// Add pieces to be picked up on the left side (use light squared pieces - then adding
+	//  light square colour as first parameter to BmpCopy undoes the anti-aliasing adjustment
+	//  leaving greyscale anti-aliasing optimised for a white background)
 	for( int i=0; i<6; i++ )
 	{
 		const char *mask;
@@ -325,7 +297,7 @@ void ChessBoardBitmap::BoardSetupCreate()
 			switch(i)	// normal orientation left = White K,Q,R,B,N,P top to bottom
 			{
 				default:
-				case 0:		file='e';	rank='4';	mask = white_king_mask;		break;
+				case 0:		file='e';	rank='2';	mask = white_king_mask;		break;
 				case 1:		file='d';	rank='1';   mask = white_queen_mask;	break;
 				case 2:		file='h';	rank='1';   mask = white_rook_mask;		break;
 				case 3:		file='f';	rank='1';   mask = white_bishop_mask;	break;
@@ -339,7 +311,7 @@ void ChessBoardBitmap::BoardSetupCreate()
 			{
 				default:
 				case 0:		file='e';	rank='8';	mask = black_king_mask;		break;
-				case 1:     file='d';	rank='5';   mask = black_queen_mask;	break;
+				case 1:     file='d';	rank='7';   mask = black_queen_mask;	break;
 				case 2:     file='a';	rank='8';   mask = black_rook_mask;		break;
 				case 3:     file='c';	rank='8';	mask = black_bishop_mask;	break;
 				case 4:     file='g';	rank='8';	mask = black_knight_mask;	break;
@@ -351,7 +323,7 @@ void ChessBoardBitmap::BoardSetupCreate()
 		//            1,1 is b7 if normal orientation g2 if reverse orientation
 		int x = normal_orientation ? (file-'a') : ('h'-file);
 		int y = normal_orientation ? ('8'-rank) : (rank-'1');
-		BmpCopyAdjust( chess_board_bmp, x*dim_pix, y*dim_pix, board_setup, dim_pickup_left.x, dim_pickup_left.y + i*dim_pickup_pitch, dim_pix, dim_pix, mask );
+		BmpCopy( &light_colour, chess_board_bmp, x*dim_pix, y*dim_pix, board_setup, dim_pickup_left.x, dim_pickup_left.y + i*dim_pickup_pitch, dim_pix, dim_pix, mask );
 	}
 
 	// Add pieces to be picked up on the right side
@@ -365,7 +337,7 @@ void ChessBoardBitmap::BoardSetupCreate()
 			{
 				default:
 				case 5:		file='e';	rank='8';	mask = black_king_mask;		break;
-				case 4:		file='d';	rank='5';	mask = black_queen_mask;	break;
+				case 4:		file='d';	rank='7';	mask = black_queen_mask;	break;
 				case 3:		file='a';	rank='8';	mask = black_rook_mask;		break;
 				case 2:		file='c';	rank='8';	mask = black_bishop_mask;	break;
 				case 1:		file='g';	rank='8';	mask = black_knight_mask;	break;
@@ -377,7 +349,7 @@ void ChessBoardBitmap::BoardSetupCreate()
 			switch(i)	// reverse orientation right = White K,Q,R,B,N,P bottom to top
 			{
 				default:
-				case 5:		file='e';	rank='4';	mask = white_king_mask;		break;
+				case 5:		file='e';	rank='2';	mask = white_king_mask;		break;
 				case 4:		file='d';	rank='1';	mask = white_queen_mask;	break;
 				case 3:		file='h';	rank='1';	mask = white_rook_mask;		break;
 				case 2:		file='f';	rank='1';	mask = white_bishop_mask;	break;
@@ -390,7 +362,7 @@ void ChessBoardBitmap::BoardSetupCreate()
 		//            1,1 is b7 if normal orientation g2 if reverse orientation
 		int x = normal_orientation ? (file-'a') : ('h'-file);
 		int y = normal_orientation ? ('8'-rank) : (rank-'1');
-		BmpCopyAdjust( chess_board_bmp, x*dim_pix, y*dim_pix, board_setup, dim_pickup_right.x, dim_pickup_right.y + i*dim_pickup_pitch, dim_pix, dim_pix, mask );
+		BmpCopy( &light_colour, chess_board_bmp, x*dim_pix, y*dim_pix, board_setup, dim_pickup_right.x, dim_pickup_right.y + i*dim_pickup_pitch, dim_pix, dim_pix, mask );
 	}
 	board_setup_bmp = board_setup;
 }
@@ -405,7 +377,7 @@ void ChessBoardBitmap::BoardSetupCustomCursorsCreate()
 		switch(i)
 		{
 			default:
-			case 0: file='e';	rank='4';
+			case 0: file='e';	rank='2';
 					mask = white_king_mask;
 					ptr  = &white_king_cursor;		break;
 			case 1: file='d';	rank='1';
@@ -426,7 +398,7 @@ void ChessBoardBitmap::BoardSetupCustomCursorsCreate()
 			case 6: file='e';	rank='8';
 					mask = black_king_mask;
 					ptr  = &black_king_cursor;		break;
-			case 7: file='d';	rank='5';
+			case 7: file='d';	rank='7';
 			        mask = black_queen_mask;
 			        ptr  = &black_queen_cursor;		break;
 			case 8: file='a';	rank='8';
@@ -444,8 +416,10 @@ void ChessBoardBitmap::BoardSetupCustomCursorsCreate()
 		}
 
 		// Find a smaller rectangle, within dim_pix by dim_pix square, containing maximum extent of the actual piece
+		//  Idea is cursor is dimensioned according to size of piece, not size of square
 		//
-		/*	eg
+		/*	eg imagine a pawn like this, dimension of cursor will be height = 9-2 = 7, width = 9-1 = 8
+
 				0000000000
 				0000000000
 				0000110000		 <-top=2
@@ -492,10 +466,10 @@ void ChessBoardBitmap::BoardSetupCustomCursorsCreate()
 
 		// If we found a maximum extents rectangle, use that
 		if( bottom>top && right>left && 
-			0<=left && left<dim_pix && 
-			0<=right && right<dim_pix &&
-			0<=top && top<dim_pix &&
-			0<=bottom && bottom<dim_pix )
+			0<=left && left<=dim_pix && 
+			0<=right && right<=dim_pix &&
+			0<=top && top<=dim_pix &&
+			0<=bottom && bottom<=dim_pix )
 		{
 			ptr->Create( right-left, bottom-top, false );
 			ptr->InitAlpha();
@@ -510,7 +484,7 @@ void ChessBoardBitmap::BoardSetupCustomCursorsCreate()
 						s.push_back(ch);
 				}
 			}
-			ImageCopyAdjust( chess_board_bmp, x*dim_pix+left, y*dim_pix+top, *ptr, 0, 0, right-left, bottom-top, s.c_str() );
+			ImageCopy( &light_colour, chess_board_bmp, x*dim_pix+left, y*dim_pix+top, *ptr, 0, 0, right-left, bottom-top, s.c_str() );
 		}
 
 		// Else just use the whole square
@@ -518,7 +492,7 @@ void ChessBoardBitmap::BoardSetupCustomCursorsCreate()
 		{
 			ptr->Create( dim_pix, dim_pix, false );
 			ptr->InitAlpha();
-			ImageCopyAdjust( chess_board_bmp, x*dim_pix, y*dim_pix, *ptr, 0, 0, dim_pix, dim_pix, mask );
+			ImageCopy( &light_colour, chess_board_bmp, x*dim_pix, y*dim_pix, *ptr, 0, 0, dim_pix, dim_pix, mask );
 		}
 	}
 }
@@ -1416,7 +1390,7 @@ void ChessBoardBitmap::SetChessPosition( const thc::ChessPosition &pos, const bo
 
 	// Copy the chess board bitmap into the centre part of the board setup bitmap
 	if( is_board_setup && ok_to_copy_chess_board_to_board_setup )
-		BmpCopy( chess_board_bmp, 0, 0, board_setup_bmp, dim_board.x, dim_board.y, 8*dim_pix, 8*dim_pix );
+		BmpCopy( NULL, chess_board_bmp, 0, 0, board_setup_bmp, dim_board.x, dim_board.y, 8*dim_pix, 8*dim_pix );
 }
 
 // Calculate an offset into the wxBitmap's image buffer

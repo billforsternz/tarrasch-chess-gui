@@ -137,9 +137,8 @@ private:
 	void BoardSetupCreate();
 	void BoardSetupCustomCursorsCreate();
     void ChessBoardCreate( int pix, const thc::ChessPosition &cp, const bool *highlight=0 );
-	void BmpCopy( wxBitmap &from, int x1, int y1, wxBitmap &to,	int x2, int y2, int w, int h, const char *mask=NULL );
-	void BmpCopyAdjust( wxBitmap &from, int x1, int y1, wxBitmap &to,	int x2, int y2, int w, int h, const char *mask=NULL );
-	void ImageCopyAdjust( wxBitmap &from, int x1, int y1, wxImage &to, int x2, int y2, int w, int h, const char *mask=NULL );
+	void BmpCopy( wxColour *background, wxBitmap &from, int x1, int y1, wxBitmap &to,	int x2, int y2, int w, int h, const char *mask=NULL );
+	void ImageCopy( wxColour *background, wxBitmap &from, int x1, int y1, wxImage &to, int x2, int y2, int w, int h, const char *mask=NULL );
 
 
 	unsigned long   Offset( char file, char rank );
