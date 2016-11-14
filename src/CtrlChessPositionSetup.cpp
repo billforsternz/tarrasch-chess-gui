@@ -41,7 +41,7 @@ CtrlChessPositionSetup::CtrlChessPositionSetup
 	wxSize sz_bmp(400,320); //(364,294);
 	cbb.CreateAsBoardSetup( sz_bmp, normal_orientation, cp );
     SetSize( sz_bmp );
-    SetCustomCursor( normal_orientation?'P':'p' );
+    SetCustomCursor( cursor = (normal_orientation?'P':'p') );
 	state = UP_CURSOR_SIDE;
 }
 
