@@ -1412,6 +1412,7 @@ void ChessBoardBitmap::Get( char src_file, char src_rank, char dst_file, char ds
 	int b_background = background_colour ? background_colour->Blue()  : 0;
 	unsigned int i, j;
 	byte *src, *dst;
+	char edge_thickness = (width/8 < 140 ? '3' : '4');	// Used to be fixed at '3', but this worried me for some reason
 	for( i=0; i < height/8; i++ )
 	{
 		src = buf_board + Offset(src_file,src_rank) + i*width_bytes;
@@ -1440,8 +1441,8 @@ void ChessBoardBitmap::Get( char src_file, char src_rank, char dst_file, char ds
 					int adjust = r;
 					if( 0<adjust && adjust<255 ) // if not already black or white
 					{
-						if( ch < '3' )	// only if near magenta background - retain full
-										// anti-aliasing dynamic range inside the piece
+						if( ch < edge_thickness )	// only if near magenta background - retain full
+													// anti-aliasing dynamic range inside the piece
 						{
 							// the value of adjust represents a greyscale colour somewhere between
 							//  0 (black) and 255 (white) - make an equivalently scaled version of

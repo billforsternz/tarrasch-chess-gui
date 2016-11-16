@@ -177,9 +177,15 @@ void GameClock::Swap( bool human_is_white )
 void GameClock::GameStart( bool white_to_move )
 {
     if( white_to_move )
+	{
         white.Start();
+		black.SetTicking(false);	// To stop the clock showing up as red, when it's not really ticking, after Undo with only one clock running
+	}
     else
+	{
         black.Start();
+		white.SetTicking(false);	// To stop the clock showing up as red, when it's not really ticking, after Undo with only one clock running
+	}
 }
 
 bool GameClock::Run( bool white_to_move )

@@ -77,6 +77,7 @@ GameLogic::GameLogic( PanelContext *canvas, CtrlChessTxt *lb, wxMenu *menu_file 
     engine_name[0] = '\0';
     under_our_program_control = false;
     kibitz_text_to_clear = false;
+	analysis_idx = 0;	  // used when kibitzing on engine as it thinks about move - so analysis not multi-pv
     this->canvas = canvas;
     this->lb = lb;
     this->tabs = objs.tabs;
@@ -1436,6 +1437,7 @@ void GameLogic::FullUndo( GAME_STATE game_state )
                     release_printf( "pondering failed\n" );
             }
             chess_clock.GameStart( gd.master_position.WhiteToPlay() );
+            objs.canvas->RedrawClocks();
             NewState( pondering ? PONDERING : HUMAN );
             break;
         }
@@ -2158,6 +2160,7 @@ void GameLogic::OnIdle()
             {
                 char buf[256];
                 bool cleared;
+				kibitz_pos = gd.master_position;
                 bool have_data = objs.uci_interface->KibitzPeekEngineToMove( run, cleared, buf, sizeof(buf)-1 );
                 run = false;
                 if( cleared )
@@ -2165,7 +2168,7 @@ void GameLogic::OnIdle()
                 if( !have_data )
                     break;
                 dbg_printf( "UciInterface kibitz engine to move; txt=%s\n", buf );
-                KibitzUpdateEngineToMove( true, buf );
+                KibitzUpdateEngineToMove( true, analysis_idx++, buf );
             }
         }
     }
@@ -2178,6 +2181,7 @@ void GameLogic::OnIdle()
             {
                 char buf[256];
                 bool cleared;
+				kibitz_pos = gd.master_position;
                 bool have_data = objs.uci_interface->KibitzPeekEngineToMove( run, cleared, buf, sizeof(buf)-1 );
                 run = false;
                 if( cleared )
@@ -2185,7 +2189,7 @@ void GameLogic::OnIdle()
                 if( !have_data )
                     break;
                 dbg_printf( "UciInterface kibitz engine to move; txt=%s\n", buf );
-                KibitzUpdateEngineToMove( false, buf );
+                KibitzUpdateEngineToMove( false, analysis_idx++, buf );
             }
         }
         thc::Move ponder;
@@ -3288,6 +3292,8 @@ bool GameLogic::MakeMove( thc::Move move, GAME_RESULT &result )
         game_move.engine_millisecs_time = chess_clock.white.millisecs_time;
         game_move.human_millisecs_time = chess_clock.black.millisecs_time;
     }
+	if( chess_clock.fixed_period_mode )
+		game_move.engine_millisecs_time = 1000*(objs.repository->clock.m_engine_fixed_minutes*60 + objs.repository->clock.m_engine_fixed_seconds);
     game_move.flag_ingame = ingame;
     game_move.nag_value1 = 0;
     game_move.nag_value2 = 0;
@@ -3660,6 +3666,8 @@ GAME_STATE GameLogic::StartThinking( const thc::Move *human_move )
                     cr = move_list_startpos;
                     strcpy( forsyth, cr.ForsythPublish().c_str() );
                 }
+				if( kibitz )
+					kibitz_pos = pos;
                 objs.uci_interface->StartThinking( false, pos, use_startpos?NULL:forsyth, smoves, wtime_ms, btime_ms, winc_ms, binc_ms );   // ms,ms,inc_ms,inc_ms
             }
             else
@@ -3667,6 +3675,8 @@ GAME_STATE GameLogic::StartThinking( const thc::Move *human_move )
                 bool use_startpos = pos.CmpStrict(std_startpos);
                 if( !use_startpos )
                     strcpy( forsyth, gd.master_position.ForsythPublish().c_str() );
+				if( kibitz )
+					kibitz_pos = pos;
                 objs.uci_interface->StartThinking( false, pos, use_startpos?NULL:forsyth, wtime_ms, btime_ms, winc_ms, binc_ms );   // ms,ms,inc_ms,inc_ms
             }
             ret = THINKING;
@@ -3753,6 +3763,8 @@ bool GameLogic::StartPondering( thc::Move ponder )
             cr = move_list_startpos;
             strcpy( forsyth, cr.ForsythPublish().c_str() );
         }
+		if( kibitz )
+			kibitz_pos = pos;
         objs.uci_interface->StartThinking( true, pos, use_startpos?NULL:forsyth, smoves, wtime_ms, btime_ms, winc_ms, binc_ms );   // ms,ms,inc_ms,inc_ms
         pondering = true;
     }
@@ -3772,11 +3784,13 @@ struct PV
 void GameLogic::CmdKibitzCaptureAll()
 {
     Atomic begin;
-    if( /*kibitz &&*/ kibitz_pos==gd.master_position &&
+    if( /*kibitz &&*/ kibitz_pos==gd.master_position &&		// we prefer to test kibitz_pos rather than kibitz flag,
+															//  because kibitz might have been turned off, but the
+															//  kibitz lines are still visible
         (state==MANUAL || state==RESET || state==HUMAN || state==PONDERING || state==GAMEOVER || state==THINKING)
       )
     {
-        // Rank the available lines according to score
+        // Rank the available lines according to score (or incrementing analysis_idx)
         vector<PV> sortable;
         for( unsigned int i=0; i<nbrof(kibitz_rank); i++ )
         {
@@ -3819,11 +3833,13 @@ void GameLogic::CmdKibitzCaptureAll()
 void GameLogic::CmdKibitzCaptureOne()
 {
     Atomic begin;
-    if( /*kibitz &&*/ kibitz_pos==gd.master_position &&
+    if( /*kibitz &&*/ kibitz_pos==gd.master_position &&		// we prefer to test kibitz_pos rather than kibitz flag,
+															//  because kibitz might have been turned off, but the
+															//  kibitz lines are still visible
         (state==MANUAL || state==RESET || state==HUMAN || state==PONDERING || state==GAMEOVER || state==THINKING)
       )
     {
-        // Rank the available lines according to score
+        // Rank the available lines according to score (or incrementing analysis_idx)
         vector<PV> sortable;
         for( unsigned int i=0; i<nbrof(kibitz_rank); i++ )
         {
@@ -4000,10 +4016,14 @@ void GameLogic::KibitzUpdate( int idx, const char *txt )
     kibitz_text_to_clear = true;
 }
 
-
-void GameLogic::KibitzUpdateEngineToMove( bool ponder, const char *txt )
+void GameLogic::KibitzUpdateEngineToMove( bool ponder, unsigned int idx, const char *txt )
 {
+	// Note idx is just an incrementing integer - used to capture (with capture top and capture
+	//  all buttons) lines of analysis in the same order the engine delivered them
     wxString pv;
+    bool have_moves=false;
+    thc::Move candidate_move;
+    candidate_move.Invalid();
     int depth=0, score_cp=0, rank_score_cp=0;
     thc::ChessRules cr = gd.master_position;
     const char *s, *temp;
@@ -4044,6 +4064,7 @@ void GameLogic::KibitzUpdateEngineToMove( bool ponder, const char *txt )
     else
         score_cp = 0-rank_score_cp;
     s = strstr(txt,temp=" pv ");
+    std::vector<thc::Move> var;
     if( s )
     {
         if( mate )
@@ -4066,16 +4087,20 @@ void GameLogic::KibitzUpdateEngineToMove( bool ponder, const char *txt )
             else
             {
                 have_move = move.TerseIn( &cr, txt2 );
-                txt2 += 4;
-                if( isalpha(*txt2) )   // eg 'Q','R' etc.
-                    txt2++;
-                while( *txt2 == ' ' )
-                    txt2++;
+				if( have_move )
+				{
+					txt2 += 4;
+					if( isalpha(*txt2) )   // eg 'Q','R' etc.
+						txt2++;
+					while( *txt2 == ' ' )
+						txt2++;
+				}
             }
             if( !have_move )
                 break;
             else
             {
+                var.push_back( move );
                 wxString mv;
                 bool white2=cr.WhiteToPlay();
                 nmove = move.NaturalOut(&cr);
@@ -4084,6 +4109,11 @@ void GameLogic::KibitzUpdateEngineToMove( bool ponder, const char *txt )
                     mv.sprintf( " %d%s%s", cr.full_move_count, white2?".":"...",nmove.c_str() );
                 else
                     mv.sprintf( " %s", nmove.c_str() );
+                if( !have_moves )
+                {
+                    candidate_move = move;
+                    have_moves = true;
+                }
                 cr.PlayMove( move );
                 pv += mv;
                 if( *txt2 == '\0' )
@@ -4092,6 +4122,16 @@ void GameLogic::KibitzUpdateEngineToMove( bool ponder, const char *txt )
         }
     }
     canvas->KibitzScroll( pv );
+    if( !have_moves )
+        candidate_move.Invalid();
+	unsigned int nbr = nbrof(kibitz_move);
+	unsigned int slot = idx%nbr;  // just use successive slots, wrapping around
+    kibitz_pv   [slot] = pv;
+    kibitz_depth[slot] = depth;
+    kibitz_rank [slot] = idx;	// when we capture, we sort on this, which will
+								//  so the slots get ordered chronologically
+    kibitz_move [slot] = candidate_move;
+    kibitz_var  [slot] = var;
 }
 
 void GameLogic::KibitzClearMultiPV()
@@ -4107,10 +4147,14 @@ void GameLogic::KibitzClearMultiPV()
 
 void GameLogic::KibitzClearDisplay( bool intro )
 {
+	analysis_idx=0;
     if( intro )
         KibitzIntro();
     for( int i=0; i<nbrof(kibitz_sorted); i++ )
+	{
+        kibitz_move  [i].Invalid();
         canvas->Kibitz(i+1, "" );
+	}
 }
 
 void GameLogic::KibitzIntro()

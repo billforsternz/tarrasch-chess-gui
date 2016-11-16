@@ -1160,11 +1160,23 @@ const char *UciInterface::user_hook_in()
     if( s )
     {
         release_printf( "in: %s\n", s );
-        last_command_was_go_infinite = (
-                                            0 == memcmp(s,"go ",3)
-                                            //0 == memcmp(s,"go infinite",11) ||
-                                            //0 == memcmp(s,"go ponder",9)
-                                       );
+		if( 0 != strcmp(s,"ponderhit") )	// ponderhit shouldn't change last_command_was_go_infinite - it's a command sent after a
+											// go ponder, whilst the engine is sending us (infinite) evaluations, it simply tells
+											// the engine to cease infinite eval and come up with a bestmove. Then last_command_was_go_infinite
+											// will be reset when and if the bestmove arrives (see below). Only when the bestmove
+											// arrives do we no longer need to "stop".
+		{
+			last_command_was_go_infinite = (	// BUG FIX JUST BEFORE Tarrasch V3. The purpose of last_command_was_go_infinite
+												// is to send a "stop" to engine to interrupt indefinite thinking, but we also
+												// need to follow other "go" commands with a "stop" if we ask the engine to do
+												// something else (eg if force move, fixed time period, undo) before the engine
+												// returns "bestmove". So set the flag always, and reset it if bestmove does
+												// arrive (search for other instance of "BUG FIX JUST BEFORE Tarrasch V3")
+												0 == memcmp(s,"go ",3)
+												//0 == memcmp(s,"go infinite",11) ||
+												//0 == memcmp(s,"go ponder",9)
+										   );
+		}
     }
     return s;
 }
@@ -1239,6 +1251,8 @@ void UciInterface::line_out( const char *s )
                 {
                     gbl_bestmove = move;
                     bestmove_received = true;
+					cprintf( "last_command_was_go_infinite was %s\n", last_command_was_go_infinite?"true":"false" );
+					last_command_was_go_infinite = false;	// search for "BUG FIX JUST BEFORE Tarrasch V3"
                     NewState( "line_out()", READY );
                     p = strstr(s,temp="ponder ");
                     if( p && ponder_sent )

@@ -66,7 +66,12 @@ PopupControl::PopupControl
     wxRect rect = objs.canvas->pb->GetRect();   // pb = panel board
     if( popup_mode != BOOK_HOVER )
     {
-        pos.x -= (4*size.x)/5;
+        int offset = (4*size.x)/5;
+		dbg_printf( "pos.x=%d offset=%d\n", pos.x, offset );
+		if( pos.x > offset+5 )
+			pos.x -= offset;
+		else
+			pos.x = 5;
         pos.y -= (max_h/2);
     }
 

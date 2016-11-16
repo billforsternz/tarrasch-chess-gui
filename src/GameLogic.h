@@ -185,7 +185,7 @@ private:
     void KibitzUpdate( int idx, const char *txt );
 
     // Update kibitz while engine thinking
-    void KibitzUpdateEngineToMove( bool ponder, const char *txt );
+    void KibitzUpdateEngineToMove( bool ponder, int unsigned idx, const char *txt );
 
 	// Set new state
 	void NewState( GAME_STATE new_state, bool from_mouse_move=false );
@@ -208,6 +208,7 @@ private:
     int     engine_millisecs_time_start;
     bool    kibitz;
     bool    kibitz_text_to_clear;
+	unsigned int		analysis_idx;
     std::string status_field1;
     std::string status_field2;
     thc::ChessPosition      kibitz_pos;

@@ -1115,6 +1115,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     objs.cws->Init( &objs.gl->undo, &objs.gl->gd, &objs.gl->gc_pgn, &objs.gl->gc_clipboard ); 
     context->SetPlayers( "", "" );
     context->resize_ready = true;
+    m_mgr.SetDockSizeConstraint(0.9,0.9);
  
     // add the panes to the manager Note: Experience shows there is no point trying to change a panel's fundamental characteristics
     //  after adding it to the manager - Things like CaptionVisible(false) etc need to be intantiated with the panel
@@ -1131,6 +1132,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
                   Left().Layer(1).Position(1).
                   CloseButton(false).MaximizeButton(false));
     m_mgr.AddPane(lb, wxCENTER );
+				  //wxAuiPaneInfo().CloseButton(false).CaptionVisible(false).Center().MinSize(50,50) );
     m_mgr.AddPane(context, //wxBOTTOM);    //, wxT("Pane Number Two"));
                   wxAuiPaneInfo().
                   Name(wxT("test9")).CaptionVisible(false). //(wxT("Tree Pane")).
@@ -1139,7 +1141,6 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 
 
     // tell the manager to "commit" all the changes just made
-    m_mgr.SetDockSizeConstraint(1.0,1.0);
     m_mgr.Update();
 
     // If we restored a non-volatile window size and location, try to restore non-volatile panel
@@ -1230,17 +1231,14 @@ void ChessFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
     wxString msg;
     msg.Printf(
-        "\nThis is the Tarrasch Chess GUI V3. Tarrasch is intended to be "
-        "an easy to use yet powerful system for playing, analysing and "
-        "training with UCI standard chess engines. Tarrasch now supports "
-        "useful database features."
+        "\nThis is the Tarrasch Chess GUI V3. Tarrasch is "
+        "an easy to use yet powerful system for playing and "
+        "analysing with UCI standard chess engines. With V3 Tarrasch now adds "
+        "fast and powerful database features."
         "\n\n"
-        "Tarrasch includes the simple Tarrasch toy engine as well "
-        "as one or more strong engines. "
-        "The Tarrasch toy "
-        "engine is particularly suited to Tarrasch's training modes. "
-        "(These modes handicap the user, and you don't want to "
-        "handicap yourself when you are playing against a strong engine!)."
+        "Tarrasch includes the state of the art Stockfish engine, some other "
+        "strong engines and the weak Tarrasch toy engine. The toy engine is "
+        "particularly suited to Tarrasch's blindfold, partial blindfold, and N move lag training modes."
         "\n\n"
         "Visit the publisher's website www.triplehappy.com for Tarrasch "
         "Chess GUI news and updates."
@@ -2047,8 +2045,8 @@ void ChessFrame::OnEngine(wxCommandEvent &)
     if( wxID_OK == dialog.ShowModal() )
     {
         objs.repository->engine = dialog.dat;
-        dbg_printf( "file=%s\n",
-            dialog.dat.m_file.c_str() );
+        const char *s = dialog.dat.m_file.c_str();
+        cprintf( "file=%s\n", s );
         if( old_file != objs.repository->engine.m_file )
             objs.gl->EngineChanged();
     }

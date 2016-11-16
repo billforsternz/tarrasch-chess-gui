@@ -155,16 +155,22 @@ void PanelBoard::Layout( const wxSize &siz, wxRect &board )
     wxClientDC dc0(board_title);
     wxCoord txt_width, txt_height, txt_descent, txt_external_leading;
     dc0.GetTextExtent( "Ready", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
-    int t1 = 150*(txt_height + txt_descent)/100;
-    int t1_height = txt_height + txt_descent;
-    int board_title_y_offset = 120*(txt_height + txt_descent)/100;
+    int t1 = 125*(txt_height /*+ txt_descent*/)/100;
+	// Experiments suggest that the descent is information only - no need to add it to height to
+	//  get the actual size - so we made some adjustments to get a bigger chess board into the
+	//  space available, with less white space around the title and player names
+    int t1_height = txt_height+1; // /*+ txt_descent*/;
+    int board_title_y_offset = t1_height; //100*(txt_height /*+ txt_descent*/)/100;
     wxClientDC dc1(time_top);
-    dc1.GetTextExtent( "120:00", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
-    int t2 = 110*(txt_height + txt_descent)/100;
+    dc1.GetTextExtent( "Player Name", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
+    int t2 = txt_height+1; //100*(txt_height /*+ txt_descent*/)/100;
     int t = t1+t2;
-    int name_top_y_offset = 105*(txt_height + txt_descent)/100;
+    int name_top_y_offset = t2; //100*(txt_height /*+ txt_descent*/)/100;
     board_title_y_offset += name_top_y_offset;
-    int time_x_offset = txt_width;
+	cprintf( "t1=%d, t2=%d, t1_height=%d, name_top_y_offset=%d, board_title_y_offset=%d\n",
+								t1, t2, t1_height, name_top_y_offset, board_title_y_offset );
+
+	int time_x_offset = txt_width;
     wxClientDC dc2(coorda);
     dc2.GetTextExtent( "w", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
     int coord_char_width = txt_width;
@@ -172,12 +178,12 @@ void PanelBoard::Layout( const wxSize &siz, wxRect &board )
     int l = 200*(txt_width)/100;
     int coord1_x_offset = 105*(txt_width)/100;
     dc2.GetTextExtent( "g", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
-    int b1 = 110*(txt_height + txt_descent)/100;
+    int b1 = txt_height+1; // 100*(txt_height /*+ txt_descent*/)/100;
     int coorda_y_offset = 5*(txt_height + txt_descent)/100;
-    int name_bottom_y_offset = 110*(txt_height + txt_descent)/100;
+    int name_bottom_y_offset = 100*(txt_height /*+ txt_descent*/)/100;
     wxClientDC dc3(name_bottom);
     dc3.GetTextExtent( "g", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
-    int b2 = 110*(txt_height + txt_descent)/100;
+    int b2 = txt_height+1; //100*(txt_height /*+ txt_descent*/)/100;
     int b =  b1+b2;
 
     wxClientDC dc4(who_bottom);
@@ -421,10 +427,14 @@ void PanelBoard::SetChessPosition()
 	cprintf( "PanelBoard::SetChessPosition()\n" );
     bool normal = gb->GetNormalOrientation();
     gb->SetChessPosition( save_position );
+
+	// a refinement - lengthen short names to get something to click on
+	std::string white_player_adjusted = ( white_player.length()<10 ? white_player+"          " : white_player );
+	std::string black_player_adjusted = ( black_player.length()<10 ? black_player+"          " : black_player );
     if( normal )
     {
-        name_bottom->SetLabel( white_player.c_str() );
-        name_top->SetLabel( black_player.c_str() );
+        name_bottom->SetLabel( white_player_adjusted.c_str() );
+        name_top->SetLabel( black_player_adjusted.c_str() );
         who_top->SetLabel( !save_position.white ? "B" : "" );
         who_bottom->SetLabel( save_position.white ? "W" : "" );
         coorda->SetLabel('a');
@@ -446,8 +456,8 @@ void PanelBoard::SetChessPosition()
     }
     else
     {
-        name_bottom->SetLabel( black_player.c_str() );
-        name_top->SetLabel( white_player.c_str() );
+        name_bottom->SetLabel( black_player_adjusted.c_str() );
+        name_top->SetLabel( white_player_adjusted.c_str() );
         who_top->SetLabel( save_position.white ? "W" : "" );
         who_bottom->SetLabel( !save_position.white ? "B" : "" );
         coorda->SetLabel('h');
