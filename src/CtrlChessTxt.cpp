@@ -316,311 +316,320 @@ void CtrlChessTxt::OnTextMaxLen(wxCommandEvent& WXUNUSED(event) )
 
 void CtrlChessTxt::OnChar(wxKeyEvent& event)
 {
-    Atomic begin(false);
-    NAVIGATION_KEY nk=NK_NULL;
-    bool done=false;
-    bool request_post_key_update = false;
-    bool shift=false;
-    long pos1, pos2;
-    GetSelection( &pos1, &pos2 );
-    bool is_selection = (pos1!=pos2);
-    bool is_selection_in_comment = gd->IsSelectionInComment(this);
-    if( event.GetModifiers() & wxMOD_SHIFT )
-        shift = true;
-    long keycode = event.GetKeyCode();
-    //cprintf( "OnChar() keycode=%lu\n", keycode );
-    {
-        switch ( keycode )
-        {
-            case WXK_NUMPAD_DELETE: // fall-thru
-            case WXK_DELETE:
-            {
-                if( !shift )
-                {
-                    if( is_selection_in_comment )
-                    {
-                        gd->DeleteSelection(this);
-                        done = true;
-                    }
-                    else if( is_selection )
-                        done = true;
-                    else
-                    {
-                        done = gd->CommentEdit(this,WXK_DELETE);
-                        nk=NK_DELETE;
-                    }
-                }
-                break;
-            }
-            case WXK_PAGEUP:                nk=NK_PGUP;     break;
-            case WXK_PAGEDOWN:              nk=NK_PGDOWN;   break;
-            case WXK_HOME:                  nk=NK_HOME;     break;
-            case WXK_END:                   nk=NK_END;      break;
-            case WXK_NUMPAD_LEFT:           nk=NK_LEFT;     break;
-            case WXK_NUMPAD_UP:             nk=NK_UP;       break;
-            case WXK_NUMPAD_RIGHT:          nk=NK_RIGHT;    break;
-            case WXK_NUMPAD_DOWN:           nk=NK_DOWN;     break;
-            case WXK_NUMPAD_HOME:           nk=NK_HOME;     break;
-            case WXK_NUMPAD_PAGEUP:         nk=NK_PGUP;     break;
-            case WXK_NUMPAD_PAGEDOWN:       nk=NK_PGDOWN;   break;
-            case WXK_NUMPAD_END:            nk=NK_END;      break;
-#ifdef THC_MAC
-            case '[':
-#endif
-            case WXK_LEFT:
-            {
-                if(!shift)
-                    done = gd->CommentEdit(this,WXK_LEFT);
-                nk=NK_LEFT;
-                break;
-            }
-#ifdef THC_MAC
-            case ']':
-#endif
-            case WXK_RIGHT:
-            {
-                if( !shift )
-                    done = gd->CommentEdit(this,WXK_RIGHT);
-                nk=NK_RIGHT;
-                break;
-            }
-            case WXK_UP:
-            {
-                bool in_comment = gd->IsInComment(this);
-                if( !shift && !in_comment )
-                    nk=NK_UP;
-                else if( in_comment )
-                    request_post_key_update = true;
-                break;
-            }
-            case WXK_DOWN:
-            {
-                bool in_comment = gd->IsInComment(this);
-                if( !shift && !in_comment )
-                    nk=NK_DOWN;
-                else if( in_comment )
-                    request_post_key_update = true;
-                break;
-            }
-            case WXK_BACK:
-            {
-                if( is_selection_in_comment )
-                {
-                    gd->DeleteSelection(this);
-                    done = true;
-                }
-                else
-                {
-                    done=gd->CommentEdit(this,WXK_BACK);
-                }
-                break;
-            }
-            case WXK_SPACE:
-            {
-                if( is_selection_in_comment )
-                    gd->DeleteSelection(this);
-                done=gd->CommentEdit(this,' ');
-                break;
-            }
-            case WXK_NUMPAD0:
-            {
-                if( is_selection_in_comment )
-                    gd->DeleteSelection(this);
-                done=gd->CommentEdit(this,'0');
-                break;
-            }
-            case WXK_NUMPAD1:
-            {
-                if( is_selection_in_comment )
-                    gd->DeleteSelection(this);
-                done=gd->CommentEdit(this,'1');
-                break;
-            }
-            case WXK_NUMPAD2:
-            {
-                if( is_selection_in_comment )
-                    gd->DeleteSelection(this);
-                done=gd->CommentEdit(this,'2');
-                break;
-            }
-            case WXK_NUMPAD3:   
-            {
-                if( is_selection_in_comment )
-                    gd->DeleteSelection(this);
-                done=gd->CommentEdit(this,'3');
-                break;
-            }
-            case WXK_NUMPAD4: 
-            {
-                if( is_selection_in_comment )
-                    gd->DeleteSelection(this);
-                done=gd->CommentEdit(this,'4');
-                break;
-            }
-            case WXK_NUMPAD5:
-            {
-                if( is_selection_in_comment )
-                    gd->DeleteSelection(this);
-                done=gd->CommentEdit(this,'5');
-                break;
-            }
-            case WXK_NUMPAD6:
-            {
-                if( is_selection_in_comment )
-                    gd->DeleteSelection(this);
-                done=gd->CommentEdit(this,'6');
-                break;
-            }
-            case WXK_NUMPAD7:
-            {
-                if( is_selection_in_comment )
-                    gd->DeleteSelection(this);
-                done=gd->CommentEdit(this,'7');
-                break;
-            }
-            case WXK_NUMPAD8:
-            {
-                if( is_selection_in_comment )
-                    gd->DeleteSelection(this);
-                done=gd->CommentEdit(this,'8');
-                break;
-            }
-            case WXK_NUMPAD9:
-            {
-                if( is_selection_in_comment )
-                    gd->DeleteSelection(this);
-                done=gd->CommentEdit(this,'9');
-                break;
-            }
-            case WXK_MULTIPLY:  
-            {
-                if( is_selection_in_comment )
-                    gd->DeleteSelection(this);
-                done=gd->CommentEdit(this,'*');
-                break;
-            }
-            case WXK_ADD:       
-            {
-                if( is_selection_in_comment )
-                    gd->DeleteSelection(this);
-                done=gd->CommentEdit(this,'+');
-                break;
-            }
-            case WXK_SUBTRACT:  
-            {
-                if( is_selection_in_comment )
-                    gd->DeleteSelection(this);
-                done=gd->CommentEdit(this,'-');
-                break;
-            }
-            case WXK_DECIMAL:   
-            {
-                if( is_selection_in_comment )
-                    gd->DeleteSelection(this);
-                done=gd->CommentEdit(this,'.');
-                break;
-            }
-            case WXK_DIVIDE:    
-            {
-                if( is_selection_in_comment )
-                    gd->DeleteSelection(this);
-                done=gd->CommentEdit(this,'\\');
-                break;
-            }
-            case WXK_TAB:       
-            case WXK_RETURN:    
-            case WXK_ESCAPE:    
-            case WXK_START:     
-            case WXK_LBUTTON:   
-            case WXK_RBUTTON:   
-            case WXK_CANCEL:    
-            case WXK_MBUTTON:   
-            case WXK_CLEAR:     
-            case WXK_SHIFT:     
-            case WXK_ALT:       
-            case WXK_CONTROL:   
-            case WXK_MENU:      
-            case WXK_PAUSE:     
-            case WXK_CAPITAL:   
-            case WXK_SELECT:    
-            case WXK_PRINT:     
-            case WXK_EXECUTE:   
-            case WXK_SNAPSHOT:  
-            case WXK_INSERT:    
-            case WXK_HELP:      
-            case WXK_SEPARATOR: 
-            case WXK_F1:  
-            case WXK_F2:  
-            case WXK_F3:  
-            case WXK_F4:  
-            case WXK_F5:  
-            case WXK_F6:  
-            case WXK_F7:  
-            case WXK_F8:  
-            case WXK_F9:  
-            case WXK_F10: 
-            case WXK_F11: 
-            case WXK_F12: 
-            case WXK_F13: 
-            case WXK_F14: 
-            case WXK_F15: 
-            case WXK_F16: 
-            case WXK_F17: 
-            case WXK_F18: 
-            case WXK_F19: 
-            case WXK_F20: 
-            case WXK_F21: 
-            case WXK_F22: 
-            case WXK_F23: 
-            case WXK_F24: 
-            case WXK_NUMLOCK:           
-            case WXK_SCROLL:            
-            case WXK_NUMPAD_SPACE:      
-            case WXK_NUMPAD_TAB:        
-            case WXK_NUMPAD_ENTER:      
-            case WXK_NUMPAD_F1:         
-            case WXK_NUMPAD_F2:         
-            case WXK_NUMPAD_F3:         
-            case WXK_NUMPAD_F4:         
-            case WXK_NUMPAD_BEGIN:      
-            case WXK_NUMPAD_INSERT:     
-            case WXK_NUMPAD_EQUAL:      
-            case WXK_NUMPAD_MULTIPLY:   
-            case WXK_NUMPAD_ADD:        
-            case WXK_NUMPAD_SEPARATOR:  
-            case WXK_NUMPAD_SUBTRACT:   
-            case WXK_NUMPAD_DECIMAL:
-            {
-                break;
-            }
-            default:
-            {
-                bool iso8859_extended_charset = (0xa0<=keycode && keycode<=0xff);
-                if( iso8859_extended_charset || wxIsprint((int)keycode) )
-                {
-                    if( is_selection_in_comment )
-                        gd->DeleteSelection(this);
-                    done=gd->CommentEdit(this,keycode); 
-                }
-            }
-        }
-    }
-    if( !shift && !done && nk!=NK_NULL )
-    {
-        if( nk == NK_DELETE )
-            gd->DeleteRestOfVariation();
-        else
-            NavigationKey(nk);
-    }
-    else if( !done )
-    {
-        event.Skip();   //continue to process event
-        if( request_post_key_update )
-        {
-            wxCommandEvent eventCustom(wxEVT_MY_CUSTOM_COMMAND);
-            wxPostEvent(this, eventCustom);
-        }
-    }
+    if( event.GetModifiers() & wxMOD_ALT )
+	{
+        event.Skip();   //continue to process event - without this alt key is largely ignored and Alt-F for example doesnt
+						// enable file menu
+	}
+	else
+	{
+		Atomic begin(false);
+		NAVIGATION_KEY nk=NK_NULL;
+		bool done=false;
+		bool request_post_key_update = false;
+		bool shift=false;
+		long pos1, pos2;
+		GetSelection( &pos1, &pos2 );
+		bool is_selection = (pos1!=pos2);
+		bool is_selection_in_comment = gd->IsSelectionInComment(this);
+		if( event.GetModifiers() & wxMOD_SHIFT )
+			shift = true;
+		long keycode = event.GetKeyCode();
+		//cprintf( "OnChar() keycode=%lu\n", keycode );
+		{
+			switch ( keycode )
+			{
+				case WXK_NUMPAD_DELETE: // fall-thru
+				case WXK_DELETE:
+				{
+					if( !shift )
+					{
+						if( is_selection_in_comment )
+						{
+							gd->DeleteSelection(this);
+							done = true;
+						}
+						else if( is_selection )
+							done = true;
+						else
+						{
+							done = gd->CommentEdit(this,WXK_DELETE);
+							nk=NK_DELETE;
+						}
+					}
+					break;
+				}
+				case WXK_PAGEUP:                nk=NK_PGUP;     break;
+				case WXK_PAGEDOWN:              nk=NK_PGDOWN;   break;
+				case WXK_HOME:                  nk=NK_HOME;     break;
+				case WXK_END:                   nk=NK_END;      break;
+				case WXK_NUMPAD_LEFT:           nk=NK_LEFT;     break;
+				case WXK_NUMPAD_UP:             nk=NK_UP;       break;
+				case WXK_NUMPAD_RIGHT:          nk=NK_RIGHT;    break;
+				case WXK_NUMPAD_DOWN:           nk=NK_DOWN;     break;
+				case WXK_NUMPAD_HOME:           nk=NK_HOME;     break;
+				case WXK_NUMPAD_PAGEUP:         nk=NK_PGUP;     break;
+				case WXK_NUMPAD_PAGEDOWN:       nk=NK_PGDOWN;   break;
+				case WXK_NUMPAD_END:            nk=NK_END;      break;
+	#ifdef THC_MAC
+				case '[':
+	#endif
+				case WXK_LEFT:
+				{
+					if(!shift)
+						done = gd->CommentEdit(this,WXK_LEFT);
+					nk=NK_LEFT;
+					break;
+				}
+	#ifdef THC_MAC
+				case ']':
+	#endif
+				case WXK_RIGHT:
+				{
+					if( !shift )
+						done = gd->CommentEdit(this,WXK_RIGHT);
+					nk=NK_RIGHT;
+					break;
+				}
+				case WXK_UP:
+				{
+					bool in_comment = gd->IsInComment(this);
+					if( !shift && !in_comment )
+						nk=NK_UP;
+					else if( in_comment )
+						request_post_key_update = true;
+					break;
+				}
+				case WXK_DOWN:
+				{
+					bool in_comment = gd->IsInComment(this);
+					if( !shift && !in_comment )
+						nk=NK_DOWN;
+					else if( in_comment )
+						request_post_key_update = true;
+					break;
+				}
+				case WXK_BACK:
+				{
+					if( is_selection_in_comment )
+					{
+						gd->DeleteSelection(this);
+						done = true;
+					}
+					else
+					{
+						done=gd->CommentEdit(this,WXK_BACK);
+					}
+					break;
+				}
+				case WXK_SPACE:
+				{
+					if( is_selection_in_comment )
+						gd->DeleteSelection(this);
+					done=gd->CommentEdit(this,' ');
+					break;
+				}
+				case WXK_NUMPAD0:
+				{
+					if( is_selection_in_comment )
+						gd->DeleteSelection(this);
+					done=gd->CommentEdit(this,'0');
+					break;
+				}
+				case WXK_NUMPAD1:
+				{
+					if( is_selection_in_comment )
+						gd->DeleteSelection(this);
+					done=gd->CommentEdit(this,'1');
+					break;
+				}
+				case WXK_NUMPAD2:
+				{
+					if( is_selection_in_comment )
+						gd->DeleteSelection(this);
+					done=gd->CommentEdit(this,'2');
+					break;
+				}
+				case WXK_NUMPAD3:   
+				{
+					if( is_selection_in_comment )
+						gd->DeleteSelection(this);
+					done=gd->CommentEdit(this,'3');
+					break;
+				}
+				case WXK_NUMPAD4: 
+				{
+					if( is_selection_in_comment )
+						gd->DeleteSelection(this);
+					done=gd->CommentEdit(this,'4');
+					break;
+				}
+				case WXK_NUMPAD5:
+				{
+					if( is_selection_in_comment )
+						gd->DeleteSelection(this);
+					done=gd->CommentEdit(this,'5');
+					break;
+				}
+				case WXK_NUMPAD6:
+				{
+					if( is_selection_in_comment )
+						gd->DeleteSelection(this);
+					done=gd->CommentEdit(this,'6');
+					break;
+				}
+				case WXK_NUMPAD7:
+				{
+					if( is_selection_in_comment )
+						gd->DeleteSelection(this);
+					done=gd->CommentEdit(this,'7');
+					break;
+				}
+				case WXK_NUMPAD8:
+				{
+					if( is_selection_in_comment )
+						gd->DeleteSelection(this);
+					done=gd->CommentEdit(this,'8');
+					break;
+				}
+				case WXK_NUMPAD9:
+				{
+					if( is_selection_in_comment )
+						gd->DeleteSelection(this);
+					done=gd->CommentEdit(this,'9');
+					break;
+				}
+				case WXK_MULTIPLY:  
+				{
+					if( is_selection_in_comment )
+						gd->DeleteSelection(this);
+					done=gd->CommentEdit(this,'*');
+					break;
+				}
+				case WXK_ADD:       
+				{
+					if( is_selection_in_comment )
+						gd->DeleteSelection(this);
+					done=gd->CommentEdit(this,'+');
+					break;
+				}
+				case WXK_SUBTRACT:  
+				{
+					if( is_selection_in_comment )
+						gd->DeleteSelection(this);
+					done=gd->CommentEdit(this,'-');
+					break;
+				}
+				case WXK_DECIMAL:   
+				{
+					if( is_selection_in_comment )
+						gd->DeleteSelection(this);
+					done=gd->CommentEdit(this,'.');
+					break;
+				}
+				case WXK_DIVIDE:    
+				{
+					if( is_selection_in_comment )
+						gd->DeleteSelection(this);
+					done=gd->CommentEdit(this,'\\');
+					break;
+				}
+				case WXK_TAB:       
+				case WXK_RETURN:    
+				case WXK_ESCAPE:    
+				case WXK_START:     
+				case WXK_LBUTTON:   
+				case WXK_RBUTTON:   
+				case WXK_CANCEL:    
+				case WXK_MBUTTON:   
+				case WXK_CLEAR:     
+				case WXK_SHIFT:     
+				case WXK_ALT:       
+				case WXK_CONTROL:   
+				case WXK_MENU:      
+				case WXK_PAUSE:     
+				case WXK_CAPITAL:   
+				case WXK_SELECT:    
+				case WXK_PRINT:     
+				case WXK_EXECUTE:   
+				case WXK_SNAPSHOT:  
+				case WXK_INSERT:    
+				case WXK_HELP:      
+				case WXK_SEPARATOR: 
+				case WXK_F1:  
+				case WXK_F2:  
+				case WXK_F3:  
+				case WXK_F4:  
+				case WXK_F5:  
+				case WXK_F6:  
+				case WXK_F7:  
+				case WXK_F8:  
+				case WXK_F9:  
+				case WXK_F10: 
+				case WXK_F11: 
+				case WXK_F12: 
+				case WXK_F13: 
+				case WXK_F14: 
+				case WXK_F15: 
+				case WXK_F16: 
+				case WXK_F17: 
+				case WXK_F18: 
+				case WXK_F19: 
+				case WXK_F20: 
+				case WXK_F21: 
+				case WXK_F22: 
+				case WXK_F23: 
+				case WXK_F24: 
+				case WXK_NUMLOCK:           
+				case WXK_SCROLL:            
+				case WXK_NUMPAD_SPACE:      
+				case WXK_NUMPAD_TAB:        
+				case WXK_NUMPAD_ENTER:      
+				case WXK_NUMPAD_F1:         
+				case WXK_NUMPAD_F2:         
+				case WXK_NUMPAD_F3:         
+				case WXK_NUMPAD_F4:         
+				case WXK_NUMPAD_BEGIN:      
+				case WXK_NUMPAD_INSERT:     
+				case WXK_NUMPAD_EQUAL:      
+				case WXK_NUMPAD_MULTIPLY:   
+				case WXK_NUMPAD_ADD:        
+				case WXK_NUMPAD_SEPARATOR:  
+				case WXK_NUMPAD_SUBTRACT:   
+				case WXK_NUMPAD_DECIMAL:
+				{
+					break;
+				}
+				default:
+				{
+					bool iso8859_extended_charset = (0xa0<=keycode && keycode<=0xff);
+					if( iso8859_extended_charset || wxIsprint((int)keycode) )
+					{
+						if( is_selection_in_comment )
+							gd->DeleteSelection(this);
+						done=gd->CommentEdit(this,keycode); 
+					}
+				}
+			}
+		}
+		if( !shift && !done && nk!=NK_NULL )
+		{
+			if( nk == NK_DELETE )
+				gd->DeleteRestOfVariation();
+			else
+				NavigationKey(nk);
+		}
+		else if( !done )
+		{
+	        cprintf( "event.Skip()\n" );
+			event.Skip();   //continue to process event
+			if( request_post_key_update )
+			{
+				wxCommandEvent eventCustom(wxEVT_MY_CUSTOM_COMMAND);
+				wxPostEvent(this, eventCustom);
+			}
+		}
+	}
 }
 
 void CtrlChessTxt::OnKeyUp(wxKeyEvent& event)
@@ -630,104 +639,104 @@ void CtrlChessTxt::OnKeyUp(wxKeyEvent& event)
 
 void CtrlChessTxt::OnKeyDown(wxKeyEvent& event)
 {
-    Atomic begin(false);
-    NAVIGATION_KEY nk=NK_NULL;
-    bool done=false;
-    bool request_post_key_update = false;
-    bool shift=false;
-    long pos1, pos2;
-    GetSelection( &pos1, &pos2 );
-    bool is_selection = (pos1!=pos2);
-    bool is_selection_in_comment = gd->IsSelectionInComment(this);
-    if( event.GetModifiers() & wxMOD_SHIFT )
-        shift = true;
-    long keycode = event.GetKeyCode();
-    //cprintf( "OnKeyDown() keycode=%lu\n", keycode );
-    {
-        switch ( keycode )
-        {
-            case WXK_NUMPAD_DELETE: // fall-thru
-            case WXK_DELETE:
-            {
-                if( !shift )
-                {
-                    if( is_selection_in_comment )
-                    {
-                        gd->DeleteSelection(this);
-                        done = true;
-                    }
-                    else if( is_selection )
-                        done = true;
-                    else
-                    {
-                        done = gd->CommentEdit(this,WXK_DELETE);
-                        nk=NK_DELETE;
-                    }
-                }
-                break;
-            }
-            case WXK_PAGEUP:                nk=NK_PGUP;     break;
-            case WXK_PAGEDOWN:              nk=NK_PGDOWN;   break;
-            case WXK_HOME:                  nk=NK_HOME;     break;
-            case WXK_END:                   nk=NK_END;      break;
-            case WXK_NUMPAD_LEFT:           nk=NK_LEFT;     break;
-            case WXK_NUMPAD_UP:             nk=NK_UP;       break;
-            case WXK_NUMPAD_RIGHT:          nk=NK_RIGHT;    break;
-            case WXK_NUMPAD_DOWN:           nk=NK_DOWN;     break;
-            case WXK_NUMPAD_HOME:           nk=NK_HOME;     break;
-            case WXK_NUMPAD_PAGEUP:         nk=NK_PGUP;     break;
-            case WXK_NUMPAD_PAGEDOWN:       nk=NK_PGDOWN;   break;
-            case WXK_NUMPAD_END:            nk=NK_END;      break;
-            case WXK_LEFT:
-            {
-                if(!shift)
-                    done = gd->CommentEdit(this,WXK_LEFT);
-                nk=NK_LEFT;
-                break;
-            }
-            case WXK_RIGHT:
-            {
-                if( !shift )
-                    done = gd->CommentEdit(this,WXK_RIGHT);
-                nk=NK_RIGHT;
-                break;
-            }
-            case WXK_UP:
-            {
-                bool in_comment = gd->IsInComment(this);
-                if( !shift && !in_comment )
-                    nk=NK_UP;
-                else if( in_comment )
-                    request_post_key_update = true;
-                break;
-            }
-            case WXK_DOWN:
-            {
-                bool in_comment = gd->IsInComment(this);
-                if( !shift && !in_comment )
-                    nk=NK_DOWN;
-                else if( in_comment )
-                    request_post_key_update = true;
-                break;
-            }
-        }
-    }
-    if( !shift && !done && nk!=NK_NULL )
-    {
-        if( nk == NK_DELETE )
-            gd->DeleteRestOfVariation();
-        else
-            NavigationKey(nk);
-    }
-    else if( !done )
-    {
-        event.Skip();   //continue to process event
-        if( request_post_key_update )
-        {
-            wxCommandEvent eventCustom(wxEVT_MY_CUSTOM_COMMAND);
-            wxPostEvent(this, eventCustom);
-        }
-    }
+	Atomic begin(false);
+	NAVIGATION_KEY nk=NK_NULL;
+	bool done=false;
+	bool request_post_key_update = false;
+	bool shift=false;
+	long pos1, pos2;
+	GetSelection( &pos1, &pos2 );
+	bool is_selection = (pos1!=pos2);
+	bool is_selection_in_comment = gd->IsSelectionInComment(this);
+	if( event.GetModifiers() & wxMOD_SHIFT )
+		shift = true;
+	long keycode = event.GetKeyCode();
+	//cprintf( "OnKeyDown() keycode=%lu\n", keycode );
+	{
+		switch ( keycode )
+		{
+			case WXK_NUMPAD_DELETE: // fall-thru
+			case WXK_DELETE:
+			{
+				if( !shift )
+				{
+					if( is_selection_in_comment )
+					{
+						gd->DeleteSelection(this);
+						done = true;
+					}
+					else if( is_selection )
+						done = true;
+					else
+					{
+						done = gd->CommentEdit(this,WXK_DELETE);
+						nk=NK_DELETE;
+					}
+				}
+				break;
+			}
+			case WXK_PAGEUP:                nk=NK_PGUP;     break;
+			case WXK_PAGEDOWN:              nk=NK_PGDOWN;   break;
+			case WXK_HOME:                  nk=NK_HOME;     break;
+			case WXK_END:                   nk=NK_END;      break;
+			case WXK_NUMPAD_LEFT:           nk=NK_LEFT;     break;
+			case WXK_NUMPAD_UP:             nk=NK_UP;       break;
+			case WXK_NUMPAD_RIGHT:          nk=NK_RIGHT;    break;
+			case WXK_NUMPAD_DOWN:           nk=NK_DOWN;     break;
+			case WXK_NUMPAD_HOME:           nk=NK_HOME;     break;
+			case WXK_NUMPAD_PAGEUP:         nk=NK_PGUP;     break;
+			case WXK_NUMPAD_PAGEDOWN:       nk=NK_PGDOWN;   break;
+			case WXK_NUMPAD_END:            nk=NK_END;      break;
+			case WXK_LEFT:
+			{
+				if(!shift)
+					done = gd->CommentEdit(this,WXK_LEFT);
+				nk=NK_LEFT;
+				break;
+			}
+			case WXK_RIGHT:
+			{
+				if( !shift )
+					done = gd->CommentEdit(this,WXK_RIGHT);
+				nk=NK_RIGHT;
+				break;
+			}
+			case WXK_UP:
+			{
+				bool in_comment = gd->IsInComment(this);
+				if( !shift && !in_comment )
+					nk=NK_UP;
+				else if( in_comment )
+					request_post_key_update = true;
+				break;
+			}
+			case WXK_DOWN:
+			{
+				bool in_comment = gd->IsInComment(this);
+				if( !shift && !in_comment )
+					nk=NK_DOWN;
+				else if( in_comment )
+					request_post_key_update = true;
+				break;
+			}
+		}
+	}
+	if( !shift && !done && nk!=NK_NULL )
+	{
+		if( nk == NK_DELETE )
+			gd->DeleteRestOfVariation();
+		else
+			NavigationKey(nk);
+	}
+	else if( !done )
+	{
+		event.Skip();   //continue to process event
+		if( request_post_key_update )
+		{
+			wxCommandEvent eventCustom(wxEVT_MY_CUSTOM_COMMAND);
+			wxPostEvent(this, eventCustom);
+		}
+	}
 }
 
 void CtrlChessTxt::OnAnnotNag1( int nag1 )

@@ -351,10 +351,15 @@ void DbDialog::GdvHelpClick()
     "are provided to add a player's games to the clipboard. Use the Show all ordered "
     " by player menu to search for players."
     "\n\n"
-    "You can sort on any column including the moves column. Sorting on the moves "
-    "column shows the most popular lines of play first. "
-    "The first column (column '#') is provided only to allow "
-    "a sort on initial order (for restoring or reversing the initial order)."
+    "You can sort on any column including the Moves column. The Moves column sort is statistical (most popular lines first) "
+	"rather than alphabetical. Sort history is respected in tie breaks. For example, if you "
+	"sort on Moves, then on Black, then on White; The games will be sorted by White "
+	"player, but all opponents will be grouped together (because of the earlier sort on Black), "
+	"and if there are multiple games between the same players, the games will be sorted according "
+	"to the most common opening sequences between those two players (because of the earlier sort on Moves). "
+	"The first column (column '#') is provided only to allow "
+    "a sort on initial order (for restoring or reversing the initial order). To reverse "
+	"sort click twice." 
     "\n\n";
     wxMessageBox(helpText,
     wxT("Database Dialog Help"),

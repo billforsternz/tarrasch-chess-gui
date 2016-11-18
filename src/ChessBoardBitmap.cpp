@@ -186,12 +186,6 @@ void ChessBoardBitmap::ImageCopy( wxColour *background, wxBitmap &from, int x1, 
 					}
 				}
 			}
-			if(	w==24 )
-			{
-				cprintf( "%c", transparent?' ':'X' );
-				if( col+1 == w )
-					cprintf( "\n" );
-			}
 			to.SetRGB(x2+col, y2+row, r,g,b);
 			to.SetAlpha(x2+col, y2+row, transparent?wxIMAGE_ALPHA_TRANSPARENT:wxIMAGE_ALPHA_OPAQUE );
             src++;
@@ -466,7 +460,7 @@ void ChessBoardBitmap::BoardSetupCustomCursorsCreate()
 		right++;	// one beyond right as per convention
 		bottom++;	// one beyond bottom as per convention
 
-		// square it up
+		// Square it up (avoids some weird distortions if images larger than 32x32 are scaled)
 		if( bottom-top > right-left )
 		{
 			int widen = (bottom-top) - (right-left);

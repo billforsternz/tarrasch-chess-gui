@@ -959,7 +959,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     menu->Append (menu_games,    _T("&Games"));
     menu->Append (menu_commands, _T("&Commands"));
     menu->Append (menu_options,  _T("&Options"));
-    menu->Append (menu_database, _T("&Database"));
+    menu->Append (menu_database, _T("Database"));
     menu->Append (menu_help,     _T("&Help"));
     SetMenuBar( menu );
 

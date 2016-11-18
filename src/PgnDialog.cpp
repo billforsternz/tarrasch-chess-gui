@@ -143,14 +143,17 @@ void PgnDialog::GdvReadItem( int item, CompactGame &info )
 
 void PgnDialog::GdvHelpClick()
 {
-    // Normally we would wish to display proper online help.
-    // For this example, we're just using a message box.
-    /*
-    wxGetApp().GetHelpController().DisplaySection(wxT("Personal record dialog"));
-     */
-
     wxString helpText =
     "\nUse this panel to preview the games in a .pgn file."
+    "\n\n"
+    "You can sort on any column. The first column (column '#') is provided only to allow "
+    "a sort on initial order (for restoring or reversing the initial order). To reverse "
+	"sort click twice. The moves column sort is statistical (most popular lines first) "
+	"rather than alphabetical. Sort history is respected in tie breaks. For example, if you "
+	"sort on Moves, then on Black, then on White; The games will be sorted by White "
+	"player, but all opponents will be grouped together (because of the earlier sort on Black), "
+	"and if there are multiple games between the same players, the games will be sorted according "
+	"to the most common opening sequences between those two players (because of the earlier sort on Moves)."
     "\n\n"
     "Two special features are provided at the moment. ECO calculates ECO codes. Note "
     "that existing ECO codes are overwritten. Since different chess programs may differ "
@@ -158,14 +161,10 @@ void PgnDialog::GdvHelpClick()
     "\n\n"
     "The Publish button is used to create interactive web content. This is still under "
     "development and should be treated as an extra-for-experts. There is a file "
-    "named web.zip in your TarraschDb installation directory with supplementary files "
-    "and instructions for the keen and well motivated."
-    "\n\n"
-    "You can sort on any column. The first column (column '#') is provided only to allow "
-    "a sort on initial order (for restoring or reversing the initial order)."
-    "\n\n";
+    "named web.zip in your Tarrasch installation directory with supplementary files "
+    "and instructions for the keen and well motivated.";
     wxMessageBox(helpText,
-    wxT("Database Dialog Help"),
+    wxT("Games Dialog Help"),
     wxOK|wxICON_INFORMATION, NULL );
 }
 
