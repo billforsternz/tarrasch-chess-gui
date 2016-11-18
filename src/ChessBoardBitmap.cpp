@@ -186,6 +186,12 @@ void ChessBoardBitmap::ImageCopy( wxColour *background, wxBitmap &from, int x1, 
 					}
 				}
 			}
+			if(	w==24 )
+			{
+				cprintf( "%c", transparent?' ':'X' );
+				if( col+1 == w )
+					cprintf( "\n" );
+			}
 			to.SetRGB(x2+col, y2+row, r,g,b);
 			to.SetAlpha(x2+col, y2+row, transparent?wxIMAGE_ALPHA_TRANSPARENT:wxIMAGE_ALPHA_OPAQUE );
             src++;
@@ -460,6 +466,28 @@ void ChessBoardBitmap::BoardSetupCustomCursorsCreate()
 		right++;	// one beyond right as per convention
 		bottom++;	// one beyond bottom as per convention
 
+		// square it up
+		if( bottom-top > right-left )
+		{
+			int widen = (bottom-top) - (right-left);
+			left -= (widen/2);
+			right = (bottom-top) + left;
+			if( left < 0 )
+				left = 0;
+			if( right > dim_pix )
+				right = dim_pix;
+		}
+		else if( right-left > bottom-top )
+		{
+			int lengthen = (right-left) - (bottom-top);
+			top -= (lengthen/2);
+			bottom = (right-left) + top;
+			if( top < 0 )
+				top = 0;
+			if( bottom > dim_pix )
+				bottom = dim_pix;
+		}
+
 		// Coordinates on source chess board
 		int x = normal_orientation ? (file-'a') : ('h'-file);
 		int y = normal_orientation ? ('8'-rank) : (rank-'1');
@@ -484,6 +512,7 @@ void ChessBoardBitmap::BoardSetupCustomCursorsCreate()
 						s.push_back(ch);
 				}
 			}
+
 			ImageCopy( &light_colour, chess_board_bmp, x*dim_pix+left, y*dim_pix+top, *ptr, 0, 0, right-left, bottom-top, s.c_str() );
 		}
 

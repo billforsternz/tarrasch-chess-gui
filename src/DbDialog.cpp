@@ -68,7 +68,7 @@ wxSizer *DbDialog::GdvAddExtraControls()
     //    sz.y /= 3;
     wxSize sz4 = mini_board->GetSize();
     wxSize sz5 = sz4;
-    sz5.x = (sz4.x*18)/10;
+    sz5.x = (sz4.x*185)/100;
     sz5.y = (sz4.y*10)/10;
     notebook = new wxNotebook(this, wxID_ANY, wxDefaultPosition, /*wxDefaultSize*/ sz5 );
     //wxPanel *notebook_page1 = new wxPanel(notebook, wxID_ANY );
@@ -844,12 +844,12 @@ void DbDialog::StatsCalculate()
 
     if( !list_ctrl_stats )
     {
-        wxSize sz4 = mini_board->GetSize();
-        sz4.x = (sz4.x*13)/10;
-        sz4.y = (sz4.y*10)/10;
+        //wxSize sz4 = mini_board->GetSize();
+        //sz4.x = (sz4.x*50)/100;
+        //sz4.y = (sz4.y*50)/100;
         
-        list_ctrl_stats   = new wxListBox( notebook, ID_DB_LISTBOX_STATS, wxDefaultPosition, sz4, 0, NULL, wxLB_HSCROLL );
-        list_ctrl_transpo = new wxListBox( notebook, ID_DB_LISTBOX_TRANSPO, wxDefaultPosition, sz4, 0, NULL, wxLB_HSCROLL );
+        list_ctrl_stats   = new wxListBox( notebook, ID_DB_LISTBOX_STATS, wxDefaultPosition, wxDefaultSize, 0, NULL, wxLB_HSCROLL );
+        list_ctrl_transpo = new wxListBox( notebook, ID_DB_LISTBOX_TRANSPO, wxDefaultPosition, wxDefaultSize, 0, NULL, wxLB_HSCROLL );
         notebook->AddPage(list_ctrl_stats,"Next Move",true);
         notebook->AddPage(list_ctrl_transpo,"Transpositions",false);
     }

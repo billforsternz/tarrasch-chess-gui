@@ -1,4 +1,160 @@
-DPCFNH
+18/11/2016
+Statistical
+Underlining
+search spaces
+meta
+larger squares TICK
+test filter
+
+17/11/2016
+
+Ian's bug FIXED
+edge thickness FIXED
+adjust colours NO
+reset app size if no pane size NO
+Try on Windows XP YES
+paste meta-data NO
+Rewrite stockfish help YES
+Fix the undo bug properly YES
+Larger miniboard NO
+
+
+Revisit todo list
+
+Todo (done on 15/9/2016)
+------------------------
+Lose the sunken border effect
+Doing scandi prep, load game (instead of use game) by mistake. Tried closing tab - crash
+Swap sides swaps labels
+Got into a situation with Kibitzer stopped and suggestions horizontal - looks bad
+Book moves not at far right if maximise
+Height of book moves should maybe set notebook width
+Board minimum width is controlled by pitch=15
+Add duplicate game thing
+Layout is non-volatile
+Get click on square working again
+Improve selection of new database file in create database dialog
+Add delete variation command
+Improved database icon in toolbar
+Show all by player not sorted sensibly within player
+Save all doesn't work for show all by player - remove it
+Cut, delete, paste should change nbr of games in a list
+Claude: Aggressive smaller resize from top left causes crash.
+Claude: Start game with engine to move - doesn't say Engine Thinking
+Edit colours
+Improved anti-aliasing without white jaggies around pieces
+Remove small board option
+Add Claude to credits.
+Bug fix: Cannot initially drag pieces in board setup
+Bug fix: Info boxes have weird first paragraph
+Clipboard as temp*orary* database
+Check all bitmaps have white pieces on left
+Change Rybka to UciEngine everywhere
+Idea: in database next move pane asterisk moves that mimic the current game.
+Dynamic US spelling (basically because of color)
+New tab button next to book moves?
+Claude: Permissions error moving files to documents
+Pickup ratings field from earlier in tournament when entering games.
+Get rid of edit game prefix
+Bring colours into preview board
+Need to get click on players, clocks working again
+
+Todo (not yet on 15/9/2016)
+--------------
+32 bit icons     NO
+Extra NAGs eg unclear   NO
+Can we control multiple instances?  NO
+Get close box on tabs   YES
+Efficient undo  NO
+Highlight colours   YES
+Bring colours into setup board  YES
+Alt F underlining etc   NO
+6 custom commands         NO
+Check ANSI names in pgn     YES
+Select All in games dialogs     NO
+Add more ratings filters        YES
+Buttons same width          NO
+Ticking clock is red        YES
+Claude: Settings, particularly GUI layout non-volatility imperfect  ?
+Add Pro-Dao NO
+Do database create and append on top of existing database   NO
+Allocate control block frees unused blocks  NO
+Append adds extra blank line    NO
+6 engine parms instead of 4 NO
+pgn column sorting - prompt to load (except col 0), handle cancelling differently   OKAY I THINK
+Add stat for how many transpos pulled in when drilling down NO
+Bug: First game of 2015-summer-g.pgn not processed  YES
+Check weird ChessBase pgn format supported for both preview and loaded game.    NO
+Bug: Make moves, save game (overwrite) - this tab not in file.  YES
+pgn_handle not cleared by constructor - check others    NO
+e8Q as well as e8=Q NO
+Paste tags  NO
+reduce sleep in engine state machine    NO
+Bugs:
+    Ian's a-file bug    YES
+    Training (partial blindfold - 2 move lag) bug   YES
+    Undo and move now don't play well together      YES
+    a) Paste current game into clipboard (incidentally - if White isn't "" don't put up game details for editing please)
+    b) Open a new file
+    c) Two bogus save requests ensue.                  YES
+    Working with a chessbase pgn with unicode intro can leave single line [Event ""] artifacts is file later NO
+    Paste game into current file, edit game details, save - changes not reflected?  YES
+
+Simple game, no ponder, not fixed period, "last_command_was_go_infinite" really means "last_command_was_go"  1.h4 d5 h5 e5 h6 Nxh6
+
+*** Events after reception of 1...d5;
+out: info depth 18 seldepth 25 multipv 1 score cp 13 nodes 3961512 nps 883477 hashfull 435 tbhits 0 time 4484 pv d7d5 d2d4 g8f6 c2c4 c7c5 e2e3 b8c6 c4d5 f6d5 d4c5 e7e5 e3e4 d5f6 d1d8 e8d8 c1g5 h7h6 g5f6 g7f6 b1c3 f8c5
+out: bestmove d7d5 ponder d2d4
+State change WAIT_EVALUATION -> READY (line_out())
+Engine returns. bestmove is d7d5, ponder is 0000
+State change READY -> SEND_PLAY_ENGINE1 (go (smoves))
+State change SEND_PLAY_ENGINE1 -> SEND_ISREADY_P (user_hook_in())      <-+
+in: stop                                                                 |
+State change SEND_ISREADY_P -> WAIT_READYOK_P (user_hook_in())           |
+in: isready                                                              | last_command_was_go_infinite triggers a redundant stop
+out: readyok                                                             |
+State change WAIT_READYOK_P -> SEND_PLAY_ENGINE2 (readyok received)    <-+
+in: setoption name MultiPV value 1
+State change SEND_PLAY_ENGINE2 -> SEND_ISREADY_P (user_hook_in())
+State change SEND_ISREADY_P -> WAIT_READYOK_P (user_hook_in())
+in: isready
+out: readyok
+State change WAIT_READYOK_P -> SEND_PLAY_ENGINE3 (readyok received)
+State change SEND_PLAY_ENGINE3 -> SEND_PLAY_ENGINE4 (user_hook_in())
+in: position startpos moves h2h4 d7d5 h4h5
+State change SEND_PLAY_ENGINE4 -> WAIT_EVALUATION (user_hook_in())
+in: go wtime 1507079 btime 175062 winc 5000 binc 1000
+Read big: avail=1198, bread=1023
+out: info depth 1 seldepth 1 multipv 1 score cp 109 nodes 28 nps 14000 tbhits 0 time 2 pv e7e5
+out: info depth 2 seldepth 2 multipv 1 score cp 79 nodes 99 nps 49500 tbhits 0 time 2 pv e7e5 d2d4 e5d4 d1d4 b8c6
+
+Simple game, no ponder, not fixed period, "last_command_was_go_infinite" means exactly that  1.h4 d5 h5 e5 h6 Nxh6
+
+*** Events after reception of 1...d5;
+out: info depth 18 seldepth 25 multipv 1 score cp 13 nodes 3961512 nps 891228 hashfull 435 tbhits 0 time 4445 pv d7d5 d2d4 g8f6 c2c4 c7c5 e2e3 b8c6 c4d5 f6d5 d4c5 e7e5 e3e4 d5f6 d1d8 e8d8 c1g5 h7h6 g5f6 g7f6 b1c3 f8c5
+out: bestmove d7d5 ponder d2d4
+State change WAIT_EVALUATION -> READY (line_out())
+Engine returns. bestmove is d7d5, ponder is 0000
+State change READY -> SEND_PLAY_ENGINE1 (go (smoves))
+State change SEND_PLAY_ENGINE1 -> SEND_PLAY_ENGINE2 (user_hook_in())   <--- no stop, go directly from SEND_PLAY_ENGINE1 -> SEND_PLAY_ENGINE2
+in: setoption name MultiPV value 1
+State change SEND_PLAY_ENGINE2 -> SEND_ISREADY_P (user_hook_in())
+State change SEND_ISREADY_P -> WAIT_READYOK_P (user_hook_in())
+in: isready
+out: readyok
+State change WAIT_READYOK_P -> SEND_PLAY_ENGINE3 (readyok received)
+State change SEND_PLAY_ENGINE3 -> SEND_PLAY_ENGINE4 (user_hook_in())
+in: position startpos moves h2h4 d7d5 h4h5
+State change SEND_PLAY_ENGINE4 -> WAIT_EVALUATION (user_hook_in())
+in: go wtime 1503265 btime 175063 winc 5000 binc 1000
+Peek: dbg_count=2, avail=1531, bread=1023
+out: info depth 1 seldepth 1 multipv 1 score cp 109 nodes 28 nps 28000 tbhits 0 time 1 pv e7e5
+out: info depth 2 seldepth 2 multipv 1 score cp 79 nodes 99 nps 49500 tbhits 0 time 2 pv e7e5 d2d4 e5d4 d1d4 b8c6
+out: info depth 3 seldepth 3 multipv 1 score cp 79 nodes 161 nps 80500 tbhits 0 time 2 pv e7e5 d2d4 e5d4
+out: info depth 4 seldepth 4 multipv 1 score cp 79 nodes 313 nps 156500 tbhits 0 time 2 pv e7e5 d2d4 e5d4 d1d4
+out: info depth 5 seldepth 5 multipv 1 score cp 77 nodes 587 nps 293500 tbhits 0 time 2 pv e7e5 d2d4 b8c6 d4e5 c6e5
+
+
 
 5/11/2016
 Added #17714 to wxWidgets trac system.

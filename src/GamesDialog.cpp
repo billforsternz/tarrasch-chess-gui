@@ -524,7 +524,7 @@ void GamesDialog::CreateControls()
         objs.repository->nv.m_col7 = cols[7] =   6*x/142;    // "Round" 
         objs.repository->nv.m_col8 = cols[8] =   7*x/142;    // "Result"
         objs.repository->nv.m_col9 = cols[9] =   5*x/142;    // "ECO"   
-        objs.repository->nv.m_col10= cols[10]=  54*x/142-2;  // "Moves"
+        objs.repository->nv.m_col10= cols[10]=  54*x/142;  // "Moves"
         objs.repository->nv.m_col11 = cols[11] = 5*x/142;    // "Ply"   
     }
     cprintf( "cols[0] = %d\n", cols[0] );
