@@ -635,6 +635,7 @@ bool CentralWorkSaver::FileSaveGameAs()
         file = fopen( (const char *)wx_filename.c_str(), append ? "ab" : "wb" );
         if( file )
         {
+			objs.gl->mru.AddFileToHistory( wx_filename );
             fseek(file,0,SEEK_END);
             if( append )
             {

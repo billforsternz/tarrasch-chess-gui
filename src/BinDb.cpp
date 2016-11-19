@@ -572,12 +572,12 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
 					elo_b_pass = old_game;
 			}
 		}
-		bool discard=false;
+		bool ok = true;
 		if( elo_cutoff_one )
-			discard = elo_w_pass||elo_b_pass;
+			ok = elo_w_pass||elo_b_pass;
 		else if( elo_cutoff_both )
-			discard = elo_w_pass&&elo_b_pass;
-		if( discard )
+			ok = elo_w_pass&&elo_b_pass;
+		if( !ok )
 			return false;   // not inserted, not error
 	}
     const char *s =  white;

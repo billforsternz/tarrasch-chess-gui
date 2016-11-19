@@ -1,10 +1,13 @@
 18/11/2016
-Statistical
-Underlining
+Statistical   TICK
+Underlining   TICK
 search spaces
 meta
 larger squares TICK
 test filter
+kibitz help
+create file goes to mru
+Does trying to overwrite db file delete it?
 
 17/11/2016
 

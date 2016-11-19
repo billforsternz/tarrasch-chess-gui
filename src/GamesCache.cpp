@@ -459,6 +459,8 @@ void GamesCache::FileCreate( std::string &filename )
     {
         loaded = true;
         pgn_filename = filename;
+		wxString wx_filename(filename.c_str());
+		objs.gl->mru.AddFileToHistory( wx_filename );
         FileSaveInner( pgn_out );
         objs.gl->pf.Close(NULL);    // close all handles (gc_clipboard
                                     //  only needed for ReopenModify())
@@ -487,6 +489,8 @@ void GamesCache::FileSaveAs( std::string &filename, GamesCache *gc_clipboard )
     if( ok )
     {
         pgn_filename = filename;
+		wxString wx_filename(filename.c_str());
+		objs.gl->mru.AddFileToHistory( wx_filename );
         FileSaveInner( pgn_out );
         objs.gl->pf.Close( gc_clipboard );    // close all handles
     }

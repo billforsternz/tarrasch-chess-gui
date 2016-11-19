@@ -283,6 +283,7 @@ void CreateDatabaseDialog::OnOk( wxCommandEvent& WXUNUSED(event) )
 void CreateDatabaseDialog::OnCreateDatabase()
 {
     bool ok=true;
+	bool created_new_db_file = false;
     std::string files[6];
     int cnt=0;
     std::string error_msg;
@@ -348,7 +349,9 @@ void CreateDatabaseDialog::OnCreateDatabase()
             fullpath = wfn.GetFullPath();
         }
         ofile = fopen( fullpath.c_str(), "wb" );
-        if( !ofile )
+        if( ofile )
+			created_new_db_file = true;
+        else
         {
             error_msg = "Cannot create ";
             error_msg += fullpath;
@@ -416,7 +419,8 @@ void CreateDatabaseDialog::OnCreateDatabase()
         if( error_msg == "cancel" )
             error_msg = "Database creation cancelled";
         wxMessageBox( error_msg.c_str(), "Database creation failed", wxOK|wxICON_ERROR );
-        _unlink(db_filename.c_str());
+		if( created_new_db_file )
+			_unlink(db_filename.c_str());
     }
     // TODO DatabaseReload();
 }

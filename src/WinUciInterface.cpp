@@ -1403,6 +1403,8 @@ void UciInterface::OptionIn( const char *s )
         // alternative check for StockFish, which also has "Max Threads per Split Point",
         // and str_pattern_smart() isn't quite smart enough to discriminate ;)
         parm = str_pattern(s, "Threads", true);
+		if( parm )
+			parm--;	// avoid sending two spaces after Threads
     }
     if( parm && str_search(parm,"type spin",true) )
     {

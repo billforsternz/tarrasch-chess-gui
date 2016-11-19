@@ -222,7 +222,6 @@ private:
     void KibitzIntro();
     void KibitzClearMultiPV();
     uint32_t game_being_edited_tag;
-	wxFileHistory mru;
 
     // public data
 public:
@@ -238,6 +237,7 @@ public:
     GamesCache gc_session;
     GamesCache gc_database;
     PgnFiles pf;
+	wxFileHistory mru;
     GameClock chess_clock;
     bool db_clipboard;
     Undo undo;
