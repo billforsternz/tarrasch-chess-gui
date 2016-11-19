@@ -859,114 +859,114 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 
     // Menu - File
     wxMenu *menu_file     = new wxMenu;
-    menu_file->Append (wxID_NEW,                    _T("New\tCtrl+N"));
-    menu_file->Append (wxID_OPEN,                   _T("Open\tCtrl+O"));
+    menu_file->Append (wxID_NEW,                    "New\tCtrl+N", "Start afresh with a new .pgn file with no games");
+    menu_file->Append (wxID_OPEN,                   "Open\tCtrl+O", "Open an existing .pgn file" );
 	wxMenu *menu_recent = new wxMenu;
 	menu_file->AppendSubMenu( menu_recent, "Open Recent" );
-    menu_file->Append (ID_FILE_OPEN_LOG,            _T("Open log file"));
-    menu_file->Append (wxID_SAVE,                   _T("Save\tCtrl+S"));
-    menu_file->Append (wxID_SAVEAS,                 _T("Save as"));
-    menu_file->Append (ID_FILE_SAVE_GAME_AS,        _T("Save game as"));
+    menu_file->Append (ID_FILE_OPEN_LOG,            "Open log file", "Open the file in which Tarrasch logs games");
+    menu_file->Append (wxID_SAVE,                   "Save\tCtrl+S", "Save the current .pgn file" );
+    menu_file->Append (wxID_SAVEAS,                 "Save as", "Save the current .pgn file with a different name");
+    menu_file->Append (ID_FILE_SAVE_GAME_AS,        "Save game as", "Save the current game to a new or existing .pgn file");
     menu_file->AppendSeparator();
-    menu_file->Append (ID_FILE_TAB_NEW,              _T("New tab\tCtrl+T"));
-    menu_file->Append (ID_FILE_TAB_CLOSE,            _T("Close tab\tCtrl+D"));
-    menu_file->Append (ID_FILE_TAB_INCLUDE,          _T("Add tab to file"));
+    menu_file->Append (ID_FILE_TAB_NEW,              "New tab\tCtrl+T");
+    menu_file->Append (ID_FILE_TAB_CLOSE,            "Close tab\tCtrl+D");
+    menu_file->Append (ID_FILE_TAB_INCLUDE,          "Add tab to file", "Add this game to the current file");
     menu_file->AppendSeparator();
-    menu_file->Append (wxID_EXIT,                   _T("E&xit\tAlt-X"));
+    menu_file->Append (wxID_EXIT,                   "E&xit\tAlt-X");
 
     // Menu - Edit
     wxMenu *menu_edit     = new wxMenu;
-    menu_edit->Append (wxID_COPY,                    _T("Copy\tCtrl+C"));
-    menu_edit->Append (wxID_CUT,                     _T("Cut\tCtrl+X"));
-    menu_edit->Append (wxID_PASTE,                   _T("Paste\tCtrl+V"));
+    menu_edit->Append (wxID_COPY,                    "Copy\tCtrl+C");
+    menu_edit->Append (wxID_CUT,                     "Cut\tCtrl+X");
+    menu_edit->Append (wxID_PASTE,                   "Paste\tCtrl+V");
     menu_edit->Append (wxID_UNDO,                    "Undo\tCtrl+Z");
-    menu_edit->Append (wxID_REDO,                    _T("Redo\tCtrl+Y"));
-    menu_edit->Append (wxID_DELETE,                  _T("Delete comment text or remainder of variation\tDel"));
-    menu_edit->Append (ID_EDIT_GAME_DETAILS,         _T("Edit game details"));
-//    menu_edit->Append (ID_EDIT_GAME_PREFIX,          _T("Edit game prefix"));
-    menu_edit->Append (ID_COPY_GAME_PGN_TO_CLIPBOARD,_T("Copy game to system clipboard (PGN)"));
-    menu_edit->Append (ID_EDIT_DELETE_VARIATION,     _T("Delete variation"));
-    menu_edit->Append (ID_EDIT_PROMOTE,              _T("Promote variation"));
-    menu_edit->Append (ID_EDIT_DEMOTE,               _T("Demote variation"));
-    menu_edit->Append (ID_EDIT_DEMOTE_TO_COMMENT,    _T("Demote rest of variation to comment\tAlt-D"));
-    menu_edit->Append (ID_EDIT_PROMOTE_TO_VARIATION, _T("Promote comment to moves"));
-    menu_edit->Append (ID_EDIT_PROMOTE_REST_TO_VARIATION, _T("Promote rest of comment to moves\tAlt-P"));
+    menu_edit->Append (wxID_REDO,                    "Redo\tCtrl+Y");
+    menu_edit->Append (wxID_DELETE,                  "Delete comment text or remainder of variation\tDel", "Delete selection or rest of variation");
+    menu_edit->Append (ID_EDIT_GAME_DETAILS,         "Edit game details", "Modify player names, tournament names, or other details");
+//    menu_edit->Append (ID_EDIT_GAME_PREFIX,          "Edit game prefix");
+    menu_edit->Append (ID_COPY_GAME_PGN_TO_CLIPBOARD,"Copy game to system clipboard (PGN)");
+    menu_edit->Append (ID_EDIT_DELETE_VARIATION,     "Delete variation", "Delete the whole variation");
+    menu_edit->Append (ID_EDIT_PROMOTE,              "Promote variation", "The current variation is elevated higher in the hierarchy of variations");
+    menu_edit->Append (ID_EDIT_DEMOTE,               "Demote variation", "The current variation is lowered in the hierarchy of variations");
+    menu_edit->Append (ID_EDIT_DEMOTE_TO_COMMENT,    "Demote rest of variation to comment\tAlt-D", "Convert moves to plain text which can be edited");
+    menu_edit->Append (ID_EDIT_PROMOTE_TO_VARIATION, "Promote comment to moves","Convert plain text to live moves");
+    menu_edit->Append (ID_EDIT_PROMOTE_REST_TO_VARIATION, "Promote rest of comment to moves\tAlt-P","Convert plain text (from cursor to end of comment) to live moves");
 
     // Menu - Games
     wxMenu *menu_games   = new wxMenu;
-    menu_games->Append (ID_GAMES_CURRENT,        _T("Current file\tCtrl+L"));
-    menu_games->Append (ID_GAMES_DATABASE,     _T("Database"));
-    menu_games->Append (ID_GAMES_SESSION,        _T("Session"));
-    menu_games->Append (ID_GAMES_CLIPBOARD,      _T("Clipboard"));
+    menu_games->Append (ID_GAMES_CURRENT,        "Current file\tCtrl+L", "Show the current file as a list of games");
+    menu_games->Append (ID_GAMES_DATABASE,       "Database", "Do a database search, revealing a list of found games");
+    menu_games->Append (ID_GAMES_SESSION,        "Session", "Show activity in this session as a list of games");
+    menu_games->Append (ID_GAMES_CLIPBOARD,      "Clipboard", "Show the copied games as a list of games");
     menu_games->AppendSeparator();
-    menu_games->Append (ID_CMD_NEXT_GAME,       _T("Next game from file"));
-    menu_games->Append (ID_CMD_PREVIOUS_GAME,   _T("Previous game from file"));
+    menu_games->Append (ID_CMD_NEXT_GAME,       "Next game from file");
+    menu_games->Append (ID_CMD_PREVIOUS_GAME,   "Previous game from file");
 
     // Menu - Commands
     wxMenu *menu_commands = new wxMenu;
-    menu_commands->Append (ID_CMD_NEW_GAME,     _T("New Game"));
-    menu_commands->Append (ID_CMD_FLIP,         _T("Flip board\tCtrl+F"));
-    menu_commands->Append (ID_CMD_TAKEBACK,     _T("Take back\tCtrl+B"));
-    menu_commands->Append (ID_CMD_SET_POSITION, _T("Set position\tCtrl+P"));
-    menu_commands->Append (ID_CMD_KIBITZ,       _T("Start kibitzer\tCtrl+K"));
+    menu_commands->Append (ID_CMD_NEW_GAME,     "New Game", "Start a new game, but leave existing .pgn file open" );
+    menu_commands->Append (ID_CMD_FLIP,         "Flip board\tCtrl+F", "Reverse the current orientation, applies to Setup position and Games menu boards as well");
+    menu_commands->Append (ID_CMD_TAKEBACK,     "Take back\tCtrl+B");
+    menu_commands->Append (ID_CMD_SET_POSITION, "Set position\tCtrl+P", "Setup a new position");
+    menu_commands->Append (ID_CMD_KIBITZ,       "Start kibitzer\tCtrl+K", "Turn computer analysis on or off");
     #if 1 // auto_kibitz_clear (if auto kibitz clear, comment out manual clear)
-//  menu_commands->Append (ID_CMD_CLEAR_KIBITZ, _T("Clear kibitz text"));
+//  menu_commands->Append (ID_CMD_CLEAR_KIBITZ, "Clear kibitz text");
     #else // manual_kibitz_clear
-    menu_commands->Append (ID_CMD_CLEAR_KIBITZ, _T("Clear kibitz text"));
+    menu_commands->Append (ID_CMD_CLEAR_KIBITZ, "Clear kibitz text");
     #endif
 
-    menu_commands->Append (ID_CMD_DRAW,             _T("Draw"));
-    menu_commands->Append (ID_CMD_WHITE_RESIGNS,    _T("White resigns"));
-    menu_commands->Append (ID_CMD_BLACK_RESIGNS,    _T("Black resigns"));
-    menu_commands->Append (ID_CMD_PLAY_WHITE,       _T("Play white"));
-    menu_commands->Append (ID_CMD_PLAY_BLACK,       _T("Play black"));
-    menu_commands->Append (ID_CMD_SWAP_SIDES,       _T("Swap sides\tAlt-S"));
-    menu_commands->Append (ID_CMD_MOVENOW,          _T("Move now\tAlt-M"));
+    menu_commands->Append (ID_CMD_DRAW,             "Draw", "Indicate game result, or claim draw when playing against engine");
+    menu_commands->Append (ID_CMD_WHITE_RESIGNS,    "White resigns", "Indicate game result, or concede when playing White against engine");
+    menu_commands->Append (ID_CMD_BLACK_RESIGNS,    "Black resigns", "Indicate game result, or concede when playing Black against engine");
+    menu_commands->Append (ID_CMD_PLAY_WHITE,       "Play white", "Play White against engine, starting from current position");
+    menu_commands->Append (ID_CMD_PLAY_BLACK,       "Play black", "Play Black against engine, starting from current position");
+    menu_commands->Append (ID_CMD_SWAP_SIDES,       "Swap sides\tAlt-S", "Reverse roles in game against engine" );
+    menu_commands->Append (ID_CMD_MOVENOW,          "Move now\tAlt-M", "Force engine to move" );
 
     // Options
     wxMenu *menu_options = new wxMenu;
-    menu_options->Append (ID_OPTIONS_ENGINE,       _T("Engine"));
-    menu_options->Append (ID_OPTIONS_GENERAL,      _T("General"));
-    menu_options->Append (ID_OPTIONS_PLAYERS,      _T("Player names"));
-    menu_options->Append (ID_OPTIONS_CLOCKS,       _T("Clocks"));
-    menu_options->Append (ID_OPTIONS_LOG,          _T("Log file"));
-    menu_options->Append (ID_OPTIONS_BOOK,         _T("Opening book"));
-    menu_options->Append (ID_OPTIONS_TRAINING,     _T("Training"));
-    menu_options->Append (ID_OPTIONS_RESET,        _T("Reset to factory defaults"));
+    menu_options->Append (ID_OPTIONS_ENGINE,       "Engine", "Specify the UCI engine to use, along with Engine options");
+    menu_options->Append (ID_OPTIONS_GENERAL,      "General", "Miscellaneous options");
+    menu_options->Append (ID_OPTIONS_PLAYERS,      "Player names", "Label the board with player names (also available by clicking on name)");
+    menu_options->Append (ID_OPTIONS_CLOCKS,       "Clocks", "Control all aspects of the on-screen game timer");
+    menu_options->Append (ID_OPTIONS_LOG,          "Log file", "Setup a file to automatically log all games");
+    menu_options->Append (ID_OPTIONS_BOOK,         "Opening book", "Control a simple .pgn based opening book facility");
+    menu_options->Append (ID_OPTIONS_TRAINING,     "Training", "Control some simple training modes to improve visualization skills");
+    menu_options->Append (ID_OPTIONS_RESET,        "Reset to factory defaults", "Reset all options to their original values");
 
     // Database
     wxMenu *menu_database = new wxMenu;
-    menu_database->Append (ID_DATABASE_SEARCH,              _T("Position search"));
-    menu_database->Append (ID_DATABASE_PATTERN,             _T("Pattern search"));
-    menu_database->Append (ID_DATABASE_MATERIAL,            _T("Material balance search"));
-    menu_database->Append (ID_DATABASE_SHOW_ALL,            _T("Show all games"));
-    menu_database->Append (ID_DATABASE_PLAYERS,             _T("Show all ordered by player"));
-    menu_database->Append (ID_DATABASE_SELECT,              _T("Select current database"));
-    menu_database->Append (ID_DATABASE_CREATE,              _T("Create new database"));
-    menu_database->Append (ID_DATABASE_APPEND,              _T("Append to database"));
-    // menu_database->Append (ID_DATABASE_MAINTENANCE,         _T("INTERNAL TEST - REMOVE SOON - Maintain database"));
+    menu_database->Append (ID_DATABASE_SEARCH,              "Position search", "Search the database for the current position");
+    menu_database->Append (ID_DATABASE_PATTERN,             "Pattern search", "Search the database for situations where a group of pieces are at specific locations");
+    menu_database->Append (ID_DATABASE_MATERIAL,            "Material balance search", "Search the database for a specific material balance, with optional locked down squares" );
+    menu_database->Append (ID_DATABASE_SHOW_ALL,            "Show all games", "Show all database games - equivalent to searching for the standard starting position");
+    menu_database->Append (ID_DATABASE_PLAYERS,             "Show all ordered by player", "Show all games ordered by White player, useful for searching for players");
+    menu_database->Append (ID_DATABASE_SELECT,              "Select current database", "Specify which database file to use for searches");
+    menu_database->Append (ID_DATABASE_CREATE,              "Create new database", "Create a new database file from scratch");
+    menu_database->Append (ID_DATABASE_APPEND,              "Append to database", "Append games to an existing database");
+    // menu_database->Append (ID_DATABASE_MAINTENANCE,         "INTERNAL TEST - REMOVE SOON - Maintain database");
 
     // Help
     wxMenu *menu_help     = new wxMenu;
-    menu_help->Append (ID_CMD_ABOUT,                _T("About"));
-    menu_help->Append (ID_HELP_HELP,                _T("Help"));
-    menu_help->Append (ID_HELP_CREDITS,             _T("Credits"));
+    menu_help->Append (ID_CMD_ABOUT,                "About", "Version and publisher information");
+    menu_help->Append (ID_HELP_HELP,                "Help", "An overview of the program");
+    menu_help->Append (ID_HELP_CREDITS,             "Credits", "Thank you to numerous people");
 
     // Menu bar
     wxMenuBar *menu = new wxMenuBar;
-    menu->Append (menu_file,     _T("&File"));
-    menu->Append (menu_edit,     _T("&Edit"));
-    menu->Append (menu_games,    _T("&Games"));
-    menu->Append (menu_commands, _T("&Commands"));
-    menu->Append (menu_options,  _T("&Options"));
-    menu->Append (menu_database, _T("Database"));
-    menu->Append (menu_help,     _T("&Help"));
+    menu->Append (menu_file,     "&File");
+    menu->Append (menu_edit,     "&Edit");
+    menu->Append (menu_games,    "&Games");
+    menu->Append (menu_commands, "&Commands");
+    menu->Append (menu_options,  "&Options");
+    menu->Append (menu_database, "Database");
+    menu->Append (menu_help,     "&Help");
     SetMenuBar( menu );
 
     // Create a status bar
-    CreateStatusBar(3);
-    int widths[3] = {-1,-200,-100};
-    SetStatusWidths(3,widths);
+    CreateStatusBar(2);
+    int widths[2] = {-200,-100};
+    SetStatusWidths(2,widths);
 
 #ifdef THC_WINDOWS
     wxToolBar *toolbar = new wxToolBar(this, wxID_ANY,
@@ -1024,9 +1024,9 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 #endif
     toolbar->AddSeparator();
     nbr_separators++;
-    ADD_TOOL( wxID_COPY, bmpCopy, _T("Copy") ); //, toolBarBitmaps[Tool_copy], _T("Toggle button 2"), wxITEM_CHECK);
-    ADD_TOOL( wxID_CUT,  bmpCut,  _T("Cut")  ); //, toolBarBitmaps[Tool_cut], _T("Toggle/Untoggle help button"));
-    ADD_TOOL( wxID_PASTE,bmpPaste,_T("Paste")); // , toolBarBitmaps[Tool_paste], _T("Paste"));
+    ADD_TOOL( wxID_COPY, bmpCopy, "Copy" ); //, toolBarBitmaps[Tool_copy], _T("Toggle button 2"), wxITEM_CHECK);
+    ADD_TOOL( wxID_CUT,  bmpCut,  "Cut"  ); //, toolBarBitmaps[Tool_cut], _T("Toggle/Untoggle help button"));
+    ADD_TOOL( wxID_PASTE,bmpPaste,"Paste"); // , toolBarBitmaps[Tool_paste], _T("Paste"));
     ADD_TOOL( wxID_UNDO, bmp_undo, "Undo");
     ADD_TOOL( wxID_REDO, bmp_redo, "Redo");
 #ifdef THC_WINDOWS

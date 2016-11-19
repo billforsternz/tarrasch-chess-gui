@@ -1,13 +1,39 @@
-18/11/2016
+19/11/2016
+Stockfish 8
+One more look at undo limit
+Check close last tab
 Statistical   TICK
 Underlining   TICK
+Mac build maybe
+Maria credit
+check hiding moves pane
 search spaces
 meta
 larger squares TICK
-test filter
-kibitz help
-create file goes to mru
-Does trying to overwrite db file delete it?
+test filter    TICK
+kibitz help    TICK woo hoo, 6 custom parameters, including kibitz
+create file goes to mru TICK
+Does trying to overwrite db file delete it? TICK
+
+Another old list
+YES If there is a nasty assert (eg wxALIGN_CENTRE_VERTICAL) then "Yes" to abort the program doesn't work?!
+YES Get rid of edit game prefix
+YES Fix bolded first line of credits etc.
+YES Fix Larry Oliver's bug
+YES Idea: in database next move pane asterisk moves that mimic the current game.
+YES First line of help is bold for some reason (wx31)
+YES Dynamic US spelling (basically because of color)
+NO Add Pro-Dao
+YES Delete variation menu command
+NO Do database create and append on top of existing database
+YES Bug: First game of 2015-summer-g.pgn not processed
+NO Allocate control block frees unused blocks
+NO Append adds extra blank line
+YES 6 engine parms instead of 4
+YES pgn column sorting - prompt to load (except col 0), handle cancelling differently
+NO add stat for how many transpos pulled in when drilling down
+
+
 
 17/11/2016
 

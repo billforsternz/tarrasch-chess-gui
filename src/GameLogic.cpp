@@ -2912,8 +2912,8 @@ void GameLogic::StatusInit()
     {
         status_field1 = "File: (none)";
         status_field2 = "";
-        objs.frame->SetStatusText( status_field1.c_str(), 1 );
-        objs.frame->SetStatusText( status_field2.c_str(), 2 );
+        objs.frame->SetStatusText( status_field1.c_str(), 0 );
+        objs.frame->SetStatusText( status_field2.c_str(), 1 );
     }
 }
 
@@ -3070,8 +3070,8 @@ void GameLogic::StatusUpdate( int idx )
         }
         if( refresh )
         {
-            objs.frame->SetStatusText( status_field1.c_str(), 1 );
-            objs.frame->SetStatusText( status_field2.c_str(), 2 );
+            objs.frame->SetStatusText( status_field1.c_str(), 0 );
+            objs.frame->SetStatusText( status_field2.c_str(), 1 );
         }
     }
 }

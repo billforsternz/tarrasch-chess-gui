@@ -228,19 +228,53 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGam
     return cache_nbr>0;
 }
 
+// Transform to lower case, collapse multiple spaces to 1, remove spaces after comma
+void Normalise( std::string &in, std::string &out ) 
+{
+	bool nuke_spaces=false;
+	size_t len=in.length();
+	out.clear();
+	for( size_t i=0; i<len; i++ )
+	{
+		int ch = in[i];
+
+		// To lower case
+		if( isascii(ch) && isupper(ch) )
+			ch = tolower(ch);
+
+		// After ',' or space, remove immediately following spaces
+		if( nuke_spaces )
+		{
+			if( ch != ' ' )
+			{
+				out.push_back(ch);
+				nuke_spaces=false;
+			}
+		}
+		else
+		{
+			out.push_back(ch);
+			if( ch==' ' || ch==',' )
+				nuke_spaces = true;
+		}
+	}
+}
+
+
 // Returns row
 int Database::FindPlayer( std::string &name, std::string &current, int start_row, bool white )
 {
     unsigned int row = 0;
-    std::string input(name);
-    std::transform(input.begin(), input.end(), input.begin(), ::tolower);
-    std::transform(current.begin(), current.end(), current.begin(), ::tolower);
+    std::string input;
+	Normalise(name,input);
+	std::string normalised_current;
+	Normalise(current, normalised_current );
     int input_len = input.length();
 
-    // If continue search step
+    // If continue search, step
     if( player_search_in_progress &&
         prev_name == name &&
-        prev_current == current &&
+        prev_current == normalised_current &&
         prev_white == white &&
         prev_row == start_row
       )
@@ -260,8 +294,9 @@ int Database::FindPlayer( std::string &name, std::string &current, int start_row
         const char *val;
         smart_ptr<ListableGame> p = tiny_db.in_memory_game_cache[row];
         val = white ? p->White() : p->Black();
-        std::string player(val);
-        std::transform(player.begin(), player.end(), player.begin(), ::tolower);
+        std::string raw_player(val);
+        std::string player;
+		Normalise(raw_player,player);
         int player_len = player.length();
 
         // If white we want to skip further games played by the same player, (since the list is sorted by white
@@ -269,7 +304,7 @@ int Database::FindPlayer( std::string &name, std::string &current, int start_row
         bool match;
         if( white )
         {
-            match = (player!=current && input_len<=player_len && player.substr(0,input_len)==input);
+            match = (player!=normalised_current && input_len<=player_len && player.substr(0,input_len)==input);
         }
 
         // If black we want to find more black games played by the same player, (since the list is sorted
