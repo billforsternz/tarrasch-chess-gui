@@ -236,6 +236,32 @@ void EngineDialog::CreateControls()
     custom4_horiz->Add( custom4b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
     box_sizer->Add( custom4_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 5 );
 
+    // Text controls for custom parameter 5
+    wxTextCtrl *custom5a_ctrl = new wxTextCtrl ( this, ID_CUSTOM5A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
+    wxTextCtrl *custom5b_ctrl = new wxTextCtrl ( this, ID_CUSTOM5B, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
+
+    // Label for custom parameter 5
+    wxStaticText* custom5_label = new wxStaticText ( this, wxID_STATIC,
+        wxT("Custom parameter 5 (name, value):"), wxDefaultPosition, wxDefaultSize, 0 );
+    box_sizer->Add(custom5_label, 0, wxALIGN_LEFT|wxALL, 5);
+    wxBoxSizer* custom5_horiz  = new wxBoxSizer(wxHORIZONTAL);
+    custom5_horiz->Add( custom5a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
+    custom5_horiz->Add( custom5b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
+    box_sizer->Add( custom5_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 5 );
+
+    // Text controls for custom parameter 6
+    wxTextCtrl *custom6a_ctrl = new wxTextCtrl ( this, ID_CUSTOM6A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
+    wxTextCtrl *custom6b_ctrl = new wxTextCtrl ( this, ID_CUSTOM6B, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
+
+    // Label for custom parameter 6
+    wxStaticText* custom6_label = new wxStaticText ( this, wxID_STATIC,
+        wxT("Custom parameter 6 (name, value):"), wxDefaultPosition, wxDefaultSize, 0 );
+    box_sizer->Add(custom6_label, 0, wxALIGN_LEFT|wxALL, 5);
+    wxBoxSizer* custom6_horiz  = new wxBoxSizer(wxHORIZONTAL);
+    custom6_horiz->Add( custom6a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
+    custom6_horiz->Add( custom6b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
+    box_sizer->Add( custom6_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 5 );
+
     // A dividing line before the OK and Cancel buttons
     wxStaticLine* line = new wxStaticLine ( this, wxID_STATIC,
         wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
@@ -291,6 +317,14 @@ void EngineDialog::SetDialogValidators()
         wxTextValidator(wxFILTER_ASCII, &dat.m_custom4a));
     FindWindow(ID_CUSTOM4B)->SetValidator(
         wxTextValidator(wxFILTER_ASCII, &dat.m_custom4b));
+    FindWindow(ID_CUSTOM5A)->SetValidator(
+        wxTextValidator(wxFILTER_ASCII, &dat.m_custom5a));
+    FindWindow(ID_CUSTOM5B)->SetValidator(
+        wxTextValidator(wxFILTER_ASCII, &dat.m_custom5b));
+    FindWindow(ID_CUSTOM6A)->SetValidator(
+        wxTextValidator(wxFILTER_ASCII, &dat.m_custom6a));
+    FindWindow(ID_CUSTOM6B)->SetValidator(
+        wxTextValidator(wxFILTER_ASCII, &dat.m_custom6b));
 }
 
 // Sets the help text for the dialog controls
@@ -325,11 +359,19 @@ void EngineDialog::SetDialogHelp()
     FindWindow(ID_CUSTOM3A)->SetToolTip(custom_a_help);
     FindWindow(ID_CUSTOM4A)->SetHelpText(custom_a_help);
     FindWindow(ID_CUSTOM4A)->SetToolTip(custom_a_help);
+    FindWindow(ID_CUSTOM5A)->SetHelpText(custom_a_help);
+    FindWindow(ID_CUSTOM5A)->SetToolTip(custom_a_help);
+    FindWindow(ID_CUSTOM6A)->SetHelpText(custom_a_help);
+    FindWindow(ID_CUSTOM6A)->SetToolTip(custom_a_help);
     wxString custom_b_help = wxT("Optional extra parameter, specify value here");
     FindWindow(ID_CUSTOM3B)->SetHelpText(custom_b_help);
     FindWindow(ID_CUSTOM3B)->SetToolTip(custom_b_help);
     FindWindow(ID_CUSTOM4B)->SetHelpText(custom_b_help);
     FindWindow(ID_CUSTOM4B)->SetToolTip(custom_b_help);
+    FindWindow(ID_CUSTOM5B)->SetHelpText(custom_b_help);
+    FindWindow(ID_CUSTOM5B)->SetToolTip(custom_b_help);
+    FindWindow(ID_CUSTOM6B)->SetHelpText(custom_b_help);
+    FindWindow(ID_CUSTOM6B)->SetToolTip(custom_b_help);
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_ENGINE_RESET
@@ -382,7 +424,7 @@ void EngineDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
 	  wxT("\n\n")
       wxT("This process also reveals all parameters supported by ")
       wxT("an engine. Expert users can experiment with these using ")
-      wxT("up to four optional custom parameters settings. For ")
+      wxT("up to six optional custom parameters settings. For ")
       wxT("example Stockfish provides a parameter to artificially reduce its strength. " )
       wxT("To try it out;\n")
       wxT(" Parameter 1, set name=Skill Level and value=0") 

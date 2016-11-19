@@ -145,6 +145,10 @@ struct EngineConfig
     wxString    m_custom3b;
     wxString    m_custom4a;
     wxString    m_custom4b;
+    wxString    m_custom5a;
+    wxString    m_custom5b;
+    wxString    m_custom6a;
+    wxString    m_custom6b;
     EngineConfig()
     {
         m_file           = Is64BitWindows() ? DEFAULT_ENGINE_64 : DEFAULT_ENGINE;
@@ -159,6 +163,10 @@ struct EngineConfig
         m_custom3b       = "";
         m_custom4a       = "";
         m_custom4b       = "";
+        m_custom5a       = "";
+        m_custom5b       = "";
+        m_custom6a       = "";
+        m_custom6b       = "";
     }
 };
 

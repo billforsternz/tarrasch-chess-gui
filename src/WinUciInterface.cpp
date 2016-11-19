@@ -214,6 +214,8 @@ UciInterface::UciInterface( const char *filename_uci_exe )
     custom2_first = true; 
     custom3_first = true; 
     custom4_first = true; 
+    custom5_first = true; 
+    custom6_first = true; 
 
     okay = false;
     suspended = false;
@@ -796,7 +798,7 @@ const char *UciInterface::user_hook_in()
         {
             static char option_buf[300];
             bool found_something_to_send = false;
-            while( !found_something_to_send && stepper<=7 )
+            while( !found_something_to_send && stepper<=9 )
             {
                 EngineConfig *rep = &objs.repository->engine;
                 switch( stepper )
@@ -918,6 +920,34 @@ const char *UciInterface::user_hook_in()
                         }
                         break;
                     }
+                    case 8:		// Add two new custom commands begin
+                    {
+                        if( custom5_first )
+                        {
+                            if( rep->m_custom5a.Len()>0 && rep->m_custom5a.Len()<=100 &&
+                                rep->m_custom5b.Len()>0 && rep->m_custom5b.Len()<=100 )
+                            {
+                                custom5_first = false;
+                                found_something_to_send = true;
+                                wxSprintf( option_buf, "setoption name %s value %s", rep->m_custom5a.c_str(), rep->m_custom5b.c_str() );
+                            }
+                        }
+                        break;
+                    }
+                    case 9:
+                    {
+                        if( custom6_first )
+                        {
+                            if( rep->m_custom6a.Len()>0 && rep->m_custom6a.Len()<=100 &&
+                                rep->m_custom6b.Len()>0 && rep->m_custom6b.Len()<=100 )
+                            {
+                                custom6_first = false;
+                                found_something_to_send = true;
+                                wxSprintf( option_buf, "setoption name %s value %s", rep->m_custom6a.c_str(), rep->m_custom6b.c_str() );
+                            }
+                        }
+                        break;	// Add two new custom commands end
+                    }
                 }   // end switch
                 stepper++;
             } // end while
@@ -985,7 +1015,7 @@ const char *UciInterface::user_hook_in()
         {
             static char option_buf[300];
             bool found_something_to_send = false;
-            while( !found_something_to_send && stepper<=6 )
+            while( !found_something_to_send && stepper<=8 )
             {
                 EngineConfig *rep = &objs.repository->engine;
                 switch( stepper )
@@ -1097,6 +1127,34 @@ const char *UciInterface::user_hook_in()
                             }
                         }
                         break;
+                    }
+                    case 7:	  // Add two new custom options begin
+                    {
+                        if( custom5_first )
+                        {
+                            if( rep->m_custom5a.Len()>0 && rep->m_custom5a.Len()<=100 &&
+                                rep->m_custom5b.Len()>0 && rep->m_custom5b.Len()<=100 )
+                            {
+                                custom5_first = false;
+                                found_something_to_send = true;
+                                wxSprintf( option_buf, "setoption name %s value %s", rep->m_custom5a.c_str(), rep->m_custom5b.c_str() );
+                            }
+                        }
+                        break;
+                    }
+                    case 8:
+                    {
+                        if( custom6_first )
+                        {
+                            if( rep->m_custom6a.Len()>0 && rep->m_custom6a.Len()<=100 &&
+                                rep->m_custom6b.Len()>0 && rep->m_custom6b.Len()<=100 )
+                            {
+                                custom6_first = false;
+                                found_something_to_send = true;
+                                wxSprintf( option_buf, "setoption name %s value %s", rep->m_custom6a.c_str(), rep->m_custom6b.c_str() );
+                            }
+                        }
+                        break; // Add two new custom options begin
                     }
                 }   // end switch
                 stepper++;

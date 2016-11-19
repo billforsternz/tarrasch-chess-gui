@@ -106,6 +106,8 @@ private:
     bool custom2_first;
     bool custom3_first;
     bool custom4_first;
+    bool custom5_first;
+    bool custom6_first;
     bool max_cpu_cores_found;
     bool max_cpu_cores_first;
     int  max_cpu_cores_min;

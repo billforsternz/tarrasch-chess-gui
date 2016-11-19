@@ -133,6 +133,10 @@ Repository::Repository( bool use_defaults )
         config->Read("EngineCustom3b",        &engine.m_custom3b        );
         config->Read("EngineCustom4a",        &engine.m_custom4a        );
         config->Read("EngineCustom4b",        &engine.m_custom4b        );
+        config->Read("EngineCustom5a",        &engine.m_custom5a        );
+        config->Read("EngineCustom5b",        &engine.m_custom5b        );
+        config->Read("EngineCustom6a",        &engine.m_custom6a        );
+        config->Read("EngineCustom6b",        &engine.m_custom6b        );
 
         // Training
         config->Read("TrainingNbrHalfMovesBehind",       &training.m_nbr_half_moves_behind       );
@@ -332,6 +336,10 @@ Repository::~Repository()
     config->Write("EngineCustom3b",     engine.m_custom3b        );
     config->Write("EngineCustom4a",     engine.m_custom4a        );
     config->Write("EngineCustom4b",     engine.m_custom4b        );
+    config->Write("EngineCustom5a",     engine.m_custom5a        );
+    config->Write("EngineCustom5b",     engine.m_custom5b        );
+    config->Write("EngineCustom6a",     engine.m_custom6a        );
+    config->Write("EngineCustom6b",     engine.m_custom6b        );
 
     // The changes will be written back automatically
     delete config;

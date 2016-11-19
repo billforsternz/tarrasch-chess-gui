@@ -29,7 +29,11 @@ enum
     ID_CUSTOM3A        = 10010,
     ID_CUSTOM3B        = 10011,
     ID_CUSTOM4A        = 10012,
-    ID_CUSTOM4B        = 10013 
+    ID_CUSTOM4B        = 10013, 
+    ID_CUSTOM5A        = 10014,
+    ID_CUSTOM5B        = 10015, 
+    ID_CUSTOM6A        = 10016,
+    ID_CUSTOM6B        = 10017 
 };
 
 // EngineDialog class declaration
