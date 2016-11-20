@@ -399,9 +399,9 @@ void EngineDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
 
     wxString helpText =
       wxT("\nUse this screen to select the UCI engine to use. ")
-      wxT("A UCI engine is a .exe file. For example Stockfish V7 64 bit ")
+      wxT("A UCI engine is a .exe file. For example Stockfish V8 64 bit ")
       wxT("is;\n")
-      wxT("stockfish 7 x64.exe.\n\n" )
+      wxT("stockfish_8_x64.exe.\n\n" )
       wxT("Another example, Komodo 3 64 bit is;\n")
       wxT("komodo3-64.exe." )
 	  wxT("\n\n")

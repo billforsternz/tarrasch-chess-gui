@@ -33,8 +33,8 @@ Source: "Engines\Rybka v2.3.2a.mp.w32.exe"; DestDir: "{app}\Engines"; Flags: ign
 Source: "Engines\komodo3-32.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "Engines\komodo3-64.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "Engines\komodo3-64-sse.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
-Source: "Engines\stockfish 7 x64.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
-Source: "Engines\stockfish 7 32bit.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
+Source: "Engines\stockfish_8_x64.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
+Source: "Engines\stockfish_8_x32.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "Engines\Houdini_15a_w32.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "Engines\Houdini_15a_x64.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "book.pgn"; DestDir: "{app}"; Flags: ignoreversion

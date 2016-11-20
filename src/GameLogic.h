@@ -225,6 +225,7 @@ private:
 
     // public data
 public:
+	bool fix_layout_flag;
     GAME_STATE state;
     CtrlChessTxt *lb;
     Tabs *tabs;

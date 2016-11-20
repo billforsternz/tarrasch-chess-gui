@@ -73,6 +73,7 @@ GameLogic::GameLogic( PanelContext *canvas, CtrlChessTxt *lb, wxMenu *menu_file 
 	mru.Load( *objs.repository->GetConfig() );
 	state    = RESET;
     db_clipboard = false;
+	fix_layout_flag = false;
     game_being_edited_tag = 0;
     engine_name[0] = '\0';
     under_our_program_control = false;
@@ -1998,6 +1999,14 @@ void GameLogic::LabelPlayers( bool start_game, bool set_document_player_names )
 void GameLogic::OnIdle()
 {
     Atomic begin(false);
+
+	// Start with a little kludge, if detected a layout problem in an OnSize(), experience suggests we
+	//  can't fix it in the OnSize() handler, we have to postpone it and do it later here
+	if( fix_layout_flag )
+	{
+		fix_layout_flag = false;
+		canvas->AuiFixLayout();
+	}
     static bool not_first_time;
     if( !not_first_time )
     {

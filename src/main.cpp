@@ -374,7 +374,6 @@ public:
     ~ChessFrame()
     {
         context->resize_ready = false;   // stops a bogus resize during shutdown on mac
-        m_mgr.UnInit();                 // deinitialize the frame manager
     }  
     void OnIdle(wxIdleEvent& event);
     void OnMove       (wxMoveEvent &event);
@@ -521,9 +520,7 @@ private:
     PanelContext *context;
     wxTimer m_timer;
     void SetFocusOnList() { if(context) context->SetFocusOnList(); }
-    wxAuiManager m_mgr;
 };
-
 
 //-----------------------------------------------------------------------------
 // Application class
@@ -622,7 +619,7 @@ bool ChessApp::OnInit()
     objs.repository->nv.m_y = pt.y;
     objs.repository->nv.m_w = sz.x;
     objs.repository->nv.m_h = sz.y;
-    ChessFrame *frame = new ChessFrame (_T("Tarrasch Chess GUI V3 -- Beta version use cautiously"),
+    ChessFrame *frame = new ChessFrame (_T("Tarrasch Chess GUI V3"),
                                   pt, sz, pos_siz_restored );
     if( maximize )
         frame->Maximize();
@@ -965,7 +962,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 
     // Create a status bar
     CreateStatusBar(2);
-    int widths[2] = {-200,-100};
+    int widths[2] = {-300,-100};
     SetStatusWidths(2,widths);
 
 #ifdef THC_WINDOWS
@@ -1064,9 +1061,6 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     int hh = csz.y;
     int ww = csz.x;
 
-    // notify wxAUI which frame to use
-    m_mgr.SetManagedWindow(this);
-
     // Some dynamic sizing code
     wxButton dummy( this, wxID_ANY, "Dummy" );
     wxFont font_temp( 10, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD,   false );
@@ -1115,103 +1109,16 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     objs.cws->Init( &objs.gl->undo, &objs.gl->gd, &objs.gl->gc_pgn, &objs.gl->gc_clipboard ); 
     context->SetPlayers( "", "" );
     context->resize_ready = true;
-    m_mgr.SetDockSizeConstraint(0.9,0.9);
- 
-    // add the panes to the manager Note: Experience shows there is no point trying to change a panel's fundamental characteristics
-    //  after adding it to the manager - Things like CaptionVisible(false) etc need to be intantiated with the panel
-    m_mgr.AddPane(skinny, //wxBOTTOM);    //, wxT("Pane Number Two"));
-                  wxAuiPaneInfo().
-                  Name(wxT("test7")).CaptionVisible(false). //(wxT("Tree Pane")).
-                  Top().Layer(1).Position(0).DockFixed().
-                 // Top().Layer(1).Position(0).Fixed().Resizable(false).
-                  CloseButton(false).MaximizeButton(false));
-    m_mgr.AddPane(pb, //wxLEFT );         //, wxT("Pane Number One"));
-// CreateTreeCtrl(),
-                  wxAuiPaneInfo().MinSize(200,200).
-                  Name(wxT("test8")).CaptionVisible(false). //(wxT("Tree Pane")).
-                  Left().Layer(1).Position(1).
-                  CloseButton(false).MaximizeButton(false));
-    m_mgr.AddPane(lb, wxCENTER );
-				  //wxAuiPaneInfo().CloseButton(false).CaptionVisible(false).Center().MinSize(50,50) );
-    m_mgr.AddPane(context, //wxBOTTOM);    //, wxT("Pane Number Two"));
-                  wxAuiPaneInfo().
-                  Name(wxT("test9")).CaptionVisible(false). //(wxT("Tree Pane")).
-                  Bottom().Layer(1).Position(2).
-                  CloseButton(false).MaximizeButton(false));
-
-
-    // tell the manager to "commit" all the changes just made
-    m_mgr.Update();
-
-    // If we restored a non-volatile window size and location, try to restore non-volatile panel
-    //  locations
-    if( pos_siz_restored )
-    {
-        wxString persp = m_mgr.SavePerspective();
-        const char *txt = persp.c_str();
-        std::string s(txt);
-        int panel1 = objs.repository->nv.m_panel1;
-        int panel2 = objs.repository->nv.m_panel2;
-        int panel3 = objs.repository->nv.m_panel3;
-        int panel4 = objs.repository->nv.m_panel4;
-        if( panel1>0 && panel2>0 && panel3>0 && panel4>0 )
-        {
-            size_t idx1 = s.find( "dock_size(1,1,0)=" );
-            size_t idx2 = s.find( "dock_size(4,1,0)=" );
-            size_t idx3 = s.find( "dock_size(5,0,0)=" );
-            size_t idx4 = s.find( "dock_size(3,1,0)=" );
-            if( idx1 != std::string::npos &&
-                idx2 != std::string::npos &&
-                idx3 != std::string::npos &&
-                idx4 != std::string::npos &&
-                idx2>idx1 && idx3>idx2 && idx4>idx3
-              )
-            {
-                char temp[100];
-                sprintf( temp, "dock_size(1,1,0)=%d|dock_size(4,1,0)=%d|dock_size(5,0,0)=%d|dock_size(3,1,0)=%d|", panel1, panel2, panel3, panel4 );
-                std::string s2 = s.substr(0,idx1) + std::string(temp);
-                wxString persp2(s2.c_str());
-                m_mgr.LoadPerspective( persp2, true );
-            }
-        }
-    }
+	context->AuiBegin( this, skinny, pb, lb, context, pos_siz_restored );
 }
+
 
 void ChessFrame::OnClose( wxCloseEvent& WXUNUSED(event) )
 {
-
-    // Save the panel layout for next time
-    int panel1=0, panel2=0, panel3=0, panel4=0;
-    wxString persp = m_mgr.SavePerspective();
-    const char *txt = persp.c_str();
-    std::string s(txt);
-    int len = strlen("dock_size(1,1,0)=");
-    size_t idx = s.find( "dock_size(1,1,0)=" );
-    if( idx != std::string::npos )
-        panel1 = atoi(txt+idx+len);
-    idx = s.find( "dock_size(4,1,0)=" );
-    if( idx != std::string::npos )
-        panel2 = atoi(txt+idx+len);
-    idx = s.find( "dock_size(5,0,0)=" );
-    if( idx != std::string::npos )
-        panel3 = atoi(txt+idx+len);
-    idx = s.find( "dock_size(3,1,0)=" );
-    if( idx != std::string::npos )
-        panel4 = atoi(txt+idx+len);
-    if( panel1>0 && panel2>0 && panel3>0 && panel4>0 )
-    {
-        objs.repository->nv.m_panel1 = panel1;
-        objs.repository->nv.m_panel2 = panel2;
-        objs.repository->nv.m_panel3 = panel3;
-        objs.repository->nv.m_panel4 = panel4;
-    }
-
-    //FILE *f = fopen( "c:/temp/persp.txt", "wb" );
-    //fputs(txt,f);
-    //fclose(f);
     bool okay = objs.gl->OnExit();
     if( okay )
     {
+		context->AuiEnd();
         wxSize sz = GetSize();
         wxPoint pt = GetPosition();
         objs.repository->nv.m_x = pt.x;
@@ -1353,6 +1260,9 @@ void ChessFrame::OnCredits(wxCommandEvent& WXUNUSED(event))
         "\n\n"
         "Thanks to Julian Smart, Vadim Zeitlin and the wxWidgets community "
         "for the GUI library."
+        "\n\n"
+        "Thanks to my dear wife Maria Champion-Forster, for not only tolerating me "
+		"spending/wasting thousands of hours on this project, but actually encouraging it."
         "\n\n"
         "Dedicated to the memory of John Victor Forster 1949-2001. We "
         "miss him every day."

@@ -89,6 +89,7 @@ PanelContext::PanelContext
     : wxWindow( parent, id, point, siz, wxNO_BORDER )
 {
     resize_ready = false;
+    aui_setup = false;
     popup = NULL;
     pb = pb_;
     lb = lb_;
@@ -208,6 +209,16 @@ void PanelContext::OnSize( wxSizeEvent &evt )
     cprintf( "OnSize()\n" );
     if( true )//resize_ready )
         Layout( siz );
+
+	// Check whether AUI moves panel is too small, if it is request a layout fixup later
+	//  (experience shows it's unwise to try and do it inside an OnSize() handler)
+	if( aui_setup )
+	{
+		int panel1,panel2,panel3,panel4;
+		GetAuiLayout( panel1, panel2, panel3, panel4 );
+		if( siz.x>50 && panel2+50>siz.x && objs.gl )
+			objs.gl->fix_layout_flag = true;
+	}
 }
 
 void PanelContext::Layout( wxSize const &siz )
@@ -503,5 +514,134 @@ void PanelContext::KibitzScroll( const wxString &txt )
     Kibitz( 4, line4 );
 }
 
+// AUI Pane layout is a bit of a mystery. Experience shows panel1 is height of skinny top
+// pane, panel2 is width of left (board) pane, panel4 is height of bottom (context) pane
+// You might think panel 3 would be width of right (moves) pane - but actually that is
+// the frame width minus the board pane width - basically panel3 is don't care
+void PanelContext::GetAuiLayout( int &panel1, int &panel2, int &panel3, int &panel4 )
+{
+    panel1=0, panel2=0, panel3=0, panel4=0;
+    wxString persp = m_mgr.SavePerspective();
+    const char *txt = persp.c_str();
+	cprintf( "Get AUI Layout: %s\n", txt );
+    std::string s(txt);
+    int len = strlen("dock_size(1,1,0)=");
+    size_t idx = s.find( "dock_size(1,1,0)=" );
+    if( idx != std::string::npos )
+        panel1 = atoi(txt+idx+len);
+    idx = s.find( "dock_size(4,1,0)=" );
+    if( idx != std::string::npos )
+        panel2 = atoi(txt+idx+len);
+    idx = s.find( "dock_size(5,1,0)=" );
+    if( idx != std::string::npos )
+        panel3 = atoi(txt+idx+len);
+    idx = s.find( "dock_size(3,1,0)=" );
+    if( idx != std::string::npos )
+        panel4 = atoi(txt+idx+len);
+}
+
+void PanelContext::SetAuiLayout( int panel1, int panel2, int panel3, int panel4 )
+{
+    wxString persp = m_mgr.SavePerspective();
+    const char *txt = persp.c_str();
+	cprintf( "Get AUI Layout: %s\n", txt );
+    std::string s(txt);
+    size_t idx1 = s.find( "dock_size(1,1,0)=" );
+    size_t idx2 = s.find( "dock_size(4,1,0)=" );
+    size_t idx3 = s.find( "dock_size(5,1,0)=" );
+    size_t idx4 = s.find( "dock_size(3,1,0)=" );
+    if( idx1 != std::string::npos &&
+        idx2 != std::string::npos &&
+        idx3 != std::string::npos &&
+        idx4 != std::string::npos &&
+        idx2>idx1 && idx3>idx2 && idx4>idx3
+        )
+    {
+        char temp[100];
+		panel3 = 400;	// It seems sensible to just insist panel3 has a sensible value
+        sprintf( temp, "dock_size(1,1,0)=%d|dock_size(4,1,0)=%d|dock_size(5,1,0)=%d|dock_size(3,1,0)=%d|", panel1, panel2, panel3, panel4 );
+        std::string s2 = s.substr(0,idx1) + std::string(temp);
+        wxString persp2(s2.c_str());
+		cprintf( "Set AUI Layout: %s\n", s2.c_str() );
+        m_mgr.LoadPerspective( persp2, true );
+    }
+}
+
+void PanelContext::AuiFixLayout()
+{
+	wxSize siz;
+	siz = GetSize();
+	int panel1,panel2,panel3,panel4;
+	GetAuiLayout( panel1, panel2, panel3, panel4 );
+	if( siz.x>60 && panel2+50>siz.x )
+	{
+		panel2 = siz.x-60;
+		SetAuiLayout(panel1,panel2,panel3,panel4);
+	}
+}
+
+void PanelContext::AuiBegin( wxFrame *frame, wxWindow *top, wxWindow *left, wxWindow *right, wxWindow *bottom, bool restore )
+{
+    // notify wxAUI which frame to use
+    m_mgr.SetManagedWindow(frame);
+    m_mgr.SetDockSizeConstraint(0.9,0.9);
+ 
+    // add the panes to the manager Note: Experience shows there is no point trying to change a panel's fundamental characteristics
+    //  after adding it to the manager - Things like CaptionVisible(false) etc need to be intantiated with the panel
+    m_mgr.AddPane(top, //wxBOTTOM);    //, wxT("Pane Number Two"));
+                  wxAuiPaneInfo().
+                  Name(wxT("test7")).CaptionVisible(false). //(wxT("Tree Pane")).
+                  Top().Layer(1).Position(0).DockFixed().
+                 // Top().Layer(1).Position(0).Fixed().Resizable(false).
+                  CloseButton(false).MaximizeButton(false));
+    m_mgr.AddPane(left, //wxLEFT );         //, wxT("Pane Number One"));
+                  wxAuiPaneInfo().MinSize(200,200).
+                  Name(wxT("test8")).CaptionVisible(false). //(wxT("Tree Pane")).
+                  Left().Layer(1).Position(1).
+                  CloseButton(false).MaximizeButton(false));
+    m_mgr.AddPane(right, // wxCENTER );
+                  wxAuiPaneInfo().
+				  Right().Layer(1).Position(2).
+				  CloseButton(false).CaptionVisible(false).Center().MinSize(50,50) );
+    m_mgr.AddPane(bottom, //wxBOTTOM);    //, wxT("Pane Number Two"));
+                  wxAuiPaneInfo().
+                  Name(wxT("test9")).CaptionVisible(false). //(wxT("Tree Pane")).
+                  Bottom().Layer(1).Position(3).
+                  CloseButton(false).MaximizeButton(false));
 
 
+    // tell the manager to "commit" all the changes just made
+    m_mgr.Update();
+
+    // If we restored a non-volatile window size and location, try to restore non-volatile panel
+    //  locations
+    if( restore )
+    {
+        int panel1 = objs.repository->nv.m_panel1;
+        int panel2 = objs.repository->nv.m_panel2;
+        int panel3 = objs.repository->nv.m_panel3;
+        int panel4 = objs.repository->nv.m_panel4;
+        if( panel1>0 && panel2>0 && panel3>0 && panel4>0 )
+		{
+			SetAuiLayout( panel1, panel2, panel3, panel4 );
+		}
+    }
+
+	aui_setup = true;
+}
+
+
+void PanelContext::AuiEnd()
+{
+	// Save the panel layout for next time
+	int panel1=0, panel2=0, panel3=0, panel4=0;
+	GetAuiLayout( panel1, panel2, panel3, panel4 );
+	if( panel1>0 && panel2>0 && panel3>0 && panel4>0 )
+	{
+		objs.repository->nv.m_panel1 = panel1;
+		objs.repository->nv.m_panel2 = panel2;
+		objs.repository->nv.m_panel3 = panel3;
+		objs.repository->nv.m_panel4 = panel4;
+	}
+	m_mgr.UnInit(); // deinitialize the frame manager
+}
