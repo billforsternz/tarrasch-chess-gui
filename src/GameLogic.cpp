@@ -1784,6 +1784,7 @@ void GameLogic::GameRedisplayPlayersResult()
     long pos = lb->GetInsertionPoint();
     gd.Rebuild();
     gd.Redisplay(pos);
+    tabs->SetTitle( gd );
 }
 
 void GameLogic::CmdEditPromote()

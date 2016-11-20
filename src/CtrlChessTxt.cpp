@@ -231,10 +231,94 @@ void CtrlChessTxt::OnTextPaste(wxClipboardTextEvent& WXUNUSED(event))
     dbg_printf( "Paste 2\n" );
 }
 
+// Shamelessly copy-pasted from GamesCache.cpp
+// Check whether text s is a valid header, return true if it is,
+//  add info to a GameDocument, optionally clearing it first
+bool Tagline( const char *s, GameDocument &gd )
+{
+    const char *tag_begin, *tag_end, *val_begin, *val_end;
+    bool is_header = false;
+
+    // Skip '['
+    s++;
+
+    // Skip whitespace
+    while( *s==' ' || *s=='\t' )
+        s++;
+
+    // Is there a tag before a leading " ?
+    tag_begin = s;
+    bool tag=false;
+    while( *s && *s!=']' && *s!=' ' && *s!='\t' && *s!='\"' )
+    {
+        tag = true;    // at least 1 non-whitespace
+        s++;
+    }
+    tag_end = s;
+    if( tag )
+    {
+
+        // Make sure there is whitespace, but skip it
+        tag = false;
+        while( *s==' ' || *s=='\t' )
+        {
+            tag = true;  // at least 1 whitespace
+            s++;
+        }
+    }
+
+    // If there is a tag, then whitespace, then a leading "
+    if( tag && *s=='\"')
+    {
+        s++;
+        val_begin = s;
+
+        // Skip to 2nd " or end of string
+        while( *s && *s!='\"' )
+            s++;
+
+        // If we have a 2nd " then we have a tag and a val, i.e. a header
+        if( *s == '\"' )        
+        {
+            is_header = true;
+            val_end = s;
+            std::string stag(tag_begin,tag_end-tag_begin);
+            std::string val(val_begin,val_end-val_begin);
+            if( stag == "White" )
+                gd.r.white = val;
+            if( stag == "Black" )
+                gd.r.black = val;
+            if( stag == "Event" )
+                gd.r.event = val;
+            if( stag == "Site" )
+                gd.r.site = val;
+            if( stag == "Date" )
+                gd.r.date = val;
+            if( stag == "Round" )
+                gd.r.round = val;
+            if( stag == "Result" )
+                gd.r.result = val;
+            if( stag == "ECO" )
+                gd.r.eco = val;
+            if( stag == "WhiteElo" )
+                gd.r.white_elo = val;
+            if( stag == "BlackElo" )
+                gd.r.black_elo = val;
+            if( stag == "FEN" )
+            {
+                gd.r.fen = val;
+                gd.start_position.Forsyth(val.c_str());
+            }
+        }
+    }
+    return is_header;
+}
+
 void CtrlChessTxt::Paste()
 {
     Atomic begin;
     dbg_printf( "Paste 1\n" );
+	int nbr_tags_processed=0;
     if( wxTheClipboard->Open() )
     {
         if( wxTheClipboard->IsSupported( wxDF_TEXT ) )
@@ -243,11 +327,28 @@ void CtrlChessTxt::Paste()
             wxTheClipboard->GetData( data );
             wxString txt_to_paste = data.GetText();
             std::string txt_to_insert;
+			bool check_tag = gd->IsEmpty();
             for( unsigned int i=0; i<txt_to_paste.Length(); i++ )
             {
                 char c=txt_to_paste[i];
                 if( c == '\n' )
-                    txt_to_insert += ' ';
+				{
+					if( !check_tag )
+						txt_to_insert += ' ';
+					else
+					{
+						if(  txt_to_insert.length()>0 && txt_to_insert[0]=='[' && Tagline(txt_to_insert.c_str(),*gd) )
+						{
+							nbr_tags_processed++;
+							txt_to_insert.clear();
+						}
+						else if( txt_to_insert.length() > 0 )
+						{
+							check_tag = false;
+							txt_to_insert += ' ';
+						}
+					}
+				}
                 else if( c != '\r' )
                     txt_to_insert += c;
             }
@@ -263,6 +364,10 @@ void CtrlChessTxt::Paste()
         }  
         wxTheClipboard->Close();
     }
+	if( nbr_tags_processed > 0 )
+	{
+        gl->GameRedisplayPlayersResult();        
+	}
 }
 
 void CtrlChessTxt::Copy()
