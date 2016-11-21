@@ -518,6 +518,23 @@ void PanelContext::KibitzScroll( const wxString &txt )
 // pane, panel2 is width of left (board) pane, panel4 is height of bottom (context) pane
 // You might think panel 3 would be width of right (moves) pane - but actually that is
 // the frame width minus the board pane width - basically panel3 is don't care
+
+/*
+                                                +--- first parameter is direction 
+                                                |
+                                                v
+    wxAUI_DOCK_TOP = 1,               dock_size(1,1,0)    panel1 top
+    wxAUI_DOCK_RIGHT = 2,
+    wxAUI_DOCK_BOTTOM = 3,            dock_size(3,1,0)    panel4 bottom
+    wxAUI_DOCK_LEFT = 4,              dock_size(4,1,0)    panel2 left
+    wxAUI_DOCK_CENTER = 5,            dock_size(5,1,0)    panel3 centre
+
+    Note that it is correct for panel3 be the "centre" rather than "right"
+    If "right" it becomes independently sizable, if "centre" it is adjacent
+    to "left", which is what we want.
+
+*/
+
 void PanelContext::GetAuiLayout( int &panel1, int &panel2, int &panel3, int &panel4 )
 {
     panel1=0, panel2=0, panel3=0, panel4=0;
@@ -558,7 +575,10 @@ void PanelContext::SetAuiLayout( int panel1, int panel2, int panel3, int panel4 
         )
     {
         char temp[100];
-		panel3 = 400;	// It seems sensible to just insist panel3 has a sensible value
+		wxSize sz = GetSize();
+		panel3 = sz.x - panel2;		// Just insist panel3 has a sensible value
+		if( panel3 < 20 )
+			panel3 = 20;
         sprintf( temp, "dock_size(1,1,0)=%d|dock_size(4,1,0)=%d|dock_size(5,1,0)=%d|dock_size(3,1,0)=%d|", panel1, panel2, panel3, panel4 );
         std::string s2 = s.substr(0,idx1) + std::string(temp);
         wxString persp2(s2.c_str());
@@ -588,24 +608,24 @@ void PanelContext::AuiBegin( wxFrame *frame, wxWindow *top, wxWindow *left, wxWi
  
     // add the panes to the manager Note: Experience shows there is no point trying to change a panel's fundamental characteristics
     //  after adding it to the manager - Things like CaptionVisible(false) etc need to be intantiated with the panel
-    m_mgr.AddPane(top, //wxBOTTOM);    //, wxT("Pane Number Two"));
+    m_mgr.AddPane(top,
                   wxAuiPaneInfo().
-                  Name(wxT("test7")).CaptionVisible(false). //(wxT("Tree Pane")).
+                  Name("top").CaptionVisible(false). //(wxT("Tree Pane")).
                   Top().Layer(1).Position(0).DockFixed().
                  // Top().Layer(1).Position(0).Fixed().Resizable(false).
                   CloseButton(false).MaximizeButton(false));
-    m_mgr.AddPane(left, //wxLEFT );         //, wxT("Pane Number One"));
+    m_mgr.AddPane(left,
                   wxAuiPaneInfo().MinSize(200,200).
-                  Name(wxT("test8")).CaptionVisible(false). //(wxT("Tree Pane")).
+                  Name("left").CaptionVisible(false). //(wxT("Tree Pane")).
                   Left().Layer(1).Position(1).
                   CloseButton(false).MaximizeButton(false));
-    m_mgr.AddPane(right, // wxCENTER );
+    m_mgr.AddPane(right,
                   wxAuiPaneInfo().
-				  Right().Layer(1).Position(2).
-				  CloseButton(false).CaptionVisible(false).Center().MinSize(50,50) );
-    m_mgr.AddPane(bottom, //wxBOTTOM);    //, wxT("Pane Number Two"));
+				  Name("right").Center().Layer(1).Position(2).
+				  CloseButton(false).CaptionVisible(false).MinSize(50,50) );
+    m_mgr.AddPane(bottom,
                   wxAuiPaneInfo().
-                  Name(wxT("test9")).CaptionVisible(false). //(wxT("Tree Pane")).
+                  Name("bottom").CaptionVisible(false). //(wxT("Tree Pane")).
                   Bottom().Layer(1).Position(3).
                   CloseButton(false).MaximizeButton(false));
 
