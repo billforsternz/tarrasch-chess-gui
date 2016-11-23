@@ -46,6 +46,7 @@ public:
     GAME_STATE DoUndo( GameDocument &gd, bool takeback=false );
     GAME_STATE DoRedo( GameDocument &gd );
     bool IsModified();
+    bool CanUndo();
     bool CanRedo();
     void ShowStackSize( const char *desc ) { cprintf( "%s Stack size = %d\n", desc, stack.size() ); }
 

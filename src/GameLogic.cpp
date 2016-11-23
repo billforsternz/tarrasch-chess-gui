@@ -1485,7 +1485,7 @@ void GameLogic::FullUndo( GAME_STATE game_state )
 
 bool GameLogic::CmdUpdateEditUndo()
 {
-    bool possible = (undo.IsModified() &&
+    bool possible = (undo.CanUndo() &&
                         (state==MANUAL || state==RESET || state==HUMAN || state==PONDERING || state==THINKING || state==FAKE_BOOK_DELAY || state==GAMEOVER)
                     );
     return( possible );

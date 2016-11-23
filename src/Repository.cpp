@@ -464,8 +464,10 @@ void Repository::SetDirectories()
     }
     if( replace )
     {
-        cprintf( "wxCopyFile(\"%s\",\"%s\") IN\n", exe_db.c_str(), doc_db.c_str() );
-        bool okay = wxCopyFile( wxString(exe_db), wxString(doc_db) );
+		const char *exe_db_c = exe_db.c_str();
+		const char *doc_db_c = doc_db.c_str();
+        cprintf( "wxCopyFile(\"%s\",\"%s\") IN\n", exe_db_c, doc_db_c );
+        bool okay = wxCopyFile( exe_db, doc_db );
         cprintf( "wxCopyFile() OUT %s\n", okay?"okay":"error" );
     }
 }
