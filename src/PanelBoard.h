@@ -48,7 +48,7 @@ private:
     void OnSize( wxSizeEvent &evt );
     wxStaticText    *who_top;
     wxStaticText    *who_bottom;
-    wxStaticText    *board_title;
+    //wxStaticText    *board_title;
     wxStaticTextSub *name_top;
     wxStaticTextSub *name_bottom;
     wxStaticText    *time_top;

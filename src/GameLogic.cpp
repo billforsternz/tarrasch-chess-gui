@@ -2814,8 +2814,9 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
 
         case FAKE_BOOK_DELAY:
         case THINKING:
-                        red = true;
-                        title = "Engine thinking...";
+						canvas->box->SetForegroundColour(*wxBLACK);
+						canvas->box->SetLabel("Engine thinking...");
+                        suggestions = false;
                         b1 = "New Game";                    b1_cmd = ID_CMD_NEW_GAME;
                         b2 = "Force immediate move";        b2_cmd = ID_CMD_MOVENOW;
                         b3 = "Examine game";                b3_cmd = ID_CMD_EXAMINE_GAME;
