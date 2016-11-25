@@ -5,7 +5,7 @@ great players demo? not present?
 OK Advise to download databases
 OK tweak credits
 OK title says initial position from start
-check append database
+OK check append database
 OK check kingbase
 OK check innosetup and microsoft ie connection
 check virus scan
