@@ -12,6 +12,22 @@ check virus scan
 slow rubber banding
 Upper case missing in setup?
 
+void BinDbDebugShowGames( const std::vector< smart_ptr<ListableGame> > &gms, const char *msg )
+{
+    if( gms.size() > 5 )
+        cprintf( "%s [too many games]\n",msg);
+	else
+	{
+        cprintf( "%s here are the games\n",msg);
+		for( size_t i=0; i<gms.size(); i++ )
+		{
+			smart_ptr<ListableGame> p = gms[i];
+			cprintf( "%s-%s\n", p->White(), p->Black() );
+		}
+	}
+}
+
+
 19/11/2016
 Stockfish 8
 One more look at undo limit

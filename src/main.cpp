@@ -1218,7 +1218,13 @@ void ChessFrame::OnHelp(wxCommandEvent& WXUNUSED(event))
         "To turn on commentary (kibitzing in chess parlance), use "
         "the \"Commands\" menu or the Robot button or select the Engine Analysis tab at the bottom. You can even "
         "get the chess engine to provide commentary when you are "
-        "playing against it.", gbl_spell_colour
+        "playing against it."
+        "\n\n"
+		"Tarrasch now includes database facilities for easily finding "
+		"games and move frequency statistics for openings you are interested in. You can search "
+		"for positions, patterns and material balances and conveniently "
+		"play through the games found."
+		, gbl_spell_colour
     );
     wxMessageBox(msg, "Tarrasch Chess GUI Help", wxOK|wxICON_INFORMATION|wxCENTRE, this);
 }
