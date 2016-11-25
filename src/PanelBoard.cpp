@@ -58,8 +58,8 @@ PanelBoard::PanelBoard
     who_top->SetFont( *font1 );
     who_bottom  = new wxStaticText(this,wxID_ANY,"W");
     who_bottom->SetFont( *font1 );
-    // board_title = new wxStaticText(this,wxID_ANY,"",wxDefaultPosition,wxDefaultSize,wxALIGN_CENTRE_HORIZONTAL+wxST_NO_AUTORESIZE);
-    // board_title->SetFont( *font2 );
+    board_title = new wxStaticText(this,wxID_ANY,"",wxDefaultPosition,wxDefaultSize,wxALIGN_CENTRE_HORIZONTAL+wxST_NO_AUTORESIZE);
+    board_title->SetFont( *font2 );
     name_top    = new wxStaticTextSub(this,ID_STATIC_TXT_PLAYER1,"Fischer, Robert");
     name_top->SetFont( *font2 );
     name_bottom = new wxStaticTextSub(this,ID_STATIC_TXT_PLAYER2,"Botvinnik, Mikhail");
@@ -116,6 +116,9 @@ PanelBoard::PanelBoard
 
 void PanelBoard::Layout( const wxSize &siz, wxRect &board )
 {
+	m_small_board=false;
+	if( objs.repository )
+		m_small_board = objs.repository->general.m_small_board;
 /*                                 |
                                    v
        +--------------------------------------------+
@@ -150,26 +153,32 @@ void PanelBoard::Layout( const wxSize &siz, wxRect &board )
            = h-t-b  whichever is smaller
 
 */
+	cprintf( "******   m_small_board = %s\n", m_small_board?"true":"false" );
     int w = siz.x;
     int h = siz.y;
-    //wxClientDC dc0(board_title);
+	m_small_board = objs.repository->general.m_small_board;
+    wxClientDC dc0(name_top);
     wxCoord txt_width, txt_height, txt_descent, txt_external_leading;
-    //dc0.GetTextExtent( "Ready", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
-    //int t1 = 125*(txt_height /*+ txt_descent*/)/100;
+    dc0.GetTextExtent( "Ready", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
+    int t1 = 125*(txt_height /*+ txt_descent*/)/100;
 	// Experiments suggest that the descent is information only - no need to add it to height to
 	//  get the actual size - so we made some adjustments to get a bigger chess board into the
 	//  space available, with less white space around the title and player names
-    //int t1_height = txt_height+1; // /*+ txt_descent*/;
-    //int board_title_y_offset = t1_height; //100*(txt_height /*+ txt_descent*/)/100;
+    int t1_height = txt_height+1; // /*+ txt_descent*/;
+    int board_title_y_offset = t1_height; //100*(txt_height /*+ txt_descent*/)/100;
     wxClientDC dc1(time_top);
     dc1.GetTextExtent( "Player Name", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
-    int t2 = txt_height+2; //100*(txt_height /*+ txt_descent*/)/100;
-	int t1 = t2/3;
+    int t2 = txt_height+1; //100*(txt_height /*+ txt_descent*/)/100;
+	if( m_small_board )
+	{
+		t2++;
+		t1 = t2/3;
+	}
     int t = t1+t2;
     int name_top_y_offset = t2; //100*(txt_height /*+ txt_descent*/)/100;
-    //board_title_y_offset += name_top_y_offset;
+    board_title_y_offset += name_top_y_offset;
 	cprintf( "t1=%d, t2=%d, t1_height=%d, name_top_y_offset=%d, board_title_y_offset=%d\n",
-								0, t2, 0, name_top_y_offset, 0 );//board_title_y_offset );
+								t1, t2, t1_height, name_top_y_offset, board_title_y_offset );
 
     dc1.GetTextExtent( "120.00", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
 	int time_x_offset = txt_width;
@@ -227,13 +236,23 @@ void PanelBoard::Layout( const wxSize &siz, wxRect &board )
 
     // Board title
     wxSize sz;
-/*  x = origin_x;
-    y = origin_y - board_title_y_offset;
-    board_title->SetPosition( wxPoint(x,y) );
-    sz = board_title->GetSize();
-    sz.x = dim;
-    sz.y = t1_height;
-    board_title->SetSize(sz); */
+	if( m_small_board )
+	{
+		board_title->SetPosition( wxPoint(x,y) );
+		board_title->SetSize(wxSize(1,1));
+		board_title->Show(false);
+	}
+	else
+	{
+		x = origin_x;
+		y = origin_y - board_title_y_offset;
+		board_title->SetPosition( wxPoint(x,y) );
+		sz = board_title->GetSize();
+		sz.x = dim;
+		sz.y = t1_height;
+		board_title->SetSize(sz);
+		board_title->Show(true);
+	}
 
     // Name and time, top
     x = origin_x;
@@ -390,20 +409,30 @@ void PanelBoard::BlackClock( const wxString &txt, bool red )
     RedrawClocks();
 }
 
-void PanelBoard::SetBoardTitle( const char *txt, bool highlight )
+void PanelBoard::SetBoardTitle()
+{
+	SetBoardTitle( m_title_saved.c_str() );
+}
+
+void PanelBoard::SetBoardTitle( const char *txt )
 {
 	wxString frame_title("Tarrasch Chess GUI V3");
-	frame_title += "  -  ";
-	frame_title += txt;
+	m_title_saved = std::string(txt);
+	cprintf( "SetBoardTitle(\"%s\")\n", txt );
+	if( m_small_board )
+	{
+		frame_title += "  -  ";
+		frame_title += txt;
+	}
+	else
+	{
+		board_title->SetLabel( txt?txt:"" );
+	}
 	if( objs.frame )
 		objs.frame->SetTitle( frame_title );  
-    cprintf( "SetBoardTitle(\"%s\",%s)\n", txt, highlight?"true":"false" );
-/*    if( highlight )
-        board_title->SetForegroundColour( *wxRED );
-    else
-        board_title->SetForegroundColour( *wxBLACK );
-    board_title->SetLabel( txt?txt:"" ); */
 }
+
+
 
 void PanelBoard::SetPlayers( const char *white, const char *black )
 {

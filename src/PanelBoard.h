@@ -36,7 +36,8 @@ public:
     void WhiteClock( const wxString &txt, bool red=false );
     void BlackClock( const wxString &txt, bool red=false );
     void RedrawClocks();                   
-    void SetBoardTitle( const char *txt, bool highlight=false );
+    void SetBoardTitle( const char *txt );
+    void SetBoardTitle();	   // to previous value
     CtrlChessBoard *gb;
 
 private:
@@ -48,7 +49,7 @@ private:
     void OnSize( wxSizeEvent &evt );
     wxStaticText    *who_top;
     wxStaticText    *who_bottom;
-    //wxStaticText    *board_title;
+    wxStaticText    *board_title;
     wxStaticTextSub *name_top;
     wxStaticTextSub *name_bottom;
     wxStaticText    *time_top;
@@ -82,6 +83,8 @@ private:
 	bool         black_clock_red;
 	bool         time_top_red;
 	bool         time_bottom_red;
+	bool         m_small_board;
+	std::string  m_title_saved;
     DECLARE_EVENT_TABLE()
 };
 

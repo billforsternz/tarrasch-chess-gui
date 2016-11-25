@@ -1,3 +1,17 @@
+24/11/2016
+check open pgn from file explorer
+try undo xp
+great players demo? not present?
+OK Advise to download databases
+OK tweak credits
+OK title says initial position from start
+check append database
+OK check kingbase
+OK check innosetup and microsoft ie connection
+check virus scan
+slow rubber banding
+Upper case missing in setup?
+
 19/11/2016
 Stockfish 8
 One more look at undo limit
@@ -94,11 +108,11 @@ Todo (not yet on 15/9/2016)
 Extra NAGs eg unclear   NO
 Can we control multiple instances?  NO
 Get close box on tabs   YES
-Efficient undo  NO
+Efficient undo  SORT OF
 Highlight colours   YES
 Bring colours into setup board  YES
-Alt F underlining etc   NO
-6 custom commands         NO
+Alt F underlining etc  YES
+6 custom commands         YES
 Check ANSI names in pgn     YES
 Select All in games dialogs     NO
 Add more ratings filters        YES
@@ -117,7 +131,7 @@ Check weird ChessBase pgn format supported for both preview and loaded game.    
 Bug: Make moves, save game (overwrite) - this tab not in file.  YES
 pgn_handle not cleared by constructor - check others    NO
 e8Q as well as e8=Q NO
-Paste tags  NO
+Paste tags  YES
 reduce sleep in engine state machine    NO
 Bugs:
     Ian's a-file bug    YES

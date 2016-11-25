@@ -335,6 +335,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
     FILE *ofile=NULL;
     if( ok )
     {
+		ok = false;
         BinDbReadBegin( true );
         wxString fullpath = db_filename;
         wxFileName wfn(db_filename);
@@ -347,16 +348,19 @@ void CreateDatabaseDialog::OnCreateDatabase()
             if( no_path )
                 wfn.SetPath(cwd);
             fullpath = wfn.GetFullPath();
-        }
-        ofile = fopen( fullpath.c_str(), "wb" );
-        if( ofile )
-			created_new_db_file = true;
-        else
-        {
-            error_msg = "Cannot create ";
-            error_msg += fullpath;
-            ok = false;
-        }
+		    db_name = std::string( fullpath.c_str() );
+			ofile = fopen( fullpath.c_str(), "wb" );
+			if( ofile )
+			{
+				created_new_db_file = true;
+				ok = true;
+			}
+		}
+		if( !ok )
+		{
+			error_msg = "Cannot create ";
+			error_msg += fullpath;
+		}
     }
     for( int i=0; ok && i<cnt; i++ )
     {
@@ -422,12 +426,12 @@ void CreateDatabaseDialog::OnCreateDatabase()
 		if( created_new_db_file )
 			_unlink(db_filename.c_str());
     }
-    // TODO DatabaseReload();
 }
 
 void CreateDatabaseDialog::OnAppendDatabase()
 {
     bool ok=true;
+	bool created_new_db_file = false;
     std::string files[6];
     int cnt=0;
     std::string error_msg;
@@ -477,15 +481,15 @@ void CreateDatabaseDialog::OnAppendDatabase()
     if( ok )
     {
         ok = BinDbOpen( db_filename.c_str(), version );
-        if( version==0 || version>DATABASE_VERSION_NUMBER_BIN_DB )
+        if( !ok )
+            error_msg = "Cannot open  " + db_name;
+        else if( version==0 || version>DATABASE_VERSION_NUMBER_BIN_DB )
         {
             error_msg = "Tarrasch database file " + db_name + " is incompatible with this version of Tarrasch";
             if( ok )
                 BinDbClose();
             ok = false;
         }
-        else if( !ok )
-            error_msg = "Cannot open  " + db_name;
     }
     if( ok )
     {
@@ -510,7 +514,9 @@ void CreateDatabaseDialog::OnAppendDatabase()
         if( ok )
         {
             ofile = fopen( db_name.c_str(), "wb" );
-            if( !ofile )
+            if( ofile )
+				created_new_db_file = true;
+			else
             {
                 error_msg = "Cannot open ";
                 error_msg += db_name;
@@ -554,12 +560,16 @@ void CreateDatabaseDialog::OnAppendDatabase()
         }
         if( ok )
         {
-            std::string title4( "Creating database, step 4 of 4");
+            std::string title4( "Appending to database, step 4 of 4");
             std::string desc4("Writing file");
             ProgressBar progress_bar4( title4, desc4, true, this );
             ok = BinDbWriteOutToFile(ofile,&progress_bar4);
-            fclose(ofile);
         }
+		if( ofile )
+		{
+            fclose(ofile);
+			ofile = NULL;
+		}
         if( ok )
         {
             wxSafeYield();
@@ -573,9 +583,9 @@ void CreateDatabaseDialog::OnAppendDatabase()
             if( error_msg == "cancel" )
                 error_msg = "Database creation cancelled";
             wxMessageBox( error_msg.c_str(), "Database creation failed", wxOK|wxICON_ERROR );
-            _unlink(db_filename.c_str());
+			if( created_new_db_file )
+				_unlink(db_filename.c_str());
         }
-        // TODO DatabaseReload();
     }
 }
 
@@ -625,8 +635,8 @@ void CreateDatabaseDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
     wxT("Tarrasch automatically rejects duplicate games and games played by ")
     wxT("players with insufficiently high Elo ratings. ")
     wxT("Rejected duplicate games are saved in file TarraschDbDuplicatesFile.pgn. ")
-    wxT("Since most historical games don't have rating information, games with ")
-    wxT("no rating information at all are not rejected. ")
+    wxT("Games can be rejected based on ")
+    wxT("rating if desired. ")
     wxT("For best results, create databases with older .pgn files first, and ")
     wxT("append newer games as you collect them. ")
     wxT("Tarrasch will try to present most recent games first." );

@@ -29,7 +29,8 @@ enum
     ID_STRAIGHT_TO_FIRST_GAME  = 10011,
     ID_EMIT_BELL               = 10012,
 	ID_SUPPRESS_HIGHLIGHT	   = 10013,
-	ID_LINE_HIGHLIGHT	       = 10014
+	ID_SMALL_BOARD             = 10014,
+	ID_LINE_HIGHLIGHT	       = 10015
 };
 
 // GeneralDialog class declaration

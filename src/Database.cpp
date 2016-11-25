@@ -141,14 +141,14 @@ bool Database::IsOperational( std::string &error_msg )
 {
     bool operational = false;
     error_msg = "";
-    if( database_version==0 || database_version>DATABASE_VERSION_NUMBER_BIN_DB )
+    if( !is_open )
+        error_msg = "Could not open database";
+    else if( database_version==0 || database_version>DATABASE_VERSION_NUMBER_BIN_DB )
     {
         char buf[200];
         sprintf( buf, "The database file is not in the correct format for this version of Tarrasch (db version=%d)", database_version );                
         error_msg = std::string(buf);
     }
-    else if( !is_open )
-        error_msg = "Could not open database";
     else
         operational = true;
     if( !operational )

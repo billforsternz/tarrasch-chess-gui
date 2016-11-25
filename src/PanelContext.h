@@ -36,7 +36,7 @@ public:
     void WhiteClock( const wxString &txt, bool red=false )  { pb->WhiteClock(txt,red); }
     void BlackClock( const wxString &txt, bool red=false )  { pb->BlackClock(txt,red); }
     void RedrawClocks()                                     { pb->RedrawClocks(); }
-    void SetBoardTitle( const char *txt, bool highlight=false )   { pb->SetBoardTitle( txt, highlight ); }
+    void SetBoardTitle( const char *txt )                   { pb->SetBoardTitle(txt); }
     void Layout( wxSize const &siz );
     void PositionSuggestionButtons();
     void BookUpdate( bool suppress );
@@ -93,6 +93,7 @@ public:
 	void			AuiBegin( wxFrame *frame, wxWindow *top, wxWindow *left, wxWindow *right, wxWindow *bottom, bool restore );
 	void			AuiEnd();
 	void			AuiFixLayout();
+	void			AuiRefresh() { int panel1, panel2, panel3, panel4; GetAuiLayout(panel1,panel2,panel3,panel4); SetAuiLayout(panel1,panel2,panel3,panel4); }
 
     #ifdef AUI_NOTEBOOK
     wxAuiNotebook    *notebook;

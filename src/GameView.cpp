@@ -1485,6 +1485,7 @@ MoveTree *GameView::Locate( unsigned long pos, thc::ChessRules &cr_, string &tit
 {
     MoveTree *found = NULL;
     at_move0 = false;
+	locate_at_move0_last_move = NULL;
     title = "Initial position";
     bool have_a_move=false;
     GameViewElement most_recent_move;
@@ -1565,6 +1566,25 @@ MoveTree *GameView::Locate( unsigned long pos, thc::ChessRules &cr_, string &tit
                         title = buf;
                         if( !at_move0 )
                             cr_.PlayMove( variation[i2].game_move.move );
+						else
+						{
+
+							// Find the move in the tree that lead to the position before the first
+							//  move of this variation (so we can highlight it, late change just
+							//  before publishing V3)
+							thc::ChessRules cr2;
+							int ivar2, imove2;
+		                    MoveTree *grandparent = tree->Parent( parent, cr2, ivar2, imove2 );
+							if( grandparent )
+							{
+								vector<MoveTree> &var2 = grandparent->variations[ivar2];
+								if( imove2 > 0 )
+								{
+									locate_at_move0_last_move = &var2[imove2-1].game_move;
+									cprintf( "last move was %s\n", locate_at_move0_last_move->move.TerseOut().c_str() );
+								}
+							}
+						}
                     }
                 }
                 break;

@@ -619,7 +619,7 @@ bool ChessApp::OnInit()
     objs.repository->nv.m_y = pt.y;
     objs.repository->nv.m_w = sz.x;
     objs.repository->nv.m_h = sz.y;
-    ChessFrame *frame = new ChessFrame (_T("Tarrasch Chess GUI V3"),
+    ChessFrame *frame = new ChessFrame ("Tarrasch Chess GUI V3",
                                   pt, sz, pos_siz_restored );
     if( maximize )
         frame->Maximize();
@@ -629,6 +629,7 @@ bool ChessApp::OnInit()
     if( objs.gl )
         objs.gl->StatusUpdate();
     objs.db         = new Database( objs.repository->database.m_file.c_str() );
+	objs.canvas->SetBoardTitle( "Initial Position" );
     return true;
 }
 
@@ -1234,21 +1235,19 @@ void ChessFrame::OnCredits(wxCommandEvent& WXUNUSED(event))
         "Lukasz Berezowski, Eric Ziegler, Laurence Dayton, Albrecht Schmidt, "
         "Lloyd Standish and David Beagan."
         "\n\n"
-        "Testers: Iliya Kristoff, Claude Tamplenizza."
+        "Testers: Iliya Kristoff, Claude Tamplenizza, Ian Sellen."
         "\n\n"
         "Thanks to David L Brown and the Good Companions for the chess "
         "graphics."
         "\n\n"
-        "Thanks to Pawel Koziol for the icon idea."
-        "\n\n"
-        "Thanks to Yusuke Kamiyamane for some of the toolbar icons."
+		"Thanks to Yusuke Kamiyamane (Fugue icons) for some of the toolbar icons."
         "\n\n"
         "Thanks to Ed Schröder for Millionbase and Pierre Havard for KingBase. Also to Mark Crowther for TWIC which "
         "is the basis of all modern chess database curation."
         "\n\n"
         "Thanks to the engine authors who provided explicit permission to "
         "include their engines. In chronological order, Vasik Rajlich (Rybka), "
-        "Don Dailey and Larry Kaufman (Komodo), and Robert Houdart (Houdini)."
+        "the late Don Dailey and Larry Kaufman (Komodo), and Robert Houdart (Houdini)."
         "\n\n"
         "Thanks to the Stockfish team, Stockfish is now the default engine. "
         "Permission to include Stockfish is inherent in its licence, as long "
@@ -1261,8 +1260,11 @@ void ChessFrame::OnCredits(wxCommandEvent& WXUNUSED(event))
         "Thanks to Julian Smart, Vadim Zeitlin and the wxWidgets community "
         "for the GUI library."
         "\n\n"
+		"Thanks to Garry Peek and the Radium team (Norman Bartholomew, John Cocks, Jaron Peek, Tim McEwan, Brian Peach, Dr Garry Brown, Corwin Newall, Kate Hyndman and James Herbison) "
+		"for providing office space and good company through much of the V3 development grind."
+        "\n\n"
         "Thanks to my dear wife Maria Champion-Forster, for not only tolerating me "
-		"spending/wasting thousands of hours on this project, but actually encouraging it."
+		"spending (wasting?) thousands of hours on this project, but actually encouraging it."
         "\n\n"
         "Dedicated to the memory of John Victor Forster 1949-2001. We "
         "miss him every day."
@@ -1851,6 +1853,7 @@ void ChessFrame::OnOptionsReset(wxCommandEvent &)
     wxString old_file    = objs.repository->book.m_file;
     wxString old_engine_file  = objs.repository->engine.m_file;
     const char *from = LangCheckDiffBegin();
+    bool before_small_board = objs.repository->general.m_small_board;
     bool before_large_font = objs.repository->general.m_large_font;
     bool before_no_italics = objs.repository->general.m_no_italics;
     delete objs.repository;
@@ -1879,10 +1882,16 @@ void ChessFrame::OnOptionsReset(wxCommandEvent &)
         objs.gl->chess_clock.Repository2Clocks();
     context->RedrawClocks();
     const char *to = LangCheckDiffEnd();
+    bool after_small_board = objs.repository->general.m_small_board;
     bool after_large_font = objs.repository->general.m_large_font;
     bool after_no_italics = objs.repository->general.m_no_italics;
     RefreshLanguageFont( from, before_large_font, before_no_italics,
                            to,  after_large_font,  after_no_italics );
+    if( before_small_board != after_small_board )
+	{
+		context->AuiRefresh();
+		context->pb->SetBoardTitle();
+	}
 	context->pb->gb->Redraw();
     SetFocusOnList();
 }
@@ -2071,6 +2080,7 @@ void ChessFrame::OnUpdateEngine(wxUpdateUIEvent &event )
 void ChessFrame::OnGeneral(wxCommandEvent &)
 {
     const char *from = LangCheckDiffBegin();
+    bool before_small_board = objs.repository->general.m_small_board;
     bool before_large_font = objs.repository->general.m_large_font;
     bool before_no_italics = objs.repository->general.m_no_italics;
     GeneralDialog dialog( this, &objs.repository->general );
@@ -2085,12 +2095,18 @@ void ChessFrame::OnGeneral(wxCommandEvent &)
                                  s, dialog.dat.m_no_italics,
                                  dialog.dat.m_straight_to_game );
         const char *to = LangCheckDiffEnd();
+		bool after_small_board = objs.repository->general.m_small_board;
         bool after_large_font = objs.repository->general.m_large_font;
         bool after_no_italics = objs.repository->general.m_no_italics;
         RefreshLanguageFont( from, before_large_font, before_no_italics,
                              to,   after_large_font,  after_no_italics );
 
 		// Change board colours
+		if( before_small_board != after_small_board )
+		{
+			context->AuiRefresh();
+			context->pb->SetBoardTitle();
+		}
 		objs.canvas->pb->gb->Redraw();
     }
     SetFocusOnList();

@@ -164,6 +164,7 @@ Repository::Repository( bool use_defaults )
         ReadBool    ("GeneralStraightToGame",             general.m_straight_to_game  );
         ReadBool    ("GeneralStraightToFirstGame",        general.m_straight_to_first_game  );
         ReadBool    ("GeneralUseLargeFont",               general.m_large_font    );
+        ReadBool    ("GeneralUseSmallBoard",              general.m_small_board   );
         ReadBool    ("GeneralNoAutoFlip",                 general.m_no_auto_flip  );
         ReadBool    ("GeneralEmitBellWhenEngineMoves",    general.m_bell  );
 		ReadBool    ("GeneralSuppressHighlight",		  general.m_suppress_highlight  );
@@ -268,6 +269,7 @@ Repository::~Repository()
     config->Write("GeneralStraightToGame",            (int)general.m_straight_to_game );
     config->Write("GeneralStraightToFirstGame",       (int)general.m_straight_to_first_game );
     config->Write("GeneralUseLargeFont",              (int)general.m_large_font   );
+    config->Write("GeneralUseSmallBoard",             (int)general.m_small_board  );
     config->Write("GeneralNoAutoFlip",                (int)general.m_no_auto_flip );
     config->Write("GeneralEmitBellWhenEngineMoves",   (int)general.m_bell  );
     config->Write("GeneralSuppressHighlight",		  (int)general.m_suppress_highlight  );
@@ -382,29 +384,29 @@ void Repository::SetDirectories()
     wxStandardPathsBase& stdp = wxStandardPaths::Get();
 
     // Defaults to use in case of error
-    wxString name = "TarraschDb";
+    wxString name = "Tarrasch";
 #ifdef WINDOWS_FIX_LATER
-    exe_dir = "C:/Program Files (x86)/TarraschDb";
+    exe_dir = "C:/Program Files (x86)/Tarrasch";
 #else
     exe_dir = ".";
 #endif
 
     // Find directories we plan to use
     wxString doc = stdp.GetDocumentsDir();              // eg "C:\Documents and Settings\Bill\My Documents"
-    wxString tmp = stdp.GetExecutablePath();            // eg "C:\Program Files\TarraschDb\TarraschDb.exe"
+    wxString tmp = stdp.GetExecutablePath();            // eg "C:\Program Files\Tarrasch\Tarrasch.exe"
     wxFileName exe(tmp);     
     wxArrayString dirs = exe.GetDirs();
     exe_dir = exe.GetPath();
     if( dirs.Count() > 1 )
         name = dirs[dirs.Count()-1];
     if( name=="vc_mswd" || name=="vc_msw" || name=="vc_mswud" || name=="vc_mswu" ) // during development
-        name = "TarraschDb";
+        name = "Tarrasch";
     if( name.Len() == 0 )
-        name = "TarraschDb";
+        name = "Tarrasch";
     bool ini_exists = false;
     bool mkdir = false;
     doc_dir = doc + "/" + name;
-    ini_filename = exe_dir + "/TarraschDb.ini";
+    ini_filename = exe_dir + "/Tarrasch.ini";
     wxFileName ini1(ini_filename);
     if( ini1.FileExists() )
     {
@@ -420,7 +422,7 @@ void Repository::SetDirectories()
             else
                 doc_dir = doc;
         }
-        ini_filename = doc_dir + "/TarraschDb.ini";
+        ini_filename = doc_dir + "/Tarrasch.ini";
         wxFileName ini2(ini_filename);
         if( !mkdir && ini2.FileExists() )
             ini_exists = true;

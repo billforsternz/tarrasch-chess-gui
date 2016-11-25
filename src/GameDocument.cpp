@@ -2054,8 +2054,13 @@ GAME_MOVE *GameDocument::GetSummaryXX( thc::ChessRules &cr, std::string &title_t
         cr = this->start_position;
         bool at_move0=false;
         MoveTree *found = Locate( pos, cr, title_txt, at_move0 );
-		if( found && !at_move0 )
-			last_move = &found->game_move;
+		if( found )
+		{
+			if( !at_move0 )
+				last_move = &found->game_move;
+			else
+				last_move = gv.LocateAtMoveZeroGetLastMove();
+		}
     }
     return( last_move );
 }

@@ -1054,8 +1054,9 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req, PatternParamete
         {
             wxMessageBox(
                 "The database is not currently running. To correct this select a database "
-                "using the database menu. If you don't have a database, the database menu "
-                "also offers a command to create a database.", "Database problem", wxOK|wxICON_ERROR
+                "using the 'Select current database' command in the database menu. If you don't have a database, you can download one "
+				"from www.triplehappy.com. Alternatively, you can create your own database "
+                "from .pgn files with the 'Create new database' command in the database menu.", "Database problem", wxOK|wxICON_ERROR
             );
         }
         else
@@ -2730,7 +2731,6 @@ bool GameLogic::MouseDown( char file, char rank, wxPoint &point )     // return 
  ****************************************************************************/
 void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
 {
-    bool red = false;
     //GAME_STATE old_state=state;
     state = new_state;
     if( new_state==HUMAN || new_state==PONDERING )
@@ -2783,7 +2783,6 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
         }
         case GAMEOVER:
                         chess_clock.GameOver();
-                        //red = true;
                         //glc.TestResult( wx_stat );
                         //title = wx_stat.c_str();
                         b1 = "New Game";                    b1_cmd = ID_CMD_NEW_GAME;
@@ -2832,7 +2831,7 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
         canvas->box->SetLabel( b1 && b2 && b3 && b4 ? "Enter moves, comments and variations freely - or ..." : "Suggestions" );
 	}
     if( title && !show )
-        canvas->SetBoardTitle( title, red );
+        canvas->SetBoardTitle( title );
     if( !b1 )
         canvas->button1->Show( false );        
     else

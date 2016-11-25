@@ -2,14 +2,14 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 [Setup]
-AppName=TarraschDb Chess GUI
-AppVerName=TarraschDb Chess GUI V3 Beta
+AppName=Tarrasch Chess GUI
+AppVerName=Tarrasch Chess GUI V3.00a
 AppPublisher=Triple Happy Ltd.
 AppPublisherURL=http://www.triplehappy.com
 AppSupportURL=http://www.triplehappy.com
 AppUpdatesURL=http://www.triplehappy.com
-DefaultDirName={pf}\TarraschDb
-DefaultGroupName=TarraschDb
+DefaultDirName={pf}\Tarrasch
+DefaultGroupName=Tarrasch
 LicenseFile=licence.txt
 OutputDir=.
 OutputBaseFilename=setup
@@ -27,7 +27,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "TarraschDb.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Tarrasch.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Engines\TarraschToyEngine.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "Engines\Rybka v2.3.2a.mp.w32.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "Engines\komodo3-32.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
@@ -44,10 +44,10 @@ Source: "web.zip"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-Name: "{group}\TarraschDb"; Filename: "{app}\TarraschDb.exe"
-Name: "{userdesktop}\TarraschDb"; Filename: "{app}\TarraschDb"; Tasks: desktopicon
-Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\TarraschDb"; Filename: "{app}\TarraschDb.exe"; Tasks: quicklaunchicon
+Name: "{group}\Tarrasch"; Filename: "{app}\Tarrasch.exe"
+Name: "{userdesktop}\Tarrasch"; Filename: "{app}\Tarrasch"; Tasks: desktopicon
+Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\Tarrasch"; Filename: "{app}\Tarrasch.exe"; Tasks: quicklaunchicon
 
 [Run]
-Filename: "{app}\TarraschDb.exe"; Description: "{cm:LaunchProgram,TarraschDb}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\Tarrasch.exe"; Description: "{cm:LaunchProgram,Tarrasch}"; Flags: nowait postinstall skipifsilent
 
