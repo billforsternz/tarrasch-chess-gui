@@ -8,18 +8,22 @@ it allows you to create and edit .pgn files (i.e standard chess documents) and e
 separate UCI (i.e. standard) chess engines. You can either play against a chess engine or use
 it to analyse positions and games.
 
-Version information: This repository contains Tarrasch V3, (also known as TarraschDb in
-recognition of Tarrasch's (nifty) database features. Tarrasch V3 is the newest version, now in
-beta. Tarrasch V3 is approaching completion and can be used instead of the established current
-version.
+The Tarrasch Chess GUI Github binary releases are relatively compact "portable" (.zip, not setup .exe)
+versions of Tarrasch without large databases. You can find out more about Tarrasch and download
+differently configured packages at [the project's home website](http://triplehappy.com). 
 
-Tarrasch V2 is still the "current version" of Tarrasch. I hope to retire it soon.
-Tarrasch V2 uses the peer old-tarrasch-chess-gui repository on github.
+Version information: This repository contains Tarrasch V3, From 2016-11-25 Tarrasch
+V3 has replaced the retired Tarrasch V2. Tarrasch V2 uses the peer old-tarrasch-chess-gui
+repository on github. My git skills are slowly getting up to speed and for future Tarrasch development I will
+avoid this unnecessary proliferation of repositories - i.e. I will prefer further developing this
+repository in to starting a new one. One reflection of my improving git skills
+is that I have used tagged releases sensibly in this repository (in the peer old-tarrasch-chess-gui
+repository I used more unwieldy branches). I now typically stick to two just branches, master and
+development. I do all work in development, and then merge development into master at each
+release.
 
-Tarrasch V1 was primitive but useful in some contexts.
-
-You can find out more about Tarrasch
-and download Tarrasch V2 and V3 for Windows at this [website](http://triplehappy.com). 
+To complete this version discussion; For the record, Tarrasch V1 was primitive but useful in some contexts. It predates any attempt
+on my part to develop in the open with a hosted repository.
 
 Building Tarrasch
 =================
@@ -97,7 +101,7 @@ you must go to properties > configuration properties > C/C++ > code generation a
 Once you've successfully rebuilt wxWidgets (both debug and release) copy the include and lib
 directory trees into place in the wxWidgets-3.1.0 directory.
 
-The .7z archives only include the 24 wxWidgets libraries required by Tarrasch. These libraries
+The .7z archives only include the 25 wxWidgets libraries required by Tarrasch. These libraries
 are all in the wxWidgets-3.1.0\lib\vc_lib subdirectory as follows;
 
 - .\wxWidgets-3.1.0\lib\vc_lib\wxbase31u.lib
@@ -116,6 +120,7 @@ are all in the wxWidgets-3.1.0\lib\vc_lib subdirectory as follows;
 - .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_core.lib
 - .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_html.lib
 - .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_richtext.lib
+- .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_aui.lib
 - .\wxWidgets-3.1.0\lib\vc_lib\wxpng.lib
 - .\wxWidgets-3.1.0\lib\vc_lib\wxpngd.lib
 - .\wxWidgets-3.1.0\lib\vc_lib\wxregexu.lib
