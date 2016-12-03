@@ -108,16 +108,16 @@ void EngineDialog::CreateControls()
     box_sizer->Add(descr, 0, wxALIGN_LEFT|wxALL, 5);
 
     // Spacer
-    box_sizer->Add(5, 5, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
+    // box_sizer->Add(5, 5, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
 
     // Label for file
     wxStaticText* file_label = new wxStaticText ( this, wxID_STATIC,
-        wxT("&UCI Engine executable file:"), wxDefaultPosition, wxDefaultSize, 0 );
+        wxT("UCI Engine executable file:"), wxDefaultPosition, wxDefaultSize, 0 );
     box_sizer->Add(file_label, 0, wxALIGN_LEFT|wxALL, 5);
 
     // File picker control
     wxString path = dat.m_file;
-    wxFilePickerCtrl *picker = new wxFilePickerCtrl( this, ID_ENGINE_PICKER, path, wxT("Select UCI Engine"),
+    wxFilePickerCtrl *picker = new wxFilePickerCtrl( this, ID_ENGINE_PICKER, path, "", //wxT("&Select UCI Engine"),
 #ifdef THC_WINDOWS
         "*.exe", wxDefaultPosition, wxDefaultSize,
 #else         
@@ -128,10 +128,10 @@ void EngineDialog::CreateControls()
 
     // Ponder enabled
     wxCheckBox* ponder_box = new wxCheckBox( this, ID_PONDER, 
-       wxT("&Ponder"), wxDefaultPosition, wxDefaultSize, 0 );
+       wxT("Ponder"), wxDefaultPosition, wxDefaultSize, 5 );
     ponder_box->SetValue( dat.m_ponder );
-    box_sizer->Add( ponder_box, 0,
-        wxALL, 5);
+    //box_sizer->Add( ponder_box, 0,
+    //    wxALL, 5);
 /*
     // Label for the hash
     wxStaticText* hash_label = new wxStaticText ( this, wxID_STATIC,
@@ -147,14 +147,15 @@ void EngineDialog::CreateControls()
 
     // Label for the hash
     wxStaticText* hash_label = new wxStaticText ( this, wxID_STATIC,
-        wxT("&Hash size:"), wxDefaultPosition, wxDefaultSize, 0 );
+        wxT("       Hash size (MB):"), wxDefaultPosition, wxDefaultSize, 5 );
 
     // A spin control for the hash
     wxSpinCtrl* hash_spin = new wxSpinCtrl ( this, ID_HASH,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 1, 4096, 64 );
     wxBoxSizer* hash_horiz  = new wxBoxSizer(wxHORIZONTAL);
-    hash_horiz->Add( hash_label,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
+    hash_horiz->Add( ponder_box, 0, wxALIGN_LEFT|wxGROW|wxALL, 5);
+    hash_horiz->Add( hash_label,  0, wxALIGN_LEFT|wxGROW|wxALL, 10);
     hash_horiz->Add( hash_spin,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
     box_sizer->Add( hash_horiz, 0, wxTOP|wxBOTTOM|wxRIGHT, 5);
 
@@ -173,7 +174,7 @@ void EngineDialog::CreateControls()
 
     // Label for max cpu cores
     wxStaticText* max_cpu_cores_label = new wxStaticText ( this, wxID_STATIC,
-        wxT("&Max CPU cores:"), wxDefaultPosition, wxDefaultSize, 0 );
+        wxT("Max CPU cores:"), wxDefaultPosition, wxDefaultSize, 0 );
 
     // A spin control for max cpu cores
     wxSpinCtrl* max_cpu_cores_spin = new wxSpinCtrl ( this, ID_MAX_CPU_CORES,
@@ -195,7 +196,7 @@ void EngineDialog::CreateControls()
     wxBoxSizer* custom1_horiz  = new wxBoxSizer(wxHORIZONTAL);
     custom1_horiz->Add( custom1a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
     custom1_horiz->Add( custom1b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
-    box_sizer->Add( custom1_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 5 );
+    box_sizer->Add( custom1_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 0 );
 
     // Text controls for custom parameter 2
     wxTextCtrl *custom2a_ctrl = new wxTextCtrl ( this, ID_CUSTOM2A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
@@ -208,7 +209,7 @@ void EngineDialog::CreateControls()
     wxBoxSizer* custom2_horiz  = new wxBoxSizer(wxHORIZONTAL);
     custom2_horiz->Add( custom2a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
     custom2_horiz->Add( custom2b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
-    box_sizer->Add( custom2_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 5 );
+    box_sizer->Add( custom2_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 0 );
 
     // Text controls for custom parameter 3
     wxTextCtrl *custom3a_ctrl = new wxTextCtrl ( this, ID_CUSTOM3A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
@@ -221,7 +222,7 @@ void EngineDialog::CreateControls()
     wxBoxSizer* custom3_horiz  = new wxBoxSizer(wxHORIZONTAL);
     custom3_horiz->Add( custom3a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
     custom3_horiz->Add( custom3b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
-    box_sizer->Add( custom3_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 5 );
+    box_sizer->Add( custom3_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 0 );
 
     // Text controls for custom parameter 4
     wxTextCtrl *custom4a_ctrl = new wxTextCtrl ( this, ID_CUSTOM4A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
@@ -234,7 +235,7 @@ void EngineDialog::CreateControls()
     wxBoxSizer* custom4_horiz  = new wxBoxSizer(wxHORIZONTAL);
     custom4_horiz->Add( custom4a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
     custom4_horiz->Add( custom4b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
-    box_sizer->Add( custom4_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 5 );
+    box_sizer->Add( custom4_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 0 );
 
     // Text controls for custom parameter 5
     wxTextCtrl *custom5a_ctrl = new wxTextCtrl ( this, ID_CUSTOM5A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
@@ -247,7 +248,7 @@ void EngineDialog::CreateControls()
     wxBoxSizer* custom5_horiz  = new wxBoxSizer(wxHORIZONTAL);
     custom5_horiz->Add( custom5a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
     custom5_horiz->Add( custom5b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
-    box_sizer->Add( custom5_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 5 );
+    box_sizer->Add( custom5_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 0 );
 
     // Text controls for custom parameter 6
     wxTextCtrl *custom6a_ctrl = new wxTextCtrl ( this, ID_CUSTOM6A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
@@ -260,7 +261,7 @@ void EngineDialog::CreateControls()
     wxBoxSizer* custom6_horiz  = new wxBoxSizer(wxHORIZONTAL);
     custom6_horiz->Add( custom6a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
     custom6_horiz->Add( custom6b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
-    box_sizer->Add( custom6_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 5 );
+    box_sizer->Add( custom6_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 0 );
 
     // A dividing line before the OK and Cancel buttons
     wxStaticLine* line = new wxStaticLine ( this, wxID_STATIC,
@@ -269,7 +270,7 @@ void EngineDialog::CreateControls()
 
     // A horizontal box sizer to contain Reset, OK, Cancel and Help
     wxBoxSizer* okCancelBox = new wxBoxSizer(wxHORIZONTAL);
-    box_sizer->Add(okCancelBox, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 15);
+    box_sizer->Add(okCancelBox, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
 /*
     // The Reset button
     wxButton* reset = new wxButton( this, ID_ENGINE_RESET, wxT("&Reset"),
