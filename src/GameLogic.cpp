@@ -38,6 +38,7 @@
 #include "PgnDialog.h"
 #include "ClipboardDialog.h"
 #include "CreateDatabaseDialog.h"
+#include "BinDb.h"
 #include "DbDialog.h"
 #include "Objects.h"
 #include "CompressMoves.h"
@@ -1094,8 +1095,46 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req, PatternParamete
     }
 }
 
+
+void GameLogic::ProbeControlBlocks()
+{
+    int largest[6];
+    std::vector< smart_ptr<ListableGame> > ref = BinDbLoadAllGamesGetVector();
+    std::vector< smart_ptr<ListableGame> > *v;
+    for( int i=0; i<6; i++ )
+    {
+        largest[i] = -1;
+        switch(i)
+        {
+            case 0: v = &gc_clipboard.gds;                          break;
+            case 1: v = &gc_pgn.gds;                                break;
+            case 2: v = &gc_database.gds;                           break;
+            case 3: v = &gc_session.gds;                            break;
+            case 4: v = &objs.db->tiny_db.in_memory_game_cache;     break;
+            case 5: v = &ref;                                       break;
+        }
+        for( size_t j=0; j<v->size(); j++ )
+        {
+            smart_ptr<ListableGame> p = (*v)[j];
+            uint8_t idx = p->GetControlBlockIdx();
+            if( idx > largest[i] )
+                largest[i] = idx;
+        }
+    }
+
+//    GamesCache gc_pgn;
+//    GamesCache gc_clipboard;
+//    GamesCache gc_session;
+//    GamesCache gc_database;
+    std::string caption("Probing");
+    char buf[2000];
+    sprintf( buf, "Largest control blocks found were %d,%d,%d,%d,%d,%d", largest[0], largest[1], largest[2], largest[3], largest[4], largest[5] );
+    wxMessageBox( wxString(buf), wxString(caption) );
+}
+
 void GameLogic::CmdDatabaseSelect()
 {
+    ProbeControlBlocks();
     wxFileDialog fd( objs.frame, "Select current database", "", "", "*.tdb", wxFD_FILE_MUST_EXIST );
     wxString path( objs.repository->database.m_file );
     fd.SetPath(path);

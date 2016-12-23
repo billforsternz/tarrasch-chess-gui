@@ -32,6 +32,7 @@ private:
     std::string fields;
     
 public:
+    uint8_t     GetControlBlockIdx() { return cb_idx; }
     static int AllocateNewControlBlock();
     static PackedGameBinDbControlBlock& GetControlBlock(int cb_idx);
 

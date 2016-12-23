@@ -159,7 +159,7 @@ PanelNotebook::PanelNotebook
 	//new_tab_button_width = butt_sz.x;
 #ifdef AUI_NOTEBOOK
     notebook = new wxAuiNotebook(this, wxID_ANY, wxPoint(5,0),  wxSize(siz.x-book_moves_width-10-new_tab_button_width-10,siz.y*5),
-        wxAUI_NB_TOP | /*wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | wxAUI_NB_SCROLL_BUTTONS |*/ wxAUI_NB_CLOSE_ON_ACTIVE_TAB );
+        wxAUI_NB_TOP | wxAUI_NB_SCROLL_BUTTONS | /* wxAUI_NB_WINDOWLIST_BUTTON | /*wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | wxAUI_NB_SCROLL_BUTTONS |*/ wxAUI_NB_CLOSE_ON_ACTIVE_TAB );
 
 
 #else
@@ -1859,7 +1859,7 @@ void ChessFrame::OnOptionsReset(wxCommandEvent &)
     wxString old_file    = objs.repository->book.m_file;
     wxString old_engine_file  = objs.repository->engine.m_file;
     const char *from = LangCheckDiffBegin();
-    bool before_small_board = objs.repository->general.m_small_board;
+    bool before_heading_above_board = objs.repository->general.m_heading_above_board;
     bool before_large_font = objs.repository->general.m_large_font;
     bool before_no_italics = objs.repository->general.m_no_italics;
     delete objs.repository;
@@ -1888,12 +1888,12 @@ void ChessFrame::OnOptionsReset(wxCommandEvent &)
         objs.gl->chess_clock.Repository2Clocks();
     context->RedrawClocks();
     const char *to = LangCheckDiffEnd();
-    bool after_small_board = objs.repository->general.m_small_board;
+    bool after_heading_above_board = objs.repository->general.m_heading_above_board;
     bool after_large_font = objs.repository->general.m_large_font;
     bool after_no_italics = objs.repository->general.m_no_italics;
     RefreshLanguageFont( from, before_large_font, before_no_italics,
                            to,  after_large_font,  after_no_italics );
-    if( before_small_board != after_small_board )
+    if( before_heading_above_board != after_heading_above_board )
 	{
 		context->AuiRefresh();
 		context->pb->SetBoardTitle();
@@ -2086,7 +2086,7 @@ void ChessFrame::OnUpdateEngine(wxUpdateUIEvent &event )
 void ChessFrame::OnGeneral(wxCommandEvent &)
 {
     const char *from = LangCheckDiffBegin();
-    bool before_small_board = objs.repository->general.m_small_board;
+    bool before_heading_above_board = objs.repository->general.m_heading_above_board;
     bool before_large_font = objs.repository->general.m_large_font;
     bool before_no_italics = objs.repository->general.m_no_italics;
     GeneralDialog dialog( this, &objs.repository->general );
@@ -2101,14 +2101,14 @@ void ChessFrame::OnGeneral(wxCommandEvent &)
                                  s, dialog.dat.m_no_italics,
                                  dialog.dat.m_straight_to_game );
         const char *to = LangCheckDiffEnd();
-		bool after_small_board = objs.repository->general.m_small_board;
+		bool after_heading_above_board = objs.repository->general.m_heading_above_board;
         bool after_large_font = objs.repository->general.m_large_font;
         bool after_no_italics = objs.repository->general.m_no_italics;
         RefreshLanguageFont( from, before_large_font, before_no_italics,
                              to,   after_large_font,  after_no_italics );
 
 		// Change board colours
-		if( before_small_board != after_small_board )
+		if( before_heading_above_board != after_heading_above_board )
 		{
 			context->AuiRefresh();
 			context->pb->SetBoardTitle();

@@ -89,6 +89,7 @@ public:
     void CmdDatabaseSearch();
     void CmdDatabaseShowAll();
     void CmdDatabasePlayers();
+    void ProbeControlBlocks();
     void CmdDatabaseSelect();
     void CmdDatabaseCreate();
     void CmdDatabaseAppend();

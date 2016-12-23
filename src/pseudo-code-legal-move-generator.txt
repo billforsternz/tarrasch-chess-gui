@@ -1,3 +1,43 @@
+/****************************************************************************
+ * Create a list of all legal moves in this position, with extra info
+ ****************************************************************************/
+void ChessRules::GenLegalMoveList( MOVELIST *list, bool check[MAXMOVES],
+                                                    bool mate[MAXMOVES],
+                                                    bool stalemate[MAXMOVES] )
+{
+    int i, j;
+    bool okay;
+    TERMINAL terminal_score;
+    MOVELIST list2;
+
+    // Generate all moves, including illegal (eg put king in check) moves
+    GenMoveList( &list2 );
+
+    // Loop copying the proven good ones
+    for( i=j=0; i<list2.count; i++ )
+    {
+        PushMove( list2.moves[i] );
+        okay = Evaluate(terminal_score);
+        Square king_to_move = (Square)(white ? wking_square : bking_square );
+		bool bcheck = false;
+        if( AttackedPiece(king_to_move) )
+		    bcheck = true;
+        PopMove( list2.moves[i] );
+        if( okay )
+        {
+            stalemate[j] = (terminal_score==TERMINAL_WSTALEMATE ||
+                            terminal_score==TERMINAL_BSTALEMATE);
+            mate[j]      = (terminal_score==TERMINAL_WCHECKMATE ||
+                            terminal_score==TERMINAL_BCHECKMATE);
+            check[j]     = mate[j] ? false : bcheck;
+            list->moves[j++] = list2.moves[i];
+        }
+    }
+    list->count  = j;
+}
+
+/*
+
 efficiently calculate list of all legal moves
  king moves
   for each knight ray
@@ -43,3 +83,4 @@ efficiently calculate list of all legal moves
         
         
    
+*/

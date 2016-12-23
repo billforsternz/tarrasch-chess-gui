@@ -108,6 +108,7 @@ public:
             }
         }
     }
+    virtual uint8_t GetControlBlockIdx() { return 0; }
  
 };
 

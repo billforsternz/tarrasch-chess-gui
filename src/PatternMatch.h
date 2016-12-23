@@ -66,7 +66,7 @@ struct PatternParameters
             this->material_balance = material_balance_;
             include_reflections = false;
             include_reverse_colours = false;
-            dont_allow_more_pieces = material_balance_?false:true;
+            dont_allow_more_pieces = false; //material_balance_?false:true;
             either_to_move = false;
             white_to_move = true;
             pawns_must_be_on_same_files = false;

@@ -83,7 +83,7 @@ private:
 	bool         black_clock_red;
 	bool         time_top_red;
 	bool         time_bottom_red;
-	bool         m_small_board;
+	bool         m_heading_above_board;
 	std::string  m_title_saved;
     DECLARE_EVENT_TABLE()
 };
