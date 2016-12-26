@@ -6,7 +6,12 @@ Arrows when number of tabs fills main screen
 Heading in frame is the default option
 Pattern search - Don't allow extra material no longer the default!
 Avoid slowly leaking memory on meta-data as databases loaded or created
-SProblems with pattern and material balance searches using clipboard as temporary database - fixed
+Problems with pattern and material balance searches using clipboard as temporary database - fixed
+Ctrl-A = select all in game dialogs
+Error handling in append database was broken - sometimes (eg bad initial format) leaving user unsure what happened
+Slightly more informative can't load database message
+Write duplicate pgn file last on db create or append - make it clear it can be cancelled
+Never show asterisk = file modified if no current file!
 
 Later
 Use faster move generator

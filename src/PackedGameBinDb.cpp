@@ -14,12 +14,56 @@
 #include "ListableGameBinDb.h"
 
 std::vector<PackedGameBinDbControlBlock> bin_db_control_blocks;
+static std::vector<bool> bin_db_control_block_used;
 
 int PackedGameBinDb::AllocateNewControlBlock()
 {
-    PackedGameBinDbControlBlock cb;
-    bin_db_control_blocks.push_back(cb);
-    return bin_db_control_blocks.size()-1;
+    // Search for an old block that's become available
+    int found = -1;
+    for( size_t i=0; i<bin_db_control_block_used.size(); i++ )
+    {
+        if( !bin_db_control_block_used[i] )
+        {
+            found = static_cast<int>(i);
+            break;
+        }
+    }
+
+    // If found, reuse
+    if( found >= 0 )
+    {
+        bin_db_control_block_used[found] = true;
+        return found;
+    }
+
+    // Else make a new block
+    else
+    {
+        PackedGameBinDbControlBlock cb;
+        bin_db_control_blocks.push_back(cb);
+        bin_db_control_block_used.push_back(true);
+        return bin_db_control_blocks.size()-1;
+    }
+}
+
+// The game logic has detected that a control block isn't being used - request reuse
+bool PackedGameBinDb::RequestRecycle( int cb_idx )
+{
+    bool in_range=false;
+    if( cb_idx < (int)bin_db_control_block_used.size() )
+    {
+        PackedGameBinDbControlBlock &cb = bin_db_control_blocks[cb_idx];
+        cb.bb.Clear();
+        cb.map_players.clear();
+        cb.map_events.clear();
+        cb.map_sites.clear();
+        cb.players.clear();
+        cb.events.clear();
+        cb.sites.clear();
+        bin_db_control_block_used[cb_idx] = false;
+        in_range = true;
+    }
+    return in_range;
 }
 
 PackedGameBinDbControlBlock& PackedGameBinDb::GetControlBlock( int cb_idx )

@@ -33,7 +33,8 @@ private:
     
 public:
     uint8_t     GetControlBlockIdx() { return cb_idx; }
-    static int AllocateNewControlBlock();
+    static int  AllocateNewControlBlock();
+    static bool RequestRecycle( int cb_idx );
     static PackedGameBinDbControlBlock& GetControlBlock(int cb_idx);
 
     bool Empty() { return fields.size() == 0; }

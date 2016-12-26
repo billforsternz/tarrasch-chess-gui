@@ -108,7 +108,7 @@ public:
             }
         }
     }
-    virtual uint8_t GetControlBlockIdx() { return 0; }
+    virtual bool UsesControlBlock( uint8_t & ) { return false; }
  
 };
 

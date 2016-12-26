@@ -38,6 +38,7 @@
 #include "PgnDialog.h"
 #include "ClipboardDialog.h"
 #include "CreateDatabaseDialog.h"
+#include "PackedGameBinDb.h"
 #include "BinDb.h"
 #include "DbDialog.h"
 #include "Objects.h"
@@ -1095,46 +1096,122 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req, PatternParamete
     }
 }
 
+/*
 
-void GameLogic::ProbeControlBlocks()
+ProbeControlBlocks() was introduced with V3.01. Previously each new database load or create blindly added
+a new PackedGameBinDbControlBlock to an unbounded vector of such blocks. One problem with this is that
+these blocks are referenced simply with a one byte control block index - so if we ever had 256 or more database
+loads or creates we would have a catastrophe. Previously I quietly ignored this, on the basis that such a
+thing would never happen in practice. But what if someone never closed Tarrasch? It's at least possible.
+
+Another problem is that no effort was made to clear the meta-data strings from old and un-used
+PackedGameBinDbControlBlocks. So again, if a user happened to make a lot of new databases or indeed just
+load a lot of databases in a session, we'd progressively waste memory.
+
+The solution to both problems is to actively recycle old PackedGameBinDbControlBlocks. At the point when
+the user indicates he is going to load or create a database we probe for unused blocks by iterating through
+all possible ListableGames in memory. We identify every block that's not in use and ask the allocator
+in PackedGameBinDb to recycle it (i.e. clear the strings in it and use it again).
+
+How can ListableGames reference old databases that are no longer in memory? The only mechanism I can think
+of is the clipboard. In any case it is imperative that all possible such games are identified by the probe
+operation here - else we will recycle the control block prematurely leading to access errors and crashes.
+
+                    #### CRITICAL INFORMATION FOR PROGRAM MAINTENANCE OR EXTENSION #####
+
+THIS CODE REPRESENTS A PROBLEM WITH THE DESIGN OF PackedBameBinDb AND HENCE OF ALL TARRASCH DATABASE
+OPERATIONS - I HAVE PRIORITISED EFFICIECY AND A MEMORY EFFICIENT APPROACH (EG THE ONE BYTE CONTROL BLOCK
+INDEX) OVER ALL OTHER CONSIDERATIONS AND SO WE DON'T HAVE ANY BETTER WAY OF ITERATING THROUGH ALL GAMES
+IN MEMORY THAN THE ONE HERE. SORRY
+
+*/
+
+// Take measures to control slow memory leak due to meta-data building up without being freed
+bool GameLogic::ProbeControlBlocks()
 {
-    int largest[6];
+    bool used[256];
+    for( int i=0; i<256; i++ )
+        used[i] = false;
     std::vector< smart_ptr<ListableGame> > ref = BinDbLoadAllGamesGetVector();
-    std::vector< smart_ptr<ListableGame> > *v;
+    std::vector< smart_ptr<ListableGame> > *v = &ref;
+
+    // I have wracked my brains and performed many system greps and these six possible
+    // locations are the only places I can think of or find where games might be stored
+    // in memory when no dialogues or menus are open and the user is able to run a command
+    // to load or create a database
     for( int i=0; i<6; i++ )
     {
-        largest[i] = -1;
+        int largest = -1;
+        const char *s="?";
         switch(i)
         {
-            case 0: v = &gc_clipboard.gds;                          break;
-            case 1: v = &gc_pgn.gds;                                break;
-            case 2: v = &gc_database.gds;                           break;
-            case 3: v = &gc_session.gds;                            break;
-            case 4: v = &objs.db->tiny_db.in_memory_game_cache;     break;
-            case 5: v = &ref;                                       break;
+            case 0: s = "Clipboard";
+                    v = &gc_clipboard.gds;                          break;
+            case 1: s = "File dialog";
+                    v = &gc_pgn.gds;                                break;
+            case 2: s = "Database dialog";
+                    v = &gc_database.gds;                           break;
+            case 3: s = "Session dialog";
+                    v = &gc_session.gds;                            break;
+            case 4: s = "In memory database";
+                    v = &objs.db->tiny_db.in_memory_game_cache;     break;
+            case 5: s = "BinDb array";
+                    v = &ref;                                       break;
         }
         for( size_t j=0; j<v->size(); j++ )
         {
             smart_ptr<ListableGame> p = (*v)[j];
-            uint8_t idx = p->GetControlBlockIdx();
-            if( idx > largest[i] )
-                largest[i] = idx;
+            uint8_t idx;
+            bool uses_control_block = p->UsesControlBlock( idx );
+            if( uses_control_block )
+            {
+                used[idx] = true;
+                if( idx > largest )
+                    largest = idx;
+            }
+        }
+        if( largest >= 0 )
+            cprintf( "%s has games with control blocks, largest index is %d\n", s, largest );
+    }
+
+    // Tell the PackedGameBinDb subsystem which control blocks aren't in use
+    int total_control_blocks_in_use = 0;
+    for( int i=0; i<256; i++ )        
+    {
+        if( used[i] )
+        {
+            total_control_blocks_in_use++;
+        }
+        else
+        {
+            bool in_range = PackedGameBinDb::RequestRecycle(i);
+            if( !in_range )
+                break;
         }
     }
 
-//    GamesCache gc_pgn;
-//    GamesCache gc_clipboard;
-//    GamesCache gc_session;
-//    GamesCache gc_database;
-    std::string caption("Probing");
-    char buf[2000];
-    sprintf( buf, "Largest control blocks found were %d,%d,%d,%d,%d,%d", largest[0], largest[1], largest[2], largest[3], largest[4], largest[5] );
-    wxMessageBox( wxString(buf), wxString(caption) );
+    // Don't really expect either of the following messages in practice
+    bool okay = total_control_blocks_in_use < 250;
+    if( !okay )
+    {
+        std::string caption("Memory Congestion Error");
+        std::string sorry("Sorry, it is no longer possible to load new databases, please save your work, exit Tarrasch and restart");
+        wxMessageBox( wxString(sorry), wxString(caption) );
+    }
+    else if( total_control_blocks_in_use > 240 )
+    {
+        std::string caption("Memory Congestion Warning");
+        std::string sorry("Please consider clearing the clipboard and/or closing the file");
+        wxMessageBox( wxString(sorry), wxString(caption) );
+    }
+    return okay;
 }
 
 void GameLogic::CmdDatabaseSelect()
 {
-    ProbeControlBlocks();
+    bool okay=ProbeControlBlocks();
+    if( !okay )
+        return;
     wxFileDialog fd( objs.frame, "Select current database", "", "", "*.tdb", wxFD_FILE_MUST_EXIST );
     wxString path( objs.repository->database.m_file );
     fd.SetPath(path);
@@ -1168,6 +1245,9 @@ void GameLogic::CmdDatabaseSelect()
 
 void GameLogic::CmdDatabaseCreate()
 {
+    bool okay=ProbeControlBlocks();
+    if( !okay )
+        return;
     Atomic begin;
     wxString db_name;
     bool ok=false;
@@ -1212,6 +1292,9 @@ void GameLogic::CmdDatabaseCreate()
 
 void GameLogic::CmdDatabaseAppend()
 {
+    bool okay=ProbeControlBlocks();
+    if( !okay )
+        return;
     Atomic begin;
     bool ok=false;
     wxString db_name;
@@ -3107,7 +3190,7 @@ void GameLogic::StatusUpdate( int idx )
             refresh=true;
         }
 		bool file_modified = gc_pgn.file_irrevocably_modified || (nbr_modified>0);
-        str = file_modified ? "* File: " :  "File: ";
+        str = (file_loaded&&file_modified) ? "* File: " :  "File: ";
         if( !file_loaded )
             str += "(none)";
         else

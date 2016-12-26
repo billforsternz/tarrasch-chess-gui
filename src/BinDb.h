@@ -25,8 +25,8 @@ bool TestBinaryBlock();
 uint8_t BinDbReadBegin( bool use_packed_control_block );
 uint32_t BinDbGetGamesSize();
 void BinDbNormaliseOrder( uint32_t begin, uint32_t end );
-bool BinDbDuplicateRemoval( std::string &title, wxWindow *window );
-bool BinDbWriteOutToFile( FILE *ofile, ProgressBar *pb=NULL );
+bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, wxWindow *window );
+bool BinDbWriteOutToFile( FILE *ofile, int nbr_to_omit_from_end, ProgressBar *pb=NULL );
 bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen );
 
 void Pgn2Tdb( const char *infile, const char *outfile );

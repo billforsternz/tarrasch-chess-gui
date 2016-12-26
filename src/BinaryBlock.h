@@ -18,6 +18,7 @@ class BinaryBlock
     int frozen_size;  
 public:
     BinaryBlock() { idx=0; bit_offset=0; }
+    void Clear() { idx=0; bit_offset=0; }
     char *GetPtr() { return reinterpret_cast<char *>(&buf[0]); }
     void Next( int nbits )
     {

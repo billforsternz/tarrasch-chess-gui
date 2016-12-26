@@ -159,6 +159,7 @@ bool BinDbOpen( const char *db_file, int &version )
     bin_file = fopen( db_file, "rb" );
     if( bin_file )
     {
+        version = -1;
         // Read the 1200 byte compatibility header - if present it makes a BinDb formatted
         //  database compatible to the original versions of TarraschDb which expect a sqlite
         //  file - well compatible enough to read the version number and conclude that they
@@ -241,7 +242,7 @@ void Pgn2Tdb( FILE *fin, FILE *fout )
     #else
     PgnRead pr('B',0);
     pr.Process(fin);
-    BinDbWriteOutToFile(fout);
+    BinDbWriteOutToFile(fout,0);
     #endif
 }
 
@@ -1117,12 +1118,23 @@ void BinDbDatabaseInitialSort( std::vector< smart_ptr<ListableGame> > &games_, b
     BinDbShowDebugOrder( games_, "Initial sort after");
 }
 
-bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
+// New in V3.01a - incorporate write file so can do that before writing dups to TarraschDbDuplicate.pgn
+bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, wxWindow *window )
 {
+    bool ok=true;
+
+    // Last three steps - remove duplicates, write to file, write duplicates to TarraschDbDuplicates.pgn
+    char buf[200];
+    sprintf( buf, "%s, step %d of %d", title.c_str(), step, step+2 );
+    std::string dup_title(buf);
+    sprintf( buf, "%s, step %d of %d", title.c_str(), step+1, step+2 );
+    std::string write_title;
+    sprintf( buf, "%s, step %d of %d", title.c_str(), step+2, step+2 );
+    std::string optional_title;
     {
         BinDbShowDebugOrder( games, "Duplicate Removal - phase 1 before");
         std::string desc("Duplicate Removal - phase 1");
-        ProgressBar progress_bar( title, desc, true, window );
+        ProgressBar progress_bar( dup_title, desc, true, window );
         progress_bar.DrawNow();
         sort_before( games.begin(), games.end(), predicate_sorts_by_game_moves, &progress_bar );
         std::sort( games.begin(), games.end(), predicate_sorts_by_game_moves );
@@ -1132,7 +1144,7 @@ bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
     {
         BinDbShowDebugOrder( games, "Duplicate Removal - phase 2 before");
         std::string desc("Duplicate Removal - phase 2");
-        ProgressBar progress_bar( title, desc, true, window );
+        ProgressBar progress_bar( dup_title, desc, true, window );
         progress_bar.DrawNow();
         ProgressBar *pb = &progress_bar;
         int nbr_games = games.size();
@@ -1214,7 +1226,7 @@ bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
     {
         BinDbShowDebugOrder( games, "Duplicate Removal - phase 3 before");
         std::string desc("Duplicate Removal - phase 3");
-        ProgressBar progress_bar( title, desc, true, window );
+        ProgressBar progress_bar( dup_title, desc, true, window );
         //progress_bar.DrawNow();
         sort_before( games.begin(), games.end(), predicate_sorts_by_id, &progress_bar );
         std::sort( games.begin(), games.end(), predicate_sorts_by_id );
@@ -1230,6 +1242,15 @@ bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
         }
 		BinDbShowDebugOrder(games, "Duplicate Removal - phase 3 after");
 	}
+
+    // New in V3.01a - incorporate write file so can do that before writing dups to TarraschDbDuplicate.pgn
+    if( ofile )
+    {
+        std::string desc("Writing file");
+        ProgressBar progress_bar( write_title, desc, true, window );
+        ok = BinDbWriteOutToFile(ofile,nbr_deleted,&progress_bar);
+    }
+
     if( nbr_deleted )
     {
         wxFileName wfn(objs.repository->log.m_file.c_str());
@@ -1242,8 +1263,8 @@ bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
         if( pgn_dup )
 	    {
 		    BinDbShowDebugOrder(games, "Duplicate Removal - phase 4 before");
-		    std::string desc("Writing duplicates to TarraschDbDuplicatesFile.pgn");
-		    ProgressBar progress_bar(title, desc, true, window);
+		    std::string desc("Saving duplicates to TarraschDbDuplicatesFile.pgn, cancel if not needed");
+		    ProgressBar progress_bar(optional_title, desc, true, window);
             for( int i=games.size()-1; i>=0; i-- )
             {
                 if( games[i]->game_id != GAME_ID_SENTINEL )
@@ -1261,21 +1282,22 @@ bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
                     the_game.ToFileTxtGameBody( str );
                     if( pgn_dup )
                         fwrite(str.c_str(),1,str.length(),pgn_dup);
-                    progress_bar.Perfraction( games.size()-i, nbr_deleted );
+                    if( progress_bar.Perfraction( games.size()-i, nbr_deleted ) )
+                        break;
                 }
             }
             fclose(pgn_dup);
-            cprintf( "Number of duplicates deleted: %d\n", nbr_deleted );
-            games.erase( games.end()-nbr_deleted, games.end() );
-            BinDbShowDebugOrder( games, "Duplicate Removal - phase 4 after");
         }
+        games.erase( games.end()-nbr_deleted, games.end() );
+        cprintf( "Number of duplicates deleted: %d\n", nbr_deleted );
+        BinDbShowDebugOrder( games, "Duplicate Removal - phase 4 after");
     }
+
     return true;
 }
 
-
 // Return bool okay
-bool BinDbWriteOutToFile( FILE *ofile, ProgressBar *pb )
+bool BinDbWriteOutToFile( FILE *ofile, int nbr_to_omit_from_end, ProgressBar *pb )
 {
     std::set<std::string> set_player;
     std::set<std::string> set_site;
@@ -1300,7 +1322,7 @@ bool BinDbWriteOutToFile( FILE *ofile, ProgressBar *pb )
     fh.nbr_players = std::distance( set_player.begin(), set_player.end() );
     fh.nbr_events  = std::distance( set_event.begin(),  set_event.end() );
     fh.nbr_sites   = std::distance( set_site.begin(),   set_site.end() );
-    fh.nbr_games   = games.size();
+    fh.nbr_games   = games.size() - nbr_to_omit_from_end;
     cprintf( "%d games, %d players, %d events, %d sites\n", fh.nbr_games, fh.nbr_players, fh.nbr_events, fh.nbr_sites );
     int nbr_bits_player = BitsRequired(fh.nbr_players);
     int nbr_bits_event  = BitsRequired(fh.nbr_events);  

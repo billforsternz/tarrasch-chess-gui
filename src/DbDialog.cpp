@@ -947,7 +947,8 @@ void DbDialog::PatternSearch()
     double percent_score=0.0;
     if( total_games )
         percent_score= ((1.0*stats_.white_wins + 0.5*total_draws_plus_no_result) * 100.0) / total_games;
-    sprintf( base, "%d %s, white scores %.1f%% +%d -%d =%d",
+    sprintf( base, "%s%d %s, white scores %.1f%% +%d -%d =%d",
+            objs.gl->db_clipboard ? "Clipboard search: " : "",
             total_games,
             total_games==1 ? "game" : "games",
             percent_score,
