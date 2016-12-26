@@ -141,11 +141,11 @@ wxSizer *DbDialog::GdvAddExtraControls()
 	}
     
     filter_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX,
-                                 wxT("&Clipboard as temporary database"), wxDefaultPosition, wxDefaultSize, 0 );
+                                    wxT("&Clipboard as temporary database"), wxDefaultPosition, wxDefaultSize, 0 );
     vsiz_panel_button1->Add(filter_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     filter_ctrl->SetValue( objs.gl->db_clipboard );
     wxStaticText* spacer1 = new wxStaticText( this, wxID_ANY, wxT(""),
-                                     wxDefaultPosition, wxDefaultSize, 0 );
+                                        wxDefaultPosition, wxDefaultSize, 0 );
     vsiz_panel_button1->Add(spacer1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     return vsiz_panel_button1;   
 }
@@ -444,20 +444,34 @@ void DbDialog::GdvCheckBox( bool checked )
     this->cr = cr_base;
     moves_from_base_position.clear();
     gc_db_displayed_games.gds.clear();
-    if( objs.gl->db_clipboard )
+
+    // Select PatternSearch() or StatsCalculate()
+    if( db_req == REQ_PATTERN )
     {
-        nbr_games_in_list_ctrl = gc_clipboard->gds.size();
+        PatternSearch();
+        Goto(0); // list_ctrl->SetFocus();
     }
-    else   // TODO need special handling for initial position
+
+    // Comments for this block are confusing and outdated - sorry
+    else if( db_req != REQ_PLAYERS )
     {
-        nbr_games_in_list_ctrl = objs.db->SetDbPosition( db_req );
+        if( objs.gl->db_clipboard )
+        {
+            nbr_games_in_list_ctrl = gc_clipboard->gds.size();
+        }
+        else    // TODO need special handling for initial position
+                //  (not really - searching for initial position picks up every game - quick enough to work well)
+        {
+            nbr_games_in_list_ctrl = objs.db->SetDbPosition( db_req );
         
-        // We have shown stats while db_clipboard was true. So to avoid going back to
-        //  situation where stats must be requested, unconditionally load games into
-        //  memory (Calculate Stats button loads games into memory)
-        gc->gds.clear();
+            // We have shown stats while db_clipboard was true. So to avoid going back to
+            //  situation where stats must be requested, unconditionally load games into
+            //  memory (Calculate Stats button loads games into memory)
+            gc->gds.clear();
+        }
+        StatsCalculate();
+        Goto(0); // list_ctrl->SetFocus();
     }
-    StatsCalculate();
 }
 
 // Copy to clipboard if clear_clipboard is true
@@ -933,7 +947,8 @@ void DbDialog::PatternSearch()
     double percent_score=0.0;
     if( total_games )
         percent_score= ((1.0*stats_.white_wins + 0.5*total_draws_plus_no_result) * 100.0) / total_games;
-    sprintf( base, "%d %s, white scores %.1f%% +%d -%d =%d",
+    sprintf( base, "%s%d %s, white scores %.1f%% +%d -%d =%d",
+            objs.gl->db_clipboard ? "Clipboard search: " : "",
             total_games,
             total_games==1 ? "game" : "games",
             percent_score,

@@ -208,11 +208,11 @@ void GeneralDialog::CreateControls()
     box_sizer->Add( line_highlight, 0,
         wxALL, 5);
 
-    // Use small board
-    wxCheckBox* use_small_board_box = new wxCheckBox( this, ID_SMALL_BOARD,
-       wxT("Put heading in frame to allow more room for chess board"), wxDefaultPosition, wxDefaultSize, 0 );
-    use_small_board_box->SetValue( dat.m_small_board );
-    box_sizer->Add( use_small_board_box, 0,
+    // Show heading above board
+    wxCheckBox* heading_above_board_box = new wxCheckBox( this, ID_HEADING_ABOVE_BOARD,
+       wxT("Show heading above board (instead of in frame)"), wxDefaultPosition, wxDefaultSize, 0 );
+    heading_above_board_box->SetValue( dat.m_heading_above_board );
+    box_sizer->Add( heading_above_board_box, 0,
         wxALL, 5);
 
     // Use large font for chess text
@@ -287,8 +287,8 @@ void GeneralDialog::SetDialogValidators()
 {
     FindWindow(ID_LARGE_FONT)->SetValidator(
         wxGenericValidator(& dat.m_large_font));
-    FindWindow(ID_SMALL_BOARD)->SetValidator(
-        wxGenericValidator(& dat.m_small_board));
+    FindWindow(ID_HEADING_ABOVE_BOARD)->SetValidator(
+        wxGenericValidator(& dat.m_heading_above_board));
     FindWindow(ID_NO_ITALICS)->SetValidator(
         wxGenericValidator(& dat.m_no_italics));
     FindWindow(ID_STRAIGHT_TO_GAME)->SetValidator(
@@ -321,8 +321,8 @@ void GeneralDialog::SetDialogHelp()
     FindWindow(ID_STRAIGHT_TO_FIRST_GAME)->SetHelpText(help3b);
     FindWindow(ID_STRAIGHT_TO_FIRST_GAME)->SetToolTip(help3b);
     wxString help4 = "Set this to move board heading into frame (particularly useful for small screen setups)";
-    FindWindow(ID_SMALL_BOARD)->SetHelpText(help4);
-    FindWindow(ID_SMALL_BOARD)->SetToolTip(help4);
+    FindWindow(ID_HEADING_ABOVE_BOARD)->SetHelpText(help4);
+    FindWindow(ID_HEADING_ABOVE_BOARD)->SetToolTip(help4);
     wxString help5 = "Set this to use a larger font in the moves window";
     FindWindow(ID_LARGE_FONT)->SetHelpText(help5);
     FindWindow(ID_LARGE_FONT)->SetToolTip(help5);

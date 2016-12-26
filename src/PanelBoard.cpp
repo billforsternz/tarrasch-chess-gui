@@ -116,9 +116,9 @@ PanelBoard::PanelBoard
 
 void PanelBoard::Layout( const wxSize &siz, wxRect &board )
 {
-	m_small_board=false;
+	m_heading_above_board=false;
 	if( objs.repository )
-		m_small_board = objs.repository->general.m_small_board;
+		m_heading_above_board = objs.repository->general.m_heading_above_board;
 /*                                 |
                                    v
        +--------------------------------------------+
@@ -153,10 +153,9 @@ void PanelBoard::Layout( const wxSize &siz, wxRect &board )
            = h-t-b  whichever is smaller
 
 */
-	cprintf( "******   m_small_board = %s\n", m_small_board?"true":"false" );
+	cprintf( "******   m_heading_above_board = %s\n", m_heading_above_board?"true":"false" );
     int w = siz.x;
     int h = siz.y;
-	m_small_board = objs.repository->general.m_small_board;
     wxClientDC dc0(name_top);
     wxCoord txt_width, txt_height, txt_descent, txt_external_leading;
     dc0.GetTextExtent( "Ready", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
@@ -169,7 +168,7 @@ void PanelBoard::Layout( const wxSize &siz, wxRect &board )
     wxClientDC dc1(time_top);
     dc1.GetTextExtent( "Player Name", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
     int t2 = txt_height+1; //100*(txt_height /*+ txt_descent*/)/100;
-	if( m_small_board )
+	if( !m_heading_above_board )
 	{
 		t2++;
 		t1 = t2/3;
@@ -236,7 +235,7 @@ void PanelBoard::Layout( const wxSize &siz, wxRect &board )
 
     // Board title
     wxSize sz;
-	if( m_small_board )
+	if( !m_heading_above_board )
 	{
 		board_title->SetPosition( wxPoint(x,y) );
 		board_title->SetSize(wxSize(1,1));
@@ -419,7 +418,7 @@ void PanelBoard::SetBoardTitle( const char *txt )
 	wxString frame_title("Tarrasch Chess GUI V3");
 	m_title_saved = std::string(txt);
 	cprintf( "SetBoardTitle(\"%s\")\n", txt );
-	if( m_small_board )
+	if( !m_heading_above_board )
 	{
 		frame_title += "  -  ";
 		frame_title += txt;

@@ -67,6 +67,7 @@ BEGIN_EVENT_TABLE( GamesDialog, wxDialog )
     EVT_BUTTON( wxID_PASTE,             GamesDialog::OnPaste )
     EVT_BUTTON( wxID_SAVE,              GamesDialog::OnSave )
     EVT_BUTTON( wxID_HELP,              GamesDialog::OnHelpClick )
+    EVT_MENU( wxID_SELECTALL,         GamesDialog::OnSelectAll )
 
     EVT_RADIOBUTTON( ID_DB_RADIO,       GamesDialog::OnRadio )
     EVT_CHECKBOX   ( ID_DB_CHECKBOX,    GamesDialog::OnCheckBox )
@@ -74,7 +75,6 @@ BEGIN_EVENT_TABLE( GamesDialog, wxDialog )
     EVT_COMBOBOX   ( ID_DB_COMBO,       GamesDialog::OnComboBox )
     EVT_LISTBOX(ID_DB_LISTBOX_STATS, GamesDialog::OnNextMove)
 
-    //EVT_MENU( wxID_SELECTALL, GamesDialog::OnSelectAll )
     EVT_LIST_ITEM_FOCUSED(ID_PGN_LISTBOX, GamesDialog::OnListFocused)
     EVT_LIST_ITEM_ACTIVATED(ID_PGN_LISTBOX, GamesDialog::OnListSelected)
     EVT_LIST_COL_CLICK(ID_PGN_LISTBOX, GamesDialog::OnListColClick)
@@ -1157,6 +1157,24 @@ void GamesDialog::OnCutOrDelete( bool cut )
         }
     }
     dbg_printf( "%d games %s\n", nbr_cut, cut?"cut":"deleted" );
+}
+
+void GamesDialog::OnSelectAll( wxCommandEvent& WXUNUSED(event) )
+{
+    if( list_ctrl )
+    {
+        int sz = list_ctrl->GetItemCount();
+        if( sz )
+        {
+            ProgressBar pb("Select all","Selecting all",true,this);
+            for( int i=0; i<sz; i++ )
+            {
+                list_ctrl->SetItemState( i, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
+                if( pb.Perfraction(i,sz) )
+                    break;
+            }
+        }
+    }
 }
 
 void GamesDialog::OnSiteEvent( wxCommandEvent& WXUNUSED(event) )

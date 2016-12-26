@@ -336,7 +336,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
     if( ok )
     {
 		ok = false;
-        BinDbReadBegin( true );
+        BinDbReadBegin();
         wxString fullpath = db_filename;
         wxFileName wfn(db_filename);
         if( wfn.IsOk() && wfn.HasName() )
@@ -373,7 +373,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
         }
         else
         {
-            std::string title( "Creating database, step 1 of 3");
+            std::string title( "Creating database, step 1 of 4");
             std::string desc("Reading file #");
             char buf[80];
             sprintf( buf, "%d of %d", i+1, cnt );
@@ -394,15 +394,9 @@ void CreateDatabaseDialog::OnCreateDatabase()
     }
     if( ok )
     {
-        std::string title( "Creating database, step 2 of 3");
-        ok = BinDbDuplicateRemoval(title,this);
-    }
-    if( ok )
-    {
-        std::string title( "Creating database, step 3 of 3");
-        std::string desc("Writing file");
-        ProgressBar progress_bar( title, desc, true, this );
-        ok = BinDbWriteOutToFile(ofile,&progress_bar);
+        std::string title( "Creating database");    // Step 2,3 and 4 of 4
+        int step=2;
+        ok = BinDbRemoveDuplicatesAndWrite(title,step,ofile,this);
     }
     if( ofile )
     {
@@ -482,7 +476,10 @@ void CreateDatabaseDialog::OnAppendDatabase()
     {
         ok = BinDbOpen( db_filename.c_str(), version );
         if( !ok )
-            error_msg = "Cannot open  " + db_name;
+        {
+            error_msg = version==-1 ? ("Cannot open " + db_name + " file is not in Tarrasch database format")
+                                    : ("Cannot open  " + db_name);
+        }
         else if( version==0 || version>DATABASE_VERSION_NUMBER_BIN_DB )
         {
             error_msg = "Tarrasch database file " + db_name + " is incompatible with this version of Tarrasch";
@@ -495,7 +492,7 @@ void CreateDatabaseDialog::OnAppendDatabase()
     {
         bool dummyb=false;
         int dummyi=false;
-        std::string title( "Appending to database, step 1 of 4");
+        std::string title( "Appending to database, step 1 of 5");
         std::string desc("Reading existing database");
         ProgressBar progress_bar( title, desc, true, this );
         
@@ -510,82 +507,76 @@ void CreateDatabaseDialog::OnAppendDatabase()
             BinDbLoadAllGames( true, mega_cache, dummyi, dummyb, &progress_bar );
             BinDbClose();
         }
-        FILE *ofile=NULL;
-        if( ok )
+    }
+    FILE *ofile=NULL;
+    if( ok )
+    {
+        ofile = fopen( db_name.c_str(), "wb" );
+        if( ofile )
+			created_new_db_file = true;
+		else
         {
-            ofile = fopen( db_name.c_str(), "wb" );
-            if( ofile )
-				created_new_db_file = true;
-			else
-            {
-                error_msg = "Cannot open ";
-                error_msg += db_name;
-                ok = false;
-            }
+            error_msg = "Cannot open ";
+            error_msg += db_name;
+            ok = false;
         }
-        for( int i=0; ok && i<cnt; i++ )
+    }
+    for( int i=0; ok && i<cnt; i++ )
+    {
+        FILE *ifile = fopen( files[i].c_str(), "rt" );
+        if( !ifile )
         {
-            FILE *ifile = fopen( files[i].c_str(), "rt" );
-            if( !ifile )
-            {
-                error_msg = "Cannot open ";
-                error_msg += files[i];
-                ok = false;
-            }
-            else
-            {
-                std::string title2( "Appending to database, step 2 of 4");
-                std::string desc2("Reading file #");
-                char buf[80];
-                sprintf( buf, "%d of %d", i+1, cnt );
-                desc2 += buf;
-                ProgressBar progress_bar2( title2, desc2, true, this, ifile );
-                uint32_t begin = BinDbGetGamesSize();
-                PgnRead pgn('B',&progress_bar2);
-                bool aborted = pgn.Process(ifile);
-                uint32_t end = BinDbGetGamesSize();
-                BinDbNormaliseOrder( begin, end );
-                if( aborted )
-                {
-                    error_msg = "cancel";
-                    ok = false;
-                }
-                fclose(ifile);
-            }
-        }
-        if( ok )
-        {
-            std::string title3( "Appending to database, step 3 of 4");
-            ok = BinDbDuplicateRemoval(title3,this);
-        }
-        if( ok )
-        {
-            std::string title4( "Appending to database, step 4 of 4");
-            std::string desc4("Writing file");
-            ProgressBar progress_bar4( title4, desc4, true, this );
-            ok = BinDbWriteOutToFile(ofile,&progress_bar4);
-        }
-		if( ofile )
-		{
-            fclose(ofile);
-			ofile = NULL;
-		}
-        if( ok )
-        {
-            wxSafeYield();
-            AcceptAndClose();
-            db_created_ok = true;
+            error_msg = "Cannot open ";
+            error_msg += files[i];
+            ok = false;
         }
         else
         {
-            if( error_msg == "" )
-                error_msg = db_primitive_error_msg();
-            if( error_msg == "cancel" )
-                error_msg = "Database creation cancelled";
-            wxMessageBox( error_msg.c_str(), "Database creation failed", wxOK|wxICON_ERROR );
-			if( created_new_db_file )
-				_unlink(db_filename.c_str());
+            std::string title2( "Appending to database, step 2 of 5");
+            std::string desc2("Reading file #");
+            char buf[80];
+            sprintf( buf, "%d of %d", i+1, cnt );
+            desc2 += buf;
+            ProgressBar progress_bar2( title2, desc2, true, this, ifile );
+            uint32_t begin = BinDbGetGamesSize();
+            PgnRead pgn('B',&progress_bar2);
+            bool aborted = pgn.Process(ifile);
+            uint32_t end = BinDbGetGamesSize();
+            BinDbNormaliseOrder( begin, end );
+            if( aborted )
+            {
+                error_msg = "cancel";
+                ok = false;
+            }
+            fclose(ifile);
         }
+    }
+    if( ok )
+    {
+        std::string title3( "Appending to database");    // Step 3,4 and 5 of 5
+        int step=3;
+        ok = BinDbRemoveDuplicatesAndWrite(title3,step,ofile,this);
+    }
+	if( ofile )
+	{
+        fclose(ofile);
+		ofile = NULL;
+	}
+    if( ok )
+    {
+        wxSafeYield();
+        AcceptAndClose();
+        db_created_ok = true;
+    }
+    else
+    {
+        if( error_msg == "" )
+            error_msg = db_primitive_error_msg();
+        if( error_msg == "cancel" )
+            error_msg = "Database creation cancelled";
+        wxMessageBox( error_msg.c_str(), "Database creation failed", wxOK|wxICON_ERROR );
+		if( created_new_db_file )
+			_unlink(db_filename.c_str());
     }
 }
 

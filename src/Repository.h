@@ -236,7 +236,7 @@ struct GeneralConfig
 	int         m_highlight_line_colour_g;
 	int         m_highlight_line_colour_b;
     bool        m_large_font;
-    bool        m_small_board;
+    bool        m_heading_above_board;
     bool        m_no_auto_flip;
     bool        m_bell;
 	bool		m_suppress_highlight;
@@ -268,7 +268,7 @@ struct GeneralConfig
         m_straight_to_first_game = false;
         m_bell               = false;
         m_large_font         = false;
-        m_small_board        = false;
+        m_heading_above_board= false;
         m_no_auto_flip       = false;
     }
 };

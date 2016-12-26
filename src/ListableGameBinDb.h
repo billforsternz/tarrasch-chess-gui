@@ -127,6 +127,7 @@ public:
     virtual int EcoBin()            { return pack.EcoBin(); }
     virtual int WhiteEloBin()       { return pack.WhiteEloBin(); }
     virtual int BlackEloBin()       { return pack.BlackEloBin(); }
+    virtual bool UsesControlBlock( uint8_t &control_block_idx ) { control_block_idx=pack.GetControlBlockIdx(); return true; }
 };
 
 

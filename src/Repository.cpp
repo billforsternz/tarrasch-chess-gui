@@ -164,7 +164,7 @@ Repository::Repository( bool use_defaults )
         ReadBool    ("GeneralStraightToGame",             general.m_straight_to_game  );
         ReadBool    ("GeneralStraightToFirstGame",        general.m_straight_to_first_game  );
         ReadBool    ("GeneralUseLargeFont",               general.m_large_font    );
-        ReadBool    ("GeneralUseSmallBoard",              general.m_small_board   );
+        ReadBool    ("GeneralHeadingAboveBoard",          general.m_heading_above_board );
         ReadBool    ("GeneralNoAutoFlip",                 general.m_no_auto_flip  );
         ReadBool    ("GeneralEmitBellWhenEngineMoves",    general.m_bell  );
 		ReadBool    ("GeneralSuppressHighlight",		  general.m_suppress_highlight  );
@@ -269,7 +269,7 @@ Repository::~Repository()
     config->Write("GeneralStraightToGame",            (int)general.m_straight_to_game );
     config->Write("GeneralStraightToFirstGame",       (int)general.m_straight_to_first_game );
     config->Write("GeneralUseLargeFont",              (int)general.m_large_font   );
-    config->Write("GeneralUseSmallBoard",             (int)general.m_small_board  );
+    config->Write("GeneralHeadingAboveBoard",         (int)general.m_heading_above_board  );
     config->Write("GeneralNoAutoFlip",                (int)general.m_no_auto_flip );
     config->Write("GeneralEmitBellWhenEngineMoves",   (int)general.m_bell  );
     config->Write("GeneralSuppressHighlight",		  (int)general.m_suppress_highlight  );

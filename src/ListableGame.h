@@ -108,6 +108,7 @@ public:
             }
         }
     }
+    virtual bool UsesControlBlock( uint8_t & ) { return false; }
  
 };
 

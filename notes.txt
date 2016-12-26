@@ -1,3 +1,135 @@
+Changes for V3.01a
+Add progress gauge when writing duplicate games, also allows discoverability
+Do it last - allows users to cancel if they don't need it *
+Engine dialog box works on smaller screens
+Arrows when number of tabs fills main screen
+Heading in frame is the default option
+Pattern search - Don't allow extra material no longer the default!
+Avoid slowly leaking memory on meta-data as databases loaded or created
+Problems with pattern and material balance searches using clipboard as temporary database - fixed
+Ctrl-A = select all in game dialogs
+Error handling in append database was broken - sometimes (eg bad initial format) leaving user unsure what happened
+Slightly more informative can't load database message
+Write duplicate pgn file last on db create or append - make it clear it can be cancelled
+Never show asterisk = file modified if no current file!
+
+Later
+Use faster move generator
+
+4/12/2016
+Successfully tried a good test
+Create empty.tdb with zero sized empty.pgn then append large .pgn to the new empty database
+Using T3Database kingbase-lite-2016-03.pgn got a binary match to regen-v3.00a.tdb Woo hoo!
+
+Appending to shipped .tdb
+kingbase-lite-2016-03-appended-1  + sites-165.pgn doesn't work to well, only two games added, but games were identical moves and Sitexxx was used for names and Site so maybe not a good test??!!
+kingbase-lite-2016-03-appended-2  + wgtn-base.pgn (2177 games, but actually a poor choice - a starting point for wellybase not an end point)
+    893026 games so added 2170 games looks reasonable
+kingbase-lite-2016-03-appended-3  + wellybase-sites-165.pgn (165 games, from wellybase.pgn [a copy of wgtn18.pgn] with Site tag changed to Site001, Site002...Site165)
+    891021 games so added 165 games woohoo, all 165 SiteNNN names at the end seem okay
+    Restart with -v flag
+    891021 games, 23301 players, 13927 events, 4097 sites
+    15 player bits, 14 event bits, 13 site bits
+    So one extra site bit added as we shifted over 4096
+kingbase-lite-2016-03-appended-4   ;Same as above but with last TarraschDb beta - minimal difference to kingbase-lite-2016-03-appended-4
+                                   ;actually, almost bin match and says 4097 sites and 13 site bits - Site164 is ok but Site165 changes to "" (i.e. empty)
+                                   ;So when only on run when append breaks limit do we get corruption - subsequent appends will be good (until next power of
+                                   ;2 limit reached) - Probably a good idea to check this matches the old buggy code issue as we understand it.
+Tarrasch
+After 3...Nf6 Berlin        9092 54.0% +2547 -1827 =4715
+ChessBase
+After 3...Nf6 Berlin        9091
+
+ChessBase is missing the following game with its eccentric start;
+[Event "8. World Teams"]
+[Site "Ningbo CHN"]
+[Date "2011.07.20"]
+[Round "4"]
+[White "Almasi, Zoltan"]
+[Black "Eljanov, Pavel"]
+1. e4 e5 2. Nf3 Nc6 3. Bb5 Nb8 4. Bf1 Nc6
+
+3/12/2016
+Shipped .tdb
+890856 games, 23255 players, 13915 events, 3932 sites
+15 player bits, 14 event bits, 12 site bits
+
+So headroom;
+9513 players
+2469 events
+164 sites
+
+Regenerated .tdb
+890856 games, 23399 players, 14028 events, 3956 sites
+15 player bits, 14 event bits, 12 site bits
+
+millionbase
+2501692 games, 238059 players, 25133 events, 18036 sites
+18 player bits, 15 event bits, 15 site bits
+headroom
+24085   players
+7635    events
+14732   sites
+
+1/12/2016
+
+Doing some "after the fact" testing
+
+The kingbase-lite-2016-03.tdb file shipped *does not* match the one currently generated
+from kingbase-lite-2016-03.pgn unfortunately. Try to figure out retrospectively how we
+got to where we are, and whether we are in good shape.
+
+Files
+
+In directory Tarrasch
+11/07/2016  07:49 PM        88,305,634 kingbase-lite-2016-03.tdb                ;This is what we shipped
+                                                                                ;  890856 games 54.7% +305853 -222752 =362167
+                                                                                ;  So same stats as regen-v3.00a.tdb below (good)
+                                                                                ;  Different and, importantly *improved* (good) order from regen!
+                                                                                ;  It looks like we shipped a sensible database
+                                                                                ;  To be resolved - it's order is better (good), but why is it
+                                                                                ;  6K smaller?
+In directory T3Database, in chronological order
+01/07/2016  02:07 PM       710,563,627 kingbase-lite-2016-03.pgn                ;Looks like we started with this
+11/07/2016  03:00 PM       668,373,002 kingbase-lite-2016-03-regenerated.pgn    ;
+11/07/2016  03:28 PM        92,847,660 kingbase-lite-2016-03-regenerated.tdb    ;Not too sure
+11/07/2016  03:45 PM        92,847,660 kingbase-lite-2016-03-regenerated2.tdb   ;Not too sure
+11/07/2016  04:03 PM        92,847,660 kingbase-lite-2016-03-regenerated3.tdb   ;Not too sure
+11/07/2016  05:12 PM        88,309,025 kingbase-lite-2016-03-regenerated4.tdb   ;Not too sure
+11/07/2016  06:33 PM        88,311,123 aaa-kingbase-lite-2016-03.tdb            ;Main version we have been testing with
+11/07/2016  07:17 PM       635,434,535 kingbase-lite-2016-03-regenerated-2.pgn  ;
+11/07/2016  07:49 PM        88,305,634 kingbase-lite-2016-03-final.tdb          ;It looks like this is what we shipped [*confirmed* with fc/b],
+                                                                                ; it is the last dated version and has "final" appended which
+                                                                                ; is good
+
+In directory T3Database, last couple of days
+30/11/2016  04:12 PM        88,311,123 regen-v3.00a.tdb                         ;Created with V3.00a from kingbase-lite-2016-03.pgn
+                                                                                ;  890856 games 54.7% +305853 -222752 =362167
+                                                                                ;  doesn't match what we shipped but does match [*confirmed* with fc/b]
+                                                                                ;  aaa-kingbase-lite-2016-03.tdb which is encouraging
+                                                                                ;Games are Harika-Mkrtchian
+                                                                                ;          Krush-Socko
+                                                                                ;          Dzagnidze-Socko
+                                                                                ;          .....
+                                                                                ;          Gutman-Langheinrich
+                                                                                ;          Foisor-Sibarevic
+30/11/2016  05:54 PM       635,434,535 shipped.pgn                              ;Created from shipped kingbase-lite-2016-03.tdb
+01/12/2016  04:33 PM       635,434,535 regen-regen-v3.00a.pgn                   ;Created from regen-v3.00a.tdb
+                                                                                ; it would be nice if it matched shipped.pgn [but *not confirmed* with fc/b]
+                                                                                ; order is quite different
+
+Stats:
+
+                            Shipped                         Regen
+After 5.Bg5 Semi-Slav       5412 56.4% +1967 -1274 =2171    Same
+After 3...Nf6 Berlin        9092 54.0% +2547 -1827 =4715    Same
+After 5.Bg5 QGD exchange    3484 62.2% +1430 -578 =1475     Same
+
+Loaded the first 10 games from a search into clipboard, then from Games> Clipboard into
+tabs and checked that the game was found from "deep in game". Okay but *no arrows on tabs*
+
+
+
 24/11/2016
 check open pgn from file explorer
 try undo xp

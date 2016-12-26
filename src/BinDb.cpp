@@ -159,6 +159,7 @@ bool BinDbOpen( const char *db_file, int &version )
     bin_file = fopen( db_file, "rb" );
     if( bin_file )
     {
+        version = -1;
         // Read the 1200 byte compatibility header - if present it makes a BinDb formatted
         //  database compatible to the original versions of TarraschDb which expect a sqlite
         //  file - well compatible enough to read the version number and conclude that they
@@ -241,7 +242,7 @@ void Pgn2Tdb( FILE *fin, FILE *fout )
     #else
     PgnRead pr('B',0);
     pr.Process(fin);
-    BinDbWriteOutToFile(fout);
+    BinDbWriteOutToFile(fout,0);
     #endif
 }
 
@@ -486,27 +487,24 @@ std::vector< smart_ptr<ListableGame> > &BinDbLoadAllGamesGetVector() { return ga
 static int game_counter;
 
 // Start reading BinDb game data
-uint8_t BinDbReadBegin( bool use_packed_control_block )
+uint8_t BinDbReadBegin()
 {
     game_counter = 0;
     games.clear();
     uint8_t cb_idx = PackedGameBinDb::AllocateNewControlBlock();
     bin_db_append_cb_idx = cb_idx;
-    if( use_packed_control_block )
-    {
-        PackedGameBinDbControlBlock& cb = PackedGameBinDb::GetControlBlock(cb_idx);
-        cb.bb.Next(24);   // Event
-        cb.bb.Next(24);   // Site
-        cb.bb.Next(24);   // White
-        cb.bb.Next(24);   // Black
-        cb.bb.Next(19);   // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
-        cb.bb.Next(16);   // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), bb=board(0-1023)
-        cb.bb.Next(9);    // ECO For now 500 codes (9 bits) (A..E)(00..99)
-        cb.bb.Next(2);    // Result (2 bits)
-        cb.bb.Next(12);   // WhiteElo 12 bits (range 0..4095)
-        cb.bb.Next(12);   // BlackElo
-        cb.bb.Freeze();
-    }
+    PackedGameBinDbControlBlock& cb = PackedGameBinDb::GetControlBlock(cb_idx);
+    cb.bb.Next(24);   // Event
+    cb.bb.Next(24);   // Site
+    cb.bb.Next(24);   // White
+    cb.bb.Next(24);   // Black
+    cb.bb.Next(19);   // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
+    cb.bb.Next(16);   // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), bb=board(0-1023)
+    cb.bb.Next(9);    // ECO For now 500 codes (9 bits) (A..E)(00..99)
+    cb.bb.Next(2);    // Result (2 bits)
+    cb.bb.Next(12);   // WhiteElo 12 bits (range 0..4095)
+    cb.bb.Next(12);   // BlackElo
+    cb.bb.Freeze();
     return cb_idx;
 }
 
@@ -1117,12 +1115,23 @@ void BinDbDatabaseInitialSort( std::vector< smart_ptr<ListableGame> > &games_, b
     BinDbShowDebugOrder( games_, "Initial sort after");
 }
 
-bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
+// New in V3.01a - incorporate write file so can do that before writing dups to TarraschDbDuplicate.pgn
+bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, wxWindow *window )
 {
+    bool ok=true;
+
+    // Last three steps - remove duplicates, write to file, write duplicates to TarraschDbDuplicates.pgn
+    char buf[200];
+    sprintf( buf, "%s, step %d of %d", title.c_str(), step, step+2 );
+    std::string dup_title(buf);
+    sprintf( buf, "%s, step %d of %d", title.c_str(), step+1, step+2 );
+    std::string write_title(buf);
+    sprintf( buf, "%s, step %d of %d", title.c_str(), step+2, step+2 );
+    std::string optional_title(buf);
     {
         BinDbShowDebugOrder( games, "Duplicate Removal - phase 1 before");
         std::string desc("Duplicate Removal - phase 1");
-        ProgressBar progress_bar( title, desc, true, window );
+        ProgressBar progress_bar( dup_title, desc, true, window );
         progress_bar.DrawNow();
         sort_before( games.begin(), games.end(), predicate_sorts_by_game_moves, &progress_bar );
         std::sort( games.begin(), games.end(), predicate_sorts_by_game_moves );
@@ -1132,7 +1141,7 @@ bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
     {
         BinDbShowDebugOrder( games, "Duplicate Removal - phase 2 before");
         std::string desc("Duplicate Removal - phase 2");
-        ProgressBar progress_bar( title, desc, true, window );
+        ProgressBar progress_bar( dup_title, desc, true, window );
         progress_bar.DrawNow();
         ProgressBar *pb = &progress_bar;
         int nbr_games = games.size();
@@ -1210,61 +1219,82 @@ bool BinDbDuplicateRemoval( std::string &title, wxWindow *window )
         }
         BinDbShowDebugOrder( games, "Duplicate Removal - phase 2 after");
     }
+    int nbr_deleted=0;
     {
         BinDbShowDebugOrder( games, "Duplicate Removal - phase 3 before");
         std::string desc("Duplicate Removal - phase 3");
-        ProgressBar progress_bar( title, desc, true, window );
+        ProgressBar progress_bar( dup_title, desc, true, window );
         //progress_bar.DrawNow();
         sort_before( games.begin(), games.end(), predicate_sorts_by_id, &progress_bar );
         std::sort( games.begin(), games.end(), predicate_sorts_by_id );
         sort_after();
 
-        // Games to be deleted are at the end - with id GAME_ID_SENTINEL
-        int nbr_deleted=0;
-        FILE *pgn_dup = 0;
+        // Games to be deleted are at the end - with id GAME_ID_SENTINEL, count them
         for( int i=games.size()-1; i>=0; i-- )
         {
             if( games[i]->game_id != GAME_ID_SENTINEL )
                 break;
             else
-            {
                 nbr_deleted++;
-                if( !pgn_dup )
-                {
-                    wxFileName wfn(objs.repository->log.m_file.c_str());
-                    if( !wfn.IsOk() )
-                        wfn.SetFullName("TarraschDbDuplicatesFile.pgn");
-                    wfn.SetExt("pgn");
-                    wfn.SetName("TarraschDbDuplicatesFile");
-                    wxString dups_filename = wfn.GetFullPath();
-                    pgn_dup = fopen(dups_filename.c_str(),"wt");
-                }
-                GameDocument  the_game;
-                CompactGame pact;
-                games[i]->GetCompactGame( pact );
-                pact.Upscale(the_game);
-                std::string str;
-                the_game.ToFileTxtGameDetails( str );
-                if( pgn_dup )
-                    fwrite(str.c_str(),1,str.length(),pgn_dup);
-                the_game.ToFileTxtGameBody( str );
-                if( pgn_dup )
-                    fwrite(str.c_str(),1,str.length(),pgn_dup);
-            }
         }
-        if( pgn_dup )
-            fclose(pgn_dup);
-        cprintf( "Number of duplicates deleted: %d\n", nbr_deleted );
-        if( nbr_deleted )
-            games.erase( games.end()-nbr_deleted, games.end() );
-        BinDbShowDebugOrder( games, "Duplicate Removal - phase 3 after");
+		BinDbShowDebugOrder(games, "Duplicate Removal - phase 3 after");
+	}
+
+    // New in V3.01a - incorporate write file so can do that before writing dups to TarraschDbDuplicate.pgn
+    if( ofile )
+    {
+        std::string desc("Writing file");
+        ProgressBar progress_bar( write_title, desc, true, window );
+        ok = BinDbWriteOutToFile(ofile,nbr_deleted,&progress_bar);
     }
+
+    if( nbr_deleted )
+    {
+        wxFileName wfn(objs.repository->log.m_file.c_str());
+        if( !wfn.IsOk() )
+            wfn.SetFullName("TarraschDbDuplicatesFile.pgn");
+        wfn.SetExt("pgn");
+        wfn.SetName("TarraschDbDuplicatesFile");
+        wxString dups_filename = wfn.GetFullPath();
+        FILE *pgn_dup = fopen(dups_filename.c_str(),"wt");
+        if( pgn_dup )
+	    {
+		    BinDbShowDebugOrder(games, "Duplicate Removal - phase 4 before");
+		    std::string desc("Saving duplicates to TarraschDbDuplicatesFile.pgn, cancel if not needed");
+		    ProgressBar progress_bar(optional_title, desc, true, window);
+            for( int i=games.size()-1; i>=0; i-- )
+            {
+                if( games[i]->game_id != GAME_ID_SENTINEL )
+                    break;
+                else
+                {
+                    GameDocument  the_game;
+                    CompactGame pact;
+                    games[i]->GetCompactGame( pact );
+                    pact.Upscale(the_game);
+                    std::string str;
+                    the_game.ToFileTxtGameDetails( str );
+                    if( pgn_dup )
+                        fwrite(str.c_str(),1,str.length(),pgn_dup);
+                    the_game.ToFileTxtGameBody( str );
+                    if( pgn_dup )
+                        fwrite(str.c_str(),1,str.length(),pgn_dup);
+                    if( progress_bar.Perfraction( games.size()-i, nbr_deleted ) )
+                        break;
+                }
+            }
+            fclose(pgn_dup);
+        }
+        games.erase( games.end()-nbr_deleted, games.end() );
+        cprintf( "Number of duplicates deleted: %d\n", nbr_deleted );
+        BinDbShowDebugOrder( games, "Duplicate Removal - phase 4 after");
+    }
+
     return true;
 }
 
-
 // Return bool okay
-bool BinDbWriteOutToFile( FILE *ofile, ProgressBar *pb )
+bool BinDbWriteOutToFile( FILE *ofile, int nbr_to_omit_from_end, ProgressBar *pb )
 {
     std::set<std::string> set_player;
     std::set<std::string> set_site;
@@ -1289,7 +1319,7 @@ bool BinDbWriteOutToFile( FILE *ofile, ProgressBar *pb )
     fh.nbr_players = std::distance( set_player.begin(), set_player.end() );
     fh.nbr_events  = std::distance( set_event.begin(),  set_event.end() );
     fh.nbr_sites   = std::distance( set_site.begin(),   set_site.end() );
-    fh.nbr_games   = games.size();
+    fh.nbr_games   = games.size() - nbr_to_omit_from_end;
     cprintf( "%d games, %d players, %d events, %d sites\n", fh.nbr_games, fh.nbr_players, fh.nbr_events, fh.nbr_sites );
     int nbr_bits_player = BitsRequired(fh.nbr_players);
     int nbr_bits_event  = BitsRequired(fh.nbr_events);  
@@ -1416,7 +1446,7 @@ void BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > 
 	//  players, events or sites
 	bool translate_to_24_bit = for_append;
 
-    uint8_t cb_idx = BinDbReadBegin( false );
+    uint8_t cb_idx = BinDbReadBegin();
     PackedGameBinDbControlBlock& cb = PackedGameBinDb::GetControlBlock(cb_idx);
     FileHeader fh;
     FILE *fin = bin_file;
@@ -1453,6 +1483,7 @@ void BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > 
     bb.Next(12);                // BlackElo
     bb.Freeze();
     int bb_sz = bb.FrozenSize();
+    cb.bb.Clear();
     cb.bb.Next( translate_to_24_bit ? 24 : nbr_bits_event  );				   // Event
     cb.bb.Next( translate_to_24_bit ? 24 : nbr_bits_site   );				   // Site
     cb.bb.Next( translate_to_24_bit ? 24 : nbr_bits_player );				   // White
