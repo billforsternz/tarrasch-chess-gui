@@ -336,7 +336,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
     if( ok )
     {
 		ok = false;
-        BinDbReadBegin( true );
+        BinDbReadBegin();
         wxString fullpath = db_filename;
         wxFileName wfn(db_filename);
         if( wfn.IsOk() && wfn.HasName() )

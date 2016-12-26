@@ -487,27 +487,24 @@ std::vector< smart_ptr<ListableGame> > &BinDbLoadAllGamesGetVector() { return ga
 static int game_counter;
 
 // Start reading BinDb game data
-uint8_t BinDbReadBegin( bool use_packed_control_block )
+uint8_t BinDbReadBegin()
 {
     game_counter = 0;
     games.clear();
     uint8_t cb_idx = PackedGameBinDb::AllocateNewControlBlock();
     bin_db_append_cb_idx = cb_idx;
-    if( use_packed_control_block )
-    {
-        PackedGameBinDbControlBlock& cb = PackedGameBinDb::GetControlBlock(cb_idx);
-        cb.bb.Next(24);   // Event
-        cb.bb.Next(24);   // Site
-        cb.bb.Next(24);   // White
-        cb.bb.Next(24);   // Black
-        cb.bb.Next(19);   // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
-        cb.bb.Next(16);   // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), bb=board(0-1023)
-        cb.bb.Next(9);    // ECO For now 500 codes (9 bits) (A..E)(00..99)
-        cb.bb.Next(2);    // Result (2 bits)
-        cb.bb.Next(12);   // WhiteElo 12 bits (range 0..4095)
-        cb.bb.Next(12);   // BlackElo
-        cb.bb.Freeze();
-    }
+    PackedGameBinDbControlBlock& cb = PackedGameBinDb::GetControlBlock(cb_idx);
+    cb.bb.Next(24);   // Event
+    cb.bb.Next(24);   // Site
+    cb.bb.Next(24);   // White
+    cb.bb.Next(24);   // Black
+    cb.bb.Next(19);   // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
+    cb.bb.Next(16);   // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), bb=board(0-1023)
+    cb.bb.Next(9);    // ECO For now 500 codes (9 bits) (A..E)(00..99)
+    cb.bb.Next(2);    // Result (2 bits)
+    cb.bb.Next(12);   // WhiteElo 12 bits (range 0..4095)
+    cb.bb.Next(12);   // BlackElo
+    cb.bb.Freeze();
     return cb_idx;
 }
 
@@ -1128,9 +1125,9 @@ bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, w
     sprintf( buf, "%s, step %d of %d", title.c_str(), step, step+2 );
     std::string dup_title(buf);
     sprintf( buf, "%s, step %d of %d", title.c_str(), step+1, step+2 );
-    std::string write_title;
+    std::string write_title(buf);
     sprintf( buf, "%s, step %d of %d", title.c_str(), step+2, step+2 );
-    std::string optional_title;
+    std::string optional_title(buf);
     {
         BinDbShowDebugOrder( games, "Duplicate Removal - phase 1 before");
         std::string desc("Duplicate Removal - phase 1");
@@ -1449,7 +1446,7 @@ void BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > 
 	//  players, events or sites
 	bool translate_to_24_bit = for_append;
 
-    uint8_t cb_idx = BinDbReadBegin( false );
+    uint8_t cb_idx = BinDbReadBegin();
     PackedGameBinDbControlBlock& cb = PackedGameBinDb::GetControlBlock(cb_idx);
     FileHeader fh;
     FILE *fin = bin_file;
@@ -1486,6 +1483,7 @@ void BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > 
     bb.Next(12);                // BlackElo
     bb.Freeze();
     int bb_sz = bb.FrozenSize();
+    cb.bb.Clear();
     cb.bb.Next( translate_to_24_bit ? 24 : nbr_bits_event  );				   // Event
     cb.bb.Next( translate_to_24_bit ? 24 : nbr_bits_site   );				   // Site
     cb.bb.Next( translate_to_24_bit ? 24 : nbr_bits_player );				   // White

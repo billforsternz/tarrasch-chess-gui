@@ -126,7 +126,7 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
     uint32_t  base=0;
     if( ok )
     {
-        cb_idx = BinDbReadBegin( true );
+        cb_idx = BinDbReadBegin();
         base   = GameIdAllocateTop( game_count );
     }
             
