@@ -228,7 +228,10 @@ bool BinDbOpen( const char *db_file, int &version )
             }
         }
         if( !ok )
+        {
             fclose(bin_file);
+            bin_file = NULL;
+        }
     }
     return ok;
 }
