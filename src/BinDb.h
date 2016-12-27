@@ -22,6 +22,7 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
                   int nbr_moves, thc::Move *moves );
 
 bool TestBinaryBlock();
+void BinDbCreationEnd();
 uint8_t BinDbReadBegin();
 uint32_t BinDbGetGamesSize();
 void BinDbNormaliseOrder( uint32_t begin, uint32_t end );

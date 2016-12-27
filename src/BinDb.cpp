@@ -20,6 +20,51 @@
 #include "ListableGameBinDb.h"
 #include "BinDb.h"
 
+/*
+
+Some Design notes:
+
+This module is basically C rather than C++. This should probably change in the future
+
+The module is principally concerned with reading and writing databases.
+
+Modes of operation
+A) Read a database into the games array (in-memory database) within a Database object
+B) Read a database [for append] and pgn games [create or append] into the local games array
+C) After B) write the local games array out to a new database file
+
+Main Functions
+1) bool    BinDbOpen( const char *db_file, int &version )
+    Opens file for reading, reads header
+    returns bool ok, sets version (we expect version 3)
+2) uint8_t BinDbReadBegin()
+    Get ready to read games, returns newly allocated control block
+3) BinDbLoadAllGames()
+    Either A) [array is the so called tiny_db inside a Database object] or B)
+    [array is the glocal games array].
+    The games in a database are ordered oldest to newest. This is our preferred order always.
+    In case A) we reverse the array order after load - to get the normal presentation order (newest games have smallest game_id and come first)
+    In case B) we don't reverse - because we are going to append more older to newer games from pgn (game_id isn't actually important we
+    now establish a contiguous range of game_ids in BinDbRemoveDuplicatesAndWrite() because it improves ordering before write)
+4) void BinDbClose()
+    Closes database file after reading in 3)
+
+The following are not needed for A) only for B) and C)
+5) bool bin_db_append( const char *fen, const char *event, const char *site, const char *date, const char *round,
+                  const char *white, const char *black, const char *result, const char *white_elo, const char *black_elo, const char *eco,
+                  int nbr_moves, thc::Move *moves )
+    One game appended in case B)
+6) void BinDbNormaliseOrder( uint32_t begin, uint32_t end )
+    After all games from one pgn file appended to games array, normalise their order (older first, newer last)
+    This function either leaves the games alone or reverses them
+7) bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, wxWindow *window )
+    New in V3.01a - incorporate write file so can do that before writing dups to TarraschDbDuplicate.pgn
+8) bool BinDbWriteOutToFile( FILE *ofile, int nbr_to_omit_from_end, ProgressBar *pb )
+    Now only called by BinDbRemoveDuplicatesAndWrite()
+9) void BinDbCreationEnd()
+    clears internal games vector
+*/
+
 static uint32_t game_id_bottom = 1;	// reserve 0 as a special value
 static uint32_t game_id_top    = GAME_ID_SENTINEL-1;
 
@@ -481,10 +526,18 @@ void Bin2Elo( uint32_t bin, std::string &elo )
     elo = buf;
 }
 
+// The games vector is used exclusively for creating and appending to databases..
 static uint8_t bin_db_append_cb_idx;
 static std::vector< smart_ptr<ListableGame> > games;
 std::vector< smart_ptr<ListableGame> > &BinDbLoadAllGamesGetVector() { return games; }
 static int game_counter;
+
+// ..When we've finished creating and appending to databases, save memory by clearing it (new in V3.01)
+void BinDbCreationEnd()
+{
+    games.clear();  // In the future consider moving the games to the in memory database instead of reloading
+                    //  if the user answers yes to "would you like to use the new database now"
+}
 
 // Start reading BinDb game data
 uint8_t BinDbReadBegin()
@@ -929,6 +982,20 @@ void BinDbNormaliseOrder( uint32_t begin, uint32_t end )
             games[i]->game_id = base+i;
         cprintf( "reverse end\n" );
     }
+    if( sz )
+    {
+        if( begin > 0 )
+        {
+            smart_ptr<ListableGame> p1 = games[0];
+            smart_ptr<ListableGame> p2 = games[begin-1];
+            cprintf( "[%d]: game_id=%lu, %s-%s %s\n", 0, p1->game_id, p1->White(), p1->Black(), p1->Date() );
+            cprintf( "[%d]: game_id=%lu, %s-%s %s\n", begin-1, p2->game_id, p2->White(), p2->Black(), p2->Date() );
+        }
+        smart_ptr<ListableGame> p1 = games[begin];
+        smart_ptr<ListableGame> p2 = games[end-1];
+        cprintf( "[%d]: game_id=%lu, %s-%s %s\n", begin, p1->game_id, p1->White(), p1->Black(), p1->Date() );
+        cprintf( "[%d]: game_id=%lu, %s-%s %s\n", end-1, p2->game_id, p2->White(), p2->Black(), p2->Date() );
+    }
 }
 
 static bool DupDetect( smart_ptr<ListableGame> p1, std::vector<std::string> &white_tokens1, std::vector<std::string> &black_tokens1, smart_ptr<ListableGame> p2 )
@@ -1079,7 +1146,7 @@ void BinDbShowDebugOrder( const std::vector< smart_ptr<ListableGame> > &gms, con
         uint32_t id_end2 = gms[gms.size()-3]->game_id;
         uint32_t id_end1 = gms[gms.size()-2]->game_id;
         uint32_t id_end0 = gms[gms.size()-1]->game_id;
-        cprintf( "%s [0x%08x,0x%08x,0x%08x...0x%08x,0x%08x,0x%08x]\n",msg, id0,id1,id2,id_end2,id_end1,id_end0);
+        cprintf( "%s [%lu,%lu,%lu...%lu,%lu,%lu]\n",msg, id0,id1,id2,id_end2,id_end1,id_end0);
     }
 }
 
@@ -1119,6 +1186,12 @@ void BinDbDatabaseInitialSort( std::vector< smart_ptr<ListableGame> > &games_, b
 bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, wxWindow *window )
 {
     bool ok=true;
+
+    // Bug fix: V3.01 Establish contiguous id range - if we have assembled multiple files it won't have happened
+    size_t nbr = games.size();
+    uint32_t id = GameIdAllocateTop(nbr);
+    for( size_t i=0; i<nbr; i++ )
+        games[i]->game_id = id++;
 
     // Last three steps - remove duplicates, write to file, write duplicates to TarraschDbDuplicates.pgn
     char buf[200];
@@ -1439,7 +1512,7 @@ void ReadStrings( FILE *fin, int nbr_strings, std::vector<std::string> &strings 
 
 void BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb )
 {
-    // When loading the system database, reverse order so most recent games come first 
+    // When loading the system database for searches, reverse order so most recent games come first 
     bool do_reverse = !for_append;
 
 	// When loading a database for appending games, use 24 bit string indexes since we don't know the final number of
@@ -1571,5 +1644,12 @@ void BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > 
     }
     if( do_reverse && !kill_background_load )
         std::reverse( mega_cache.begin(), mega_cache.end() );
+    if( nbr_games > 0 )
+    {
+        smart_ptr<ListableGame> p1 = mega_cache[0];
+        smart_ptr<ListableGame> p2 = mega_cache[nbr_games-1];
+        cprintf( "First: game_id=%lu, %s-%s %s\n", p1->game_id, p1->White(), p1->Black(), p1->Date() );
+        cprintf( "Last:  game_id=%lu, %s-%s %s\n", p2->game_id, p2->White(), p2->Black(), p2->Date() );
+    }
 }
 

@@ -212,18 +212,14 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGam
     else
     {
         BinDbLoadAllGames( false, mega_cache, background_load_permill, kill_background_load );
-        std::reverse( mega_cache.begin(), mega_cache.end() );
         BinDbClose();
     }
-    //cprintf( "Reversing BinDb order begin\n" );
-    //std::reverse( mega_cache.begin(), mega_cache.end() ); 
-    //cprintf( "Reversing BinDb order end\n" );
     int cache_nbr = mega_cache.size();
     cprintf( "Number of games = %d\n", cache_nbr );
-    if( 2 < cache_nbr )
+    if( cache_nbr > 0 )
     {
-        smart_ptr<ListableGame> p = mega_cache[2];
-        cprintf( "White=%s Black=%s Result=%s Round=%s\n", p->White(), p->Black(), p->Result(), p->Round() );
+        smart_ptr<ListableGame> p = mega_cache[0];
+        cprintf( "Most recent game first: White=%s Black=%s Result=%s Round=%s\n", p->White(), p->Black(), p->Result(), p->Round() );
     }
     return cache_nbr>0;
 }

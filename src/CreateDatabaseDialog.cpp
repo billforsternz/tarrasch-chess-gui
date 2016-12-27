@@ -420,6 +420,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
 		if( created_new_db_file )
 			_unlink(db_filename.c_str());
     }
+    BinDbCreationEnd();
 }
 
 void CreateDatabaseDialog::OnAppendDatabase()
@@ -578,6 +579,7 @@ void CreateDatabaseDialog::OnAppendDatabase()
 		if( created_new_db_file )
 			_unlink(db_filename.c_str());
     }
+    BinDbCreationEnd();
 }
 
 void CreateDatabaseDialog::OnDbFilePicked( wxFileDirPickerEvent& event )
