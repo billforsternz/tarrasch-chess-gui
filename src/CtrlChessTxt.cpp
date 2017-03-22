@@ -36,7 +36,7 @@ CtrlChessTxt::CtrlChessTxt
     wxWindowID     id, //= wxID_ANY,
     const wxPoint &point,
     const wxSize &size
-)  : wxRichTextCtrl( parent, id, "", point, size,   wxNO_BORDER+wxWANTS_CHARS+wxRE_MULTILINE+wxRE_READONLY )
+)  : wxRichTextCtrl( parent, id, "", point, size,   wxNO_BORDER+wxWANTS_CHARS+wxRE_MULTILINE/*+wxRE_CENTRE_CARET*/+wxRE_READONLY )
 
 {
     gl = 0;
@@ -441,6 +441,8 @@ void CtrlChessTxt::OnChar(wxKeyEvent& event)
 			shift = true;
 		long keycode = event.GetKeyCode();
 		//cprintf( "OnChar() keycode=%lu\n", keycode );
+        char ascii = '\0';
+        bool pass_thru_edit = false;   // an optimisation - sometimes we can just let the richtext edit control process the character
 		{
 			switch ( keycode )
 			{
@@ -458,7 +460,7 @@ void CtrlChessTxt::OnChar(wxKeyEvent& event)
 							done = true;
 						else
 						{
-							done = gd->CommentEdit(this,WXK_DELETE);
+							done = gd->CommentEdit(this,WXK_DELETE,&pass_thru_edit);
 							nk=NK_DELETE;
 						}
 					}
@@ -523,120 +525,88 @@ void CtrlChessTxt::OnChar(wxKeyEvent& event)
 					}
 					else
 					{
-						done=gd->CommentEdit(this,WXK_BACK);
+						done=gd->CommentEdit(this,WXK_BACK,&pass_thru_edit);
 					}
 					break;
 				}
 				case WXK_SPACE:
-				{
-					if( is_selection_in_comment )
-						gd->DeleteSelection(this);
-					done=gd->CommentEdit(this,' ');
+                {
+                    ascii = ' ';
 					break;
 				}
 				case WXK_NUMPAD0:
 				{
-					if( is_selection_in_comment )
-						gd->DeleteSelection(this);
-					done=gd->CommentEdit(this,'0');
-					break;
+                    ascii = '0';
+                    break;
 				}
 				case WXK_NUMPAD1:
 				{
-					if( is_selection_in_comment )
-						gd->DeleteSelection(this);
-					done=gd->CommentEdit(this,'1');
+                    ascii = '1';
 					break;
 				}
 				case WXK_NUMPAD2:
 				{
-					if( is_selection_in_comment )
-						gd->DeleteSelection(this);
-					done=gd->CommentEdit(this,'2');
+                    ascii = '2';
 					break;
 				}
 				case WXK_NUMPAD3:   
 				{
-					if( is_selection_in_comment )
-						gd->DeleteSelection(this);
-					done=gd->CommentEdit(this,'3');
+                    ascii = '3';
 					break;
 				}
 				case WXK_NUMPAD4: 
 				{
-					if( is_selection_in_comment )
-						gd->DeleteSelection(this);
-					done=gd->CommentEdit(this,'4');
+                    ascii = '4';
 					break;
 				}
 				case WXK_NUMPAD5:
 				{
-					if( is_selection_in_comment )
-						gd->DeleteSelection(this);
-					done=gd->CommentEdit(this,'5');
+                    ascii = '5';
 					break;
 				}
 				case WXK_NUMPAD6:
 				{
-					if( is_selection_in_comment )
-						gd->DeleteSelection(this);
-					done=gd->CommentEdit(this,'6');
+                    ascii = '6';
 					break;
 				}
 				case WXK_NUMPAD7:
 				{
-					if( is_selection_in_comment )
-						gd->DeleteSelection(this);
-					done=gd->CommentEdit(this,'7');
+                    ascii = '7';
 					break;
 				}
 				case WXK_NUMPAD8:
 				{
-					if( is_selection_in_comment )
-						gd->DeleteSelection(this);
-					done=gd->CommentEdit(this,'8');
+                    ascii = '8';
 					break;
 				}
 				case WXK_NUMPAD9:
 				{
-					if( is_selection_in_comment )
-						gd->DeleteSelection(this);
-					done=gd->CommentEdit(this,'9');
+                    ascii = '9';
 					break;
 				}
 				case WXK_MULTIPLY:  
 				{
-					if( is_selection_in_comment )
-						gd->DeleteSelection(this);
-					done=gd->CommentEdit(this,'*');
+                    ascii = '*';
 					break;
 				}
 				case WXK_ADD:       
 				{
-					if( is_selection_in_comment )
-						gd->DeleteSelection(this);
-					done=gd->CommentEdit(this,'+');
+                    ascii = '+';
 					break;
 				}
 				case WXK_SUBTRACT:  
 				{
-					if( is_selection_in_comment )
-						gd->DeleteSelection(this);
-					done=gd->CommentEdit(this,'-');
+                    ascii = '-';
 					break;
 				}
 				case WXK_DECIMAL:   
 				{
-					if( is_selection_in_comment )
-						gd->DeleteSelection(this);
-					done=gd->CommentEdit(this,'.');
+                    ascii = '.';
 					break;
 				}
 				case WXK_DIVIDE:    
 				{
-					if( is_selection_in_comment )
-						gd->DeleteSelection(this);
-					done=gd->CommentEdit(this,'\\');
+                    ascii = '\\';
 					break;
 				}
 				case WXK_TAB:       
@@ -708,16 +678,40 @@ void CtrlChessTxt::OnChar(wxKeyEvent& event)
 				default:
 				{
 					bool iso8859_extended_charset = (0xa0<=keycode && keycode<=0xff);
-					if( iso8859_extended_charset || wxIsprint((int)keycode) )
-					{
-						if( is_selection_in_comment )
-							gd->DeleteSelection(this);
-						done=gd->CommentEdit(this,keycode); 
+                    if (iso8859_extended_charset || wxIsprint((int)keycode))
+                    {
+                        if( is_selection_in_comment )
+                        {
+                            gd->DeleteSelection(this);
+                            done = gd->CommentEdit(this, keycode);
+                        }
+                        else
+                        {
+                            done = gd->CommentEdit(this,keycode,&pass_thru_edit);
+                        }
 					}
 				}
 			}
+            if (ascii)
+            {
+                if( is_selection_in_comment )
+                {
+                    gd->DeleteSelection(this);
+                    done = gd->CommentEdit(this,ascii);
+                }
+                else
+                {
+                    done = gd->CommentEdit(this,ascii,&pass_thru_edit);
+                }
+            }
 		}
-		if( !shift && !done && nk!=NK_NULL )
+        if( pass_thru_edit )
+        {
+            SetEditable(true);
+            wxRichTextCtrl::OnChar(event);
+            SetEditable(false);
+        }
+        else if( !shift && !done && nk!=NK_NULL )
 		{
 			if( nk == NK_DELETE )
 				gd->DeleteRestOfVariation();
