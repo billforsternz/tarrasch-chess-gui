@@ -367,7 +367,20 @@ void GameView::Display( unsigned long pos )
 #endif
         ctrl->BeginSuppressUndo();
         gv_printf( "ctrl->BeginSuppressUndo();" );
-        ctrl->Clear();
+
+        // don't try and restore scroll position when at top of document - clear
+        //  will take us to the top naturally
+        if( pos == 0 )
+            ctrl->Clear();
+
+        // restore scroll position 
+        else
+        {
+            int x, y;
+            ctrl->GetScrollHelper()->GetViewStart( &x, &y );
+            ctrl->Clear();
+            ctrl->GetScrollHelper()->Scroll(x,y);
+        }
         gv_printf( "ctrl->Clear();" );
         ctrl->EndAllStyles();
         gv_printf( "ctrl->EndAllStyles();" );
@@ -500,10 +513,10 @@ void GameView::Display( unsigned long pos )
         ctrl->Thaw();
         gv_printf( "ctrl->Thaw();" );
 #endif
-        ctrl->ShowPosition(pos);
-        gv_printf( "ctrl->ShowPosition(%lu);", pos );
         ctrl->Update();
         gv_printf( "ctrl->Update();" );
+        ctrl->ShowPosition(pos);
+        gv_printf( "ctrl->ShowPosition(%lu);", pos );
     }
 }
 
@@ -1673,9 +1686,11 @@ bool GameView::GetOffsetWithinComment( unsigned long pos, unsigned long &pos_wit
     return found;
 }
 
-bool GameView::CommentEdit( wxRichTextCtrl *UNUSED(ctrl), std::string &txt_to_insert, long keycode )
+bool GameView::CommentEdit( wxRichTextCtrl *UNUSED(ctrl), std::string &txt_to_insert, long keycode, bool *pass_thru_edit_ptr )
 {
+    bool pass_thru_edit = false;
     bool used = false;
+    bool ascii = false;
     unsigned long pos = gl->atom.GetInsertionPoint();
     unsigned long orig_pos = pos;
     int nbr = expansion.size();
@@ -1683,6 +1698,7 @@ bool GameView::CommentEdit( wxRichTextCtrl *UNUSED(ctrl), std::string &txt_to_in
     {
         char c = (char)keycode;
         txt_to_insert = c;
+        ascii = true;
     }
     for( int i=0; i<nbr; i++ )
     {
@@ -1721,6 +1737,7 @@ bool GameView::CommentEdit( wxRichTextCtrl *UNUSED(ctrl), std::string &txt_to_in
                                     pos -= (empty?2:1);
                                 comment_edited = true;
                                 used = true;
+                                pass_thru_edit = true;
                             }
                             break;
                         }
@@ -1741,6 +1758,7 @@ bool GameView::CommentEdit( wxRichTextCtrl *UNUSED(ctrl), std::string &txt_to_in
                                 }
                                 comment_edited = true;
                                 used = true;
+                                pass_thru_edit = true;
                             }
                             break;
                         }
@@ -1772,6 +1790,7 @@ bool GameView::CommentEdit( wxRichTextCtrl *UNUSED(ctrl), std::string &txt_to_in
                                     gve.node->game_move.pre_comment.insert( offset_within_comment, txt_to_insert );
                                 pos += txt_to_insert.length();
                                 comment_edited = true;
+                                pass_thru_edit = ascii;
                                 used = true;
                             }
                         }
@@ -1819,13 +1838,16 @@ bool GameView::CommentEdit( wxRichTextCtrl *UNUSED(ctrl), std::string &txt_to_in
     if( comment_edited )
     {
         gl->gd.Rebuild();
-        gl->atom.Display( pos );
+        if( !pass_thru_edit )
+            gl->atom.Display( pos );
         gl->atom.Undo();
     }
     else if( orig_pos != pos )
     {
         gl->atom.SetInsertionPoint(pos);
     }
+    if( pass_thru_edit_ptr )
+        *pass_thru_edit_ptr = pass_thru_edit;
     return used;
 }
 
