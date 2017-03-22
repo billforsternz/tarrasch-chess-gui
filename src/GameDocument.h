@@ -226,16 +226,16 @@ public:
     {  gv.Display(pos); }
     bool IsInComment( wxRichTextCtrl *ctrl )
     {  return gv.IsInComment(ctrl); }
-    bool CommentEdit( wxRichTextCtrl *ctrl, long keycode )
+    bool CommentEdit( wxRichTextCtrl *ctrl, long keycode, bool *pass_thru_edit_ptr=NULL )
     {   std::string txt_to_insert;
         gv.comment_edited = false;
-        bool done = gv.CommentEdit(ctrl,txt_to_insert,keycode);
+        bool done = gv.CommentEdit(ctrl,txt_to_insert,keycode,pass_thru_edit_ptr);
         return done;
     }
-    bool CommentEdit( wxRichTextCtrl *ctrl, std::string &txt_to_insert )
+    bool CommentEdit( wxRichTextCtrl *ctrl, std::string &txt_to_insert, bool *pass_thru_edit_ptr=NULL )
     {
         gv.comment_edited = false;
-        bool done = gv.CommentEdit(ctrl,txt_to_insert);
+        bool done = gv.CommentEdit(ctrl,txt_to_insert,0,pass_thru_edit_ptr);
         return done;
     }
     bool IsSelectionInComment( wxRichTextCtrl *ctrl )
