@@ -249,7 +249,7 @@ void PanelContext::Layout( wxSize const &siz )
     kpos.x = SPACER*2;
     kpos.y = SPACER*2;
     ksiz.x = siz.x - button1_size.x - 3*kpos.x;
-    ksiz.y = 99; //sz2.y;
+    ksiz.y = 125; //jaap 99; //sz2.y;
     kibitz_ctrl->SetPosition(kpos);
     kibitz_ctrl->SetSize(ksiz);
     kibitz_ctrl->SetColumnWidth(0,ksiz.x-18);
