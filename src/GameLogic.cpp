@@ -386,7 +386,19 @@ void GameLogic::CmdTabNew()
 #else
     Atomic begin;
     GameDocument temp = gd;
-    PutBackDocument();
+    // #Workflow Instructive bug fix follows
+    //PutBackDocument();   <- Bug fix: commented out.
+    //  Inserting PutBackDocument() here was a very instructive bug up to and including V3.01a.
+    //  PutBackDocument() serves to save modified documents in the pgn GamesCache. This means we can
+    //  edit games and not lose our work when we switch to a different game, for example by the next
+    //  game or previous game button. The undo stack for the game is not saved by this mechanism, we
+    //  can't edit a game, go next game then previous game and undo our edits. There is just a simple
+    //  modified flag to indicate the game has been edited and needs to be saved. We have a stronger
+    //  system for saving our work when we switch tabs that *does* also save the undo stack. So
+    //  we can create new tabs, and/or switch between tabs, then return to a tab and undo the edits.
+    //  If we mistakenly insert the PutBackDocument() call above, then after switching back to the tab
+    //  and undoing all the edits, the game will wrongly still be marked as modified - the modified flag
+    //  set by PutBackDocument() is only cleared when we save the game. Bill 22Mar2017
     {
         GameDocument blank;
         tabs->TabNew(blank);
