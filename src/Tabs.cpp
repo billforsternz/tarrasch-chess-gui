@@ -4,6 +4,7 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
+#include "wx/richtext/richtextctrl.h"
 #include "GameLogic.h"
 #include "Objects.h"
 #include "Tabs.h"
@@ -28,6 +29,12 @@ void Tabs::TabNew( GameDocument &new_gd )
         pos = gl->gd.GetInsertionPoint();
         v[current_idx].gd  = gl->gd;
         v[current_idx].pos = pos;
+        wxRichTextCtrl *ctrl = objs.canvas->lb;
+        int x=0, y=0;
+        if( ctrl )
+            ctrl->GetScrollHelper()->GetViewStart( &x, &y );
+        v[current_idx].scroll_x = x;
+        v[current_idx].scroll_y = y;
         v[current_idx].undo = gl->undo;
         cprintf( "Creating new tab, current_idx=%d, [0]undo=%s [0]redo=%s, old undo=%s old redo=%s\n", current_idx,
                 v[0].undo.IsModified()?"yes":"no", v[0].undo.CanRedo()?"yes":"no",
@@ -60,10 +67,18 @@ bool Tabs::TabSelected( int idx )
             v[current_idx].gd  = gl->gd;
             v[current_idx].pos = pos;
             v[current_idx].undo = gl->undo;
+            wxRichTextCtrl *ctrl = objs.canvas->lb;
+            int x=0, y=0;
+            if( ctrl )
+                ctrl->GetScrollHelper()->GetViewStart( &x, &y );
+            v[current_idx].scroll_x = x;
+            v[current_idx].scroll_y = y;
             gl->gd = v[idx].gd;
             gl->undo = v[idx].undo;
             pos = v[idx].pos;
             gl->gd.non_zero_start_pos = pos;
+            if( ctrl )
+                ctrl->GetScrollHelper()->Scroll( v[idx].scroll_x, v[idx].scroll_y );
             current_idx = idx;
             cprintf( "Set difference tab idx=%d, [0]undo=%s [0]redo=%s, new undo=%s new redo=%s\n", idx,
                         v[0].undo.IsModified()?"yes":"no", v[0].undo.CanRedo()?"yes":"no",
@@ -176,6 +191,9 @@ int Tabs::TabDelete()
         unsigned long pos = v[idx].pos;
         gl->gd.SetInsertionPoint(pos);
         gl->gd.non_zero_start_pos = pos;
+        wxRichTextCtrl *ctrl = objs.canvas->lb;
+        if( ctrl )
+            ctrl->GetScrollHelper()->Scroll( v[idx].scroll_x, v[idx].scroll_y );
     }
     return( current_idx );
 }
