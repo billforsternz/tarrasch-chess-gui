@@ -249,7 +249,30 @@ void PanelContext::Layout( wxSize const &siz )
     kpos.x = SPACER*2;
     kpos.y = SPACER*2;
     ksiz.x = siz.x - button1_size.x - 3*kpos.x;
-    ksiz.y = 125; //jaap 99; //sz2.y;
+    ksiz.y = 99;    // Originally T3 simply set this to 99. User Jaap reported that the Kibitz box then only
+                    //  showed 4 lines. I sent him a special version with 125 instead of 99, but now I am
+                    //  reintroducing some T2 code to try to automatically adjust the height
+
+#if 1   // T2 code reintroduced
+    wxClientDC dc(kibitz_ctrl);
+    wxCoord width, height, descent, external_leading;
+    dc.GetTextExtent( "AbWy123456789", &width, &height, &descent, &external_leading );
+    cprintf( "Kibitz box height=%d; font height=%d, descent=%d, external_leading=%d\n", ksiz.y, height, descent, external_leading );
+    // results of this: Kibitz box height=99; font height=15, descent=3, external_leading=0
+    //  Theory, min height of kibitz box to avoid scroll bars is 99 = (15+3)*5 + 9
+
+    // Is kibitz text same size as on dev system ?
+    if( height==15 && descent==3 && external_leading==0 )
+        ;   // yes, don't change anything
+
+    // Else no, resize box to avoid scroll bars
+    else
+    {
+        int y_needed = (height+descent+external_leading)*5 + 9;
+        ksiz.y =  y_needed + 4;  // safety margin
+    }
+#endif
+
     kibitz_ctrl->SetPosition(kpos);
     kibitz_ctrl->SetSize(ksiz);
     kibitz_ctrl->SetColumnWidth(0,ksiz.x-18);
