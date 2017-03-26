@@ -454,12 +454,16 @@ void GamesDialog::CreateControls()
     wxDisplaySize(&disp_width, &disp_height);
     wxSize sz;
     cprintf( "disp_width=%d, disp_height=%d\n", disp_width, disp_height );
+    bool big_display=false;
     if( disp_width > 1366 )
         disp_width = 1366;
     if( disp_height > 768 )
+    {
         disp_height = 768;
+        big_display = true;
+    }
     sz.x = (disp_width*90)/100;
-    sz.y = (disp_height*36)/100;
+    sz.y = (disp_height*(big_display?36:25))/100;
     list_ctrl  = new GamesListCtrl( this, ID_PGN_LISTBOX, wxDefaultPosition, sz/*wxDefaultSize*/);
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
     if( nbr_games_in_list_ctrl > 0 )
@@ -1143,13 +1147,14 @@ void GamesDialog::OnCutOrDelete( bool cut )
             for( size_t j=0; j<games_to_cut.size(); j++ )
             {
                 int idx = games_to_cut[j];
-                idx -= j;					//@ suspicious
+                idx -= j;					//compensates for games cut earlier in this loop
                 gc->gds.erase(iter+idx);
 				iter = gc->gds.begin();
+                idx_focus = idx;
             }
             sz-=nbr_cut;
             list_ctrl->SetItemCount(sz);
-            Goto( 0<=idx_focus && idx_focus<sz ? idx_focus : 0 );
+            Goto( 0<=idx_focus && idx_focus<sz ? idx_focus : sz-1 );
             list_ctrl->RefreshItems(0,sz-1);
 			char buf[80];
 			sprintf(buf,"%d games",sz);
