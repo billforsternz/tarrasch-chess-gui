@@ -435,13 +435,24 @@ void UciInterface::Kibitz( thc::ChessPosition &pos, const char *forsyth )
     }
     if( !skip )
     {
-        pos_kibitz = pos;
-        strcpy( gbl_forsyth, "fen " );
-        strcpy( gbl_forsyth+4, forsyth );
-        sprintf( gbl_go, "go infinite" );
-        gbl_score = 0;
-        if( okay )
-            NewState( "Kibitz()", SEND_KIBITZ1 );
+        // Don't ask chess engines to analyse illegal positions or checkmates/stalemates
+        thc::ChessRules cr = pos;
+        thc::TERMINAL terminal;
+        bool ok = cr.Evaluate( terminal );
+        if( ok )
+        {
+            bool game_over = (terminal==TERMINAL_WCHECKMATE || terminal==TERMINAL_WSTALEMATE || terminal==TERMINAL_BCHECKMATE || terminal==TERMINAL_BSTALEMATE );
+            if( !game_over )
+            {
+                pos_kibitz = pos;
+                strcpy( gbl_forsyth, "fen " );
+                strcpy( gbl_forsyth+4, forsyth );
+                sprintf( gbl_go, "go infinite" );
+                gbl_score = 0;
+                if( okay )
+                    NewState( "Kibitz()", SEND_KIBITZ1 );
+            }
+        }
     }
 }
 
