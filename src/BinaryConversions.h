@@ -19,7 +19,7 @@ void Bin2Date( uint32_t bin, std::string &date );
 uint16_t Round2Bin( const char *round );
 void Bin2Round( uint32_t bin, std::string &round );
 
-// For now 500 codes (9 bits) (A..E)(00..99), 0 (or A00) if unknown
+// For now 500 codes (9 bits) (A..E)(00..99), 0 (or A00) if unknown, 500=empty
 uint16_t Eco2Bin( const char *eco );
 void Bin2Eco( uint32_t bin, std::string &eco );
 

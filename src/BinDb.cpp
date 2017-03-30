@@ -442,11 +442,11 @@ void Bin2Round( uint32_t bin, std::string &round )
     round = buf;
 }
 
-// For now 500 codes (9 bits) (A..E)(00..99), 0 (or A00) if unknown
+// For now 500 codes (9 bits) (A..E)(00..99), 0 (or A00) if unknown, 500 if empty
 uint16_t Eco2Bin( const char *eco )
 {
-    if( !eco )
-        return 0;
+    if( !eco || !*eco )
+        return 500; // 500 is empty
     uint16_t bin=0;
     if( 'A'<=eco[0] && eco[0]<='E' &&
         '0'<=eco[1] && eco[1]<='9' &&
@@ -461,14 +461,19 @@ uint16_t Eco2Bin( const char *eco )
 void Bin2Eco( uint32_t bin, std::string &eco )
 {
     char buf[4];
-    int hundreds = bin/100;         // eg bin = 473 -> 4
-    int tens     = (bin%100)/10;    // eg bin = 473 -> 73 -> 7
-    int ones     = (bin%10);        // eg bin = 473 -> 3
-    buf[0] = 'A'+hundreds;
-    buf[1] = '0'+tens;
-    buf[2] = '0'+ones;
-    buf[3] = '\0';
-    eco = buf;
+    if( bin>499 )
+        eco = "";   // 500 is empty
+    else
+    {
+        int hundreds = bin/100;         // eg bin = 473 -> 4
+        int tens     = (bin%100)/10;    // eg bin = 473 -> 73 -> 7
+        int ones     = (bin%10);        // eg bin = 473 -> 3
+        buf[0] = 'A'+hundreds;
+        buf[1] = '0'+tens;
+        buf[2] = '0'+ones;
+        buf[3] = '\0';
+        eco = buf;
+    }
 }
 
 // 4 codes (2 bits)
@@ -1477,7 +1482,10 @@ bool BinDbWriteOutToFile( FILE *ofile, int nbr_to_omit_from_end, ProgressBar *pb
         bb.Write(3,black_offset);           // Black
         bb.Write(4,ptr->DateBin());         // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
         bb.Write(5,ptr->RoundBin());        // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), bb=board(0-1023)
-        bb.Write(6,ptr->EcoBin());          // ECO For now 500 codes (9 bits) (A..E)(00..99)
+        uint16_t eco_bin = ptr->EcoBin();   // ECO 500 codes (9 bits) 0-499 is (A..E)(00..99), 500 is empty
+        if( eco_bin >= 500 )                // Sadly older versions cannot cope with 500 = empty
+            eco_bin = 0;
+        bb.Write(6,eco_bin);                // ECO For now 500 codes (9 bits) 0-499 is (A..E)(00..99), sadly A00 indistinguishable from empty
         bb.Write(7,ptr->ResultBin());       // Result (2 bits)
         bb.Write(8,ptr->WhiteEloBin());     // WhiteElo 12 bits (range 0..4095)                                                                 
         bb.Write(9,ptr->BlackEloBin());     // BlackElo
