@@ -62,6 +62,7 @@ public:
 	virtual void ConvertToGameDocument(GameDocument &gd)
 	{
 		ReadGameFromPgn(pgn_handle, fposn, gd);
+        gd.game_id = game_id;
 	}
 
 
