@@ -765,7 +765,8 @@ void GamesDialog::Goto( int idx )
 
 void GamesDialog::ReadItemWithSingleLineCache( int item, CompactGame &info )
 {
-    if( !GdvTestAndClearIsCacheDirty() && (item==single_line_cache_idx) )
+    bool is_dirty = GdvTestAndClearIsCacheDirty();
+    if( !is_dirty && (item==single_line_cache_idx) )
         info = single_line_cache;
     else
     {
@@ -1545,6 +1546,9 @@ static bool master_predicate( const smart_ptr<ListableGame> &g1, const smart_ptr
         bool forward = sort_forward[i];
         bool use_bin=false;
         bool use_rev_bin=false;
+        bool use_int=false;
+        int int1=0;
+        int int2=0;
         uint32_t bin1=0;
         uint32_t bin2=0;
         const char *parm1=NULL;
@@ -1614,9 +1618,13 @@ static bool master_predicate( const smart_ptr<ListableGame> &g1, const smart_ptr
             }
             case 9:
             {
-                use_bin = true;
-                bin1 = g1->EcoBin();
-                bin2 = g2->EcoBin();
+                use_int = true;
+                int1 = g1->EcoBin();
+                if( int1 >= 500 )
+                    int1 = -1;  // allows empty to sort differently to A00
+                int2 = g2->EcoBin();
+                if( int2 >= 500 )
+                    int2 = -1;  // allows empty to sort differently to A00
                 break;
             }
             case 10: // Ply
@@ -1628,7 +1636,12 @@ static bool master_predicate( const smart_ptr<ListableGame> &g1, const smart_ptr
             }
             // case 11: // moves - not present, use the _mc version
         }
-        if( use_bin )
+        if( use_int )
+        {
+            lt = forward ? (int1 < int2) : (int2 < int1);
+            eq = (int1 == int2);
+        }
+        else if( use_bin )
         {
             lt = forward ? (bin1 < bin2) : (bin2 < bin1);
             eq = (bin1 == bin2);
@@ -1733,7 +1746,11 @@ static bool master_predicate_mc( const MoveColCompareElement &e1, const MoveColC
             {
                 use_bin = true;
                 bin1 = g1->EcoBin();
+                if( bin1 >= 500 )
+                    bin1 = -1;  // allows empty to sort differently to A00
                 bin2 = g2->EcoBin();
+                if( bin2 >= 500 )
+                    bin2 = -1;  // allows empty to sort differently to A00
                 break;
             }
             case 10: // Ply

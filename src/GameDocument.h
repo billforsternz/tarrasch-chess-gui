@@ -32,6 +32,8 @@ public:
     virtual long GetFposn()					  { return fposn0; }
     virtual void SetFposn(long posn)		  { fposn0=posn; }
     virtual Roster &RefRoster() { return r; }
+    virtual void SetRoster( Roster &r_in ) { r=r_in; }
+
     virtual std::vector<thc::Move> &RefMoves()
     {
         static std::vector<thc::Move> moves;

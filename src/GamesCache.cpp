@@ -725,19 +725,29 @@ static void PgnNameCommaGroom( std::string &name )
 void GamesCache::Eco(  GamesCache *UNUSED(gc_clipboard) )
 {
     int gds_nbr = gds.size();
-    ProgressBar pb( "Recalculating ECO codes", "Recalculating ECO codes" );
+    ProgressBar pb( "Calculate missing ECO codes", "Calculate missing ECO codes" );
     for( int i=0; i<gds_nbr; i++ )
     {
         pb.Permill( (i*1000L) / (gds_nbr?gds_nbr:1) );
         ListableGame *mptr = gds[i].get();
         CompactGame pact;
         mptr->GetCompactGame( pact );
-        //CompressMoves press;
-        //std::string blob = press.Compress(pact.moves);
-        pact.r.eco = eco_calculate( pact.moves );
-        PgnNameCommaGroom( pact.r.black );
-        PgnNameCommaGroom( pact.r.white );
-        mptr->SetRoster(pact.r);
+        if( pact.r.fen == "" && pact.r.eco == "" )
+        {
+            pact.r.eco = eco_calculate( pact.moves );
+            //PgnNameCommaGroom( pact.r.black );
+            //PgnNameCommaGroom( pact.r.white );
+            if( mptr->IsGameDocument() )
+                mptr->SetRoster(pact.r);
+            else
+            {
+        		GameDocument temp;
+		        mptr->ConvertToGameDocument(temp);
+                temp.SetRoster(pact.r);
+			    make_smart_ptr(GameDocument, new_smart_ptr, temp);
+			    gds[i] = std::move(new_smart_ptr);
+            }
+        }
     }
 }
 
