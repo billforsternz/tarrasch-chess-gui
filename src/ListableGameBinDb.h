@@ -69,6 +69,7 @@ public:
         CompactGame pact;
         GetCompactGame( pact );
         pact.Upscale(gd);
+        gd.game_id = game_id;
     }
 
     virtual bool HaveStartPosition() { return false; }
