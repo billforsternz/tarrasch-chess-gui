@@ -3,7 +3,7 @@
 
 [Setup]
 AppName=Tarrasch Chess GUI
-AppVerName=Tarrasch Chess GUI V3.01a
+AppVerName=Tarrasch Chess GUI V3.02a
 AppPublisher=Triple Happy Ltd.
 AppPublisherURL=http://www.triplehappy.com
 AppSupportURL=http://www.triplehappy.com
@@ -30,9 +30,8 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 Source: "Tarrasch.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Engines\TarraschToyEngine.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "Engines\Rybka v2.3.2a.mp.w32.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
-Source: "Engines\komodo3-32.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
-Source: "Engines\komodo3-64.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
-Source: "Engines\komodo3-64-sse.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
+Source: "Engines\komodo-8-32bit.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
+Source: "Engines\komodo-8-64bit.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "Engines\stockfish_8_x64.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "Engines\stockfish_8_x32.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "Engines\Houdini_15a_w32.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
