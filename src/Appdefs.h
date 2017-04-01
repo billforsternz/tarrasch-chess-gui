@@ -11,9 +11,9 @@
 
 #define USING_KINGBASE
 #ifdef  USING_KINGBASE
-#define MASTER_VERSION "V3.01a-plus"		// now no suffix indicates default .tdb is kingbase
+#define MASTER_VERSION "V3.02a"		// now no suffix indicates default .tdb is kingbase
 #else
-#define MASTER_VERSION "V3.01a-g"   // 'g' indicates default .tdb is great players database
+#define MASTER_VERSION "V3.02a-g"   // 'g' indicates default .tdb is great players database
 #endif
 #define DEFAULT_ENGINE "stockfish_8_x32.exe"
 #define DEFAULT_ENGINE_64 "stockfish_8_x64.exe"
@@ -21,13 +21,13 @@
 #define DATABASE_VERSION_NUMBER_TINY   2
 #define DATABASE_VERSION_NUMBER_BIN_DB 3
 #ifdef  USING_KINGBASE
-#define DEFAULT_DATABASE "kingbase-lite-2016-03.tdb"
+#define DEFAULT_DATABASE "tarraschbase-2017-04.tdb"
 #else
 #define DEFAULT_DATABASE "great-players-demo.tdb"
 #endif
 
 // Conditional compiles
-#define DURING_DEVELOPMENT		// If defined we get a console window for cprintf()
+//#define DURING_DEVELOPMENT		// If defined we get a console window for cprintf()
 #define AUI_NOTEBOOK				// Define this to get X close boxes on tabs - when it's ready
 //#define NEW_TAB_LAUNCHES_TESTBED	// If defined new tab feature actually launches testbed window instead
 #ifndef DURING_DEVELOPMENT
