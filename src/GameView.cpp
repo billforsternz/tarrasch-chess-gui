@@ -1838,7 +1838,8 @@ bool GameView::CommentEdit( wxRichTextCtrl *UNUSED(ctrl), std::string &txt_to_in
     if( comment_edited )
     {
         gl->gd.Rebuild();
-        if( !pass_thru_edit )
+        bool will_be_passed_thru = pass_thru_edit_ptr && pass_thru_edit;
+        if( !will_be_passed_thru )
             gl->atom.Display( pos );
         gl->atom.Undo();
     }
