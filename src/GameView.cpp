@@ -1737,7 +1737,7 @@ bool GameView::CommentEdit( wxRichTextCtrl *UNUSED(ctrl), std::string &txt_to_in
                                     pos -= (empty?2:1);
                                 comment_edited = true;
                                 used = true;
-                                pass_thru_edit = true;
+                                pass_thru_edit = (end-home > 1);     // only pass thru when substantial amount of comment remains
                             }
                             break;
                         }
@@ -1758,7 +1758,7 @@ bool GameView::CommentEdit( wxRichTextCtrl *UNUSED(ctrl), std::string &txt_to_in
                                 }
                                 comment_edited = true;
                                 used = true;
-                                pass_thru_edit = true;
+                                pass_thru_edit = (end-home > 1);     // only pass thru when substantial amount of comment remains
                             }
                             break;
                         }

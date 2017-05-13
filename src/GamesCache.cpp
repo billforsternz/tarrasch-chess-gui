@@ -461,7 +461,7 @@ void GamesCache::FileCreate( std::string &filename )
         pgn_filename = filename;
 		wxString wx_filename(filename.c_str());
 		objs.gl->mru.AddFileToHistory( wx_filename );
-        FileSaveInner( pgn_out );
+        FileSaveInner( NULL, pgn_out );
         objs.gl->pf.Close(NULL);    // close all handles (gc_clipboard
                                     //  only needed for ReopenModify())
     }
@@ -475,7 +475,7 @@ void GamesCache::FileSave( GamesCache *gc_clipboard )
     bool ok = objs.gl->pf.ReopenModify( pgn_handle, pgn_in, pgn_out );
     if( ok )
     {
-        FileSaveInner( pgn_out );
+        FileSaveInner( pgn_in, pgn_out );
         objs.gl->pf.Close( gc_clipboard );    // close all handles
     }
 }
@@ -491,7 +491,7 @@ void GamesCache::FileSaveAs( std::string &filename, GamesCache *gc_clipboard )
         pgn_filename = filename;
 		wxString wx_filename(filename.c_str());
 		objs.gl->mru.AddFileToHistory( wx_filename );
-        FileSaveInner( pgn_out );
+        FileSaveInner( pgn_in, pgn_out );
         objs.gl->pf.Close( gc_clipboard );    // close all handles
     }
 }
@@ -509,7 +509,7 @@ void GamesCache::FileSaveAllAsAFile( std::string &filename )
     FILE *pgn_out = objs.gl->pf.OpenCreate( filename, pgn_handle );
     if( pgn_out )
     {
-        FileSaveInner( pgn_out );
+        FileSaveInner( NULL, pgn_out );
         objs.gl->pf.Close(NULL);    // close all handles (gc_clipboard
                                     //  only needed for ReopenModify())
     }
@@ -532,7 +532,7 @@ bool GamesCache::TestGameInCache( const GameDocument &gd )
 
 
 // Save common
-void GamesCache::FileSaveInner( FILE *pgn_out )
+void GamesCache::FileSaveInner( FILE *pgn_in, FILE *pgn_out )
 {
     char *buf;
 	GameDocument gd_temp;
@@ -554,10 +554,16 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
 		long game_len = 0;
         if( is_pgn )
         {
+
+            // Read data from a .pgn
             long fposn = mptr->GetFposn();
+
+            // If we are copying the file, update the position to be the new write position in the file
             if( pgn_handle == pgn_handle2 )
                 mptr->SetFposn( write_posn );
-            FILE *pgn_in2 = objs.gl->pf.ReopenRead ( pgn_handle2 );
+
+            // If the file we are reading from is already opened in ReopenModify or ReopenCopy mode - don't reopen
+            FILE *pgn_in2 = (pgn_handle==pgn_handle2 && pgn_in) ? pgn_in : objs.gl->pf.ReopenRead( pgn_handle2);
             if( pgn_in2 )
             {
                 fseek( pgn_in2, fposn, SEEK_SET );
@@ -645,38 +651,6 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
                     
 			if( save_changes_back_to_tab )
 				*save_changes_back_to_tab = *ptr;
-
-#if 0
-			// Now use a more radical than old comment below indicates - update docs being edited directly
-			//  see save_changes_back_to_tab
-			// Fix a nasty bug in T2 up to and including V2.01. A later PutBackDocument()
-            //  was overwriting the correctly calculated values of fposn0 etc. with stale
-            //  values. Fix is to update those stale values here.
-            GameDocument *p;
-            Undo *pu;
-			int handle = objs.tabs->Iterate(0,p,pu);
-            while( p )
-            {
-                if( ptr->game_being_edited!=0 && (ptr->game_being_edited == p->game_being_edited)  )
-                {
-					*p = *ptr;
-
-                    /* p->fposn0 = ptr->fposn0;  
-                    p->fposn1 = ptr->fposn1;  
-                    p->fposn2 = ptr->fposn2;  
-                    p->fposn3 = ptr->fposn3;  
-                    p->pgn_handle = ptr->pgn_handle; */
-
-					// Also indicate the document is saved inside tab, including clear document undo on file save (a little old fashioned I know)
-					/* p->modified = false;
-					p->game_prefix_edited = false;
-					p->game_details_edited = false; */
-					if( pu )
-						pu->Clear(*ptr);
-                }
-				objs.tabs->Iterate(handle,p,pu);
-            }
-#endif
         }
         write_posn += game_len;
     }
