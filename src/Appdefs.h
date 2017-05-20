@@ -11,7 +11,7 @@
 
 #define USING_KINGBASE
 #ifdef  USING_KINGBASE
-#define MASTER_VERSION "V3.02b"		// now no suffix indicates default .tdb is kingbase
+#define MASTER_VERSION "V3.03a"		// now no suffix indicates default .tdb is kingbase
 #else
 #define MASTER_VERSION "V3.02b-g"   // 'g' indicates default .tdb is great players database
 #endif
@@ -21,7 +21,7 @@
 #define DATABASE_VERSION_NUMBER_TINY   2
 #define DATABASE_VERSION_NUMBER_BIN_DB 3
 #ifdef  USING_KINGBASE
-#define DEFAULT_DATABASE "tarraschbase-2017-04.tdb"
+#define DEFAULT_DATABASE "kingbase-lite.tdb"
 #else
 #define DEFAULT_DATABASE "great-players-demo.tdb"
 #endif
