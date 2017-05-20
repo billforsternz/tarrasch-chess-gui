@@ -1272,7 +1272,7 @@ void GameLogic::CmdDatabaseCreate()
     }
     if( ok )
     {
-        int answer = wxMessageBox( "Would you like to use the new database now?", "Press Yes to set the new database as the current database",  wxYES_NO|wxCANCEL );
+        int answer = wxMessageBox( "Press Yes to set the new database as the current database",  "Would you like to use the new database now?", wxYES_NO|wxCANCEL );
         bool set_current = (answer == wxYES);
         if( set_current )
         {
@@ -1319,7 +1319,7 @@ void GameLogic::CmdDatabaseAppend()
     }
     if( ok )
     {
-        int answer = wxMessageBox( "Would you like to use the new database now?", "Press Yes to set the new database as the current database",  wxYES_NO|wxCANCEL );
+        int answer = wxMessageBox( "Press Yes to set the new database as the current database",  "Would you like to use the new database now?", wxYES_NO|wxCANCEL );
         bool set_current = (answer == wxYES);
         if( set_current )
         {

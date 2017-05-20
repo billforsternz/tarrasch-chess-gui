@@ -321,7 +321,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                         {
                             ok = true;
                             bool append=false;
-                            int answer2 = wxMessageBox( "Append games to existing file ?", "'Yes' to append, 'No' to replace (be careful with 'No')",  wxYES_NO|wxCANCEL, objs.frame );
+                            int answer2 = wxMessageBox( "'Yes' to append, 'No' to replace (be careful with 'No')", "Append games to existing file ?", wxYES_NO|wxCANCEL, objs.frame );
                             if( answer2 == wxYES )
                                 append = true;
                             else if( answer2 == wxCANCEL )
@@ -410,7 +410,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                     {
                         ok = true;
                         bool append=false;
-                        int answer2 = wxMessageBox( "Append to existing file ?", "'Yes' to append, 'No' to overwrite (be careful with 'No')",  wxYES_NO|wxCANCEL, objs.frame );
+                        int answer2 = wxMessageBox( "'Yes' to append, 'No' to overwrite (be careful with 'No')", "Append to existing file ?", wxYES_NO|wxCANCEL, objs.frame );
                         if( answer2 == wxYES )
                             append = true;
                         else if( answer2 == wxCANCEL )
@@ -615,7 +615,7 @@ bool CentralWorkSaver::FileSaveGameAs()
             // If file exists, append or replace
             if( ::wxFileExists(wx_filename ) )
             {
-                int answer2 = wxMessageBox( "Append game to file ?", "Yes to append, No to replace, be careful with No",  wxYES_NO|wxCANCEL, objs.frame );
+                int answer2 = wxMessageBox( "'Yes' to append, 'No' to replace (be careful with 'No')", "Append game to file ?",  wxYES_NO|wxCANCEL, objs.frame );
                 if( answer2 == wxYES )
                     append = true;
                 else if( answer2 == wxCANCEL )
