@@ -51,7 +51,7 @@ bool GamesCache::Load(std::string &filename )
         loaded = Load(pgn_file);
         if( loaded )
             pgn_filename = filename;
-        objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
+        objs.gl->pf.Close();
     }
     return loaded;
 }
@@ -286,7 +286,7 @@ void *ReadGameFromPgnInLoop( int pgn_handle, long fposn, CompactGame &pact, void
 	}
     if( pgn_file && pgn_handle!=save_pgn_handle )
     {
-        objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
+        objs.gl->pf.Close();
         pgn_file = NULL;
         save_pgn_handle = 0;
     }
@@ -300,7 +300,7 @@ void *ReadGameFromPgnInLoop( int pgn_handle, long fposn, CompactGame &pact, void
     pgn->Process(pgn_file);
     if( end )
     {
-        objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
+        objs.gl->pf.Close();
         pgn_file = NULL;
         save_pgn_handle = 0;
         delete pgn;
@@ -362,7 +362,7 @@ void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &new_doc )
     gd.fposn0 = fposn;
     gd.SetPgnHandle(pgn_handle);
     new_doc = gd;
-    objs.gl->pf.Close(NULL);  // clipboard only needed after ReopenModify()
+    objs.gl->pf.Close();
 }
 
 
@@ -461,9 +461,8 @@ void GamesCache::FileCreate( std::string &filename )
         pgn_filename = filename;
 		wxString wx_filename(filename.c_str());
 		objs.gl->mru.AddFileToHistory( wx_filename );
-        FileSaveInner( NULL, pgn_out );
-        objs.gl->pf.Close(NULL);    // close all handles (gc_clipboard
-                                    //  only needed for ReopenModify())
+        FileSaveInner( pgn_out );
+        objs.gl->pf.Close();    // close all handles
     }
 }
 
@@ -472,10 +471,10 @@ void GamesCache::FileSave( GamesCache *gc_clipboard )
 {
     FILE *pgn_in;
     FILE *pgn_out;
-    bool ok = objs.gl->pf.ReopenModify( pgn_handle, pgn_in, pgn_out );
+    bool ok = objs.gl->pf.ReopenModify( pgn_handle, pgn_in, pgn_out, gc_clipboard );
     if( ok )
     {
-        FileSaveInner( pgn_in, pgn_out );
+        FileSaveInner( pgn_out );
         objs.gl->pf.Close( gc_clipboard );    // close all handles
     }
 }
@@ -485,13 +484,13 @@ void GamesCache::FileSaveAs( std::string &filename, GamesCache *gc_clipboard )
 {
     FILE *pgn_in;
     FILE *pgn_out;
-    bool ok = objs.gl->pf.ReopenCopy( pgn_handle, filename, pgn_in, pgn_out );
+    bool ok = objs.gl->pf.ReopenCopy( pgn_handle, filename, pgn_in, pgn_out, gc_clipboard );
     if( ok )
     {
         pgn_filename = filename;
 		wxString wx_filename(filename.c_str());
 		objs.gl->mru.AddFileToHistory( wx_filename );
-        FileSaveInner( pgn_in, pgn_out );
+        FileSaveInner( pgn_out );
         objs.gl->pf.Close( gc_clipboard );    // close all handles
     }
 }
@@ -509,9 +508,8 @@ void GamesCache::FileSaveAllAsAFile( std::string &filename )
     FILE *pgn_out = objs.gl->pf.OpenCreate( filename, pgn_handle );
     if( pgn_out )
     {
-        FileSaveInner( NULL, pgn_out );
-        objs.gl->pf.Close(NULL);    // close all handles (gc_clipboard
-                                    //  only needed for ReopenModify())
+        FileSaveInner( pgn_out );
+        objs.gl->pf.Close();    // close all handles
     }
 }
 
@@ -532,7 +530,7 @@ bool GamesCache::TestGameInCache( const GameDocument &gd )
 
 
 // Save common
-void GamesCache::FileSaveInner( FILE *pgn_in, FILE *pgn_out )
+void GamesCache::FileSaveInner( FILE *pgn_out )
 {
     char *buf;
 	GameDocument gd_temp;
@@ -549,6 +547,7 @@ void GamesCache::FileSaveInner( FILE *pgn_in, FILE *pgn_out )
         if( abort )
             break;
         ListableGame *mptr = gds[i].get();
+        mptr->saved = true;
 		int pgn_handle2;
 		bool is_pgn = mptr->GetPgnHandle(pgn_handle2);
 		long game_len = 0;
@@ -562,8 +561,8 @@ void GamesCache::FileSaveInner( FILE *pgn_in, FILE *pgn_out )
             if( pgn_handle == pgn_handle2 )
                 mptr->SetFposn( write_posn );
 
-            // If the file we are reading from is already opened in ReopenModify or ReopenCopy mode - don't reopen
-            FILE *pgn_in2 = (pgn_handle==pgn_handle2 && pgn_in) ? pgn_in : objs.gl->pf.ReopenRead( pgn_handle2);
+            // Get FILE * for reading - note this doesn't usually require a new fopen()
+            FILE *pgn_in2 = objs.gl->pf.ReopenRead( pgn_handle2);
             if( pgn_in2 )
             {
                 fseek( pgn_in2, fposn, SEEK_SET );
@@ -779,7 +778,7 @@ void GamesCache::Eco(  GamesCache *gc_clipboard )
 #endif
 
 // Publish to a markdown (later html) file
-void GamesCache::Publish(  GamesCache *gc_clipboard )
+void GamesCache::Publish()
 {
     std::string filename = pgn_filename;
     int len=filename.length();
@@ -1005,7 +1004,6 @@ void GamesCache::Publish(  GamesCache *gc_clipboard )
 					fwrite(s.c_str(), 1, s.length(), md_out);
 				}
 
-				objs.gl->pf.Close(gc_clipboard);    // close all handles
 				fwrite("<br/>\n", 1, 6, md_out);
 				if (!markdown && i + 1 == gds_nbr)
 				{

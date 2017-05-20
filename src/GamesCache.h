@@ -28,8 +28,8 @@ public:
     void FileSaveAs( std::string &filename, GamesCache *gc_clipboard );
     //void FileSaveGameAs( std::string &filename, GamesCache *gc_clipboard );
     void FileSaveAllAsAFile( std::string &filename );
-    void FileSaveInner( FILE *pgn_in, FILE *pgn_out );
-    void Publish( GamesCache *gc_clipboard );
+    void FileSaveInner( FILE *pgn_out );
+    void Publish();
     void Eco( GamesCache *gc_clipboard );
     bool IsLoaded();
 	bool TestGameInCache( const GameDocument &gd );

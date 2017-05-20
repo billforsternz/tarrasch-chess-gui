@@ -47,13 +47,13 @@ public:
     FILE *ReopenRead ( int handle );
 
     // Reopen a known file for modification
-    bool ReopenModify( int handle, FILE * &pgn_in, FILE * &pgn_out );
+    bool ReopenModify( int handle, FILE * &pgn_in, FILE * &pgn_out,  GamesCache *gc_clipboard );
 
     // Reopen a known file for copy
-    bool ReopenCopy( int handle, std::string new_filename, FILE * &pgn_in, FILE * &pgn_out );
+    bool ReopenCopy( int handle, std::string new_filename, FILE * &pgn_in, FILE * &pgn_out,  GamesCache *gc_clipboard );
 
     // Close all files
-    void Close( GamesCache *gc_clipboard );
+    void Close( GamesCache *gc_clipboard=NULL );
 
     // If a modified file is known, update length and time
     void UpdateKnownFile( std::string &filename, time_t filetime_before, long filelen_before, long delta );

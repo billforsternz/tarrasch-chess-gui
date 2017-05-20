@@ -155,7 +155,7 @@ FILE *PgnFiles::ReopenRead( int handle )
     std::map<int,PgnFile>::iterator it = files.find(handle);
     if( it != files.end() )
     {
-        if( it->second.mode==PgnFile::reading || it->second.mode==PgnFile::modifying )
+        if( it->second.mode==PgnFile::reading || it->second.mode==PgnFile::modifying || it->second.mode==PgnFile::copying )
             pgn_file = it->second.file_read;
         else
         {
@@ -174,12 +174,21 @@ FILE *PgnFiles::ReopenRead( int handle )
 }
 
 // Reopen a known file for modification
-bool PgnFiles::ReopenModify( int handle, FILE * &pgn_in, FILE * &pgn_out )
+bool PgnFiles::ReopenModify( int handle, FILE * &pgn_in, FILE * &pgn_out, GamesCache *gc_clipboard  )
 {
     bool ok = IsAvailable( handle );
     if( ok )
     {
         ok = false;
+
+        // Avoid orphaning clipboard games, step1
+        if( gc_clipboard )
+        {
+            int sz=gc_clipboard->gds.size();
+            for( int i=0; i<sz; i++ )
+                gc_clipboard->gds[i]->saved = false;
+        }
+
         std::map<int,PgnFile>::iterator it = files.find(handle);
         if( it != files.end() )
         {
@@ -206,12 +215,22 @@ bool PgnFiles::ReopenModify( int handle, FILE * &pgn_in, FILE * &pgn_out )
 }
 
 // Reopen a known file for copy
-bool PgnFiles::ReopenCopy( int handle, std::string new_filename, FILE * &pgn_in, FILE * &pgn_out )
+bool PgnFiles::ReopenCopy( int handle, std::string new_filename, FILE * &pgn_in, FILE * &pgn_out, GamesCache *gc_clipboard )
 {
     bool ok = IsAvailable( handle );
     if( ok )
     {
         ok = false;
+
+        // Avoid orphaning clipboard games, step1
+        if( gc_clipboard )
+        {
+            int sz=gc_clipboard->gds.size();
+            for( int i=0; i<sz; i++ )
+                gc_clipboard->gds[i]->saved = false;
+        }
+
+
         std::map<int,PgnFile>::iterator it = files.find(handle);
         if( it != files.end() )
         {
@@ -261,12 +280,14 @@ void PgnFiles::Close( GamesCache *gc_clipboard )
         if( modifying || copying )
         {
             fclose(it->second.file_read);
+
+            // Avoid orphaning clipboard games step 2
             int sz = (gc_clipboard ? gc_clipboard->gds.size() : 0);
             for( int i=0; !still_needed && i<sz; i++ )
             {
                 int pgn_handle;
                 bool is_pgn = gc_clipboard->gds[i]->GetPgnHandle( pgn_handle );
-                if( is_pgn && pgn_handle == it->first )
+                if( !gc_clipboard->gds[i]->saved && is_pgn && pgn_handle == it->first )
                 {
                     still_needed   = true;
                     handle_replace = it->first;
@@ -292,6 +313,8 @@ void PgnFiles::Close( GamesCache *gc_clipboard )
                 wxString wx_filename       = it->second.filename.c_str();
                 if( still_needed )
                 {
+
+                    // Avoid orphaning clipboard games step 3
                     // We want to swap filenames of the file and temp file, eg
                     //  before
                     //     wx_filename = "file.pgn" (original file)
@@ -312,6 +335,7 @@ void PgnFiles::Close( GamesCache *gc_clipboard )
         }
     }
 
+    // Avoid orphaning clipboard games step 4
     // If needed, then replace handle for current file whereever it
     //  appears in the clipboard. The new handle in the clipboard points
     //  at a new element in the map; this new element represents the
@@ -325,7 +349,7 @@ void PgnFiles::Close( GamesCache *gc_clipboard )
         {
             int pgn_handle;
             bool is_pgn = gc_clipboard->gds[i]->GetPgnHandle( pgn_handle );
-            if( is_pgn && pgn_handle == handle_replace )
+            if( !gc_clipboard->gds[i]->saved && is_pgn && pgn_handle == handle_replace )
                 gc_clipboard->gds[i]->SetPgnHandle( handle );
         }
         std::pair<int,PgnFile> elem(handle,pf);

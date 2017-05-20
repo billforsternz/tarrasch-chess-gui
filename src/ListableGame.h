@@ -82,6 +82,7 @@ public:
 public:
     uint32_t game_id;
     uint8_t  game_attributes;            // at the moment this is effectively bool game_has_promotion;
+    bool     saved;
     virtual void SetAttributes( const char *blob, int len )
     {
         game_attributes = static_cast<uint8_t>(false);
