@@ -9,11 +9,11 @@
 
 #include "wx/wx.h"
 
-#define USING_KINGBASE
+//#define USING_KINGBASE
 #ifdef  USING_KINGBASE
 #define MASTER_VERSION "V3.03a"		// now no suffix indicates default .tdb is kingbase
 #else
-#define MASTER_VERSION "V3.02b-g"   // 'g' indicates default .tdb is great players database
+#define MASTER_VERSION "V3.03a-g"   // 'g' indicates default .tdb is great players database
 #endif
 #define DEFAULT_ENGINE "stockfish_8_x32.exe"
 #define DEFAULT_ENGINE_64 "stockfish_8_x64.exe"
