@@ -152,7 +152,7 @@ void EngineDialog::CreateControls()
     // A spin control for the hash
     wxSpinCtrl* hash_spin = new wxSpinCtrl ( this, ID_HASH,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
-        wxSP_ARROW_KEYS, 1, 4096, 64 );
+        wxSP_ARROW_KEYS, 1, 32768, 64 );
     wxBoxSizer* hash_horiz  = new wxBoxSizer(wxHORIZONTAL);
     hash_horiz->Add( ponder_box, 0, wxALIGN_LEFT|wxGROW|wxALL, 5);
     hash_horiz->Add( hash_label,  0, wxALIGN_LEFT|wxGROW|wxALL, 10);
