@@ -1337,7 +1337,7 @@ bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, w
         wfn.SetExt("pgn");
         wfn.SetName("TarraschDbDuplicatesFile");
         wxString dups_filename = wfn.GetFullPath();
-        FILE *pgn_dup = fopen(dups_filename.c_str(),"wt");
+        FILE *pgn_dup = fopen(dups_filename.c_str(),"wb");
         if( pgn_dup )
 	    {
 		    BinDbShowDebugOrder(games, "Duplicate Removal - phase 4 before");
