@@ -393,6 +393,11 @@ void Repository::SetDirectories()
 
     // Find directories we plan to use
     wxString doc = stdp.GetDocumentsDir();              // eg "C:\Documents and Settings\Bill\My Documents"
+    wxString without_end;
+    cprintf( "Windows document directory before: %s\n", static_cast<const char *>(doc.c_str()) );
+    if( doc.EndsWith("\\",&without_end) )
+        doc = without_end;
+    cprintf( "Windows document directory after : %s\n", static_cast<const char *>(doc.c_str()) );
     wxString tmp = stdp.GetExecutablePath();            // eg "C:\Program Files\Tarrasch\Tarrasch.exe"
     wxFileName exe(tmp);     
     wxArrayString dirs = exe.GetDirs();

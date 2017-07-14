@@ -723,7 +723,7 @@ void Book::GameBegin()
     thc::ChessRules temp;
     chess_rules = temp;    // init
     nbr_games++;
-    if( (nbr_games%10) == 0 )
+    if( (nbr_games%100) == 0 )
         cprintf( "%d games\n", nbr_games );
 }
 
