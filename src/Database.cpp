@@ -64,7 +64,38 @@ static void LoadInBackground( Database *ptr1 )
     }
 }
 
+// pieces 'B','K','N','P','Q','R','b','k','n','p','q','r'
+static int piece_to_idx[128] =
+{
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,    // 0x00
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,    // 0x10
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,    // 0x20
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,    // 0x30
+    0,0,1,0,0,0,0,0,0,0,0,2,0,0,3,0,    // 0x40, 0x41='A'
+    4,5,6,0,0,0,0,0,0,0,0,0,0,0,0,0,    // 0x50='P'
+    0,0,7,0,0,0,0,0,0,0,0,8,0,0,9,0,    // 0x60, 0x61='a'
+    10,11,12,0,0,0,0,0,0,0,0,0,0,0,0,0  // 0x70='p'
+};
+static int idx_to_piece[16] =
+{
+    0,'B','K','N','P','Q','R','b','k','n','p','q','r'
+};
+
+struct data_point
+{
+    bool hit;
+    unsigned long game_count;
+    unsigned long ply_array[100];
+    float avg_search_proportion;
+    float effectiveness;
+};
+static data_point stats[16][64];
+static int nbr_games_this_long[100];
 wxMutex s_mutex_tiny_database;
+
+static const int PLY_MIN = 4;
+static const int PLY_MAX = 4;
+
 void * WorkerThread::Entry()
 {
     static int count;
@@ -75,6 +106,260 @@ void * WorkerThread::Entry()
         {
             cprintf( "... if we waited for mutex, wait is over (%d)\n", temp );
             the_database->LoadAllGamesForPositionSearch( the_database->tiny_db.in_memory_game_cache );
+
+            // put investigation stuff here
+#if 1
+            int nbr_games = the_database->tiny_db.in_memory_game_cache.size();
+            for( int i=0; i<nbr_games; i++ )
+	        {
+                int modulo = i<10000 ? 1000 : (i<10000?10000:100000);
+                if( i%modulo == 0 )
+                    cprintf( "Investigation %d games\n", i );
+                for( int j=0; j<16; j++ )
+                {
+                    for( int k=0; k<64; k++ )
+                    {
+                        data_point *p = &stats[j][k];
+                        p->hit = false;
+                    }
+                }
+		        smart_ptr<ListableGame> ptr = the_database->tiny_db.in_memory_game_cache[i];
+                CompactGame pact;
+		        ptr->GetCompactGame( pact );
+                int nbr_moves = pact.moves.size();
+                thc::ChessRules cr;
+                for( int ply=0; ply<nbr_moves; ply++ )
+                {
+                    thc::Move mv = pact.moves[ply];
+                    unsigned int src = static_cast<unsigned int>(mv.src);
+                    char piece = cr.squares[src];
+                    switch( mv.special )
+                    {
+                        default: break;
+                        case thc::SPECIAL_PROMOTION_BISHOP: piece = (piece=='p'?'b':'B'); break;
+                        case thc::SPECIAL_PROMOTION_KNIGHT: piece = (piece=='p'?'n':'N'); break;
+                        case thc::SPECIAL_PROMOTION_ROOK:   piece = (piece=='p'?'r':'R'); break;
+                        case thc::SPECIAL_PROMOTION_QUEEN:  piece = (piece=='p'?'q':'Q'); break;
+                    }
+                    int piece_idx = piece_to_idx[piece];
+
+                    // A piece lands on a square - indicate that for this is a game where piece hit that square
+                    unsigned int sq = static_cast<unsigned int>(mv.dst);
+                    data_point *p = &stats[piece_idx][sq];
+                    if( !p->hit )
+                    {
+                        p->hit = true;
+                        p->game_count++;
+                    }
+                    cr.PlayMove(mv);
+
+                    // After every move, update a ply index count for every piece/square combination
+                    if( ply < 100 )
+                    {
+                        nbr_games_this_long[ply]++;
+                        for( int jj=1; jj<=12; jj++ )
+                        {
+                            char rover_piece = idx_to_piece[jj];
+                            for( int kk=0; kk<64; kk++ )
+                            {
+                                if( cr.squares[kk] == rover_piece )
+                                {
+                                    data_point *pp = &stats[jj][kk];
+                                    pp->ply_array[ply]++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Display game hits
+            cprintf( "Investigation complete %d games\n", nbr_games );
+            cprintf( "Game hit rates\n", nbr_games );
+            for( int i=1; i<=12; i++ )
+            {
+                char piece = idx_to_piece[i];
+                for( int sq=0; sq<64; sq++ )
+                {
+                    if( piece=='p' && sq<16 )
+                        continue;
+                    if( piece=='p' && sq>=56 )
+                        continue;
+                    if( piece=='P' && sq<8 )
+                        continue;
+                    if( piece=='P' && sq>=48 )
+                        continue;
+                    char file = 'a' + (sq%8);
+                    char rank = '8' - ((sq>>3)&7);
+                    if( file == 'a' )
+                        cprintf( "\n" );
+                    if( piece=='r' && (sq==0||sq==7) )
+                        continue;
+                    if( piece=='n' && (sq==1||sq==6) )
+                        continue;
+                    if( piece=='b' && (sq==2||sq==5) )
+                        continue;
+                    if( piece=='q' && sq==3 )
+                        continue;
+                    if( piece=='k' && sq==4 )
+                        continue;
+                    if( piece=='R' && (sq==56||sq==63) )
+                        continue;
+                    if( piece=='N' && (sq==57||sq==62) )
+                        continue;
+                    if( piece=='B' && (sq==58||sq==61) )
+                        continue;
+                    if( piece=='Q' && sq==59 )
+                        continue;
+                    if( piece=='K' && sq==60 )
+                        continue;
+                    data_point *p = &stats[i][sq];
+                    cprintf( "%c%c%c %2.1f%%", piece, file, rank, (float)(p->game_count) * 100.0 / (float)(nbr_games) );
+                    if( file !='h' )
+                        cprintf( " " );
+                }
+            }
+
+            // Display ply stats for Nf3
+            cprintf( "\n\n" );
+            cprintf( "Stats for Nf3\n");
+            data_point *p1 = &stats[piece_to_idx['N']][45];
+            for( int ply=0; ply<100; ply++ )
+            {
+                if( nbr_games_this_long[ply] )
+                    cprintf( "ply %d: %2.1f%%\n", ply, (float)(p1->ply_array[ply]) * 100.0 / (float)(nbr_games_this_long[ply]) );
+            }
+
+            // Display ply stats
+            cprintf( "\n\n" );
+            cprintf( "Ply average hit rates\n" );
+            for( int i=1; i<=12; i++ )
+            {
+                char piece = idx_to_piece[i];
+                for( int sq=0; sq<64; sq++ )
+                {
+                    if( piece=='p' && sq<16 )
+                        continue;
+                    if( piece=='p' && sq>=56 )
+                        continue;
+                    if( piece=='P' && sq<8 )
+                        continue;
+                    if( piece=='P' && sq>=48 )
+                        continue;
+                    char file = 'a' + (sq%8);
+                    char rank = '8' - ((sq>>3)&7);
+                    if( file == 'a' )
+                        cprintf( "\n" );
+                    if( piece=='r' && (sq==0||sq==7) )
+                        continue;
+                    if( piece=='n' && (sq==1||sq==6) )
+                        continue;
+                    if( piece=='b' && (sq==2||sq==5) )
+                        continue;
+                    if( piece=='q' && sq==3 )
+                        continue;
+                    if( piece=='k' && sq==4 )
+                        continue;
+                    if( piece=='R' && (sq==56||sq==63) )
+                        continue;
+                    if( piece=='N' && (sq==57||sq==62) )
+                        continue;
+                    if( piece=='B' && (sq==58||sq==61) )
+                        continue;
+                    if( piece=='Q' && sq==59 )
+                        continue;
+                    if( piece=='K' && sq==60 )
+                        continue;
+                    data_point *p2 = &stats[i][sq];
+
+                    float sum = 0.0;
+                    for( int ply=PLY_MIN; ply<=PLY_MAX; ply++ )
+                    {
+                        float ply_hit_rate = 0.0;
+                        if( nbr_games_this_long[ply] > 0 )
+                            ply_hit_rate =  (float)(p2->ply_array[ply]) / (float)(nbr_games_this_long[ply]);
+                        sum += ply_hit_rate;
+                    }
+
+                    // AVG = Average rate at which piece/square combo appears in position between PLY_MIN and PLY_MAX
+                    float avg = sum / (PLY_MAX-PLY_MIN+1);
+
+                    // If search position contains the combo, then no need to search games where combo not hit
+                    // So EFFECTIVENESS = AVG * proportion of games where combo not hit
+                    //  eg if Nf3 appears in 40% of positions, and is hit somewhere in 90% of games
+                    //  effectiveness = 40% * 10% = 4% speedup if we know which games Nf3 hits somewhere
+                    float effectiveness = avg * (float)(nbr_games - p2->game_count)  / (float)(nbr_games);
+                    p2->avg_search_proportion = avg;
+                    p2->effectiveness = effectiveness;
+                    cprintf( "%c%c%c %2.1f%%", piece, file, rank, (float)(avg) * 100.0  );
+                    if( file !='h' )
+                        cprintf( " " );
+                }
+            }
+
+            // Display effectiveness
+            cprintf( "\n\n" );
+            cprintf( "Estimate of improved search time as a percentage of unimproved search time = %02.1f%%\n",
+                ((100.00 - 05.01) / 100.0) *
+                ((100.00 - 05.06) / 100.0) *
+                ((100.00 - 05.20) / 100.0) *
+                ((100.00 - 05.38) / 100.0) *
+                ((100.00 - 06.08) / 100.0) *
+                ((100.00 - 06.08) / 100.0) *
+                ((100.00 - 06.32) / 100.0) *
+                ((100.00 - 06.44) / 100.0) *
+                ((100.00 - 06.56) / 100.0) *
+                ((100.00 - 07.41) / 100.0) *
+                ((100.00 - 07.46) / 100.0) *
+                ((100.00 - 08.55) / 100.0) *
+                ((100.00 - 09.84) / 100.0) *
+                ((100.00 - 11.76) / 100.0) *
+                ((100.00 - 13.79) / 100.0) * 100.0 );
+            cprintf( "Effectiveness...\n" );
+            return 0;
+            for( int i=1; i<=12; i++ )
+            {
+                char piece = idx_to_piece[i];
+                for( int sq=0; sq<64; sq++ )
+                {
+                    if( piece=='p' && sq<16 )
+                        continue;
+                    if( piece=='p' && sq>=56 )
+                        continue;
+                    if( piece=='P' && sq<8 )
+                        continue;
+                    if( piece=='P' && sq>=48 )
+                        continue;
+                    char file = 'a' + (sq%8);
+                    char rank = '8' - ((sq>>3)&7);
+                    if( piece=='r' && (sq==0||sq==7) )
+                        continue;
+                    if( piece=='n' && (sq==1||sq==6) )
+                        continue;
+                    if( piece=='b' && (sq==2||sq==5) )
+                        continue;
+                    if( piece=='q' && sq==3 )
+                        continue;
+                    if( piece=='k' && sq==4 )
+                        continue;
+                    if( piece=='R' && (sq==56||sq==63) )
+                        continue;
+                    if( piece=='N' && (sq==57||sq==62) )
+                        continue;
+                    if( piece=='B' && (sq==58||sq==61) )
+                        continue;
+                    if( piece=='Q' && sq==59 )
+                        continue;
+                    if( piece=='K' && sq==60 )
+                        continue;
+                    data_point *p3 = &stats[i][sq];
+                    cprintf( "%02.2f%% %c%c%c\n", (float)(p3->effectiveness) * 100.0, piece, file, rank );
+                    if( piece=='P' && file=='c' && rank=='4' )
+                        return 0;
+                }
+            }
+
+#endif
         }
     }
     return 0;
