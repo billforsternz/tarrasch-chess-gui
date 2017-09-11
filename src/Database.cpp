@@ -64,6 +64,11 @@ static void LoadInBackground( Database *ptr1 )
     }
 }
 
+wxMutex s_mutex_tiny_database;   
+
+#define DATABASE_EXPERIMENTS
+#ifdef DATABASE_EXPERIMENTS
+
 // pieces 'B','K','N','P','Q','R','b','k','n','p','q','r'
 static int piece_to_idx[128] =
 {
@@ -81,20 +86,58 @@ static int idx_to_piece[16] =
     0,'B','K','N','P','Q','R','b','k','n','p','q','r'
 };
 
-struct data_point
+struct PieceSquareCombo
 {
+    char piece;
+    char file;
+    char rank;
     bool hit;
+    bool always_hit;
     unsigned long game_count;
     unsigned long ply_array[100];
-    float avg_search_proportion;
-    float effectiveness;
+    double hit_rate;
+    double search_frequency;
+    double effectiveness;
 };
-static data_point stats[16][64];
+static PieceSquareCombo stats[16][64];
 static int nbr_games_this_long[100];
-wxMutex s_mutex_tiny_database;
-
 static const int PLY_MIN = 4;
-static const int PLY_MAX = 4;
+static const int PLY_MAX = 30;
+
+int func_E( const void *q1, const void *q2 )
+{
+    const PieceSquareCombo *p1 = (PieceSquareCombo *)q1;
+    const PieceSquareCombo *p2 = (PieceSquareCombo *)q2;
+    if( p2->effectiveness > p1->effectiveness )
+        return 1;
+    if( p2->effectiveness < p1->effectiveness )
+        return -1;
+    return 0;
+}
+
+int func_H( const void *q1, const void *q2 )
+{
+    const PieceSquareCombo *p1 = (PieceSquareCombo *)q1;
+    const PieceSquareCombo *p2 = (PieceSquareCombo *)q2;
+    if( p2->hit_rate > p1->hit_rate )
+        return 1;
+    if( p2->hit_rate < p1->hit_rate )
+        return -1;
+    return 0;
+}
+
+int func_S( const void *q1, const void *q2 )
+{
+    const PieceSquareCombo *p1 = (PieceSquareCombo *)q1;
+    const PieceSquareCombo *p2 = (PieceSquareCombo *)q2;
+    if( p2->search_frequency > p1->search_frequency )
+        return 1;
+    if( p2->search_frequency < p1->search_frequency )
+        return -1;
+    return 0;
+}
+
+#endif
 
 void * WorkerThread::Entry()
 {
@@ -108,7 +151,42 @@ void * WorkerThread::Entry()
             the_database->LoadAllGamesForPositionSearch( the_database->tiny_db.in_memory_game_cache );
 
             // put investigation stuff here
-#if 1
+#ifdef DATABASE_EXPERIMENTS
+            for( int i=1; i<=12; i++ )
+            {
+                char piece = idx_to_piece[i];
+                for( int sq=0; sq<64; sq++ )
+                {
+                    PieceSquareCombo *p = &stats[i][sq];
+                    p->piece = piece;
+                    p->file = 'a' + (sq%8);
+                    p->rank = '8' - ((sq>>3)&7);
+                    if( piece=='p' && 8<=sq && sq<16 )
+                        p->always_hit = true;
+                    if( piece=='P' && 48<=sq && sq<56 )
+                        p->always_hit = true;
+                    if( piece=='r' && (sq==0||sq==7) )
+                        p->always_hit = true;
+                    if( piece=='n' && (sq==1||sq==6) )
+                        p->always_hit = true;
+                    if( piece=='b' && (sq==2||sq==5) )
+                        p->always_hit = true;
+                    if( piece=='q' && sq==3 )
+                        p->always_hit = true;
+                    if( piece=='k' && sq==4 )
+                        p->always_hit = true;
+                    if( piece=='R' && (sq==56||sq==63) )
+                        p->always_hit = true;
+                    if( piece=='N' && (sq==57||sq==62) )
+                        p->always_hit = true;
+                    if( piece=='B' && (sq==58||sq==61) )
+                        p->always_hit = true;
+                    if( piece=='Q' && sq==59 )
+                        p->always_hit = true;
+                    if( piece=='K' && sq==60 )
+                        p->always_hit = true;
+                }
+            }
             int nbr_games = the_database->tiny_db.in_memory_game_cache.size();
             for( int i=0; i<nbr_games; i++ )
 	        {
@@ -119,8 +197,10 @@ void * WorkerThread::Entry()
                 {
                     for( int k=0; k<64; k++ )
                     {
-                        data_point *p = &stats[j][k];
-                        p->hit = false;
+                        PieceSquareCombo *p = &stats[j][k];
+                        p->hit = p->always_hit;
+                        if( p->hit )
+                            p->game_count++;
                     }
                 }
 		        smart_ptr<ListableGame> ptr = the_database->tiny_db.in_memory_game_cache[i];
@@ -140,12 +220,34 @@ void * WorkerThread::Entry()
                         case thc::SPECIAL_PROMOTION_KNIGHT: piece = (piece=='p'?'n':'N'); break;
                         case thc::SPECIAL_PROMOTION_ROOK:   piece = (piece=='p'?'r':'R'); break;
                         case thc::SPECIAL_PROMOTION_QUEEN:  piece = (piece=='p'?'q':'Q'); break;
+                        case thc::SPECIAL_WK_CASTLING:
+                        case thc::SPECIAL_BK_CASTLING:
+                        case thc::SPECIAL_WQ_CASTLING:
+                        case thc::SPECIAL_BQ_CASTLING:
+                        {
+                            thc::Square castling_sq=thc::f1;
+                            char castling_rook='R';
+                            switch( mv.special )
+                            {
+                                case thc::SPECIAL_WQ_CASTLING:  castling_sq=thc::c1; break;
+                                case thc::SPECIAL_BK_CASTLING:  castling_sq=thc::f8; castling_rook='r'; break;
+                                case thc::SPECIAL_BQ_CASTLING:  castling_sq=thc::c8; castling_rook='r'; break;
+                            }
+                            int piece_idx = piece_to_idx[castling_rook];
+                            unsigned int sq = static_cast<unsigned int>(castling_sq);
+                            PieceSquareCombo *p = &stats[piece_idx][sq];
+                            if( !p->hit )
+                            {
+                                p->hit = true;
+                                p->game_count++;
+                            }
+                        }
                     }
                     int piece_idx = piece_to_idx[piece];
 
                     // A piece lands on a square - indicate that for this is a game where piece hit that square
                     unsigned int sq = static_cast<unsigned int>(mv.dst);
-                    data_point *p = &stats[piece_idx][sq];
+                    PieceSquareCombo *p = &stats[piece_idx][sq];
                     if( !p->hit )
                     {
                         p->hit = true;
@@ -153,7 +255,7 @@ void * WorkerThread::Entry()
                     }
                     cr.PlayMove(mv);
 
-                    // After every move, update a ply index count for every piece/square combination
+                    // After every move, update a ply indexed array for every piece/square combination
                     if( ply < 100 )
                     {
                         nbr_games_this_long[ply]++;
@@ -164,7 +266,7 @@ void * WorkerThread::Entry()
                             {
                                 if( cr.squares[kk] == rover_piece )
                                 {
-                                    data_point *pp = &stats[jj][kk];
+                                    PieceSquareCombo *pp = &stats[jj][kk];
                                     pp->ply_array[ply]++;
                                 }
                             }
@@ -173,189 +275,151 @@ void * WorkerThread::Entry()
                 }
             }
 
-            // Display game hits
+            // Display stats
             cprintf( "Investigation complete %d games\n", nbr_games );
-            cprintf( "Game hit rates\n", nbr_games );
+            cprintf( "Stats for each piece/square combo\n", nbr_games );
             for( int i=1; i<=12; i++ )
             {
                 char piece = idx_to_piece[i];
-                for( int sq=0; sq<64; sq++ )
+                const char *name="?";
+                switch(piece)
                 {
-                    if( piece=='p' && sq<16 )
-                        continue;
-                    if( piece=='p' && sq>=56 )
-                        continue;
-                    if( piece=='P' && sq<8 )
-                        continue;
-                    if( piece=='P' && sq>=48 )
-                        continue;
-                    char file = 'a' + (sq%8);
-                    char rank = '8' - ((sq>>3)&7);
-                    if( file == 'a' )
-                        cprintf( "\n" );
-                    if( piece=='r' && (sq==0||sq==7) )
-                        continue;
-                    if( piece=='n' && (sq==1||sq==6) )
-                        continue;
-                    if( piece=='b' && (sq==2||sq==5) )
-                        continue;
-                    if( piece=='q' && sq==3 )
-                        continue;
-                    if( piece=='k' && sq==4 )
-                        continue;
-                    if( piece=='R' && (sq==56||sq==63) )
-                        continue;
-                    if( piece=='N' && (sq==57||sq==62) )
-                        continue;
-                    if( piece=='B' && (sq==58||sq==61) )
-                        continue;
-                    if( piece=='Q' && sq==59 )
-                        continue;
-                    if( piece=='K' && sq==60 )
-                        continue;
-                    data_point *p = &stats[i][sq];
-                    cprintf( "%c%c%c %2.1f%%", piece, file, rank, (float)(p->game_count) * 100.0 / (float)(nbr_games) );
-                    if( file !='h' )
-                        cprintf( " " );
+                    case 'r': name="Black Rook";        break;
+                    case 'n': name="Black Knight";      break;
+                    case 'b': name="Black Bishop";      break;
+                    case 'q': name="Black Queen";       break;
+                    case 'k': name="Black King";        break;
+                    case 'p': name="Black Pawn";        break;
+                    case 'R': name="White Rook";        break;
+                    case 'N': name="White Knight";      break;
+                    case 'B': name="White Bishop";      break;
+                    case 'Q': name="White Queen";       break;
+                    case 'K': name="White King";        break;
+                    case 'P': name="White Pawn";        break;
                 }
-            }
-
-            // Display ply stats for Nf3
-            cprintf( "\n\n" );
-            cprintf( "Stats for Nf3\n");
-            data_point *p1 = &stats[piece_to_idx['N']][45];
-            for( int ply=0; ply<100; ply++ )
-            {
-                if( nbr_games_this_long[ply] )
-                    cprintf( "ply %d: %2.1f%%\n", ply, (float)(p1->ply_array[ply]) * 100.0 / (float)(nbr_games_this_long[ply]) );
-            }
-
-            // Display ply stats
-            cprintf( "\n\n" );
-            cprintf( "Ply average hit rates\n" );
-            for( int i=1; i<=12; i++ )
-            {
-                char piece = idx_to_piece[i];
-                for( int sq=0; sq<64; sq++ )
+                cprintf( "\n%s\n", name );
+                for( int r=0; r<8; r++ )
                 {
-                    if( piece=='p' && sq<16 )
-                        continue;
-                    if( piece=='p' && sq>=56 )
-                        continue;
-                    if( piece=='P' && sq<8 )
-                        continue;
-                    if( piece=='P' && sq>=48 )
-                        continue;
-                    char file = 'a' + (sq%8);
-                    char rank = '8' - ((sq>>3)&7);
-                    if( file == 'a' )
-                        cprintf( "\n" );
-                    if( piece=='r' && (sq==0||sq==7) )
-                        continue;
-                    if( piece=='n' && (sq==1||sq==6) )
-                        continue;
-                    if( piece=='b' && (sq==2||sq==5) )
-                        continue;
-                    if( piece=='q' && sq==3 )
-                        continue;
-                    if( piece=='k' && sq==4 )
-                        continue;
-                    if( piece=='R' && (sq==56||sq==63) )
-                        continue;
-                    if( piece=='N' && (sq==57||sq==62) )
-                        continue;
-                    if( piece=='B' && (sq==58||sq==61) )
-                        continue;
-                    if( piece=='Q' && sq==59 )
-                        continue;
-                    if( piece=='K' && sq==60 )
-                        continue;
-                    data_point *p2 = &stats[i][sq];
-
-                    float sum = 0.0;
-                    for( int ply=PLY_MIN; ply<=PLY_MAX; ply++ )
+                    for( int f=0; f<8; f++ )
                     {
-                        float ply_hit_rate = 0.0;
-                        if( nbr_games_this_long[ply] > 0 )
-                            ply_hit_rate =  (float)(p2->ply_array[ply]) / (float)(nbr_games_this_long[ply]);
-                        sum += ply_hit_rate;
+                        PieceSquareCombo *p = &stats[i][r*8+f];
+
+                        // Calculate H = hit rate
+                        p->hit_rate = (double)(p->game_count) / (double)(nbr_games);
+
+                        // Calculate S = search frequency
+                        double sum = 0.0;
+                        for( int ply=PLY_MIN; ply<=PLY_MAX; ply++ )
+                        {
+                            double ply_hit_rate = 0.0;
+                            if( nbr_games_this_long[ply] > 0 )
+                                ply_hit_rate =  (double)(p->ply_array[ply]) / (double)(nbr_games_this_long[ply]);
+                            sum += ply_hit_rate;
+                        }
+                        p->search_frequency = sum / (PLY_MAX-PLY_MIN+1);   // Average rate at which piece/square combo
+                                                                           //  appears in position between PLY_MIN and PLY_MAX
+
+                        // Calculate E = effectiveness,  E = S*(1-H) 
+                        // If search position contains the combo, then no need to search games where combo not hit
+                        // So EFFECTIVENESS = AVG * proportion of games where combo not hit
+                        //  eg if Nf3 appears in 40% of positions, and is hit somewhere in 90% of games
+                        //  effectiveness = 40% * 10% = 4% speedup if we know which games Nf3 hits somewhere
+                        double effectiveness = p->search_frequency * (double)(nbr_games - p->game_count)  / (double)(nbr_games);
+                        p->effectiveness = effectiveness;
                     }
-
-                    // AVG = Average rate at which piece/square combo appears in position between PLY_MIN and PLY_MAX
-                    float avg = sum / (PLY_MAX-PLY_MIN+1);
-
-                    // If search position contains the combo, then no need to search games where combo not hit
-                    // So EFFECTIVENESS = AVG * proportion of games where combo not hit
-                    //  eg if Nf3 appears in 40% of positions, and is hit somewhere in 90% of games
-                    //  effectiveness = 40% * 10% = 4% speedup if we know which games Nf3 hits somewhere
-                    float effectiveness = avg * (float)(nbr_games - p2->game_count)  / (float)(nbr_games);
-                    p2->avg_search_proportion = avg;
-                    p2->effectiveness = effectiveness;
-                    cprintf( "%c%c%c %2.1f%%", piece, file, rank, (float)(avg) * 100.0  );
-                    if( file !='h' )
-                        cprintf( " " );
+                    for( int f=0; f<8; f++ )
+                    {
+                        PieceSquareCombo *p = &stats[i][r*8+f];
+                        char buf[100];
+                        sprintf( buf, "   %c", r==0 ? p->file : ' ' );
+                        if( f == 0 )
+                            cprintf( "   " );
+                        cprintf( "%-8s%c", buf, f==7 ? '\n' : ' ' );
+                    }
+                    for( int f=0; f<8; f++ )
+                    {
+                        PieceSquareCombo *p = &stats[i][r*8+f];
+                        char buf[100];
+                        sprintf( buf, "H=%2.2f%%", p->hit_rate*100.0 );
+                        if( 0==strcmp(buf+2,"100.00%") )
+                            strcpy(buf+2,"100%");
+                        if( f == 0 )
+                            cprintf( "   " );
+                        cprintf( "%-8s%c", buf, f==7 ? '\n' : ' ' );
+                    }
+                    for( int f=0; f<8; f++ )
+                    {
+                        PieceSquareCombo *p = &stats[i][r*8+f];
+                        char buf[100];
+                        sprintf( buf, "S=%2.2f%%", p->search_frequency*100.0 );
+                        if( 0==strcmp(buf+2,"100.00%") )
+                            strcpy(buf+2,"100%");
+                        if( f == 0 )
+                            cprintf( " %c ", p->rank );
+                        cprintf( "%-8s%c", buf, f==7 ? '\n' : ' ' );
+                    }
+                    for( int f=0; f<8; f++ )
+                    {
+                        PieceSquareCombo *p = &stats[i][r*8+f];
+                        char buf[100];
+                        sprintf( buf, "E=%2.2f%%", p->effectiveness*100.0 );
+                        if( 0==strcmp(buf+2,"100.00%") )
+                            strcpy(buf+2,"100%");
+                        if( f == 0 )
+                            cprintf( "   " );
+                        cprintf( "%-8s%c", buf, f==7 ? '\n' : ' ' );
+                    }
                 }
             }
 
-            // Display effectiveness
-            cprintf( "\n\n" );
-            cprintf( "Estimate of improved search time as a percentage of unimproved search time = %02.1f%%\n",
-                ((100.00 - 05.01) / 100.0) *
-                ((100.00 - 05.06) / 100.0) *
-                ((100.00 - 05.20) / 100.0) *
-                ((100.00 - 05.38) / 100.0) *
-                ((100.00 - 06.08) / 100.0) *
-                ((100.00 - 06.08) / 100.0) *
-                ((100.00 - 06.32) / 100.0) *
-                ((100.00 - 06.44) / 100.0) *
-                ((100.00 - 06.56) / 100.0) *
-                ((100.00 - 07.41) / 100.0) *
-                ((100.00 - 07.46) / 100.0) *
-                ((100.00 - 08.55) / 100.0) *
-                ((100.00 - 09.84) / 100.0) *
-                ((100.00 - 11.76) / 100.0) *
-                ((100.00 - 13.79) / 100.0) * 100.0 );
-            cprintf( "Effectiveness...\n" );
-            return 0;
-            for( int i=1; i<=12; i++ )
+            for( int i=0; i<3; i++ )
             {
-                char piece = idx_to_piece[i];
-                for( int sq=0; sq<64; sq++ )
+                switch(i)
                 {
-                    if( piece=='p' && sq<16 )
-                        continue;
-                    if( piece=='p' && sq>=56 )
-                        continue;
-                    if( piece=='P' && sq<8 )
-                        continue;
-                    if( piece=='P' && sq>=48 )
-                        continue;
-                    char file = 'a' + (sq%8);
-                    char rank = '8' - ((sq>>3)&7);
-                    if( piece=='r' && (sq==0||sq==7) )
-                        continue;
-                    if( piece=='n' && (sq==1||sq==6) )
-                        continue;
-                    if( piece=='b' && (sq==2||sq==5) )
-                        continue;
-                    if( piece=='q' && sq==3 )
-                        continue;
-                    if( piece=='k' && sq==4 )
-                        continue;
-                    if( piece=='R' && (sq==56||sq==63) )
-                        continue;
-                    if( piece=='N' && (sq==57||sq==62) )
-                        continue;
-                    if( piece=='B' && (sq==58||sq==61) )
-                        continue;
-                    if( piece=='Q' && sq==59 )
-                        continue;
-                    if( piece=='K' && sq==60 )
-                        continue;
-                    data_point *p3 = &stats[i][sq];
-                    cprintf( "%02.2f%% %c%c%c\n", (float)(p3->effectiveness) * 100.0, piece, file, rank );
-                    if( piece=='P' && file=='c' && rank=='4' )
-                        return 0;
+                    case 0: qsort( &stats[1][0], 12*64, sizeof(PieceSquareCombo), func_E );
+                            cprintf( "\nSorting in order of effectiveness E\n" );
+                            break;
+                    case 1: qsort( &stats[1][0], 12*64, sizeof(PieceSquareCombo), func_H );
+                            cprintf( "\nSorting in order of hit rate H\n" );
+                            break;
+                    case 2: qsort( &stats[1][0], 12*64, sizeof(PieceSquareCombo), func_S );
+                            cprintf( "\nSorting in order of search frequency S\n" );
+                            break;
+                }
+                
+                PieceSquareCombo *p = &stats[1][0];
+                double cumulative = 1.0;
+                for( int j=0; j<32; )
+                {
+                    if( !p->always_hit )
+                    {
+                        const char *name="?";
+                        switch(p->piece)
+                        {
+                            case 'r': name="Black Rook";        break;
+                            case 'n': name="Black Knight";      break;
+                            case 'b': name="Black Bishop";      break;
+                            case 'q': name="Black Queen";       break;
+                            case 'k': name="Black King";        break;
+                            case 'p': name="Black Pawn";        break;
+                            case 'R': name="White Rook";        break;
+                            case 'N': name="White Knight";      break;
+                            case 'B': name="White Bishop";      break;
+                            case 'Q': name="White Queen";       break;
+                            case 'K': name="White King";        break;
+                            case 'P': name="White Pawn";        break;
+                        }
+                        if( i!=0 )
+                            cprintf( "%s %c%c, H=%2.2f%%, S=%2.2f%%, E=%2.2f%%\n", name, p->file, p->rank, p->hit_rate*100.0, p->search_frequency*100.0, p->effectiveness*100.0 );
+                        else
+                        {
+                            cumulative *= (1.0 - p->effectiveness);
+                            cprintf( "%s %c%c, E=%2.2f%% cumulative E=%2.2f%% with %d bit%s, H=%2.2f%%, S=%2.2f%%\n", name, p->file, p->rank,
+                                            p->effectiveness*100.0, (1.0-cumulative)*100.0, j+1, j+1>1?"s":"", p->hit_rate*100.0, p->search_frequency*100.0 );
+                        }
+                        j++;
+                    }
+                    p++;
                 }
             }
 
