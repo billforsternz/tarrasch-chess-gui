@@ -850,8 +850,9 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
                                                             //        wxNO_FULL_REPAINT_ON_RESIZE )
 {
     // Set the frame icon
+#ifndef THC_LINUX
     SetIcon(wxICON(bbbbbbbb));      // for explanation of 'bbbbbbbb' see Tarrasch.rc
-
+#endif
     // Timer
     m_timer.SetOwner(this,TIMER_ID);
 
