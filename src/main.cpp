@@ -1234,7 +1234,7 @@ void ChessFrame::OnCredits(wxCommandEvent& WXUNUSED(event))
 {
     wxString msg;
     msg.Printf(
-        "\nProgram design and implementation: Bill Forster."
+        wxString::FromUTF8("\nProgram design and implementation: Bill Forster."
         "\n\n"
         "Foundation supporter: Yves Catineau."
         "\n\n"
@@ -1249,7 +1249,7 @@ void ChessFrame::OnCredits(wxCommandEvent& WXUNUSED(event))
         "\n\n"
 		"Thanks to Yusuke Kamiyamane (Fugue icons) for some of the toolbar icons."
         "\n\n"
-        "Thanks to Ed Schröder for Millionbase and Pierre Havard for KingBase. Also to Mark Crowther for TWIC which "
+        "Thanks to Ed Schr" "\xC3\xB6" "der" " for Millionbase and Pierre Havard for KingBase. Also to Mark Crowther for TWIC which "
         "is the basis of all modern chess database curation."
         "\n\n"
         "Thanks to the engine authors who provided explicit permission to "
@@ -1274,7 +1274,7 @@ void ChessFrame::OnCredits(wxCommandEvent& WXUNUSED(event))
 		"spending (wasting?) thousands of hours on this project, but actually encouraging it."
         "\n\n"
         "Dedicated to the memory of John Victor Forster 1949-2001. We "
-        "miss him every day."
+        "miss him every day.")
     );
     wxMessageBox(msg, "Credits", wxOK|wxICON_INFORMATION|wxCENTRE, this);
 }
