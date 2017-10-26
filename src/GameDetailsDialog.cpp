@@ -386,15 +386,15 @@ void GameDetailsDialog::OnChildFocus( wxChildFocusEvent& evt )
 	cprintf( "OnChildFocus() in: leaving_white=%s leaving_black=%s\n", leaving_white?"true":"false", leaving_black?"true":"false" );
 	if( leaving_white )
 	{
-		std::string w = white_ctrl->GetValue();
-		std::string we = white_elo_ctrl->GetValue();
+		std::string w = std::string(white_ctrl->GetValue());
+		std::string we = std::string(white_elo_ctrl->GetValue());
 		if( we=="" && lookup_elo.count(w)>0 )
 			white_elo_ctrl->SetValue(lookup_elo[w].c_str());
 	}
 	if( leaving_black )
 	{
-		std::string b = black_ctrl->GetValue();
-		std::string be = black_elo_ctrl->GetValue();
+		std::string b = std::string(black_ctrl->GetValue());
+		std::string be = std::string(black_elo_ctrl->GetValue());
 		if( be=="" && lookup_elo.count(b)>0 )
 			black_elo_ctrl->SetValue(lookup_elo[b].c_str());
 	}

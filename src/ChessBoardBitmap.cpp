@@ -811,6 +811,10 @@ void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, 
                                 p_mask = &black_pawn_mask;
                                 break;
                 }
+
+                // select out the bitmap before using wxNativePixelData
+                dc.SelectObject(wxNullBitmap);
+
                 wxNativePixelData pixels_src(lookup);
                 wxNativePixelData::Iterator src(pixels_src);
                 wxNativePixelData pixels_dst(new_chess_board_bmp);
@@ -1040,6 +1044,10 @@ void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, 
                             cprintf("\n");
                     }
                 }  */  
+
+                // reselect bitmap
+                dc.SelectObject(new_chess_board_bmp);
+
             }
             dark = !dark;
             x += pix;
