@@ -17,7 +17,6 @@
     #include "wx/dc.h"
 #endif
 
-#if wxUSE_UXTHEME
 #include "wx/aui/tabart.h"
 #include "wx/aui/auibook.h"
 #include "wx/msw/uxtheme.h"
@@ -505,4 +504,3 @@ bool wxAuiMSWTabArt::IsThemed() const
 
 
 #endif // wxUSE_AUI
-#endif // wxUSE_UXTHEME
