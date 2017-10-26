@@ -1,4 +1,4 @@
-*Recently updated - Tarrasch is now a lot more developer friendly I hope*
+*Recent news - Tarrasch on Linux has moved ahead significantly, see Building Tarrasch on Linux and Mac below*
 
 Background
 ==========
@@ -68,6 +68,21 @@ within that.
 Building Tarrasch on Linux and Mac
 ==================================
 
+Note: Recently (late October 2017) as the result of some great work by John
+Cheetham, Tarrasch on Linux has moved forward significantly. To try this out on
+Ubuntu 16.04 LTS (say), perform the following steps then simply make in the top
+level directory;
+
+sudo apt install libwxgtk3.0-dev
+sudo apt install libwxgtk-media3.0-dev
+sudo apt install libwxgtk-webview3.0-dev
+wx-config --version
+ (should return 3.0.2)
+
+Look for John's merged pull request for further discussion.
+
+The following comments are still relevant, but predate this recent development.
+
 For the moment these are second class citizens unfortunately. In due course I hope
 this changes. However you can certainly have a play if you are keen. I can't/won't
 outline the steps required in detail, but basically;
@@ -75,6 +90,7 @@ outline the steps required in detail, but basically;
 1) Grab repository as above
 
 2) Install wxWidgets and build one or more samples, in particular samples/richtext
+and samples/aui
 
 3) Once you have samples/richtext working, just replace richtext.cpp with all the
 source files in the repository src directory. Pay attention to file src/Portability.h
