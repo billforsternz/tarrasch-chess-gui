@@ -68,6 +68,7 @@ wxSizer *DbDialog::GdvAddExtraControls()
     //    sz.y /= 3;
     wxSize sz4 = mini_board->GetSize();
     wxSize sz5 = sz4;
+    cprintf( "mini_board size x=%d, y=%d\n",sz4.x, sz4.y );
     sz5.x = (sz4.x*185)/100;
     sz5.y = (sz4.y*10)/10;
     notebook = new wxNotebook(this, wxID_ANY, wxDefaultPosition, /*wxDefaultSize*/ sz5 );
@@ -562,7 +563,7 @@ void DbDialog::GdvNextMove( int idx )
     title_ctrl->Update();
     //title_ctrl->MacDoRedraw(0);
     wxSafeYield();
-#ifdef THC_MAC
+#ifdef THC_UNIX
     CallAfter( &DbDialog::StatsCalculate );
 #else
     StatsCalculate();
@@ -837,7 +838,8 @@ void DbDialog::StatsCalculate()
     nbr_games_in_list_ctrl = gc_db_displayed_games.gds.size();
     dirty = true;
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
-    list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
+    if( nbr_games_in_list_ctrl>0 )
+        list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
     char buf[1000];
     int total_games  = nbr_games_in_list_ctrl;
     int total_draws_plus_no_result = total_games - total_white_wins - total_black_wins;
@@ -850,7 +852,7 @@ void DbDialog::StatsCalculate()
             total_games==1 ? "game" : "games",
             percent_score,
             total_white_wins, total_black_wins, total_draws );
-    cprintf( "Got here #5\n" );
+    cprintf( "Got here #5, %s\n", buf );
     title_ctrl->SetLabel( buf );
 
     int top = list_ctrl->GetTopItem();
@@ -939,7 +941,8 @@ void DbDialog::PatternSearch()
     nbr_games_in_list_ctrl = gc_db_displayed_games.gds.size();
     dirty = true;
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
-    list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
+    if( nbr_games_in_list_ctrl>0 )
+        list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
     char buf[1000];
     char base[1000];
     int total_games  = stats_.nbr_games;

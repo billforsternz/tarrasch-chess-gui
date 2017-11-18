@@ -123,9 +123,9 @@ void ChessBoardBitmap::BmpCopy( wxColour *background, wxBitmap &from, int x1, in
 						b = adjust;
 					}
 				}
-				dst.m_ptr[2] = r;
-				dst.m_ptr[1] = g;
-				dst.m_ptr[0] = b;
+				dst.m_ptr[wxNativePixelFormat::RED] = r;
+				dst.m_ptr[wxNativePixelFormat::GREEN] = g;
+				dst.m_ptr[wxNativePixelFormat::BLUE] = b;
 				// dst.m_ptr = src.m_ptr;
 			}
             src++;
@@ -830,9 +830,9 @@ void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, 
                         byte r = src.Red();
                         byte g = src.Green();
                         byte b = src.Blue();
-                        dst.m_ptr[2] = r;
-                        dst.m_ptr[1] = g;
-                        dst.m_ptr[0] = b;
+                        dst.m_ptr[wxNativePixelFormat::RED] = r;
+                        dst.m_ptr[wxNativePixelFormat::GREEN] = g;
+                        dst.m_ptr[wxNativePixelFormat::BLUE] = b;
                         src++;
                         dst++;
                     }
@@ -1407,17 +1407,17 @@ void ChessBoardBitmap::SetChessPosition( const thc::ChessPosition &pos, const bo
     wxNativePixelData bmdata(chess_board_bmp);
     wxNativePixelData::Iterator p(bmdata);
     byte *src = buf_board;
-    for( unsigned int row=0; row<height; row++ )
-    {
-        p.MoveTo(bmdata, 0, row );
-        for( unsigned int col=0; col<width; col++ )
-        {
-            p.Red()   = *src++; 
-            p.Green() = *src++; 
-            p.Blue()  = *src++; 
-            p++;
-        }
-    }
+	for( unsigned int row=0; row<height; row++ )
+	{
+		p.MoveTo(bmdata, 0, row );
+		for( unsigned int col=0; col<width; col++ )
+		{
+			p.Red()   = *src++; 
+			p.Green() = *src++; 
+			p.Blue()  = *src++; 
+			p++;
+		}
+	}
 
 	// Copy the chess board bitmap into the centre part of the board setup bitmap
 	if( is_board_setup && ok_to_copy_chess_board_to_board_setup )
@@ -1498,7 +1498,8 @@ void ChessBoardBitmap::Get( char src_file, char src_rank, char dst_file, char ds
 void ChessBoardBitmap::Put( char src_file, char src_rank, char dst_file, char dst_rank, bool highlight_f )
 {
 	unsigned int i, j, k;
-	byte *src, *dst, *src_blue;
+	const byte *src;
+	byte *dst, *src_blue;
 	if( !highlight_f )	// optimisation - much simpler
 	{
 		for( i=0; i < height/8; i++ )

@@ -176,7 +176,7 @@ std::string GamesListCtrl::CalculateMoveTxt( std::string &previous_move, Compact
                     updated_position = cr;
                 }
                 char buf[100];
-                sprintf( buf, "%lu%s", cr.full_move_count, cr.white?".":"..." );
+                sprintf( buf, "%d%s", cr.full_move_count, cr.white?".":"..." );
                 s = std::string(buf) + s;
             }
             if( prev_move )
@@ -232,7 +232,7 @@ wxString GamesListCtrl::OnGetItemText( long item, long column) const
         case 7: txt =   info.r.round.c_str();         break;
         case 8: txt =   info.r.result.c_str();        break;
         case 9: txt =   info.r.eco.c_str();           break;
-        case 10: sprintf( buf,"%d", info.moves.size() );
+        case 10: sprintf( buf,"%lu", info.moves.size() );
                  txt =  buf;                          break;
         case 11:
         {
@@ -745,6 +745,7 @@ void GamesDialog::Goto( int idx )
             // Move focus to a new location
             dirty = true;
             int old = focus_idx;
+            cprintf( "Goto(%d, of %d)\n", idx, sz-1 );
             list_ctrl->RefreshItem( idx );
             list_ctrl->ReceiveFocus( idx );
             list_ctrl->SetItemState( idx, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
@@ -1156,7 +1157,8 @@ void GamesDialog::OnCutOrDelete( bool cut )
             sz-=nbr_cut;
             list_ctrl->SetItemCount(sz);
             Goto( 0<=idx_focus && idx_focus<sz ? idx_focus : sz-1 );
-            list_ctrl->RefreshItems(0,sz-1);
+            if( sz>0 )
+                list_ctrl->RefreshItems(0,sz-1);
 			char buf[80];
 			sprintf(buf,"%d games",sz);
 		    title_ctrl->SetLabel( buf );
@@ -1204,7 +1206,8 @@ void GamesDialog::OnSiteEvent( wxCommandEvent& WXUNUSED(event) )
             field = info.r.site;
         list_ctrl->SetItem( i, 6, field.c_str() );
     }
-    list_ctrl->RefreshItems( top, end-1 );
+    if( end>0 )
+        list_ctrl->RefreshItems( top, end-1 );
     //Goto( 0<=track->focus_idx && track->focus_idx<gds_nbr ? track->focus_idx : 0 );
     list_ctrl->SetFocus();
 }
@@ -1244,7 +1247,8 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
             list_ctrl->SetItemState( insert_idx, 0, wxLIST_STATE_FOCUSED );
             list_ctrl->SetItemState( insert_idx, 0, wxLIST_STATE_SELECTED );
             Goto( insert_idx );
-            list_ctrl->RefreshItems(0,sz-1);
+            if( sz>0 )
+                list_ctrl->RefreshItems(0,sz-1);
 			char buf[80];
 			sprintf(buf,"%d games",sz);
             objs.gl->gd = gd;
@@ -1301,7 +1305,8 @@ void GamesDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
         sz += sz2;
         list_ctrl->SetItemCount(sz);
         Goto(idx_focus);
-        list_ctrl->RefreshItems(0,sz-1);
+        if( sz>0 )
+            list_ctrl->RefreshItems(0,sz-1);
 		char buf[80];
   		sprintf(buf,"%d games",sz);
 		title_ctrl->SetLabel( buf );
@@ -1324,7 +1329,8 @@ void GamesDialog::OnEco( wxCommandEvent& WXUNUSED(event) )
     int sz=gc->gds.size();
     gc->Eco( gc_clipboard );
     Goto(idx_focus);
-    list_ctrl->RefreshItems(0,sz-1);
+    if( sz>0 )
+        list_ctrl->RefreshItems(0,sz-1);
 }
 
 #if 0
@@ -2470,7 +2476,8 @@ void GamesDialog::ColumnSort( int compare_col_, std::vector< smart_ptr<ListableG
         }
         nbr_games_in_list_ctrl = displayed_games.size();
         list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
-        list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
+        if( nbr_games_in_list_ctrl>0 )
+            list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
         int top = list_ctrl->GetTopItem();
         int count = 1 + list_ctrl->GetCountPerPage();
         if( count > nbr_games_in_list_ctrl )
