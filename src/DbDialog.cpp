@@ -562,10 +562,10 @@ void DbDialog::GdvNextMove( int idx )
     title_ctrl->Refresh();
     title_ctrl->Update();
     //title_ctrl->MacDoRedraw(0);
-    wxSafeYield();
 #ifdef THC_UNIX
     CallAfter( &DbDialog::StatsCalculate );
 #else
+    wxSafeYield();
     StatsCalculate();
 #endif
 }
@@ -589,13 +589,17 @@ std::multimap<B,A> flip_and_sort_map(const std::map<A,B> &src)
 // Heart and sole of DbDialog() - do the search and calculate the stats
 void DbDialog::StatsCalculate()
 {
+    wxString save_title = GetTitle();
+    SetTitle("Searching...");
+
     int total_white_wins = 0;
     int total_black_wins = 0;
     int total_draws = 0;
     transpositions.clear();
     stats.clear();
     dirty = true;
-    gc_db_displayed_games.gds.clear();
+    GamesCache temp;
+    temp.gds.clear();
     cprintf( "Remove focus %d\n", track->focus_idx );
     list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_FOCUSED );
     list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_SELECTED );
@@ -656,6 +660,7 @@ void DbDialog::StatsCalculate()
         if( search_needed )
         {
             ProgressBar progress2("Searching Database", "Searching",false);
+            //progress2.DrawNow();
             game_count = mps->DoSearch(cr_to_match,&progress2);
         }
     }
@@ -664,224 +669,230 @@ void DbDialog::StatsCalculate()
     std::vector<DoSearchFoundGame>          &found_games = mps->GetVectorGamesFound();
     size_t nbr_found_games = found_games.size();
     
-    ProgressBar progress("Calculating Stats","Calculating Stats",false);
-    for( size_t i=0; i<nbr_found_games; i++ )
     {
-        progress.Permill(i*1000/nbr_found_games);
-        int idx                   = found_games[i].idx;
-        unsigned short offset_first = found_games[i].offset_first;
-        unsigned short offset_last  = found_games[i].offset_last;
-        gc_db_displayed_games.gds.push_back(db_games[idx]);
-        std::string blob = db_games[idx]->CompressedMoves();
-    
-        // Search for a match to this game
-        bool new_transposition_found=false;
-        bool found=false;
-        int found_idx=0;
-        for( size_t j=0; !found && j<transpositions.size(); j++ )
+        ProgressBar progress("Calculating Stats","Calculating Stats",false);
+        for( size_t i=0; i<nbr_found_games; i++ )
         {
-            size_t len = transpositions[j].blob.size();
-            if( len <= blob.size() )
+            progress.Permill(i*1000/nbr_found_games);
+            int idx                   = found_games[i].idx;
+            unsigned short offset_first = found_games[i].offset_first;
+            unsigned short offset_last  = found_games[i].offset_last;
+            temp.gds.push_back(db_games[idx]);
+            std::string blob = db_games[idx]->CompressedMoves();
+        
+            // Search for a match to this game
+            bool new_transposition_found=false;
+            bool found=false;
+            int found_idx=0;
+            for( size_t j=0; !found && j<transpositions.size(); j++ )
             {
-                std::string s1 = blob.substr(0,len);
-                std::string s2 = transpositions[j].blob;
-                if( s1 == s2 )
+                size_t len = transpositions[j].blob.size();
+                if( len <= blob.size() )
                 {
-                    found = true;
-                    found_idx = j;
+                    std::string s1 = blob.substr(0,len);
+                    std::string s2 = transpositions[j].blob;
+                    if( s1 == s2 )
+                    {
+                        found = true;
+                        found_idx = j;
+                    }
                 }
             }
-        }
-        
-        // If none so far add the one from this game
-        if( !found )
-        {
-            new_transposition_found = true;
-            PATH_TO_POSITION ptp;
-            ptp.blob = blob.substr(0,offset_first);
-            transpositions.push_back(ptp);
-            found_idx = transpositions.size()-1;
-        }
-        const char *result = db_games[idx]->Result();
-        bool white_wins = (0==strcmp(result,"1-0"));
-        if( white_wins )
-            total_white_wins++;
-        bool black_wins = (0==strcmp(result,"0-1"));
-        if( black_wins )
-            total_black_wins++;
-        bool draw       = (0==strcmp(result,"1/2-1/2"));
-        if( draw )
-            total_draws++;
-        PATH_TO_POSITION *p = &transpositions[found_idx];
-        p->frequency++;
-        if( offset_last < blob.length() ) // must be more moves
-        {
-            char compressed_move = blob[offset_last];
-            std::map< char, MOVE_STATS >::iterator it;
-            it = stats.find(compressed_move);
-            if( it == stats.end() )
+            
+            // If none so far add the one from this game
+            if( !found )
             {
-                MOVE_STATS empty;
-                empty.nbr_games = 0;
-                empty.nbr_white_wins = 0;
-                empty.nbr_black_wins = 0;
-                empty.nbr_draws = 0;
-                stats[compressed_move] = empty;
-                it = stats.find(compressed_move);
+                new_transposition_found = true;
+                PATH_TO_POSITION ptp;
+                ptp.blob = blob.substr(0,offset_first);
+                transpositions.push_back(ptp);
+                found_idx = transpositions.size()-1;
             }
-            it->second.nbr_games++;
+            const char *result = db_games[idx]->Result();
+            bool white_wins = (0==strcmp(result,"1-0"));
             if( white_wins )
-                it->second.nbr_white_wins++;
-            else if( black_wins )
-                it->second.nbr_black_wins++;
-            else if( draw )
-                it->second.nbr_draws++;
-        }
-
-        // For speed, have the most frequent transpositions first        
-        if( new_transposition_found )
-        {
-            std::sort( transpositions.rbegin(), transpositions.rend() );
-        }
-    }
-
-	// Play through the current game, and find the last instance of a user move in this position
-	CompactGame pact;
-	objs.gl->gd.GetCompactGame( pact );
-	thc::Move user_move;
-	user_move.Invalid();
-	thc::ChessRules scan(pact.start_position);
-	for( size_t i=0; i<pact.moves.size(); i++ )
-	{
-		if( scan == cr_to_match )
-			user_move = pact.moves[i];
-		scan.PlayMove( pact.moves[i] );
-	}
-
-    // Sort the stats according to number of games
-    std::multimap< MOVE_STATS,  char > dst = flip_and_sort_map(stats);
-    std::multimap< MOVE_STATS,  char >::reverse_iterator it;
-    moves_in_this_position.clear();
-    wxArrayString strings_stats;
-    for( it=dst.rbegin(); it!=dst.rend(); it++ )
-    {
-        double percentage_score = 0.0;
-        int nbr_games      = it->first.nbr_games;
-        int nbr_white_wins = it->first.nbr_white_wins;
-        int nbr_black_wins = it->first.nbr_black_wins;
-        int nbr_draws      = it->first.nbr_draws;
-        int draws_plus_no_result = nbr_games - nbr_white_wins - nbr_black_wins;
-        if( nbr_games )
-            percentage_score = ((1.0*nbr_white_wins + 0.5*draws_plus_no_result) * 100.0) / nbr_games;
-        char compressed_move = it->second;
-        CompressMoves press(cr_to_match);
-        thc::Move mv = press.UncompressMove( compressed_move );
-        if( add_go_back )
-        {
-            add_go_back = false;
-            wxString wstr( go_back_string.c_str() );
-            strings_stats.Add(wstr);
-            moves_in_this_position.push_back(mv);
-        }
-        moves_in_this_position.push_back(mv);
-        std::string s = mv.NaturalOut(&cr_to_match);
-        LangOut(s);
-        if( !cr_to_match.white )
-            s = "..." + s;
-        char buf[200];
-        sprintf( buf, "%s%s: %d %s, white scores %.1f%% +%d -%d =%d",
-			    mv==user_move ? ">" : " ",
-                s.c_str(),
-                nbr_games,
-                nbr_games==1 ? "game" : "games",
-                percentage_score,
-                nbr_white_wins, nbr_black_wins, nbr_draws );
-        cprintf( "%s\n", buf );
-        wxString wstr(buf);
-        strings_stats.Add(wstr);
-    }
-
-    // Print the transpositions in order
-    std::sort( transpositions.rbegin(), transpositions.rend() );
-    cprintf( "%d transpositions\n", transpositions.size() );
-    wxArrayString strings_transpos;
-    for( unsigned int j=0; j<transpositions.size(); j++ )
-    {
-        PATH_TO_POSITION *p = &transpositions[j];
-        size_t len = p->blob.length();
-        CompressMoves press;
-        std::vector<thc::Move> unpacked = press.Uncompress(p->blob);
-        std::string txt;
-        thc::ChessRules cr2;
-        for( unsigned int k=0; k<len; k++ )
-        {
-            thc::Move mv = unpacked[k];
-            if( cr2.white )
+                total_white_wins++;
+            bool black_wins = (0==strcmp(result,"0-1"));
+            if( black_wins )
+                total_black_wins++;
+            bool draw       = (0==strcmp(result,"1/2-1/2"));
+            if( draw )
+                total_draws++;
+            PATH_TO_POSITION *p = &transpositions[found_idx];
+            p->frequency++;
+            if( offset_last < blob.length() ) // must be more moves
             {
-                char buf[100];
-                sprintf( buf, "%d.", cr2.full_move_count );
-                txt += buf;
+                char compressed_move = blob[offset_last];
+                std::map< char, MOVE_STATS >::iterator it;
+                it = stats.find(compressed_move);
+                if( it == stats.end() )
+                {
+                    MOVE_STATS empty;
+                    empty.nbr_games = 0;
+                    empty.nbr_white_wins = 0;
+                    empty.nbr_black_wins = 0;
+                    empty.nbr_draws = 0;
+                    stats[compressed_move] = empty;
+                    it = stats.find(compressed_move);
+                }
+                it->second.nbr_games++;
+                if( white_wins )
+                    it->second.nbr_white_wins++;
+                else if( black_wins )
+                    it->second.nbr_black_wins++;
+                else if( draw )
+                    it->second.nbr_draws++;
             }
-            std::string s = mv.NaturalOut(&cr2);
-            LangOut(s);
-            txt += s;
-            txt += " ";
-            cr2.PlayMove(mv);
+
+            // For speed, have the most frequent transpositions first        
+            if( new_transposition_found )
+            {
+                std::sort( transpositions.rbegin(), transpositions.rend() );
+            }
         }
-        char buf[2000];
-        sprintf( buf, "T%d: %s: %d occurences", j+1, txt.c_str(), p->frequency );
-        cprintf( "%s\n", buf );
-        wxString wstr(buf);
-        strings_transpos.Add(wstr);
-    }
 
-    nbr_games_in_list_ctrl = gc_db_displayed_games.gds.size();
-    dirty = true;
-    list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
-    if( nbr_games_in_list_ctrl>0 )
-        list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
-    char buf[1000];
-    int total_games  = nbr_games_in_list_ctrl;
-    int total_draws_plus_no_result = total_games - total_white_wins - total_black_wins;
-    double percent_score=0.0;
-    if( total_games )
-        percent_score= ((1.0*total_white_wins + 0.5*total_draws_plus_no_result) * 100.0) / total_games;
-    sprintf( buf, "%s%d %s, white scores %.1f%% +%d -%d =%d",
-            objs.gl->db_clipboard ? "Clipboard search: " : "",
-            total_games,
-            total_games==1 ? "game" : "games",
-            percent_score,
-            total_white_wins, total_black_wins, total_draws );
-    cprintf( "Got here #5, %s\n", buf );
-    title_ctrl->SetLabel( buf );
+        // Play through the current game, and find the last instance of a user move in this position
+        CompactGame pact;
+        objs.gl->gd.GetCompactGame( pact );
+        thc::Move user_move;
+        user_move.Invalid();
+        thc::ChessRules scan(pact.start_position);
+        for( size_t i=0; i<pact.moves.size(); i++ )
+        {
+            if( scan == cr_to_match )
+                user_move = pact.moves[i];
+            scan.PlayMove( pact.moves[i] );
+        }
 
-    int top = list_ctrl->GetTopItem();
-    int count = 1 + list_ctrl->GetCountPerPage();
-    if( count > nbr_games_in_list_ctrl )
-        count = nbr_games_in_list_ctrl;
-    for( int i=0; i<count; i++ )
-        list_ctrl->RefreshItem(top++);
-    list_ctrl->SetFocus();
+        // Sort the stats according to number of games
+        std::multimap< MOVE_STATS,  char > dst = flip_and_sort_map(stats);
+        std::multimap< MOVE_STATS,  char >::reverse_iterator it;
+        moves_in_this_position.clear();
+        wxArrayString strings_stats;
+        for( it=dst.rbegin(); it!=dst.rend(); it++ )
+        {
+            double percentage_score = 0.0;
+            int nbr_games      = it->first.nbr_games;
+            int nbr_white_wins = it->first.nbr_white_wins;
+            int nbr_black_wins = it->first.nbr_black_wins;
+            int nbr_draws      = it->first.nbr_draws;
+            int draws_plus_no_result = nbr_games - nbr_white_wins - nbr_black_wins;
+            if( nbr_games )
+                percentage_score = ((1.0*nbr_white_wins + 0.5*draws_plus_no_result) * 100.0) / nbr_games;
+            char compressed_move = it->second;
+            CompressMoves press(cr_to_match);
+            thc::Move mv = press.UncompressMove( compressed_move );
+            if( add_go_back )
+            {
+                add_go_back = false;
+                wxString wstr( go_back_string.c_str() );
+                strings_stats.Add(wstr);
+                moves_in_this_position.push_back(mv);
+            }
+            moves_in_this_position.push_back(mv);
+            std::string s = mv.NaturalOut(&cr_to_match);
+            LangOut(s);
+            if( !cr_to_match.white )
+                s = "..." + s;
+            char buf[200];
+            sprintf( buf, "%s%s: %d %s, white scores %.1f%% +%d -%d =%d",
+                    mv==user_move ? ">" : " ",
+                    s.c_str(),
+                    nbr_games,
+                    nbr_games==1 ? "game" : "games",
+                    percentage_score,
+                    nbr_white_wins, nbr_black_wins, nbr_draws );
+            cprintf( "%s\n", buf );
+            wxString wstr(buf);
+            strings_stats.Add(wstr);
+        }
 
-    if( !list_ctrl_stats )
-    {
-        //wxSize sz4 = mini_board->GetSize();
-        //sz4.x = (sz4.x*50)/100;
-        //sz4.y = (sz4.y*50)/100;
+        // Print the transpositions in order
+        std::sort( transpositions.rbegin(), transpositions.rend() );
+        cprintf( "%d transpositions\n", transpositions.size() );
+        wxArrayString strings_transpos;
+        for( unsigned int j=0; j<transpositions.size(); j++ )
+        {
+            PATH_TO_POSITION *p = &transpositions[j];
+            size_t len = p->blob.length();
+            CompressMoves press;
+            std::vector<thc::Move> unpacked = press.Uncompress(p->blob);
+            std::string txt;
+            thc::ChessRules cr2;
+            for( unsigned int k=0; k<len; k++ )
+            {
+                thc::Move mv = unpacked[k];
+                if( cr2.white )
+                {
+                    char buf[100];
+                    sprintf( buf, "%d.", cr2.full_move_count );
+                    txt += buf;
+                }
+                std::string s = mv.NaturalOut(&cr2);
+                LangOut(s);
+                txt += s;
+                txt += " ";
+                cr2.PlayMove(mv);
+            }
+            char buf[2000];
+            sprintf( buf, "T%d: %s: %d occurences", j+1, txt.c_str(), p->frequency );
+            cprintf( "%s\n", buf );
+            wxString wstr(buf);
+            strings_transpos.Add(wstr);
+        }
+
+        char buf[1000];
+        int total_games  = temp.gds.size();
+        int total_draws_plus_no_result = total_games - total_white_wins - total_black_wins;
+        double percent_score=0.0;
+        if( total_games )
+            percent_score= ((1.0*total_white_wins + 0.5*total_draws_plus_no_result) * 100.0) / total_games;
+        sprintf( buf, "%s%d %s, white scores %.1f%% +%d -%d =%d",
+                objs.gl->db_clipboard ? "Clipboard search: " : "",
+                total_games,
+                total_games==1 ? "game" : "games",
+                percent_score,
+                total_white_wins, total_black_wins, total_draws );
+        cprintf( "Got here #5, %s\n", buf );
+        title_ctrl->SetLabel( buf );
+
+    /*   int top = list_ctrl->GetTopItem();
+        int count = 1 + list_ctrl->GetCountPerPage();
+        if( count > nbr_games_in_list_ctrl )
+            count = nbr_games_in_list_ctrl;
+        for( int i=0; i<count; i++ )
+            list_ctrl->RefreshItem(top++);
+        list_ctrl->SetFocus(); */
+
+        if( !list_ctrl_stats )
+        {
+            //wxSize sz4 = mini_board->GetSize();
+            //sz4.x = (sz4.x*50)/100;
+            //sz4.y = (sz4.y*50)/100;
+            
+            list_ctrl_stats   = new wxListBox( notebook, ID_DB_LISTBOX_STATS, wxDefaultPosition, wxDefaultSize, 0, NULL, wxLB_HSCROLL );
+            list_ctrl_transpo = new wxListBox( notebook, ID_DB_LISTBOX_TRANSPO, wxDefaultPosition, wxDefaultSize, 0, NULL, wxLB_HSCROLL );
+            notebook->AddPage(list_ctrl_stats,"Next Move",true);
+            notebook->AddPage(list_ctrl_transpo,"Transpositions",false);
+        }
         
-        list_ctrl_stats   = new wxListBox( notebook, ID_DB_LISTBOX_STATS, wxDefaultPosition, wxDefaultSize, 0, NULL, wxLB_HSCROLL );
-        list_ctrl_transpo = new wxListBox( notebook, ID_DB_LISTBOX_TRANSPO, wxDefaultPosition, wxDefaultSize, 0, NULL, wxLB_HSCROLL );
-        notebook->AddPage(list_ctrl_stats,"Next Move",true);
-        notebook->AddPage(list_ctrl_transpo,"Transpositions",false);
+        list_ctrl_stats->Clear();
+        list_ctrl_transpo->Clear();
+        if( !strings_stats.IsEmpty() )
+            list_ctrl_stats->InsertItems( strings_stats, 0 );
+        if( !strings_transpos.IsEmpty() )
+            list_ctrl_transpo->InsertItems( strings_transpos, 0 );
+        gc_db_displayed_games = temp;
+        nbr_games_in_list_ctrl = gc_db_displayed_games.gds.size();
+        dirty = true;
+        list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
+    //    if( nbr_games_in_list_ctrl>0 )
+    //        list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
+        if( nbr_games_in_list_ctrl>0 )
+            list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
     }
-    
-    list_ctrl_stats->Clear();
-    list_ctrl_transpo->Clear();
-    if( !strings_stats.IsEmpty() )
-        list_ctrl_stats->InsertItems( strings_stats, 0 );
-    if( !strings_transpos.IsEmpty() )
-        list_ctrl_transpo->InsertItems( strings_transpos, 0 );
     Goto(0);
+    SetTitle(save_title);
 }
 
 
