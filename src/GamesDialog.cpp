@@ -964,9 +964,11 @@ void GamesDialog::GdvButton5()
 {
 }
 
+static bool temp_fixme;
 // Move Stats or Transpositions selected
 void GamesDialog::OnTabSelected( wxBookCtrlEvent& event )
 {
+    temp_fixme = transpo_activated;  // set flag if coming back from transpositions tab
     transpo_activated = (1==event.GetSelection());
     int top = list_ctrl->GetTopItem();
     int count = 1 + list_ctrl->GetCountPerPage();
@@ -981,7 +983,13 @@ void GamesDialog::OnTabSelected( wxBookCtrlEvent& event )
 void GamesDialog::OnNextMove( wxCommandEvent &event )
 {
     int idx = event.GetSelection();
-    GdvNextMove(idx);
+    #ifdef THC_LINUX
+    if( transpo_activated || (idx==0&&temp_fixme) )
+        ;   // filter false event when selecting NextMove tab, Linux only
+    else
+    #endif
+        GdvNextMove(idx);
+    temp_fixme = false;
 }
 
 
