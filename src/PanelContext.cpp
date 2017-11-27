@@ -269,7 +269,7 @@ void PanelContext::Layout( wxSize const &siz )
     else
     {
         int y_needed = (height+descent+external_leading)*5 + 9;
-        ksiz.y =  y_needed + 4;  // safety margin
+        ksiz.y =  y_needed + 8;  // safety margin (changed from 4 to 8 when getting Ubuntu version going)
     }
 #endif
 
