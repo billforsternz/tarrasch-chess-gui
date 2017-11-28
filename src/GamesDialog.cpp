@@ -587,71 +587,61 @@ void GamesDialog::CreateControls()
     track->focus_offset = 0;
     list_ctrl->track = track;
     mini_board->SetChessPosition( cr );
-
-    hsiz_panel->Add( mini_board, 1, wxALIGN_LEFT|wxTOP|wxRIGHT|wxBOTTOM|wxFIXED_MINSIZE, 5 );
+    wxBoxSizer *mini_board_container = new wxBoxSizer(wxHORIZONTAL);    // Without this,the chess board has a tendency to be
+                                                                        //  sacrificed on smaller displays, on Linux at least
+    mini_board_container->Add( mini_board, 1, wxALIGN_LEFT|wxTOP|wxRIGHT|wxBOTTOM|wxFIXED_MINSIZE, 5 );
+    hsiz_panel->Add(mini_board_container, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxTOP, 0);
 
     wxBoxSizer *button_panel = new wxBoxSizer(wxVERTICAL);
     hsiz_panel->Add(button_panel, 0, wxALIGN_TOP|wxALL, 10);
 
-    int row1, col1, row2, col2;
-    GdvGetButtonGridDimensions( row1, col1, row2, col2 );
-    if( row1>0 && col1>0 )
-        vsiz_panel_button1 = new wxFlexGridSizer(row1,col1,0,0);
-    else
-        vsiz_panel_button1 = NULL;
-    if( vsiz_panel_button1 )
-        button_panel->Add(vsiz_panel_button1, 0, wxALIGN_TOP|wxALL, 0);
-    if( row2>0 && col2>0 )
-        vsiz_panel_buttons = new wxFlexGridSizer(row2,col2,0,0);
-    else
-        vsiz_panel_buttons = NULL;
-    if( vsiz_panel_buttons )
-        button_panel->Add(vsiz_panel_buttons, 0, wxALIGN_TOP|wxALL, 0);
+    vsiz_panel_buttons = new wxFlexGridSizer(8,2,0,0);
+    button_panel->Add(vsiz_panel_buttons, 0, wxALIGN_TOP|wxALL, 0);
 
     // Load / Ok / Game->Board
     ok_button = new wxButton ( this, wxID_OK, wxT("Load Game"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_button1->Add(ok_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_buttons->Add(ok_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     
     // Save all games to a file
     if( id == ID_PGN_DIALOG_FILE )
     {
         wxButton* save_all_to_a_file = new wxButton ( this, wxID_SAVE, wxT("Save"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        vsiz_panel_button1->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
         wxButton* save_as_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save as"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        vsiz_panel_button1->Add(save_as_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(save_as_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
     else if( id == ID_GAMES_DIALOG_DATABASE )
     {
         wxButton* btn5 = new wxButton ( this, ID_BUTTON_5, wxT("Use Game"),
                                        wxDefaultPosition, wxDefaultSize, 0 );
-        vsiz_panel_button1->Add(btn5, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(btn5, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
     else
     {
         wxButton* save_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save all"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        vsiz_panel_button1->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
 
     // The Cancel button
     wxButton* cancel = new wxButton ( this, wxID_CANCEL,
         wxT("Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_button1->Add(cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_buttons->Add(cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     // The Help button
     wxButton* help = new wxButton( this, wxID_HELP, wxT("Help"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_button1->Add(help, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_buttons->Add(help, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     player_names = new wxStaticText( this, wxID_ANY, "White - Black",
                                     wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL );
     box_sizer->Add(player_names, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxBOTTOM, 10);
     
     // Overridden by specialised classes
-    GdvAddExtraControls();
+    GdvAddExtraControls( big_display );
 
     // Overridden by specialised classes
     GdvEnumerateGames();
@@ -663,8 +653,8 @@ void GamesDialog::CreateControls()
        wxT("&Event"), wxDefaultPosition, wxDefaultSize, 0 );
     site_button->SetValue( !objs.repository->nv.m_event_not_site );
     event_button->SetValue( objs.repository->nv.m_event_not_site );
-    vsiz_panel_button1->Add(site_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    vsiz_panel_button1->Add(event_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_buttons->Add(site_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_buttons->Add(event_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
 }
 

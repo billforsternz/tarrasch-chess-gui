@@ -330,7 +330,8 @@ void CtrlChessTxt::Paste()
 			bool check_tag = gd->IsEmpty();
             for( unsigned int i=0; i<txt_to_paste.Length(); i++ )
             {
-                char c=txt_to_paste[i];
+                int c=txt_to_paste[i];
+				c &= 0x7f;
                 if( c == '\n' )
 				{
 					if( !check_tag )

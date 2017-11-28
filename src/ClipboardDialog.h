@@ -27,7 +27,7 @@ public:
      );
     
     // Overrides
-    virtual wxSizer *GdvAddExtraControls();
+    virtual wxSizer *GdvAddExtraControls(  bool big_display );
     virtual void GdvCheckBox( bool checked );
     virtual void GdvEnumerateGames();
 };
