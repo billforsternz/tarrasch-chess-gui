@@ -1,3 +1,10 @@
+sudo apt install libwxgtk3.0-dev
+wx-config --version
+> 3.0.2
+
+cannot find -lwx_gtk2u_webview-3.0
+cannot find -lwx_gtk2u_media-3.0
+
 Changes for V3.01a
 Add progress gauge when writing duplicate games, also allows discoverability
 Do it last - allows users to cancel if they don't need it *

@@ -10,7 +10,7 @@
 #include "Tabs.h"
 
 BEGIN_EVENT_TABLE(NotebookPage,wxTextCtrl)
-	EVT_SET_FOCUS(RedirectFocus)
+	EVT_SET_FOCUS(NotebookPage::RedirectFocus)
 END_EVENT_TABLE()
 
 void NotebookPage::RedirectFocus(wxFocusEvent& WXUNUSED(event))

@@ -500,7 +500,11 @@ void ClockDialog::OnFixedPeriodMode( wxCommandEvent& WXUNUSED(event) )
     bool fpm = fixed_period_mode->GetValue();
     dat.m_engine_minutes = fpm ? dat.m_engine_fixed_minutes : dat.m_engine_time;
     dat.m_engine_seconds = fpm ? dat.m_engine_fixed_seconds : dat.m_engine_increment;
+#ifdef THC_LINUX
+    time_ctrl4->SetRange(fpm?0:1, time_ctrl4->GetMax());
+#else
     time_ctrl4->SetMin(fpm?0:1);    // engine minutes can (usually is) 0 in fixed period mode, but 1 minute is min otherwise
+#endif
     time_ctrl4->SetValue(dat.m_engine_minutes);
     increment_ctrl4->SetValue(dat.m_engine_seconds);
     increment_label4->SetLabel( fpm ? "Time (seconds):" : "Increment (seconds):" );

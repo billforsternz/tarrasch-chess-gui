@@ -361,7 +361,7 @@ void GameView::Display( unsigned long pos )
     wxRichTextCtrl *ctrl = objs.canvas->lb;
     if( ctrl )
     {
-#ifndef THC_MAC
+#ifndef THC_UNIX
         ctrl->Freeze();
         gv_printf( "ctrl->Freeze();" );
 #endif
@@ -509,7 +509,7 @@ void GameView::Display( unsigned long pos )
         gv_printf( "ctrl->SetInsertionPoint(%lu);", pos );
         ctrl->EndSuppressUndo();
         gv_printf( "ctrl->EndSuppressUndo();" );
-#ifndef THC_MAC
+#ifndef THC_UNIX
         ctrl->Thaw();
         gv_printf( "ctrl->Thaw();" );
 #endif

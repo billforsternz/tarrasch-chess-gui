@@ -8,13 +8,34 @@
 #define APPDEFS_H
 
 #include "wx/wx.h"
+#include "Portability.h"
 
-//#define USING_KINGBASE
+#define USING_KINGBASE
+// no suffix indicates default .tdb is kingbase
 #ifdef  USING_KINGBASE
-#define MASTER_VERSION "V3.04a"		// now no suffix indicates default .tdb is kingbase
-#else
-#define MASTER_VERSION "V3.04a-g"   // 'g' indicates default .tdb is great players database
+#ifdef THC_WINDOWS
+#define MASTER_VERSION "V3.05a-Windows"
 #endif
+#ifdef THC_LINUX
+#define MASTER_VERSION "V3.05a-Linux"
+#endif
+#ifdef THC_MAC
+#define MASTER_VERSION "V3.05a-Mac"
+#endif
+
+// 'g' suffix indicates default .tdb is great players database
+#else
+#ifdef THC_WINDOWS
+#define MASTER_VERSION "V3.05a-g-Windows"
+#endif
+#ifdef THC_LINUX
+#define MASTER_VERSION "V3.05a-g-Linux"
+#endif
+#ifdef THC_MAC
+#define MASTER_VERSION "V3.05a-g-Mac"
+#endif
+#endif
+
 #define DEFAULT_ENGINE "stockfish_8_x32.exe"
 #define DEFAULT_ENGINE_64 "stockfish_8_x64.exe"
 #define DATABASE_VERSION_NUMBER_NORMAL 1
