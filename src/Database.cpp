@@ -66,7 +66,16 @@ static void LoadInBackground( Database *ptr1 )
 
 wxMutex s_mutex_tiny_database;   
 
-#define DATABASE_EXPERIMENTS
+// Some experiments on indexing the database for more speed - eg if searching for a position with a
+//  White Knight on f3, don't bother searching the 10% or so of games where no white knight ever lands
+//  on f3. The experiments are aimed at finding the best 8,16,32 or 64 piece square combos (like white
+//  knight on f3 - likely a good one because many positions will have a white knight on f3, but a useful
+//  proportion of games will never see a white knight there)
+//
+//#define DATABASE_EXPERIMENTS
+#ifndef DURING_DEVELOPMENT
+#undef  DATABASE_EXPERIMENTS	// Never unless during development
+#endif
 #ifdef DATABASE_EXPERIMENTS
 
 // pieces 'B','K','N','P','Q','R','b','k','n','p','q','r'
