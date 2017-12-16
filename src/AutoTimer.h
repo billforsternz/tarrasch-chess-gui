@@ -30,7 +30,7 @@ public:
         // start timer
         QueryPerformanceCounter(&t1);
         #endif
-        #ifdef THC_MAC
+        #ifdef THC_UNIX
         // start timer
         gettimeofday(&t1, NULL);
         #endif
@@ -46,7 +46,7 @@ public:
         // compute the elapsed time in millisec
         elapsed_time = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
         #endif
-        #ifdef THC_MAC
+        #ifdef THC_UNIX
         // stop timer
         gettimeofday(&t2, NULL);
     
@@ -78,7 +78,7 @@ private:
     LARGE_INTEGER frequency;        // ticks per second
     LARGE_INTEGER t1, t2;           // ticks
 #endif
-#ifdef THC_MAC
+#ifdef THC_UNIX
     timeval t1, t2;
 #endif
     const char *desc;

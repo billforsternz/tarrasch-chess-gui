@@ -20,14 +20,14 @@ ClipboardDialog::ClipboardDialog
 {
 }
 
-wxSizer *ClipboardDialog::GdvAddExtraControls()
+wxSizer *ClipboardDialog::GdvAddExtraControls( bool big_display )
 {
-    wxSizer *vsiz_panel_button1_ = PgnDialog::GdvAddExtraControls();
+    wxSizer *vsiz_panel_buttons_ = PgnDialog::GdvAddExtraControls(big_display);
     filter_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX,
                                  wxT("&Clipboard as temporary database"), wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_button1_->Add(filter_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_buttons_->Add(filter_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     filter_ctrl->SetValue( objs.gl->db_clipboard );
-    return vsiz_panel_button1_;
+    return vsiz_panel_buttons_;
 }
 
 void ClipboardDialog::GdvCheckBox( bool checked )

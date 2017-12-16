@@ -7,7 +7,7 @@ obj := $(src:.cpp=.o)
 	$(CXX) -o $@ $^ `wx-config --libs all` -ldl
 
 %.o : %.cpp
-	$(CXX) -c -std=c++11 `wx-config --cxxflags` $< -o $@
+	$(CXX) -c -std=c++11 -g `wx-config --cxxflags` $< -o $@
 
 sqlite3.o:
 	gcc -c sqlite3.c

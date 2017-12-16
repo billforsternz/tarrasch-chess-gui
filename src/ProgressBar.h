@@ -182,6 +182,12 @@ public:
         return false;
     }
 
+    // If after time T1 we have completed proportion P of the task, then how long T do we expect the task to take ?
+    //  T1/T = P
+    //  => T = T1/P
+    //  If p is permill, then p = P*1000
+    //  => T = T1/(p/1000)
+    //  => T = 1000*T1/p, where T1 and T have the same units (milliseconds in this case) 
     double PredictEnd( int permill )
     {
         if( permill == 0 )
@@ -220,6 +226,7 @@ public:
         }
         return abort;
     }
+
     bool Perfraction( int numerator, int denominator, const std::string &s="" )  // return true if abort
     {
         int permill=1000;

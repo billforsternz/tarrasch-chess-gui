@@ -551,10 +551,9 @@ void PatternDialog::ModifyLockdown( int offset )
             case 'p': s = "a black pawn";     break;
         } 
         char buf2[200];
+        buf2[0] = '\0';
         if( count-1 > 0 )
             sprintf( buf2, " (and %d other%s...)", count-1, (count-1)>1?"s":"" );
-        else
-            sprintf( buf2, "" );
         sprintf( buf, "There %s %d locked down square%s\n %c%c must be %s%s", count>1?"are":"is", count, count>1?"s":"", 'a'+file, '1'+rank, s, buf2 );
     }
     offset_persist = offset;

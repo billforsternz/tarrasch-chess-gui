@@ -176,7 +176,7 @@ std::string GamesListCtrl::CalculateMoveTxt( std::string &previous_move, Compact
                     updated_position = cr;
                 }
                 char buf[100];
-                sprintf( buf, "%lu%s", cr.full_move_count, cr.white?".":"..." );
+                sprintf( buf, "%d%s", cr.full_move_count, cr.white?".":"..." );
                 s = std::string(buf) + s;
             }
             if( prev_move )
@@ -232,7 +232,7 @@ wxString GamesListCtrl::OnGetItemText( long item, long column) const
         case 7: txt =   info.r.round.c_str();         break;
         case 8: txt =   info.r.result.c_str();        break;
         case 9: txt =   info.r.eco.c_str();           break;
-        case 10: sprintf( buf,"%d", info.moves.size() );
+        case 10: sprintf( buf,"%lu", info.moves.size() );
                  txt =  buf;                          break;
         case 11:
         {
@@ -587,71 +587,61 @@ void GamesDialog::CreateControls()
     track->focus_offset = 0;
     list_ctrl->track = track;
     mini_board->SetChessPosition( cr );
-
-    hsiz_panel->Add( mini_board, 1, wxALIGN_LEFT|wxTOP|wxRIGHT|wxBOTTOM|wxFIXED_MINSIZE, 5 );
+    wxBoxSizer *mini_board_container = new wxBoxSizer(wxHORIZONTAL);    // Without this,the chess board has a tendency to be
+                                                                        //  sacrificed on smaller displays, on Linux at least
+    mini_board_container->Add( mini_board, 1, wxALIGN_LEFT|wxTOP|wxRIGHT|wxBOTTOM|wxFIXED_MINSIZE, 5 );
+    hsiz_panel->Add(mini_board_container, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxTOP, 0);
 
     wxBoxSizer *button_panel = new wxBoxSizer(wxVERTICAL);
     hsiz_panel->Add(button_panel, 0, wxALIGN_TOP|wxALL, 10);
 
-    int row1, col1, row2, col2;
-    GdvGetButtonGridDimensions( row1, col1, row2, col2 );
-    if( row1>0 && col1>0 )
-        vsiz_panel_button1 = new wxFlexGridSizer(row1,col1,0,0);
-    else
-        vsiz_panel_button1 = NULL;
-    if( vsiz_panel_button1 )
-        button_panel->Add(vsiz_panel_button1, 0, wxALIGN_TOP|wxALL, 0);
-    if( row2>0 && col2>0 )
-        vsiz_panel_buttons = new wxFlexGridSizer(row2,col2,0,0);
-    else
-        vsiz_panel_buttons = NULL;
-    if( vsiz_panel_buttons )
-        button_panel->Add(vsiz_panel_buttons, 0, wxALIGN_TOP|wxALL, 0);
+    vsiz_panel_buttons = new wxFlexGridSizer(8,2,0,0);
+    button_panel->Add(vsiz_panel_buttons, 0, wxALIGN_TOP|wxALL, 0);
 
     // Load / Ok / Game->Board
     ok_button = new wxButton ( this, wxID_OK, wxT("Load Game"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_button1->Add(ok_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_buttons->Add(ok_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     
     // Save all games to a file
     if( id == ID_PGN_DIALOG_FILE )
     {
         wxButton* save_all_to_a_file = new wxButton ( this, wxID_SAVE, wxT("Save"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        vsiz_panel_button1->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
         wxButton* save_as_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save as"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        vsiz_panel_button1->Add(save_as_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(save_as_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
     else if( id == ID_GAMES_DIALOG_DATABASE )
     {
         wxButton* btn5 = new wxButton ( this, ID_BUTTON_5, wxT("Use Game"),
                                        wxDefaultPosition, wxDefaultSize, 0 );
-        vsiz_panel_button1->Add(btn5, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(btn5, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
     else
     {
         wxButton* save_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save all"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        vsiz_panel_button1->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        vsiz_panel_buttons->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
 
     // The Cancel button
     wxButton* cancel = new wxButton ( this, wxID_CANCEL,
         wxT("Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_button1->Add(cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_buttons->Add(cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     // The Help button
     wxButton* help = new wxButton( this, wxID_HELP, wxT("Help"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    vsiz_panel_button1->Add(help, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_buttons->Add(help, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     player_names = new wxStaticText( this, wxID_ANY, "White - Black",
                                     wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL );
     box_sizer->Add(player_names, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxBOTTOM, 10);
     
     // Overridden by specialised classes
-    GdvAddExtraControls();
+    GdvAddExtraControls( big_display );
 
     // Overridden by specialised classes
     GdvEnumerateGames();
@@ -663,8 +653,8 @@ void GamesDialog::CreateControls()
        wxT("&Event"), wxDefaultPosition, wxDefaultSize, 0 );
     site_button->SetValue( !objs.repository->nv.m_event_not_site );
     event_button->SetValue( objs.repository->nv.m_event_not_site );
-    vsiz_panel_button1->Add(site_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    vsiz_panel_button1->Add(event_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_buttons->Add(site_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    vsiz_panel_buttons->Add(event_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
 }
 
@@ -745,6 +735,7 @@ void GamesDialog::Goto( int idx )
             // Move focus to a new location
             dirty = true;
             int old = focus_idx;
+            cprintf( "Goto(%d, of %d)\n", idx, sz-1 );
             list_ctrl->RefreshItem( idx );
             list_ctrl->ReceiveFocus( idx );
             list_ctrl->SetItemState( idx, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED );
@@ -963,9 +954,11 @@ void GamesDialog::GdvButton5()
 {
 }
 
+static bool temp_fixme;
 // Move Stats or Transpositions selected
 void GamesDialog::OnTabSelected( wxBookCtrlEvent& event )
 {
+    temp_fixme = transpo_activated;  // set flag if coming back from transpositions tab
     transpo_activated = (1==event.GetSelection());
     int top = list_ctrl->GetTopItem();
     int count = 1 + list_ctrl->GetCountPerPage();
@@ -980,7 +973,13 @@ void GamesDialog::OnTabSelected( wxBookCtrlEvent& event )
 void GamesDialog::OnNextMove( wxCommandEvent &event )
 {
     int idx = event.GetSelection();
-    GdvNextMove(idx);
+    #ifdef THC_LINUX
+    if( transpo_activated || (idx==0&&temp_fixme) )
+        ;   // filter false event when selecting NextMove tab, Linux only
+    else
+    #endif
+        GdvNextMove(idx);
+    temp_fixme = false;
 }
 
 
@@ -1156,7 +1155,8 @@ void GamesDialog::OnCutOrDelete( bool cut )
             sz-=nbr_cut;
             list_ctrl->SetItemCount(sz);
             Goto( 0<=idx_focus && idx_focus<sz ? idx_focus : sz-1 );
-            list_ctrl->RefreshItems(0,sz-1);
+            if( sz>0 )
+                list_ctrl->RefreshItems(0,sz-1);
 			char buf[80];
 			sprintf(buf,"%d games",sz);
 		    title_ctrl->SetLabel( buf );
@@ -1204,7 +1204,8 @@ void GamesDialog::OnSiteEvent( wxCommandEvent& WXUNUSED(event) )
             field = info.r.site;
         list_ctrl->SetItem( i, 6, field.c_str() );
     }
-    list_ctrl->RefreshItems( top, end-1 );
+    if( end>0 )
+        list_ctrl->RefreshItems( top, end-1 );
     //Goto( 0<=track->focus_idx && track->focus_idx<gds_nbr ? track->focus_idx : 0 );
     list_ctrl->SetFocus();
 }
@@ -1244,7 +1245,8 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
             list_ctrl->SetItemState( insert_idx, 0, wxLIST_STATE_FOCUSED );
             list_ctrl->SetItemState( insert_idx, 0, wxLIST_STATE_SELECTED );
             Goto( insert_idx );
-            list_ctrl->RefreshItems(0,sz-1);
+            if( sz>0 )
+                list_ctrl->RefreshItems(0,sz-1);
 			char buf[80];
 			sprintf(buf,"%d games",sz);
             objs.gl->gd = gd;
@@ -1301,7 +1303,8 @@ void GamesDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
         sz += sz2;
         list_ctrl->SetItemCount(sz);
         Goto(idx_focus);
-        list_ctrl->RefreshItems(0,sz-1);
+        if( sz>0 )
+            list_ctrl->RefreshItems(0,sz-1);
 		char buf[80];
   		sprintf(buf,"%d games",sz);
 		title_ctrl->SetLabel( buf );
@@ -1324,7 +1327,8 @@ void GamesDialog::OnEco( wxCommandEvent& WXUNUSED(event) )
     int sz=gc->gds.size();
     gc->Eco( gc_clipboard );
     Goto(idx_focus);
-    list_ctrl->RefreshItems(0,sz-1);
+    if( sz>0 )
+        list_ctrl->RefreshItems(0,sz-1);
 }
 
 #if 0
@@ -2470,7 +2474,8 @@ void GamesDialog::ColumnSort( int compare_col_, std::vector< smart_ptr<ListableG
         }
         nbr_games_in_list_ctrl = displayed_games.size();
         list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
-        list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
+        if( nbr_games_in_list_ctrl>0 )
+            list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
         int top = list_ctrl->GetTopItem();
         int count = 1 + list_ctrl->GetCountPerPage();
         if( count > nbr_games_in_list_ctrl )

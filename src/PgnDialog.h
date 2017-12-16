@@ -43,8 +43,7 @@ public:
     
     // Overrides
     virtual void GdvEnumerateGames();
-    virtual wxSizer *GdvAddExtraControls();
-    virtual void GdvGetButtonGridDimensions( int &row1, int &col1, int &row2, int &col2 ) { row1=8; col1=2; row2=0; col2=0; }
+    virtual wxSizer *GdvAddExtraControls( bool big_display );
     virtual void GdvReadItem( int item, CompactGame &info );
     virtual void GdvListColClick( int compare_col );
     virtual void GdvHelpClick();

@@ -123,9 +123,9 @@ void ChessBoardBitmap::BmpCopy( wxColour *background, wxBitmap &from, int x1, in
 						b = adjust;
 					}
 				}
-				dst.m_ptr[2] = r;
-				dst.m_ptr[1] = g;
-				dst.m_ptr[0] = b;
+				dst.m_ptr[wxNativePixelFormat::RED] = r;
+				dst.m_ptr[wxNativePixelFormat::GREEN] = g;
+				dst.m_ptr[wxNativePixelFormat::BLUE] = b;
 				// dst.m_ptr = src.m_ptr;
 			}
             src++;
@@ -830,9 +830,9 @@ void ChessBoardBitmap::ChessBoardCreate( int pix, const thc::ChessPosition &cp, 
                         byte r = src.Red();
                         byte g = src.Green();
                         byte b = src.Blue();
-                        dst.m_ptr[2] = r;
-                        dst.m_ptr[1] = g;
-                        dst.m_ptr[0] = b;
+                        dst.m_ptr[wxNativePixelFormat::RED] = r;
+                        dst.m_ptr[wxNativePixelFormat::GREEN] = g;
+                        dst.m_ptr[wxNativePixelFormat::BLUE] = b;
                         src++;
                         dst++;
                     }
@@ -1407,17 +1407,94 @@ void ChessBoardBitmap::SetChessPosition( const thc::ChessPosition &pos, const bo
     wxNativePixelData bmdata(chess_board_bmp);
     wxNativePixelData::Iterator p(bmdata);
     byte *src = buf_board;
-    for( unsigned int row=0; row<height; row++ )
-    {
-        p.MoveTo(bmdata, 0, row );
-        for( unsigned int col=0; col<width; col++ )
-        {
-            p.Red()   = *src++; 
-            p.Green() = *src++; 
-            p.Blue()  = *src++; 
-            p++;
-        }
-    }
+
+	// Some fairly brutal and simple code to generate icon xpm strings for Linux icon in main.cpp
+	//#define GENERATE_ICON_XPM_FILE
+	#ifdef GENERATE_ICON_XPM_FILE
+	static bool once;
+	FILE *f=NULL;
+	if( !once )
+		f = fopen("icon-basis.xpm","wt");
+	unsigned char red[256];
+	unsigned char green[256];
+	unsigned char blue[256];
+	char ch[256];
+	for( int i=0, c=' '; i<sizeof(ch); i++, c++ )
+	{
+		while( c=='"' || c=='\\' || c=='\'' )
+			c++;
+		ch[i] = c;
+	}
+	int nbr_colours=0;
+	std::string xpm;
+	#endif	// #ifdef GENERATE_ICON_XPM_FILE
+
+	for( unsigned int row=0; row<height; row++ )
+	{
+		p.MoveTo(bmdata, 0, row );
+		for( unsigned int col=0; col<width; col++ )
+		{
+			unsigned char r = src[0];
+			unsigned char g = src[1];
+			unsigned char b = src[2];
+			src += 3;
+			p.Red()   = r; 
+			p.Green() = g; 
+			p.Blue()  = b; 
+			p++;
+	#ifndef GENERATE_ICON_XPM_FILE
+		}
+	}
+	#else
+			bool found=false;
+			char c = 0;
+			for( int i=0; !found && i<nbr_colours; i++ )
+			{
+				if( r==red[i] && g==green[i] && b==blue[i] )
+				{
+					c = ch[i];
+					found = true;
+				}
+			}
+			if( !found )
+			{
+				red[nbr_colours]=r;
+				green[nbr_colours]=g;
+				blue[nbr_colours]=b;
+				c = ch[nbr_colours];
+				if( nbr_colours<255 )
+					nbr_colours++;
+			}
+			// y = first 2/8 of board, x = 5/8 of board => gives f8 = Black bishop on dark square and
+			//   f7 = Black pawn on light square
+			if( !once && col>(width*5)/8-10 && col<(width*6)/8+10 && row<(height*2)/8+10 && f )
+				xpm += c;
+		}
+		if( !once && row<(height*2)/8+10 )
+		{
+			xpm += "\"";
+			if( row+1 < (height*2)/8+10 )
+				xpm += ",\n\"";
+			else
+				xpm += "\n";
+		}
+	}
+	if( !once && f)
+	{
+		fputs( "static const char *icon_xpm[] = {\n", f );
+		fputs( "/* columns rows colors chars-per-pixel */\n", f );
+		fprintf( f, "\"%lu %lu %d 1\",\n", width/8+20-1, (height*2)/8+10, nbr_colours );
+		for( int i=0; i<nbr_colours; i++ )
+		{
+			fprintf( f, "\"%c c #%02x%02x%02x\",\n", ch[i], red[i]&0xff, green[i]&0xff, blue[i]&0xff );
+		}
+		fputs( "\"", f );
+		fputs( xpm.c_str(), f );
+		fputs( "};\n", f );
+		fclose(f);
+	}
+	once = true;
+	#endif // #ifdef GENERATE_ICON_XPM_FILE
 
 	// Copy the chess board bitmap into the centre part of the board setup bitmap
 	if( is_board_setup && ok_to_copy_chess_board_to_board_setup )
@@ -1498,7 +1575,8 @@ void ChessBoardBitmap::Get( char src_file, char src_rank, char dst_file, char ds
 void ChessBoardBitmap::Put( char src_file, char src_rank, char dst_file, char dst_rank, bool highlight_f )
 {
 	unsigned int i, j, k;
-	byte *src, *dst, *src_blue;
+	const byte *src;
+	byte *dst, *src_blue;
 	if( !highlight_f )	// optimisation - much simpler
 	{
 		for( i=0; i < height/8; i++ )
