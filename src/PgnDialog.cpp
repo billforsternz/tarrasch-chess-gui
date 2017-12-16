@@ -30,7 +30,7 @@ void PgnDialog::GdvEnumerateGames()
 }
 
 
-wxSizer *PgnDialog::GdvAddExtraControls( bool big_display )
+wxSizer *PgnDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
 {
     if( id == ID_PGN_DIALOG_FILE )
     {

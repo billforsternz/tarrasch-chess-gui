@@ -210,7 +210,7 @@ public:
     // Overrides - Gdv = Games Dialog Override
     virtual void GdvOnActivate();
     virtual void GdvEnumerateGames()    {}
-    virtual wxSizer *GdvAddExtraControls( bool big_display ) { return NULL; }
+    virtual wxSizer *GdvAddExtraControls( bool WXUNUSED(big_display) ) { return NULL; }
     bool dirty;
     virtual bool GdvTestAndClearIsCacheDirty() { bool was=dirty; dirty=false; return was; }
     virtual void GdvReadItem( int item, CompactGame &info ) = 0;

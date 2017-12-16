@@ -1123,8 +1123,9 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     : wxFrame((wxFrame *)NULL, wxID_ANY, title, pos, size ) //, wxDEFAULT_FRAME_STYLE|wxCLIP_CHILDREN|
                                                             //        wxNO_FULL_REPAINT_ON_RESIZE )
 {
-    // Set the frame icon
+#ifdef THC_WINDOWS
     SetIcon(wxICON(bbbbbbbb));      // for explanation of 'bbbbbbbb' see Tarrasch.rc
+#endif
 
     // Timer
     m_timer.SetOwner(this,TIMER_ID);
