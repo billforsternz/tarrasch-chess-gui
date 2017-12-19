@@ -137,8 +137,11 @@ GameDocument * PgnDialog::GetCachedDocument( int idx )
 
 void PgnDialog::GdvReadItem( int item, CompactGame &info )
 {
-    smart_ptr<ListableGame> &mb = gc->gds[item];
-    mb->GetCompactGame( info );
+    if( 0<=item && item<=gc->gds.size() )
+    {
+        smart_ptr<ListableGame> &mb = gc->gds[item];
+        mb->GetCompactGame( info );
+    }
 }
 
 void PgnDialog::GdvHelpClick()

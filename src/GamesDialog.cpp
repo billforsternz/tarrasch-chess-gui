@@ -93,7 +93,8 @@ GamesListCtrl::GamesListCtrl( GamesDialog *parent, wxWindowID id, const wxPoint 
 // Focus changes to new item;
 void GamesListCtrl::ReceiveFocus( int focus_idx )
 {
-    if( focus_idx >= 0 )
+    int nbr_items = GetItemCount();
+    if( 0<=focus_idx && focus_idx<nbr_items )
     {
         track->focus_idx = focus_idx;
         parent->ReadItemWithSingleLineCache( focus_idx, track->info );
@@ -388,11 +389,26 @@ bool GamesDialog::Create( wxWindow* parent,
    wxWindowID id_, const wxString& caption,
    const wxPoint& pos_, const wxSize& size_, long style_ )
 {
-    bool okay=true;
+    wxSize sz = size_;
+    wxPoint pos = pos_;
+    bool restore_pos = false;
+    int disp_width, disp_height;
+    wxDisplaySize(&disp_width, &disp_height);
+    if( objs.repository->nv.m_games_x > 0 && objs.repository->nv.m_games_y > 0 &&
+        objs.repository->nv.m_games_x < (disp_width*9)/10 && objs.repository->nv.m_games_y < (disp_height*9)/10 &&
+        objs.repository->nv.m_games_w > 0 && objs.repository->nv.m_games_h > 0 )
+    {
+        pos.x = objs.repository->nv.m_games_x;
+        pos.y = objs.repository->nv.m_games_y;
+        sz.x  = objs.repository->nv.m_games_w;
+        sz.y  = objs.repository->nv.m_games_h;
+        restore_pos = true;
+    }
 
     // We have to set extra styles before creating the dialog
+    bool okay=true;
     SetExtraStyle( wxWS_EX_BLOCK_EVENTS/*|wxDIALOG_EX_CONTEXTHELP*/ );
-    if( !wxDialog::Create( parent, id_, caption, pos_, size_, style_ ) )
+    if( !wxDialog::Create( parent, id_, caption, pos, sz, style_ ) )
         okay = false;
     else
     {
@@ -409,6 +425,11 @@ bool GamesDialog::Create( wxWindow* parent,
 
         // Centre the dialog on the parent or (if none) screen
         Centre();
+        if( restore_pos)
+        {
+            SetPosition(pos);
+            SetSize(sz);
+        }
     }
     return okay;
 }
@@ -440,8 +461,9 @@ void GamesDialog::CreateControls()
     }
     else
     {
-        nbr_games_in_list_ctrl = objs.db->SetDbPosition( db_req );
-        sprintf(buf,"List of %d matching games from the database",nbr_games_in_list_ctrl);
+        nbr_games_in_list_ctrl = 0;
+        objs.db->SetDbPosition( db_req );
+        //sprintf(buf,"List of %d matching games from the database",nbr_games_in_list_ctrl);
     }
 
     title_ctrl = new wxStaticText( this, wxID_STATIC,
@@ -452,7 +474,7 @@ void GamesDialog::CreateControls()
     box_sizer->Add(5, 5, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
     int disp_width, disp_height;
     wxDisplaySize(&disp_width, &disp_height);
-    wxSize sz;
+    wxSize sz = wxDefaultSize;
     cprintf( "disp_width=%d, disp_height=%d\n", disp_width, disp_height );
     bool big_display=false;
     if( disp_width > 1366 )
@@ -462,9 +484,9 @@ void GamesDialog::CreateControls()
         disp_height = 768;
         big_display = true;
     }
-    sz.x = (disp_width*90)/100;
+    //sz.x = (disp_width*90)/100;
     sz.y = (disp_height*(big_display?36:25))/100;
-    list_ctrl  = new GamesListCtrl( this, ID_PGN_LISTBOX, wxDefaultPosition, sz/*wxDefaultSize*/);
+    list_ctrl  = new GamesListCtrl( this, ID_PGN_LISTBOX, wxDefaultPosition, sz );
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
     if( nbr_games_in_list_ctrl > 0 )
     {
@@ -994,6 +1016,12 @@ bool GamesDialog::ShowModalOk( std::string title )
     Init();
     Create( parent2, id, wxString(title.c_str()), pos, size, style );
     bool ok = (wxID_OK == ShowModal());
+    wxRect rect;
+    rect = this->GetRect();
+    objs.repository->nv.m_games_x = rect.x;
+    objs.repository->nv.m_games_y = rect.y;
+    objs.repository->nv.m_games_w = rect.width;
+    objs.repository->nv.m_games_h = rect.height;
     objs.repository->nv.m_col0  = list_ctrl->GetColumnWidth( 0 );    // "Game #"
     objs.repository->nv.m_col1  = list_ctrl->GetColumnWidth( 1 );    // "White"
     objs.repository->nv.m_col2  = list_ctrl->GetColumnWidth( 2 );    // "Elo W"
