@@ -190,6 +190,10 @@ Repository::Repository( bool use_defaults )
         config->Read("NonVolatileY",                      &nv.m_y );
         config->Read("NonVolatileW",                      &nv.m_w );
         config->Read("NonVolatileH",                      &nv.m_h );
+        config->Read("NonVolatileGamesX",                 &nv.m_games_x );
+        config->Read("NonVolatileGamesY",                 &nv.m_games_y );
+        config->Read("NonVolatileGamesW",                 &nv.m_games_w );
+        config->Read("NonVolatileGamesH",                 &nv.m_games_h );
         config->Read("NonVolatilePanel1",                 &nv.m_panel1 );
         config->Read("NonVolatilePanel2",                 &nv.m_panel2 );
         config->Read("NonVolatilePanel3",                 &nv.m_panel3 );
@@ -295,6 +299,10 @@ Repository::~Repository()
     config->Write("NonVolatileY",                   nv.m_y );
     config->Write("NonVolatileW",                   nv.m_w );
     config->Write("NonVolatileH",                   nv.m_h );
+    config->Write("NonVolatileGamesX",              nv.m_games_x );
+    config->Write("NonVolatileGamesY",              nv.m_games_y );
+    config->Write("NonVolatileGamesW",              nv.m_games_w );
+    config->Write("NonVolatileGamesH",              nv.m_games_h );
     config->Write("NonVolatilePanel1",              nv.m_panel1 );
     config->Write("NonVolatilePanel2",              nv.m_panel2 );
     config->Write("NonVolatilePanel3",              nv.m_panel3 );

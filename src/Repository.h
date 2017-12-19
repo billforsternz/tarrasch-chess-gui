@@ -296,6 +296,10 @@ struct NonVolatile
     int         m_col9;
     int         m_col10;
     int         m_col11;
+    int         m_games_x;
+    int         m_games_y;
+    int         m_games_w;
+    int         m_games_h;
     wxString    m_doc_dir;
     bool        m_event_not_site;
     NonVolatile()
@@ -304,6 +308,10 @@ struct NonVolatile
         m_y = -1;
         m_w = -1;
         m_h = -1;
+        m_games_x = -1;
+        m_games_y = -1;
+        m_games_w = -1;
+        m_games_h = -1;
         m_panel1 = -1;
         m_panel2 = -1;
         m_panel3 = -1;
