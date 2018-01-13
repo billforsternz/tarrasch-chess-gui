@@ -1142,18 +1142,28 @@ static bool predicate_sorts_by_player( const smart_ptr<ListableGame> &e1, const 
 
 void BinDbShowDebugOrder( const std::vector< smart_ptr<ListableGame> > &gms, const char *msg )
 {
-    if( gms.size() < 7 )
+    int sz = gms.size();
+    if( sz < 7 )
 	{
-        cprintf( "%s [too short to show]\n",msg);
+        std::string s;
+        for( int idx=0; idx<sz; idx++ )
+        {
+            char buf[40];
+            sprintf( buf, "%lu", gms[idx]->game_id );
+            s += std::string(buf);
+            if( idx+1 < sz )
+                s +=",";
+        }
+        cprintf( "%s [%s]\n", msg, s.c_str() );
 	}
     else
     {
         uint32_t id0 = gms[0]->game_id;
         uint32_t id1 = gms[1]->game_id;
         uint32_t id2 = gms[2]->game_id;
-        uint32_t id_end2 = gms[gms.size()-3]->game_id;
-        uint32_t id_end1 = gms[gms.size()-2]->game_id;
-        uint32_t id_end0 = gms[gms.size()-1]->game_id;
+        uint32_t id_end2 = gms[sz-3]->game_id;
+        uint32_t id_end1 = gms[sz-2]->game_id;
+        uint32_t id_end0 = gms[sz-1]->game_id;
         cprintf( "%s [%lu,%lu,%lu...%lu,%lu,%lu]\n",msg, id0,id1,id2,id_end2,id_end1,id_end0);
     }
 }
@@ -1226,39 +1236,58 @@ bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, w
         progress_bar.DrawNow();
         ProgressBar *pb = &progress_bar;
         int nbr_games = games.size();
+
+        // State variable - true when traversing duplicates
         bool in_dups=false;
+
+        // State variable - points to first of group of duplicates
         int start=0;
-        for( int i=0; i<nbr_games-1; i++ )
+        for( int i=0; i<nbr_games-1; i++ )    // note we stop at second last element
         {
             if( pb->Perfraction( i,nbr_games) )
                 return false;   // abort
-            bool more = (i+1 < nbr_games-1);
+
+            // Does this element match the next element? (there's always another element because
+            //  remember we stop at second to last element not last element)
             bool next_matches = (0 == strcmp(games[i]->CompressedMoves(),games[i+1]->CompressedMoves()) );
-            bool eval_dups = (in_dups && !more);
-            if( !in_dups )
-            {
-                if( next_matches )
-                {
-                    start = i;
-                    in_dups = true;
-                }
-            }
-            else
+
+            // end will point beyond end of a group of duplicates if we identify such a group this time
+            //  through the loop
+            int end = i;
+
+            // State machine to maintain in_dups and start state variables
+            if( in_dups )
             {
                 if( !next_matches )
                 {
                     in_dups = false;
-                    eval_dups = true;
+                    end = i+1;  // Leaving a group of duplicates, evaluate them
+                }
+            }
+            else
+            {
+                if( next_matches )
+                {
+                    in_dups = true;
+                    start = i;
                 }
             }
 
-            // For subranges with identical moves, mark dups with id = GAME_ID_SENTINEL
-            if( eval_dups )
+            // One special case - a group of duplicates at the end
+            bool last = (i+1 >= nbr_games-1);  // is this the last time thru loop?
+            if( last && in_dups )
+                end = i+2;  // i points at second last element, end should point beyond last element
+
+            // Found a group of (potential) duplicates. So far we only know that the moves are
+            //  identical. We have more work to do to identify the real duplicates. Real duplicates
+            //  are marked with id = GAME_ID_SENTINEL so that they group together when we do a final
+            //  sort by id.
+            if( end > i )
             {
-                int end = i+1;
+
+                // First reorder the group by id
                 std::sort( games.begin()+start, games.begin()+end, predicate_sorts_by_id );
-                static int trigger = 3;
-                if( false ) //end-start > 8 ) //trigger > 0 )
+#if 0
                 {
                     cprintf( "Eval Dups in\n" );
                     for( int idx=start; idx<end; idx++ )
@@ -1267,16 +1296,25 @@ bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, w
                         cprintf( "%d: %s-%s, %s %d ply\n", p->game_id, p->White(), p->Black(), p->Event(), strlen(p->CompressedMoves()) );
                     }
                 }
+#endif
 
+                // For each game in group of duplicates
                 for( int idx=start; idx<end; idx++ )
                 {
                     smart_ptr<ListableGame> p = games[idx];
+
+                    // If the game hasn't already been marked as a dup (note first of the group is never marked as a dup)
                     if( p->game_id != GAME_ID_SENTINEL )
                     {
+
+                        // Sweep through the rest of the group and mark each game in turn a dup if it matches
                         std::vector<std::string> white_tokens;
                         Split(p->White(),white_tokens);
                         std::vector<std::string> black_tokens;
                         Split(p->Black(),black_tokens);
+
+                        // Note that this is a O(2) type algorithm sadly, we loop through a group of games for each
+                        //  game in main loop
                         for( int j=idx+1; j<end; j++ )
                         {
                             smart_ptr<ListableGame> q = games[j];
@@ -1285,10 +1323,8 @@ bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, w
                         }
                     }
                 }
-
-                if( end-start>2 )//&& strlen(games[start]->CompressedMoves()) > 20 )
+#if 0           
                 {
-                    //trigger--;
                     cprintf( "Eval Dups out\n" );
                     for( int idx=start; idx<end; idx++ )
                     {
@@ -1296,6 +1332,7 @@ bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, w
                         cprintf( "%d: %s-%s, %s %d ply\n", p->game_id, p->White(), p->Black(), p->Event(), strlen(p->CompressedMoves()) );
                     }
                 }
+#endif
             }
         }
         BinDbShowDebugOrder( games, "Duplicate Removal - phase 2 after");

@@ -12,6 +12,9 @@
 #include "Appdefs.h"
 #include "EngineDialog.h"
 
+// Workaround for systems that can't cope with 6 parameters
+#define ONLY_4_PARAMETERS
+
 // EngineDialog type definition
 IMPLEMENT_CLASS( EngineDialog, wxDialog )
 
@@ -238,6 +241,7 @@ void EngineDialog::CreateControls()
     box_sizer->Add( custom4_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 0 );
 
     // Text controls for custom parameter 5
+#ifndef ONLY_4_PARAMETERS
     wxTextCtrl *custom5a_ctrl = new wxTextCtrl ( this, ID_CUSTOM5A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
     wxTextCtrl *custom5b_ctrl = new wxTextCtrl ( this, ID_CUSTOM5B, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
 
@@ -262,6 +266,7 @@ void EngineDialog::CreateControls()
     custom6_horiz->Add( custom6a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
     custom6_horiz->Add( custom6b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
     box_sizer->Add( custom6_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 0 );
+#endif
 
     // A dividing line before the OK and Cancel buttons
     wxStaticLine* line = new wxStaticLine ( this, wxID_STATIC,
@@ -318,6 +323,7 @@ void EngineDialog::SetDialogValidators()
         wxTextValidator(wxFILTER_ASCII, &dat.m_custom4a));
     FindWindow(ID_CUSTOM4B)->SetValidator(
         wxTextValidator(wxFILTER_ASCII, &dat.m_custom4b));
+#ifndef ONLY_4_PARAMETERS
     FindWindow(ID_CUSTOM5A)->SetValidator(
         wxTextValidator(wxFILTER_ASCII, &dat.m_custom5a));
     FindWindow(ID_CUSTOM5B)->SetValidator(
@@ -326,6 +332,7 @@ void EngineDialog::SetDialogValidators()
         wxTextValidator(wxFILTER_ASCII, &dat.m_custom6a));
     FindWindow(ID_CUSTOM6B)->SetValidator(
         wxTextValidator(wxFILTER_ASCII, &dat.m_custom6b));
+#endif
 }
 
 // Sets the help text for the dialog controls
@@ -360,19 +367,23 @@ void EngineDialog::SetDialogHelp()
     FindWindow(ID_CUSTOM3A)->SetToolTip(custom_a_help);
     FindWindow(ID_CUSTOM4A)->SetHelpText(custom_a_help);
     FindWindow(ID_CUSTOM4A)->SetToolTip(custom_a_help);
+#ifndef ONLY_4_PARAMETERS
     FindWindow(ID_CUSTOM5A)->SetHelpText(custom_a_help);
     FindWindow(ID_CUSTOM5A)->SetToolTip(custom_a_help);
     FindWindow(ID_CUSTOM6A)->SetHelpText(custom_a_help);
     FindWindow(ID_CUSTOM6A)->SetToolTip(custom_a_help);
+#endif
     wxString custom_b_help = wxT("Optional extra parameter, specify value here");
     FindWindow(ID_CUSTOM3B)->SetHelpText(custom_b_help);
     FindWindow(ID_CUSTOM3B)->SetToolTip(custom_b_help);
     FindWindow(ID_CUSTOM4B)->SetHelpText(custom_b_help);
     FindWindow(ID_CUSTOM4B)->SetToolTip(custom_b_help);
+#ifndef ONLY_4_PARAMETERS
     FindWindow(ID_CUSTOM5B)->SetHelpText(custom_b_help);
     FindWindow(ID_CUSTOM5B)->SetToolTip(custom_b_help);
     FindWindow(ID_CUSTOM6B)->SetHelpText(custom_b_help);
     FindWindow(ID_CUSTOM6B)->SetToolTip(custom_b_help);
+#endif
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_ENGINE_RESET
