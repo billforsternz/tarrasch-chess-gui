@@ -301,8 +301,26 @@ void UciInterface::StartThinking( bool ponder, thc::ChessPosition &pos, const ch
     else
         strcpy( gbl_forsyth, "startpos" );
     gbl_smoves = "";
+    long wtime = wtime_ms;
+    long btime = btime_ms;
+    if( pos_engine_to_move.WhiteToPlay() )
+    {
+        if( wtime > 1000 )
+            wtime -= 900;   // hurry engine along, but don't reduce time to less than 100ms
+        else if( wtime > 100 )
+            wtime = 100;
+    }
+    else
+    {
+        if( btime > 1000 )
+            btime -= 900;
+        else if( btime > 100 )
+            btime = 100;
+    }
+    cprintf( "Condition times to avoid race when engine is almost out of time: wtime=%ld (wtime_ms=%ld), btime=%ld (btime_ms=%ld)\n", 
+            wtime, wtime_ms, btime, btime_ms );
     sprintf( gbl_go, "go%s wtime %ld btime %ld winc %ld binc %ld",
-                         (ponder?" ponder":""), wtime_ms, btime_ms, winc_ms, binc_ms );
+                         (ponder?" ponder":""), wtime, btime, winc_ms, binc_ms );
     bestmove_received = false;
     ponder_received = false;
     gbl_score = 0;
@@ -321,8 +339,26 @@ void UciInterface::StartThinking( bool ponder, thc::ChessPosition &pos, const ch
     else
         strcpy( gbl_forsyth, "startpos" );
     gbl_smoves = smoves;
+    long wtime = wtime_ms;
+    long btime = btime_ms;
+    if( pos_engine_to_move.WhiteToPlay() )
+    {
+        if( wtime > 1000 )
+            wtime -= 900;   // hurry engine along, but don't reduce time to less than 100ms
+        else if( wtime > 100 )
+            wtime = 100;
+    }
+    else
+    {
+        if( btime > 1000 )
+            btime -= 900;
+        else if( btime > 100 )
+            btime = 100;
+    }
+    cprintf( "Condition times to avoid race when engine is almost out of time: wtime=%ld (wtime_ms=%ld), btime=%ld (btime_ms=%ld)\n", 
+            wtime, wtime_ms, btime, btime_ms );
     sprintf( gbl_go, "go%s wtime %ld btime %ld winc %ld binc %ld",
-                         (ponder?" ponder":""), wtime_ms, btime_ms, winc_ms, binc_ms );
+                         (ponder?" ponder":""), wtime, btime, winc_ms, binc_ms );
     bestmove_received = false;
     ponder_received = false;
     send_ponderhit = false;
