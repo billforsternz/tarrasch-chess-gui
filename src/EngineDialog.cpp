@@ -13,7 +13,7 @@
 #include "EngineDialog.h"
 
 // Workaround for systems that can't cope with 6 parameters
-#define ONLY_4_PARAMETERS
+//#define ONLY_4_PARAMETERS
 
 // EngineDialog type definition
 IMPLEMENT_CLASS( EngineDialog, wxDialog )
@@ -108,7 +108,7 @@ void EngineDialog::CreateControls()
         "You can also select parameters to modify engine behaviour. Expert\n"
         "users might enjoy experimenting with the custom parameters."
         , wxDefaultPosition, wxDefaultSize, 0 );
-    box_sizer->Add(descr, 0, wxALIGN_LEFT|wxALL, 5);
+    box_sizer->Add(descr, 0, wxALIGN_LEFT|wxALL, 4);
 
     // Spacer
     // box_sizer->Add(5, 5, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
@@ -116,7 +116,7 @@ void EngineDialog::CreateControls()
     // Label for file
     wxStaticText* file_label = new wxStaticText ( this, wxID_STATIC,
         wxT("UCI Engine executable file:"), wxDefaultPosition, wxDefaultSize, 0 );
-    box_sizer->Add(file_label, 0, wxALIGN_LEFT|wxALL, 5);
+    box_sizer->Add(file_label, 0, wxALIGN_LEFT|wxALL, 1);
 
     // File picker control
     wxString path = dat.m_file;
@@ -127,7 +127,7 @@ void EngineDialog::CreateControls()
         "*", wxDefaultPosition, wxDefaultSize,
 #endif        
         wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST ); //|wxFLP_CHANGE_DIR );    
-    box_sizer->Add(picker, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
+    box_sizer->Add(picker, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 1);
 
     // Ponder enabled
     wxCheckBox* ponder_box = new wxCheckBox( this, ID_PONDER, 
@@ -160,7 +160,7 @@ void EngineDialog::CreateControls()
     hash_horiz->Add( ponder_box, 0, wxALIGN_LEFT|wxGROW|wxALL, 5);
     hash_horiz->Add( hash_label,  0, wxALIGN_LEFT|wxGROW|wxALL, 10);
     hash_horiz->Add( hash_spin,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
-    box_sizer->Add( hash_horiz, 0, wxTOP|wxBOTTOM|wxRIGHT, 5);
+    box_sizer->Add( hash_horiz, 0, wxTOP|wxBOTTOM|wxRIGHT, 1);
 
 /*
     // Label for max cpu cores
@@ -186,7 +186,7 @@ void EngineDialog::CreateControls()
     wxBoxSizer* max_cpu_cores_horiz  = new wxBoxSizer(wxHORIZONTAL);
     max_cpu_cores_horiz->Add( max_cpu_cores_label,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
     max_cpu_cores_horiz->Add( max_cpu_cores_spin,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
-    box_sizer->Add( max_cpu_cores_horiz, 0, wxTOP|wxBOTTOM|wxRIGHT, 5);
+    box_sizer->Add( max_cpu_cores_horiz, 0, wxTOP|wxBOTTOM|wxRIGHT, 1);
 
     // Text controls for custom parameter 1
     wxTextCtrl *custom1a_ctrl = new wxTextCtrl ( this, ID_CUSTOM1A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
@@ -195,7 +195,7 @@ void EngineDialog::CreateControls()
     // Label for custom parameter 1
     wxStaticText* custom1_label = new wxStaticText ( this, wxID_STATIC,
         wxT("Custom parameter 1 (name, value):"), wxDefaultPosition, wxDefaultSize, 0 );
-    box_sizer->Add(custom1_label, 0, wxALIGN_LEFT|wxALL, 5);
+    box_sizer->Add(custom1_label, 0, wxALIGN_LEFT|wxLEFT, 5);
     wxBoxSizer* custom1_horiz  = new wxBoxSizer(wxHORIZONTAL);
     custom1_horiz->Add( custom1a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
     custom1_horiz->Add( custom1b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
@@ -208,7 +208,7 @@ void EngineDialog::CreateControls()
     // Label for custom parameter 2
     wxStaticText* custom2_label = new wxStaticText ( this, wxID_STATIC,
         wxT("Custom parameter 2 (name, value):"), wxDefaultPosition, wxDefaultSize, 0 );
-    box_sizer->Add(custom2_label, 0, wxALIGN_LEFT|wxALL, 5);
+    box_sizer->Add(custom2_label, 0, wxALIGN_LEFT|wxLEFT, 5 );
     wxBoxSizer* custom2_horiz  = new wxBoxSizer(wxHORIZONTAL);
     custom2_horiz->Add( custom2a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
     custom2_horiz->Add( custom2b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
@@ -221,7 +221,7 @@ void EngineDialog::CreateControls()
     // Label for custom parameter 3
     wxStaticText* custom3_label = new wxStaticText ( this, wxID_STATIC,
         wxT("Custom parameter 3 (name, value):"), wxDefaultPosition, wxDefaultSize, 0 );
-    box_sizer->Add(custom3_label, 0, wxALIGN_LEFT|wxALL, 5);
+    box_sizer->Add(custom3_label, 0, wxALIGN_LEFT|wxLEFT, 5);
     wxBoxSizer* custom3_horiz  = new wxBoxSizer(wxHORIZONTAL);
     custom3_horiz->Add( custom3a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
     custom3_horiz->Add( custom3b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
@@ -234,7 +234,7 @@ void EngineDialog::CreateControls()
     // Label for custom parameter 4
     wxStaticText* custom4_label = new wxStaticText ( this, wxID_STATIC,
         wxT("Custom parameter 4 (name, value):"), wxDefaultPosition, wxDefaultSize, 0 );
-    box_sizer->Add(custom4_label, 0, wxALIGN_LEFT|wxALL, 5);
+    box_sizer->Add(custom4_label, 0, wxALIGN_LEFT|wxLEFT, 5);
     wxBoxSizer* custom4_horiz  = new wxBoxSizer(wxHORIZONTAL);
     custom4_horiz->Add( custom4a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
     custom4_horiz->Add( custom4b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
@@ -248,7 +248,7 @@ void EngineDialog::CreateControls()
     // Label for custom parameter 5
     wxStaticText* custom5_label = new wxStaticText ( this, wxID_STATIC,
         wxT("Custom parameter 5 (name, value):"), wxDefaultPosition, wxDefaultSize, 0 );
-    box_sizer->Add(custom5_label, 0, wxALIGN_LEFT|wxALL, 5);
+    box_sizer->Add(custom5_label, 0, wxALIGN_LEFT|wxLEFT, 5);
     wxBoxSizer* custom5_horiz  = new wxBoxSizer(wxHORIZONTAL);
     custom5_horiz->Add( custom5a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
     custom5_horiz->Add( custom5b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
@@ -261,7 +261,7 @@ void EngineDialog::CreateControls()
     // Label for custom parameter 6
     wxStaticText* custom6_label = new wxStaticText ( this, wxID_STATIC,
         wxT("Custom parameter 6 (name, value):"), wxDefaultPosition, wxDefaultSize, 0 );
-    box_sizer->Add(custom6_label, 0, wxALIGN_LEFT|wxALL, 5);
+    box_sizer->Add(custom6_label, 0, wxALIGN_LEFT|wxLEFT, 5);
     wxBoxSizer* custom6_horiz  = new wxBoxSizer(wxHORIZONTAL);
     custom6_horiz->Add( custom6a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
     custom6_horiz->Add( custom6b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
@@ -271,11 +271,11 @@ void EngineDialog::CreateControls()
     // A dividing line before the OK and Cancel buttons
     wxStaticLine* line = new wxStaticLine ( this, wxID_STATIC,
         wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
-    box_sizer->Add(line, 0, wxGROW|wxALL, 5);
+    box_sizer->Add(line, 0, wxGROW|wxALL, 1);
 
     // A horizontal box sizer to contain Reset, OK, Cancel and Help
     wxBoxSizer* okCancelBox = new wxBoxSizer(wxHORIZONTAL);
-    box_sizer->Add(okCancelBox, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
+    box_sizer->Add(okCancelBox, 0, wxALIGN_CENTER_HORIZONTAL|wxLEFT|wxRIGHT, 2);
 /*
     // The Reset button
     wxButton* reset = new wxButton( this, ID_ENGINE_RESET, wxT("&Reset"),
@@ -285,7 +285,7 @@ void EngineDialog::CreateControls()
     // The OK button
     wxButton* ok = new wxButton ( this, wxID_OK, wxT("&OK"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    okCancelBox->Add(ok, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    okCancelBox->Add(ok, 0, wxALIGN_CENTER_VERTICAL|wxLEFT|wxRIGHT, 2);
 
     // The Cancel button
     wxButton* cancel = new wxButton ( this, wxID_CANCEL,
@@ -295,7 +295,7 @@ void EngineDialog::CreateControls()
     // The Help button
     wxButton* help = new wxButton( this, wxID_HELP, wxT("&Help"),
         wxDefaultPosition, wxDefaultSize, 0 );
-    okCancelBox->Add(help, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    okCancelBox->Add(help, 0, wxALIGN_CENTER_VERTICAL|wxLEFT|wxRIGHT, 2);
 }
 
 // Set the validators for the dialog controls
