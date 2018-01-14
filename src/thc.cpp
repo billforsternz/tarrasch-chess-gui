@@ -7464,7 +7464,7 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                         else if( 'a'<=g && g<='h' )
                         {
                             char dst_rank = *natural_in++;
-                            if( '1'<=dst_rank || dst_rank<='8' )
+                            if( '1'<=dst_rank && dst_rank<='8' )
                                 mv.dst = SQ(g,dst_rank);
                             else
                                 err = true;
@@ -7814,7 +7814,7 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                         else if( 'a'<=g && g<='h' )
                         {
                             char dst_rank = *natural_in++;
-                            if( '1'<=dst_rank || dst_rank<='8' )
+                            if( '1'<=dst_rank && dst_rank<='8' )
                                 mv.dst = SQ(g,dst_rank);
                             else
                                 err = true;
