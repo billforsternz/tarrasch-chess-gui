@@ -1740,7 +1740,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                         mqi.squares[dst] = 'p';
                         mqi.squares[src] = EMPTY_CHARACTER;
                         mqi.side_black.pawns[pawn_offset] = dst;
-                        if( 8<=src && src<6 && !BLACK_HOME_ROW_TEST )
+                        if( 8<=src && src<16 && !BLACK_HOME_ROW_TEST )
                             return false;
                         break;
                     }
