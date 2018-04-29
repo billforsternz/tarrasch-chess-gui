@@ -1,3 +1,11 @@
+Annoying engine dialog problem first reported by Laocomo / Larry Oliver on 02 Dec 2016 predated Tarrasch V3.01
+Problem is that wxWidgets sacrifices the engine picker in a bid to get all 6 UCI parameters (number of UCI parameters
+increased to 6 with Tarrasch 3). Larry's screen res wa 1280 x 720
+
+This problem still pops up on V3.03a for some people! including someone with 1280 x 800 (janirv1949@gmail.com)
+
+For V3.05 try squeezing up the custom parameters more.
+
 sudo apt install libwxgtk3.0-dev
 wx-config --version
 > 3.0.2
