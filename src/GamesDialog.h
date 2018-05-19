@@ -161,6 +161,7 @@ public:
 
     // wxEVT_UPDATE_UI event handler for ID_???
     //void On???Update( wxUpdateUIEvent& event );
+    void OnSize(wxSizeEvent& event);
     void OnActivate(wxActivateEvent& event);
     void OnListSelected( wxListEvent &event );
     void OnListFocused( wxListEvent &event );

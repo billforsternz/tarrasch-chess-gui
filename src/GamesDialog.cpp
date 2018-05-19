@@ -40,6 +40,7 @@ IMPLEMENT_CLASS( GamesDialog, wxDialog )
 
 // GamesDialog event table definition
 BEGIN_EVENT_TABLE( GamesDialog, wxDialog )
+    EVT_SIZE( GamesDialog::OnSize )
 //  EVT_CLOSE( GamesDialog::OnClose )
     EVT_ACTIVATE(GamesDialog::OnActivate)
     EVT_BUTTON( wxID_OK,                GamesDialog::OnOkClick )
@@ -83,11 +84,139 @@ END_EVENT_TABLE()
 
 static bool gbl_right_arrow_pressed;
 
+
+class GamesDialogResizer
+{
+    int window_x, window_y, window_w, window_h;
+    int list_x, list_y, list_w, list_h;
+    int line_x, line_y, line_w, line_h;
+    std::vector<wxPoint>    panel_origins;
+    std::vector<wxWindow *> panel_windows;
+    bool first_time;
+
+public:
+    void Init()
+    {
+        panel_windows.clear();
+        panel_origins.clear();
+        first_time = true;
+    }
+
+    void RegisterPanelWindow( wxWindow *window )
+    {
+        panel_windows.push_back(window);
+    }
+
+    void Layout( wxWindow *dialog, wxWindow *list, wxWindow *line )
+    {
+        if( first_time )
+        {
+            first_time = false;
+            dialog->Layout();
+            AnchorOriginalPositions( dialog, list, line );
+        }
+        else
+        {
+            ReLayout( dialog, list, line );
+            Refresh( dialog, list, line );
+        }
+    }
+
+    void AnchorOriginalPositions( wxWindow *dialog, wxWindow *list, wxWindow *line )
+    {
+        dialog->GetPosition( &window_x, &window_y );
+        dialog->GetSize( &window_w, &window_h );
+        list->GetPosition( &list_x, &list_y );
+        list->GetSize( &list_w, &list_h );
+        line->GetPosition( &line_x, &line_y );
+        line->GetSize( &line_w, &line_h );
+        for( int i=0; i<panel_windows.size(); i++ )
+        {
+            wxWindow *window = panel_windows[i];
+            wxPoint pos = window->GetPosition();
+            panel_origins.push_back(pos);
+        }
+    }
+
+    void ReLayout( wxWindow *dialog, wxWindow *list, wxWindow *line )
+    {
+        // Calculate new list height list_h2
+        /*
+            +--------------------------------------------+
+            |               dialog                       |
+            | +----------------------------------------+ |
+            | |                                        | |
+            | |  list                                  | |
+            | |                                        | |
+            | +----------------------------------------+ |
+            |   ============== line ==================   |
+            | +----------------------------------------+ |
+            | |                                        | |
+            | |  panel                                 | |
+            | |                                        | |
+            | +----------------------------------------+ |
+            +--------------------------------------------+
+
+            list_h + panel_h + overhead_h = dialog_h       (original)
+            list_h2 + panel_h + overhead_h = dialog_h2     (after resize)
+            list_h2 = dialog_h2 - (panel_h + overhead_h)   (panel_h and overhead_h are invariant)
+            list_h2 = dialog_h2 - (dialog_h-list_h)
+                    = dialog_h2-dialog_h + list_h
+                    = list_h + stretch_h         (stretch_h = dialog_h2-dialog_h, how much we've stretched the dialog down)
+            
+            
+        */
+        int w2, h2, stretch_h, stretch_w;
+        dialog->GetSize( &w2, &h2 );
+        stretch_h = h2-window_h;
+        h2 = list_h + stretch_h;
+
+        // Width is similar
+        stretch_w = w2-window_w;
+        w2 = list_w + stretch_w;
+        list->SetSize( w2, h2 );
+        wxPoint pos(list_x,list_y);
+        list->SetPosition(pos);
+
+        // Line repositioned and lengthened with similar ideas
+        w2 = line_w + stretch_w;
+        line->SetSize( w2, line_h );
+        int y2 = line_y + stretch_h;
+        w2 = line_w + stretch_w;
+        wxPoint pos2( line_x, y2 );
+        line->SetPosition(pos2);
+
+        // All panel windows moved down by stretch amount
+        for( int i=0; i<panel_windows.size(); i++ )
+        {
+            wxWindow *window = panel_windows[i];
+            wxPoint pos3 = panel_origins[i];
+            pos3.y += stretch_h;
+            window->SetPosition(pos3);
+        }
+    }
+
+    void Refresh( wxWindow *dialog, wxWindow *list, wxWindow *line )
+    {
+        dialog->Refresh();
+/*        list->Refresh();
+        line->Refresh();
+        for( int i=0; i<panel_windows.size(); i++ )
+        {
+            wxWindow *window = panel_windows[i];
+            window->Refresh();
+        }     */
+    }
+};
+
 GamesListCtrl::GamesListCtrl( GamesDialog *parent, wxWindowID id, const wxPoint &pos, const wxSize &size )
     : wxListCtrl( (wxWindow *)parent, id, pos, size, wxLC_REPORT|wxLC_VIRTUAL )
 {
     this->parent = parent;
     mini_board = 0;
+    //long style = GetWindowStyle();
+    //style = style & (~wxHSCROLL);
+    //SetWindowStyle(style);
 }
 
 // Focus changes to new item;
@@ -329,6 +458,9 @@ void GamesListCtrl::OnChar( wxKeyEvent &event )
     }
 }
 
+static GamesDialogResizer gdr;
+static wxStaticLine* line_ctrl;
+
 // GamesDialog constructor
 GamesDialog::GamesDialog
 (
@@ -347,6 +479,7 @@ GamesDialog::GamesDialog
     this->style = style;
     this->gc = gc;
     this->gc_clipboard = gc_clipboard;
+    this->list_ctrl = 0;
     db_search = (cr!=NULL);
     col_last_time = -1;
     col_consecutive = 0;
@@ -413,6 +546,7 @@ bool GamesDialog::Create( wxWindow* parent,
     else
     {
 
+        gdr.Init();
         CreateControls();
         SetDialogHelp();
         SetDialogValidators();
@@ -425,7 +559,7 @@ bool GamesDialog::Create( wxWindow* parent,
 
         // Centre the dialog on the parent or (if none) screen
         Centre();
-        if( restore_pos)
+        if( restore_pos )
         {
             SetPosition(pos);
             SetSize(sz);
@@ -433,7 +567,6 @@ bool GamesDialog::Create( wxWindow* parent,
     }
     return okay;
 }
-
 
 // Control creation for GamesDialog
 void GamesDialog::CreateControls()
@@ -593,9 +726,9 @@ void GamesDialog::CreateControls()
     box_sizer->Add(list_ctrl, 0, wxGROW|wxALL, 5);
 
     // A dividing line before the details
-    wxStaticLine* line = new wxStaticLine ( this, wxID_STATIC,
+    line_ctrl = new wxStaticLine ( this, wxID_STATIC,
         wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
-    box_sizer->Add(line, 0, wxGROW|wxALL, 5);
+    box_sizer->Add(line_ctrl, 0, wxGROW|wxALL, 5);
 
     // Create a panel beneath the list control, containing everything else
     hsiz_panel = new wxBoxSizer(wxHORIZONTAL);
@@ -603,6 +736,7 @@ void GamesDialog::CreateControls()
 	bool interactive = false;
 	bool normal_orientation = objs.canvas->GetNormalOrientation();
     mini_board = new CtrlChessBoard(interactive,normal_orientation,this);	// non interactive CtrlChessBoard
+    gdr.RegisterPanelWindow( mini_board );
     list_ctrl->mini_board = mini_board;
     track = &mini_board_game;
     track->updated_position = cr;
@@ -624,6 +758,7 @@ void GamesDialog::CreateControls()
     // Load / Ok / Game->Board
     ok_button = new wxButton ( this, wxID_OK, wxT("Load Game"),
         wxDefaultPosition, wxDefaultSize, 0 );
+    gdr.RegisterPanelWindow( ok_button );
     vsiz_panel_buttons->Add(ok_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     
     // Save all games to a file
@@ -631,36 +766,43 @@ void GamesDialog::CreateControls()
     {
         wxButton* save_all_to_a_file = new wxButton ( this, wxID_SAVE, wxT("Save"),
             wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( save_all_to_a_file );
         vsiz_panel_buttons->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
         wxButton* save_as_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save as"),
             wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( save_as_all_to_a_file );
         vsiz_panel_buttons->Add(save_as_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
     else if( id == ID_GAMES_DIALOG_DATABASE )
     {
         wxButton* btn5 = new wxButton ( this, ID_BUTTON_5, wxT("Use Game"),
                                        wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( btn5 );
         vsiz_panel_buttons->Add(btn5, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
     else
     {
         wxButton* save_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save all"),
             wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( save_all_to_a_file );
         vsiz_panel_buttons->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
 
     // The Cancel button
     wxButton* cancel = new wxButton ( this, wxID_CANCEL,
         wxT("Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
+    gdr.RegisterPanelWindow( cancel );
     vsiz_panel_buttons->Add(cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     // The Help button
     wxButton* help = new wxButton( this, wxID_HELP, wxT("Help"),
         wxDefaultPosition, wxDefaultSize, 0 );
+    gdr.RegisterPanelWindow( help );
     vsiz_panel_buttons->Add(help, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     player_names = new wxStaticText( this, wxID_ANY, "White - Black",
                                     wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL );
+    gdr.RegisterPanelWindow( player_names );
     box_sizer->Add(player_names, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxBOTTOM, 10);
     
     // Overridden by specialised classes
@@ -672,14 +814,33 @@ void GamesDialog::CreateControls()
     // Select site/or event
     wxRadioButton *site_button = new wxRadioButton( this, ID_SITE_EVENT,
        wxT("&Site"), wxDefaultPosition, wxDefaultSize,  wxRB_GROUP );
+    gdr.RegisterPanelWindow( site_button );
     wxRadioButton *event_button = new wxRadioButton( this, ID_SITE_EVENT,
        wxT("&Event"), wxDefaultPosition, wxDefaultSize, 0 );
+    gdr.RegisterPanelWindow( event_button );
     site_button->SetValue( !objs.repository->nv.m_event_not_site );
     event_button->SetValue( objs.repository->nv.m_event_not_site );
     vsiz_panel_buttons->Add(site_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     vsiz_panel_buttons->Add(event_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
 }
+
+
+void GamesDialog::OnSize( wxSizeEvent &evt )
+{
+    wxSize siz = evt.GetSize();
+    wxSize sz1;
+    sz1.x = siz.x;
+    sz1.y = siz.y;
+    cprintf( "GamesDialog::OnSize(%d,%d)\n", siz.x, siz.y );
+    //Layout();
+    if(list_ctrl)
+    {
+        gdr.Layout( this, list_ctrl, line_ctrl );
+    }
+}
+
+
 
 
 // Set the validators for the dialog controls
