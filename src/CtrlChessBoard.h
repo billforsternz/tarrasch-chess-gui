@@ -58,6 +58,8 @@ public:
     void OnMouseMove (wxMouseEvent & event);
 	void OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(event) );
 
+    static unsigned int GetDefaultSquareSize() { return 38; }
+
 private:
     DECLARE_EVENT_TABLE()
 	ChessBoardBitmap cbb;

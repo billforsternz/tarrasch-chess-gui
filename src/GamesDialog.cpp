@@ -522,31 +522,58 @@ bool GamesDialog::Create( wxWindow* parent,
    wxWindowID id_, const wxString& caption,
    const wxPoint& pos_, const wxSize& size_, long style_ )
 {
-    wxSize sz = size_;
-    wxPoint pos = pos_;
-    bool restore_pos = false;
+    // Fallback (size,position) is what was requested, they should be reasonable/default/fallback values
+    // Minimum (size,position) is a very small minimum size. To get that effect we set this size initially
+    //  then we change to Actual values
+    // Actual (size,position) is what was are going to finally set - either restored non-volatile values or
+    //  the fallack values
+    wxSize  sz_fallback = size_;
+    wxPoint pos_fallback = pos_;
+    wxSize  sz_minimum = size_;
+    wxPoint pos_minimum(0,0);
     int disp_width, disp_height;
     wxDisplaySize(&disp_width, &disp_height);
+
+    // Adjust fallback position to be centred on the parent or (if none) screen
+    wxSize sz_for_centre(disp_width,disp_height);
+    if( parent )
+        sz_for_centre =parent->GetSize();
+    if( sz_fallback.x <= sz_for_centre.x )
+        pos_fallback.x = (sz_for_centre.x-sz_fallback.x)/2;
+    if( sz_fallback.y <= sz_for_centre.y )
+        pos_fallback.y = (sz_for_centre.y-sz_fallback.y)/2;
+
+    // Calculate Minimum()
+    sz_minimum.x = disp_width/10 < sz_fallback.x ? disp_width/10 : sz_fallback.x;
+    sz_minimum.y = disp_height/10 < sz_fallback.y ? disp_height/10 : sz_fallback.y;
+
+    // Retrieve Actual() if available
+    wxSize  sz_actual = sz_fallback;
+    wxPoint pos_actual = pos_fallback;
     if( objs.repository->nv.m_games_x > 0 && objs.repository->nv.m_games_y > 0 &&
         objs.repository->nv.m_games_x < (disp_width*9)/10 && objs.repository->nv.m_games_y < (disp_height*9)/10 &&
         objs.repository->nv.m_games_w > 0 && objs.repository->nv.m_games_h > 0 )
     {
-        pos.x = objs.repository->nv.m_games_x;
-        pos.y = objs.repository->nv.m_games_y;
-        sz.x  = objs.repository->nv.m_games_w;
-        sz.y  = objs.repository->nv.m_games_h;
-        restore_pos = true;
+        pos_actual.x = objs.repository->nv.m_games_x;
+        pos_actual.y = objs.repository->nv.m_games_y;
+        sz_actual.x  = objs.repository->nv.m_games_w;
+        sz_actual.y  = objs.repository->nv.m_games_h;
     }
+
+    // Start with minimum 
+    gdr.Init();
+    size  = sz_minimum;
+    pos = pos_minimum;
+
 
     // We have to set extra styles before creating the dialog
     bool okay=true;
     SetExtraStyle( wxWS_EX_BLOCK_EVENTS/*|wxDIALOG_EX_CONTEXTHELP*/ );
-    if( !wxDialog::Create( parent, id_, caption, pos, sz, style_ ) )
+    if( !wxDialog::Create( parent, id_, caption, pos, size, style_ ) )
         okay = false;
     else
     {
 
-        gdr.Init();
         CreateControls();
         SetDialogHelp();
         SetDialogValidators();
@@ -557,13 +584,95 @@ bool GamesDialog::Create( wxWindow* parent,
         // This ensures that the dialog cannot be sized smaller than the minimum size
         GetSizer()->SetSizeHints(this);
 
-        // Centre the dialog on the parent or (if none) screen
-        Centre();
-        if( restore_pos )
+        // If we insert these columns in CreateControls() we end up not being able
+        //  to make the list control very small
+        list_ctrl->InsertColumn( 0, "#"  ); // id==ID_PGN_DIALOG_FILE?"#":" "  );
+        list_ctrl->InsertColumn( 1, "White"    );
+        list_ctrl->InsertColumn( 2, "Elo"      );
+        list_ctrl->InsertColumn( 3, "Black"    );
+        list_ctrl->InsertColumn( 4, "Elo"      );
+        list_ctrl->InsertColumn( 5, "Date"     );
+        list_ctrl->InsertColumn( 6, "Site/Event"     );
+        list_ctrl->InsertColumn( 7, "Round"    );
+        list_ctrl->InsertColumn( 8, "Result"   );
+        list_ctrl->InsertColumn( 9, "ECO"      );
+        list_ctrl->InsertColumn(10, "Ply"      );
+        list_ctrl->InsertColumn(11, "Moves"    );
+        int col_flag=0;
+        int cols[20];
+
+        // Only use the non volatile column widths if they validate okay (factory
+        //  default is -1 (for all columns), which forces a recalc)
+        if( false /*  objs.repository->nv.m_col0 > 0 &&
+            objs.repository->nv.m_col1 > 0 &&
+            objs.repository->nv.m_col2 > 0 &&
+            objs.repository->nv.m_col3 > 0 &&
+            objs.repository->nv.m_col4 > 0 &&
+            objs.repository->nv.m_col5 > 0 &&
+            objs.repository->nv.m_col6 > 0 &&
+            objs.repository->nv.m_col7 > 0 &&
+            objs.repository->nv.m_col8 > 0 &&
+            objs.repository->nv.m_col9 > 0 &&
+            objs.repository->nv.m_col10 > 0 &&
+            objs.repository->nv.m_col11 > 0 */
+          )
         {
-            SetPosition(pos);
-            SetSize(sz);
+            cols[0] = objs.repository->nv.m_col0;
+            cols[1] = objs.repository->nv.m_col1;
+            cols[2] = objs.repository->nv.m_col2;
+            cols[3] = objs.repository->nv.m_col3;
+            cols[4] = objs.repository->nv.m_col4;
+            cols[5] = objs.repository->nv.m_col5;
+            cols[6] = objs.repository->nv.m_col6;
+            cols[7] = objs.repository->nv.m_col7;
+            cols[8] = objs.repository->nv.m_col8;
+            cols[9] = objs.repository->nv.m_col9;
+            cols[10]= objs.repository->nv.m_col10;
+            cols[11]= objs.repository->nv.m_col11;
         }
+        else // else set some sensible defaults
+        {
+            unsigned int x = CtrlChessBoard::GetDefaultSquareSize();
+            objs.repository->nv.m_col0 = cols[0] =  x*9/16;     // "#"
+            objs.repository->nv.m_col1 = cols[1] =  x*3/1;      // "White" 
+            objs.repository->nv.m_col2 = cols[2] =  x*13/16;    // "Elo W"
+            objs.repository->nv.m_col3 = cols[3] =  x*3/1;      // "Black" 
+            objs.repository->nv.m_col4 = cols[4] =  x*13/16;    // "Elo B" 
+            objs.repository->nv.m_col5 = cols[5] =  x*7/5;      // "Date"  
+            objs.repository->nv.m_col6 = cols[6] =  x*3/1;      // "Site/Event"  
+            objs.repository->nv.m_col7 = cols[7] =  x*5/4;      // "Round" 
+            objs.repository->nv.m_col8 = cols[8] =  x*11/8;      // "Result"
+            objs.repository->nv.m_col9 = cols[9] =  x*15/16;    // "ECO"   
+            objs.repository->nv.m_col10= cols[10]=  x*8/1;      // "Moves"
+            objs.repository->nv.m_col11 = cols[11]= x*7/8;      // "Ply"   
+        }
+        cprintf( "cols[0] = %d\n", cols[0] );
+        cprintf( "cols[1] = %d\n", cols[1] );
+        cprintf( "cols[2] = %d\n", cols[2] );
+        cprintf( "cols[3] = %d\n", cols[3] );
+        cprintf( "cols[4] = %d\n", cols[4] );
+        cprintf( "cols[5] = %d\n", cols[5] );
+        cprintf( "cols[6] = %d\n", cols[6] );
+        cprintf( "cols[7] = %d\n", cols[7] );
+        cprintf( "cols[8] = %d\n", cols[8] );
+        cprintf( "cols[9] = %d\n", cols[9] );
+        cprintf( "cols[10] = %d\n", cols[10] );
+        cprintf( "cols[11] = %d\n", cols[11] );
+        list_ctrl->SetColumnWidth( 0, cols[0] );    // "Game #"
+        list_ctrl->SetColumnWidth( 1, cols[1] );    // "White" 
+        list_ctrl->SetColumnWidth( 2, cols[2] );    // "Elo W" 
+        list_ctrl->SetColumnWidth( 3, cols[3] );    // "Black" 
+        list_ctrl->SetColumnWidth( 4, cols[4] );    // "Elo B" 
+        list_ctrl->SetColumnWidth( 5, cols[5] );    // "Date"  
+        list_ctrl->SetColumnWidth( 6, cols[6] );    // "Site/Event"  
+        list_ctrl->SetColumnWidth( 7, cols[7] );    // "Round"
+        list_ctrl->SetColumnWidth( 8, cols[8] );    // "Result"
+        list_ctrl->SetColumnWidth( 9, cols[9] );    // "ECO"   
+        list_ctrl->SetColumnWidth(10, cols[11] );   // "Ply"
+        list_ctrl->SetColumnWidth(11, cols[10] );   // "Moves"
+
+        SetPosition(pos=pos_actual);
+        SetSize(size=sz_actual);
     }
     return okay;
 }
@@ -619,110 +728,15 @@ void GamesDialog::CreateControls()
         big_display = true;
     }
     //sz.x = (disp_width*90)/100;
-    sz.y = (disp_height*(big_display?36:25))/100;
-    list_ctrl  = new GamesListCtrl( this, ID_PGN_LISTBOX, wxDefaultPosition, sz );
+    //Saturday sz.y = (disp_height*(big_display?36:25))/100;
+    wxSize sz_tiny( 10,10);
+    list_ctrl  = new GamesListCtrl( this, ID_PGN_LISTBOX, wxDefaultPosition, sz_tiny );
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
     if( nbr_games_in_list_ctrl > 0 )
     {
         list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
     }
 
-    list_ctrl->InsertColumn( 0, "#"  ); // id==ID_PGN_DIALOG_FILE?"#":" "  );
-    list_ctrl->InsertColumn( 1, "White"    );
-    list_ctrl->InsertColumn( 2, "Elo"      );
-    list_ctrl->InsertColumn( 3, "Black"    );
-    list_ctrl->InsertColumn( 4, "Elo"      );
-    list_ctrl->InsertColumn( 5, "Date"     );
-    list_ctrl->InsertColumn( 6, "Site/Event"     );
-    list_ctrl->InsertColumn( 7, "Round"    );
-    list_ctrl->InsertColumn( 8, "Result"   );
-    list_ctrl->InsertColumn( 9, "ECO"      );
-    list_ctrl->InsertColumn(10, "Ply"      );
-    list_ctrl->InsertColumn(11, "Moves"    );
-    int col_flag=0;
-    int cols[20];
-
-    // Only use the non volatile column widths if they validate okay (factory
-    //  default is -1 (for all columns), which forces a recalc)
-    if( objs.repository->nv.m_col0 > 0 &&
-        objs.repository->nv.m_col1 > 0 &&
-        objs.repository->nv.m_col2 > 0 &&
-        objs.repository->nv.m_col3 > 0 &&
-        objs.repository->nv.m_col4 > 0 &&
-        objs.repository->nv.m_col5 > 0 &&
-        objs.repository->nv.m_col6 > 0 &&
-        objs.repository->nv.m_col7 > 0 &&
-        objs.repository->nv.m_col8 > 0 &&
-        objs.repository->nv.m_col9 > 0 &&
-        objs.repository->nv.m_col10 > 0 &&
-        objs.repository->nv.m_col11 > 0
-      )
-    {
-        cols[0] = objs.repository->nv.m_col0;
-        cols[1] = objs.repository->nv.m_col1;
-        cols[2] = objs.repository->nv.m_col2;
-        cols[3] = objs.repository->nv.m_col3;
-        cols[4] = objs.repository->nv.m_col4;
-        cols[5] = objs.repository->nv.m_col5;
-        cols[6] = objs.repository->nv.m_col6;
-        cols[7] = objs.repository->nv.m_col7;
-        cols[8] = objs.repository->nv.m_col8;
-        cols[9] = objs.repository->nv.m_col9;
-        cols[10]= objs.repository->nv.m_col10;
-        cols[11]= objs.repository->nv.m_col11;
-    }
-    else // else set some sensible defaults
-    {
-        int x   = (sz.x*98)/100;
-        objs.repository->nv.m_col0 = cols[0] =  3*x/190;     // "#"
-        objs.repository->nv.m_col1 = cols[1] =  16*x/142;    // "White" 
-        objs.repository->nv.m_col2 = cols[2] =   5*x/142;    // "Elo W"
-        objs.repository->nv.m_col3 = cols[3] =  16*x/142;    // "Black" 
-        objs.repository->nv.m_col4 = cols[4] =   5*x/142;    // "Elo B" 
-        objs.repository->nv.m_col5 = cols[5] =   9*x/142;    // "Date"  
-        objs.repository->nv.m_col6 = cols[6] =  13*x/142;    // "Site/Event"  
-        objs.repository->nv.m_col7 = cols[7] =   6*x/142;    // "Round" 
-        objs.repository->nv.m_col8 = cols[8] =   7*x/142;    // "Result"
-        objs.repository->nv.m_col9 = cols[9] =   5*x/142;    // "ECO"   
-        objs.repository->nv.m_col10= cols[10]=  54*x/142;  // "Moves"
-        objs.repository->nv.m_col11 = cols[11] = 5*x/142;    // "Ply"   
-    }
-    cprintf( "cols[0] = %d\n", cols[0] );
-    cprintf( "cols[1] = %d\n", cols[1] );
-    cprintf( "cols[2] = %d\n", cols[2] );
-    cprintf( "cols[3] = %d\n", cols[3] );
-    cprintf( "cols[4] = %d\n", cols[4] );
-    cprintf( "cols[5] = %d\n", cols[5] );
-    cprintf( "cols[6] = %d\n", cols[6] );
-    cprintf( "cols[7] = %d\n", cols[7] );
-    cprintf( "cols[8] = %d\n", cols[8] );
-    cprintf( "cols[9] = %d\n", cols[9] );
-    cprintf( "cols[10] = %d\n", cols[10] );
-    cprintf( "cols[11] = %d\n", cols[11] );
-    list_ctrl->SetColumnWidth( 0, cols[0] );    // "Game #"
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth( 1, cols[1] );    // "White" 
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth( 2, cols[2] );    // "Elo W" 
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth( 3, cols[3] );    // "Black" 
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth( 4, cols[4] );    // "Elo B" 
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth( 5, cols[5] );    // "Date"  
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth( 6, cols[6] );    // "Site/Event"  
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth( 7, cols[7] );    // "Round"
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth( 8, cols[8] );    // "Result"
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth( 9, cols[9] );    // "ECO"   
-    gc->col_flags.push_back(col_flag);
-    list_ctrl->SetColumnWidth(10, cols[11] );   // "Ply"
-    gc->col_flags.push_back(col_flag);                       // Note that Ply and Moves are inverted here for compatibility with T2 (on T2 there is no Ply so nv.m_col10 is Moves)
-    list_ctrl->SetColumnWidth(11, cols[10] );   // "Moves"
-    gc->col_flags.push_back(col_flag);
     box_sizer->Add(list_ctrl, 0, wxGROW|wxALL, 5);
 
     // A dividing line before the details

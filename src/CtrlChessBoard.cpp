@@ -33,7 +33,8 @@ CtrlChessBoard::CtrlChessBoard
 	interactive = interactive_;
 	if( sz.x<=0 || sz.y<=0 )
 	{
-		sz = wxSize(38*8,38*8);
+        unsigned int square_size = GetDefaultSquareSize();
+		sz = wxSize(square_size*8,square_size*8);
 		SetSize(sz);
 	}
     int min = sz.x<sz.y ? sz.x : sz.y;
