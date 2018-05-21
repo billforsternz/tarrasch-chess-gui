@@ -25,6 +25,7 @@ wxSizer *ClipboardDialog::GdvAddExtraControls( bool big_display )
     wxSizer *vsiz_panel_buttons_ = PgnDialog::GdvAddExtraControls(big_display);
     filter_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX,
                                  wxT("&Clipboard as temporary database"), wxDefaultPosition, wxDefaultSize, 0 );
+    gdr.RegisterPanelWindow( filter_ctrl );
     vsiz_panel_buttons_->Add(filter_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     filter_ctrl->SetValue( objs.gl->db_clipboard );
     return vsiz_panel_buttons_;

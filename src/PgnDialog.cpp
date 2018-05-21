@@ -37,6 +37,7 @@ wxSizer *PgnDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
         // Edit game details
         wxButton* edit_game_details = new wxButton ( this, ID_PGN_DIALOG_GAME_DETAILS, wxT("Edit Game Details"),
             wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( edit_game_details );
         vsiz_panel_buttons->Add(edit_game_details, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
         // Edit game prefix
@@ -47,41 +48,49 @@ wxSizer *PgnDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
         // Paste game / Board->Game
         wxButton* board2game = new wxButton ( this, ID_BOARD2GAME, wxT("Paste current game"),
             wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( board2game );
         vsiz_panel_buttons->Add(board2game, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
         // Delete
         wxButton* delete_ = new wxButton ( this, wxID_DELETE, wxT("Delete"),
             wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( delete_ );
         vsiz_panel_buttons->Add(delete_, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
         // Cut
         wxButton* cut = new wxButton ( this, wxID_CUT, wxT("Cut"),
             wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( cut );
         vsiz_panel_buttons->Add(cut, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
         // Add to clipboard
         wxButton* add = new wxButton ( this, ID_ADD_TO_CLIPBOARD, wxT("Add to clipboard"),
             wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( add );
         vsiz_panel_buttons->Add(add, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
         // Copy
         wxButton* copy = new wxButton ( this, wxID_COPY, wxT("Copy"),
             wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( copy );
         vsiz_panel_buttons->Add(copy, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
         // Paste
         wxButton* paste = new wxButton ( this, wxID_PASTE, wxT("Paste"),
             wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( paste );
         vsiz_panel_buttons->Add(paste, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
         // Publish
         wxButton* publish = new wxButton ( this, ID_PGN_DIALOG_PUBLISH, wxT("Publish"),
             wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( publish );
         vsiz_panel_buttons->Add(publish, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
         // ECO codes
         wxButton* eco_codes = new wxButton ( this, ID_DIALOG_ECO, wxT("ECO codes"),
             wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( eco_codes );
         vsiz_panel_buttons->Add(eco_codes, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     }
     else if( id == ID_PGN_DIALOG_CLIPBOARD )
@@ -89,16 +98,19 @@ wxSizer *PgnDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
         // Edit game details
         wxButton* edit_game_details = new wxButton ( this, ID_PGN_DIALOG_GAME_DETAILS, wxT("Edit Game Details"),
                                                     wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( edit_game_details );
         vsiz_panel_buttons->Add(edit_game_details, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
         
         // Paste game / Board->Game
         wxButton* board2game = new wxButton ( this, ID_BOARD2GAME, wxT("Paste current game"),
                                              wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( board2game );
         vsiz_panel_buttons->Add(board2game, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
         
         // Delete
         wxButton* delete_ = new wxButton ( this, wxID_DELETE, wxT("Delete"),
                                           wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( delete_ );
         vsiz_panel_buttons->Add(delete_, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
         
     }
@@ -107,11 +119,13 @@ wxSizer *PgnDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
         // Add to clipboard
         wxButton* add = new wxButton ( this, ID_ADD_TO_CLIPBOARD, wxT("Add to clipboard"),
                                       wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( add );
         vsiz_panel_buttons->Add(add, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
         
         // Copy
         wxButton* copy = new wxButton ( this, wxID_COPY, wxT("Copy"),
                                        wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( copy );
         vsiz_panel_buttons->Add(copy, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
         
     }

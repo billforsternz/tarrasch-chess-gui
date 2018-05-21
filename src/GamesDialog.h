@@ -103,6 +103,24 @@ private:
     std::map< uint32_t, int > browse_map;   // lookup offset into all games browsed in current session, by uint32_t game_id
 };
 
+// A helper, implements custom, non-volatile resizing of games dialogs
+class GamesDialogResizer
+{
+    int window_x, window_y, window_w, window_h;
+    int list_x, list_y, list_w, list_h;
+    int line_x, line_y, line_w, line_h;
+    std::vector<wxPoint>    panel_origins;
+    std::vector<wxWindow *> panel_windows;
+    bool first_time=true;   //C++11 allows this construct which I didn't know about until recently
+                            // no need for a constructor if you only need to do things like this
+public:
+    void RegisterPanelWindow( wxWindow *window );
+    void Layout( wxWindow *dialog, wxWindow *list, wxWindow *line );
+    void AnchorOriginalPositions( wxWindow *dialog, wxWindow *list, wxWindow *line );
+    void ReLayout( wxWindow *dialog, wxWindow *list, wxWindow *line );
+    void Refresh( wxWindow *dialog, wxWindow *list, wxWindow *line );
+};
+
 
 // GamesDialog class declaration
 class GamesDialog: public wxDialog
@@ -114,6 +132,7 @@ protected:
     thc::ChessRules cr;
     thc::ChessRules cr_base;
     wxStaticText *title_ctrl;
+    GamesDialogResizer gdr;
  
 public:
 
@@ -281,6 +300,7 @@ protected:
     bool activated_at_least_once;
 
 private:    //TODO - move more vars to private
+    wxStaticLine* line_ctrl;
     bool db_search;
     int col_last_time;
     int col_consecutive;

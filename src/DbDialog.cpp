@@ -72,6 +72,8 @@ wxSizer *DbDialog::GdvAddExtraControls( bool big_display )
     sz5.x = (sz4.x*185)/100;
     sz5.y = (sz4.y*10)/10;
     notebook = new wxNotebook(this, wxID_ANY, wxDefaultPosition, /*wxDefaultSize*/ sz5 );
+    gdr.RegisterPanelWindow( notebook );
+
     //wxPanel *notebook_page1 = new wxPanel(notebook, wxID_ANY );
     hsiz_panel /*vsiz_panel_stats*/->Add( notebook, 0, wxALIGN_TOP|/*wxGROW|*/wxALL, 0 );
 
@@ -85,6 +87,7 @@ wxSizer *DbDialog::GdvAddExtraControls( bool big_display )
     {
         //text_ctrl->SetSize( sz3.x*2, sz3.y );      // temp temp
         text_ctrl = new wxTextCtrl ( this, ID_DB_TEXT, wxT(""), wxDefaultPosition, sz5, 0 );
+        gdr.RegisterPanelWindow( text_ctrl );
         vsiz_panel_buttons->Add(text_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
         wxSize sz2=text_ctrl->GetSize();
         //text_ctrl->SetSize((sz2.x*10)/32,sz2.y);      // temp temp
@@ -93,6 +96,7 @@ wxSizer *DbDialog::GdvAddExtraControls( bool big_display )
 
         wxButton* search = new wxButton ( this, ID_DB_SEARCH, wxT("Search"),
                                          wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( search );
         vsiz_panel_buttons->Add(search, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
         //wxSize sz3=reload->GetSize();
         //text_ctrl->SetSize( sz3.x*2, sz3.y );      // temp temp
@@ -110,43 +114,52 @@ wxSizer *DbDialog::GdvAddExtraControls( bool big_display )
 
     wxButton* btn1 = new wxButton ( this, ID_BUTTON_1, wxT("Clear Clipboard"),
                                      wxDefaultPosition, wxDefaultSize, 0 );
+    gdr.RegisterPanelWindow( btn1 );
     vsiz_panel_buttons->Add(btn1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     wxButton* btn2 = new wxButton ( this, ID_BUTTON_2, wxT("Add to Clipboard"),
                                    wxDefaultPosition, wxDefaultSize, 0 );
+    gdr.RegisterPanelWindow( btn2 );
     vsiz_panel_buttons->Add(btn2, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     
     wxButton* btn3 = new wxButton ( this, ID_BUTTON_3, wxT("Add All Player's White Games"),
                                      wxDefaultPosition, wxDefaultSize, 0 );
+    gdr.RegisterPanelWindow( btn3 );
     vsiz_panel_buttons->Add(btn3, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     white_player_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX2,
                                    wxT("&White player"), wxDefaultPosition, wxDefaultSize, 0 );
+    gdr.RegisterPanelWindow( white_player_ctrl );
     vsiz_panel_buttons->Add(white_player_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     white_player_ctrl->SetValue( true );
 
     wxButton* btn4 = new wxButton ( this, ID_BUTTON_4, wxT("Add All Player's Black Games"),
                                    wxDefaultPosition, wxDefaultSize, 0 );
+    gdr.RegisterPanelWindow( btn4 );
     vsiz_panel_buttons->Add(btn4, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
     if( db_req == REQ_PLAYERS )	// Save all button assumes games are in the gc_db_displayed_games cache. Not true if REQ_PLAYERS
 	{
 		wxStaticText* spacer1 = new wxStaticText( this, wxID_ANY, wxT(""),
 										 wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( spacer1 );
 		vsiz_panel_buttons->Add(spacer1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 	}
 	else
 	{
 		wxButton* save_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save all"),
 			wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( save_all_to_a_file );
 		vsiz_panel_buttons->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 	}
     
     filter_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX,
                                     big_display?"&Clipboard as temporary database":"&Clipboard as temp database", wxDefaultPosition, wxDefaultSize, 0 );
+    gdr.RegisterPanelWindow( filter_ctrl );
     vsiz_panel_buttons->Add(filter_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     filter_ctrl->SetValue( objs.gl->db_clipboard );
     wxStaticText* spacer1 = new wxStaticText( this, wxID_ANY, wxT(""),
                                         wxDefaultPosition, wxDefaultSize, 0 );
+    gdr.RegisterPanelWindow( spacer1 );
     vsiz_panel_buttons->Add(spacer1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     return vsiz_panel_buttons;   
 }

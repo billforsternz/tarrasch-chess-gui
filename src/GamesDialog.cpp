@@ -84,130 +84,112 @@ END_EVENT_TABLE()
 
 static bool gbl_right_arrow_pressed;
 
-
-class GamesDialogResizer
+void GamesDialogResizer::RegisterPanelWindow( wxWindow *window )
 {
-    int window_x, window_y, window_w, window_h;
-    int list_x, list_y, list_w, list_h;
-    int line_x, line_y, line_w, line_h;
-    std::vector<wxPoint>    panel_origins;
-    std::vector<wxWindow *> panel_windows;
-    bool first_time;
+    panel_windows.push_back(window);
+}
 
-public:
-    void Init()
+void GamesDialogResizer::Layout( wxWindow *dialog, wxWindow *list, wxWindow *line )
+{
+    if( first_time )
     {
-        panel_windows.clear();
-        panel_origins.clear();
-        first_time = true;
+        first_time = false;
+        dialog->Layout();
+        AnchorOriginalPositions( dialog, list, line );
     }
-
-    void RegisterPanelWindow( wxWindow *window )
+    else
     {
-        panel_windows.push_back(window);
+        ReLayout( dialog, list, line );
+        Refresh( dialog, list, line );
     }
+}
 
-    void Layout( wxWindow *dialog, wxWindow *list, wxWindow *line )
+void GamesDialogResizer::AnchorOriginalPositions( wxWindow *dialog, wxWindow *list, wxWindow *line )
+{
+    dialog->GetPosition( &window_x, &window_y );
+    dialog->GetSize( &window_w, &window_h );
+    list->GetPosition( &list_x, &list_y );
+    list->GetSize( &list_w, &list_h );
+    line->GetPosition( &line_x, &line_y );
+    line->GetSize( &line_w, &line_h );
+    for( int i=0; i<panel_windows.size(); i++ )
     {
-        if( first_time )
-        {
-            first_time = false;
-            dialog->Layout();
-            AnchorOriginalPositions( dialog, list, line );
-        }
-        else
-        {
-            ReLayout( dialog, list, line );
-            Refresh( dialog, list, line );
-        }
+        wxWindow *window = panel_windows[i];
+        wxPoint pos = window->GetPosition();
+        panel_origins.push_back(pos);
     }
+}
 
-    void AnchorOriginalPositions( wxWindow *dialog, wxWindow *list, wxWindow *line )
-    {
-        dialog->GetPosition( &window_x, &window_y );
-        dialog->GetSize( &window_w, &window_h );
-        list->GetPosition( &list_x, &list_y );
-        list->GetSize( &list_w, &list_h );
-        line->GetPosition( &line_x, &line_y );
-        line->GetSize( &line_w, &line_h );
-        for( int i=0; i<panel_windows.size(); i++ )
-        {
-            wxWindow *window = panel_windows[i];
-            wxPoint pos = window->GetPosition();
-            panel_origins.push_back(pos);
-        }
-    }
+void GamesDialogResizer::ReLayout( wxWindow *dialog, wxWindow *list, wxWindow *line )
+{
+    // Calculate new list height list_h2
+    /*
+        +--------------------------------------------+
+        |               dialog                       |
+        | +----------------------------------------+ |
+        | |                                        | |
+        | |  list                                  | |
+        | |                                        | |
+        | +----------------------------------------+ |
+        |   ============== line ==================   |
+        | +----------------------------------------+ |
+        | |                                        | |
+        | |  panel                                 | |
+        | |                                        | |
+        | +----------------------------------------+ |
+        +--------------------------------------------+
 
-    void ReLayout( wxWindow *dialog, wxWindow *list, wxWindow *line )
-    {
-        // Calculate new list height list_h2
-        /*
-            +--------------------------------------------+
-            |               dialog                       |
-            | +----------------------------------------+ |
-            | |                                        | |
-            | |  list                                  | |
-            | |                                        | |
-            | +----------------------------------------+ |
-            |   ============== line ==================   |
-            | +----------------------------------------+ |
-            | |                                        | |
-            | |  panel                                 | |
-            | |                                        | |
-            | +----------------------------------------+ |
-            +--------------------------------------------+
-
-            list_h + panel_h + overhead_h = dialog_h       (original)
-            list_h2 + panel_h + overhead_h = dialog_h2     (after resize)
-            list_h2 = dialog_h2 - (panel_h + overhead_h)   (panel_h and overhead_h are invariant)
-            list_h2 = dialog_h2 - (dialog_h-list_h)
-                    = dialog_h2-dialog_h + list_h
-                    = list_h + stretch_h         (stretch_h = dialog_h2-dialog_h, how much we've stretched the dialog down)
+        list_h + panel_h + overhead_h = dialog_h       (original)
+        list_h2 + panel_h + overhead_h = dialog_h2     (after resize)
+        list_h2 = dialog_h2 - (panel_h + overhead_h)   (panel_h and overhead_h are invariant)
+        list_h2 = dialog_h2 - (dialog_h-list_h)
+                = dialog_h2-dialog_h + list_h
+                = list_h + stretch_h         (stretch_h = dialog_h2-dialog_h, how much we've stretched the dialog down)
             
             
-        */
-        int w2, h2, stretch_h, stretch_w;
-        dialog->GetSize( &w2, &h2 );
-        stretch_h = h2-window_h;
-        h2 = list_h + stretch_h;
+    */
+    int w2, h2, stretch_h, stretch_w;
+    dialog->GetSize( &w2, &h2 );
+    stretch_h = h2-window_h;
+    h2 = list_h + stretch_h;
 
-        // Width is similar
-        stretch_w = w2-window_w;
-        w2 = list_w + stretch_w;
-        list->SetSize( w2, h2 );
-        wxPoint pos(list_x,list_y);
-        list->SetPosition(pos);
+    // Width is similar
+    stretch_w = w2-window_w;
+    w2 = list_w + stretch_w;
+    list->SetSize( w2, h2 );
+    wxPoint pos(list_x,list_y);
+    list->SetPosition(pos);
 
-        // Line repositioned and lengthened with similar ideas
-        w2 = line_w + stretch_w;
-        line->SetSize( w2, line_h );
-        int y2 = line_y + stretch_h;
-        w2 = line_w + stretch_w;
-        wxPoint pos2( line_x, y2 );
-        line->SetPosition(pos2);
+    // Line repositioned and lengthened with similar ideas
+    w2 = line_w + stretch_w;
+    line->SetSize( w2, line_h );
+    int y2 = line_y + stretch_h;
+    w2 = line_w + stretch_w;
+    wxPoint pos2( line_x, y2 );
+    line->SetPosition(pos2);
 
-        // All panel windows moved down by stretch amount
-        for( int i=0; i<panel_windows.size(); i++ )
-        {
-            wxWindow *window = panel_windows[i];
-            wxPoint pos3 = panel_origins[i];
-            pos3.y += stretch_h;
-            window->SetPosition(pos3);
-        }
-    }
-
-    void Refresh( wxWindow *dialog, wxWindow *list, wxWindow *line )
+    // All panel windows moved down by stretch amount
+    for( int i=0; i<panel_windows.size(); i++ )
     {
-        dialog->Refresh();
+        wxWindow *window = panel_windows[i];
+        wxPoint pos3 = panel_origins[i];
+        pos3.y += stretch_h;
+        window->SetPosition(pos3);
+    }
+}
+
+void GamesDialogResizer::Refresh( wxWindow *dialog, wxWindow *list, wxWindow *line )
+{
+    dialog->Refresh();
 /*        list->Refresh();
-        line->Refresh();
-        for( int i=0; i<panel_windows.size(); i++ )
-        {
-            wxWindow *window = panel_windows[i];
-            window->Refresh();
-        }     */
-    }
-};
+    line->Refresh();
+    for( int i=0; i<panel_windows.size(); i++ )
+    {
+        wxWindow *window = panel_windows[i];
+        window->Refresh();
+    }     */
+}
+
 
 GamesListCtrl::GamesListCtrl( GamesDialog *parent, wxWindowID id, const wxPoint &pos, const wxSize &size )
     : wxListCtrl( (wxWindow *)parent, id, pos, size, wxLC_REPORT|wxLC_VIRTUAL )
@@ -458,9 +440,6 @@ void GamesListCtrl::OnChar( wxKeyEvent &event )
     }
 }
 
-static GamesDialogResizer gdr;
-static wxStaticLine* line_ctrl;
-
 // GamesDialog constructor
 GamesDialog::GamesDialog
 (
@@ -561,7 +540,6 @@ bool GamesDialog::Create( wxWindow* parent,
     }
 
     // Start with minimum 
-    gdr.Init();
     size  = sz_minimum;
     pos = pos_minimum;
 
@@ -603,7 +581,7 @@ bool GamesDialog::Create( wxWindow* parent,
 
         // Only use the non volatile column widths if they validate okay (factory
         //  default is -1 (for all columns), which forces a recalc)
-        if( false /*  objs.repository->nv.m_col0 > 0 &&
+        if( objs.repository->nv.m_col0 > 0 &&
             objs.repository->nv.m_col1 > 0 &&
             objs.repository->nv.m_col2 > 0 &&
             objs.repository->nv.m_col3 > 0 &&
@@ -614,7 +592,7 @@ bool GamesDialog::Create( wxWindow* parent,
             objs.repository->nv.m_col8 > 0 &&
             objs.repository->nv.m_col9 > 0 &&
             objs.repository->nv.m_col10 > 0 &&
-            objs.repository->nv.m_col11 > 0 */
+            objs.repository->nv.m_col11 > 0
           )
         {
             cols[0] = objs.repository->nv.m_col0;
@@ -669,7 +647,7 @@ bool GamesDialog::Create( wxWindow* parent,
         list_ctrl->SetColumnWidth( 8, cols[8] );    // "Result"
         list_ctrl->SetColumnWidth( 9, cols[9] );    // "ECO"   
         list_ctrl->SetColumnWidth(10, cols[11] );   // "Ply"
-        list_ctrl->SetColumnWidth(11, cols[10] );   // "Moves"
+        list_ctrl->SetColumnWidth(11, wxLIST_AUTOSIZE_USEHEADER ); //cols[10] );   // "Moves"
 
         SetPosition(pos=pos_actual);
         SetSize(size=sz_actual);
