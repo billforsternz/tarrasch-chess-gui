@@ -69,10 +69,10 @@ wxSizer *DbDialog::GdvAddExtraControls( bool big_display )
     wxSize sz4 = mini_board->GetSize();
     wxSize sz5 = sz4;
     cprintf( "mini_board size x=%d, y=%d\n",sz4.x, sz4.y );
-    sz5.x = (sz4.x*185)/100;
+    sz5.x = (sz4.x*5)/100;
     sz5.y = (sz4.y*10)/10;
-    notebook = new wxNotebook(this, wxID_ANY, wxDefaultPosition, /*wxDefaultSize*/ sz5 );
-    gdr.RegisterPanelWindow( notebook );
+    notebook = new wxNotebook(this, wxID_ANY, wxDefaultPosition, sz5 );
+    gdr.RegisterPanelWindow( notebook, true );
 
     //wxPanel *notebook_page1 = new wxPanel(notebook, wxID_ANY );
     hsiz_panel /*vsiz_panel_stats*/->Add( notebook, 0, wxALIGN_TOP|/*wxGROW|*/wxALL, 0 );

@@ -110,11 +110,13 @@ class GamesDialogResizer
     int list_x, list_y, list_w, list_h;
     int line_x, line_y, line_w, line_h;
     std::vector<wxPoint>    panel_origins;
+    std::vector<wxSize>     panel_sizes;
     std::vector<wxWindow *> panel_windows;
+    std::vector<bool>       panel_stretch_widths;
     bool first_time=true;   //C++11 allows this construct which I didn't know about until recently
                             // no need for a constructor if you only need to do things like this
 public:
-    void RegisterPanelWindow( wxWindow *window );
+    void RegisterPanelWindow( wxWindow *window, bool stretch_width=false );
     void Layout( wxWindow *dialog, wxWindow *list, wxWindow *line );
     void AnchorOriginalPositions( wxWindow *dialog, wxWindow *list, wxWindow *line );
     void ReLayout( wxWindow *dialog, wxWindow *list, wxWindow *line );

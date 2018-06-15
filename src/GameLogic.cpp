@@ -1395,11 +1395,7 @@ void GameLogic::CmdGamesClipboard()
     bool ok=CmdUpdateGamesClipboard();
     if( ok )
     {
-        wxPoint pt(0,0);
-        wxSize sz = objs.frame->GetSize();
-        sz.x = (sz.x*9)/10;
-        sz.y = (sz.y*9)/10;
-        ClipboardDialog dialog( objs.frame, &gc_clipboard, &gc_clipboard, ID_PGN_DIALOG_CLIPBOARD, pt, sz );   // GamesDialog instance
+        ClipboardDialog dialog( objs.frame, &gc_clipboard, &gc_clipboard, ID_PGN_DIALOG_CLIPBOARD );  // GamesDialog instance
         if( dialog.ShowModalOk("Clipboard") )
         {
             objs.log->SaveGame(&gd,editing_log);

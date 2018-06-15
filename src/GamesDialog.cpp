@@ -84,21 +84,24 @@ END_EVENT_TABLE()
 
 static bool gbl_right_arrow_pressed;
 
-void GamesDialogResizer::RegisterPanelWindow( wxWindow *window )
+void GamesDialogResizer::RegisterPanelWindow( wxWindow *window, bool stretch_width )
 {
     panel_windows.push_back(window);
+    panel_stretch_widths.push_back(stretch_width);
 }
 
 void GamesDialogResizer::Layout( wxWindow *dialog, wxWindow *list, wxWindow *line )
 {
     if( first_time )
     {
+        cprintf( "GamesDialogResizer::Layout() first time\n" );
         first_time = false;
         dialog->Layout();
         AnchorOriginalPositions( dialog, list, line );
     }
     else
     {
+        cprintf( "GamesDialogResizer::Layout() not first time\n" );
         ReLayout( dialog, list, line );
         Refresh( dialog, list, line );
     }
@@ -117,6 +120,8 @@ void GamesDialogResizer::AnchorOriginalPositions( wxWindow *dialog, wxWindow *li
         wxWindow *window = panel_windows[i];
         wxPoint pos = window->GetPosition();
         panel_origins.push_back(pos);
+        wxSize sz = window->GetSize();
+        panel_sizes.push_back(sz);
     }
 }
 
@@ -172,6 +177,12 @@ void GamesDialogResizer::ReLayout( wxWindow *dialog, wxWindow *list, wxWindow *l
     for( int i=0; i<panel_windows.size(); i++ )
     {
         wxWindow *window = panel_windows[i];
+        if( panel_stretch_widths[i] )
+        {
+            wxSize sz3 = panel_sizes[i];
+            sz3.x += stretch_w;
+            window->SetSize(sz3);
+        }
         wxPoint pos3 = panel_origins[i];
         pos3.y += stretch_h;
         window->SetPosition(pos3);
@@ -181,15 +192,17 @@ void GamesDialogResizer::ReLayout( wxWindow *dialog, wxWindow *list, wxWindow *l
 void GamesDialogResizer::Refresh( wxWindow *dialog, wxWindow *list, wxWindow *line )
 {
     dialog->Refresh();
-/*        list->Refresh();
-    line->Refresh();
-    for( int i=0; i<panel_windows.size(); i++ )
+    for( int i=0; i<panel_stretch_widths.size(); i++ )
     {
-        wxWindow *window = panel_windows[i];
-        window->Refresh();
-    }     */
+        if( panel_stretch_widths[i] )
+        {
+            wxWindow *window = panel_windows[i];
+            window->Update();
+            window->Refresh();
+            cprintf( "Refresh() notebook\n" );
+        }
+    } 
 }
-
 
 GamesListCtrl::GamesListCtrl( GamesDialog *parent, wxWindowID id, const wxPoint &pos, const wxSize &size )
     : wxListCtrl( (wxWindow *)parent, id, pos, size, wxLC_REPORT|wxLC_VIRTUAL )
@@ -501,34 +514,21 @@ bool GamesDialog::Create( wxWindow* parent,
    wxWindowID id_, const wxString& caption,
    const wxPoint& pos_, const wxSize& size_, long style_ )
 {
-    // Fallback (size,position) is what was requested, they should be reasonable/default/fallback values
     // Minimum (size,position) is a very small minimum size. To get that effect we set this size initially
     //  then we change to Actual values
     // Actual (size,position) is what was are going to finally set - either restored non-volatile values or
     //  the fallack values
-    wxSize  sz_fallback = size_;
-    wxPoint pos_fallback = pos_;
-    wxSize  sz_minimum = size_;
-    wxPoint pos_minimum(0,0);
     int disp_width, disp_height;
     wxDisplaySize(&disp_width, &disp_height);
 
-    // Adjust fallback position to be centred on the parent or (if none) screen
-    wxSize sz_for_centre(disp_width,disp_height);
-    if( parent )
-        sz_for_centre =parent->GetSize();
-    if( sz_fallback.x <= sz_for_centre.x )
-        pos_fallback.x = (sz_for_centre.x-sz_fallback.x)/2;
-    if( sz_fallback.y <= sz_for_centre.y )
-        pos_fallback.y = (sz_for_centre.y-sz_fallback.y)/2;
-
     // Calculate Minimum()
-    sz_minimum.x = disp_width/10 < sz_fallback.x ? disp_width/10 : sz_fallback.x;
-    sz_minimum.y = disp_height/10 < sz_fallback.y ? disp_height/10 : sz_fallback.y;
+    wxSize sz_minimum( disp_width/10, disp_height/10 );
+    wxPoint pos_minimum( disp_width/10, disp_height/10 );
 
     // Retrieve Actual() if available
-    wxSize  sz_actual = sz_fallback;
-    wxPoint pos_actual = pos_fallback;
+    wxSize  sz_zero(0,0);
+    wxSize  sz_actual = sz_zero; // refinement, fallback to a size calculated below based on minimum dialog size //sz_fallback;
+    wxPoint pos_actual = pos_minimum;
     if( objs.repository->nv.m_games_x > 0 && objs.repository->nv.m_games_y > 0 &&
         objs.repository->nv.m_games_x < (disp_width*9)/10 && objs.repository->nv.m_games_y < (disp_height*9)/10 &&
         objs.repository->nv.m_games_w > 0 && objs.repository->nv.m_games_h > 0 )
@@ -613,29 +613,17 @@ bool GamesDialog::Create( wxWindow* parent,
             unsigned int x = CtrlChessBoard::GetDefaultSquareSize();
             objs.repository->nv.m_col0 = cols[0] =  x*9/16;     // "#"
             objs.repository->nv.m_col1 = cols[1] =  x*3/1;      // "White" 
-            objs.repository->nv.m_col2 = cols[2] =  x*13/16;    // "Elo W"
+            objs.repository->nv.m_col2 = cols[2] =  x*16/16;    // "Elo W"
             objs.repository->nv.m_col3 = cols[3] =  x*3/1;      // "Black" 
-            objs.repository->nv.m_col4 = cols[4] =  x*13/16;    // "Elo B" 
-            objs.repository->nv.m_col5 = cols[5] =  x*7/5;      // "Date"  
-            objs.repository->nv.m_col6 = cols[6] =  x*3/1;      // "Site/Event"  
+            objs.repository->nv.m_col4 = cols[4] =  x*16/16;    // "Elo B" 
+            objs.repository->nv.m_col5 = cols[5] =  x*9/5;      // "Date"  
+            objs.repository->nv.m_col6 = cols[6] =  x*4/1;      // "Site/Event"  
             objs.repository->nv.m_col7 = cols[7] =  x*5/4;      // "Round" 
-            objs.repository->nv.m_col8 = cols[8] =  x*11/8;      // "Result"
+            objs.repository->nv.m_col8 = cols[8] =  x*23/16;    // "Result"
             objs.repository->nv.m_col9 = cols[9] =  x*15/16;    // "ECO"   
             objs.repository->nv.m_col10= cols[10]=  x*8/1;      // "Moves"
-            objs.repository->nv.m_col11 = cols[11]= x*7/8;      // "Ply"   
+            objs.repository->nv.m_col11 = cols[11]= x*14/16;    // "Ply"   
         }
-        cprintf( "cols[0] = %d\n", cols[0] );
-        cprintf( "cols[1] = %d\n", cols[1] );
-        cprintf( "cols[2] = %d\n", cols[2] );
-        cprintf( "cols[3] = %d\n", cols[3] );
-        cprintf( "cols[4] = %d\n", cols[4] );
-        cprintf( "cols[5] = %d\n", cols[5] );
-        cprintf( "cols[6] = %d\n", cols[6] );
-        cprintf( "cols[7] = %d\n", cols[7] );
-        cprintf( "cols[8] = %d\n", cols[8] );
-        cprintf( "cols[9] = %d\n", cols[9] );
-        cprintf( "cols[10] = %d\n", cols[10] );
-        cprintf( "cols[11] = %d\n", cols[11] );
         list_ctrl->SetColumnWidth( 0, cols[0] );    // "Game #"
         list_ctrl->SetColumnWidth( 1, cols[1] );    // "White" 
         list_ctrl->SetColumnWidth( 2, cols[2] );    // "Elo W" 
@@ -647,9 +635,21 @@ bool GamesDialog::Create( wxWindow* parent,
         list_ctrl->SetColumnWidth( 8, cols[8] );    // "Result"
         list_ctrl->SetColumnWidth( 9, cols[9] );    // "ECO"   
         list_ctrl->SetColumnWidth(10, cols[11] );   // "Ply"
-        list_ctrl->SetColumnWidth(11, wxLIST_AUTOSIZE_USEHEADER ); //cols[10] );   // "Moves"
+        list_ctrl->SetColumnWidth(11, cols[10] );   // "Moves"  // No Ply in Tarrasch V2, so Moves is [10], Ply is[11]
 
         SetPosition(pos=pos_actual);
+
+        // Calculate a starting size based on the minimum size set by the sizer
+        if( sz_actual.x==0 || sz_actual.y==0 )
+        {
+            sz_actual = GetSize();
+            sz_actual.x = sz_actual.x * 150 / 100;
+            if( sz_actual.x > disp_width )
+                sz_actual.x = disp_width;
+            sz_actual.y = sz_actual.y * 150 / 100;
+            if( sz_actual.y > disp_height )
+                sz_actual.y = disp_height;
+        }
         SetSize(size=sz_actual);
     }
     return okay;
@@ -693,20 +693,6 @@ void GamesDialog::CreateControls()
 
     // Spacer
     box_sizer->Add(5, 5, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
-    int disp_width, disp_height;
-    wxDisplaySize(&disp_width, &disp_height);
-    wxSize sz = wxDefaultSize;
-    cprintf( "disp_width=%d, disp_height=%d\n", disp_width, disp_height );
-    bool big_display=false;
-    if( disp_width > 1366 )
-        disp_width = 1366;
-    if( disp_height > 768 )
-    {
-        disp_height = 768;
-        big_display = true;
-    }
-    //sz.x = (disp_width*90)/100;
-    //Saturday sz.y = (disp_height*(big_display?36:25))/100;
     wxSize sz_tiny( 10,10);
     list_ctrl  = new GamesListCtrl( this, ID_PGN_LISTBOX, wxDefaultPosition, sz_tiny );
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
@@ -797,8 +783,10 @@ void GamesDialog::CreateControls()
     gdr.RegisterPanelWindow( player_names );
     box_sizer->Add(player_names, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxBOTTOM, 10);
     
-    // Overridden by specialised classes
-    GdvAddExtraControls( big_display );
+    int disp_width, disp_height;
+    wxDisplaySize(&disp_width, &disp_height);
+    bool big_display = (disp_width > 1366);
+    GdvAddExtraControls( big_display ); // overridden by specialised classes
 
     // Overridden by specialised classes
     GdvEnumerateGames();
@@ -824,8 +812,7 @@ void GamesDialog::OnSize( wxSizeEvent &evt )
     wxSize sz1;
     sz1.x = siz.x;
     sz1.y = siz.y;
-    cprintf( "GamesDialog::OnSize(%d,%d)\n", siz.x, siz.y );
-    //Layout();
+    cprintf( "GamesDialog::OnSize(%d,%d) list_ctrl=%s\n", siz.x, siz.y, list_ctrl?"not NULL":"NULL" );
     if(list_ctrl)
     {
         gdr.Layout( this, list_ctrl, line_ctrl );
