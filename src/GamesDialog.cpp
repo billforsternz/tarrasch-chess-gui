@@ -10,7 +10,7 @@
 #include "wx/listctrl.h"
 #include "wx/notebook.h"
 #include "Portability.h"
-#ifdef THC_MAC
+#ifdef THC_UNIX
 #include <sys/time.h>               // for gettimeofday()
 #endif
 #ifdef THC_WINDOWS

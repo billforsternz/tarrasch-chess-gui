@@ -418,7 +418,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
             error_msg = "Database creation cancelled";
         wxMessageBox( error_msg.c_str(), "Database creation failed", wxOK|wxICON_ERROR );
 		if( created_new_db_file )
-#ifdef THC_LINUX
+#ifdef THC_UNIX
 			unlink(db_filename.c_str());
 #else
 			_unlink(db_filename.c_str());
@@ -581,7 +581,7 @@ void CreateDatabaseDialog::OnAppendDatabase()
             error_msg = "Database creation cancelled";
         wxMessageBox( error_msg.c_str(), "Database creation failed", wxOK|wxICON_ERROR );
 		if( created_new_db_file )
-#ifdef THC_LINUX
+#ifdef THC_UNIX
 			unlink(db_filename.c_str());
 #else
 			_unlink(db_filename.c_str());
