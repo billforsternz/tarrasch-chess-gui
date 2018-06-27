@@ -70,6 +70,119 @@ MoveTree *MoveTree::ParentCrawler( int& level, bool& first, MoveTree *child, thc
 }
 
 
+// Find a target node in the tree under here, build a stack of variations leading to the node
+bool MoveTree::Find( MoveTree *target, std::vector<VARIATION_STACK_ELEMENT> &stack )
+{
+    thc::ChessRules cr;
+    bool found = false;
+    stack.clear();
+    if( root )
+        cr = *root;
+    int level=0;
+    found = FindCrawler( found, level, target, cr, stack );
+    return found;
+}
+
+bool MoveTree::FindCrawler( bool &found, int& level,
+                            const MoveTree *target, thc::ChessRules &cr, std::vector<VARIATION_STACK_ELEMENT> &stack )
+{
+    if( found )
+        return true;
+    if( target == this )
+    {
+        found = true;
+        stack.resize(level);
+        int top = stack.size()-1;
+        //while( top >=0 )
+        //{
+        //    if( stack[top].v==NULL || stack[top].imove==-1 )
+        //        stack.resize(level-1);
+        //    top = stack.size()-1;
+        //}
+        return true;
+    }
+    else
+    {
+        int nbr_vars = variations.size();
+        if( nbr_vars )
+        {
+            level++;
+            if( stack.size() <= level )
+            {
+                VARIATION_STACK_ELEMENT n;
+                stack.push_back(n);
+            }
+            thc::ChessRules cr_before_move = cr;
+            for( int i=0; i<nbr_vars; i++ )
+            {
+                if( i>0 )
+                    cr = cr_before_move;
+                vector<MoveTree> &var = variations[i];
+                stack[level-1].v = &variations[i];
+                int nbr_moves=var.size();
+                for( int j=0; j<nbr_moves; j++ )
+                {
+                    stack[level-1].imove = j;
+                    found = var[j].FindCrawler( found, level, target, cr, stack );
+                    if( found )
+                        return true;
+                }
+            }
+            cr = cr_before_move;
+            level--;
+        }    
+        bool at_root = (level==0);
+        if( !at_root )
+            cr.PlayMove(game_move.move);
+    }
+    return false;
+}
+
+// Calculate a ChessRules object with history leading to a position
+bool MoveTree::Seek( const MoveTree *target, thc::ChessRules &cr )
+{
+    bool found=false;
+    int level=-1;
+    if( root )
+    {
+        cr = *root;
+        found = SeekCrawler( level, target, cr, found );
+    }
+    return found;
+}
+
+bool MoveTree::SeekCrawler( int& level, const MoveTree *target, thc::ChessRules &cr, bool done )
+{
+    level++;
+    if( !done )
+    {
+        done = (target==this);
+        if( !done )
+        {
+            if( level>0 )
+                cr.PlayMove(game_move.move);
+            int nbr_vars=variations.size();
+            if( nbr_vars )
+            {
+                for( int i=0; !done && i<nbr_vars; i++ )
+                {
+                    vector<MoveTree> &var = variations[i];
+                    int nbr_moves=var.size();
+                    for( int j=0; !done && j<nbr_moves; j++ )
+                        done = var[j].SeekCrawler( level, target, cr, done );
+                    if( !done )
+                        for( int j=nbr_moves-1; j>=0; j-- )
+                            cr.PopMove(var[j].game_move.move);
+                }
+            }
+        }    
+    }
+    level--;
+    return done;
+}
+
+
+
 // Promote the entire variation containing a child node
 //  Return ptr to child node in its new position in the promoted variation
 MoveTree *MoveTree::Promote( MoveTree *child )

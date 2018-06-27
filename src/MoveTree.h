@@ -28,6 +28,9 @@ struct GAME_MOVE
                   human_is_white=false; human_millisecs_time=0; engine_millisecs_time=0; }
 };
 
+struct VARIATION_STACK_ELEMENT;
+
+
 class MoveTree
 {
 
@@ -62,8 +65,26 @@ public:
     // Given a child node, find its parent
     MoveTree *Parent( MoveTree *child, thc::ChessRules &cr_out, int &ivar, int &imove );
     MoveTree *ParentCrawler( int& level, bool& first, MoveTree *child, thc::ChessRules &cr, thc::ChessRules &cr_out, int &ivar, int &imove );
+
+    // Find a target node in the tree under here, build a stack of variations leading to the node
+    bool Find( MoveTree *target, std::vector<VARIATION_STACK_ELEMENT> &stack );
+    bool FindCrawler( bool &found, int& level,
+                                const MoveTree *target, thc::ChessRules &cr, std::vector<VARIATION_STACK_ELEMENT> &stack );
+
+
+    // Calculate a ChessRules object with history leading to a position
+    //  returns true if found successfully
+    bool Seek( const MoveTree *target, thc::ChessRules &cr );
+    bool SeekCrawler( int& level, const MoveTree *target, thc::ChessRules &cr, bool done );
 };
 
+
 typedef std::vector<MoveTree> VARIATION;
+
+struct VARIATION_STACK_ELEMENT
+{
+    VARIATION *v=NULL;
+    int imove=-1;
+};
 
 #endif //MOVE_TREE_H
