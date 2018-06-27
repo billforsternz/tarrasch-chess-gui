@@ -1149,7 +1149,7 @@ void BinDbShowDebugOrder( const std::vector< smart_ptr<ListableGame> > &gms, con
         for( int idx=0; idx<sz; idx++ )
         {
             char buf[40];
-            sprintf( buf, "%lu", gms[idx]->game_id );
+            sprintf( buf, "%u", gms[idx]->game_id );
             s += std::string(buf);
             if( idx+1 < sz )
                 s +=",";
