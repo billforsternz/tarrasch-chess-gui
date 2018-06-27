@@ -561,6 +561,9 @@ public:
     // Check draw rules (50 move rule etc.)
     bool IsDraw( bool white_asks, DRAWTYPE &result );
 
+    // Get number of times position has been repeated
+    int GetRepetitionCount();
+
     // Check insufficient material draw rule
     bool IsInsufficientDraw( bool white_asks, DRAWTYPE &result );
 

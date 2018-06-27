@@ -2409,6 +2409,58 @@ bool ChessRules::IsDraw( bool white_asks, DRAWTYPE &result )
     return( draw );
 }       
 
+/****************************************************************************
+ * Get number of times position has been repeated
+ ****************************************************************************/
+int ChessRules::GetRepetitionCount()
+{
+    int matches=0;
+
+    //  Save those aspects of current position that are changed by multiple 
+    //  PopMove() calls as we search backwards (i.e. squares, white,
+    //  detail, detail_idx)
+    char save_squares[sizeof(squares)];
+    memcpy( save_squares, squares, sizeof(save_squares) );
+    unsigned char save_detail_idx = detail_idx;  // must be unsigned char
+    bool          save_white      = white;
+    unsigned char idx             = history_idx; // must be unsigned char
+    DETAIL_SAVE;
+
+    // Search backwards ....
+    int nbr_half_moves = (full_move_count-1)*2 + (!white?1:0);
+    if( nbr_half_moves > nbrof(history)-1 )
+        nbr_half_moves = nbrof(history)-1;
+    if( nbr_half_moves > nbrof(detail_stack)-1 )
+        nbr_half_moves = nbrof(detail_stack)-1;
+    for( int i=0; i<nbr_half_moves; i++ )
+    {
+        Move m = history[--idx];
+        if( m.src == m.dst )
+            break;  // unused history is set to zeroed memory
+        PopMove(m);
+
+        // ... looking for matching positions
+        if( white    == save_white      && // quick ones first!
+            DETAIL_EQ                   &&
+            0 == memcmp(squares,save_squares,sizeof(squares) )
+            )
+        {
+            matches++;
+        }
+
+        // For performance reasons, abandon search early if pawn move
+        //  or capture
+        if( squares[m.src]=='P' || squares[m.src]=='p' || !IsEmptySquare(m.capture) )
+            break;
+    }
+
+    // Restore current position
+    memcpy( squares, save_squares, sizeof(squares) );
+    white      = save_white;
+    detail_idx = save_detail_idx;
+    DETAIL_RESTORE;
+    return( matches+1 );  // +1 counts original position
+}       
 
 /****************************************************************************
  * Check insufficient material draw rule
