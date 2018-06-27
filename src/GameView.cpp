@@ -1559,72 +1559,32 @@ MoveTree *GameView::Locate( unsigned long pos, thc::ChessRules &cr_, string &tit
                 #endif
                 if( have_a_move )
                 {
-#if 1
                     std::vector<VARIATION_STACK_ELEMENT> stack;
                     bool ok = tree->Find( gve.node, stack );
-                    if( ok && stack.size()>0 )
+                    if( ok )
                     {
                         found = gve.node;
+
+                        // Play all the moves up to the move
                         if( tree->root )
                             cr_ = *tree->root;
                         else
                             cr_.Init();
                         int nbr_vars = stack.size();
-                        std::string nmove;
+                        MoveTree *last_move_played=NULL;
                         for( int i=0; i<nbr_vars; i++ )
                         {
                             vector<MoveTree> &variation = *stack[i].v;
                             int imove = stack[i].imove;
-                            bool final_variation = (i+1 >= nbr_vars);
-                            int i2=0;
-                            for( i2=0; i2<imove; i2++ )
-                                cr_.PlayMove( variation[i2].game_move.move );
-                            if( final_variation && i2<variation.size() )
+                            for( int j=0; j<imove; j++ )
                             {
-                                nmove = variation[i2].game_move.move.NaturalOut(&cr_);
-                                LangOut(nmove);
-                                char buf[80];
-                                sprintf( buf, "%s %d%s%s",
-                                        at_move0?"Position before":"Position after",
-                                        cr_.full_move_count,
-                                        cr_.white?".":"...",
-                                        nmove.c_str() );
-                                title = buf;
-                                if( !at_move0 )
-                                    cr_.PlayMove( variation[i2].game_move.move );
-                                else
-                                {
-
-                                    // Find the move in the tree that lead to the position before the first
-                                    //  move of this variation (so we can highlight it, late change just
-                                    //  before publishing V3)
-                          /*          thc::ChessRules cr2;
-                                    int ivar2, imove2;
-                                    MoveTree *grandparent = tree->Parent( parent, cr2, ivar2, imove2 );
-                                    if( grandparent )
-                                    {
-                                        vector<MoveTree> &var2 = grandparent->variations[ivar2];
-                                        if( imove2 > 0 )
-                                        {
-                                            locate_at_move0_last_move = &var2[imove2-1].game_move;
-                                            cprintf( "last move was %s\n", locate_at_move0_last_move->move.TerseOut().c_str() );
-                                        } 
-                                    } */
-                                }
+                                cr_.PlayMove( variation[j].game_move.move );
+                                last_move_played = &variation[j];
                             }
-						}
-                    }
-#else
-                    int ivar, imove;
-                    MoveTree *parent = tree->Parent( gve.node, cr_, ivar, imove );
-                    if( parent )
-                    {
-                        found = gve.node;
-                        vector<MoveTree> &variation = parent->variations[ivar];
-                        int i2=0;
-                        for( i2=0; i2<imove; i2++ )
-                            cr_.PlayMove( variation[i2].game_move.move );
-                        std::string nmove =  variation[i2].game_move.move.NaturalOut(&cr_);
+                        }
+
+                        // Next move *is* the move
+                        std::string nmove = found->game_move.move.NaturalOut(&cr_);
                         LangOut(nmove);
                         char buf[80];
                         sprintf( buf, "%s %d%s%s",
@@ -1634,47 +1594,16 @@ MoveTree *GameView::Locate( unsigned long pos, thc::ChessRules &cr_, string &tit
                                 nmove.c_str() );
                         title = buf;
                         if( !at_move0 )
-                            cr_.PlayMove( variation[i2].game_move.move );
-						else
-						{
-
-							// Find the move in the tree that lead to the position before the first
-							//  move of this variation (so we can highlight it, late change just
-							//  before publishing V3)
-							thc::ChessRules cr2;
-							int ivar2, imove2;
-		                    MoveTree *grandparent = tree->Parent( parent, cr2, ivar2, imove2 );
-							if( grandparent )
-							{
-								vector<MoveTree> &var2 = grandparent->variations[ivar2];
-								if( imove2 > 0 )
-								{
-									locate_at_move0_last_move = &var2[imove2-1].game_move;
-									cprintf( "last move was %s\n", locate_at_move0_last_move->move.TerseOut().c_str() );
-								}
-							}
-						}
+                            cr_.PlayMove(found->game_move.move);
+                        else
+                        {
+                            // Point at the move in the tree that lead to the position before the first
+                            //  move of this variation (so we can highlight it, late change just
+                            //  before publishing V3)
+                            if( nbr_vars>1 && stack[nbr_vars-1].imove==0)
+                                locate_at_move0_last_move = &last_move_played->game_move;
+                        }
                     }
-#endif
-#if 0
-                    bool ok = tree->Seek( gve.node, cr_ );
-                    if( ok )
-                    {
-                        std::string nmove =  gve.node->game_move.move.NaturalOut(&cr_);
-                        LangOut(nmove);
-                        char buf[80];
-                        sprintf( buf, "%s %d%s%s",
-                                at_move0?"Position before":"Position after",
-                                cr_.full_move_count,
-                                cr_.white?".":"...",
-                                nmove.c_str() );
-                        title = buf;
-                        //if( at_move0 )
-						//{
-                        //    locate_at_move0_last_move = &var2[imove2-1].game_move;
-                        //    cprintf( "last move was %s\n", locate_at_move0_last_move->move.TerseOut().c_str() );
-					}
-#endif
                 }
                 break;
             }

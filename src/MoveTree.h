@@ -68,9 +68,7 @@ public:
 
     // Find a target node in the tree under here, build a stack of variations leading to the node
     bool Find( MoveTree *target, std::vector<VARIATION_STACK_ELEMENT> &stack );
-    bool FindCrawler( bool &found, int& level,
-                                const MoveTree *target, thc::ChessRules &cr, std::vector<VARIATION_STACK_ELEMENT> &stack );
-
+    bool FindCrawler( int& level,  const MoveTree *target, std::vector<VARIATION_STACK_ELEMENT> &stack );
 
     // Calculate a ChessRules object with history leading to a position
     //  returns true if found successfully

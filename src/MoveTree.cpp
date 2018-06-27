@@ -69,76 +69,55 @@ MoveTree *MoveTree::ParentCrawler( int& level, bool& first, MoveTree *child, thc
     return found;
 }
 
-
 // Find a target node in the tree under here, build a stack of variations leading to the node
+//   This is a much faster, simpler more general mechanism that the Parent() and ParentCrawler()
+//   code - Intention is to use Find() of Parent() whenever possible
 bool MoveTree::Find( MoveTree *target, std::vector<VARIATION_STACK_ELEMENT> &stack )
 {
-    thc::ChessRules cr;
     bool found = false;
     stack.clear();
-    if( root )
-        cr = *root;
     int level=0;
-    found = FindCrawler( found, level, target, cr, stack );
+    found = FindCrawler( level, target, stack );
+    found = (found && stack.size()>0);
     return found;
 }
 
-bool MoveTree::FindCrawler( bool &found, int& level,
-                            const MoveTree *target, thc::ChessRules &cr, std::vector<VARIATION_STACK_ELEMENT> &stack )
+
+bool MoveTree::FindCrawler( int& level, const MoveTree *target, std::vector<VARIATION_STACK_ELEMENT> &stack )
 {
-    if( found )
-        return true;
     if( target == this )
-    {
-        found = true;
-        stack.resize(level);
-        int top = stack.size()-1;
-        //while( top >=0 )
-        //{
-        //    if( stack[top].v==NULL || stack[top].imove==-1 )
-        //        stack.resize(level-1);
-        //    top = stack.size()-1;
-        //}
         return true;
-    }
     else
     {
         int nbr_vars = variations.size();
         if( nbr_vars )
         {
             level++;
-            if( stack.size() <= level )
-            {
-                VARIATION_STACK_ELEMENT n;
-                stack.push_back(n);
-            }
-            thc::ChessRules cr_before_move = cr;
+            VARIATION_STACK_ELEMENT n;
+            stack.push_back(n);
             for( int i=0; i<nbr_vars; i++ )
             {
-                if( i>0 )
-                    cr = cr_before_move;
                 vector<MoveTree> &var = variations[i];
                 stack[level-1].v = &variations[i];
                 int nbr_moves=var.size();
                 for( int j=0; j<nbr_moves; j++ )
                 {
                     stack[level-1].imove = j;
-                    found = var[j].FindCrawler( found, level, target, cr, stack );
+                    bool found = var[j].FindCrawler( level, target, stack );
                     if( found )
-                        return true;
+                        return true; // once found we back out very quickly, with no stack pop_back()s
                 }
             }
-            cr = cr_before_move;
+            stack.pop_back();
             level--;
         }    
-        bool at_root = (level==0);
-        if( !at_root )
-            cr.PlayMove(game_move.move);
     }
     return false;
 }
 
 // Calculate a ChessRules object with history leading to a position
+//   Seek() and SeekCrawler() aren't very useful since they fail once the game (in any variation) reaches
+//   256 half moves - remove later
 bool MoveTree::Seek( const MoveTree *target, thc::ChessRules &cr )
 {
     bool found=false;
