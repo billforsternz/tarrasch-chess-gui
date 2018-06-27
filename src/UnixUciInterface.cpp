@@ -154,16 +154,7 @@ UciInterface::UciInterface( const char *filename_uci_exe )
     this->filename_uci_exe = filename_uci_exe;
     engine_name[0] = '\0';
 
-    // Get nbr of CPUs
-#ifdef WINDOWS_FIX_LATER
-    SYSTEM_INFO sysinfo;
-    GetSystemInfo( &sysinfo );
-    nbr_cpus = sysinfo.dwNumberOfProcessors;
-#else
-    nbr_cpus = 1;
-#endif
-
-   
+    nbr_cpus = 1;   // How do we calculate this in Unix?
     kq_engine_to_move.SetDepth(6);  // small number
     bestmove_received = false;
     ponder_received = false;
