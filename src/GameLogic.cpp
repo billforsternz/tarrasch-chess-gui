@@ -3192,6 +3192,14 @@ void GameLogic::StatusUpdate( int idx )
 			}
             str = buf;
         }
+        static char status_field3[20];
+        char bf[20];
+        sprintf( bf, "%d", gd.master_position.half_move_clock);
+        if( 0 != strcmp(bf,status_field3) )
+        {
+            strcpy(status_field3,bf);
+            refresh=true;
+        }
         if( str != status_field2 )
         {
             status_field2 = str;
@@ -3212,6 +3220,7 @@ void GameLogic::StatusUpdate( int idx )
         {
             objs.frame->SetStatusText( status_field1.c_str(), 0 );
             objs.frame->SetStatusText( status_field2.c_str(), 1 );
+            objs.frame->SetStatusText( status_field3, 2 );
         }
     }
 }
