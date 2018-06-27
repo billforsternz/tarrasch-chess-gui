@@ -152,8 +152,8 @@ wxSizer *DbDialog::GdvAddExtraControls( bool big_display )
 		vsiz_panel_buttons->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 	}
     
-    filter_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX,
-                                    big_display?"&Clipboard as temporary database":"&Clipboard as temp database", wxDefaultPosition, wxDefaultSize, 0 );
+    filter_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX, "&Clipboard as temp database", wxDefaultPosition, wxDefaultSize, 0 );
+                             //       big_display?"&Clipboard as temporary database":"&Clipboard as temp database", wxDefaultPosition, wxDefaultSize, 0 );
     gdr.RegisterPanelWindow( filter_ctrl );
     vsiz_panel_buttons->Add(filter_ctrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     filter_ctrl->SetValue( objs.gl->db_clipboard );
