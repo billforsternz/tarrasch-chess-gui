@@ -1235,9 +1235,9 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     SetMenuBar( menu );
 
     // Create a status bar
-    CreateStatusBar(2);
-    int widths[2] = {-300,-100};
-    SetStatusWidths(2,widths);
+    CreateStatusBar(3);
+    int widths[3] = {-300,-100,-100};
+    SetStatusWidths(3,widths);
 
 #ifdef THC_WINDOWS
     wxToolBar *toolbar = new wxToolBar(this, wxID_ANY,
@@ -1889,7 +1889,7 @@ void ChessFrame::OnUpdateEditCut( wxUpdateUIEvent &event )
 
 void ChessFrame::OnUpdateEditPaste( wxUpdateUIEvent &event )
 {
-#ifdef WINDOWS_FIX_LATER
+#ifdef WINDOWS_FIX_LATER    
     bool enabled = (wxTheClipboard->Open() && wxTheClipboard->IsSupported( wxDF_TEXT ));
     event.Enable(enabled);
 #endif
