@@ -93,6 +93,7 @@ void CtrlChessTxt::OnSize( wxSizeEvent& event )
 
 void CtrlChessTxt::OnMouseLeftDown( wxMouseEvent& ev )
 {
+//  Atomic begin;
     gl->SetManual(NULL,false);
     ev.Skip();   //continue to process event
 }
@@ -142,6 +143,7 @@ void CtrlChessTxt::OnMouseEvent( wxMouseEvent& ev )
 {
     if( gl->IsManual() )
     {
+        Atomic begin(false);
         unsigned long pos = GetInsertionPoint();
         Goto(pos,true);
         ev.Skip();   //continue to process event
