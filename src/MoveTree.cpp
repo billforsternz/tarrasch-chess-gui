@@ -11,6 +11,7 @@ using namespace thc;
 
 
 // Find a child node's parent
+#if 1
 MoveTree *MoveTree::Parent( MoveTree *child, thc::ChessRules &cr_out, int &ivar, int &imove )
 {
     MoveTree *found=NULL;
@@ -25,6 +26,7 @@ MoveTree *MoveTree::Parent( MoveTree *child, thc::ChessRules &cr_out, int &ivar,
     }
     return found;
 }
+#endif
 
 MoveTree *MoveTree::ParentCrawler( int& level, bool& first, MoveTree *child, thc::ChessRules &cr, thc::ChessRules &cr_out, int &ivar, int &imove )
 {
@@ -69,9 +71,45 @@ MoveTree *MoveTree::ParentCrawler( int& level, bool& first, MoveTree *child, thc
     return found;
 }
 
+#if 0
+// Find a child node's parent
+MoveTree *MoveTree::Parent( MoveTree *child, thc::ChessRules &cr_out, int &ivar, int &imove )
+{
+    std::vector<VARIATION_STACK_ELEMENT> stack;
+    Find( child, stack );
+    thc::ChessRules cr;
+    if( root )
+        cr = *root;
+    int i=0;
+    VARIATION &var = variations[0];
+    child = this;
+    ivar  = 0;
+    imove = 0;
+    for( i=0; i<stack.size(); i++ )
+    {
+        bool final = (i+1 >=  stack.size());
+        if( final )
+        {
+            for( int j=0; j<var.
+        }
+        var = *stack[i].v;
+        int ibranch = stack[i].imove;
+        if( i+1 < stack.size() )
+        {
+            for( int j=0; j<ibranch; j++ )
+                cr.PlayMove( var[j].game_move );
+        }
+        else
+        {
+
+        }
+    }
+}
+#endif
+
 // Find a target node in the tree under here, build a stack of variations leading to the node
 //   This is a much faster, simpler more general mechanism that the Parent() and ParentCrawler()
-//   code - Intention is to use Find() of Parent() whenever possible
+//   code - Intention is to transition to Find() instead of Parent() whenever possible
 bool MoveTree::Find( MoveTree *target, std::vector<VARIATION_STACK_ELEMENT> &stack )
 {
     bool found = false;
