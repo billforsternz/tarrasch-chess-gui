@@ -135,7 +135,10 @@ inline Square& operator++ ( Square& sq )
 #define DETAIL_ADDR         ( (DETAIL*) ((char *)this + sizeof(ChessPosition) - sizeof(DETAIL))  )
 #define DETAIL_SAVE         DETAIL tmp = *DETAIL_ADDR
 #define DETAIL_RESTORE      *DETAIL_ADDR = tmp
-#define DETAIL_EQ           ( *DETAIL_ADDR == tmp )
+#define DETAIL_EQ_ALL               ( (*DETAIL_ADDR&0x0fffffff) == (tmp&0x0fffffff) )
+#define DETAIL_EQ_CASTLING          ( (*DETAIL_ADDR&0x0f000000) == (tmp&0x0f000000) )
+#define DETAIL_EQ_KING_POSITIONS    ( (*DETAIL_ADDR&0x00ffff00) == (tmp&0x00ffff00) )
+#define DETAIL_EQ_EN_PASSANT        ( (*DETAIL_ADDR&0x000000ff) == (tmp&0x000000ff) )
 #define DETAIL_PUSH         detail_stack[detail_idx++] = *DETAIL_ADDR
 #define DETAIL_POP          *DETAIL_ADDR = detail_stack[--detail_idx]
 #define DETAIL_CASTLING(sq) *( 3 + (unsigned char*)DETAIL_ADDR ) &= castling_prohibited_table[sq]
@@ -2128,6 +2131,55 @@ static unsigned char castling_prohibited_table[] =
 
 void ChessRules::TestInternals()
 {
+    Init();
+    Move mv;
+    cprintf( "All castling allowed %08x\n", *DETAIL_ADDR );
+    mv.TerseIn(this,"g1f3");
+    PlayMove(mv);
+    mv.TerseIn(this,"g8f6");
+    PlayMove(mv);
+    cprintf( "All castling allowed %08x\n", *DETAIL_ADDR );
+    mv.TerseIn(this,"h1g1");
+    PlayMove(mv);
+    mv.TerseIn(this,"h8g8");
+    PlayMove(mv);
+    mv.TerseIn(this,"g1h1");
+    PlayMove(mv);
+    cprintf( "WKING castling not allowed %08x\n", *DETAIL_ADDR );
+    mv.TerseIn(this,"g8h8");
+    PlayMove(mv);
+    cprintf( "WKING BKING castling not allowed %08x\n", *DETAIL_ADDR );
+    mv.TerseIn(this,"b1c3");
+    PlayMove(mv);
+    mv.TerseIn(this,"b8c6");
+    PlayMove(mv);
+    mv.TerseIn(this,"a1b1");
+    PlayMove(mv);
+    mv.TerseIn(this,"a8b8");
+    PlayMove(mv);
+    mv.TerseIn(this,"b1a1");
+    PlayMove(mv);
+    cprintf( "WKING BKING WQUEEN castling not allowed %08x\n", *DETAIL_ADDR );
+    mv.TerseIn(this,"b8a8");
+    PlayMove(mv);
+    cprintf( "WKING BKING WQUEEN BQUEEN castling not allowed %08x\n", *DETAIL_ADDR );
+    ChessPosition::Init();
+    cprintf( "All castling allowed %08x\n", *DETAIL_ADDR );
+    mv.TerseIn(this,"e2e3");
+    PlayMove(mv);
+    mv.TerseIn(this,"e7e6");
+    PlayMove(mv);
+    cprintf( "All castling allowed %08x\n", *DETAIL_ADDR );
+    mv.TerseIn(this,"e1e2");
+    PlayMove(mv);
+    mv.TerseIn(this,"e8e7");
+    PlayMove(mv);
+    mv.TerseIn(this,"e2e1");
+    PlayMove(mv);
+    cprintf( "WKING WQUEEN castling not allowed %08x\n", *DETAIL_ADDR );
+    mv.TerseIn(this,"e7e8");
+    PlayMove(mv);
+    cprintf( "WKING WQUEEN BKING BQUEEN castling not allowed %08x\n", *DETAIL_ADDR );
     const char *fen = "b3k2r/8/8/8/8/8/8/R3K2R w KQk - 0 1";
     Move move;
     Forsyth(fen);
@@ -2338,7 +2390,6 @@ void ChessRules::GenLegalMoveList( MOVELIST *list, bool check[MAXMOVES],
 bool ChessRules::IsDraw( bool white_asks, DRAWTYPE &result )
 {
     bool   draw=false;
-    int    i, matches;
 
     // Insufficient mating material
     draw =  IsInsufficientDraw( white_asks, result );
@@ -2350,60 +2401,13 @@ bool ChessRules::IsDraw( bool white_asks, DRAWTYPE &result )
         draw = true;
     }
 
-    // 3 times repitition,
-    //  Save those aspects of current position that are changed by multiple 
-    //  PopMove() calls as we search backwards (i.e. squares, white,
-    //  detail, detail_idx)
-    if( !draw )
+    // 3 times repetition,
+    if( !draw && GetRepetitionCount()>=3 )
     {
-//      dbg_printf( "Checking 3 times repitition\n" );
         result = DRAWTYPE_REPITITION;
-        /* static ;remove for thread safety */  char save_squares[sizeof(squares)];
-        memcpy( save_squares, squares, sizeof(save_squares) );
-        unsigned char save_detail_idx = detail_idx;  // must be unsigned char
-        bool          save_white      = white;
-        unsigned char idx             = history_idx; // must be unsigned char
-        DETAIL_SAVE;
-
-        // Search backwards ....
-        int nbr_half_moves = (full_move_count-1)*2 + (!white?1:0);
-        if( nbr_half_moves > nbrof(history)-1 )
-            nbr_half_moves = nbrof(history)-1;
-        if( nbr_half_moves > nbrof(detail_stack)-1 )
-            nbr_half_moves = nbrof(detail_stack)-1;
-        for( i=matches=0; i<nbr_half_moves; i++ )
-        {
-            Move m = history[--idx];
-            if( m.src == m.dst )
-                break;  // clearing history prevents bogus repitition draws
-            PopMove(m);
-
-            // ... looking for matching positions
-            if( white    == save_white      && // quick ones first!
-                DETAIL_EQ                   &&
-                0 == memcmp(squares,save_squares,sizeof(squares) )
-              )
-            {
-                matches++;
-                if( matches >= 2 )  // 3 counting original position
-                {
-                    draw = true;
-                    break;
-                }           
-            }
-
-            // For performance reasons, abandon search early if pawn move
-            //  or capture
-            if( squares[m.src]=='P' || squares[m.src]=='p' || !IsEmptySquare(m.capture) )
-                break;
-        }
-
-        // Restore current position
-        memcpy( squares, save_squares, sizeof(squares) );
-        white      = save_white;
-        detail_idx = save_detail_idx;
-        DETAIL_RESTORE;
+        draw = true;
     }
+
     if( !draw )
         result = NOT_DRAW;
     return( draw );
@@ -2441,11 +2445,97 @@ int ChessRules::GetRepetitionCount()
 
         // ... looking for matching positions
         if( white    == save_white      && // quick ones first!
-            DETAIL_EQ                   &&
+            DETAIL_EQ_KING_POSITIONS    &&
             0 == memcmp(squares,save_squares,sizeof(squares) )
             )
         {
             matches++;
+            if( !DETAIL_EQ_ALL )    // Castling flags and/or enpassant target different?
+            {
+                // It might not be a match (but it could be - we have to unpack what the differences
+                //  really mean)
+                bool revoke_match = false;
+
+                // Revoke match if different value of en-passant target square means different
+                //  en passant possibilities
+                if( !DETAIL_EQ_EN_PASSANT )
+                {
+                    int ep_saved = (int)(tmp&0xff);
+                    int ep_now   = (int)(*DETAIL_ADDR&0xff);
+
+                    // Work out whether each en_passant is a real one, i.e. is there an opposition
+                    //  pawn in place to capture (if not it's just a double pawn advance with no
+                    //  actual enpassant consequences)
+                    bool real=false;
+                    int ep = ep_saved;
+                    char const *squ = save_squares;
+                    for( int j=0; j<2; j++ )
+                    {
+                        if( ep == 0x10 )    // 0x10 = a6
+                        {
+                             real = (squ[SE(ep)] == 'P');
+                        }
+                        else if( 0x10<ep && ep<0x17 )   // 0x10 = h6
+                        {
+                             real = (squ[SW(ep)] == 'P' || squ[SE(ep)] == 'P');
+                        }
+                        else if( ep==0x17 )
+                        {
+                             real = (squ[SW(ep)] == 'P');
+                        }
+                        else if( 0x28==ep )   // 0x28 = a3
+                        {
+                             real = (squ[NE(ep)] == 'p');
+                        }
+                        else if( 0x28<ep && ep<0x2f )   // 0x2f = h3
+                        {
+                             real = (squ[NE(ep)] == 'p' || squ[NW(ep)] == 'p');
+                        }
+                        else if( ep==0x2f )
+                        {
+                             real = (squ[NW(ep)] == 'p' );
+                        }
+                        if( j > 0 )
+                            ep_now = real?ep:0x40;      // evaluate second time through
+                        else
+                        {
+                            ep_saved = real?ep:0x40;    // evaluate first time through
+                            ep = ep_now;                // setup second time through
+                            squ = squares;
+                            real = false;
+                        }
+                    }
+
+                    // If for example one en_passant is real and the other not, it's not a real match
+                    if( ep_saved != ep_now )
+                        revoke_match = true;
+                }
+
+                // Revoke match if different value of castling flags means different
+                //  castling possibilities
+                if( !revoke_match && !DETAIL_EQ_CASTLING )
+                {
+                    bool wking_saved  = save_squares[e1]=='K' && save_squares[h1]=='R' && (int)(tmp&(WKING<<24));
+                    bool wking_now    = squares[e1]=='K' && squares[h1]=='R' && (int)(*DETAIL_ADDR&(WKING<<24));
+                    bool bking_saved  = save_squares[e8]=='k' && save_squares[h8]=='r' && (int)(tmp&(BKING<<24));
+                    bool bking_now    = squares[e8]=='k' && squares[h8]=='r' && (int)(*DETAIL_ADDR&(BKING<<24));
+                    bool wqueen_saved = save_squares[e1]=='K' && save_squares[a1]=='R' && (int)(tmp&(WQUEEN<<24));
+                    bool wqueen_now   = squares[e1]=='K' && squares[a1]=='R' && (int)(*DETAIL_ADDR&(WQUEEN<<24));
+                    bool bqueen_saved = save_squares[e8]=='k' && save_squares[a8]=='r' && (int)(tmp&(BQUEEN<<24));
+                    bool bqueen_now   = squares[e8]=='k' && squares[a8]=='r' && (int)(*DETAIL_ADDR&(BQUEEN<<24));
+                    revoke_match = ( wking_saved != wking_now ||
+                                     bking_saved != bking_now ||
+                                     wqueen_saved != wqueen_now ||
+                                     bqueen_saved != bqueen_now );
+                }
+
+                // If the real castling or enpassant possibilities differ, it's not a match
+                //  At one stage we just did a naive binary match of the details - not good enough. For example
+                //  a rook moving away from h1 doesn't affect the WKING flag, but does disallow white king side
+                //  castling
+                if( revoke_match )
+                     matches--;
+            }
         }
 
         // For performance reasons, abandon search early if pawn move
@@ -6177,53 +6267,7 @@ bool ChessEngine::CalculateNextMove( bool new_game, vector<Move> &pv, Move &best
  ****************************************************************************/
 bool ChessEngine::IsRepitition()
 {
-    bool repitition=false;
-
-    //  Save those aspects of current position that are changed by multiple 
-    //  PopMove() calls as we search backwards (i.e. squares, white,
-    //  detail, detail_idx)
-    bool save_white = white;
-    char save_squares[sizeof(squares)];
-    memcpy( save_squares, squares, sizeof(save_squares) );
-    unsigned char save_detail_idx = detail_idx;  // must be unsigned char
-    unsigned char idx             = history_idx; // must be unsigned char
-    DETAIL_SAVE;
-
-    // Search backwards ....
-    int nbr_half_moves = (full_move_count-1)*2 + (!white?1:0);
-    if( nbr_half_moves > nbrof(history)-1 )
-        nbr_half_moves = nbrof(history)-1;
-    if( nbr_half_moves > nbrof(detail_stack)-1 )
-        nbr_half_moves = nbrof(detail_stack)-1;
-    for( int i=0; i<nbr_half_moves; i++ )
-    {
-        Move m = history[--idx];
-        if( m.src == m.dst )
-            break;  // clearing history prevents bogus repitition draws
-        PopMove(m);
-
-        // ... looking for matching positions
-        if( white    == save_white      && // quick ones first!
-            DETAIL_EQ                   &&
-            0 == memcmp(squares,save_squares,sizeof(squares) )
-          )
-        {
-            repitition = true;
-            break;
-        }
-
-        // For performance reasons, abandon search early if pawn move
-        //  or capture
-        if( squares[m.src]=='P' || squares[m.src]=='p'  || !IsEmptySquare(m.capture) )
-            break;
-    }
-
-    // Restore current position
-    memcpy( squares, save_squares, sizeof(squares) );
-    detail_idx = save_detail_idx;
-    DETAIL_RESTORE;
-    white      = save_white;
-    return repitition;
+    return GetRepetitionCount() > 1;
 }
 
 /****************************************************************************
