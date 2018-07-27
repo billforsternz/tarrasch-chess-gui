@@ -244,8 +244,8 @@ void GameLogic::ShowNewDocument()
     glc.Set(result);
     NewState( gameover ? GAMEOVER : RESET );
     undo.Clear(gd,state);
-    atom.Focus();
     atom.StatusUpdate();
+    atom.Focus();
 }
 
 void GameLogic::CmdPlayWhite()
@@ -1713,6 +1713,7 @@ void GameLogic::SetManual( MoveTree *mt, bool at_move0, bool from_mouse_move )
     }
     chess_clock.GameOver();
     NewState( MANUAL, from_mouse_move );
+    atom.StatusUpdate();
     atom.Focus();
 }
 
@@ -3043,6 +3044,7 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
     if( objs.uci_interface && (state==MANUAL||state==HUMAN||state==PONDERING||state==THINKING||(kibitz&&state==GAMEOVER) ) )
         objs.uci_interface->SuspendResume( true );  // resume if suspended
     atom.StatusUpdate();
+    cprintf( "*** Status Update Request\n" );
     atom.Focus();
 }
 
@@ -3059,6 +3061,7 @@ void GameLogic::StatusInit()
 
 void GameLogic::StatusUpdate( int idx )
 {
+    cprintf( "*** StatusUpdate() called\n" );
 	games_in_file_idx = -1;
 	int tabs_current_idx = tabs->GetCurrentIdx();
 	bool tab_in_file=false;
@@ -3192,9 +3195,24 @@ void GameLogic::StatusUpdate( int idx )
 			}
             str = buf;
         }
-        static char status_field3[20];
-        char bf[20];
-        sprintf( bf, "%d", gd.master_position.half_move_clock);
+        static char status_field3[40];
+        char bf[40];
+        bf[0] = '\0';
+        int repetition_count = gd.master_position.GetRepetitionCount();
+        int half_move_clock = gd.master_position.half_move_clock;
+        bool draw_rep_approaching = repetition_count>1;
+        bool draw_50_approaching  = half_move_clock>=20*2;
+        if( draw_rep_approaching || draw_50_approaching )
+        {
+            char bf3[20];
+            char bf50[20];
+            sprintf( bf3,  "%d/3", repetition_count );
+            sprintf( bf50, "%d%s/50", half_move_clock/2, half_move_clock%2==0?"":".5" );
+            sprintf( bf, "Draw count%s: %s%s%s", draw_rep_approaching && draw_50_approaching ? "s":"",
+                                                 draw_rep_approaching ? bf3 : "",
+                                                 draw_rep_approaching && draw_50_approaching ? " : ":"",
+                                                 draw_50_approaching ? bf50 : "");
+        }
         if( 0 != strcmp(bf,status_field3) )
         {
             strcpy(status_field3,bf);
