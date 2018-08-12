@@ -13,16 +13,17 @@ releases.
 New branch strategy: 'releases' is releases only, 'master' is main work branch, between
 releases, 'development' will be deleted in due course.
 
-I made releases with git checkout tags/tarrasch-v3.03a -b releases
-
-Unfortunately github.com thinks this brand new branch is stale - but that will resolve
-when we put out a new branch.
-
 Why? Because the Linux changes started in 'master' wrongly, and also because Github.com web visitors
 see 'master' first and foremost - so make that the place where work happens.
 
 I've put some notes on new issues and problems that are holding up a nice new release in
 file notes.txt
+
+By the way I made 'releases' with git checkout tags/tarrasch-v3.03a -b releases
+
+Unfortunately github.com thinks this brand new branch is stale - but that will resolve
+when we (finally) put out a new release.
+
 
 Background
 ==========
