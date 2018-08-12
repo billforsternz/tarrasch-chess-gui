@@ -1572,14 +1572,14 @@ MoveTree *GameView::Locate( unsigned long pos, thc::ChessRules &cr_, string &tit
                             cr_.Init();
                         int nbr_vars = stack.size();
                         MoveTree *last_move_played=NULL;
-                        for( int i=0; i<nbr_vars; i++ )
+                        for( int j=0; j<nbr_vars; j++ )
                         {
-                            vector<MoveTree> &variation = *stack[i].v;
-                            int imove = stack[i].imove;
-                            for( int j=0; j<imove; j++ )
+                            vector<MoveTree> &variation = *stack[j].v;
+                            int imove = stack[j].imove;
+                            for( int k=0; k<imove; k++ )
                             {
-                                cr_.PlayMove( variation[j].game_move.move );
-                                last_move_played = &variation[j];
+                                cr_.PlayMove( variation[k].game_move.move );
+                                last_move_played = &variation[k];
                             }
                         }
 
