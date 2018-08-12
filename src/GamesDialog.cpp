@@ -115,7 +115,7 @@ void GamesDialogResizer::AnchorOriginalPositions( wxWindow *dialog, wxWindow *li
     list->GetSize( &list_w, &list_h );
     line->GetPosition( &line_x, &line_y );
     line->GetSize( &line_w, &line_h );
-    for( int i=0; i<panel_windows.size(); i++ )
+    for( unsigned int i=0; i<panel_windows.size(); i++ )
     {
         wxWindow *window = panel_windows[i];
         wxPoint pos = window->GetPosition();
@@ -174,7 +174,7 @@ void GamesDialogResizer::ReLayout( wxWindow *dialog, wxWindow *list, wxWindow *l
     line->SetPosition(pos2);
 
     // All panel windows moved down by stretch amount
-    for( int i=0; i<panel_windows.size(); i++ )
+    for( unsigned int i=0; i<panel_windows.size(); i++ )
     {
         wxWindow *window = panel_windows[i];
         if( panel_stretch_widths[i] )
@@ -189,10 +189,10 @@ void GamesDialogResizer::ReLayout( wxWindow *dialog, wxWindow *list, wxWindow *l
     }
 }
 
-void GamesDialogResizer::Refresh( wxWindow *dialog, wxWindow *list, wxWindow *line )
+void GamesDialogResizer::Refresh( wxWindow *dialog, wxWindow *WXUNUSED(list), wxWindow *WXUNUSED(line) )
 {
     dialog->Refresh();
-    for( int i=0; i<panel_stretch_widths.size(); i++ )
+    for( unsigned int i=0; i<panel_stretch_widths.size(); i++ )
     {
         if( panel_stretch_widths[i] )
         {
@@ -512,7 +512,7 @@ void GamesDialog::Init()
 // Window creation
 bool GamesDialog::Create( wxWindow* parent,
    wxWindowID id_, const wxString& caption,
-   const wxPoint& pos_, const wxSize& size_, long style_ )
+   const wxPoint& WXUNUSED(pos_), const wxSize& WXUNUSED(size_), long style_ )
 {
     // Minimum (size,position) is a very small minimum size. To get that effect we set this size initially
     //  then we change to Actual values
@@ -576,7 +576,6 @@ bool GamesDialog::Create( wxWindow* parent,
         list_ctrl->InsertColumn( 9, "ECO"      );
         list_ctrl->InsertColumn(10, "Ply"      );
         list_ctrl->InsertColumn(11, "Moves"    );
-        int col_flag=0;
         int cols[20];
 
         // Only use the non volatile column widths if they validate okay (factory
