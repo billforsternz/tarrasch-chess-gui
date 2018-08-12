@@ -551,7 +551,7 @@ int Database::LoadPlayerGamesWithQuery(  std::string &player_name, bool white, s
 
 int Database::GetRow( int row, CompactGame *pact )
 {
-    if( 0<=row && row<tiny_db.in_memory_game_cache.size() )
+    if( 0<=row && static_cast<unsigned int>(row)<tiny_db.in_memory_game_cache.size() )
     {
         smart_ptr<ListableGame> p = tiny_db.in_memory_game_cache[row];
         p->GetCompactGame(*pact);

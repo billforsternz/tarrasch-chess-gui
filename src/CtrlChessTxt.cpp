@@ -333,7 +333,13 @@ void CtrlChessTxt::Paste()
             for( unsigned int i=0; i<txt_to_paste.Length(); i++ )
             {
                 int c=txt_to_paste[i];
-				c &= 0x7f;
+                if( c == 0x2013 )   // Unicode en-dash ?
+                {
+                    c = '-';
+                    cprintf( "Special unicode en-dash handling\n" );
+                }
+                else if( c > 0x7f )
+                    c = '?';
                 if( c == '\n' )
 				{
 					if( !check_tag )
