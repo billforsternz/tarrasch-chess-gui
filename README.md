@@ -15,7 +15,7 @@ releases, 'development' will be deleted in due course.
 
 I made releases with git checkout tags/tarrasch-v3.03a -b releases
 
-Unfortunately github.com things this brand new branch is stale - but that will resolve
+Unfortunately github.com thinks this brand new branch is stale - but that will resolve
 when we put out a new branch.
 
 Why? Because the Linux changes started in 'master' wrongly, and also because Github.com web visitors
