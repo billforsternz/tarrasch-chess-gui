@@ -60,7 +60,7 @@ void DbDialog::GdvEnumerateGames()
 }
 
 // Games Dialog Override - Add extra controls
-wxSizer *DbDialog::GdvAddExtraControls( bool big_display )
+wxSizer *DbDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
 {
     // Stats list box
     //    wxSize sz4 = sz;
