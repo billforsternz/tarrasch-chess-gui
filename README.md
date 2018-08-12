@@ -1,4 +1,23 @@
-*Recent news - Tarrasch on Linux has moved ahead significantly, see Building Tarrasch on Linux and Mac below*
+Recently
+========
+
+A Tarrasch Linux release is very close, although it has been close for a long time (sorry).
+See Building Tarrasch on Linux and Mac below.
+
+At the moment I am just doing a little bit or reorganisation, because the Linux changes
+disrupted my branch strategy.
+
+Old branch strategy: 'master' is releases only, 'development' is main work branch, between
+releases.
+
+New branch strategy: 'releases' is releases only, 'master' is main work branch, between
+releases, 'development' will be deleted in due course.
+
+Why? Because the Linux changes started in 'master' wrongly, and also because Github.com web visitors
+see 'master' first and foremost - so make that the place where work happens.
+
+I've put some notes on new issues and problems that are holding up a nice new release in
+file notes.txt
 
 Background
 ==========
