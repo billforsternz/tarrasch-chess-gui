@@ -183,4 +183,4 @@ Tarrasch V3 seeks to add the following features to the existing Tarrasch V2
 * Publish to .html (and possibly .rtf).
 * Work with huge files, easily preview games before loading.
 
-Bill Forster <billforsternz@gmail.com> Last update: 12Aug2016
+Bill Forster <billforsternz@gmail.com>
