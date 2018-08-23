@@ -50,6 +50,9 @@ void GameDocument::Init( const thc::ChessPosition &start_position_ )
     r.white_elo = "";
     r.black_elo = "";
     this->start_position = start_position_;
+    r.fen       = this->start_position.ForsythPublish();
+    if( r.fen == "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" )
+        r.fen = "";
     fposn1 = 0;
     fposn2 = 0;
     fposn3 = 0;
