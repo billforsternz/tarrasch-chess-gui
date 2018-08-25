@@ -388,7 +388,7 @@ void PositionDialog::CreateControls()
         wxT("&Move count"), wxDefaultPosition, wxDefaultSize, 0 );
     move_count_ctrl = new wxSpinCtrl ( this, ID_MOVE_COUNT,
         wxEmptyString, wxDefaultPosition, wxSize(50, wxDefaultCoord), //wxDefaultSize, 
-        wxSP_ARROW_KEYS, m_pos.full_move_count, 500, 1 );
+        wxSP_ARROW_KEYS, 1, 500, m_pos.full_move_count );
     move_count_sizer->Add(move_count_label, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     move_count_sizer->Add(92, 5, 1, wxALL, 0);
     move_count_sizer->Add(move_count_ctrl,  0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
@@ -402,7 +402,7 @@ void PositionDialog::CreateControls()
         wxT("50 move rule count"), wxDefaultPosition, wxDefaultSize, 0 );
     half_count_ctrl = new wxSpinCtrl ( this, ID_HALF_COUNT,
         wxEmptyString, wxDefaultPosition, wxSize(50, wxDefaultCoord), //wxDefaultSize, 
-        wxSP_ARROW_KEYS, m_pos.half_move_clock, 100, 0 );
+        wxSP_ARROW_KEYS, 0, 100, m_pos.half_move_clock );
     half_count_sizer->Add(half_count_label, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     half_count_sizer->Add(57, 5, 1, wxALL, 0);
     half_count_sizer->Add(half_count_ctrl,  0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
