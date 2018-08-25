@@ -1,4 +1,4 @@
-12 August 2018
+24 August 2018
 Things on top at the moment as we struggle to get a new release out
 (last release was V3.03a in early 2017)
 
@@ -16,7 +16,7 @@ Remove warnings
 Comment before resume from branch
 Cancel in PGN Dialog still loads game
 Able to add comment right at end of game
-Fix bug: Setup a position, play moves, go back and look at it in session
+FIXED> Fix bug: Setup a position, play moves, go back and look at it in session
 Diagram output
 Game output
 PGN editor preserves extra tags, let's you edit arbitrary tags
@@ -28,10 +28,12 @@ Hague-Smith was missing in selection; so we pasted moves into new game, added ta
 Gong-Ang was first game we edited, but opened another file, so tab was orphaned, so opened selection again and added tab to file. Later
 we sorted by round and deleted old unannotated version. 
 Bug: Promote rest of comment from index 0 in a lone comment doesn't work
-Bug: move counts in position setup aren't modifiable
+FIXED (actually they were modifiable, but improperly restricted)> Bug: move counts in position setup aren't modifiable
 Bug: Clear text window on new game
 Bug: Delete in text window doesn't delete selection
 Promote comment to stalemate (checkmate?) doesn't generate same result as playing out moves.
+Set engine priority lower
+Remove sqlite from build
 
 Annoying engine dialog problem first reported by Laocomo / Larry Oliver on 02 Dec 2016 predated Tarrasch V3.01
 Problem is that wxWidgets sacrifices the engine picker in a bid to get all 6 UCI parameters (number of UCI parameters
