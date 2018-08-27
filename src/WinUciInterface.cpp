@@ -278,8 +278,11 @@ UciInterface::UciInterface( const char *filename_uci_exe )
     si.hStdInput = newstdin;
 
     //spawn the child process
+    EngineConfig *rep = &objs.repository->engine;
+    DWORD dwCreationFlags = rep->m_low_priority ? CREATE_NEW_CONSOLE|BELOW_NORMAL_PRIORITY_CLASS
+                                                : CREATE_NEW_CONSOLE;
     int i_okay =  
-    CreateProcessA(filename_uci_exe,NULL,NULL,NULL,TRUE,CREATE_NEW_CONSOLE,
+    CreateProcessA(filename_uci_exe,NULL,NULL,NULL,TRUE,dwCreationFlags,
                        NULL,NULL,&si,&pi);
     if( !i_okay )  
     {

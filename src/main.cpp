@@ -2240,15 +2240,19 @@ void ChessFrame::OnUpdateLog(wxUpdateUIEvent &event )
 
 void ChessFrame::OnEngine(wxCommandEvent &)
 {
-    wxString old_file    = objs.repository->engine.m_file;
+    wxString old_file     = objs.repository->engine.m_file;
+    bool old_low_priority = objs.repository->engine.m_low_priority;
     EngineDialog dialog( objs.repository->engine, this );
     if( wxID_OK == dialog.ShowModal() )
     {
         objs.repository->engine = dialog.dat;
         const char *s = dialog.dat.m_file.c_str();
         cprintf( "file=%s\n", s );
-        if( old_file != objs.repository->engine.m_file )
+        if( old_file != objs.repository->engine.m_file ||
+            old_low_priority != objs.repository->engine.m_low_priority )
+        {
             objs.gl->EngineChanged();
+        }
     }
     SetFocusOnList();
 }

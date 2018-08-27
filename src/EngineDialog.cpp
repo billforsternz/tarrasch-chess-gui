@@ -129,24 +129,15 @@ void EngineDialog::CreateControls()
         wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST ); //|wxFLP_CHANGE_DIR );    
     box_sizer->Add(picker, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 1);
 
+    // Low priority enabled
+    wxCheckBox* low_priority_box = new wxCheckBox( this, ID_LOW_PRIORITY, 
+       "Low priority", wxDefaultPosition, wxDefaultSize, 5 );
+    low_priority_box->SetValue( dat.m_low_priority );
+
     // Ponder enabled
     wxCheckBox* ponder_box = new wxCheckBox( this, ID_PONDER, 
        wxT("Ponder"), wxDefaultPosition, wxDefaultSize, 5 );
     ponder_box->SetValue( dat.m_ponder );
-    //box_sizer->Add( ponder_box, 0,
-    //    wxALL, 5);
-/*
-    // Label for the hash
-    wxStaticText* hash_label = new wxStaticText ( this, wxID_STATIC,
-        wxT("&Hash:"), wxDefaultPosition, wxDefaultSize, 0 );
-    box_sizer->Add(hash_label, 0, wxALL, 5);
-
-    // A spin control for the hash
-    wxSpinCtrl* hash_spin = new wxSpinCtrl ( this, ID_HASH,
-        wxEmptyString, wxDefaultPosition, wxSize(60, -1),
-        wxSP_ARROW_KEYS, 1, 4096, 64 );
-    box_sizer->Add(hash_spin, 0, wxALL, 5);
-*/
 
     // Label for the hash
     wxStaticText* hash_label = new wxStaticText ( this, wxID_STATIC,
@@ -157,6 +148,7 @@ void EngineDialog::CreateControls()
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 1, 32768, 64 );
     wxBoxSizer* hash_horiz  = new wxBoxSizer(wxHORIZONTAL);
+    hash_horiz->Add( low_priority_box, 0, wxALIGN_LEFT|wxGROW|wxALL, 5);
     hash_horiz->Add( ponder_box, 0, wxALIGN_LEFT|wxGROW|wxALL, 5);
     hash_horiz->Add( hash_label,  0, wxALIGN_LEFT|wxGROW|wxALL, 10);
     hash_horiz->Add( hash_spin,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
@@ -303,6 +295,8 @@ void EngineDialog::SetDialogValidators()
 {
     FindWindow(ID_PONDER)->SetValidator(
         wxGenericValidator(& dat.m_ponder));
+    FindWindow(ID_LOW_PRIORITY)->SetValidator(
+        wxGenericValidator(& dat.m_low_priority));
     FindWindow(ID_HASH)->SetValidator(
         wxGenericValidator(& dat.m_hash));
     FindWindow(ID_MAX_CPU_CORES)->SetValidator(
@@ -338,12 +332,15 @@ void EngineDialog::SetDialogValidators()
 // Sets the help text for the dialog controls
 void EngineDialog::SetDialogHelp()
 {
-    wxString file_help = wxT("The UCI engine to use (a .exe file, eg Rybka v2.3.2a.mp.w32.exe, or komodo3-64.exe).");
+    wxString file_help = wxT("The UCI engine to use (a .exe file, eg stockfish_8_x64.exe, or komodo8-64.exe).");
     FindWindow(ID_ENGINE_PICKER)->SetHelpText(file_help);
     FindWindow(ID_ENGINE_PICKER)->SetToolTip(file_help);
     wxString ponder_help = wxT("Allow the engine to think on human's time (if capable).");
     FindWindow(ID_PONDER)->SetHelpText(ponder_help);
     FindWindow(ID_PONDER)->SetToolTip(ponder_help);
+    wxString low_priority_help = wxT("Run the engine at lower than normal priority to improve the computer's responsiveness.");
+    FindWindow(ID_LOW_PRIORITY)->SetHelpText(low_priority_help);
+    FindWindow(ID_LOW_PRIORITY)->SetToolTip(low_priority_help);
     wxString hash_help = wxT("The maximum size of hash table the engine is allowed (in megabytes).");
     FindWindow(ID_HASH)->SetHelpText(hash_help);
     FindWindow(ID_HASH)->SetToolTip(hash_help);

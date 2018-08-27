@@ -123,6 +123,7 @@ Repository::Repository( bool use_defaults )
         // Engine
         config->Read("EngineExeFile",         &engine.m_file            );
         ReadBool    ("EnginePonder",           engine.m_ponder          );
+        ReadBool    ("EngineLowPriority",      engine.m_low_priority    );
         config->Read("EngineHash",            &engine.m_hash            );
         config->Read("EngineMaxCpuCores",     &engine.m_max_cpu_cores   );
         config->Read("EngineCustom1a",        &engine.m_custom1a        );
@@ -336,6 +337,7 @@ Repository::~Repository()
     // Engine
     config->Write("EngineExeFile",      engine.m_file   );
     config->Write("EnginePonder",       (int)engine.m_ponder     );
+    config->Write("EngineLowPriority",  (int)engine.m_low_priority );
     config->Write("EngineHash",         engine.m_hash            );
     config->Write("EngineMaxCpuCores",  engine.m_max_cpu_cores   );
     config->Write("EngineCustom1a",     engine.m_custom1a        );
