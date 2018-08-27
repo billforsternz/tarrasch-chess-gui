@@ -7,7 +7,7 @@ Things on top at the moment as we struggle to get a new release out
 
 BUG Fixed> Check what happens when human comp game ends as a repetition draw
 Why do we need Mouse Event atom instance when Set Manual does atom
-File save game as -> recent files
+COMPLETE> File save game as -> recent files
 COMPLETE> Database file in status field
 Database option in options
 Open database file offers to set it to default

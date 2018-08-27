@@ -621,6 +621,12 @@ bool CentralWorkSaver::FileSaveGameAs()
                 else if( answer2 == wxCANCEL )
                     ok = false;
             }
+
+            // Often I've found we then go hunting for the file. At least make it easy to find!
+            if(ok)
+            {
+		        objs.gl->mru.AddFileToHistory( wx_filename );
+            }
         }
     }
     if( ok )
