@@ -20,7 +20,6 @@
 #include "DbPrimitives.h"
 #include "PackedGameBinDb.h"
 #include "BinDb.h"
-#include "LegacyDb.h"
 #include "CreateDatabaseDialog.h"
 
 // CreateDatabaseDialog type definition
@@ -476,22 +475,9 @@ void CreateDatabaseDialog::OnAppendDatabase()
             ok = false;
         }
     }
-    int version=0;
     if( ok )
     {
-        ok = BinDbOpen( db_filename.c_str(), version );
-        if( !ok )
-        {
-            error_msg = version==-1 ? ("Cannot open " + db_name + " file is not in Tarrasch database format")
-                                    : ("Cannot open  " + db_name);
-        }
-        else if( version==0 || version>DATABASE_VERSION_NUMBER_BIN_DB )
-        {
-            error_msg = "Tarrasch database file " + db_name + " is incompatible with this version of Tarrasch";
-            if( ok )
-                BinDbClose();
-            ok = false;
-        }
+        ok = BinDbOpen( db_filename.c_str(), error_msg );
     }
     if( ok )
     {
@@ -502,16 +488,8 @@ void CreateDatabaseDialog::OnAppendDatabase()
         ProgressBar progress_bar( title, desc, true, this );
         
         std::vector< smart_ptr<ListableGame> > &mega_cache = BinDbLoadAllGamesGetVector();
-        if( version < DATABASE_VERSION_NUMBER_BIN_DB )
-        {
-            BinDbClose();
-            ok = LegacyDbLoadAllGames( db_filename.c_str(), true, mega_cache, dummyi, dummyb, &progress_bar );
-        }
-        else
-        {
-            BinDbLoadAllGames( true, mega_cache, dummyi, dummyb, &progress_bar );
-            BinDbClose();
-        }
+        BinDbLoadAllGames( true, mega_cache, dummyi, dummyb, &progress_bar );
+        BinDbClose();
     }
     FILE *ofile=NULL;
     if( ok )
