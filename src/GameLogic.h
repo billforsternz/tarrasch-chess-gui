@@ -212,6 +212,7 @@ private:
 	unsigned int		analysis_idx;
     std::string status_field1;
     std::string status_field2;
+    std::string status_field4;
     thc::ChessPosition      kibitz_pos;
     thc::Move               kibitz_move[NBR_KIBITZ_LINES];
     std::vector<thc::Move>  kibitz_var[NBR_KIBITZ_LINES];
