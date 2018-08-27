@@ -119,6 +119,7 @@ public:
     void CmdClocks();
     void CmdEditGameDetails();
     void CmdEditCopyGamePGNToClipboard();
+    void CmdEditCopyFENToClipboard();
     void CmdEditGamePrefix();
     void CmdEditPromote();
     void CmdEditDemote();

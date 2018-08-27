@@ -1910,6 +1910,16 @@ void GameLogic::CmdEditCopyGamePGNToClipboard()
     }
 }
 
+void GameLogic::CmdEditCopyFENToClipboard()
+{
+    std::string fen = gd.master_position.ForsythPublish();
+    if( wxTheClipboard->Open() )
+    {
+        wxTheClipboard->SetData( new wxTextDataObject(fen) );
+        wxTheClipboard->Close();
+    }
+}
+
 // If players or result (possibly) changed, redisplay it
 void GameLogic::GameRedisplayPlayersResult()
 {

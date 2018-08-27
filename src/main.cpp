@@ -775,6 +775,8 @@ public:
         void OnUpdateEditGamePrefix( wxUpdateUIEvent &);
     void OnEditCopyGamePGNToClipboard (wxCommandEvent &);
         void OnUpdateEditCopyGamePGNToClipboard(wxUpdateUIEvent &);
+    void OnEditCopyFENToClipboard (wxCommandEvent &);
+        void OnUpdateEditCopyFENToClipboard(wxUpdateUIEvent &);
     void OnEditDeleteVariation (wxCommandEvent &);
         void OnUpdateEditDeleteVariation( wxUpdateUIEvent &);
     void OnEditPromote (wxCommandEvent &);
@@ -1055,6 +1057,8 @@ BEGIN_EVENT_TABLE(ChessFrame, wxFrame)
         EVT_UPDATE_UI (ID_EDIT_GAME_PREFIX,             ChessFrame::OnUpdateEditGamePrefix)
     EVT_MENU(ID_COPY_GAME_PGN_TO_CLIPBOARD, ChessFrame::OnEditCopyGamePGNToClipboard)
         EVT_UPDATE_UI(ID_COPY_GAME_PGN_TO_CLIPBOARD,    ChessFrame::OnUpdateEditCopyGamePGNToClipboard)
+    EVT_MENU(ID_COPY_FEN_TO_CLIPBOARD,      ChessFrame::OnEditCopyFENToClipboard)
+        EVT_UPDATE_UI(ID_COPY_FEN_TO_CLIPBOARD,         ChessFrame::OnUpdateEditCopyFENToClipboard)
     EVT_MENU (ID_EDIT_DELETE_VARIATION,     ChessFrame::OnEditDeleteVariation)
         EVT_UPDATE_UI (ID_EDIT_DELETE_VARIATION,        ChessFrame::OnUpdateEditDeleteVariation)
     EVT_MENU (ID_EDIT_PROMOTE,              ChessFrame::OnEditPromote)
@@ -1158,6 +1162,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     menu_edit->Append (ID_EDIT_GAME_DETAILS,         "Edit game details", "Modify player names, tournament names, or other details");
 //    menu_edit->Append (ID_EDIT_GAME_PREFIX,          "Edit game prefix");
     menu_edit->Append (ID_COPY_GAME_PGN_TO_CLIPBOARD,"Copy game to system clipboard (PGN)");
+    menu_edit->Append (ID_COPY_FEN_TO_CLIPBOARD,     "Copy position to system clipboard (FEN)");
     menu_edit->Append (ID_EDIT_DELETE_VARIATION,     "Delete variation", "Delete the whole variation");
     menu_edit->Append (ID_EDIT_PROMOTE,              "Promote variation", "The current variation is elevated higher in the hierarchy of variations");
     menu_edit->Append (ID_EDIT_DEMOTE,               "Demote variation", "The current variation is lowered in the hierarchy of variations");
@@ -1787,6 +1792,11 @@ void ChessFrame::OnEditCopyGamePGNToClipboard(wxCommandEvent &)
     objs.gl->CmdEditCopyGamePGNToClipboard();
 }
 
+void ChessFrame::OnEditCopyFENToClipboard(wxCommandEvent &)
+{
+    objs.gl->CmdEditCopyFENToClipboard();
+}
+
 void ChessFrame::OnEditDeleteVariation (wxCommandEvent &)
 {
     objs.gl->CmdEditDeleteVariation();
@@ -1928,6 +1938,12 @@ void ChessFrame::OnUpdateEditGamePrefix( wxUpdateUIEvent &event )
 }
 
 void ChessFrame::OnUpdateEditCopyGamePGNToClipboard(wxUpdateUIEvent &event)
+{
+    bool enabled = true;
+    event.Enable(enabled);
+}
+
+void ChessFrame::OnUpdateEditCopyFENToClipboard(wxUpdateUIEvent &event)
 {
     bool enabled = true;
     event.Enable(enabled);
