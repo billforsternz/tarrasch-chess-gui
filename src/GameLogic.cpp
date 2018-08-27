@@ -1224,6 +1224,7 @@ void GameLogic::CmdDatabaseSelect()
     bool okay=ProbeControlBlocks();
     if( !okay )
         return;
+    Atomic begin;
     wxFileDialog fd( objs.frame, "Select current database", "", "", "*.tdb", wxFD_FILE_MUST_EXIST );
     wxString path( objs.repository->database.m_file );
     fd.SetPath(path);
@@ -1253,6 +1254,7 @@ void GameLogic::CmdDatabaseSelect()
             }
         }
     }
+    atom.StatusUpdate();
 }
 
 void GameLogic::CmdDatabaseCreate()
@@ -2887,7 +2889,6 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
     const char *b3 = NULL;
     const char *b4 = NULL;
     const char *title = NULL;
-    wxString wx_stat;
     switch( state )
     {
         case RESET:
@@ -2895,43 +2896,52 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
         case SLIDING_MANUAL:
         case POPUP_MANUAL:
         {
-                        TERMINAL terminal_score;
-                        gd.master_position.Evaluate(terminal_score);
-                        bool gameover = (terminal_score==TERMINAL_WCHECKMATE || terminal_score==TERMINAL_BCHECKMATE ||
-                                         terminal_score==TERMINAL_WSTALEMATE || terminal_score==TERMINAL_BSTALEMATE);
-                        if( gameover )
-                        {
-                            b1 = "New Game";                    b1_cmd = ID_CMD_NEW_GAME;
-                        }
-                        else
-                        {
-                            b1 = "Play white against engine";        b1_cmd = ID_CMD_PLAY_WHITE;
-                            b2 = "Play black against engine";        b2_cmd = ID_CMD_PLAY_BLACK;
-                            b3 = "Setup a position";                    b3_cmd = ID_CMD_SET_POSITION;
-                            b4 = "Search database for this position";   b4_cmd = ID_DATABASE_SEARCH;
-                        }
-                        break;
+            TERMINAL terminal_score;
+            gd.master_position.Evaluate(terminal_score);
+            bool gameover = (terminal_score==TERMINAL_WCHECKMATE || terminal_score==TERMINAL_BCHECKMATE ||
+                                terminal_score==TERMINAL_WSTALEMATE || terminal_score==TERMINAL_BSTALEMATE);
+            if( gameover )
+            {
+                b1 = "New Game";                    b1_cmd = ID_CMD_NEW_GAME;
+            }
+            else
+            {
+                b1 = "Play white against engine";        b1_cmd = ID_CMD_PLAY_WHITE;
+                b2 = "Play black against engine";        b2_cmd = ID_CMD_PLAY_BLACK;
+                b3 = "Setup a position";                    b3_cmd = ID_CMD_SET_POSITION;
+                b4 = "Search database for this position";   b4_cmd = ID_DATABASE_SEARCH;
+            }
+            break;
         }
         case GAMEOVER:
-                        chess_clock.GameOver();
-                        //glc.TestResult( wx_stat );
-                        //title = wx_stat.c_str();
-                        b1 = "New Game";                    b1_cmd = ID_CMD_NEW_GAME;
-                        b2 = "Examine game";                b2_cmd = ID_CMD_EXAMINE_GAME;
-                        objs.log->Gameover();// initial_position, game_moves, glc.Get() );
-                        break;
-
+        {
+            chess_clock.GameOver();
+            wxString result_txt;
+            bool announce = glc.TestResult( result_txt );
+            if( announce )
+            {
+				canvas->box->SetForegroundColour(*wxRED);
+				canvas->box->SetLabel(result_txt);
+                suggestions = false;
+            }
+            b1 = "New Game";                    b1_cmd = ID_CMD_NEW_GAME;
+            b2 = "Examine game";                b2_cmd = ID_CMD_EXAMINE_GAME;
+            objs.log->Gameover();// initial_position, game_moves, glc.Get() );
+            break;
+        }
         case SLIDING:
         case HUMAN:
         case PONDERING:
         case POPUP:
-						canvas->box->SetForegroundColour(*wxRED);
-						canvas->box->SetLabel(reply_to.c_str());
-                        suggestions = false;
-                        b1 = "New Game";                    b1_cmd = ID_CMD_NEW_GAME;
-                        b2 = "Swap sides";                  b2_cmd = ID_CMD_SWAP_SIDES;
-                        b3 = "Examine game";                b3_cmd = ID_CMD_EXAMINE_GAME;
-                        break;
+        {
+			canvas->box->SetForegroundColour(*wxRED);
+			canvas->box->SetLabel(reply_to.c_str());
+            suggestions = false;
+            b1 = "New Game";                    b1_cmd = ID_CMD_NEW_GAME;
+            b2 = "Swap sides";                  b2_cmd = ID_CMD_SWAP_SIDES;
+            b3 = "Examine game";                b3_cmd = ID_CMD_EXAMINE_GAME;
+            break;
+        }
 
 /*      case SLIDING:
         case SLIDING_MANUAL:
@@ -2944,13 +2954,15 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
 
         case FAKE_BOOK_DELAY:
         case THINKING:
-						canvas->box->SetForegroundColour(*wxBLACK);
-						canvas->box->SetLabel("Engine thinking...");
-                        suggestions = false;
-                        b1 = "New Game";                    b1_cmd = ID_CMD_NEW_GAME;
-                        b2 = "Force immediate move";        b2_cmd = ID_CMD_MOVENOW;
-                        b3 = "Examine game";                b3_cmd = ID_CMD_EXAMINE_GAME;
-                        break;
+        {
+			canvas->box->SetForegroundColour(*wxBLACK);
+			canvas->box->SetLabel("Engine thinking...");
+            suggestions = false;
+            b1 = "New Game";                    b1_cmd = ID_CMD_NEW_GAME;
+            b2 = "Force immediate move";        b2_cmd = ID_CMD_MOVENOW;
+            b3 = "Examine game";                b3_cmd = ID_CMD_EXAMINE_GAME;
+            break;
+        }
 
     }
 	SetGroomedPosition();
@@ -3053,9 +3065,10 @@ void GameLogic::StatusInit()
     if( objs.frame )
     {
         status_field1 = "File: (none)";
-        status_field2 = "";
         objs.frame->SetStatusText( status_field1.c_str(), 0 );
         objs.frame->SetStatusText( status_field2.c_str(), 1 );
+        objs.frame->SetStatusText( "", 2 );
+        objs.frame->SetStatusText( status_field4.c_str(), 3 );
     }
 }
 
@@ -3201,7 +3214,10 @@ void GameLogic::StatusUpdate( int idx )
         int repetition_count = gd.master_position.GetRepetitionCount();
         int half_move_clock = gd.master_position.half_move_clock;
         bool draw_rep_approaching = repetition_count>1;
-        bool draw_50_approaching  = half_move_clock>=20*2;
+        bool draw_50_approaching  = half_move_clock>=20*2 || ( /* 50 move count >= 20 OR no pawns */
+                                                              NULL==memchr(&gd.master_position.squares[8],'P',48) &&
+                                                              NULL==memchr(&gd.master_position.squares[8],'p',48)
+                                                             );
         if( draw_rep_approaching || draw_50_approaching )
         {
             char bf3[20];
@@ -3234,11 +3250,19 @@ void GameLogic::StatusUpdate( int idx )
             status_field1 = str;
             refresh=true;
         }
+        std::string tmp = objs.db->GetStatus();
+        cprintf( "Possible Db status: current:%s new:%s %s\n",status_field4.c_str(), tmp.c_str(), status_field4!=tmp?"refresh":"no refresh");
+        if( status_field4 != tmp )
+        {
+            status_field4 = tmp;
+            refresh=true;
+        }
         if( refresh )
         {
             objs.frame->SetStatusText( status_field1.c_str(), 0 );
             objs.frame->SetStatusText( status_field2.c_str(), 1 );
             objs.frame->SetStatusText( status_field3, 2 );
+            objs.frame->SetStatusText( status_field4.c_str(), 3 );
         }
     }
 }
