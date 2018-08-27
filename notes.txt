@@ -2,17 +2,17 @@
 Things on top at the moment as we struggle to get a new release out
 (last release was V3.03a in early 2017)
 
-Check what happens when human comp game ends as a repetition draw
+BUG Fixed> Check what happens when human comp game ends as a repetition draw
 Why do we need Mouse Event atom instance when Set Manual does atom
 File save game as -> recent files
-Database file in status field
+COMPLETE> Database file in status field
 Database option in options
 Open database file offers to set it to default
 Cancel not default in pop up
 Copy FEN to system clipboard
 Start not Suggestions
 Faster move generation
-Remove warnings
+COMPLETE> Remove warnings
 Comment before resume from branch
 Cancel in PGN Dialog still loads game
 Able to add comment right at end of game
@@ -33,8 +33,9 @@ Bug: Clear text window on new game
 Bug: Delete in text window doesn't delete selection
 Promote comment to stalemate (checkmate?) doesn't generate same result as playing out moves.
 Set engine priority lower
-Remove sqlite from build
+DONE> Remove sqlite from build
 
+Older stuff below;
 Annoying engine dialog problem first reported by Laocomo / Larry Oliver on 02 Dec 2016 predated Tarrasch V3.01
 Problem is that wxWidgets sacrifices the engine picker in a bid to get all 6 UCI parameters (number of UCI parameters
 increased to 6 with Tarrasch 3). Larry's screen res wa 1280 x 720
