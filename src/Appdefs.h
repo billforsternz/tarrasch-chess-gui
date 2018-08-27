@@ -14,33 +14,33 @@
 // no suffix indicates default .tdb is kingbase
 #ifdef  USING_KINGBASE
 #ifdef THC_WINDOWS
-#define MASTER_VERSION "V3.05a-Windows"
+#define MASTER_VERSION "*V3.05a-Windows"    //add asterisk prefix between releases
 #endif
 #ifdef THC_LINUX
-#define MASTER_VERSION "V3.05a-Linux"
+#define MASTER_VERSION "*V3.05a-Linux"
 #endif
 #ifdef THC_MAC
-#define MASTER_VERSION "V3.05a-Mac"
+#define MASTER_VERSION "*V3.05a-Mac"
 #endif
 
 // 'g' suffix indicates default .tdb is great players database
 #else
 #ifdef THC_WINDOWS
-#define MASTER_VERSION "V3.05a-g-Windows"
+#define MASTER_VERSION "*V3.05a-g-Windows"
 #endif
 #ifdef THC_LINUX
-#define MASTER_VERSION "V3.05a-g-Linux"
+#define MASTER_VERSION "*V3.05a-g-Linux"
 #endif
 #ifdef THC_MAC
-#define MASTER_VERSION "V3.05a-g-Mac"
+#define MASTER_VERSION "*V3.05a-g-Mac"
 #endif
 #endif
 
 #define DEFAULT_ENGINE "stockfish_8_x32.exe"
 #define DEFAULT_ENGINE_64 "stockfish_8_x64.exe"
-#define DATABASE_VERSION_NUMBER_NORMAL 1
-#define DATABASE_VERSION_NUMBER_TINY   2
-#define DATABASE_VERSION_NUMBER_BIN_DB 3
+#define DATABASE_VERSION_NUMBER_LEGACY 1    // Old SQL type = supported with V3.03a
+#define DATABASE_VERSION_NUMBER_TINY   2    // Some kind of intermediate version, we don't support it any more at all
+#define DATABASE_VERSION_NUMBER_BIN_DB 3    // Only type this version of Tarrasch supports
 #ifdef  USING_KINGBASE
 #define DEFAULT_DATABASE "kingbase-lite.tdb"
 #else
