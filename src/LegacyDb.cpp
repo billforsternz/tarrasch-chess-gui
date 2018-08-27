@@ -4,6 +4,7 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Copyright 2010-2016, Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
+#if 0 // Omit - not supported after V3.03a
 #include <vector>
 #include <set>
 #include <map>
@@ -16,7 +17,6 @@
 #include "CompactGame.h"
 #include "ListableGameBinDb.h"
 #include "BinDb.h"
-#include "LegacyDb.h"
 
 // Handle for database connection
 static sqlite3 *gbl_handle;
@@ -253,4 +253,5 @@ bool LegacyDbLoadAllGames(  const char *db_file, bool for_db_append, std::vector
     return ok;
 }
 
+#endif // Omit - not supported after V3.03a
 
