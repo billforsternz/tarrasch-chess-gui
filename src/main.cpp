@@ -902,10 +902,10 @@ bool ChessApp::OnInit()
     objs.frame = frame;
     SetTopWindow (frame);
     frame->Show(true);
-    if( objs.gl )
-        objs.gl->StatusUpdate();
     objs.db         = new Database( objs.repository->database.m_file.c_str() );
 	objs.canvas->SetBoardTitle( "Initial Position" );
+    if( objs.gl )
+        objs.gl->StatusUpdate();
     return true;
 }
 
@@ -1237,9 +1237,9 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     SetMenuBar( menu );
 
     // Create a status bar
-    CreateStatusBar(3);
-    int widths[3] = {-300,-100,-100};
-    SetStatusWidths(3,widths);
+    CreateStatusBar(4);
+    int widths[4] = {-250,-100,-100,-250};
+    SetStatusWidths(4,widths);
 
 #ifdef THC_WINDOWS
     wxToolBar *toolbar = new wxToolBar(this, wxID_ANY,
