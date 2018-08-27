@@ -67,7 +67,7 @@ VS2010 and VS2015
 2) Put this repository into a convenient working directory, eg
 git clone https://github.com/billforsternz/tarrasch-chess-gui workdir
 
-3) Just the one project file is required, it's called TarraschDb.vcxproj.
+3) Just the one project file is required, it's called Tarrasch.vcxproj.
 It works on VS2010 and VS2015. The project structure is now super lean,
 mean and easy. There are a bunch of C++ source files (obviously) plus a
 simple resource file and icon (actually two icon files now) in the src
