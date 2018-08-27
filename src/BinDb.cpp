@@ -34,9 +34,9 @@ B) Read a database [for append] and pgn games [create or append] into the local 
 C) After B) write the local games array out to a new database file
 
 Main Functions
-1) bool    BinDbOpen( const char *db_file, int &version )
+1) bool    BinDbOpen( const char *db_file, std::string &error_msg )
     Opens file for reading, reads header
-    returns bool ok, sets version (we expect version 3)
+    Returns bool ok, if !ok set error_msg to explain
 2) uint8_t BinDbReadBegin()
     Get ready to read games, returns newly allocated control block
 3) BinDbLoadAllGames()
@@ -191,47 +191,69 @@ static uint8_t compatibility_header[] =
 #define COMPATIBILITY_HEADER_SIZE 1200  // = 0x4b0
 static uint32_t compatibility_header_size=COMPATIBILITY_HEADER_SIZE;
 
-// Return bool ok
-bool BinDbOpen( const char *db_file, int &version )
+// Return bool ok, if !ok set error_msg to explain
+bool BinDbOpen( const char *db_file, std::string &error_msg )
 {
     bool ok=false;
-    version=0;
+    error_msg = "";
     if( bin_file )
     {
         fclose( bin_file );
         bin_file = NULL;
     }
     bin_file = fopen( db_file, "rb" );
-    if( bin_file )
+    if( !bin_file )
     {
-        version = -1;
+        error_msg = "Cannot open  " + std::string(db_file);
+    }
+    else
+    {
         // Read the 1200 byte compatibility header - if present it makes a BinDb formatted
         //  database compatible to the original versions of TarraschDb which expect a sqlite
         //  file - well compatible enough to read the version number and conclude that they
         //  can't use the file so that they fail gracefully.
         unsigned char buf[COMPATIBILITY_HEADER_SIZE];
         int n = fread( buf, 1, sizeof(buf), bin_file );
-        if( n == COMPATIBILITY_HEADER_SIZE )
+        if( n != COMPATIBILITY_HEADER_SIZE )
+            error_msg = "File  " + std::string(db_file) + " does not appear to be a Tarrasch database file";
+        else
         {
             if( 0 == memcmp(&buf[0x100], "TDB format", 10) )  // is this the compatibility header ?
             {
-                ok = true;
                 compatibility_header_size = *( reinterpret_cast<uint32_t *>(&buf[0x0f0]) );
                 if( compatibility_header_size<0x10b || compatibility_header_size>COMPATIBILITY_HEADER_SIZE )    // a little future-proofing, support possible
                     compatibility_header_size = COMPATIBILITY_HEADER_SIZE;                                      //  smaller compatibility header size
-                version = buf[compatibility_header_size-1];
+                int version = buf[compatibility_header_size-1];
+                char vtxt[40];
+                sprintf( vtxt, "%d", version );
+                if( version == DATABASE_VERSION_NUMBER_BIN_DB )
+                    ok = true;
+                else if( version < DATABASE_VERSION_NUMBER_BIN_DB )
+                {
+                    error_msg = "Tarrasch database file " + std::string(db_file) + " uses an old Tarrasch format (DB format =" + std::string(vtxt) + ") and is incompatible with this version of Tarrasch. "
+                        "Try Tarrasch V3.03, it might be able to read it. "
+                        "If that works, append a small (even empty) pgn to rewrite to a newer format. "
+                        "Tarrasch V3.03 can be downloaded from https://triplehappy.com/downloads/portable-tarrasch-v3.03a-g.zip.";
+                }
+                else if( version > DATABASE_VERSION_NUMBER_BIN_DB )
+                {
+                    error_msg = "Tarrasch database file " + std::string(db_file) + " expects a more recent version of Tarrasch (DB format =" + std::string(vtxt) + "), it is incompatible with this older version of Tarrasch";
+                }
             } 
             else if( 0 == memcmp(&buf[0], "SQLite format 3", 15) )  // is it an earlier Tarrasch DB SQL based format ?
             {
-                ok = true;  // supported via LegacyDb functions
-                version = DATABASE_VERSION_NUMBER_NORMAL;
+                // version = DATABASE_VERSION_NUMBER_LEGACY
+                error_msg = "File " + std::string(db_file) + " is an SQLITE file. This version of Tarrasch cannot read it. "
+                    "Try Tarrasch V3.03, it might be able to. "
+                    "If that works, append a small (even empty) pgn to rewrite to a newer format. "
+                    "Tarrasch V3.03 can be downloaded from https://triplehappy.com/downloads/portable-tarrasch-v3.03a-g.zip.";
             }
         }
-        if( !ok )
-        {
-            fclose(bin_file);
-            bin_file = NULL;
-        }
+    }
+    if( bin_file && !ok )
+    {
+        fclose(bin_file);
+        bin_file = NULL;
     }
     return ok;
 }
