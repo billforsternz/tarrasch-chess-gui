@@ -1,7 +1,6 @@
 Instructions for building distributable packages.
 
-1) Copy the release executable from .\vc_mswu\TarraschDb.exe to Tarrasch.exe in
-this directory.
+1) Copy the release executable from .\vc_mswu\Tarrasch.exe to this directory.
 2) Make sure tarrasch.iss is selecting the .tdb file you want to include
 3) Make sure tarrasch,iss has the AppVerName right
 4) Open tarrasch.iss with the (free, wonderful) innosetup program and use the
