@@ -18,7 +18,6 @@
 #include "ProgressBar.h"
 #include "DbPrimitives.h"
 #include "BinDb.h"
-#include "LegacyDb.h"
 #include "Database.h"
 #include "Repository.h"
 #if !wxUSE_THREADS
@@ -470,7 +469,19 @@ wxMutex *WaitForWorkerThread()
 
 Database::Database( const char *db_file )
 {
+    is_open = false;
+    database_error_msg = "Database not yet open";
     Reopen( db_file );
+}
+
+std::string Database::GetStatus()
+{
+    std::string s("Db: ");
+    if( is_open )
+        s += std::string(db_filename);
+    else
+        s += "(none)"; 
+    return s;
 }
 
 void Database::Reopen( const char *db_file )
@@ -483,9 +494,7 @@ void Database::Reopen( const char *db_file )
     // Access the database.
     cprintf( "Database startup %s\n", db_file );
     db_filename = std::string(db_file);
-    is_open = BinDbOpen( db_file, database_version );
-    std::string nomsg;
-    is_open = IsOperational( nomsg );
+    is_open = BinDbOpen( db_file, database_error_msg );
     if( is_open )
         LoadInBackground( this );
     
@@ -497,25 +506,8 @@ void Database::Reopen( const char *db_file )
 // Return bool operational
 bool Database::IsOperational( std::string &error_msg )
 {
-    bool operational = false;
-    error_msg = "";
-    if( !is_open )
-        error_msg = database_version==-1 ? "Could not open database, file is not in Tarrasch database format" : "Could not open database";
-    else if( database_version==0 || database_version>DATABASE_VERSION_NUMBER_BIN_DB )
-    {
-        char buf[200];
-        sprintf( buf, "The database file is not in the correct format for this version of Tarrasch (db version=%d)", database_version );                
-        error_msg = std::string(buf);
-    }
-    else
-        operational = true;
-    if( !operational )
-    {
-        if( is_open )
-            BinDbClose();
-        is_open = false;
-    }
-    return operational;
+    error_msg = database_error_msg;
+    return is_open;
 }
 
 // SetDbPosition() no longer sets the position! - requires a little bit of refactoring
@@ -565,16 +557,8 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGam
     background_load_permill = 0;
     kill_background_load = false;
     mega_cache.clear();
-    if( database_version < DATABASE_VERSION_NUMBER_BIN_DB )
-    {
-        BinDbClose();
-        LegacyDbLoadAllGames( db_filename.c_str(), false, mega_cache, background_load_permill, kill_background_load );
-    }
-    else
-    {
-        BinDbLoadAllGames( false, mega_cache, background_load_permill, kill_background_load );
-        BinDbClose();
-    }
+    BinDbLoadAllGames( false, mega_cache, background_load_permill, kill_background_load );
+    BinDbClose();
     int cache_nbr = mega_cache.size();
     cprintf( "Number of games = %d\n", cache_nbr );
     if( cache_nbr > 0 )
