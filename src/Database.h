@@ -37,12 +37,13 @@ public:
     MemoryPositionSearch tiny_db;
     int background_load_permill;
     bool kill_background_load;
+    std::string GetStatus();
   
 private:
     std::string db_filename;
     DB_REQ db_req;
     bool is_open;
-    int  database_version;
+    std::string database_error_msg; // explanation if is_open is false
     bool player_search_in_progress;
 
     // Misc
