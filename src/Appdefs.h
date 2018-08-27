@@ -14,25 +14,25 @@
 // no suffix indicates default .tdb is kingbase
 #ifdef  USING_KINGBASE
 #ifdef THC_WINDOWS
-#define MASTER_VERSION "*V3.05a-Windows"    //add asterisk prefix between releases
+#define MASTER_VERSION "V3.05a-Windows"    //add asterisk prefix between releases
 #endif
 #ifdef THC_LINUX
-#define MASTER_VERSION "*V3.05a-Linux"
+#define MASTER_VERSION "V3.05a-Linux"
 #endif
 #ifdef THC_MAC
-#define MASTER_VERSION "*V3.05a-Mac"
+#define MASTER_VERSION "V3.05a-Mac"
 #endif
 
 // 'g' suffix indicates default .tdb is great players database
 #else
 #ifdef THC_WINDOWS
-#define MASTER_VERSION "*V3.05a-g-Windows"
+#define MASTER_VERSION "V3.05a-g-Windows"
 #endif
 #ifdef THC_LINUX
-#define MASTER_VERSION "*V3.05a-g-Linux"
+#define MASTER_VERSION "V3.05a-g-Linux"
 #endif
 #ifdef THC_MAC
-#define MASTER_VERSION "*V3.05a-g-Mac"
+#define MASTER_VERSION "V3.05a-g-Mac"
 #endif
 #endif
 
@@ -48,7 +48,7 @@
 #endif
 
 // Conditional compiles
-#define DURING_DEVELOPMENT		    // If defined we get a console window for cprintf()
+//#define DURING_DEVELOPMENT		    // If defined we get a console window for cprintf()
 #define AUI_NOTEBOOK				// Define this to get X close boxes on tabs
 //#define NEW_TAB_LAUNCHES_TESTBED	// If defined new tab feature actually launches testbed window instead
 #ifndef DURING_DEVELOPMENT
@@ -139,6 +139,7 @@ enum
     ID_ANNOT19,
     ID_ANNOT20,
     ID_COPY_GAME_PGN_TO_CLIPBOARD,
+    ID_COPY_FEN_TO_CLIPBOARD,
 	ID_BUTTON_TAB_NEW,
 	ID_STATIC_TXT_PLAYER1,
 	ID_STATIC_TXT_PLAYER2,
