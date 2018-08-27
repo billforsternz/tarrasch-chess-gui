@@ -3276,14 +3276,6 @@ void GameLogic::DoPopup( wxPoint &point, vector<thc::Move> &target_moves,
     wxArrayString terses;
     wxArrayString book;
 
-    // Start with cancel
-    if( popup_mode != BOOK_HOVER )
-    {
-        strs.Add( "Cancel" );
-        terses.Add( "" );
-        book.Add( "" );
-    }
-
     // 1st book moves that are target moves
     // 2nd target moves that aren't book moves
     // 3rd book moves that aren't target moves
@@ -3378,6 +3370,14 @@ void GameLogic::DoPopup( wxPoint &point, vector<thc::Move> &target_moves,
                 book.Add( "B" );
             }
         }
+    }
+
+    // End with cancel
+    if( popup_mode != BOOK_HOVER )
+    {
+        strs.Add( "Cancel" );
+        terses.Add( "" );
+        book.Add( "" );
     }
 
     // Show the position after playing the move if SLIDE_TO_DESTINATION
