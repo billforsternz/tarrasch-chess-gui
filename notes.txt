@@ -1,3 +1,9 @@
+We changed some mouse handlers by adding "Atomic begin" in order to get the
+draw counts to update when clicking on a different move;
+
+But why was that necessary when clicking on a different move updated the
+position and the window title?
+
 rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 rnb1kb1r/pp1ppppp/2p2n2/6q1/3P4/2N1P3/PPP2PPP/R2QKBNR w KQkq - 0 1
 
