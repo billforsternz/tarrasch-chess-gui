@@ -332,14 +332,31 @@ void CtrlChessTxt::Paste()
 			bool check_tag = gd->IsEmpty();
             for( unsigned int i=0; i<txt_to_paste.Length(); i++ )
             {
-                int c=txt_to_paste[i];
-                if( c == 0x2013 )   // Unicode en-dash ?
+                char c=txt_to_paste[i];
+                /* Did some debugging to sort out an issue with en dash. Some old code
+                   in GameDocument.cpp did special handling to treat en dash as ascii
+                   dash, but had forgotten about it, and didn't actually know it was
+                   en dash, only that it was '\x96'. Turns out that's the ANSI code for
+                   en dash.
+                   Now comes the interesting part. If we go
+                    char c=txt_to_paste[i];
+                   wxWidgets automatically converts en dash to the ansi code -x96 (or -106)
+                   But if we go
+                    int c=txt_to_paste[i];
+                   wxWidgets automatically converts en dash to the unicode value 0x2013 ! */
+
+
+            /*  The old code in GameDocument.cpp did the same job in a more general way,
+                One day we failed to promote 0-0-0 (with en dashes instead of ascii
+                dashes) for some reason - can't reproduce problem - and we ended up
+                putting this unnecessary code in */
+            /*  if( c == 0x2013 )   // Unicode en dash ?
                 {
                     c = '-';
-                    cprintf( "Special unicode en-dash handling\n" );
+                    cprintf( "Special unicode en dash handling\n" );
                 }
                 else if( c > 0x7f )
-                    c = '?';
+                    c = '?'; */
                 if( c == '\n' )
 				{
 					if( !check_tag )

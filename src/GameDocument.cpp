@@ -418,7 +418,7 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
     {
         push_back = '\0';
         old_state = state;
-        if( ch == '\x96' )  // something that looks a lot like a '-', sometimes used instead of '-'
+        if( ch == '\x96' )  // ANSI code for en dash, sometimes used instead of '-'
             ch = '-';
         bool in_number = isascii(ch) && isdigit(ch);
         bool in_move   = isascii(ch) && isalnum(ch);
