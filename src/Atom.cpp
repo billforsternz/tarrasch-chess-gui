@@ -72,6 +72,15 @@ void Atom::Redisplay( long pos_ )
         gl->gd.Redisplay(pos_);
 }
 
+void Atom::StatusUpdate()
+{
+    if( running )
+        status_update=true;
+    else
+        gl->StatusUpdate();
+}
+
+
 void Atom::Begin( bool set_focus_ )
 {
     this->set_focus = set_focus_;

@@ -4,6 +4,12 @@ draw counts to update when clicking on a different move;
 But why was that necessary when clicking on a different move updated the
 position and the window title?
 
+Answer> Problem was that no atomic context was running so status was updated
+but ignored. Solution update Atom::StatusUpdate() so that if no atomic
+context is running it updates status immediately (not at end of context) -
+some (not all) of the other Atom facilities work that way. Enabled removal
+of the (only one actually) Atomic begin; previously added to a mouse handler.
+
 rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 rnb1kb1r/pp1ppppp/2p2n2/6q1/3P4/2N1P3/PPP2PPP/R2QKBNR w KQkq - 0 1
 

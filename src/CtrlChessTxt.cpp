@@ -143,7 +143,6 @@ void CtrlChessTxt::OnMouseEvent( wxMouseEvent& ev )
 {
     if( gl->IsManual() )
     {
-        Atomic begin(false);
         unsigned long pos = GetInsertionPoint();
         Goto(pos,true);
         ev.Skip();   //continue to process event

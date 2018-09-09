@@ -38,10 +38,7 @@ public:
     {
         set_focus=true;
     }
-    void StatusUpdate()
-    {
-        status_update=true;
-    }
+    void StatusUpdate();
     void End();
     void NotUndoAble()
     {
