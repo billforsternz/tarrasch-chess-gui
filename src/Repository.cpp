@@ -164,7 +164,7 @@ Repository::Repository( bool use_defaults )
         ReadBool    ("GeneralNoItalics",                  general.m_no_italics        );
         ReadBool    ("GeneralStraightToGame",             general.m_straight_to_game  );
         ReadBool    ("GeneralStraightToFirstGame",        general.m_straight_to_first_game  );
-        ReadBool    ("GeneralUseLargeFont",               general.m_large_font    );
+		config->Read("GeneralFontSize",                  &general.m_font_size );
         ReadBool    ("GeneralHeadingAboveBoard",          general.m_heading_above_board );
         ReadBool    ("GeneralNoAutoFlip",                 general.m_no_auto_flip  );
         ReadBool    ("GeneralEmitBellWhenEngineMoves",    general.m_bell  );
@@ -273,7 +273,7 @@ Repository::~Repository()
     config->Write("GeneralNoItalics",                 (int)general.m_no_italics       );
     config->Write("GeneralStraightToGame",            (int)general.m_straight_to_game );
     config->Write("GeneralStraightToFirstGame",       (int)general.m_straight_to_first_game );
-    config->Write("GeneralUseLargeFont",              (int)general.m_large_font   );
+    config->Write("GeneralFontSize",                  general.m_font_size   );
     config->Write("GeneralHeadingAboveBoard",         (int)general.m_heading_above_board  );
     config->Write("GeneralNoAutoFlip",                (int)general.m_no_auto_flip );
     config->Write("GeneralEmitBellWhenEngineMoves",   (int)general.m_bell  );
