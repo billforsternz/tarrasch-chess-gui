@@ -14,7 +14,7 @@
 // no suffix indicates default .tdb is kingbase
 #ifdef  USING_KINGBASE
 #ifdef THC_WINDOWS
-#define MASTER_VERSION "V3.06a-Windows"    //add asterisk prefix between releases
+#define MASTER_VERSION "V3.06-Custom-Fisco Del Rosario"    //add asterisk prefix between releases
 #endif
 #ifdef THC_LINUX
 #define MASTER_VERSION "V3.06a-Linux"
