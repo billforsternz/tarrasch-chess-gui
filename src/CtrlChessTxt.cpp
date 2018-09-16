@@ -41,13 +41,16 @@ CtrlChessTxt::CtrlChessTxt
 {
     gl = 0;
     context_menu = 0;
-    bool large_font = objs.repository->general.m_large_font;
-    wxFont temp(*wxNORMAL_FONT);
-    this->font_normal = temp;
-    temp.SetPointSize(temp.GetPointSize() + 2);
-    this->font_large  = temp;
-    SetLargeFont( large_font ); // SetFont(*wxNORMAL_FONT);
-    //GetBuffer().SetFloatingLayoutMode(false); attempt to speed up
+	wxFont temp(*wxNORMAL_FONT);
+	font = temp;
+	SetFontSize();
+}
+
+void CtrlChessTxt::SetFontSize()
+{
+	int font_size = objs.repository->general.m_font_size;
+	font.SetPointSize(font_size);
+	SetFont(font);
 }
 
 void CtrlChessTxt::SetGameDocument( GameDocument *gd_ )

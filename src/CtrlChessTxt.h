@@ -32,10 +32,10 @@ public:
     void Paste();
     void Cut();
     void Delete();
-    void SetLargeFont( bool large ) { SetFont(large?font_large:font_normal); }
+	void SetFontSize();
 
 private:
-    void OnProcessCustom(wxCommandEvent& event);
+	void OnProcessCustom(wxCommandEvent& event);
     void OnMouseMove( wxMouseEvent& event );
     void OnMouseLeftUp( wxMouseEvent &event );
     void OnMouseLeftDown( wxMouseEvent &event );
@@ -83,8 +83,7 @@ private:
 
     int max_w, max_h, height;
 private:
-    wxFont font_normal;
-    wxFont font_large;
+    wxFont font;
     wxMenu *context_menu;
     MoveTree *popup_mt;
     GameDocument *gd;
