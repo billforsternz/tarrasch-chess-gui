@@ -34,7 +34,9 @@ enum
     ID_CUSTOM5B        = 10015, 
     ID_CUSTOM6A        = 10016,
     ID_CUSTOM6B        = 10017, 
-    ID_LOW_PRIORITY    = 10018
+	ID_NORMAL_PRIORITY = 10018,
+	ID_LOW_PRIORITY    = 10019,
+	ID_IDLE_PRIORITY   = 10020
 };
 
 // EngineDialog class declaration

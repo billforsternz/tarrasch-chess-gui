@@ -2257,7 +2257,9 @@ void ChessFrame::OnUpdateLog(wxUpdateUIEvent &event )
 void ChessFrame::OnEngine(wxCommandEvent &)
 {
     wxString old_file     = objs.repository->engine.m_file;
-    bool old_low_priority = objs.repository->engine.m_low_priority;
+	bool old_normal_priority = objs.repository->engine.m_normal_priority;
+	bool old_low_priority = objs.repository->engine.m_low_priority;
+	bool old_idle_priority = objs.repository->engine.m_idle_priority;
     EngineDialog dialog( objs.repository->engine, this );
     if( wxID_OK == dialog.ShowModal() )
     {
@@ -2265,8 +2267,10 @@ void ChessFrame::OnEngine(wxCommandEvent &)
         const char *s = dialog.dat.m_file.c_str();
         cprintf( "file=%s\n", s );
         if( old_file != objs.repository->engine.m_file ||
-            old_low_priority != objs.repository->engine.m_low_priority )
-        {
+			old_normal_priority != objs.repository->engine.m_normal_priority ||
+			old_low_priority != objs.repository->engine.m_low_priority ||
+			old_idle_priority != objs.repository->engine.m_idle_priority )
+		{
             objs.gl->EngineChanged();
         }
     }

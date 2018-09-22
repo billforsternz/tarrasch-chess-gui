@@ -135,8 +135,10 @@ struct EngineConfig
 {
     wxString    m_file;
     bool        m_ponder;
-    bool        m_low_priority;
-    int         m_hash;
+    bool        m_normal_priority;
+	bool        m_low_priority;
+	bool        m_idle_priority;
+	int         m_hash;
     int         m_max_cpu_cores;
     wxString    m_custom1a;
     wxString    m_custom1b;
@@ -154,7 +156,9 @@ struct EngineConfig
     {
         m_file           = Is64BitWindows() ? DEFAULT_ENGINE_64 : DEFAULT_ENGINE;
         m_ponder         = false;
-        m_low_priority   = false;
+		m_normal_priority = false;
+		m_low_priority   = false;
+		m_idle_priority  = false;
         m_hash           = 64;
         m_max_cpu_cores  = 1;
         m_custom1a       = "";
