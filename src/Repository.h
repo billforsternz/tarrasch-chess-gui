@@ -156,7 +156,7 @@ struct EngineConfig
     {
         m_file           = Is64BitWindows() ? DEFAULT_ENGINE_64 : DEFAULT_ENGINE;
         m_ponder         = false;
-		m_normal_priority = false;
+		m_normal_priority = true;
 		m_low_priority   = false;
 		m_idle_priority  = false;
         m_hash           = 64;

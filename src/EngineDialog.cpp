@@ -129,29 +129,9 @@ void EngineDialog::CreateControls()
         wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST ); //|wxFLP_CHANGE_DIR );    
     box_sizer->Add(picker, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 1);
 
-#if 0
-	// Low priority enabled
-    wxCheckBox* low_priority_box = new wxCheckBox( this, ID_LOW_PRIORITY, 
-       "Low priority", wxDefaultPosition, wxDefaultSize, 5 );
-    low_priority_box->SetValue( dat.m_low_priority );
-
-	// Font size
-	wxBoxSizer* font_size_sizer = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText* font_size_label = new wxStaticText(this, wxID_STATIC,
-		"Font size in points (default is 9)", wxDefaultPosition, wxDefaultSize, 0);
-	wxSpinCtrl *font_size_ctrl = new wxSpinCtrl(this, ID_LARGE_FONT,
-		wxEmptyString, wxDefaultPosition, wxSize(50, wxDefaultCoord), //wxDefaultSize, 
-		wxSP_ARROW_KEYS, 4, 100, dat.m_font_size);
-	font_size_sizer->Add(font_size_ctrl, 0, wxALL | wxALIGN_CENTER_VERTICAL, 0);
-	font_size_sizer->Add(10, 0, 0, wxALL, 0);
-	font_size_sizer->Add(font_size_label, 0, wxALL | wxALIGN_CENTER_VERTICAL, 0);
-	box_sizer->Add(font_size_sizer, 0,
-		wxALL, 5);
-#endif
-
 	// Ponder enabled
 	wxCheckBox* ponder_box = new wxCheckBox(this, ID_PONDER,
-		wxT("Ponder    Priority:"), wxDefaultPosition, wxDefaultSize, 0);
+		wxT("Ponder      "), wxDefaultPosition, wxDefaultSize, 0);
 	ponder_box->SetValue(dat.m_ponder);
 
 	// Label for the hash
@@ -164,39 +144,23 @@ void EngineDialog::CreateControls()
 		wxSP_ARROW_KEYS, 1, 32768, 64);
 
 	// Normal, below Normal, Idle Priority radio options
+    wxStaticBox *box2 = new wxStaticBox(this, wxID_ANY, "&Engine Priority" );
+    wxSizer     *who_box = new wxStaticBoxSizer(box2, wxHORIZONTAL);
 	if( !dat.m_low_priority && !dat.m_idle_priority)
 		dat.m_normal_priority = true;
 	wxRadioButton *priority_normal = new wxRadioButton(this, ID_NORMAL_PRIORITY,
-		"Hi", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+		"Normal", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
 	priority_normal->SetValue(dat.m_normal_priority);
 	wxRadioButton *priority_low = new wxRadioButton(this, ID_LOW_PRIORITY,
-		"Mid", wxDefaultPosition, wxDefaultSize, 0);
+		"Below normal", wxDefaultPosition, wxDefaultSize, 0);
 	priority_low->SetValue(dat.m_low_priority);
 	wxRadioButton *priority_idle = new wxRadioButton(this, ID_IDLE_PRIORITY,
-		"Lo", wxDefaultPosition, wxDefaultSize, 0);
+		"Idle", wxDefaultPosition, wxDefaultSize, 0);
 	priority_idle->SetValue(dat.m_idle_priority);
+    who_box->Add( priority_normal, 0, wxALL, 1);
+    who_box->Add( priority_low, 0, wxALL, 1);
+    who_box->Add( priority_idle, 0, wxALL, 1);
 
-    wxBoxSizer* hash_horiz  = new wxBoxSizer(wxHORIZONTAL);
-	hash_horiz->Add( hash_label, 0, wxALIGN_LEFT | wxGROW | wxALL, 5);
-	hash_horiz->Add( hash_spin, 0, wxALIGN_LEFT | wxGROW | wxALL, 5);
-	hash_horiz->Add( ponder_box, 0, wxALIGN_LEFT | wxGROW | wxALL, 5);
-	hash_horiz->Add( priority_normal, 0, wxALIGN_LEFT|wxGROW|wxALL, 5);
-	hash_horiz->Add( priority_low, 0, wxALIGN_LEFT | wxGROW | wxALL, 5);
-	hash_horiz->Add( priority_idle, 0, wxALIGN_LEFT | wxGROW | wxALL, 5);
-    box_sizer->Add( hash_horiz, 0, wxTOP|wxBOTTOM|wxRIGHT, 1);
-
-/*
-    // Label for max cpu cores
-    wxStaticText* max_cpu_cores_label = new wxStaticText ( this, wxID_STATIC,
-        wxT("&Max CPU cores:"), wxDefaultPosition, wxDefaultSize, 0 );
-    box_sizer->Add(max_cpu_cores_label, 0, wxALL, 5);
-
-    // A spin control for max cpu cores
-    wxSpinCtrl* max_cpu_cores_spin = new wxSpinCtrl ( this, ID_MAX_CPU_CORES,
-        wxEmptyString, wxDefaultPosition, wxSize(60, -1),
-        wxSP_ARROW_KEYS, 1, nbr_cpus, 1 );
-    box_sizer->Add(max_cpu_cores_spin, 0, wxALL, 5);
-*/
 
     // Label for max cpu cores
     wxStaticText* max_cpu_cores_label = new wxStaticText ( this, wxID_STATIC,
@@ -206,10 +170,17 @@ void EngineDialog::CreateControls()
     wxSpinCtrl* max_cpu_cores_spin = new wxSpinCtrl ( this, ID_MAX_CPU_CORES,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 1, nbr_cpus, 1 );
-    wxBoxSizer* max_cpu_cores_horiz  = new wxBoxSizer(wxHORIZONTAL);
-    max_cpu_cores_horiz->Add( max_cpu_cores_label,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
-    max_cpu_cores_horiz->Add( max_cpu_cores_spin,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
-    box_sizer->Add( max_cpu_cores_horiz, 0, wxTOP|wxBOTTOM|wxRIGHT, 1);
+
+	wxBoxSizer* hash_horiz1  = new wxBoxSizer(wxHORIZONTAL);
+    wxBoxSizer* hash_horiz2  = new wxBoxSizer(wxHORIZONTAL);
+	hash_horiz1->Add( hash_label, 0, wxALIGN_LEFT | wxGROW | wxALL, 5);
+	hash_horiz1->Add( hash_spin, 0, wxALIGN_LEFT | wxGROW | wxALL, 5);
+    hash_horiz1->Add( max_cpu_cores_label,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
+    hash_horiz1->Add( max_cpu_cores_spin,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
+	hash_horiz2->Add( ponder_box, 0, wxALIGN_LEFT | wxGROW | wxALL, 5);
+    hash_horiz2->Add( who_box, 1, wxGROW | (wxALL/* & ~wxTOP  */), 5);
+    box_sizer->Add( hash_horiz1, 0, wxTOP|wxBOTTOM|wxRIGHT, 1);
+	box_sizer->Add( hash_horiz2, 0, wxTOP|wxBOTTOM|wxRIGHT, 1);
 
     // Text controls for custom parameter 1
     wxTextCtrl *custom1a_ctrl = new wxTextCtrl ( this, ID_CUSTOM1A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
@@ -372,7 +343,7 @@ void EngineDialog::SetDialogHelp()
     wxString ponder_help = wxT("Allow the engine to think on human's time (if capable).");
     FindWindow(ID_PONDER)->SetHelpText(ponder_help);
     FindWindow(ID_PONDER)->SetToolTip(ponder_help);
-    wxString priority_help = wxT("Three engine CPU priorities are available, Lower priority settings might improve the computer's responsiveness.");
+    wxString priority_help = wxT("Three engine CPU priorities are available, \"Normal\" is highest, \"Idle\" is lowest. Lower settings might improve the computer's responsiveness.");
     FindWindow(ID_NORMAL_PRIORITY)->SetHelpText(priority_help);
     FindWindow(ID_NORMAL_PRIORITY)->SetToolTip(priority_help);
 	FindWindow(ID_LOW_PRIORITY)->SetHelpText(priority_help);
