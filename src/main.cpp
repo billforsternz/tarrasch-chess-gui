@@ -728,8 +728,8 @@ public:
         void OnUpdateTraining(wxUpdateUIEvent &);
     void OnGeneral    (wxCommandEvent &);
         void OnUpdateGeneral (wxUpdateUIEvent &);
-    void RefreshLanguageFont( const char *from, bool before_large_font, bool before_no_italics,
-                              const char *to,   bool after_large_font,  bool after_no_italics );
+    void RefreshLanguageFont( const char *from, int before_font_size, bool before_no_italics,
+                              const char *to,   int after_font_size,  bool after_no_italics );
 
     void OnFileNew (wxCommandEvent &);
         void OnUpdateFileNew( wxUpdateUIEvent &);
@@ -2151,7 +2151,7 @@ void ChessFrame::OnOptionsReset(wxCommandEvent &)
     wxString old_engine_file  = objs.repository->engine.m_file;
     const char *from = LangCheckDiffBegin();
     bool before_heading_above_board = objs.repository->general.m_heading_above_board;
-    bool before_large_font = objs.repository->general.m_large_font;
+    int  before_font_size = objs.repository->general.m_font_size;
     bool before_no_italics = objs.repository->general.m_no_italics;
     delete objs.repository;
     objs.repository = new Repository(true);
@@ -2180,10 +2180,10 @@ void ChessFrame::OnOptionsReset(wxCommandEvent &)
     context->RedrawClocks();
     const char *to = LangCheckDiffEnd();
     bool after_heading_above_board = objs.repository->general.m_heading_above_board;
-    bool after_large_font = objs.repository->general.m_large_font;
+    int  after_font_size = objs.repository->general.m_font_size;
     bool after_no_italics = objs.repository->general.m_no_italics;
-    RefreshLanguageFont( from, before_large_font, before_no_italics,
-                           to,  after_large_font,  after_no_italics );
+    RefreshLanguageFont( from, before_font_size, before_no_italics,
+                           to,  after_font_size,  after_no_italics );
     if( before_heading_above_board != after_heading_above_board )
 	{
 		context->AuiRefresh();
@@ -2257,7 +2257,9 @@ void ChessFrame::OnUpdateLog(wxUpdateUIEvent &event )
 void ChessFrame::OnEngine(wxCommandEvent &)
 {
     wxString old_file     = objs.repository->engine.m_file;
-    bool old_low_priority = objs.repository->engine.m_low_priority;
+	bool old_normal_priority = objs.repository->engine.m_normal_priority;
+	bool old_low_priority = objs.repository->engine.m_low_priority;
+	bool old_idle_priority = objs.repository->engine.m_idle_priority;
     EngineDialog dialog( objs.repository->engine, this );
     if( wxID_OK == dialog.ShowModal() )
     {
@@ -2265,8 +2267,10 @@ void ChessFrame::OnEngine(wxCommandEvent &)
         const char *s = dialog.dat.m_file.c_str();
         cprintf( "file=%s\n", s );
         if( old_file != objs.repository->engine.m_file ||
-            old_low_priority != objs.repository->engine.m_low_priority )
-        {
+			old_normal_priority != objs.repository->engine.m_normal_priority ||
+			old_low_priority != objs.repository->engine.m_low_priority ||
+			old_idle_priority != objs.repository->engine.m_idle_priority )
+		{
             objs.gl->EngineChanged();
         }
     }
@@ -2382,7 +2386,7 @@ void ChessFrame::OnGeneral(wxCommandEvent &)
 {
     const char *from = LangCheckDiffBegin();
     bool before_heading_above_board = objs.repository->general.m_heading_above_board;
-    bool before_large_font = objs.repository->general.m_large_font;
+    int  before_font_size = objs.repository->general.m_font_size;
     bool before_no_italics = objs.repository->general.m_no_italics;
     GeneralDialog dialog( this, &objs.repository->general );
     if( wxID_OK == dialog.ShowModal() )
@@ -2397,10 +2401,10 @@ void ChessFrame::OnGeneral(wxCommandEvent &)
                                  dialog.dat.m_straight_to_game );
         const char *to = LangCheckDiffEnd();
 		bool after_heading_above_board = objs.repository->general.m_heading_above_board;
-        bool after_large_font = objs.repository->general.m_large_font;
+        int  after_font_size = objs.repository->general.m_font_size;
         bool after_no_italics = objs.repository->general.m_no_italics;
-        RefreshLanguageFont( from, before_large_font, before_no_italics,
-                             to,   after_large_font,  after_no_italics );
+        RefreshLanguageFont( from, before_font_size, before_no_italics,
+                             to,   after_font_size,  after_no_italics );
 
 		// Change board colours
 		if( before_heading_above_board != after_heading_above_board )
@@ -2413,11 +2417,11 @@ void ChessFrame::OnGeneral(wxCommandEvent &)
     SetFocusOnList();
 }
 
-void ChessFrame::RefreshLanguageFont( const char *UNUSED(from), bool before_large_font, bool before_no_italics,
-                                      const char *to,   bool after_large_font,  bool after_no_italics )
+void ChessFrame::RefreshLanguageFont( const char *UNUSED(from), int before_font_size, bool before_no_italics,
+                                      const char *to,   int after_font_size,  bool after_no_italics )
 {
-    if( after_large_font != before_large_font )
-        objs.gl->lb->SetLargeFont( after_large_font );
+	if( before_font_size != after_font_size )
+		objs.gl->lb->SetFontSize();
     bool redisplayed = false;
     if( to )
     {
@@ -2439,7 +2443,7 @@ void ChessFrame::RefreshLanguageFont( const char *UNUSED(from), bool before_larg
     }
 
     // If no redisplay yet, and font change, redisplay
-    if( after_large_font!=before_large_font && !redisplayed )
+    if(before_font_size!=after_font_size && !redisplayed )
     {
         long pos = objs.gl->lb->GetInsertionPoint();
         objs.gl->gd.Rebuild();

@@ -1600,7 +1600,7 @@ MoveTree *GameView::Locate( unsigned long pos, thc::ChessRules &cr_, string &tit
                             // Point at the move in the tree that lead to the position before the first
                             //  move of this variation (so we can highlight it, late change just
                             //  before publishing V3)
-                            if( nbr_vars>1 && stack[nbr_vars-1].imove==0)
+                            if( last_move_played )
                                 locate_at_move0_last_move = &last_move_played->game_move;
                         }
                     }

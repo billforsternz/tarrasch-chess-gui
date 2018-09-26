@@ -129,43 +129,38 @@ void EngineDialog::CreateControls()
         wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST ); //|wxFLP_CHANGE_DIR );    
     box_sizer->Add(picker, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 1);
 
-    // Low priority enabled
-    wxCheckBox* low_priority_box = new wxCheckBox( this, ID_LOW_PRIORITY, 
-       "Low priority", wxDefaultPosition, wxDefaultSize, 5 );
-    low_priority_box->SetValue( dat.m_low_priority );
+	// Ponder enabled
+	wxCheckBox* ponder_box = new wxCheckBox(this, ID_PONDER,
+		wxT("Ponder      "), wxDefaultPosition, wxDefaultSize, 0);
+	ponder_box->SetValue(dat.m_ponder);
 
-    // Ponder enabled
-    wxCheckBox* ponder_box = new wxCheckBox( this, ID_PONDER, 
-       wxT("Ponder"), wxDefaultPosition, wxDefaultSize, 5 );
-    ponder_box->SetValue( dat.m_ponder );
+	// Label for the hash
+	wxStaticText* hash_label = new wxStaticText(this, wxID_STATIC,
+		wxT("Hash size (MB):"), wxDefaultPosition, wxDefaultSize, 0);
 
-    // Label for the hash
-    wxStaticText* hash_label = new wxStaticText ( this, wxID_STATIC,
-        wxT("       Hash size (MB):"), wxDefaultPosition, wxDefaultSize, 5 );
+	// A spin control for the hash
+	wxSpinCtrl* hash_spin = new wxSpinCtrl(this, ID_HASH,
+		wxEmptyString, wxDefaultPosition, wxSize(60, -1),
+		wxSP_ARROW_KEYS, 1, 32768, 64);
 
-    // A spin control for the hash
-    wxSpinCtrl* hash_spin = new wxSpinCtrl ( this, ID_HASH,
-        wxEmptyString, wxDefaultPosition, wxSize(60, -1),
-        wxSP_ARROW_KEYS, 1, 32768, 64 );
-    wxBoxSizer* hash_horiz  = new wxBoxSizer(wxHORIZONTAL);
-    hash_horiz->Add( low_priority_box, 0, wxALIGN_LEFT|wxGROW|wxALL, 5);
-    hash_horiz->Add( ponder_box, 0, wxALIGN_LEFT|wxGROW|wxALL, 5);
-    hash_horiz->Add( hash_label,  0, wxALIGN_LEFT|wxGROW|wxALL, 10);
-    hash_horiz->Add( hash_spin,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
-    box_sizer->Add( hash_horiz, 0, wxTOP|wxBOTTOM|wxRIGHT, 1);
+	// Normal, below Normal, Idle Priority radio options
+    wxStaticBox *box2 = new wxStaticBox(this, wxID_ANY, "&Engine Priority" );
+    wxSizer     *who_box = new wxStaticBoxSizer(box2, wxHORIZONTAL);
+	if( !dat.m_low_priority && !dat.m_idle_priority)
+		dat.m_normal_priority = true;
+	wxRadioButton *priority_normal = new wxRadioButton(this, ID_NORMAL_PRIORITY,
+		"Normal", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+	priority_normal->SetValue(dat.m_normal_priority);
+	wxRadioButton *priority_low = new wxRadioButton(this, ID_LOW_PRIORITY,
+		"Below normal", wxDefaultPosition, wxDefaultSize, 0);
+	priority_low->SetValue(dat.m_low_priority);
+	wxRadioButton *priority_idle = new wxRadioButton(this, ID_IDLE_PRIORITY,
+		"Idle", wxDefaultPosition, wxDefaultSize, 0);
+	priority_idle->SetValue(dat.m_idle_priority);
+    who_box->Add( priority_normal, 0, wxALL, 1);
+    who_box->Add( priority_low, 0, wxALL, 1);
+    who_box->Add( priority_idle, 0, wxALL, 1);
 
-/*
-    // Label for max cpu cores
-    wxStaticText* max_cpu_cores_label = new wxStaticText ( this, wxID_STATIC,
-        wxT("&Max CPU cores:"), wxDefaultPosition, wxDefaultSize, 0 );
-    box_sizer->Add(max_cpu_cores_label, 0, wxALL, 5);
-
-    // A spin control for max cpu cores
-    wxSpinCtrl* max_cpu_cores_spin = new wxSpinCtrl ( this, ID_MAX_CPU_CORES,
-        wxEmptyString, wxDefaultPosition, wxSize(60, -1),
-        wxSP_ARROW_KEYS, 1, nbr_cpus, 1 );
-    box_sizer->Add(max_cpu_cores_spin, 0, wxALL, 5);
-*/
 
     // Label for max cpu cores
     wxStaticText* max_cpu_cores_label = new wxStaticText ( this, wxID_STATIC,
@@ -175,10 +170,17 @@ void EngineDialog::CreateControls()
     wxSpinCtrl* max_cpu_cores_spin = new wxSpinCtrl ( this, ID_MAX_CPU_CORES,
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 1, nbr_cpus, 1 );
-    wxBoxSizer* max_cpu_cores_horiz  = new wxBoxSizer(wxHORIZONTAL);
-    max_cpu_cores_horiz->Add( max_cpu_cores_label,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
-    max_cpu_cores_horiz->Add( max_cpu_cores_spin,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
-    box_sizer->Add( max_cpu_cores_horiz, 0, wxTOP|wxBOTTOM|wxRIGHT, 1);
+
+	wxBoxSizer* hash_horiz1  = new wxBoxSizer(wxHORIZONTAL);
+    wxBoxSizer* hash_horiz2  = new wxBoxSizer(wxHORIZONTAL);
+	hash_horiz1->Add( hash_label, 0, wxALIGN_LEFT | wxGROW | wxALL, 5);
+	hash_horiz1->Add( hash_spin, 0, wxALIGN_LEFT | wxGROW | wxALL, 5);
+    hash_horiz1->Add( max_cpu_cores_label,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
+    hash_horiz1->Add( max_cpu_cores_spin,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
+	hash_horiz2->Add( ponder_box, 0, wxALIGN_LEFT | wxGROW | wxALL, 5);
+    hash_horiz2->Add( who_box, 1, wxGROW | (wxALL/* & ~wxTOP  */), 5);
+    box_sizer->Add( hash_horiz1, 0, wxTOP|wxBOTTOM|wxRIGHT, 1);
+	box_sizer->Add( hash_horiz2, 0, wxTOP|wxBOTTOM|wxRIGHT, 1);
 
     // Text controls for custom parameter 1
     wxTextCtrl *custom1a_ctrl = new wxTextCtrl ( this, ID_CUSTOM1A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
@@ -266,8 +268,7 @@ void EngineDialog::CreateControls()
     box_sizer->Add(line, 0, wxGROW|wxALL, 1);
 
     // A horizontal box sizer to contain Reset, OK, Cancel and Help
-    wxBoxSizer* okCancelBox = new wxBoxSizer(wxHORIZONTAL);
-    box_sizer->Add(okCancelBox, 0, wxALIGN_CENTER_HORIZONTAL|wxLEFT|wxRIGHT, 2);
+    wxBoxSizer* okCancelBox = new wxBoxSizer(wxHORIZONTAL);box_sizer->Add(okCancelBox, 0, wxALIGN_CENTER_HORIZONTAL|wxLEFT|wxRIGHT, 2);
 /*
     // The Reset button
     wxButton* reset = new wxButton( this, ID_ENGINE_RESET, wxT("&Reset"),
@@ -295,9 +296,13 @@ void EngineDialog::SetDialogValidators()
 {
     FindWindow(ID_PONDER)->SetValidator(
         wxGenericValidator(& dat.m_ponder));
-    FindWindow(ID_LOW_PRIORITY)->SetValidator(
-        wxGenericValidator(& dat.m_low_priority));
-    FindWindow(ID_HASH)->SetValidator(
+    FindWindow(ID_NORMAL_PRIORITY)->SetValidator(
+        wxGenericValidator(& dat.m_normal_priority));
+	FindWindow(ID_LOW_PRIORITY)->SetValidator(
+		wxGenericValidator(&dat.m_low_priority));
+	FindWindow(ID_IDLE_PRIORITY)->SetValidator(
+		wxGenericValidator(&dat.m_idle_priority));
+	FindWindow(ID_HASH)->SetValidator(
         wxGenericValidator(& dat.m_hash));
     FindWindow(ID_MAX_CPU_CORES)->SetValidator(
         wxGenericValidator(& dat.m_max_cpu_cores));
@@ -338,10 +343,14 @@ void EngineDialog::SetDialogHelp()
     wxString ponder_help = wxT("Allow the engine to think on human's time (if capable).");
     FindWindow(ID_PONDER)->SetHelpText(ponder_help);
     FindWindow(ID_PONDER)->SetToolTip(ponder_help);
-    wxString low_priority_help = wxT("Run the engine at lower than normal priority to improve the computer's responsiveness.");
-    FindWindow(ID_LOW_PRIORITY)->SetHelpText(low_priority_help);
-    FindWindow(ID_LOW_PRIORITY)->SetToolTip(low_priority_help);
-    wxString hash_help = wxT("The maximum size of hash table the engine is allowed (in megabytes).");
+    wxString priority_help = wxT("Three engine CPU priorities are available, \"Normal\" is highest, \"Idle\" is lowest. Lower settings might improve the computer's responsiveness.");
+    FindWindow(ID_NORMAL_PRIORITY)->SetHelpText(priority_help);
+    FindWindow(ID_NORMAL_PRIORITY)->SetToolTip(priority_help);
+	FindWindow(ID_LOW_PRIORITY)->SetHelpText(priority_help);
+	FindWindow(ID_LOW_PRIORITY)->SetToolTip(priority_help);
+	FindWindow(ID_IDLE_PRIORITY)->SetHelpText(priority_help);
+	FindWindow(ID_IDLE_PRIORITY)->SetToolTip(priority_help);
+	wxString hash_help = wxT("The maximum size of hash table the engine is allowed (in megabytes).");
     FindWindow(ID_HASH)->SetHelpText(hash_help);
     FindWindow(ID_HASH)->SetToolTip(hash_help);
     wxString max_cpu_cores_help = wxT("The number of CPU cores the engine can use.");

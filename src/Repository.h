@@ -135,8 +135,10 @@ struct EngineConfig
 {
     wxString    m_file;
     bool        m_ponder;
-    bool        m_low_priority;
-    int         m_hash;
+    bool        m_normal_priority;
+	bool        m_low_priority;
+	bool        m_idle_priority;
+	int         m_hash;
     int         m_max_cpu_cores;
     wxString    m_custom1a;
     wxString    m_custom1b;
@@ -154,7 +156,9 @@ struct EngineConfig
     {
         m_file           = Is64BitWindows() ? DEFAULT_ENGINE_64 : DEFAULT_ENGINE;
         m_ponder         = false;
-        m_low_priority   = false;
+		m_normal_priority = true;
+		m_low_priority   = false;
+		m_idle_priority  = false;
         m_hash           = 64;
         m_max_cpu_cores  = 1;
         m_custom1a       = "";
@@ -237,7 +241,7 @@ struct GeneralConfig
 	int         m_highlight_line_colour_r;
 	int         m_highlight_line_colour_g;
 	int         m_highlight_line_colour_b;
-    bool        m_large_font;
+    int         m_font_size;
     bool        m_heading_above_board;
     bool        m_no_auto_flip;
     bool        m_bell;
@@ -269,7 +273,7 @@ struct GeneralConfig
         m_straight_to_game   = false;
         m_straight_to_first_game = false;
         m_bell               = false;
-        m_large_font         = false;
+        m_font_size          = 9;
         m_heading_above_board= false;
         m_no_auto_flip       = false;
     }

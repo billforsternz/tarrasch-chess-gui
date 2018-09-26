@@ -123,8 +123,10 @@ Repository::Repository( bool use_defaults )
         // Engine
         config->Read("EngineExeFile",         &engine.m_file            );
         ReadBool    ("EnginePonder",           engine.m_ponder          );
-        ReadBool    ("EngineLowPriority",      engine.m_low_priority    );
-        config->Read("EngineHash",            &engine.m_hash            );
+		ReadBool	("EngineNormalPriority",   engine.m_normal_priority );
+		ReadBool	("EngineLowPriority",	   engine.m_low_priority    );
+		ReadBool	("EngineIdlePriority",	   engine.m_idle_priority   );
+		config->Read("EngineHash",            &engine.m_hash            );
         config->Read("EngineMaxCpuCores",     &engine.m_max_cpu_cores   );
         config->Read("EngineCustom1a",        &engine.m_custom1a        );
         config->Read("EngineCustom1b",        &engine.m_custom1b        );
@@ -164,7 +166,7 @@ Repository::Repository( bool use_defaults )
         ReadBool    ("GeneralNoItalics",                  general.m_no_italics        );
         ReadBool    ("GeneralStraightToGame",             general.m_straight_to_game  );
         ReadBool    ("GeneralStraightToFirstGame",        general.m_straight_to_first_game  );
-        ReadBool    ("GeneralUseLargeFont",               general.m_large_font    );
+		config->Read("GeneralFontSize",                  &general.m_font_size );
         ReadBool    ("GeneralHeadingAboveBoard",          general.m_heading_above_board );
         ReadBool    ("GeneralNoAutoFlip",                 general.m_no_auto_flip  );
         ReadBool    ("GeneralEmitBellWhenEngineMoves",    general.m_bell  );
@@ -273,7 +275,7 @@ Repository::~Repository()
     config->Write("GeneralNoItalics",                 (int)general.m_no_italics       );
     config->Write("GeneralStraightToGame",            (int)general.m_straight_to_game );
     config->Write("GeneralStraightToFirstGame",       (int)general.m_straight_to_first_game );
-    config->Write("GeneralUseLargeFont",              (int)general.m_large_font   );
+    config->Write("GeneralFontSize",                  general.m_font_size   );
     config->Write("GeneralHeadingAboveBoard",         (int)general.m_heading_above_board  );
     config->Write("GeneralNoAutoFlip",                (int)general.m_no_auto_flip );
     config->Write("GeneralEmitBellWhenEngineMoves",   (int)general.m_bell  );
@@ -337,8 +339,10 @@ Repository::~Repository()
     // Engine
     config->Write("EngineExeFile",      engine.m_file   );
     config->Write("EnginePonder",       (int)engine.m_ponder     );
-    config->Write("EngineLowPriority",  (int)engine.m_low_priority );
-    config->Write("EngineHash",         engine.m_hash            );
+    config->Write("EngineNormalPriority",	(int)engine.m_normal_priority );
+	config->Write("EngineLowPriority",		(int)engine.m_low_priority);
+	config->Write("EngineIdlePriority",		(int)engine.m_idle_priority);
+	config->Write("EngineHash",         engine.m_hash            );
     config->Write("EngineMaxCpuCores",  engine.m_max_cpu_cores   );
     config->Write("EngineCustom1a",     engine.m_custom1a        );
     config->Write("EngineCustom1b",     engine.m_custom1b        );

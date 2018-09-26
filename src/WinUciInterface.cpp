@@ -279,10 +279,12 @@ UciInterface::UciInterface( const char *filename_uci_exe )
 
     //spawn the child process
     EngineConfig *rep = &objs.repository->engine;
-    DWORD dwCreationFlags = rep->m_low_priority ? CREATE_NEW_CONSOLE|BELOW_NORMAL_PRIORITY_CLASS
-                                                : CREATE_NEW_CONSOLE;
-    int i_okay =  
-    CreateProcessA(filename_uci_exe,NULL,NULL,NULL,TRUE,dwCreationFlags,
+    DWORD dwCreationFlags = CREATE_NEW_CONSOLE;
+	if( rep->m_low_priority )
+		dwCreationFlags |= BELOW_NORMAL_PRIORITY_CLASS;
+	else if( rep->m_idle_priority )
+		dwCreationFlags |= IDLE_PRIORITY_CLASS;
+    int i_okay = CreateProcessA(filename_uci_exe,NULL,NULL,NULL,TRUE,dwCreationFlags,
                        NULL,NULL,&si,&pi);
     if( !i_okay )  
     {

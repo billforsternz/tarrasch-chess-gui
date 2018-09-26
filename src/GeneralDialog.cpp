@@ -215,11 +215,17 @@ void GeneralDialog::CreateControls()
     box_sizer->Add( heading_above_board_box, 0,
         wxALL, 5);
 
-    // Use large font for chess text
-    wxCheckBox* use_large_font_box = new wxCheckBox( this, ID_LARGE_FONT,
-       wxT("Use larger font in move window"), wxDefaultPosition, wxDefaultSize, 0 );
-    use_large_font_box->SetValue( dat.m_large_font );
-    box_sizer->Add( use_large_font_box, 0,
+    // Font size
+	wxBoxSizer* font_size_sizer = new wxBoxSizer(wxHORIZONTAL);
+	wxStaticText* font_size_label = new wxStaticText(this, wxID_STATIC,
+		"Font size in points (default is 9)", wxDefaultPosition, wxDefaultSize, 0);
+	wxSpinCtrl *font_size_ctrl = new wxSpinCtrl(this, ID_LARGE_FONT,
+		wxEmptyString, wxDefaultPosition, wxSize(50, wxDefaultCoord), //wxDefaultSize, 
+		wxSP_ARROW_KEYS, 4, 100, dat.m_font_size );
+	font_size_sizer->Add(font_size_ctrl, 0, wxALL | wxALIGN_CENTER_VERTICAL, 0);
+	font_size_sizer->Add(10, 0, 0, wxALL, 0);
+	font_size_sizer->Add(font_size_label, 0, wxALL | wxALIGN_CENTER_VERTICAL, 0);
+    box_sizer->Add( font_size_sizer, 0,
         wxALL, 5);
 
     // Don't use italics for subvariations
@@ -286,7 +292,7 @@ void GeneralDialog::CreateControls()
 void GeneralDialog::SetDialogValidators()
 {
     FindWindow(ID_LARGE_FONT)->SetValidator(
-        wxGenericValidator(& dat.m_large_font));
+        wxGenericValidator(& dat.m_font_size));
     FindWindow(ID_HEADING_ABOVE_BOARD)->SetValidator(
         wxGenericValidator(& dat.m_heading_above_board));
     FindWindow(ID_NO_ITALICS)->SetValidator(
@@ -323,7 +329,7 @@ void GeneralDialog::SetDialogHelp()
     wxString help4 = "Set this to move board heading into frame (particularly useful for small screen setups)";
     FindWindow(ID_HEADING_ABOVE_BOARD)->SetHelpText(help4);
     FindWindow(ID_HEADING_ABOVE_BOARD)->SetToolTip(help4);
-    wxString help5 = "Set this to use a larger font in the moves window";
+    wxString help5 = "Use this to change the font size in the moves window";
     FindWindow(ID_LARGE_FONT)->SetHelpText(help5);
     FindWindow(ID_LARGE_FONT)->SetToolTip(help5);
     wxString help6 = "Set this if you don't want the board to automatically flip around when you start a game as black";
