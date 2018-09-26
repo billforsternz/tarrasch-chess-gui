@@ -2058,7 +2058,8 @@ void Testbed()
 	TestbedDialog dialog(bm);
 	dialog.Run();
 }
-#else
+#endif
+#if 0
 void Testbed()
 {
 	ChessBoardBitmap cbb;

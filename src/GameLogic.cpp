@@ -2140,6 +2140,17 @@ void GameLogic::LabelPlayers( bool start_game, bool set_document_player_names )
     }
 }
 
+static bool thrash_flag;
+static int thrash_count;
+static int thrash_thres = 20;
+static unsigned long base_time;
+
+void Testbed()
+{
+    srand(0);
+    thrash_flag = !thrash_flag;
+}
+
 void GameLogic::OnIdle()
 {
     Atomic begin(false);
@@ -2168,6 +2179,51 @@ void GameLogic::OnIdle()
     }
     bool expired = false;
     bool white = gd.master_position.WhiteToPlay();
+    if( thrash_flag && state==MANUAL )
+    {
+        unsigned long t = GetTickCount();
+        if( t-base_time > 500  )
+        {
+            base_time = t;
+            bool change_pos = false;
+            bool add_comment = false;
+            thrash_count++;
+            if( thrash_count > thrash_thres )
+            {
+                thrash_count=0;
+                thrash_thres = 20 + rand()%20;
+                change_pos = (thrash_thres%3 == 0);
+                add_comment = !change_pos;
+            }
+            vector<thc::Move> moves;
+            gd.master_position.GenLegalMoveList( moves );
+            bool gameover = (moves.size()==0);
+            if( !gameover )
+            {
+                unsigned int idx = rand() % moves.size();
+                GAME_RESULT result;
+                gameover = MakeMove( moves[idx], result );
+
+            }
+            if( gameover || change_pos )
+            {
+                unsigned int pos = lb->GetLastPosition();
+                pos = (pos*9)/10;
+                atom.SetInsertionPoint( rand()%pos );
+            }
+            if( add_comment )
+            {
+                std::string s;
+                int len = rand()%20 + 10;
+                for( int i=0; i<len; i++ )
+                {
+                    char c = 'a' + rand()%26;
+                    s += c;
+                }
+                gd.CommentEdit(lb,s);
+            }
+        }
+    }
     switch( state )
     {
         case RESET:
