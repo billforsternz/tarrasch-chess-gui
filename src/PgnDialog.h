@@ -54,6 +54,7 @@ public:
 
     // Return true if a game has been selected
     bool LoadGame( GameLogic *gl, GameDocument& gd );
+	int GetSelectedGame( int *offset );  // towards replacing LoadGame();
 };
 
 #endif    // PGN_DIALOG_H
