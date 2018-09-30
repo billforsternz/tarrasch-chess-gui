@@ -49,6 +49,54 @@ bool CentralWorkSaver::TestFileExists()
     return( gc->pgn_filename != "" );
 }
 
+bool CentralWorkSaver::TestGameInFileAndOthersModified()
+{
+	if( !TestGameInFile() )
+		return false;
+	if( gc->file_irrevocably_modified )
+		return true;
+    bool modified=false;
+    if( gc->pgn_filename != "" )
+    {
+        modified = gc->file_irrevocably_modified;
+        for( unsigned int i=0; !modified && i<gc->gds.size(); i++ )
+        {
+			// Is any other modified game sitting in the cache ?
+            ListableGame *ptr = gc->gds[i].get();
+			if( ptr && ptr->GetGameBeingEdited() == gd->game_being_edited && gd->game_being_edited )
+			{
+				continue;
+			}
+            if( ptr && ptr->IsModified() )
+            {
+                modified = true;
+                break;
+            }
+
+			// Is the file game sitting modified in a tab ?
+			uint32_t game_being_edited = ptr->GetGameBeingEdited();
+			if( game_being_edited )
+			{
+				Tabs *tabs = objs.gl->tabs;
+				GameDocument *pd;
+				Undo *pu;
+				int handle = tabs->Iterate(0,pd,pu);
+				while( pd && pu )
+				{
+					if( game_being_edited == pd->game_being_edited )
+					{
+						if( pd->IsModified() || pu->IsModified() )
+							modified = true;
+						break;
+					}
+					tabs->Iterate(handle,pd,pu);
+				}
+			}
+        }
+    }
+    return modified;
+}
+
 bool CentralWorkSaver::TestFileModified()
 {
     bool modified=false;
@@ -593,6 +641,7 @@ bool CentralWorkSaver::FileSaveGameAs()
     bool ok=true;
     bool append=false;
     wxString wx_filename;
+	std::string filename;
     GameDetailsDialog dialog(objs.frame);
     if( dialog.Run(*gd) )
         objs.gl->GameRedisplayPlayersResult();
@@ -611,7 +660,8 @@ bool CentralWorkSaver::FileSaveGameAs()
             wxFileName::SplitPath( fd.GetPath(), &dir2, NULL, NULL );
             objs.repository->nv.m_doc_dir = dir2;
             wx_filename = fd.GetPath();
-            
+			filename = std::string(wx_filename.c_str());
+
             // If file exists, append or replace
             if( ::wxFileExists(wx_filename ) )
             {
@@ -620,12 +670,6 @@ bool CentralWorkSaver::FileSaveGameAs()
                     append = true;
                 else if( answer2 == wxCANCEL )
                     ok = false;
-            }
-
-            // Often I've found we then go hunting for the file. At least make it easy to find!
-            if(ok)
-            {
-		        objs.gl->mru.AddFileToHistory( wx_filename );
             }
         }
     }
@@ -663,6 +707,44 @@ bool CentralWorkSaver::FileSaveGameAs()
                 gd->game_details_edited = false;
                 undo->Clear(*gd);
             }
+
+			bool switch_files = true;
+            if( TestGameInFileAndOthersModified() )
+            {
+                int answer = wxMessageBox( "There are other modified games in file, save all, then switch to new file?", "Switch to new file?", wxYES_NO|wxCANCEL, objs.frame );
+                if( answer != wxYES )
+                    switch_files = false;
+                else
+				{
+                    PutBackDocument();
+                    gc->FileSave( gc_clipboard );
+				}
+			}
+            if( switch_files )
+            {
+                std::vector< smart_ptr<ListableGame> > gds_temp = gc->gds;   // copy existing file of games to temp
+                if( gc->Load(filename) && gc->gds.size()>0 )
+				{
+					// #Workflow
+					// Set edit correspondence between currently edited document and game added to end of file
+					unsigned int sz = gc->gds.size();
+					make_smart_ptr(GameDocument, new_smart_ptr, *gd);
+					gc->gds[sz-1] = std::move(new_smart_ptr);
+					objs.gl->SetGameBeingEdited( *gd, *gc->gds[sz-1] );
+					gd->modified = false;
+					gd->game_prefix_edited = false;
+					gd->game_details_edited = false;
+					undo->Clear(*gd);
+				}
+				else
+                {
+                    wxString msg="Cannot switch to new file ";
+                    msg += wx_filename;
+                    wxMessageBox( msg, "Error reading file", wxOK|wxICON_ERROR );
+                    gc->gds = gds_temp;
+                    ok = false;
+		        }
+	        }
         }
     }
     return ok;
@@ -688,7 +770,11 @@ bool CentralWorkSaver::GameNew()
         }
         else
         {
+#ifdef NEW_TAB_LAUNCHES_TESTBED		// for automated thrash testing, just save to current file without user involvement
+            int answer = wxYES;
+#else
             int answer = SaveGamePrompt(true,FILE_EXISTS_GAME_NEW,false);
+#endif
             if( answer == wxYES )
                 SaveFile(false,FILE_EXISTS_GAME_NEW,false);
         }

@@ -37,6 +37,7 @@ private:
     bool TestFileModified();
     bool TestGameModified();
     bool TestGameInFile();
+	bool TestGameInFileAndOthersModified();
 	bool TestModifiedOrphanTabs( int &nbr_orphans );
     void AddGameToFile();
     void PutBackDocument();
