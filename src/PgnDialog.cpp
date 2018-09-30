@@ -309,3 +309,9 @@ bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd )
     }
     return selected_game_ != -1;
 }
+
+int PgnDialog::GetSelectedGame( int *offset )
+{
+	*offset = track->focus_offset;
+    return track->focus_idx;
+}
