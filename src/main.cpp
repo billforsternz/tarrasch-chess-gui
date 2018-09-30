@@ -897,7 +897,9 @@ bool ChessApp::OnInit()
     objs.repository->nv.m_y = pt.y;
     objs.repository->nv.m_w = sz.x;
     objs.repository->nv.m_h = sz.y;
-    ChessFrame *frame = new ChessFrame ("Tarrasch Chess GUI V3",
+	char buf[80];
+	snprintf(buf,sizeof(buf),"Tarrasch Chess GUI %s",MASTER_VERSION_BASE);
+    ChessFrame *frame = new ChessFrame (buf,
                                   pt, sz, pos_siz_restored );
     if( maximize )
         frame->Maximize();
@@ -2207,11 +2209,6 @@ void ChessFrame::OnBook(wxCommandEvent &)
     if( wxID_OK == dialog.ShowModal() )
     {
         objs.repository->book = dialog.dat;
-        dbg_printf( "file=%s, enabled=%s, limit=%d, percent=%d\n",
-            dialog.dat.m_file.c_str(),
-            dialog.dat.m_enabled?"yes":"no",
-            dialog.dat.m_limit_moves,
-            dialog.dat.m_post_limit_percent );
         if( objs.repository->book.m_enabled != old_enabled ||
             objs.repository->book.m_file    != old_file )
         {
@@ -2241,9 +2238,6 @@ void ChessFrame::OnLog(wxCommandEvent &)
     if( wxID_OK == dialog.ShowModal() )
     {
         objs.repository->log = dialog.dat;
-        dbg_printf( "file=%s, enabled=%s\n",
-            dialog.dat.m_file.c_str(),
-            dialog.dat.m_enabled?"yes":"no" );
     }
     SetFocusOnList();
 }
@@ -2361,8 +2355,6 @@ void ChessFrame::OnDatabaseMaintenance(wxCommandEvent &)
     if( wxID_OK == dialog.ShowModal() )
     {
         objs.repository->engine = dialog.dat;
-        dbg_printf( "file=%s\n",
-                     dialog.dat.m_file.c_str() );
         if( old_file != objs.repository->engine.m_file )
             objs.gl->EngineChanged();
     }
