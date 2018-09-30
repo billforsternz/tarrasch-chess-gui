@@ -1113,7 +1113,13 @@ unsigned long GameDocument::GetInsertionPoint()
 // Where are we in the document
 void GameDocument::SetInsertionPoint(unsigned long pos)
 {
-    // FIXME - this sets the physical insertion point in a control - is that really what we want ?
+    // This sets the physical insertion point in a control - is that really what we want ?
+	//  29/9/2018 we checked it out, it is subtle but it is a little more than that - it
+	//	also a peer to gets insertion point above and this might be used to locate the users
+	//  cursor position and set the the game board position and title. In fact we only found
+	//  this function called from one point - to set the position in a different tab after
+	//  a tab delete - and subsequently ShowNewDocument picked up and located the position
+	//  properly.
     gl->atom.SetInsertionPoint(pos);
 }
 
