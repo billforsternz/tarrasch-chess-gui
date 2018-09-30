@@ -663,6 +663,7 @@ void GamesCache::Debug( const char *UNUSED(intro_message) )
 
 //#define NOMARKDOWN x
 
+#if 0  //not currently needed
 static void PgnNameCommaGroom( std::string &name )
 {
     name.erase( name.find_last_not_of(" \n\r\t")+1 ); // right trim
@@ -694,6 +695,7 @@ static void PgnNameCommaGroom( std::string &name )
         }
     }
 }
+#endif
 
 void GamesCache::Eco(  GamesCache *UNUSED(gc_clipboard) )
 {
