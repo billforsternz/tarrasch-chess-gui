@@ -10,18 +10,16 @@ context is running it updates status immediately (not at end of context) -
 some (not all) of the other Atom facilities work that way. Enabled removal
 of the (only one actually) Atomic begin; previously added to a mouse handler.
 
-rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
-rnb1kb1r/pp1ppppp/2p2n2/6q1/3P4/2N1P3/PPP2PPP/R2QKBNR w KQkq - 0 1
 
 24 August 2018
 Things on top at the moment as we struggle to get a new release out
 (last release was V3.03a in early 2017)
 
 BUG Fixed> Check what happens when human comp game ends as a repetition draw
-Why do we need Mouse Event atom instance when Set Manual does atom
+COMPLETE> Why do we need Mouse Event atom instance when Set Manual does atom
 COMPLETE> File save game as -> recent files
 COMPLETE> Database file in status field
-Database option in options
+DONT DO IT>Database option in options
 Open database file offers to set it to default
 COMPLETE> Cancel not default in pop up
 COMPLETE> Copy FEN to system clipboard
@@ -29,14 +27,14 @@ Start not Suggestions
 Faster move generation
 COMPLETE> Remove warnings
 Comment before resume from branch
-Cancel in PGN Dialog still loads game
+COMPLETE> Cancel in PGN Dialog still loads game
 Able to add comment right at end of game
 FIXED> Fix bug: Setup a position, play moves, go back and look at it in session
 Diagram output
 Game output
 PGN editor preserves extra tags, let's you edit arbitrary tags
 Consistency: Save overwrites or appends to existing files everywhere.
-Investigate Unicode issues
+COMPLETE> Investigate Unicode issues
 Bug hunt:
 Things we did
 Hague-Smith was missing in selection; so we pasted moves into new game, added tab to file, edited game details, sorted and saved
@@ -47,7 +45,7 @@ FIXED (actually they were modifiable, but improperly restricted)> Bug: move coun
 Bug: Clear text window on new game
 Bug: Delete in text window doesn't delete selection
 Promote comment to stalemate (checkmate?) doesn't generate same result as playing out moves.
-Set engine priority lower
+COMPLETE> Set engine priority lower
 DONE> Remove sqlite from build
 
 Older stuff below;
