@@ -551,6 +551,8 @@ void CtrlChessTxt::OnChar(wxKeyEvent& event)
 						gd->DeleteSelection(this);
 						done = true;
 					}
+					else if( is_selection )
+						done = true;
 					else
 					{
 						done=gd->CommentEdit(this,WXK_BACK,&pass_thru_edit);
@@ -713,7 +715,9 @@ void CtrlChessTxt::OnChar(wxKeyEvent& event)
                             gd->DeleteSelection(this);
                             done = gd->CommentEdit(this, keycode);
                         }
-                        else
+						else if( is_selection )
+							done = true;
+						else
                         {
                             done = gd->CommentEdit(this,keycode,&pass_thru_edit);
                         }
@@ -727,7 +731,9 @@ void CtrlChessTxt::OnChar(wxKeyEvent& event)
                     gd->DeleteSelection(this);
                     done = gd->CommentEdit(this,ascii);
                 }
-                else
+				else if( is_selection )
+					done = true;
+				else
                 {
                     done = gd->CommentEdit(this,ascii,&pass_thru_edit);
                 }
