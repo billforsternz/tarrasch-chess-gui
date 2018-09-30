@@ -709,68 +709,51 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
         wxMessageBox( "Cannot read file", "Error", wxOK|wxICON_ERROR );
     else
     {
-        if(
+		int offset=0;
+		int selected_game = 0;
+		bool goto_first_game =
             ( gc_pgn.gds.size()==1 && objs.repository->general.m_straight_to_game )  ||
-            ( gc_pgn.gds.size()>0  && objs.repository->general.m_straight_to_first_game )
-          )
-        {
-			objs.log->SaveGame(&gd, editing_log);
-			objs.session->SaveGame(&gd);
-
-			// Upgrade first element of games cache to a GameDocument, if necessary
-			GameDocument *gd_file = gc_pgn.gds[0]->IsGameDocument();
-			GameDocument new_gd;
-			if (gd_file)
-				new_gd = *gd_file;
-			else
-			{
-				gc_pgn.gds[0]->ConvertToGameDocument(new_gd);
-				make_smart_ptr(GameDocument, new_smart_ptr, new_gd);
-				gc_pgn.gds[0] = std::move(new_smart_ptr);
-			}
-
-			// #Workflow)  Open file go straight to game, game opens in new tab
-			// Set edit correspondence between new_gd and game in file cache
-            SetGameBeingEdited( new_gd, *gc_pgn.gds[0] );
-            if( is_empty )
-                gd = new_gd;
-            else
-                tabs->TabNew(new_gd);
-            ShowNewDocument();
-        }
-		else
-        {
-            wxPoint pt(0,0);
+            ( gc_pgn.gds.size()>0  && objs.repository->general.m_straight_to_first_game );
+		if( !goto_first_game )
+		{
+			wxPoint pt(0,0);
             wxSize sz = objs.frame->GetSize();
             sz.x = (sz.x*9)/10;
             sz.y = (sz.y*9)/10;
             PgnDialog dialog( objs.frame, &gc_pgn, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );   // GamesDialog instance
             std::string title = "File: " + filename;
-            if( !dialog.ShowModalOk(title) )
-			{
-#define CANCEL_PGN_DIALOG_CANCELS_FILE	// if this is defined, open file -> pgn dialog -> cancel doesn't load the file
-#ifdef CANCEL_PGN_DIALOG_CANCELS_FILE
-				gc_pgn.gds.clear();
-				gc_pgn.pgn_filename = "";
-#endif
-			}
-			else
-            {
-                objs.log->SaveGame(&gd,editing_log);
-                objs.session->SaveGame(&gd);
-                GameDocument new_gd;
+            bool ok = dialog.ShowModalOk(title);
+			if( ok )
+				selected_game = dialog.GetSelectedGame(&offset);
+		}
+		if( offset>=0 && selected_game>=0 && static_cast<unsigned int>(selected_game)<gc_pgn.gds.size() )
+		{
+            objs.log->SaveGame(&gd,editing_log);
+            objs.session->SaveGame(&gd);
 
-				// #Workflow)  Open file and select new game from list, game opens in new tab
-				// [edit correspondence between new_gd and game in file cache is created inside LoadGame()]
-                if( dialog.LoadGame(this,new_gd) )
-                {
-                    if( is_empty )
-                        gd = new_gd;
-                    else
-                        tabs->TabNew(new_gd);
-                    ShowNewDocument();
-                }
-            }
+			// Upgrade first (or selected) element of games cache to a GameDocument, if necessary
+			GameDocument *gd_file = gc_pgn.gds[selected_game]->IsGameDocument();
+            GameDocument new_gd;
+			if( gd_file )
+				new_gd = *gd_file;
+			else
+			{
+				gc_pgn.gds[selected_game]->ConvertToGameDocument(new_gd);
+				make_smart_ptr(GameDocument, new_smart_ptr, new_gd);
+				gc_pgn.gds[selected_game] = std::move(new_smart_ptr);
+			}
+
+			// #Workflow)  Open file go straight to game or game pulled from
+			// game dialog, game opens in new tab
+			// Set edit correspondence between new_gd and game in file cache
+			SetGameBeingEdited( new_gd, *gc_pgn.gds[selected_game] );
+			if( offset !=0 )
+				new_gd.SetNonZeroStartPosition(offset);
+			if( is_empty )
+				gd = new_gd;
+			else
+				tabs->TabNew(new_gd);
+			ShowNewDocument();
         }
     }
     atom.StatusUpdate();
@@ -1868,11 +1851,6 @@ void GameLogic::CmdPlayers()
     if( wxID_OK == dialog.ShowModal() )
     {
         objs.repository->player = dialog.dat;
-        dbg_printf( "human=%s, computer=%s, white=%s, black=%s\n",
-                     dialog.dat.m_human.c_str(),
-                     dialog.dat.m_computer.c_str(),
-                     dialog.dat.m_white.c_str(),
-                     dialog.dat.m_black.c_str() );
         objs.gl->LabelPlayers(false,true);
     }
 }
@@ -2142,6 +2120,7 @@ void GameLogic::LabelPlayers( bool start_game, bool set_document_player_names )
 
 static bool thrash_flag;
 static int thrash_count;
+static int new_game_count;
 static int thrash_thres = 20;
 static unsigned long base_time;
 
@@ -2179,12 +2158,13 @@ void GameLogic::OnIdle()
     }
     bool expired = false;
     bool white = gd.master_position.WhiteToPlay();
-    if( thrash_flag && state==MANUAL )
+    if( thrash_flag && (state==RESET || state==GAMEOVER || state==MANUAL) )
     {
         unsigned long t = GetTickCount();
         if( t-base_time > 500  )
         {
             base_time = t;
+			bool make_move = true;
             bool change_pos = false;
             bool add_comment = false;
             thrash_count++;
@@ -2194,25 +2174,41 @@ void GameLogic::OnIdle()
                 thrash_thres = 20 + rand()%20;
                 change_pos = (thrash_thres%3 == 0);
                 add_comment = !change_pos;
+				make_move = false;
             }
-            vector<thc::Move> moves;
-            gd.master_position.GenLegalMoveList( moves );
-            bool gameover = (moves.size()==0);
-            if( !gameover )
-            {
-                unsigned int idx = rand() % moves.size();
-                GAME_RESULT result;
-                gameover = MakeMove( moves[idx], result );
-
+			if( make_move )
+			{
+				vector<thc::Move> moves;
+				gd.master_position.GenLegalMoveList( moves );
+				if( moves.size() == 0 )
+					change_pos = true;
+				else
+				{
+					unsigned int idx = rand() % moves.size();
+					GAME_RESULT result;
+					thc::Move mv = moves[idx];
+					std::string s = mv.NaturalOut(&gd.master_position);
+					cprintf( "Making move %s\n", s.c_str());
+					MakeMove( moves[idx], result );
+				}
             }
-            if( gameover || change_pos )
+            if( change_pos )
             {
+				cprintf( "Changing position\n");
                 unsigned int pos = lb->GetLastPosition();
                 pos = (pos*9)/10;
-                atom.SetInsertionPoint( rand()%pos );
+                atom.Redisplay( rand()%pos );
+				if( new_game_count++ > 100 )
+				{
+					new_game_count = 0;
+					cprintf( "Calling CmdNewGame()\n");
+					CmdNewGame();
+					cprintf( "CmdNewGame() returns\n");
+				}	
             }
             if( add_comment )
             {
+				cprintf( "Adding comment\n");
                 std::string s;
                 int len = rand()%20 + 10;
                 for( int i=0; i<len; i++ )
@@ -2221,6 +2217,7 @@ void GameLogic::OnIdle()
                     s += c;
                 }
                 gd.CommentEdit(lb,s);
+				atom.Redisplay( atom.GetInsertionPoint() );
             }
         }
     }
