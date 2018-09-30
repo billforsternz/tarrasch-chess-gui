@@ -415,7 +415,9 @@ void PanelBoard::SetBoardTitle()
 
 void PanelBoard::SetBoardTitle( const char *txt )
 {
-	wxString frame_title("Tarrasch Chess GUI V3");
+	char buf[80];
+	snprintf(buf,sizeof(buf),"Tarrasch Chess GUI %s",MASTER_VERSION_BASE);
+	wxString frame_title(buf);
 	m_title_saved = std::string(txt);
 	cprintf( "SetBoardTitle(\"%s\")\n", txt );
 	if( !m_heading_above_board )
