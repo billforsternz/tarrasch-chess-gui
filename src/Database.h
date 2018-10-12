@@ -26,7 +26,7 @@ enum DB_REQ
 class Database
 {
 public:
-    Database( const char *db_file );
+    Database( const char *db_file, bool another_instance_running );
     void Reopen( const char *db_file );
     bool IsOperational( std::string &error_msg );
 	int  SetDbPosition(DB_REQ db_req);

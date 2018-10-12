@@ -382,7 +382,10 @@ void GameLogic::CmdTabNew()
 {
 #ifdef NEW_TAB_LAUNCHES_TESTBED
 	void Testbed();
-	Testbed();
+	//Testbed();
+    wxCommandEvent *p = new wxCommandEvent(wxEVT_MENU, 5000);
+    objs.frame->GetEventHandler()->QueueEvent(p);
+
 #else
     Atomic begin;
     GameDocument temp = gd;
@@ -656,6 +659,31 @@ void GameLogic::CmdFileOpen()
 			mru.AddFileToHistory( wx_filename );
             std::string filename( wx_filename.c_str() );
             CmdFileOpenInner( filename );
+        }
+    }
+    atom.StatusUpdate();
+}
+
+void GameLogic::CmdFileOpenShell( std::string &filename )
+{
+    Atomic begin;
+    wxFileName fn(filename.c_str());
+    wxString name = fn.GetFullName();
+    wxString dir = fn.GetPath();
+    wxFileDialog fd( objs.frame, "Select .pgn file", "", "", "*.pgn", wxFD_FILE_MUST_EXIST );//|wxFD_CHANGE_DIR );
+    fd.SetDirectory(dir);
+    fd.SetFilename(name);
+    if( wxID_OK == fd.ShowModal() )
+    {
+        if( objs.cws->FileOpen() )
+        {
+            wxString dir2;
+            wxFileName::SplitPath( fd.GetPath(), &dir2, NULL, NULL );
+            objs.repository->nv.m_doc_dir = dir2;
+            wxString wx_filename = fd.GetPath();
+		    mru.AddFileToHistory( wx_filename );
+            std::string the_file( wx_filename.c_str() );
+            CmdFileOpenInner( the_file );
         }
     }
     atom.StatusUpdate();

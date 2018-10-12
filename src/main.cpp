@@ -24,6 +24,9 @@
 #include "wx/sysopt.h"
 #include "wx/log.h"
 #include "wx/filehistory.h"
+#include "wx/snglinst.h"
+#include <wx/snglinst.h>
+#include <wx/ipc.h>
 #include "Appdefs.h"
 #include "wx/aui/aui.h"
 #ifdef AUI_NOTEBOOK
@@ -362,6 +365,41 @@ Objects objs;
 // Should really be a little more sophisticated about this
 #define TIMER_ID 2001
 
+// Some IPC stuff to support proper instance handling
+class InterProcessCommunicationConnection : public wxConnection
+{
+protected:
+	bool OnExec(const wxString& topic, const wxString& data)
+	{
+		if (topic == "Activate")
+		{
+			cprintf("Activated by another instance starting\n");
+			if( objs.frame && objs.gl )
+			{
+				objs.frame->Raise();
+				std::string filename_from_shell = std::string(data.c_str());
+				if( filename_from_shell != "" )
+				{
+					wxCommandEvent *p = new wxCommandEvent(wxEVT_MENU, ID_FILE_OPEN_SHELL);
+					objs.gl->filename_from_shell = filename_from_shell;
+					objs.frame->GetEventHandler()->QueueEvent(p);
+				}
+			}
+		}
+		return true;
+	}
+};
+
+class InterProcessCommunicationServer : public wxServer
+{
+public:
+    wxConnectionBase *OnAcceptConnection( const wxString& WXUNUSED(topic) )
+	{
+        return new InterProcessCommunicationConnection;
+    }
+};
+
+
 // ----------------------------------------------------------------------------
 // application class
 // ----------------------------------------------------------------------------
@@ -371,6 +409,9 @@ class ChessApp: public wxApp
 public:
     virtual bool OnInit();
     virtual int  OnExit();
+private:
+    wxSingleInstanceChecker m_one;
+	InterProcessCommunicationServer *m_server;
 };
 
 CtrlBoxBookMoves *gbl_book_moves;
@@ -735,6 +776,7 @@ public:
         void OnUpdateFileNew( wxUpdateUIEvent &);
     void OnFileOpen (wxCommandEvent &);
         void OnUpdateFileOpen(wxUpdateUIEvent &);
+    void OnFileOpenShell (wxCommandEvent &);
 	void OnFileOpenMru(wxCommandEvent&);
     void OnFileOpenLog (wxCommandEvent &);
         void OnUpdateFileOpenLog(wxUpdateUIEvent &);
@@ -813,7 +855,19 @@ const char *gbl_spell_colour;	// "colour" or "color"
 
 bool ChessApp::OnInit()
 {
-	//_CrtSetBreakAlloc(1050656);
+    // Check if there is another process running.
+    if (m_one.IsAnotherRunning()) {
+        // Create a IPC client and use it to ask the existing process to show itself.
+        wxClient *client = new wxClient;
+        wxConnectionBase *conn = client->MakeConnection("localhost", "/tmp/a_socket" /* or a port number */, "Activate");
+        conn->Execute( argc==2 ? argv[1] : "" );
+        delete conn;
+        delete client;
+        // Don't enter the message loop.
+        return false;
+    }
+
+    //_CrtSetBreakAlloc(1050656);
     srand(time(NULL));
     //_CrtSetBreakAlloc( 198300 ); //563242 );
     //_CrtSetBreakAlloc( 195274 );
@@ -906,7 +960,14 @@ bool ChessApp::OnInit()
     objs.frame = frame;
     SetTopWindow (frame);
     frame->Show(true);
-    objs.db         = new Database( objs.repository->database.m_file.c_str() );
+
+    // Start a IPC server.
+    m_server = new InterProcessCommunicationServer;
+    m_server->Create("/tmp/a_socket" /* or the same port number */);
+
+    bool another_instance_running = m_one.IsAnotherRunning();
+    cprintf( "Another Instance running = %s\n", another_instance_running?"true":"false" );
+    objs.db  = new Database( objs.repository->database.m_file.c_str(), another_instance_running );
 	objs.canvas->SetBoardTitle( "Initial Position" );
     if( objs.gl )
         objs.gl->StatusUpdate();
@@ -916,6 +977,7 @@ bool ChessApp::OnInit()
 
 int ChessApp::OnExit()
 {
+    delete m_server;
 	if (teefile)
 	{
 		fclose(teefile);
@@ -1109,6 +1171,7 @@ BEGIN_EVENT_TABLE(ChessFrame, wxFrame)
         EVT_UPDATE_UI (ID_DATABASE_MATERIAL,            ChessFrame::OnUpdateDatabaseMaterial)
     EVT_MENU (ID_DATABASE_MAINTENANCE,              ChessFrame::OnDatabaseMaintenance)
         EVT_UPDATE_UI (ID_DATABASE_MAINTENANCE,          ChessFrame::OnUpdateDatabaseMaintenance)
+    EVT_MENU (ID_FILE_OPEN_SHELL,                    ChessFrame::OnFileOpenShell)	// Doesn't appear in any actual menu, used to open files from Windows Explorer
 
     EVT_TOOL (ID_CMD_FLIP,         ChessFrame::OnFlip)
     EVT_TOOL (ID_CMD_NEXT_GAME,    ChessFrame::OnNextGame)
@@ -1694,6 +1757,11 @@ void ChessFrame::OnFileNew (wxCommandEvent &)
 void ChessFrame::OnFileOpen (wxCommandEvent &)
 {
     objs.gl->CmdFileOpen();
+}
+
+void ChessFrame::OnFileOpenShell(wxCommandEvent &)
+{
+    objs.gl->CmdFileOpenShell(objs.gl->filename_from_shell);
 }
 
 void ChessFrame::OnFileOpenMru(wxCommandEvent& event)
@@ -2489,3 +2557,4 @@ void ChessFrame::OnChar( wxKeyEvent &event )
     if( objs.canvas )
         objs.canvas->lb->GetEventHandler()->ProcessEvent(event);
 }
+

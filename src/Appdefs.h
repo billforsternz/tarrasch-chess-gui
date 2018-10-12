@@ -70,6 +70,7 @@ enum
     ID_Quit = 1,
     ID_Clear,
     ID_FILE_SAVE_GAME_AS,
+    ID_FILE_OPEN_SHELL,
     ID_FILE_OPEN_LOG,
     ID_FILE_TAB_NEW,
     ID_FILE_TAB_CLOSE,

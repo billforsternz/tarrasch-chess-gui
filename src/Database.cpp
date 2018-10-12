@@ -467,11 +467,14 @@ wxMutex *WaitForWorkerThread()
     return &s_mutex_tiny_database;
 }
 
-Database::Database( const char *db_file )
+Database::Database( const char *db_file, bool another_instance_running )
 {
     is_open = false;
     database_error_msg = "Database not yet open";
-    Reopen( db_file );
+    if( !another_instance_running )
+        Reopen( db_file );
+    else
+        database_error_msg = "Database is not open, database is not automatically loaded if another instance of Tarrasch is running";
 }
 
 std::string Database::GetStatus()

@@ -716,7 +716,9 @@ void CtrlChessTxt::OnChar(wxKeyEvent& event)
                             done = gd->CommentEdit(this, keycode);
                         }
 						else if( is_selection )
+						{
 							done = true;
+						}
 						else
                         {
                             done = gd->CommentEdit(this,keycode,&pass_thru_edit);
@@ -724,7 +726,7 @@ void CtrlChessTxt::OnChar(wxKeyEvent& event)
 					}
 				}
 			}
-            if (ascii)
+            if(ascii)
             {
                 if( is_selection_in_comment )
                 {
@@ -732,7 +734,9 @@ void CtrlChessTxt::OnChar(wxKeyEvent& event)
                     done = gd->CommentEdit(this,ascii);
                 }
 				else if( is_selection )
+				{
 					done = true;
+				}
 				else
                 {
                     done = gd->CommentEdit(this,ascii,&pass_thru_edit);

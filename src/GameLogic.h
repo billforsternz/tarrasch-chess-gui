@@ -75,6 +75,7 @@ public:
     void CmdExamineGame();
     void CmdFileNew();
     void CmdFileOpen();
+    void CmdFileOpenShell( std::string &filename );
     void CmdFileOpenMru( int mru_idx );
     void CmdFileOpenLog();
     void CmdFileOpenInner( std::string &filename );
@@ -229,6 +230,7 @@ private:
     // public data
 public:
 	bool fix_layout_flag;
+    std::string filename_from_shell;
     GAME_STATE state;
     CtrlChessTxt *lb;
     Tabs *tabs;
