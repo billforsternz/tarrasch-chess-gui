@@ -1329,7 +1329,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 
     // Create a status bar
     CreateStatusBar(4);
-    int widths[4] = {-250,-100,-100,-250};
+    int widths[4] = {-350,-90,-90,-120};
     SetStatusWidths(4,widths);
 
 #ifdef THC_WINDOWS
