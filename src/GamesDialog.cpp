@@ -522,16 +522,19 @@ bool GamesDialog::Create( wxWindow* parent,
     wxDisplaySize(&disp_width, &disp_height);
 
     // Calculate Minimum()
+	wxPoint temp = parent->GetPosition();
     wxSize sz_minimum( disp_width/10, disp_height/10 );
-    wxPoint pos_minimum( disp_width/10, disp_height/10 );
+    wxPoint pos_minimum( temp.x+disp_width/20, temp.y+disp_height/20 );
 
     // Retrieve Actual() if available
     wxSize  sz_zero(0,0);
     wxSize  sz_actual = sz_zero; // refinement, fallback to a size calculated below based on minimum dialog size //sz_fallback;
     wxPoint pos_actual = pos_minimum;
-    if( objs.repository->nv.m_games_x > 0 && objs.repository->nv.m_games_y > 0 &&
-        objs.repository->nv.m_games_x < (disp_width*9)/10 && objs.repository->nv.m_games_y < (disp_height*9)/10 &&
-        objs.repository->nv.m_games_w > 0 && objs.repository->nv.m_games_h > 0 )
+	bool pos_siz_not_saved = ( objs.repository->nv.m_games_x==-1 &&
+        objs.repository->nv.m_games_y==-1 &&
+        objs.repository->nv.m_games_w==-1 &&
+        objs.repository->nv.m_games_h==-1 );
+    if( !pos_siz_not_saved )
     {
         pos_actual.x = objs.repository->nv.m_games_x;
         pos_actual.y = objs.repository->nv.m_games_y;
@@ -542,7 +545,6 @@ bool GamesDialog::Create( wxWindow* parent,
     // Start with minimum 
     size  = sz_minimum;
     pos = pos_minimum;
-
 
     // We have to set extra styles before creating the dialog
     bool okay=true;
@@ -637,12 +639,13 @@ bool GamesDialog::Create( wxWindow* parent,
         list_ctrl->SetColumnWidth(11, cols[10] );   // "Moves"  // No Ply in Tarrasch V2, so Moves is [10], Ply is[11]
 
         SetPosition(pos=pos_actual);
+		cprintf( "######  Games Dialog initial pos.x=%d, pos.y=%d\n", pos.x, pos.y );
 
         // Calculate a starting size based on the minimum size set by the sizer
         if( sz_actual.x==0 || sz_actual.y==0 )
         {
             sz_actual = GetSize();
-            sz_actual.x = sz_actual.x * 150 / 100;
+            sz_actual.x = sz_actual.x * 160 / 100;
             if( sz_actual.x > disp_width )
                 sz_actual.x = disp_width;
             sz_actual.y = sz_actual.y * 150 / 100;
