@@ -647,18 +647,30 @@ void GameLogic::CmdFileOpen()
     Atomic begin;
     if( objs.cws->FileOpen() )
     {
-        wxFileDialog fd( objs.frame, "Select .pgn file", "", "", "*.pgn", wxFD_FILE_MUST_EXIST );//|wxFD_CHANGE_DIR );
+        wxFileDialog fd( objs.frame, "Select .pgn file (or *.tdb file)", "", "", "*.pgn;*.tdb", wxFD_FILE_MUST_EXIST );//|wxFD_CHANGE_DIR );
         wxString dir = objs.repository->nv.m_doc_dir;
         fd.SetDirectory(dir);
         if( wxID_OK == fd.ShowModal() )
         {
             wxString dir2;
-            wxFileName::SplitPath( fd.GetPath(), &dir2, NULL, NULL );
-            objs.repository->nv.m_doc_dir = dir2;
-            wxString wx_filename = fd.GetPath();
-			mru.AddFileToHistory( wx_filename );
-            std::string filename( wx_filename.c_str() );
-            CmdFileOpenInner( filename );
+            wxString name;
+            wxString ext;
+			wxString wx_filename = fd.GetPath();
+            wxFileName::SplitPath( wx_filename, &dir2, &name, &ext );
+			objs.repository->nv.m_doc_dir = dir2;
+			std::string filename( wx_filename.c_str() );
+			if( ext == "tdb" )
+			{
+				CmdDatabaseOpen( filename );
+				status_field4 = objs.db->GetStatus();
+				objs.frame->SetStatusText( status_field4.c_str(), 3 );
+				CmdDatabaseShowAll();
+			}
+			else
+			{
+				mru.AddFileToHistory( wx_filename );
+				CmdFileOpenInner( filename );
+			}
         }
     }
     atom.StatusUpdate();
@@ -980,28 +992,15 @@ void GameLogic::CmdGamesCurrent()
 
 void GameLogic::CmdGamesDatabase()
 {
-    thc::ChessRules cr;
-    thc::ChessRules start_position;
-    std::string title_txt;
-    gd.GetSummaryXX( cr, title_txt );
-    DB_REQ db_req;
-    if( cr == start_position )
-        db_req = REQ_SHOW_ALL;
-    else
-        db_req = REQ_POSITION;
-    CmdDatabase( cr, db_req );
+    CmdDatabaseSearch();
 }
 
 void GameLogic::CmdDatabaseSearch()
 {
     thc::ChessRules cr;
-    thc::ChessRules start_position;
     std::string title_txt;
     gd.GetSummaryXX( cr, title_txt );
-    if( cr == start_position )
-        CmdDatabase( cr, REQ_SHOW_ALL );
-    else
-        CmdDatabase( cr, REQ_POSITION );
+    CmdDatabase( cr, REQ_POSITION );
 }
 
 void GameLogic::CmdDatabasePattern()
@@ -1053,14 +1052,12 @@ void GameLogic::CmdDatabaseMaterial()
 void GameLogic::CmdDatabaseShowAll()
 {
     thc::ChessRules cr;
-    std::string title_txt;
     CmdDatabase( cr, REQ_SHOW_ALL );
 }
 
 void GameLogic::CmdDatabasePlayers()
 {
     thc::ChessRules cr;
-    std::string title_txt;
     CmdDatabase( cr, REQ_PLAYERS );
 }
 
@@ -1069,11 +1066,13 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req, PatternParamete
     static int count;
     int temp = ++count;
     cprintf( "CmdDatabase(): May wait for tiny database load here (%d)...\n", temp );
-    extern wxMutex *WaitForWorkerThread();
-    wxMutex *ptr_mutex_tiny_database = WaitForWorkerThread();
+    extern wxMutex *WaitForWorkerThread( const char *title );
+    wxMutex *ptr_mutex_tiny_database = WaitForWorkerThread( db_req==REQ_SHOW_ALL ? "Initial Database Load" : "Completing Initial Database Load" );
     wxMutexLocker lock(*ptr_mutex_tiny_database);
     {
         cprintf( "...CmdDatabase() if we did wait, that wait is now over (%d)\n", temp );
+		status_field4 = objs.db->GetStatus();
+		objs.frame->SetStatusText( status_field4.c_str(), 3 );
         std::string error_msg;
         bool suspended  = objs.db->IsSuspended();
         bool operational = objs.db->IsOperational(error_msg);
@@ -1083,8 +1082,8 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req, PatternParamete
                 "The database is not loaded. Tarrasch normally automatically loads the database at startup, but it did not do so on "
                 "this occasion because it detected another instance of Tarrasch already running. "
 				"This is a way of conserving memory, it prevents multiple copies of Tarrasch from all automatically loading "
-				"separate copies of a potentially huge database. You can manually load the database using the menu > Database > "
-				"Select current database", "Database not loaded", wxOK|wxICON_ERROR
+				"separate copies of a potentially huge database. You can manually load the database using the File > Open or "
+				"Database > Select current database menu", "Database not loaded", wxOK|wxICON_ERROR
             );
         }
         else if( !operational )
@@ -1242,6 +1241,7 @@ bool GameLogic::ProbeControlBlocks()
     return okay;
 }
 
+
 void GameLogic::CmdDatabaseSelect()
 {
     bool okay=ProbeControlBlocks();
@@ -1255,9 +1255,9 @@ void GameLogic::CmdDatabaseSelect()
     {
         static int count;
         int temp = ++count;
-        cprintf( "CmdDatabaseSelect(): May wait for tiny database load here (%d)...\n", temp );
-        extern wxMutex *WaitForWorkerThread();
-        wxMutex *ptr_mutex_tiny_database = WaitForWorkerThread();
+        cprintf( "CmdDatabaseSelect(): May (not) wait for tiny database load here (%d)...\n", temp );
+        extern wxMutex *DontWaitForWorkerThread();
+        wxMutex *ptr_mutex_tiny_database = DontWaitForWorkerThread();
         wxMutexLocker lock(*ptr_mutex_tiny_database);
         {
             cprintf( "...CmdDatabaseSelect() if we did wait, that wait is now over (%d)\n", temp );
@@ -1275,6 +1275,39 @@ void GameLogic::CmdDatabaseSelect()
                 objs.db->Reopen(previous);
                 wxMessageBox( error_msg.c_str(), "Database selection failed", wxOK|wxICON_ERROR );
             }
+        }
+    }
+    atom.StatusUpdate();
+}
+
+void GameLogic::CmdDatabaseOpen( std::string filename )
+{
+    bool okay=ProbeControlBlocks();
+    if( !okay )
+        return;
+    Atomic begin;
+    static int count;
+    int temp = ++count;
+    cprintf( "CmdDatabaseOpen(): May (not) wait for tiny database load here (%d)...\n", temp );
+    extern wxMutex *DontWaitForWorkerThread();
+    wxMutex *ptr_mutex_tiny_database = DontWaitForWorkerThread();
+    wxMutexLocker lock(*ptr_mutex_tiny_database);
+    {
+        cprintf( "...CmdDatabaseOpen() if we did wait, that wait is now over (%d)\n", temp );
+        wxString previous = objs.repository->database.m_file;
+        cprintf( "File is %s\n", filename.c_str() );
+        objs.db->Reopen(filename.c_str());
+        std::string error_msg;
+        bool operational = objs.db->IsOperational(error_msg);
+        if( operational )
+		{
+	        wxString s(filename.c_str());
+            objs.repository->database.m_file = s;
+		}
+        else
+        {
+            objs.db->Reopen(previous);
+            wxMessageBox( error_msg.c_str(), "Database selection failed", wxOK|wxICON_ERROR );
         }
     }
     atom.StatusUpdate();

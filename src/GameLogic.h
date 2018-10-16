@@ -92,6 +92,7 @@ public:
     void CmdDatabasePlayers();
     bool ProbeControlBlocks();
     void CmdDatabaseSelect();
+    void CmdDatabaseOpen( std::string filename );
     void CmdDatabaseCreate();
     void CmdDatabaseAppend();
     void CmdDatabasePattern();

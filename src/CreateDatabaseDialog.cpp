@@ -486,9 +486,12 @@ void CreateDatabaseDialog::OnAppendDatabase()
         std::string title( "Appending to database, step 1 of 5");
         std::string desc("Reading existing database");
         ProgressBar progress_bar( title, desc, true, this );
-        
         std::vector< smart_ptr<ListableGame> > &mega_cache = BinDbLoadAllGamesGetVector();
-        BinDbLoadAllGames( true, mega_cache, dummyi, dummyb, &progress_bar );
+		cprintf( "Appending to database, step 1 of 5 begin\n" );
+        bool killed = BinDbLoadAllGames( true, mega_cache, dummyi, dummyb, &progress_bar );
+		cprintf( "Appending to database, step 1 of 5 end, killed=%s\n", killed?"true":"false" );
+		if( killed )
+			ok=false;
         BinDbClose();
     }
     FILE *ofile=NULL;
