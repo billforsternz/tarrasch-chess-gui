@@ -445,12 +445,12 @@ wxMutex *KillWorkerThread()
 }
 
 
-wxMutex *WaitForWorkerThread()
+wxMutex *WaitForWorkerThread( const char *title )
 {   
     if( wxMUTEX_BUSY == s_mutex_tiny_database.TryLock() )
     {
         int base = the_database->background_load_permill;
-        ProgressBar progress("Completing Initial Database Load","Loading database into memory",false);
+        ProgressBar progress(title,"Loading database into memory",true);
         while( wxMUTEX_BUSY == s_mutex_tiny_database.TryLock() )
         {
             //static int now_before=-1;
@@ -458,10 +458,23 @@ wxMutex *WaitForWorkerThread()
             //if( now != now_before )
             //    cprintf( "base=%d, now=%d, now-base=%d, 1000-base=%d\n", base, now, now-base, 1000-base );
             //now_before = now;
-            progress.Perfraction( now-base, 1000-base );
+            if( progress.Perfraction( now-base, 1000-base ) )
+			{
+				the_database->kill_background_load = true;
+				break;
+			}
             wxSafeYield();
         }
     }
+    wxSafeYield();
+    s_mutex_tiny_database.Unlock();
+    return &s_mutex_tiny_database;
+}
+
+wxMutex *DontWaitForWorkerThread()
+{   
+	the_database->kill_background_load = true;
+    s_mutex_tiny_database.TryLock();
     wxSafeYield();
     s_mutex_tiny_database.Unlock();
     return &s_mutex_tiny_database;
@@ -484,7 +497,13 @@ std::string Database::GetStatus()
 {
     std::string s("Db: ");
     if( is_open )
-        s += std::string(db_filename);
+	{
+		wxFileName fn(db_filename.c_str());
+		std::string name_without_directory = std::string(fn.GetFullName().c_str());
+        s += name_without_directory;
+		if( is_partial_load )
+	        s += " (partial)"; 
+	}
     else if( is_suspended )
         s += "(not loaded)"; 
 	else
@@ -495,6 +514,7 @@ std::string Database::GetStatus()
 void Database::Reopen( const char *db_file )
 {
 	is_suspended = false;
+	is_partial_load = false;
     background_load_permill = 0;
     kill_background_load = false;
     player_search_in_progress = false;
@@ -572,7 +592,9 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGam
     background_load_permill = 0;
     kill_background_load = false;
     mega_cache.clear();
-    BinDbLoadAllGames( false, mega_cache, background_load_permill, kill_background_load );
+	is_partial_load = false;
+    bool killed = BinDbLoadAllGames( false, mega_cache, background_load_permill, kill_background_load );
+	is_partial_load = killed;
     BinDbClose();
     int cache_nbr = mega_cache.size();
     cprintf( "Number of games = %d\n", cache_nbr );

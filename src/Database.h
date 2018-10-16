@@ -45,6 +45,7 @@ private:
     DB_REQ db_req;
     bool is_open;
     bool is_suspended;
+    bool is_partial_load;
     std::string database_error_msg; // explanation if is_open is false
     bool player_search_in_progress;
 
