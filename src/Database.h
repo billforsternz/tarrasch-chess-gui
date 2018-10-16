@@ -39,6 +39,7 @@ public:
     int background_load_permill;
     bool kill_background_load;
     std::string GetStatus();
+	bool GetFile( std::string &filename );	//returns true if database is operational and fully loaded
   
 private:
     std::string db_filename;

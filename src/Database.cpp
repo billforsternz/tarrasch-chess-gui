@@ -511,6 +511,12 @@ std::string Database::GetStatus()
     return s;
 }
 
+bool Database::GetFile( std::string &filename )
+{
+	filename = db_filename;
+	return( is_open && !is_partial_load );
+}
+
 void Database::Reopen( const char *db_file )
 {
 	is_suspended = false;

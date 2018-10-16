@@ -1296,7 +1296,10 @@ void GameLogic::CmdDatabaseOpen( std::string filename )
         cprintf( "...CmdDatabaseOpen() if we did wait, that wait is now over (%d)\n", temp );
         wxString previous = objs.repository->database.m_file;
         cprintf( "File is %s\n", filename.c_str() );
-        objs.db->Reopen(filename.c_str());
+		std::string current;
+		bool running = objs.db->GetFile(current);
+		if( !running || current!=filename )
+			objs.db->Reopen(filename.c_str());
         std::string error_msg;
         bool operational = objs.db->IsOperational(error_msg);
         if( operational )
