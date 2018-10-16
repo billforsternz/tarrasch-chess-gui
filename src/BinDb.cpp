@@ -39,13 +39,14 @@ Main Functions
     Returns bool ok, if !ok set error_msg to explain
 2) uint8_t BinDbReadBegin()
     Get ready to read games, returns newly allocated control block
-3) BinDbLoadAllGames()
+3) bool BinDbLoadAllGames()
     Either A) [array is the so called tiny_db inside a Database object] or B)
     [array is the glocal games array].
     The games in a database are ordered oldest to newest. This is our preferred order always.
     In case A) we reverse the array order after load - to get the normal presentation order (newest games have smallest game_id and come first)
     In case B) we don't reverse - because we are going to append more older to newer games from pgn (game_id isn't actually important we
     now establish a contiguous range of game_ids in BinDbRemoveDuplicatesAndWrite() because it improves ordering before write)
+    Returns bool killed, if killed array is not fully loaded
 4) void BinDbClose()
     Closes database file after reading in 3)
 
@@ -1580,8 +1581,11 @@ void ReadStrings( FILE *fin, int nbr_strings, std::vector<std::string> &strings 
     }
 }
 
-void BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb )
+// Returns bool killed;
+bool BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb )
 {
+	bool killed=false;
+
     // When loading the system database for searches, reverse order so most recent games come first 
     bool do_reverse = !for_append;
 
@@ -1644,10 +1648,18 @@ void BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > 
     uint32_t nbr_games=0;
     uint32_t nbr_promotion_games=0;
     uint32_t base = GameIdAllocateTop(game_count);
-    for( uint32_t i=0; i<game_count && !kill_background_load; i++ )
+    for( uint32_t i=0; i<game_count; i++ )
     {
-        if( pb )
-            pb->Perfraction(i,game_count);
+		if( kill_background_load )
+		{
+			killed = true;
+			break;
+		}
+        if( pb && pb->Perfraction(i,game_count) )
+		{
+			killed = true;
+			break;
+		}
         char buf[sizeof(cb.bb)];
 
 		// Read the game header into a std::string
@@ -1708,18 +1720,19 @@ void BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > 
                                         ) */
             )
         {
-			if( !kill_background_load )
-				cprintf( "%d games (%d include promotion)\n", nbr_games, nbr_promotion_games );
+			cprintf( "%d games (%d include promotion)\n", nbr_games, nbr_promotion_games );
         }
     }
-    if( do_reverse && !kill_background_load )
+    if( do_reverse )
         std::reverse( mega_cache.begin(), mega_cache.end() );
     if( nbr_games > 0 )
     {
         smart_ptr<ListableGame> p1 = mega_cache[0];
         smart_ptr<ListableGame> p2 = mega_cache[nbr_games-1];
+        cprintf( "Load %s\n", killed?"killed":"not killed" );
         cprintf( "First: game_id=%lu, %s-%s %s\n", p1->game_id, p1->White(), p1->Black(), p1->Date() );
         cprintf( "Last:  game_id=%lu, %s-%s %s\n", p2->game_id, p2->White(), p2->Black(), p2->Date() );
     }
+	return killed;
 }
 

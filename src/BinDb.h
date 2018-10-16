@@ -14,7 +14,7 @@
 
 bool BinDbOpen( const char *db_file, std::string &error_msg );
 void BinDbClose();
-void BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb=NULL  );
+bool BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb=NULL  );
 std::vector< smart_ptr<ListableGame> > &BinDbLoadAllGamesGetVector();
 
 bool bin_db_append( const char *fen, const char *event, const char *site, const char *date, const char *round,
