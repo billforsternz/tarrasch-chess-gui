@@ -28,6 +28,7 @@ class Database
 public:
     Database( const char *db_file, bool another_instance_running );
     void Reopen( const char *db_file );
+    bool IsSuspended();
     bool IsOperational( std::string &error_msg );
 	int  SetDbPosition(DB_REQ db_req);
     int  GetRow( int row, CompactGame *pact );
@@ -43,6 +44,7 @@ private:
     std::string db_filename;
     DB_REQ db_req;
     bool is_open;
+    bool is_suspended;
     std::string database_error_msg; // explanation if is_open is false
     bool player_search_in_progress;
 

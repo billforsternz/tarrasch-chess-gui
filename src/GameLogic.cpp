@@ -668,24 +668,25 @@ void GameLogic::CmdFileOpenShell( std::string &filename )
 {
     Atomic begin;
     wxFileName fn(filename.c_str());
-    wxString name = fn.GetFullName();
-    wxString dir = fn.GetPath();
-    wxFileDialog fd( objs.frame, "Select .pgn file", "", "", "*.pgn", wxFD_FILE_MUST_EXIST );//|wxFD_CHANGE_DIR );
-    fd.SetDirectory(dir);
-    fd.SetFilename(name);
-    if( wxID_OK == fd.ShowModal() )
-    {
-        if( objs.cws->FileOpen() )
-        {
-            wxString dir2;
-            wxFileName::SplitPath( fd.GetPath(), &dir2, NULL, NULL );
-            objs.repository->nv.m_doc_dir = dir2;
-            wxString wx_filename = fd.GetPath();
-		    mru.AddFileToHistory( wx_filename );
-            std::string the_file( wx_filename.c_str() );
-            CmdFileOpenInner( the_file );
-        }
-    }
+	std::string name      = std::string(fn.GetFullName().c_str());
+	std::string dir       = std::string(fn.GetPath().c_str());
+	std::string full_path = std::string(fn.GetFullPath().c_str());
+	bool ok            = fn.IsOk();
+	bool exists        = fn.FileExists();
+	bool readable      = fn.IsFileReadable();
+	cprintf( "file=%s, name=%s, dir=%s, full_path=%s, ok=%s exists=%s, readable=%s\n", filename.c_str(), name.c_str(), dir.c_str(), full_path.c_str(), ok?"true":"false", exists?"true":"false", readable?"true":"false" );
+	if( ok && exists )
+	{
+		if( objs.cws->FileOpen() )
+		{
+			wxString wx_filename = fn.GetFullPath();
+			wxString dir2 = fn.GetPath();
+			objs.repository->nv.m_doc_dir = dir2;
+			mru.AddFileToHistory(wx_filename);
+			std::string the_file(wx_filename.c_str());
+			CmdFileOpenInner(the_file);
+		}
+	}
     atom.StatusUpdate();
 }
 
@@ -1074,8 +1075,19 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req, PatternParamete
     {
         cprintf( "...CmdDatabase() if we did wait, that wait is now over (%d)\n", temp );
         std::string error_msg;
+        bool suspended  = objs.db->IsSuspended();
         bool operational = objs.db->IsOperational(error_msg);
-        if( !operational )
+        if( suspended )
+        {
+            wxMessageBox(
+                "The database is not loaded. Tarrasch normally automatically loads the database at startup, but it did not do so on "
+                "this occasion because it detected another instance of Tarrasch already running. "
+				"This is a way of conserving memory, it prevents multiple copies of Tarrasch from all automatically loading "
+				"separate copies of a potentially huge database. You can manually load the database using the menu > Database > "
+				"Select current database", "Database not loaded", wxOK|wxICON_ERROR
+            );
+        }
+        else if( !operational )
         {
             wxMessageBox(
                 "The database is not currently running. To correct this select a database "

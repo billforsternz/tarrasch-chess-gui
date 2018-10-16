@@ -470,11 +470,14 @@ wxMutex *WaitForWorkerThread()
 Database::Database( const char *db_file, bool another_instance_running )
 {
     is_open = false;
-    database_error_msg = "Database not yet open";
-    if( !another_instance_running )
-        Reopen( db_file );
-    else
+    is_suspended = another_instance_running;
+    if( is_suspended )
         database_error_msg = "Database is not open, database is not automatically loaded if another instance of Tarrasch is running";
+    else
+	{
+		database_error_msg = "Database not yet open";
+        Reopen( db_file );
+	}
 }
 
 std::string Database::GetStatus()
@@ -482,13 +485,16 @@ std::string Database::GetStatus()
     std::string s("Db: ");
     if( is_open )
         s += std::string(db_filename);
-    else
+    else if( is_suspended )
+        s += "(not loaded)"; 
+	else
         s += "(none)"; 
     return s;
 }
 
 void Database::Reopen( const char *db_file )
 {
+	is_suspended = false;
     background_load_permill = 0;
     kill_background_load = false;
     player_search_in_progress = false;
@@ -511,6 +517,12 @@ bool Database::IsOperational( std::string &error_msg )
 {
     error_msg = database_error_msg;
     return is_open;
+}
+
+// Check for disabled to save memory
+bool Database::IsSuspended()
+{
+    return is_suspended;
 }
 
 // SetDbPosition() no longer sets the position! - requires a little bit of refactoring

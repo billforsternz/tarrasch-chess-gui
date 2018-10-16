@@ -25,15 +25,14 @@
 #include "wx/log.h"
 #include "wx/filehistory.h"
 #include "wx/snglinst.h"
-#include <wx/snglinst.h>
-#include <wx/ipc.h>
-#include "Appdefs.h"
+#include "wx/ipc.h"
 #include "wx/aui/aui.h"
 #ifdef AUI_NOTEBOOK
 #include "wx/aui/auibook.h"
 #else
 #include "wx/notebook.h"
 #endif
+#include "Appdefs.h"
 #include "Tabs.h"
 #include "PanelBoard.h"
 #include "PanelContext.h"
@@ -371,7 +370,7 @@ class InterProcessCommunicationConnection : public wxConnection
 protected:
 	bool OnExec(const wxString& topic, const wxString& data)
 	{
-		if (topic == "Activate")
+		if( topic == "Activate" )
 		{
 			cprintf("Activated by another instance starting\n");
 			if( objs.frame && objs.gl )
@@ -411,7 +410,7 @@ public:
     virtual int  OnExit();
 private:
     wxSingleInstanceChecker m_one;
-	InterProcessCommunicationServer *m_server;
+	InterProcessCommunicationServer *m_server=NULL;
 };
 
 CtrlBoxBookMoves *gbl_book_moves;
@@ -856,15 +855,36 @@ const char *gbl_spell_colour;	// "colour" or "color"
 bool ChessApp::OnInit()
 {
     // Check if there is another process running.
-    if (m_one.IsAnotherRunning()) {
-        // Create a IPC client and use it to ask the existing process to show itself.
-        wxClient *client = new wxClient;
-        wxConnectionBase *conn = client->MakeConnection("localhost", "/tmp/a_socket" /* or a port number */, "Activate");
-        conn->Execute( argc==2 ? argv[1] : "" );
-        delete conn;
-        delete client;
-        // Don't enter the message loop.
-        return false;
+    if( m_one.IsAnotherRunning() ) {
+
+		// If we have a valid filename as a parameter, open it in other instance
+		if( argc > 1 )
+		{
+			wxFileName fn(argv[1]);
+			std::string name      = std::string(fn.GetFullName().c_str());
+			std::string dir       = std::string(fn.GetPath().c_str());
+			std::string full_path = std::string(fn.GetFullPath().c_str());
+			if( dir == "" )
+			{
+				fn.Assign(wxFileName::GetCwd(),argv[1]);
+				name      = std::string(fn.GetFullName().c_str());
+				dir       = std::string(fn.GetPath().c_str());
+				full_path = std::string(fn.GetFullPath().c_str());
+			}
+			bool ok            = fn.IsOk();
+			bool exists        = fn.FileExists();
+			if( ok && exists )
+			{
+				// Create a IPC client and use it to ask the existing process to show itself.
+				wxClient *client = new wxClient;
+				wxConnectionBase *conn = client->MakeConnection("localhost", "/tmp/a_socket" /* or a port number */, "Activate");
+				conn->Execute( full_path.c_str() );
+				delete conn;
+				delete client;
+				// Don't enter the message loop.
+				return false;
+			}
+		}
     }
 
     //_CrtSetBreakAlloc(1050656);
@@ -977,7 +997,8 @@ bool ChessApp::OnInit()
 
 int ChessApp::OnExit()
 {
-    delete m_server;
+	if( m_server )
+		delete m_server;
 	if (teefile)
 	{
 		fclose(teefile);
