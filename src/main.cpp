@@ -926,7 +926,6 @@ bool ChessApp::OnInit()
     objs.repository = new Repository;
 
     // Use these as fallbacks/defaults
-    bool pos_siz_restored = false;
     int xx = (disp_width * 10) /100;
     int yy = (disp_height * 10) /100;
     int ww = (disp_width * 80) /100;
@@ -934,43 +933,34 @@ bool ChessApp::OnInit()
     wxPoint pt(xx,yy);
     wxSize  sz(ww,hh);
 
-    // Save restore windows logic
-    if( objs.repository->nv.m_x>=0 &&
-        objs.repository->nv.m_y>=0 &&
-        objs.repository->nv.m_w>=0 &&
-        objs.repository->nv.m_h>=0
-      )
+    // Restore size position from repository
+    cprintf( "Repository sizes/positions x=%d, y=%d, w =%d, h=%d\n",
+        objs.repository->nv.m_x,
+        objs.repository->nv.m_y,
+        objs.repository->nv.m_w,
+        objs.repository->nv.m_h );
+	bool pos_siz_not_saved = ( objs.repository->nv.m_x==-1 &&
+        objs.repository->nv.m_y==-1 &&
+        objs.repository->nv.m_w==-1 &&
+        objs.repository->nv.m_h==-1 );
+    bool pos_siz_restored = !pos_siz_not_saved;
+    if( pos_siz_restored )
     {
-        if( objs.repository->nv.m_x + objs.repository->nv.m_w <= disp_width &&
-            objs.repository->nv.m_y + objs.repository->nv.m_h <= disp_height
-          )
-        {
-            pos_siz_restored = true;
-            pt.x = objs.repository->nv.m_x;
-            pt.y = objs.repository->nv.m_y;
-            sz.x = objs.repository->nv.m_w;
-            sz.y = objs.repository->nv.m_h;
-        }
+        pt.x = objs.repository->nv.m_x;
+        pt.y = objs.repository->nv.m_y;
+        sz.x = objs.repository->nv.m_w;
+        sz.y = objs.repository->nv.m_h;
     }
 
-    // Try to detect and restore a MAXIMISED frame (initial x,y slightly negative, initial w,h slightly larger than display)
+    // Improved detect MAXIMISED frame logic (single display initial x,y slightly negative), multiple
+	//  display one might be very negative)
     bool  maximize = false;
-    if( !pos_siz_restored &&
-        objs.repository->nv.m_x>=-8 &&
-        objs.repository->nv.m_y>=-8 &&
-        objs.repository->nv.m_w>=0 &&
-        objs.repository->nv.m_h>=0 &&
-        objs.repository->nv.m_x + objs.repository->nv.m_w <= disp_width+8 &&
-        objs.repository->nv.m_y + objs.repository->nv.m_h <= disp_height+8
-      )
-    {
-        pos_siz_restored = true;
-        maximize = true;
-    }
     objs.repository->nv.m_x = pt.x;
     objs.repository->nv.m_y = pt.y;
     objs.repository->nv.m_w = sz.x;
     objs.repository->nv.m_h = sz.y;
+	if( pos_siz_restored && pt.y<0 && pt.x<0 )
+		maximize = true;
 	char buf[80];
 	snprintf(buf,sizeof(buf),"Tarrasch Chess GUI %s",MASTER_VERSION_BASE);
     ChessFrame *frame = new ChessFrame (buf,
@@ -1488,10 +1478,20 @@ void ChessFrame::OnClose( wxCloseEvent& WXUNUSED(event) )
 		context->AuiEnd();
         wxSize sz = GetSize();
         wxPoint pt = GetPosition();
-        objs.repository->nv.m_x = pt.x;
-        objs.repository->nv.m_y = pt.y;
-        objs.repository->nv.m_w = sz.x;
-        objs.repository->nv.m_h = sz.y;
+        if( objs.repository->nv.m_x == -1 &&
+			objs.repository->nv.m_y == -1 &&
+			objs.repository->nv.m_w == -1 &&
+			objs.repository->nv.m_h == -1)
+		{
+			// Allow user to manually set factory defaults and retain this setting until next session
+		}
+		else
+		{
+			objs.repository->nv.m_x = pt.x;
+			objs.repository->nv.m_y = pt.y;
+			objs.repository->nv.m_w = sz.x;
+			objs.repository->nv.m_h = sz.y;
+		}
         Destroy();  // only exit if OnExit() worked okay (eg, if it wasn't cancelled)
     }
 }
