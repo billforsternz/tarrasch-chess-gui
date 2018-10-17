@@ -882,8 +882,8 @@ bool Book::DoMove( bool white_, int move_number, char *buf )
         okay = move.NaturalIn( &chess_rules, buf2 );
         if( !okay )
         {
-            Error( white_ ? "Cannot convert white terse move"
-                         : "Cannot convert black terse move" );
+            Error( white_ ? "Cannot convert white move"
+                         : "Cannot convert black move" );
         }
         else
         {
