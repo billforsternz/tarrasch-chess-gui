@@ -357,8 +357,11 @@ void CtrlChessTxt::Paste()
                     c = '-';
                     cprintf( "Special unicode en dash handling\n" );
                 }
-                else if( c > 0x7f )
-                    c = '?'; */
+				*/
+#ifdef THC_LINUX
+				if( c & 0x80 )  // pu this back for Linux only, fixes a crash bug
+                    c = '?'; 
+#endif
                 if( c == '\n' )
 				{
 					if( !check_tag )
