@@ -20,10 +20,10 @@ COMPLETE> Why do we need Mouse Event atom instance when Set Manual does atom
 COMPLETE> File save game as -> recent files
 COMPLETE> Database file in status field
 DONT DO IT>Database option in options
-Open database file offers to set it to default
+COMPLETE (and better than suggested)>Open database file offers to set it to default
 COMPLETE> Cancel not default in pop up
 COMPLETE> Copy FEN to system clipboard
-Start not Suggestions
+COMPLETE> Start not Suggestions
 Faster move generation
 COMPLETE> Remove warnings
 Comment before resume from branch
