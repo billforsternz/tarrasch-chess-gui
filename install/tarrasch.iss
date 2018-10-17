@@ -3,7 +3,7 @@
 
 [Setup]
 AppName=Tarrasch Chess GUI
-AppVerName=Tarrasch Chess GUI V3.06b-Windows
+AppVerName=Tarrasch Chess GUI V3.10a-Windows
 AppPublisher=Triple Happy Ltd.
 AppPublisherURL=http://www.triplehappy.com
 AppSupportURL=http://www.triplehappy.com
@@ -15,9 +15,16 @@ OutputDir=.
 OutputBaseFilename=setup
 Compression=lzma
 SolidCompression=yes
-ChangesAssociations=no
+ChangesAssociations=yes
+
+[Tasks]
+Name: pgnAssociation; Description: "Associate to .pgn extension"; GroupDescription: File extensions:
 
 [Registry]
+Root: HKLM; Subkey: "Software\Classes\.pgn"; ValueType: string; ValueName: ""; ValueData: "ChessDocumentPgn"; Flags: uninsdeletevalue; Tasks: pgnAssociation
+Root: HKLM; Subkey: "Software\Classes\ChessDocumentPgn"; ValueType: string; ValueName: ""; ValueData: "Chess Document"; Flags: uninsdeletekey; Tasks: pgnAssociation
+Root: HKLM; Subkey: "Software\Classes\ChessDocumentPgn\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\Tarrasch.exe,0"; Tasks: pgnAssociation
+Root: HKLM; Subkey: "Software\Classes\ChessDocumentPgn\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\Tarrasch.exe"" ""%1"""; Tasks: pgnAssociation
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
