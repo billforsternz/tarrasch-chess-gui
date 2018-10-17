@@ -3110,7 +3110,7 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
     if( suggestions )
 	{
 		canvas->box->SetForegroundColour(*wxBLACK);
-        canvas->box->SetLabel( b1 && b2 && b3 && b4 ? "Enter moves, comments and variations freely - or ..." : "Suggestions" );
+        canvas->box->SetLabel( b1 && b2 && b3 && b4 ? "Enter moves, comments and variations freely - or ..." : "Start" );
 	}
     if( title && !show )
         canvas->SetBoardTitle( title );

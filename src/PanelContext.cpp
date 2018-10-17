@@ -101,7 +101,7 @@ PanelContext::PanelContext
     kibitz_page      = new wxPanel(context_notebook, wxID_ANY, wxPoint(0,0), wxSize((90*siz.x)/100,(90*siz.y)/100), wxNO_BORDER );
 
     // Add pages to notebook
-    context_notebook->AddPage(suggestions_page,"Suggestions",true);
+    context_notebook->AddPage(suggestions_page,"Start",true);
     context_notebook->AddPage(kibitz_page,"Engine Analysis",false);
 
     font1 = NULL;
@@ -129,7 +129,7 @@ PanelContext::PanelContext
     
     // Create Status box
     box = new wxStaticBox( suggestions_page, ID_BOX,"",wxDefaultPosition, wxDefaultSize );
-    //box->SetLabel( "Suggestions" );
+    //box->SetLabel( "Start" );
 
     // Create flexible buttons
     button1 = new wxButton( suggestions_page, ID_BUTTON1, "Play engine as white" /*longest button text*/,       wxDefaultPosition, wxDefaultSize ); 
