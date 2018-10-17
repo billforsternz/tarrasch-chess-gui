@@ -124,7 +124,7 @@ void GeneralDialog::CreateControls()
     notation_language_sizer->Add(notation_language_label, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     notation_language_sizer->Add(10, 5, 1, wxALL, 0);
     notation_language_sizer->Add(notation_language_ctrl,  0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
-    box_sizer->Add(notation_language_sizer, 0, wxALIGN_LEFT|wxALL, 5);
+    box_sizer->Add(notation_language_sizer, 0, wxALIGN_LEFT|wxALL, 3);
 
     // Colour Pickers
     wxBoxSizer* colour_sizer1  = new wxBoxSizer(wxHORIZONTAL);
@@ -138,7 +138,7 @@ void GeneralDialog::CreateControls()
     wxButton *restore_light = new wxButton ( this, ID_RESTORE_LIGHT, "Restore Default",
         wxDefaultPosition, wxDefaultSize, 0 );
     colour_sizer1->Add(restore_light, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-	box_sizer->Add(colour_sizer1, 0, wxALIGN_LEFT|wxALL, 5);
+	box_sizer->Add(colour_sizer1, 0, wxALIGN_LEFT|wxALL, 3);
 
     wxBoxSizer* colour_sizer2  = new wxBoxSizer(wxHORIZONTAL);
     wxStaticText* colour_label2 = new wxStaticText ( this, wxID_STATIC,
@@ -151,7 +151,7 @@ void GeneralDialog::CreateControls()
     wxButton *restore_dark = new wxButton ( this, ID_RESTORE_DARK, "Restore Default",
         wxDefaultPosition, wxDefaultSize, 0 );
     colour_sizer2->Add(restore_dark, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    box_sizer->Add(colour_sizer2, 0, wxALIGN_LEFT|wxALL, 5);
+    box_sizer->Add(colour_sizer2, 0, wxALIGN_LEFT|wxALL, 3);
 
     wxBoxSizer* colour_sizer3  = new wxBoxSizer(wxHORIZONTAL);
     wxStaticText* colour_label3 = new wxStaticText ( this, wxID_STATIC,
@@ -164,7 +164,7 @@ void GeneralDialog::CreateControls()
     wxButton *restore_highlight_light = new wxButton ( this, ID_RESTORE_HIGHLIGHT_LIGHT, "Restore Default",
         wxDefaultPosition, wxDefaultSize, 0 );
     colour_sizer3->Add(restore_highlight_light, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    box_sizer->Add(colour_sizer3, 0, wxALIGN_LEFT|wxALL, 5);
+    box_sizer->Add(colour_sizer3, 0, wxALIGN_LEFT|wxALL, 3);
 
     wxBoxSizer* colour_sizer4  = new wxBoxSizer(wxHORIZONTAL);
     wxStaticText* colour_label4 = new wxStaticText ( this, wxID_STATIC,
@@ -177,7 +177,7 @@ void GeneralDialog::CreateControls()
     wxButton *restore_highlight_dark = new wxButton ( this, ID_RESTORE_HIGHLIGHT_DARK, "Restore Default",
         wxDefaultPosition, wxDefaultSize, 0 );
     colour_sizer4->Add(restore_highlight_dark, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    box_sizer->Add(colour_sizer4, 0, wxALIGN_LEFT|wxALL, 5);
+    box_sizer->Add(colour_sizer4, 0, wxALIGN_LEFT|wxALL, 3);
 
     wxBoxSizer* colour_sizer5  = new wxBoxSizer(wxHORIZONTAL);
     wxStaticText* colour_label5 = new wxStaticText ( this, wxID_STATIC,
@@ -190,14 +190,14 @@ void GeneralDialog::CreateControls()
     wxButton *restore_highlight_line = new wxButton ( this, ID_RESTORE_HIGHLIGHT_LINE, "Restore Default",
         wxDefaultPosition, wxDefaultSize, 0 );
     colour_sizer5->Add(restore_highlight_line, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    box_sizer->Add(colour_sizer5, 0, wxALIGN_LEFT|wxALL, 5);
+    box_sizer->Add(colour_sizer5, 0, wxALIGN_LEFT|wxALL, 3);
 
     // Suppress highlight of last move
     wxCheckBox* suppress_highlight = new wxCheckBox( this, ID_SUPPRESS_HIGHLIGHT,
        "Don't highlight the most recent move on the chess board", wxDefaultPosition, wxDefaultSize, 0 );
     suppress_highlight->SetValue( dat.m_suppress_highlight );
     box_sizer->Add( suppress_highlight, 0,
-        wxALL, 5);
+        wxLEFT, 5);
 
     // Use line highlighting rather than colour highlighting
     wxCheckBox* line_highlight = new wxCheckBox( this, ID_LINE_HIGHLIGHT,
@@ -206,14 +206,14 @@ void GeneralDialog::CreateControls()
 		"Use borders rather than colours for square highlights", wxDefaultPosition, wxDefaultSize, 0 );
     line_highlight->SetValue( dat.m_line_highlight );
     box_sizer->Add( line_highlight, 0,
-        wxALL, 5);
+        wxLEFT, 5);
 
     // Show heading above board
     wxCheckBox* heading_above_board_box = new wxCheckBox( this, ID_HEADING_ABOVE_BOARD,
        wxT("Show heading above board (instead of in frame)"), wxDefaultPosition, wxDefaultSize, 0 );
     heading_above_board_box->SetValue( dat.m_heading_above_board );
     box_sizer->Add( heading_above_board_box, 0,
-        wxALL, 5);
+        wxLEFT, 5);
 
     // Font size
 	wxBoxSizer* font_size_sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -226,42 +226,42 @@ void GeneralDialog::CreateControls()
 	font_size_sizer->Add(10, 0, 0, wxALL, 0);
 	font_size_sizer->Add(font_size_label, 0, wxALL | wxALIGN_CENTER_VERTICAL, 0);
     box_sizer->Add( font_size_sizer, 0,
-        wxALL, 5);
+        wxLEFT, 5);
 
     // Don't use italics for subvariations
     wxCheckBox* no_italics_box = new wxCheckBox( this, ID_NO_ITALICS,
        wxT("Don't use italics for subvariations"), wxDefaultPosition, wxDefaultSize, 0 );
     no_italics_box->SetValue( dat.m_no_italics );
     box_sizer->Add( no_italics_box, 0,
-        wxALL, 5);
+        wxLEFT, 5);
 
     // Go straight to game for single game pgns
     wxCheckBox* straight_to_game_box = new wxCheckBox( this, ID_STRAIGHT_TO_GAME,
        wxT("Go straight to game for single game .pgn files"), wxDefaultPosition, wxDefaultSize, 0 );
     straight_to_game_box->SetValue( dat.m_straight_to_game );
     box_sizer->Add( straight_to_game_box, 0,
-        wxALL, 5);
+        wxLEFT, 5);
 
     // Go straight to game for all pgns
     wxCheckBox* straight_to_first_game_box = new wxCheckBox( this, ID_STRAIGHT_TO_FIRST_GAME,
        wxT("Go straight to first game for all .pgn files"), wxDefaultPosition, wxDefaultSize, 0 );
     straight_to_first_game_box->SetValue( dat.m_straight_to_first_game );
     box_sizer->Add( straight_to_first_game_box, 0,
-        wxALL, 5);
+        wxLEFT, 5);
 
     // No auto flip at start of game or on swap sides
     wxCheckBox* no_auto_flip = new wxCheckBox( this, ID_NO_AUTO_FLIP,
        wxT("Don't flip board to put human at bottom"), wxDefaultPosition, wxDefaultSize, 0 );
     no_auto_flip->SetValue( dat.m_no_auto_flip );
     box_sizer->Add( no_auto_flip, 0,
-        wxALL, 5);
+        wxLEFT, 5);
 
     // Emit bell sound when engine moves
     wxCheckBox* emit_bell_sound_when_engine_moves = new wxCheckBox( this, ID_EMIT_BELL,
        wxT("Emit bell sound when engine moves"), wxDefaultPosition, wxDefaultSize, 0 );
     emit_bell_sound_when_engine_moves->SetValue( dat.m_bell );
     box_sizer->Add( emit_bell_sound_when_engine_moves, 0,
-        wxALL, 5);
+        wxLEFT, 5);
 
     // A dividing line before the OK and Cancel buttons
     wxStaticLine* line = new wxStaticLine ( this, wxID_STATIC,

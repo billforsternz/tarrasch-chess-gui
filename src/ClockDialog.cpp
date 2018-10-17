@@ -87,7 +87,7 @@ void ClockDialog::CreateControls()
     // A friendly message
     wxStaticText* descr = new wxStaticText( this, wxID_STATIC,
         wxT("This panel lets you control the on screen chess clocks"), wxDefaultPosition, wxDefaultSize, 0 );
-    box_sizer->Add(descr, 0, wxALIGN_LEFT|wxLEFT|wxTOP, 20 );
+    box_sizer->Add(descr, 0, wxALIGN_LEFT|wxLEFT|wxTOP, 5 );
 
 //    // Spacer
 //    box_sizer->Add(5, 5, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
@@ -142,8 +142,8 @@ void ClockDialog::CreateControls()
     small_sizer->Add( running_box, 0,
         wxALL, 5);
 
-    horiz_sizer->Add(small_sizer, 1, wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 10);
-    //box_sizer->Add(small_sizer, 0, wxGROW | (wxALL/* & ~wxLEFT */), 10);
+    horiz_sizer->Add(small_sizer, 1, wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 5);
+    //box_sizer->Add(small_sizer, 0, wxGROW | (wxALL/* & ~wxLEFT */), 5);
 
 //BLACK
     // Label for time
@@ -186,9 +186,9 @@ void ClockDialog::CreateControls()
     small_sizer2->Add( running_box2, 0,
         wxALL, 5);
 
-    horiz_sizer->Add(small_sizer2, 1, wxGROW | (wxALL/* & ~wxLEFT */), 10);
-    //box_sizer->Add(small_sizer2, 1, wxGROW | (wxALL/* & ~wxLEFT */), 10);
-    box_sizer->Add(horiz_sizer, 1, wxGROW | (wxALL/* & ~wxLEFT */), 10);
+    horiz_sizer->Add(small_sizer2, 1, wxGROW | (wxALL/* & ~wxLEFT */), 5);
+    //box_sizer->Add(small_sizer2, 1, wxGROW | (wxALL/* & ~wxLEFT */), 5);
+    box_sizer->Add(horiz_sizer, 1, wxGROW | (wxALL/* & ~wxLEFT */), 5);
 
     // An intermediate sizer
     wxBoxSizer* horiz_sizer2 = new wxBoxSizer(wxHORIZONTAL);
@@ -232,8 +232,8 @@ void ClockDialog::CreateControls()
     small_sizer3->Add( human_running_checkbox, 0,
         wxALL, 5);
 
-    horiz_sizer2->Add(small_sizer3, 1, wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 10);
-    //box_sizer->Add(small_sizer, 0, wxGROW | (wxALL/* & ~wxLEFT */), 10);
+    horiz_sizer2->Add(small_sizer3, 1, wxALIGN_LEFT|wxGROW | (wxALL & ~wxTOP), 5);
+    //box_sizer->Add(small_sizer, 0, wxGROW | (wxALL/* & ~wxLEFT */), 5);
 
 //ENGINE
     // Label for time
@@ -272,9 +272,9 @@ void ClockDialog::CreateControls()
     small_sizer4->Add( engine_running_checkbox, 0,
         wxALL, 5);
 
-    horiz_sizer2->Add(small_sizer4, 1, wxGROW | (wxALL/* & ~wxLEFT */), 10);
-    //box_sizer->Add(small_sizer2, 1, wxGROW | (wxALL/* & ~wxLEFT */), 10);
-    box_sizer->Add(horiz_sizer2, 1, wxGROW | (wxALL/* & ~wxLEFT */), 10);
+    horiz_sizer2->Add(small_sizer4, 1, wxGROW | (wxALL & ~wxTOP), 5);
+    //box_sizer->Add(small_sizer2, 1, wxGROW | (wxALL/* & ~wxLEFT */), 5);
+    box_sizer->Add(horiz_sizer2, 1, wxGROW | (wxALL & ~wxTOP), 5);
 
     // An intermediate sizer
     wxBoxSizer* horiz_sizer3 = new wxBoxSizer(wxHORIZONTAL);
@@ -286,8 +286,8 @@ void ClockDialog::CreateControls()
     fixed_period_mode->SetValue( dat.m_fixed_period_mode );
     small_sizer5->Add( fixed_period_mode, 0,
         wxALL, 5);
-    horiz_sizer3->Add(small_sizer5, 1, (wxALL/* & ~wxLEFT */), 10);
-    box_sizer->Add(horiz_sizer3, 0, wxGROW |  (wxALL/* & ~wxLEFT */), 10);
+    horiz_sizer3->Add(small_sizer5, 1, (wxALL & ~wxTOP), 5);
+    box_sizer->Add(horiz_sizer3, 0, wxGROW |  (wxALL & ~wxTOP), 5);
 
     // A dividing line before the OK and Cancel buttons
     wxStaticLine* line = new wxStaticLine ( this, wxID_STATIC,
@@ -296,7 +296,7 @@ void ClockDialog::CreateControls()
 
     // A horizontal box sizer to contain Reset, OK, Cancel and Help
     wxBoxSizer* okCancelBox = new wxBoxSizer(wxHORIZONTAL);
-    box_sizer->Add(okCancelBox, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 15);
+    box_sizer->Add(okCancelBox, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
 /*
     // The Reset button
     wxButton* reset = new wxButton( this, ID_CLOCK_RESET, wxT("&Reset"),
