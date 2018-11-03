@@ -818,9 +818,11 @@ void GamesDialog::OnSize( wxSizeEvent &evt )
     if(list_ctrl)
     {
         gdr.Layout( this, list_ctrl, line_ctrl );
-		list_ctrl->SetFocus();
     }
 }
+
+
+
 
 // Set the validators for the dialog controls
 void GamesDialog::SetDialogValidators()
