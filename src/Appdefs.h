@@ -10,9 +10,9 @@
 #include "wx/wx.h"
 #include "Portability.h"
 
-#define MASTER_VERSION_BASE "V3.10a"    //add asterisk prefix between releases
+#define MASTER_VERSION_BASE "V3.10b"    //add asterisk prefix between releases
 
-//#define USING_KINGBASE
+#define USING_KINGBASE
 // no suffix indicates default .tdb is kingbase
 #ifdef  USING_KINGBASE
 #ifdef THC_WINDOWS

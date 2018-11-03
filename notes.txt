@@ -1,3 +1,8 @@
+1 November 2018
+Need to more aggressively set current window on opening new style games dialog
+File Save game as leaves status in limbo
+Promote rest of comment to moves fails on blank board from position zero.
+
 We changed some mouse handlers by adding "Atomic begin" in order to get the
 draw counts to update when clicking on a different move;
 
