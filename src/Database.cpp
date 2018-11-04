@@ -473,7 +473,8 @@ wxMutex *WaitForWorkerThread( const char *title )
 
 wxMutex *DontWaitForWorkerThread()
 {   
-	the_database->kill_background_load = true;
+    if( the_database )
+		the_database->kill_background_load = true;
     s_mutex_tiny_database.TryLock();
     wxSafeYield();
     s_mutex_tiny_database.Unlock();
