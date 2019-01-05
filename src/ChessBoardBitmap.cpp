@@ -1410,11 +1410,20 @@ void ChessBoardBitmap::SetChessPosition( const thc::ChessPosition &pos, const bo
 
 	// Some fairly brutal and simple code to generate icon xpm strings for Linux icon in main.cpp
 	//#define GENERATE_ICON_XPM_FILE
+	#define WHOLE_BOARD  //instead generate whole board
 	#ifdef GENERATE_ICON_XPM_FILE
-	static bool once;
+	static bool once[5000];
 	FILE *f=NULL;
-	if( !once )
-		f = fopen("icon-basis.xpm","wt");
+	if( !once[width] )
+	{
+		char name[80];
+#ifdef WHOLE_BOARD
+		sprintf( name, "whole-board-%d-%d.xpm", width, height );
+#else
+		sprintf( name, "icon-basis.xpm" );
+#endif
+		f = fopen(name,"wt");
+	}
 	unsigned char red[256];
 	unsigned char green[256];
 	unsigned char blue[256];
@@ -1467,10 +1476,23 @@ void ChessBoardBitmap::SetChessPosition( const thc::ChessPosition &pos, const bo
 			}
 			// y = first 2/8 of board, x = 5/8 of board => gives f8 = Black bishop on dark square and
 			//   f7 = Black pawn on light square
-			if( !once && col>(width*5)/8-10 && col<(width*6)/8+10 && row<(height*2)/8+10 && f )
+#ifdef WHOLE_BOARD
+			if( !once[width] ) // && col>(width*5)/8-10 && col<(width*6)/8+10 && row<(height*2)/8+10 && f )
 				xpm += c;
 		}
-		if( !once && row<(height*2)/8+10 )
+		if( !once[width] ) //&& row<(height*2)/8+10 )
+		{
+			xpm += "\"";
+			if( row+1 < height )
+				xpm += ",\n\"";
+			else
+				xpm += "\n";
+		}
+#else
+			if( !once[width] && col>(width*5)/8-10 && col<(width*6)/8+10 && row<(height*2)/8+10 && f )
+				xpm += c;
+		}
+		if( !once[width] && row<(height*2)/8+10 )
 		{
 			xpm += "\"";
 			if( row+1 < (height*2)/8+10 )
@@ -1478,12 +1500,17 @@ void ChessBoardBitmap::SetChessPosition( const thc::ChessPosition &pos, const bo
 			else
 				xpm += "\n";
 		}
+#endif
 	}
-	if( !once && f)
+	if( !once[width] && f)
 	{
 		fputs( "static const char *icon_xpm[] = {\n", f );
 		fputs( "/* columns rows colors chars-per-pixel */\n", f );
+#ifdef WHOLE_BOARD
+		fprintf( f, "\"%lu %lu %d 1\",\n", width, height, nbr_colours );
+#else
 		fprintf( f, "\"%lu %lu %d 1\",\n", width/8+20-1, (height*2)/8+10, nbr_colours );
+#endif
 		for( int i=0; i<nbr_colours; i++ )
 		{
 			fprintf( f, "\"%c c #%02x%02x%02x\",\n", ch[i], red[i]&0xff, green[i]&0xff, blue[i]&0xff );
@@ -1493,7 +1520,7 @@ void ChessBoardBitmap::SetChessPosition( const thc::ChessPosition &pos, const bo
 		fputs( "};\n", f );
 		fclose(f);
 	}
-	once = true;
+	once[width] = true;
 	#endif // #ifdef GENERATE_ICON_XPM_FILE
 
 	// Copy the chess board bitmap into the centre part of the board setup bitmap
