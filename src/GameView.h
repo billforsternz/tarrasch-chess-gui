@@ -23,7 +23,6 @@ public:
     GameLogic *gl;
     bool comment_edited;    // sorry very disgusting
     int  puzzle_nbr;        // see above
-    void Debug();
     void Build( std::string &result, MoveTree *tree, thc::ChessPosition &start_position );
     void ToString( std::string &str );
     void ToString( std::string &str, int begin, int end );
@@ -54,6 +53,7 @@ public:
     unsigned long FindEnd();
     bool IsAtEnd( unsigned long pos );
     unsigned long GetMoveOffset( MoveTree *node );
+	void Debug();
 
 private:
     enum GAME_VIEW_ELEMENT_TYPE
