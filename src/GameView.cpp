@@ -1410,6 +1410,57 @@ unsigned long GameView::NavigationKey( unsigned long pos, NAVIGATION_KEY nk )
                 {
                     found = true;
                     level_original = level_ = gve.level;
+
+					// This is a specific "band-aid" type fix to Github.com issue "Moving backwards in main line not working #11"
+					if( iter==-1 && gve.type==NEWLINE && i-1!=end && expansion[i-1].type==MOVE && expansion[i-1].offset1<=pos && pos<=expansion[i-1].offset2)
+					{
+						/*
+							The minimal bug example was this document;
+							1.e4 e5
+							  (1...c5)
+							  (1...e6)
+							2.Nf3
+							  (2...Nc3)
+							2...Nc6
+
+							Putting the cursor on 2...Nc6 and pressing up arrow twice did *not* get to 1...e5 (the cursor stuck
+							at 2.Nf3). Here is the structure revealed by a call to GameView::Debug();
+							MOVE0 level=1, offset1=0, offset2=0, str=
+							MOVE level=1, offset1=0, offset2=4, str=1.e4
+							MOVE level=1, offset1=4, offset2=7, str= e5
+							NEWLINE level=2, offset1=7, offset2=8, str=
+							START_OF_VARIATION level=2, offset1=8, offset2=9, str=
+							MOVE0 level=2, offset1=9, offset2=9, str=
+							MOVE level=2, offset1=9, offset2=15, str=1...c5
+							END_OF_VARIATION level=2, offset1=15, offset2=16, str=
+							NEWLINE level=2, offset1=16, offset2=17, str=
+							START_OF_VARIATION level=2, offset1=17, offset2=18, str=
+							MOVE0 level=2, offset1=18, offset2=18, str=
+							MOVE level=2, offset1=18, offset2=24, str=1...e6
+							END_OF_VARIATION level=2, offset1=24, offset2=25, str=
+							NEWLINE level=1, offset1=25, offset2=26, str=
+							MOVE level=1, offset1=26, offset2=31, str=2.Nf3
+							NEWLINE level=2, offset1=31, offset2=32, str=
+							START_OF_VARIATION level=2, offset1=32, offset2=33, str=
+							MOVE0 level=2, offset1=33, offset2=33, str=
+							MOVE level=2, offset1=33, offset2=38, str=2.Nc3
+							END_OF_VARIATION level=2, offset1=38, offset2=39, str=
+							NEWLINE level=1, offset1=39, offset2=40, str=
+							MOVE level=1, offset1=40, offset2=47, str=2...Nc6
+							END_OF_GAME level=1, offset1=47, offset2=47, str=
+
+							Analysis revealed that the first up arrow press set the cursor to pos=31 at the end of
+							the line with 2.Nf3. Then when the up arrow key was pressed again the backwards search
+							from the end would hit the NEWLINE level=2 instead of the MOVE level=1. These 2 lines;
+							MOVE level=1, offset1=26, offset2=31, str=2.Nf3
+							NEWLINE level=2, offset1=31, offset2=32, str=
+
+							The fix is this extra if clause which targets this very specific situation and iterates
+							one more time to the MOVE level=1 line instead of the NEWLINE level=2 line.
+						*/
+						i--;
+	                    level_original = level_ = expansion[i].level;
+					}
                 }
             }
             else
