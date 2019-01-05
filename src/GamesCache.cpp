@@ -1006,8 +1006,11 @@ void GamesCache::Publish()
 					fwrite(s.c_str(), 1, s.length(), md_out);
 				}
 
-				fwrite("<br/>\n", 1, 6, md_out);
-				if (!markdown && i + 1 == gds_nbr)
+				if( i+1 == gds_nbr )
+					fwrite("<br/>\n", 1, 6, md_out);
+				else
+					fwrite("\n", 1, 1, md_out);
+				if( !markdown && i+1 == gds_nbr )
 				{
 					fwrite("</div>\n"
 						"</body>\n"
