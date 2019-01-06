@@ -348,17 +348,10 @@ public:
     }
 
     // Copy constructor
-    ChessPosition( const ChessPosition& src )
-    {
-        memcpy( (void*)this, (void*)&src, sizeof(ChessPosition) );
-    }
+    ChessPosition( const ChessPosition& src ) = default;
 
     // Assignment operator
-    ChessPosition& operator=( const ChessPosition& src )
-    {
-        memcpy( (void*)this, (void*)&src, sizeof(ChessPosition) );
-        return( *this );
-    }
+    ChessPosition& operator=( const ChessPosition& src ) = default;
 
     // Equality operator
     bool operator ==( const ChessPosition &other ) const
