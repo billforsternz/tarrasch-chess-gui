@@ -813,6 +813,15 @@ bool GameLogic::CmdUpdatePreviousGame()
     return( nbr>1 && games_in_file_idx!=-1 && 0<=games_in_file_idx-1 && games_in_file_idx-1<nbr );
 }
 
+int GameLogic::GetCurrentGameInFileIndex()
+{
+    int nbr = gc_pgn.gds.size();
+	int idx = 0;
+    if( games_in_file_idx!=-1 && 0<=games_in_file_idx && games_in_file_idx<nbr )
+		idx = games_in_file_idx;
+	return idx;
+}
+
 void GameLogic::NextGamePreviousGame( int idx )
 {
     Atomic begin;
@@ -965,7 +974,7 @@ void GameLogic::CmdGamesCurrent()
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
         gc_pgn.Debug( "Before loading current file games dialog" );
-        PgnDialog dialog( objs.frame, &gc_pgn, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );   // GamesDialog instance
+        PgnDialog dialog( objs.frame, &gc_pgn, &gc_clipboard, ID_PGN_DIALOG_CURRENT_FILE, pt, sz );   // GamesDialog instance
         if( dialog.ShowModalOk("Current file") )
         {
             objs.log->SaveGame(&gd,editing_log);

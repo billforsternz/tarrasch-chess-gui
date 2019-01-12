@@ -55,6 +55,7 @@ public:
     bool InHumanEngineGame( bool &human_is_white );
 	void SetGameBeingEdited( GameDocument &first, ListableGame &second ) { int tag = ++game_being_edited_tag;
 		first.game_being_edited=tag; second.SetGameBeingEdited(tag); }
+	int GetCurrentGameInFileIndex();
 
 	// Idle routine
 	void OnIdle();
