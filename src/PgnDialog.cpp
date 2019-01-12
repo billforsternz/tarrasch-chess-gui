@@ -32,7 +32,7 @@ void PgnDialog::GdvEnumerateGames()
 
 wxSizer *PgnDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
 {
-    if( id == ID_PGN_DIALOG_FILE )
+    if( id==ID_PGN_DIALOG_FILE || id==ID_PGN_DIALOG_CURRENT_FILE )
     {
         // Edit game details
         wxButton* edit_game_details = new wxButton ( this, ID_PGN_DIALOG_GAME_DETAILS, wxT("Edit Game Details"),
@@ -161,7 +161,7 @@ void PgnDialog::GdvReadItem( int item, CompactGame &info )
 void PgnDialog::GdvHelpClick()
 {
     wxString helpText;
-    if( id == ID_PGN_DIALOG_FILE )
+    if( id==ID_PGN_DIALOG_FILE || id==ID_PGN_DIALOG_CURRENT_FILE )
         helpText=
     "\nUse this panel to preview the games in a .pgn file."
     "\n\n"
