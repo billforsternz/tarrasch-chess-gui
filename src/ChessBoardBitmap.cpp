@@ -16,6 +16,7 @@
 #include "CompressedBitmaps.h"
 #include "ChessBoardBitmap.h"
 #include "GameLogic.h"
+#include "DialogDetect.h"
 #include "thc.h"
 #include "Objects.h"
 #include "Repository.h"
@@ -2072,6 +2073,7 @@ void TestbedDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
 bool TestbedDialog::Run()
 {
     bool ok=false;
+	DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
     if( wxID_OK == ShowModal() )
         ok = true;
     return ok;

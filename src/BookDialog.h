@@ -10,6 +10,7 @@
 #include "wx/statline.h"
 #include "wx/filepicker.h"
 #include "SuspendEngine.h"
+#include "DialogDetect.h"
 #include "Repository.h"
 
 // Control identifiers
@@ -82,6 +83,7 @@ public:
     // Data members
     BookConfig   dat;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
+	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
 };
 
 #endif    // BOOK_DIALOG_H

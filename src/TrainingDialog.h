@@ -10,6 +10,7 @@
 #include "wx/spinctrl.h"
 #include "wx/statline.h"
 #include "SuspendEngine.h"
+#include "DialogDetect.h"
 #include "Repository.h"
 
 // Control identifiers
@@ -79,6 +80,7 @@ public:
     // Data members
     TrainingConfig   dat;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
+	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
 };
 
 #endif    // TRAINING_DIALOG_H

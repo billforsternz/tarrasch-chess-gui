@@ -12,6 +12,7 @@
 #include "wx/statline.h"
 #include "wx/accel.h"
 #include "SuspendEngine.h"
+#include "DialogDetect.h"
 #include "GamesCache.h"
 #include "GameDocument.h"
 #include "Repository.h"
@@ -320,6 +321,7 @@ protected:
     GamesCache  *gc_clipboard;
     GameDocument preview_game;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
+	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
 };
 
 

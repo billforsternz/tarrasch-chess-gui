@@ -11,6 +11,7 @@
 #include "wx/statline.h"
 #include "MoveTree.h"   // for PGN_RESULT
 #include "SuspendEngine.h"
+#include "DialogDetect.h"
 #include "GameDocument.h"
 
 // Control identifiers
@@ -76,6 +77,7 @@ public:
     // Data members
     wxString        prefix_txt;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
+	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
 };
 
 #endif    // GAME_PREFIX_DIALOG_H

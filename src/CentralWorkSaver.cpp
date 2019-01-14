@@ -338,6 +338,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                     wxFileDialog fd( objs.frame, "Select .pgn file to create, replace or append to", "", "", "*.pgn", wxFD_SAVE ); //|wxFD_CHANGE_DIR );
                     wxString dir = objs.repository->nv.m_doc_dir;
                     fd.SetDirectory(dir);
+					DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
                     int answer = fd.ShowModal();
                     if( answer == wxID_CANCEL )
                         any_cancel = true;
@@ -427,6 +428,7 @@ void CentralWorkSaver::SaveFile( bool prompt, FILE_MODE fm, bool save_as )
                 wxFileDialog fd( objs.frame, "Select .pgn file to create, replace or append to", "", "", "*.pgn", wxFD_SAVE ); //|wxFD_CHANGE_DIR );
                 wxString dir = objs.repository->nv.m_doc_dir;
                 fd.SetDirectory(dir);
+				DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
                 int answer = fd.ShowModal();
                 if( answer == wxID_CANCEL )
                     any_cancel = true;
@@ -652,6 +654,7 @@ bool CentralWorkSaver::FileSaveGameAs()
         wxFileDialog fd( objs.frame, "Select .pgn file to create, replace or append to", "", "", "*.pgn", wxFD_SAVE ); //|wxFD_CHANGE_DIR );
         wxString dir = objs.repository->nv.m_doc_dir;
         fd.SetDirectory(dir);
+		DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
         int answer = fd.ShowModal();
         ok = (answer==wxID_OK);
         if( ok )

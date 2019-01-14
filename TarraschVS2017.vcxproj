@@ -223,6 +223,7 @@
     <ClInclude Include="src\DbMaintenance.h" />
     <ClInclude Include="src\DbPrimitives.h" />
     <ClInclude Include="src\DebugPrintf.h" />
+    <ClInclude Include="src\DialogDetect.h" />
     <ClInclude Include="src\Eco.h" />
     <ClInclude Include="src\EngineDialog.h" />
     <ClInclude Include="src\GameClock.h" />

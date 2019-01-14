@@ -365,6 +365,7 @@ Objects objs;
 #define TIMER_ID 2001
 
 // Some IPC stuff to support proper instance handling
+int DialogDetect::counter=0;	// Don't accept shell commands if we are running a dialog
 class InterProcessCommunicationConnection : public wxConnection
 {
 protected:
@@ -377,7 +378,7 @@ protected:
 			{
 				objs.frame->Raise();
 				std::string filename_from_shell = std::string(data.c_str());
-				if( filename_from_shell != "" )
+				if( filename_from_shell != "" && !DialogDetect::IsOpen() )
 				{
 					wxCommandEvent *p = new wxCommandEvent(wxEVT_MENU, ID_FILE_OPEN_SHELL);
 					objs.gl->filename_from_shell = filename_from_shell;
