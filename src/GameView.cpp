@@ -1784,9 +1784,16 @@ bool GameView::GetOffsetWithinComment( unsigned long pos, unsigned long &pos_wit
     for( int i=0; !found && i<nbr; i++ )
     {
         GameViewElement &gve = expansion[i];
-        if( gve.offset1<pos && pos<gve.offset2 )
+        if( gve.type==COMMENT )
         {
-            if( gve.type==COMMENT ) // || gve.type==PRE_COMMENT )
+	        if( gve.offset1==0 && gve.offset1<=pos && pos<gve.offset2 )
+			{
+				// Special case - no inserted space before an initial comment, so no
+				//  need to subtract one from gve.offset1 to get pos_within_comment
+                found = true;
+                pos_within_comment = pos-gve.offset1;
+			}
+	        else if( gve.offset1<pos && pos<gve.offset2 )
             {
                 found = true;
                 pos_within_comment = pos-gve.offset1-1;
