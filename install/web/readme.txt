@@ -10,6 +10,10 @@ very obscure (but nice and simple) tool called "Poole" to publish the
 tournament reports for my local club. For example output see
 http://www.nzchessmag.com/wellingtonchessclub/2015-mazur-g.html.
 
+A similar, but more recent example, with some refined javascript
+(eg arrow keys supported, and onscreen arrows are more dynamic)
+http://newzealandchess.co.nz/nzchessmag/interactive/1979-12.html
+
 My approach to interactive chess content is different to most (as far as
 I know it is unique). My basic idea is to make the output look like a
 chess book, but when users click on moves the diagrams in the chess book
@@ -35,4 +39,4 @@ Finally, note that you need to include at least one diagram in each game
 for my web publishing system to work. Indicate a diagram with comment
 text "#Diagram" at appropriate points in the .pgn. Good luck!
 
-Bill Forster 2015-12-11
+Bill Forster 2015-12-11, updated 2019-01-14

@@ -10,10 +10,13 @@ function setPlayPauseImage()
 {        
     if( gblFramedDiagram >= 0 )
     {
+        var mvParameters = gblCurrentMove.attr('rel');
+        var arr = mvParameters.split(' ');
+        var nextMove = parseInt(arr[4],10);
         if( gblPlaying )
-            document.images[(gblFramedDiagram+1)*64 + 4].src  = 'png/mpause.png';
+            document.images[(gblFramedDiagram+1)*64 + 4].src  = nextMove==-1?'png/blank.png':'png/mpause.png';
         else
-            document.images[(gblFramedDiagram+1)*64 + 4].src  = 'png/mplay.png';
+            document.images[(gblFramedDiagram+1)*64 + 4].src  = nextMove==-1?'png/blank.png':'png/mplay.png';
     }
 }
 
@@ -52,6 +55,12 @@ function changeFrame( diagNbr )
         var diagNbr2 = parseInt(arr2[1],10);
         pos(posn2,diagNbr2,'b','Moves are clickable');
     }
+    
+    var mvParameters = gblCurrentMove.attr('rel');
+    var arr = mvParameters.split(' ');
+    var prevMove = parseInt(arr[3],10);
+    var nextMove = parseInt(arr[4],10);
+
 
     // Frame this diagram
     gblFramedDiagram = diagNbr;
@@ -59,13 +68,13 @@ function changeFrame( diagNbr )
     ////console.log(buttonsClass);
     $(buttonsClass).addClass('locateButtons');
     $(buttonsClass).append("<img class='exit' src='png/exit.png' alt=''>"+
-                            "<img class='backward' src='png/mback.png' alt=''>"+
+                            "<img class='backward' src=" + (prevMove==-1 ? "'png/blank.png'" : "'png/mback.png'") + " alt=''>"+
                             "<img class='rover' src='png/blank.png' alt=''>"+
                             "<img src='png/blank.png' alt=''>"+
-                            "<img class='play' src='png/" + (gblPlaying?"mpause.png":"mplay.png") + " ' alt=''>"+
+                            "<img class='play' src=" + (nextMove==-1 ? "'png/blank.png'" : (gblPlaying?"'png/mpause.png'":"'png/mplay.png'")) + " ' alt=''>"+
                             "<img src='png/blank.png' alt=''>"+
                             "<img src='png/blank.png' alt=''>"+
-                            "<img class='forward' src='png/mforward.png' alt=''><br>");
+                            "<img class='forward' src=" + (nextMove==-1 ? "'png/blank.png'" : "'png/mforward.png'") + " alt=''><br>");
     //$(buttonsClass).scrollIntoView(true);
 
     // Attach a function to the forward button
@@ -88,7 +97,9 @@ function changeFrameAndScroll(fromPosn,fromMoveTxt,fromInitialPosition)
     var diagNbr = parseInt(arr[0],10);
     var posn = arr[1];
     var moveTxt = arr[2];                     
-    var animationElement = $($.browser.webkit?'body':'html');   // webkit vs mozilla/ie  only works on JQuery < 1.9
+    var animationElement = $("html, body"); // Nice html/body trick from Stackoverflow
+	// var animationElement = $($.browser.webkit?'body':'html'); // old version - has stopped working with modern Chrome?
+	//	webkit vs mozilla/ie  only works on JQuery < 1.9, for Chrome we want 'html' for Firefox 'body'
     var topOffset =  animationElement.scrollTop();
     var buttonOffset = gblFramedDiagram>=0 ? $(".forward").offset().top : 0;
 
@@ -168,16 +179,17 @@ function cbAnimateMove()
             var dstRank = hexDstRank-0x31;
             var srcFile = hexSrcFile-0x61;
             var srcRank = hexSrcRank-0x31;
-            var srcTop  = 33 + 24*srcRank;
-            var srcLeft = -49 + 24*srcFile;
-            var dstTop  = 33 + 24*dstRank;
-            var dstLeft = -49 + 24*dstFile;
+            var srcTop  = 45 + 36*srcRank;
+            var srcLeft = -73 + 36*srcFile;
+            var dstTop  = 45 + 36*dstRank;
+            var dstLeft = -73 + 36*dstFile;
             var strSrcTop  = '-' + srcTop + 'px';
             var strSrcLeft = '' + srcLeft + 'px';
             var strDstTop  = '-' + dstTop + 'px';
             var strDstLeft = '' + dstLeft + 'px';
             var w;
             var i = (7-srcRank)*8 + srcFile; 
+
             if( i<8 || (16<=i && i<24) || (32<=i && i<40)|| (48<=i && i<56) )
                 w = ((i&1)==0);
             else
@@ -228,10 +240,20 @@ function cbShowMoveAfterAnimation()
     var posn = arr[1];
     var moveTxt = arr[2];
     var prevMove = parseInt(arr[3],10);
+    var nextMove = parseInt(arr[4],10);
     var desc = 'Position after ' + moveTxt;
     if( prevMove==-1 ) //&& posn=='ahff32FFAH' )
         desc = '  Initial position';
     pos( posn, diagNbr, 'y', desc );
+    
+    // Show forward back buttons only if apprpriate
+    document.images[(gblFramedDiagram+1)*64 + 1].src  = (prevMove==-1 ? 'png/blank.png' : 'png/mback.png');
+    document.images[(gblFramedDiagram+1)*64 + 7].src  = (nextMove==-1 ? 'png/blank.png' : 'png/mforward.png');
+    
+    // Clear the roving image - fixes the long-standing promotion bug
+    document.images[(gblFramedDiagram+1)*64 + 2].src  = 'png/blank.png';
+    $(".rover").css( 'top',  '0px'  );
+    $(".rover").css( 'left', '0px' );
     setPlayPauseImage();
     if( gblPlaying )
     {
@@ -424,6 +446,32 @@ $(function(){
     $('.variation').click(function(){
         doMove( $(this) );
     });
+	$(document).keydown(function(e) {
+		switch(e.which) {
+			case 37: // left
+			if( gblFramedDiagram >= 0 )
+			{
+				backwardMovePressed();
+			}
+			break;
+
+			//case 38: // up
+			//break;
+
+			case 39: // right
+			if( gblFramedDiagram >= 0 )
+			{
+				forwardMovePressed();
+			}
+			break;
+
+			//case 40: // down
+			//break;
+
+			default: return; // exit this handler for other keys
+		}
+		e.preventDefault(); // prevent the default action (scroll / move caret)
+	});
 });
             
 function expandPosition( str )
