@@ -410,10 +410,14 @@ void PanelBoard::BlackClock( const wxString &txt, bool red )
 
 void PanelBoard::SetBoardTitle()
 {
-	// this is needed because SetBoardTitle(const char*)
-	// sets m_title_saved which destroys the results of c_str()
-	// but that function assumes the pointer is not deleted
 	std::string title = m_title_saved;
+
+	// Use a copied string title. We used to use m_title_saved
+	// directly but actually then when SetBoardTitle(const char*)
+	// sets m_title_saved it destroys the results of the c_str()
+	// below before it has finished using it!
+	// Thanks to Github user metiscus for the pull request that
+	// fixed this.
 	SetBoardTitle( title.c_str() );
 }
 
