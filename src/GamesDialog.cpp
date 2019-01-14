@@ -774,7 +774,7 @@ void GamesDialog::CreateControls()
 
     // The Cancel button
     wxButton* cancel = new wxButton ( this, wxID_CANCEL,
-         id==ID_PGN_DIALOG_FILE||id==ID_PGN_DIALOG_CURRENT_FILE ? "Close" : "Cancel",	// Can't really cancel file dialog any more - still get a new game
+         id==ID_PGN_DIALOG_FILE ? "Close" : "Cancel",	// Can't really cancel open file dialog any more - still get a new game
 		 wxDefaultPosition, wxDefaultSize, 0 );
     gdr.RegisterPanelWindow( cancel );
     vsiz_panel_buttons->Add(cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
