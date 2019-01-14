@@ -509,7 +509,7 @@ void GameLogic::CmdSwapSides()
         SetGroomedPosition();
         thc::ChessRules cr;
         string last_move_txt;
-        GAME_MOVE *last_move = gd.GetSummaryXX( cr, last_move_txt );
+        GAME_MOVE *last_move = gd.GetSummaryTitle( cr, last_move_txt );
         glc.Swap();
         wxString temp                   = objs.repository->player.m_black;
         objs.repository->player.m_black = objs.repository->player.m_white;
@@ -1012,7 +1012,7 @@ void GameLogic::CmdDatabaseSearch()
 {
     thc::ChessRules cr;
     std::string title_txt;
-    gd.GetSummaryXX( cr, title_txt );
+    gd.GetSummaryTitle( cr, title_txt );
     CmdDatabase( cr, REQ_POSITION );
 }
 
@@ -1020,7 +1020,7 @@ void GameLogic::CmdDatabasePattern()
 {
     thc::ChessRules cr;
     std::string title_txt;
-    gd.GetSummaryXX( cr, title_txt );
+    gd.GetSummaryTitle( cr, title_txt );
     pp_persist.OneTimeInit(false,cr);
     PatternParameters parm = pp_persist;
     bool do_search = false;
@@ -1044,7 +1044,7 @@ void GameLogic::CmdDatabaseMaterial()
 {
     thc::ChessRules cr;
     std::string title_txt;
-    gd.GetSummaryXX( cr, title_txt );
+    gd.GetSummaryTitle( cr, title_txt );
     pp_persist_material_balance.OneTimeInit(true,cr);
     PatternParameters parm = pp_persist_material_balance;
     bool do_search = false;
@@ -3729,7 +3729,7 @@ void GameLogic::SetGroomedPosition( bool show_title )
     {
         thc::ChessRules cr;
         string move_txt;
-        GAME_MOVE *game_move = gd.GetSummaryXX( cr, move_txt, lag_nbr );
+        GAME_MOVE *game_move = gd.GetSummaryTitle( cr, move_txt, lag_nbr );
         if( game_move )
         {
 			gb->SetHighlight1(game_move->move.src);

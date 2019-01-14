@@ -1055,7 +1055,7 @@ bool GameDocument::AtEndOfMainLine()
     bool at_end = (nbr_moves==0);
     thc::ChessRules cr;
     std::string move_txt;
-    GAME_MOVE *move_ptr = GetSummaryXX( cr, move_txt );
+    GAME_MOVE *move_ptr = GetSummaryTitle( cr, move_txt );
     if( move_ptr && nbr_moves>0 )
         at_end = (move_ptr == &variation[nbr_moves-1].game_move);
     return at_end;
@@ -2014,13 +2014,16 @@ void GameDocument::GetSummary( thc::ChessPosition &start_position_, std::vector<
 
 // The current position, title text for the last move played eg "Position after 23...Nxd5"
 //  Return ptr to the last move played,  NULL if no last move OR if nbr_half_moves_lag
-GAME_MOVE *GameDocument::GetSummaryXX( thc::ChessRules &cr, std::string &title_txt, int nbr_half_moves_lag )
+GAME_MOVE *GameDocument::GetSummaryTitle( thc::ChessRules &cr, std::string &title_txt, int nbr_half_moves_lag )
 {
 	GAME_MOVE *last_move = NULL;
     if( nbr_half_moves_lag )
     {
         thc::ChessPosition end;
         std::vector<GAME_MOVE> game_moves;
+		static GAME_MOVE ret;	// Return pointer to a static GAME_MOVE not a dynamic element in a local vector!
+								// Fixes Github issue: Several functions can access memory through invalid pointers #13
+								//  Thanks Github user metiscus for identifying this!
         GetSummary( cr, game_moves, end );
         int nbr = game_moves.size();
         if( nbr == 0 )
@@ -2045,7 +2048,8 @@ GAME_MOVE *GameDocument::GetSummaryXX( thc::ChessRules &cr, std::string &title_t
             {
                 for( int i=0; i<nbr-1; i++ )
                     cr.PlayMove( game_moves[i].move );
-				last_move = &game_moves[nbr-1];
+				ret = game_moves[nbr-1];
+				last_move = &ret;
                 std::string s = last_move->move.NaturalOut(&cr);
                 LangOut(s);
                 sprintf( buf, "Position after %d%s%s",
