@@ -16,6 +16,7 @@
 #include "DebugPrintf.h"
 #include "thc.h"
 #include "GameLogic.h"
+#include "DialogDetect.h"
 #include "Objects.h"
 #include "Repository.h"
 #include "PgnFiles.h"
@@ -808,6 +809,7 @@ void GamesCache::Publish()
 #endif
     wxString dir = objs.repository->nv.m_doc_dir;
     fd.SetDirectory(dir);
+	DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
     int answer = fd.ShowModal();
     if( answer == wxID_OK)
     {
@@ -1006,8 +1008,11 @@ void GamesCache::Publish()
 					fwrite(s.c_str(), 1, s.length(), md_out);
 				}
 
-				fwrite("<br/>\n", 1, 6, md_out);
-				if (!markdown && i + 1 == gds_nbr)
+				if( i+1 == gds_nbr )
+					fwrite("<br/>\n", 1, 6, md_out);
+				else
+					fwrite("\n", 1, 1, md_out);
+				if( !markdown && i+1 == gds_nbr )
 				{
 					fwrite("</div>\n"
 						"</body>\n"

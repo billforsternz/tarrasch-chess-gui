@@ -11,6 +11,7 @@
 #include "wx/statline.h"
 #include "wx/filepicker.h"
 #include "SuspendEngine.h"
+#include "DialogDetect.h"
 //#include "Repository.h"
 
 // Control identifiers
@@ -84,6 +85,7 @@ public:
     
     // Data members
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
+	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
     wxString db_filename;
     wxString pgn_filename1;
     wxString pgn_filename2;

@@ -175,6 +175,7 @@ void GameLogic::CmdSetPosition()
     {
         char after[128];
         PositionDialog dialog( objs.frame );
+		DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
         if( wxID_OK == dialog.ShowModal() )
         {
             strcpy( after, dialog.fen.c_str() );
@@ -508,7 +509,7 @@ void GameLogic::CmdSwapSides()
         SetGroomedPosition();
         thc::ChessRules cr;
         string last_move_txt;
-        GAME_MOVE *last_move = gd.GetSummaryXX( cr, last_move_txt );
+        GAME_MOVE *last_move = gd.GetSummaryTitle( cr, last_move_txt );
         glc.Swap();
         wxString temp                   = objs.repository->player.m_black;
         objs.repository->player.m_black = objs.repository->player.m_white;
@@ -650,6 +651,7 @@ void GameLogic::CmdFileOpen()
         wxFileDialog fd( objs.frame, "Select .pgn file (or *.tdb file)", "", "", "*.pgn;*.tdb", wxFD_FILE_MUST_EXIST );//|wxFD_CHANGE_DIR );
         wxString dir = objs.repository->nv.m_doc_dir;
         fd.SetDirectory(dir);
+		DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
         if( wxID_OK == fd.ShowModal() )
         {
             wxString dir2;
@@ -763,6 +765,7 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
             sz.y = (sz.y*9)/10;
             PgnDialog dialog( objs.frame, &gc_pgn, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );   // GamesDialog instance
             std::string title = "File: " + filename;
+			DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
             bool ok = dialog.ShowModalOk(title);
 			if( ok )
 				selected_game = dialog.GetSelectedGame(&offset);
@@ -811,6 +814,15 @@ bool GameLogic::CmdUpdatePreviousGame()
 {
     int nbr = gc_pgn.gds.size();
     return( nbr>1 && games_in_file_idx!=-1 && 0<=games_in_file_idx-1 && games_in_file_idx-1<nbr );
+}
+
+int GameLogic::GetCurrentGameInFileIndex()
+{
+    int nbr = gc_pgn.gds.size();
+	int idx = 0;
+    if( games_in_file_idx!=-1 && 0<=games_in_file_idx && games_in_file_idx<nbr )
+		idx = games_in_file_idx;
+	return idx;
 }
 
 void GameLogic::NextGamePreviousGame( int idx )
@@ -965,7 +977,8 @@ void GameLogic::CmdGamesCurrent()
         sz.x = (sz.x*9)/10;
         sz.y = (sz.y*9)/10;
         gc_pgn.Debug( "Before loading current file games dialog" );
-        PgnDialog dialog( objs.frame, &gc_pgn, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );   // GamesDialog instance
+        PgnDialog dialog( objs.frame, &gc_pgn, &gc_clipboard, ID_PGN_DIALOG_CURRENT_FILE, pt, sz );   // GamesDialog instance
+		DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
         if( dialog.ShowModalOk("Current file") )
         {
             objs.log->SaveGame(&gd,editing_log);
@@ -999,7 +1012,7 @@ void GameLogic::CmdDatabaseSearch()
 {
     thc::ChessRules cr;
     std::string title_txt;
-    gd.GetSummaryXX( cr, title_txt );
+    gd.GetSummaryTitle( cr, title_txt );
     CmdDatabase( cr, REQ_POSITION );
 }
 
@@ -1007,12 +1020,13 @@ void GameLogic::CmdDatabasePattern()
 {
     thc::ChessRules cr;
     std::string title_txt;
-    gd.GetSummaryXX( cr, title_txt );
+    gd.GetSummaryTitle( cr, title_txt );
     pp_persist.OneTimeInit(false,cr);
     PatternParameters parm = pp_persist;
     bool do_search = false;
     {   // scope controls when dialog closes
         PatternDialog dialog( &parm, objs.frame, "Search database for games where pieces reached this position", ID_PATTERN_DIALOG );
+		DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
         if( wxID_OK == dialog.ShowModal() )
         {
             pp_persist = parm;
@@ -1030,12 +1044,13 @@ void GameLogic::CmdDatabaseMaterial()
 {
     thc::ChessRules cr;
     std::string title_txt;
-    gd.GetSummaryXX( cr, title_txt );
+    gd.GetSummaryTitle( cr, title_txt );
     pp_persist_material_balance.OneTimeInit(true,cr);
     PatternParameters parm = pp_persist_material_balance;
     bool do_search = false;
     {
         PatternDialog dialog( &parm, objs.frame, "Search database for games which reached this material balance", ID_MATERIAL_BALANCE_DIALOG );
+		DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
         if( wxID_OK == dialog.ShowModal() )
         {
             pp_persist_material_balance = parm;
@@ -1105,6 +1120,7 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req, PatternParamete
             sz.x = (sz.x*9)/10;
             sz.y = (sz.y*9)/10;
             DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard, db_req, parm, ID_GAMES_DIALOG_DATABASE, pt, sz );   // GamesDialog instance
+			DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
             if( dialog.ShowModalOk("Database games") )
             {
                 objs.log->SaveGame(&gd,editing_log);
@@ -1251,6 +1267,7 @@ void GameLogic::CmdDatabaseSelect()
     wxFileDialog fd( objs.frame, "Select current database", "", "", "*.tdb", wxFD_FILE_MUST_EXIST );
     wxString path( objs.repository->database.m_file );
     fd.SetPath(path);
+	DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
     if( wxID_OK == fd.ShowModal() )
     {
         static int count;
@@ -1326,6 +1343,7 @@ void GameLogic::CmdDatabaseCreate()
     bool ok=false;
     {
         CreateDatabaseDialog dialog( objs.frame, ID_CREATE_DB_DIALOG, true ); // create_mode = true
+		DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
         dialog.ShowModal();
         ok = dialog.db_created_ok;
         wxString s(dialog.db_name.c_str());
@@ -1373,6 +1391,7 @@ void GameLogic::CmdDatabaseAppend()
     wxString db_name;
     {
         CreateDatabaseDialog dialog( objs.frame, ID_CREATE_DB_DIALOG, false ); // create_mode = false
+		DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
         dialog.ShowModal();
         ok = dialog.db_created_ok;
         wxString s(dialog.db_name.c_str());
@@ -3710,7 +3729,7 @@ void GameLogic::SetGroomedPosition( bool show_title )
     {
         thc::ChessRules cr;
         string move_txt;
-        GAME_MOVE *game_move = gd.GetSummaryXX( cr, move_txt, lag_nbr );
+        GAME_MOVE *game_move = gd.GetSummaryTitle( cr, move_txt, lag_nbr );
         if( game_move )
         {
 			gb->SetHighlight1(game_move->move.src);

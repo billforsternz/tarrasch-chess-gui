@@ -12,6 +12,7 @@
 #include "wx/statline.h"
 #include "wx/accel.h"
 #include "SuspendEngine.h"
+#include "DialogDetect.h"
 #include "GamesCache.h"
 #include "GameDocument.h"
 #include "Repository.h"
@@ -37,6 +38,7 @@ enum
     ID_BUTTON_4,
     ID_BUTTON_5,
     ID_PGN_DIALOG_FILE     ,
+    ID_PGN_DIALOG_CURRENT_FILE     ,
     ID_PGN_DIALOG_CLIPBOARD,
     ID_PGN_DIALOG_SESSION  ,
     ID_GAMES_DIALOG_DATABASE   ,
@@ -117,7 +119,7 @@ class GamesDialogResizer
                             // no need for a constructor if you only need to do things like this
 public:
     void RegisterPanelWindow( wxWindow *window, bool stretch_width=false );
-    void Layout( wxWindow *dialog, wxWindow *list, wxWindow *line );
+    bool Layout( wxWindow *dialog, wxWindow *list, wxWindow *line );
     void AnchorOriginalPositions( wxWindow *dialog, wxWindow *list, wxWindow *line );
     void ReLayout( wxWindow *dialog, wxWindow *list, wxWindow *line );
     void Refresh( wxWindow *dialog, wxWindow *list, wxWindow *line );
@@ -319,6 +321,7 @@ protected:
     GamesCache  *gc_clipboard;
     GameDocument preview_game;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
+	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
 };
 
 

@@ -347,18 +347,13 @@ public:
         full_move_count = 1;
     }
 
-    // Copy constructor
-    ChessPosition( const ChessPosition& src )
-    {
-        memcpy( (void*)this, (void*)&src, sizeof(ChessPosition) );
-    }
-
-    // Assignment operator
-    ChessPosition& operator=( const ChessPosition& src )
-    {
-        memcpy( (void*)this, (void*)&src, sizeof(ChessPosition) );
-        return( *this );
-    }
+    // Copy constructor and Assignment operator. Defining them this way
+	//  generates simple bitwise memory copy, which is exactly what we
+	//  want and is better practice than the old memcpy() versions (which
+	//  copy the vtable ptr as well - we don't want that). Thanks to Github
+	//  user metiscus for the pull request that fixed this.
+    ChessPosition( const ChessPosition& src ) = default;
+    ChessPosition& operator=( const ChessPosition& src ) = default;
 
     // Equality operator
     bool operator ==( const ChessPosition &other ) const

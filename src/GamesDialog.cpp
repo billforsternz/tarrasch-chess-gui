@@ -90,8 +90,9 @@ void GamesDialogResizer::RegisterPanelWindow( wxWindow *window, bool stretch_wid
     panel_stretch_widths.push_back(stretch_width);
 }
 
-void GamesDialogResizer::Layout( wxWindow *dialog, wxWindow *list, wxWindow *line )
+bool GamesDialogResizer::Layout( wxWindow *dialog, wxWindow *list, wxWindow *line )
 {
+	bool was_first_time = first_time;
     if( first_time )
     {
         cprintf( "GamesDialogResizer::Layout() first time\n" );
@@ -105,6 +106,7 @@ void GamesDialogResizer::Layout( wxWindow *dialog, wxWindow *list, wxWindow *lin
         ReLayout( dialog, list, line );
         Refresh( dialog, list, line );
     }
+	return was_first_time;
 }
 
 void GamesDialogResizer::AnchorOriginalPositions( wxWindow *dialog, wxWindow *list, wxWindow *line )
@@ -476,7 +478,7 @@ GamesDialog::GamesDialog
     col_last_time = -1;
     col_consecutive = 0;
     sort_order_first = true;
-    focus_idx = 0;
+    focus_idx = (id==ID_PGN_DIALOG_CURRENT_FILE ? objs.gl->GetCurrentGameInFileIndex() : 0);
 
     if( cr )
     {
@@ -566,7 +568,7 @@ bool GamesDialog::Create( wxWindow* parent,
 
         // If we insert these columns in CreateControls() we end up not being able
         //  to make the list control very small
-        list_ctrl->InsertColumn( 0, "#"  ); // id==ID_PGN_DIALOG_FILE?"#":" "  );
+        list_ctrl->InsertColumn( 0, "#"  );
         list_ctrl->InsertColumn( 1, "White"    );
         list_ctrl->InsertColumn( 2, "Elo"      );
         list_ctrl->InsertColumn( 3, "Black"    );
@@ -671,6 +673,7 @@ void GamesDialog::CreateControls()
 
     // A friendly message
     char buf[200];
+	buf[0] = '\0';
     if( !db_search )
     {
         nbr_games_in_list_ctrl = gc->gds.size();
@@ -685,8 +688,9 @@ void GamesDialog::CreateControls()
     {
         nbr_games_in_list_ctrl = objs.db->SetDbPosition( db_req );
         if( db_req == REQ_POSITION )
-            nbr_games_in_list_ctrl = 0;
-        //sprintf(buf,"List of %d matching games from the database",nbr_games_in_list_ctrl);
+            nbr_games_in_list_ctrl = 0;		// message will be calculated later
+		else
+	        sprintf(buf,"%d games",nbr_games_in_list_ctrl);
     }
 
     title_ctrl = new wxStaticText( this, wxID_STATIC,
@@ -700,7 +704,7 @@ void GamesDialog::CreateControls()
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
     if( nbr_games_in_list_ctrl > 0 )
     {
-        list_ctrl->SetItemState(0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
+        list_ctrl->SetItemState(focus_idx<nbr_games_in_list_ctrl?focus_idx:0, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
     }
 
     box_sizer->Add(list_ctrl, 0, wxGROW|wxALL, 5);
@@ -720,7 +724,7 @@ void GamesDialog::CreateControls()
     list_ctrl->mini_board = mini_board;
     track = &mini_board_game;
     track->updated_position = cr;
-    track->focus_idx = -1;
+    track->focus_idx = focus_idx;
     track->focus_offset = 0;
     list_ctrl->track = track;
     mini_board->SetChessPosition( cr );
@@ -742,7 +746,7 @@ void GamesDialog::CreateControls()
     vsiz_panel_buttons->Add(ok_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     
     // Save all games to a file
-    if( id == ID_PGN_DIALOG_FILE )
+    if( id==ID_PGN_DIALOG_FILE || id==ID_PGN_DIALOG_CURRENT_FILE )
     {
         wxButton* save_all_to_a_file = new wxButton ( this, wxID_SAVE, wxT("Save"),
             wxDefaultPosition, wxDefaultSize, 0 );
@@ -770,7 +774,8 @@ void GamesDialog::CreateControls()
 
     // The Cancel button
     wxButton* cancel = new wxButton ( this, wxID_CANCEL,
-        wxT("Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
+         id==ID_PGN_DIALOG_FILE ? "Close" : "Cancel",	// Can't really cancel open file dialog any more - still get a new game
+		 wxDefaultPosition, wxDefaultSize, 0 );
     gdr.RegisterPanelWindow( cancel );
     vsiz_panel_buttons->Add(cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
@@ -817,8 +822,10 @@ void GamesDialog::OnSize( wxSizeEvent &evt )
     cprintf( "GamesDialog::OnSize(%d,%d) list_ctrl=%s\n", siz.x, siz.y, list_ctrl?"not NULL":"NULL" );
     if(list_ctrl)
     {
-        gdr.Layout( this, list_ctrl, line_ctrl );
-		list_ctrl->SetFocus();
+        if( gdr.Layout( this, list_ctrl, line_ctrl ) )
+			Goto(focus_idx);	// If first time through, establish starting index (normally 0 but see ID_PGN_DIALOG_CURRENT_FILE)
+		else
+			list_ctrl->SetFocus();
     }
 }
 
@@ -883,7 +890,7 @@ void GamesDialog::GdvOnActivate()
     if( !activated_at_least_once )
     {
         activated_at_least_once = true;
-        Goto(0); // list_ctrl->SetFocus();
+        Goto(focus_idx); // list_ctrl->SetFocus();
     }
 }
 
@@ -909,8 +916,6 @@ void GamesDialog::Goto( int idx )
                 list_ctrl->SetItemState( old, 0, wxLIST_STATE_SELECTED );
             }
             list_ctrl->SetFocus();
-            int span = list_ctrl->GetCountPerPage() - 4;    // so that on average maybe 2 lines before idx are also visible
-            list_ctrl->EnsureVisible(idx+10<sz?idx+span:sz-1);
             list_ctrl->EnsureVisible(idx);
         }
         list_ctrl->SetFocus();

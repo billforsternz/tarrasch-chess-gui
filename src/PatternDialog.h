@@ -10,6 +10,7 @@
 #include "thc.h"
 #include "PatternMatch.h"
 #include "SuspendEngine.h"
+#include "DialogDetect.h"
 class CtrlChessPositionSetup;
 
 // Control identifiers
@@ -110,6 +111,7 @@ public:
 private:
     wxString        fen;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
+	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
     wxStaticText*   lockdown_text;
     wxCheckBox*     inc_reverse;
     wxCheckBox*     inc_reflection;

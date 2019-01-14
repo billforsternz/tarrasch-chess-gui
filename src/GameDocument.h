@@ -202,7 +202,7 @@ public:
     
     // The current position, title text for the last move played eg "Position after 23...Nxd5"
     //  Return ptr to the last move played,  NULL if no last move OR if nbr_half_moves_lag
-    GAME_MOVE *GetSummaryXX( thc::ChessRules &cr, std::string &title_txt, int nbr_half_moves_lag=0 );
+    GAME_MOVE *GetSummaryTitle( thc::ChessRules &cr, std::string &title_txt, int nbr_half_moves_lag=0 );
     
     // The current position, move text for the last move played eg "23...Nxd5"
     //  Return ptr to the last move played,  NULL if no last move OR if nbr_half_moves_lag

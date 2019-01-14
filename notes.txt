@@ -1,3 +1,9 @@
+28 November 2018
+Improving HTML publishing system. Created program xpm2bmp to help create 36 pixel
+squares.
+
+Background colours White rgb=255,255,255, Grey rgb=224,223,227 (!? - we used 224,224,224) Yellow rgb=239,228,176
+
 1 November 2018
 Need to more aggressively set current window on opening new style games dialog
 File Save game as leaves status in limbo

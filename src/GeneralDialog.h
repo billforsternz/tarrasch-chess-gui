@@ -10,6 +10,7 @@
 #include "wx/clrpicker.h"
 #include "thc.h"
 #include "SuspendEngine.h"
+#include "DialogDetect.h"
 #include "Repository.h"
 
 // Control identifiers
@@ -93,6 +94,7 @@ public:
     wxString        combo_label;
     GeneralConfig   dat;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
+	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
 
 private:
 	wxColourPickerCtrl* light_picker;
