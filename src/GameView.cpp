@@ -1803,7 +1803,7 @@ bool GameView::GetOffsetWithinComment( unsigned long pos, unsigned long &pos_wit
     return found;
 }
 
-bool GameView::CommentEdit( wxRichTextCtrl *UNUSED(ctrl), std::string &txt_to_insert, long keycode, bool *pass_thru_edit_ptr )
+bool GameView::CommentEdit(wxRichTextCtrl *UNUSED(ctrl), wxString &txt_to_insert, long keycode, bool *pass_thru_edit_ptr)
 {
     bool pass_thru_edit = false;
     bool used = false;
@@ -1811,9 +1811,16 @@ bool GameView::CommentEdit( wxRichTextCtrl *UNUSED(ctrl), std::string &txt_to_in
     unsigned long pos = gl->atom.GetInsertionPoint();
     unsigned long orig_pos = pos;
     int nbr = expansion.size();
-    if( 0x20<=keycode && keycode<=0xff && keycode!=0x7f /*delete*/ )
+	//if (0x20 <= keycode && keycode <= 0xff && keycode != 0x7f /*delete*/)
+	//{
+	//	char c = (char)keycode;
+	//	txt_to_insert = c;
+	//	ascii = true;
+	//}
+	wxChar c = (wxChar)keycode;
+	if (wxIsprint(c) && keycode != 0x7f /*delete*/)
     {
-        char c = (char)keycode;
+        //char c = (char)keycode;
         txt_to_insert = c;
         ascii = true;
     }

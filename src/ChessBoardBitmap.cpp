@@ -1859,14 +1859,15 @@ void ChessBoardBitmap::PutEx( char piece,
 				(byte *)(buf_box   + Offset(src_file,src_rank) + i*width_bytes);
 			dst			  =
 				(byte *)(buf_board + Offset(dst_file,dst_rank) + i*width_bytes);
-            dst += (width_bytes * shift.y);
-            dst += shift.x*density;
+            dst += (long)(width_bytes * shift.y);
+            dst += (long)(shift.x*density);
+
 			for( j=0; j < width_bytes/(8*density); j++ )
             {
                 if( *mask++ != '0' )
-                    memcpy( dst, src, density );
-                src += density;
-                dst += density;
+                    memcpy( dst, src, (byte)density );
+                src +=(byte) density;
+                dst +=(byte) density;
             }
 		}
 	}

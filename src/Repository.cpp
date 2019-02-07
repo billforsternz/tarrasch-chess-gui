@@ -38,7 +38,26 @@
                 //handle error
             }
         }
-        bool ret =  bIsWow64?true:false;
+
+		typedef void (WINAPI *LPFN_PGNSI)(LPSYSTEM_INFO);
+		LPFN_PGNSI pGNSI = (LPFN_PGNSI)GetProcAddress(
+			GetModuleHandle(TEXT("kernel32.dll")), "GetNativeSystemInfo");
+		if (NULL != pGNSI)
+		{
+			SYSTEM_INFO si;
+			GetNativeSystemInfo(&si);
+			if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 ||
+				si.wProcessorArchitecture != PROCESSOR_ARCHITECTURE_IA64)
+			{
+				bIsWow64 = true;//64bit windows OS
+			}
+			else
+			{
+				bIsWow64 = false;//32bit windows OS
+			}
+		}
+		
+		bool ret =  bIsWow64?true:false;
         dbg_printf( "Running on %d bit Windows\n", ret?64:32 );
         return ret;
     }

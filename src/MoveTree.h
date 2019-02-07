@@ -20,8 +20,8 @@ struct GAME_MOVE
     bool  white_clock_visible;
     bool  black_clock_visible;
     bool  human_is_white;
-    std::string pre_comment;
-    std::string comment;
+    wxString pre_comment;
+	wxString comment;
     char nag_value1;
     char nag_value2;
     GAME_MOVE() { nag_value1=0; nag_value2=0; flag_ingame=0; white_clock_visible=false; black_clock_visible=false;

@@ -161,7 +161,7 @@ public:
     void ToFileTxtGameBody( std::string &str );
     void ToPublishTxtGameBody( std::string &str, int &diagram_idx, int &mv_idx, int &neg_base, int publish_options  );
     bool IsDiff( GameDocument &other );
-    bool PgnParse( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language=false, int imove=-1 );
+    bool PgnParse( bool use_semi, int &nbr_converted, const wxString str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language=false, int imove=-1 );
     void LoadFromMoveList( std::vector<thc::Move> &moves, int move_idx=0 );
     void SetNonZeroStartPosition( int main_line_idx );
 
@@ -179,7 +179,7 @@ public:
     );
     void Promote();
     void Demote();
-    bool PromotePaste( std::string &str );
+    bool PromotePaste( wxString &str );
     void PromoteToVariation( unsigned long offset_within_comment=0 );
     void PromoteRestToVariation();
     void DemoteToComment();
@@ -229,12 +229,13 @@ public:
     bool IsInComment( wxRichTextCtrl *ctrl )
     {  return gv.IsInComment(ctrl); }
     bool CommentEdit( wxRichTextCtrl *ctrl, long keycode, bool *pass_thru_edit_ptr=NULL )
-    {   std::string txt_to_insert;
+    {   wxString txt_to_insert;
         gv.comment_edited = false;
         bool done = gv.CommentEdit(ctrl,txt_to_insert,keycode,pass_thru_edit_ptr);
         return done;
     }
-    bool CommentEdit( wxRichTextCtrl *ctrl, std::string &txt_to_insert, bool *pass_thru_edit_ptr=NULL )
+
+    bool CommentEdit( wxRichTextCtrl *ctrl, wxString &txt_to_insert, bool *pass_thru_edit_ptr=NULL )
     {
         gv.comment_edited = false;
         bool done = gv.CommentEdit(ctrl,txt_to_insert,0,pass_thru_edit_ptr);

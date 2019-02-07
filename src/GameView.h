@@ -41,7 +41,7 @@ public:
 
     void Display( unsigned long pos );
     bool GetOffsetWithinComment( unsigned long pos, unsigned long &pos_within_comment );
-    bool CommentEdit( wxRichTextCtrl *ctrl, std::string &txt_to_insert, long keycode=0, bool *pass_thru_edit_ptr=NULL );
+    bool CommentEdit( wxRichTextCtrl *ctrl, wxString &txt_to_insert, long keycode=0, bool *pass_thru_edit_ptr=NULL );
     bool IsSelectionInComment( wxRichTextCtrl *ctrl );
     bool IsInComment( wxRichTextCtrl *ctrl );
     void DeleteSelection( wxRichTextCtrl *ctrl );

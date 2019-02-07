@@ -330,11 +330,11 @@ void CtrlChessTxt::Paste()
             wxTextDataObject data;
             wxTheClipboard->GetData( data );
             wxString txt_to_paste = data.GetText();
-            std::string txt_to_insert;
+			wxString txt_to_insert;
 			bool check_tag = gd->IsEmpty();
             for( unsigned int i=0; i<txt_to_paste.Length(); i++ )
             {
-                char c=txt_to_paste[i];
+                wxChar c=txt_to_paste[i];
                 /* Did some debugging to sort out an issue with en dash. Some old code
                    in GameDocument.cpp did special handling to treat en dash as ascii
                    dash, but had forgotten about it, and didn't actually know it was
@@ -471,8 +471,11 @@ void CtrlChessTxt::OnChar(wxKeyEvent& event)
 		if( event.GetModifiers() & wxMOD_SHIFT )
 			shift = true;
 		long keycode = event.GetKeyCode();
+#if wxUSE_UNICODE
+		keycode = event.GetUnicodeKey();
+#endif
 		//cprintf( "OnChar() keycode=%lu\n", keycode );
-        char ascii = '\0';
+        wxChar ascii = '\0';
         bool pass_thru_edit = false;   // an optimisation - sometimes we can just let the richtext edit control process the character
 		{
 			switch ( keycode )
@@ -710,8 +713,9 @@ void CtrlChessTxt::OnChar(wxKeyEvent& event)
 				}
 				default:
 				{
-					bool iso8859_extended_charset = (0xa0<=keycode && keycode<=0xff);
-                    if (iso8859_extended_charset || wxIsprint((int)keycode))
+					//bool iso8859_extended_charset = (0xa0<=keycode && keycode<=0xff);
+                    //if (iso8859_extended_charset || wxIsprint((int)keycode))
+					if(wxIsprint((int)keycode))
                     {
                         if( is_selection_in_comment )
                         {

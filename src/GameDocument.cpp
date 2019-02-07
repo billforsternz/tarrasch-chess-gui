@@ -252,7 +252,7 @@ std::string GameDocument::Description()
     return label;
 }
 
-bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language, int imove )
+bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const wxString str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language, int imove )
 {
 
     // Main state machine has these states
@@ -293,14 +293,14 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
 
     // Misc
     #define Error(x)
-    std::string move_str;
-    std::string comment_str;
-    std::string buffered_comment;
-    std::string prefix;
-    char comment_ch='\0', previous_ch='\0';
+	wxString move_str;
+    wxString comment_str;
+	wxString buffered_comment;
+	wxString prefix;
+    wxChar comment_ch='\0', previous_ch='\0';
     int nag_value=0;
     PSTATE old_state, save_state=BETWEEN_MOVES;
-    char ch, push_back='\0';
+    wxChar ch, push_back='\0';
     unsigned int str_idx=0;
     bool was_empty = false;
     nbr_converted = 0;
@@ -444,8 +444,9 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
                         //  Only create '{' comments (most chess software doesn't understand ';' comments)
                         //  If  "}" appears in comment transform to "|>"    (change *is* restored when reading .pgn)
                         //  If  "|>" appears in comment transform to "| >"  (change is *not* restored when reading .pgn)
-                        std::string ReplaceAll( const std::string &in, const std::string &from, const std::string &to );
-                        comment_str = ReplaceAll( comment_str, "|>", "}" );
+                        //wxString ReplaceAll( const wxString &in, const wxString &from, const wxString &to );
+                        //comment_str = ReplaceAll( comment_str, "|>", "}" );
+						comment_str.Replace("|>", "}");
                     }
                     if( (*pvar).size() == 0 )
                     {
@@ -480,7 +481,7 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
                         if( ch == '\n' )
                             comment_str += ' ';
                         else if( ch != '\r' )
-                            comment_str += (char)ch;
+                            comment_str += ch;
                     }
                 }
                 break;
@@ -685,7 +686,7 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
                         keep_buffering = in_move;
                 }
                 if( keep_buffering )
-                    move_str += (char)ch;
+                    move_str += ch;
                 else
                 {
                     push_back = ch;
@@ -1380,7 +1381,7 @@ void GameDocument::PromoteRestToVariation()
         PromoteToVariation(offset_within_comment);
 }
 
-bool GameDocument::PromotePaste( std::string &str )
+bool GameDocument::PromotePaste( wxString &str )
 {
     unsigned long pos = GetInsertionPoint();
     std::string title;
@@ -1572,7 +1573,7 @@ void GameDocument::PromoteToVariation( unsigned long offset_within_comment )
         tree = save;
         Rebuild();
         found = Locate( pos, cr, title, at_move0 );
-        if( found && found->game_move.comment.length()>offset_within_comment && found->game_move.comment[offset_within_comment]!='(' )
+        if( found && found->game_move.comment.length()>offset_within_comment && found->game_move.comment[(long)offset_within_comment]!='(' )
         {
             pos_restore_scenario2 = gv.GetMoveOffset( found ); // where to end up pointing
             thc::ChessRules cr2;
@@ -1598,7 +1599,7 @@ void GameDocument::PromoteToVariation( unsigned long offset_within_comment )
         tree = save;
         Rebuild();
         found = Locate( pos, cr, title, at_move0 );
-        if( found && found->game_move.comment.length()>offset_within_comment && found->game_move.comment[offset_within_comment]!='(' )
+        if( found && found->game_move.comment.length()>offset_within_comment && found->game_move.comment[(long)offset_within_comment]!='(' )
         {
             thc::ChessRules cr2;
             int ivar;
