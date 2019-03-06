@@ -678,6 +678,24 @@ void GameLogic::CmdFileOpen()
     atom.StatusUpdate();
 }
 
+void GameLogic::CmdFileOpenShellAsk( std::string &filename )
+{
+    wxString wx_filename(filename.c_str());
+    wxString dir;
+    wxString name;
+    wxString ext;
+    wxFileName::SplitPath( wx_filename, &dir, &name, &ext );
+    wxString msg = "Do you still want to open file ";
+    msg += name;
+    msg += ".";
+    msg += ext;
+    msg += "?";
+    DialogDetect detect;
+    int answer = wxMessageBox( msg, "A previous file open command can now take place", wxYES_NO);
+    if( answer == wxYES )
+        CmdFileOpenShell( filename );
+}
+
 void GameLogic::CmdFileOpenShell( std::string &filename )
 {
     Atomic begin;
@@ -1340,10 +1358,10 @@ void GameLogic::CmdDatabaseCreate()
         return;
     Atomic begin;
     wxString db_name;
+	DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
     bool ok=false;
     {
         CreateDatabaseDialog dialog( objs.frame, ID_CREATE_DB_DIALOG, true ); // create_mode = true
-		DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
         dialog.ShowModal();
         ok = dialog.db_created_ok;
         wxString s(dialog.db_name.c_str());
@@ -1388,10 +1406,10 @@ void GameLogic::CmdDatabaseAppend()
         return;
     Atomic begin;
     bool ok=false;
+	DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
     wxString db_name;
     {
         CreateDatabaseDialog dialog( objs.frame, ID_CREATE_DB_DIALOG, false ); // create_mode = false
-		DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
         dialog.ShowModal();
         ok = dialog.db_created_ok;
         wxString s(dialog.db_name.c_str());

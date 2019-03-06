@@ -58,6 +58,7 @@
 #include "CtrlBox.h"
 #include "CtrlBoxBookMoves.h"
 #include "CtrlChessTxt.h"
+#include "DialogDetect.h"
 
 // For Windows Tarrasch4Squares.ico is included in Tarrasch.exe as a resource, for Unix a different system is required
 #ifdef THC_UNIX
@@ -364,8 +365,30 @@ Objects objs;
 // Should really be a little more sophisticated about this
 #define TIMER_ID 2001
 
+static void OpenShellFile( std::string &filename_from_shell )
+{
+	if( filename_from_shell != "" )
+	{
+		wxCommandEvent *p = new wxCommandEvent(wxEVT_MENU, ID_FILE_OPEN_SHELL);
+		objs.gl->filename_from_shell = filename_from_shell;
+		objs.frame->GetEventHandler()->QueueEvent(p);
+	}
+}
+
+static void OpenShellFileAsk( std::string &filename_from_shell )
+{
+	if( filename_from_shell != "" )
+    {
+		wxCommandEvent *p = new wxCommandEvent(wxEVT_MENU, ID_FILE_OPEN_SHELL_ASK);
+		objs.gl->filename_from_shell = filename_from_shell;
+		objs.frame->GetEventHandler()->QueueEvent(p);
+    }
+}
+
 // Some IPC stuff to support proper instance handling
-int DialogDetect::counter=0;	// Don't accept shell commands if we are running a dialog
+int DialogDetect::counter=0;	              // Don't accept shell commands if we are running a dialog
+void (*DialogDetect::func)(std::string &);    // Run them when the dialog exits
+std::string DialogDetect::parm;
 class InterProcessCommunicationConnection : public wxConnection
 {
 protected:
@@ -378,11 +401,13 @@ protected:
 			{
 				objs.frame->Raise();
 				std::string filename_from_shell = std::string(data.c_str());
-				if( filename_from_shell != "" && !DialogDetect::IsOpen() )
+				if( DialogDetect::IsOpen() )
+                {
+				    DialogDetect::OnClose( OpenShellFileAsk, filename_from_shell );
+                }
+                else
 				{
-					wxCommandEvent *p = new wxCommandEvent(wxEVT_MENU, ID_FILE_OPEN_SHELL);
-					objs.gl->filename_from_shell = filename_from_shell;
-					objs.frame->GetEventHandler()->QueueEvent(p);
+                    OpenShellFile( filename_from_shell );
 				}
 			}
 		}
@@ -777,6 +802,7 @@ public:
     void OnFileOpen (wxCommandEvent &);
         void OnUpdateFileOpen(wxUpdateUIEvent &);
     void OnFileOpenShell (wxCommandEvent &);
+    void OnFileOpenShellAsk (wxCommandEvent &);
 	void OnFileOpenMru(wxCommandEvent&);
     void OnFileOpenLog (wxCommandEvent &);
         void OnUpdateFileOpenLog(wxUpdateUIEvent &);
@@ -1184,6 +1210,7 @@ BEGIN_EVENT_TABLE(ChessFrame, wxFrame)
     EVT_MENU (ID_DATABASE_MAINTENANCE,              ChessFrame::OnDatabaseMaintenance)
         EVT_UPDATE_UI (ID_DATABASE_MAINTENANCE,          ChessFrame::OnUpdateDatabaseMaintenance)
     EVT_MENU (ID_FILE_OPEN_SHELL,                    ChessFrame::OnFileOpenShell)	// Doesn't appear in any actual menu, used to open files from Windows Explorer
+    EVT_MENU (ID_FILE_OPEN_SHELL_ASK,                ChessFrame::OnFileOpenShellAsk)	// Doesn't appear in any actual menu, used to open files from Windows Explorer
 
     EVT_TOOL (ID_CMD_FLIP,         ChessFrame::OnFlip)
     EVT_TOOL (ID_CMD_NEXT_GAME,    ChessFrame::OnNextGame)
@@ -1518,6 +1545,7 @@ void ChessFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
         "Visit the publisher's website www.triplehappy.com for Tarrasch "
         "Chess GUI news and updates."
     );
+    DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
     wxMessageBox(msg, "About the Tarrasch Chess GUI " MASTER_VERSION, wxOK|wxICON_INFORMATION|wxCENTRE, this);
 }
 
@@ -1593,6 +1621,7 @@ void ChessFrame::OnHelp(wxCommandEvent& WXUNUSED(event))
 		"play through the games found."
 		, gbl_spell_colour
     );
+    DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
     wxMessageBox(msg, "Tarrasch Chess GUI Help", wxOK|wxICON_INFORMATION|wxCENTRE, this);
 }
 
@@ -1642,6 +1671,7 @@ void ChessFrame::OnCredits(wxCommandEvent& WXUNUSED(event))
         "Dedicated to the memory of John Victor Forster 1949-2001. We "
         "miss him every day.")
     );
+    DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
     wxMessageBox(msg, "Credits", wxOK|wxICON_INFORMATION|wxCENTRE, this);
 }
 
@@ -1784,6 +1814,11 @@ void ChessFrame::OnFileOpen (wxCommandEvent &)
 void ChessFrame::OnFileOpenShell(wxCommandEvent &)
 {
     objs.gl->CmdFileOpenShell(objs.gl->filename_from_shell);
+}
+
+void ChessFrame::OnFileOpenShellAsk(wxCommandEvent &)
+{
+    objs.gl->CmdFileOpenShellAsk(objs.gl->filename_from_shell);
 }
 
 void ChessFrame::OnFileOpenMru(wxCommandEvent& event)
@@ -2258,7 +2293,10 @@ void ChessFrame::OnOptionsReset(wxCommandEvent &)
             wxString error_msg;
             bool error = objs.book->Load( error_msg, objs.repository->book.m_file );
             if( error )
+            {
+                DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
                 wxMessageBox( error_msg, "Error loading book", wxOK|wxICON_ERROR );
+            }
             objs.canvas->BookUpdate( false );
         }
     }
@@ -2307,7 +2345,10 @@ void ChessFrame::OnBook(wxCommandEvent &)
                 wxString error_msg;
                 bool error = objs.book->Load( error_msg, objs.repository->book.m_file );
                 if( error )
+                {
+                    DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
                     wxMessageBox( error_msg, "Error loading book", wxOK|wxICON_ERROR );
+                }
                 objs.canvas->BookUpdate( false );
             }
             objs.gl->Refresh();

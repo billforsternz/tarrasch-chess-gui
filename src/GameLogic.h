@@ -77,6 +77,7 @@ public:
     void CmdFileNew();
     void CmdFileOpen();
     void CmdFileOpenShell( std::string &filename );
+    void CmdFileOpenShellAsk( std::string &filename );
     void CmdFileOpenMru( int mru_idx );
     void CmdFileOpenLog();
     void CmdFileOpenInner( std::string &filename );
