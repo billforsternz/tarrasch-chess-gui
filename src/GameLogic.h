@@ -25,6 +25,18 @@
 #include "GameState.h"
 #include "Database.h"
 
+class NewTabNeededStateMachine
+{
+public:
+    void FileOpenDialogCancel( unsigned long insertion_point ) { after_file_open_dialog_cancel=true; initial_insertion_point=insertion_point; }
+    void ShowNewDocument() { after_file_open_dialog_cancel=false; }
+    void TabModified( int tab_idx, bool tab_modified) { if( tab_modified ) after_file_open_dialog_cancel=false; }
+    bool DontNeedNewTab( unsigned long insertion_point ) { return after_file_open_dialog_cancel && initial_insertion_point==insertion_point; }
+private:
+    bool after_file_open_dialog_cancel=false;
+    unsigned long initial_insertion_point=0;
+};
+
 class GameLogic
 {
 public:
@@ -229,6 +241,7 @@ private:
     void KibitzIntro();
     void KibitzClearMultiPV();
     uint32_t game_being_edited_tag;
+    NewTabNeededStateMachine new_tab_needed;
 
     // public data
 public:

@@ -196,6 +196,7 @@ void GameLogic::CmdSetPosition()
 
 void GameLogic::ShowNewDocument()
 {
+    new_tab_needed.ShowNewDocument();
     human_or_pondering = HUMAN;
     kibitz = false;
     CmdClearKibitz(true);
@@ -765,11 +766,13 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
 {
     Atomic begin;
     bool is_empty = gd.IsEmpty();
+    unsigned long insertion_point = gd.GetInsertionPoint();
     bool editing_log = objs.gl->EditingLog();
     if( !gc_pgn.Load(filename) )
         wxMessageBox( "Cannot read file", "Error", wxOK|wxICON_ERROR );
     else
     {
+        bool load_with_cancel = true;
 		int offset=0;
 		int selected_game = 0;
 		bool goto_first_game =
@@ -786,7 +789,10 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
 			DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
             bool ok = dialog.ShowModalOk(title);
 			if( ok )
+            {
 				selected_game = dialog.GetSelectedGame(&offset);
+                load_with_cancel = false;
+            }
 		}
 		if( offset>=0 && selected_game>=0 && static_cast<unsigned int>(selected_game)<gc_pgn.gds.size() )
 		{
@@ -811,11 +817,17 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
 			SetGameBeingEdited( new_gd, *gc_pgn.gds[selected_game] );
 			if( offset !=0 )
 				new_gd.SetNonZeroStartPosition(offset);
-			if( is_empty )
+            bool dont_need_new_tab = is_empty || new_tab_needed.DontNeedNewTab(insertion_point);
+			if( dont_need_new_tab )
 				gd = new_gd;
 			else
 				tabs->TabNew(new_gd);
 			ShowNewDocument();
+            if( load_with_cancel )
+            {
+                unsigned long initial_insertion_point = gd.GetInsertionPoint();
+                new_tab_needed.FileOpenDialogCancel( initial_insertion_point );
+            }
         }
     }
     atom.StatusUpdate();
@@ -3326,6 +3338,7 @@ void GameLogic::StatusUpdate( int idx )
 							{
 								tab_in_file = true;
 								tab_modified = game_modified;
+                                new_tab_needed.TabModified(tab_idx,tab_modified);
 								idx = i;
 							}
 							#ifdef _DEBUG
