@@ -196,7 +196,7 @@ void GameLogic::CmdSetPosition()
 
 void GameLogic::ShowNewDocument()
 {
-    new_tab_needed.ShowNewDocument();
+    monitor_usage_pattern.ShowNewDocument();
     human_or_pondering = HUMAN;
     kibitz = false;
     CmdClearKibitz(true);
@@ -817,7 +817,7 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
 			SetGameBeingEdited( new_gd, *gc_pgn.gds[selected_game] );
 			if( offset !=0 )
 				new_gd.SetNonZeroStartPosition(offset);
-            bool dont_need_new_tab = is_empty || new_tab_needed.DontNeedNewTab(insertion_point);
+            bool dont_need_new_tab = is_empty || monitor_usage_pattern.DontNeedNewTab(insertion_point);
 			if( dont_need_new_tab )
 				gd = new_gd;
 			else
@@ -826,7 +826,7 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
             if( load_with_cancel )
             {
                 unsigned long initial_insertion_point = gd.GetInsertionPoint();
-                new_tab_needed.FileOpenDialogCancel( initial_insertion_point );
+                monitor_usage_pattern.FileOpenDialogCancel( initial_insertion_point );
             }
         }
     }
@@ -3338,7 +3338,8 @@ void GameLogic::StatusUpdate( int idx )
 							{
 								tab_in_file = true;
 								tab_modified = game_modified;
-                                new_tab_needed.TabModified(tab_idx,tab_modified);
+                                if( tab_modified )
+                                    monitor_usage_pattern.TabModified();
 								idx = i;
 							}
 							#ifdef _DEBUG

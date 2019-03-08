@@ -167,6 +167,7 @@
     <ClCompile Include="src\Lang.cpp" />
     <ClCompile Include="src\Log.cpp" />
     <ClCompile Include="src\LogDialog.cpp" />
+    <ClCompile Include="src\MonitorUsagePattern.cpp" />
     <ClCompile Include="src\UnixUciInterface.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MaintenanceDialog.cpp" />
@@ -250,6 +251,7 @@
     <ClInclude Include="src\MaintenanceDialog.h" />
     <ClInclude Include="src\MemoryPositionSearch.h" />
     <ClInclude Include="src\MemoryPositionSearchSide.h" />
+    <ClInclude Include="src\MonitorUsagePattern.h" />
     <ClInclude Include="src\MoveTree.h" />
     <ClInclude Include="src\NavigationKey.h" />
     <ClInclude Include="src\Objects.h" />
