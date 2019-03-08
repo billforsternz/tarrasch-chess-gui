@@ -896,6 +896,7 @@ void GamesDialog::GdvOnActivate()
 
 void GamesDialog::Goto( int idx )
 {
+    objs.frame->Raise();    // Fixes disturbing problem where we were losing program focus with wxWidgets-3.1.2
     if( list_ctrl )
     {
         int sz = list_ctrl->GetItemCount();
