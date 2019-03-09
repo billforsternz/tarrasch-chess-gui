@@ -104,9 +104,9 @@ For Windows either;
 
 A) Download an already prepared installation in the form of a single compressed .7z (7zip) archive
 from the project website, and uncompress it with 7zip. Three versions are now available;
- [VS2010 version](http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2010.7z),
- [VS2015 version](http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2015.7z) and
- [VS2017 version](http://triplehappy.com/downloads/wxWidgets-3.1.2-vs2017.7z)
+ [VS2010 version (wxWidgets-3.1.0)](http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2010.7z),
+ [VS2015 version (wxWidgets-3.1.0)](http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2015.7z) and
+ [VS2017 version (wxWidgets-3.1.2)](http://triplehappy.com/downloads/wxWidgets-3.1.2-vs2017.7z)
 
 Use the version corresponding to your compiler. Note that the VS2017 version is a more recent
 version of wxWidgets. Originally I only had the VS2010 and VS2015 versions, when I added the
