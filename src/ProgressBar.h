@@ -109,7 +109,7 @@ public:
         this->title = title;
         this->desc = desc;
         this->abortable = abortable;
-        this->parent = parent ? parent : (objs.frame?objs.frame:NULL);
+        this->parent = parent ? parent : objs.frame;
         this->ifile = ifile;
         this->ifile = ifile;
         if( ifile )
