@@ -450,7 +450,7 @@ wxMutex *WaitForWorkerThread( const char *title )
     if( wxMUTEX_BUSY == s_mutex_tiny_database.TryLock() )
     {
         int base = the_database->background_load_permill;
-        ProgressBar progress(title,"Loading database into memory",true);
+        ProgressBar progress(title,"Loading database into memory",true,objs.frame);
         while( wxMUTEX_BUSY == s_mutex_tiny_database.TryLock() )
         {
             //static int now_before=-1;

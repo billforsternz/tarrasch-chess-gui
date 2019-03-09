@@ -897,6 +897,8 @@ void GamesDialog::GdvOnActivate()
 void GamesDialog::Goto( int idx )
 {
     objs.frame->Raise();    // Fixes disturbing problem where we were losing program focus with wxWidgets-3.1.2
+                            // Belt and braces, because using objs.frame in preference to NULL as the ProgressBar
+                            // parent (see ProgressBar.h) also fixes it
     if( list_ctrl )
     {
         int sz = list_ctrl->GetItemCount();
