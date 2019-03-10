@@ -989,7 +989,7 @@ void GamesCache::Publish()
 						s += black;
 						if (gd.r.event.find('?') == std::string::npos)
 						{
-							s += " ";
+							s += " - ";
 							s += gd.r.event;
 						}
 						std::string year = gd.r.date.substr(0, 4);

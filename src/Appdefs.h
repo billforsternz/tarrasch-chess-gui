@@ -10,9 +10,9 @@
 #include "wx/wx.h"
 #include "Portability.h"
 
-#define MASTER_VERSION_BASE "V3.11a"    //add asterisk prefix between releases
+#define MASTER_VERSION_BASE "V3.12a"    //add asterisk prefix between releases
 
-//#define USING_KINGBASE
+#define USING_KINGBASE
 // no suffix indicates default .tdb is kingbase
 #ifdef  USING_KINGBASE
 #ifdef THC_WINDOWS
@@ -71,6 +71,7 @@ enum
     ID_Clear,
     ID_FILE_SAVE_GAME_AS,
     ID_FILE_OPEN_SHELL,
+    ID_FILE_OPEN_SHELL_ASK,
     ID_FILE_OPEN_LOG,
     ID_FILE_TAB_NEW,
     ID_FILE_TAB_CLOSE,

@@ -196,6 +196,7 @@ void GameLogic::CmdSetPosition()
 
 void GameLogic::ShowNewDocument()
 {
+    monitor_usage_pattern.ShowNewDocument();
     human_or_pondering = HUMAN;
     kibitz = false;
     CmdClearKibitz(true);
@@ -678,6 +679,24 @@ void GameLogic::CmdFileOpen()
     atom.StatusUpdate();
 }
 
+void GameLogic::CmdFileOpenShellAsk( std::string &filename )
+{
+    wxString wx_filename(filename.c_str());
+    wxString dir;
+    wxString name;
+    wxString ext;
+    wxFileName::SplitPath( wx_filename, &dir, &name, &ext );
+    wxString msg = "Do you still want to open file ";
+    msg += name;
+    msg += ".";
+    msg += ext;
+    msg += "?";
+    DialogDetect detect;
+    int answer = wxMessageBox( msg, "A previous file open command can now take place", wxYES_NO);
+    if( answer == wxYES )
+        CmdFileOpenShell( filename );
+}
+
 void GameLogic::CmdFileOpenShell( std::string &filename )
 {
     Atomic begin;
@@ -747,11 +766,13 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
 {
     Atomic begin;
     bool is_empty = gd.IsEmpty();
+    unsigned long insertion_point = gd.GetInsertionPoint();
     bool editing_log = objs.gl->EditingLog();
     if( !gc_pgn.Load(filename) )
         wxMessageBox( "Cannot read file", "Error", wxOK|wxICON_ERROR );
     else
     {
+        bool load_with_cancel = true;
 		int offset=0;
 		int selected_game = 0;
 		bool goto_first_game =
@@ -768,7 +789,10 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
 			DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
             bool ok = dialog.ShowModalOk(title);
 			if( ok )
+            {
 				selected_game = dialog.GetSelectedGame(&offset);
+                load_with_cancel = false;
+            }
 		}
 		if( offset>=0 && selected_game>=0 && static_cast<unsigned int>(selected_game)<gc_pgn.gds.size() )
 		{
@@ -793,11 +817,17 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
 			SetGameBeingEdited( new_gd, *gc_pgn.gds[selected_game] );
 			if( offset !=0 )
 				new_gd.SetNonZeroStartPosition(offset);
-			if( is_empty )
+            bool dont_need_new_tab = is_empty || monitor_usage_pattern.DontNeedNewTab(insertion_point);
+			if( dont_need_new_tab )
 				gd = new_gd;
 			else
 				tabs->TabNew(new_gd);
 			ShowNewDocument();
+            if( load_with_cancel )
+            {
+                unsigned long initial_insertion_point = gd.GetInsertionPoint();
+                monitor_usage_pattern.FileOpenDialogCancel( initial_insertion_point );
+            }
         }
     }
     atom.StatusUpdate();
@@ -1340,10 +1370,10 @@ void GameLogic::CmdDatabaseCreate()
         return;
     Atomic begin;
     wxString db_name;
+	DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
     bool ok=false;
     {
         CreateDatabaseDialog dialog( objs.frame, ID_CREATE_DB_DIALOG, true ); // create_mode = true
-		DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
         dialog.ShowModal();
         ok = dialog.db_created_ok;
         wxString s(dialog.db_name.c_str());
@@ -1388,10 +1418,10 @@ void GameLogic::CmdDatabaseAppend()
         return;
     Atomic begin;
     bool ok=false;
+	DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
     wxString db_name;
     {
         CreateDatabaseDialog dialog( objs.frame, ID_CREATE_DB_DIALOG, false ); // create_mode = false
-		DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
         dialog.ShowModal();
         ok = dialog.db_created_ok;
         wxString s(dialog.db_name.c_str());
@@ -3308,6 +3338,8 @@ void GameLogic::StatusUpdate( int idx )
 							{
 								tab_in_file = true;
 								tab_modified = game_modified;
+                                if( tab_modified )
+                                    monitor_usage_pattern.TabModified();
 								idx = i;
 							}
 							#ifdef _DEBUG

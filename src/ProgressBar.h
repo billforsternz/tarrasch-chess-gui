@@ -11,6 +11,7 @@
 #include <string>
 #include "AutoTimer.h"
 #include "DebugPrintf.h"
+#include "Objects.h"
 #include "wx/progdlg.h"
 
 
@@ -108,7 +109,7 @@ public:
         this->title = title;
         this->desc = desc;
         this->abortable = abortable;
-        this->parent = parent;
+        this->parent = parent ? parent : objs.frame;
         this->ifile = ifile;
         this->ifile = ifile;
         if( ifile )
