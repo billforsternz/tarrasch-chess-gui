@@ -1,3 +1,29 @@
+28/9/2016
+New simple test plan for testing workflow as games cycle through files and tabs
+Cycle randomly through following tasks;
+1. Play moves to create game
+2. Load games from a file
+3. Save moves to a file
+4. Edit game from a file
+5. Load game from a database search
+6. Copy games to clipboard
+7. Delete games from clipboard
+8. Delete games from file
+9. Paste games into file
+10. Paste current game into file
+11. Edit game details
+12. New tab, play moves in tab
+13. Add tab to file
+14. Close tab
+
+Generate 100 random numbers from 1-14 with browserling.com/tools
+
+10*, 8*, 2*, 4*, 12*, 11*, 9*, 6*, 3*, 10*, 10*, 1*, 12, 13, 8, 10-, 10-, 12, 3, 13, 1,
+7, 6, 1, 9, 14, 4, 2, 13, 4, 9, 11, 10, 7, 11, 10, 11, 6, 4, 10, 9
+13, 6, 11, 11, 10, 11, 11, 5, 6, 2, 8, 10, 4, 8, 8, 2, 7, 4, 6, 11
+6, 7, 14, 2, 10, 6, 5, 11, 8, 7, 12, 12, 12, 10, 1, 2, 12, 13, 3, 9
+12, 11, 13, 13, 7, 13, 13, 2, 8, 12, 9, 12, 1, 4, 7, 9, 3, 8, 1, 9
+
 Test plan
 
 1) Make moves, File, Save [new file], Ok

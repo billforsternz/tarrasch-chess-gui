@@ -9,6 +9,17 @@
 #include "GamesCache.h"
 #include "PgnFiles.h"
 
+// Skip over the Unicode BOM at the start of some text files
+static void UnicodeBomSkip( FILE *in )
+{
+    unsigned char buf[4];
+    int len = fread( buf, 1, 3, in );
+    if( len==3 && 0==memcmp(buf,"\xef\xbb\xbf",3)  )
+        ;  // File starts with UNICODE BOM, I think ChessBase does this sometimes, so skip over it
+    else
+        fseek(in,0,SEEK_SET); //rewind to start
+}
+
 // Start reading a file and introduce it into the system
 FILE *PgnFiles::OpenRead( std::string filename, int &handle )
 {
@@ -46,6 +57,8 @@ FILE *PgnFiles::OpenRead( std::string filename, int &handle )
             files.insert(elem);
         }
     }
+    if( pgn_file )
+        UnicodeBomSkip( pgn_file );
     return pgn_file;
 }
 
@@ -164,6 +177,7 @@ FILE *PgnFiles::ReopenRead( int handle )
                 pgn_file = fopen( it->second.filename.c_str(), "rb" );
                 if( pgn_file )
                 {
+                    UnicodeBomSkip( pgn_file );
                     it->second.file_read  = pgn_file;
                     it->second.mode = PgnFile::reading;
                 }
@@ -195,6 +209,7 @@ bool PgnFiles::ReopenModify( int handle, FILE * &pgn_in, FILE * &pgn_out, GamesC
             pgn_in = fopen( it->second.filename.c_str(), "rb" );
             if( pgn_in )
             {
+                UnicodeBomSkip( pgn_in );
                 it->second.file_read  = pgn_in;
                 wxString wx_filename_in  = it->second.filename.c_str();
                 wxString wx_filename_out = wxFileName::CreateTempFileName(wx_filename_in);
@@ -237,6 +252,7 @@ bool PgnFiles::ReopenCopy( int handle, std::string new_filename, FILE * &pgn_in,
             pgn_in = fopen( it->second.filename.c_str(), "rb" );
             if( pgn_in )
             {
+                UnicodeBomSkip( pgn_in );
                 it->second.file_read  = pgn_in;
                 pgn_out = fopen( new_filename.c_str(), "wb" );
                 if( !pgn_out )

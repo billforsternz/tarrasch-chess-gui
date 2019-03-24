@@ -1,30 +1,3 @@
-Recently
-========
-
-A Tarrasch Linux release is very close, although it has been close for a long time (sorry).
-See Building Tarrasch on Linux and Mac below.
-
-At the moment I am just doing a little bit or reorganisation, because the Linux changes
-disrupted my branch strategy.
-
-Old branch strategy: 'master' is releases only, 'development' is main work branch, between
-releases.
-
-New branch strategy: 'releases' is releases only, 'master' is main work branch, between
-releases, 'development' will be deleted in due course.
-
-Why? Because the Linux changes started in 'master' wrongly, and also because Github.com web visitors
-see 'master' first and foremost - so make that the place where work happens.
-
-I've put some notes on new issues and problems that are holding up a nice new release in
-file notes.txt
-
-By the way I made 'releases' with git checkout tags/tarrasch-v3.03a -b releases
-
-Unfortunately github.com thinks this brand new branch is stale - but that will resolve
-when we (finally) put out a new release.
-
-
 Background
 ==========
 
@@ -43,9 +16,9 @@ repository on github. My git skills are slowly getting up to speed and for futur
 avoid this unnecessary proliferation of repositories - i.e. I will prefer further developing this
 repository in to starting a new one. One reflection of my improving git skills
 is that I have used tagged releases sensibly in this repository (in the peer old-tarrasch-chess-gui
-repository I used more unwieldy branches). I now typically stick to two just branches, master and
-development. I do all work in development, and then merge development into master at each
-release.
+repository I used more unwieldy branches). I now typically use just two branches, master and releases.
+I do all work in master, and then merge master into releases at each release (so the releases
+branch reflects the most recent release).
 
 To complete this version discussion; For the record, Tarrasch V1 was primitive but useful in some contexts. It predates any attempt
 on my part to develop in the open with a hosted repository.
@@ -53,27 +26,26 @@ on my part to develop in the open with a hosted repository.
 Building Tarrasch
 =================
 
-It is now easy to grab the Tarrasch source code, rebuild it and hack on it (at least
-on Windows). This is a new development, as for the first 6 or more years of its life
-I accepted that using wxWidgets inevitably resulted in a difficult barrier for new
-developers. I recently (July-August 2016) took a fresh look at this as part of a long
-delayed upgrade to wxWidgets V3 and it turns out it's not so hard.
+It is now easy (since 2016 when I changed to wxWidgets V3 and grabbed the wxWidgets
+dependency problem by the horns) to grab the Tarrasch source code, rebuild it and hack on it (at least
+on Windows and Linux).
 
 Steps
 
 1) Download and install a recent version of Visual Studio, with C++ support. I've tried
-VS2010 and VS2015
+VS2010, VS2015 and VS2017
 
 2) Put this repository into a convenient working directory, eg
 git clone https://github.com/billforsternz/tarrasch-chess-gui workdir
 
 3) Just the one project file is required, it's called Tarrasch.vcxproj.
-It works on VS2010 and VS2015. The project structure is now super lean,
+It works on VS2010, VS2015 and VS2017. The project structure is now super lean,
 mean and easy. There are a bunch of C++ source files (obviously) plus a
 simple resource file and icon (actually two icon files now) in the src
 directory. The project does assume the existance of a wxWidgets
 directory using standard wxWidgets conventions. The directory should be
-named wxWidgets-3.1.0 and it only needs to contain the include and lib
+named wxWidgets (note: until March 2019 it was wxWidgets-3.1.0 but this
+was unnecessarily inflexible) and it only needs to contain the include and lib
 directories. Still this is a problem as these files collectively are
 really too big to store in the repository, but....
 
@@ -87,8 +59,8 @@ Cannot open include file: 'wx/wx.h': No such file or directory
 
 That is a strong indication that you either ommitted step 4) or didn't unzip into
 the right place in the directory hierarchy. It is really important to have a directory
-wxWidgets-3.1.0 in your working directory and to have valid lib and include directories
-within that.
+wxWidgets (not wxWidgets-3.1.0 any more! change made with Tarrasch V3.12) in your
+working directory and to have valid lib and include directories within that.
 
 Building Tarrasch on Linux and Mac
 ==================================
@@ -126,61 +98,68 @@ it stands for triple happy chess - Triplehappy.com is the Tarrasch's home websit
 wxWidgets Dependency
 ====================
 
-To obtain a populated wxWidgets-3.1.0 directory on Windows. Either;
+For Linux see previous section.
+
+For Windows either;
 
 A) Download an already prepared installation in the form of a single compressed .7z (7zip) archive
-from the project website, and uncompress it with 7zip. Two versions are available;
- [VS2010 version](http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2010.7z) and
- [VS2015 version](http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2015.7z)
-These are the same except the completed libraries have been compiled with VS2010 in the first
-and VS2015 in the second. Use the one corresponding to the version of Visual Studio you intend
-to use.
+from the project website, and uncompress it with 7zip. Three versions are now available;
+ [VS2010 version (wxWidgets-3.1.0)](http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2010.7z),
+ [VS2015 version (wxWidgets-3.1.0)](http://triplehappy.com/downloads/wxWidgets-3.1.0-vs2015.7z) and
+ [VS2017 version (wxWidgets-3.1.2)](http://triplehappy.com/downloads/wxWidgets-3.1.2-vs2017.7z)
+
+Use the version corresponding to your compiler. Note that the VS2017 version is a more recent
+version of wxWidgets. Originally I only had the VS2010 and VS2015 versions, when I added the
+VS2017 version I changed to the more normal wxWidgets/ subdirectory convention within the
+project directory instead of my old and inflexible wxWidgets-3.1.0/ conventions. Once you have
+unzipped with 7zip, move the lib and include directories into place in the project's wxWidgets/
+subdirectory.
+
+When I started using VS2017 I originally created a new project file TarraschVS2017.vcxproj
+but at the time of releasing Tarrasch V3.12 I updated the original Tarraschc.vcxproj to
+support VS2017 as well, a better solution I think.
 
 B) Install wxWidgets from wxwidgets.org and follow the MSW (Microsoft Windows) instructions
-in build/msw to build your own installation from scratch. Important: For each wxWidgets subproject
-you must go to properties > configuration properties > C/C++ > code generation and change
+in build/msw to build your own installation from scratch. It's pretty easy, eg for VS2017
+load up wx_vc15.sln. Important: Before rebuilding the solution for release and debug you
+must individually configure each wxWidgets subproject using properties > configuration properties > C/C++ > code generation and change
 /MD to /MT (release) and /MDd to /MTd (debug). This enables a fully static final executable.
+It's a bit of a pain, but Visual Studio makes life a little easier by going straight to the
+right configuration dialog as you double click each subproject (don't close the configuration
+dialog).
+
 Once you've successfully rebuilt wxWidgets (both debug and release) copy the include and lib
-directory trees into place in the wxWidgets-3.1.0 directory.
+directory trees into place in the wxWidgets/ project subdirectory.
 
-The .7z archives only include the 25 wxWidgets libraries required by Tarrasch. These libraries
-are all in the wxWidgets-3.1.0\lib\vc_lib subdirectory as follows;
+The .7z archives only include the 26 wxWidgets libraries required by Tarrasch. These libraries
+are all in the wxWidgets\lib\vc_lib subdirectory as follows;
 
-- .\wxWidgets-3.1.0\lib\vc_lib\wxbase31u.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxbase31ud.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxbase31ud_xml.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxbase31u_xml.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxexpat.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxexpatd.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxjpeg.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxjpegd.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31ud_adv.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31ud_core.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31ud_html.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31ud_richtext.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_adv.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_core.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_html.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_richtext.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxmsw31u_aui.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxpng.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxpngd.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxregexu.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxregexud.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxtiff.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxtiffd.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxzlib.lib
-- .\wxWidgets-3.1.0\lib\vc_lib\wxzlibd.lib
+- wxWidgets\lib\vc_lib\wxbase31u.lib
+- wxWidgets\lib\vc_lib\wxbase31ud.lib
+- wxWidgets\lib\vc_lib\wxbase31ud_xml.lib
+- wxWidgets\lib\vc_lib\wxbase31u_xml.lib
+- wxWidgets\lib\vc_lib\wxexpat.lib
+- wxWidgets\lib\vc_lib\wxexpatd.lib
+- wxWidgets\lib\vc_lib\wxjpeg.lib
+- wxWidgets\lib\vc_lib\wxjpegd.lib
+- wxWidgets\lib\vc_lib\wxmsw31ud_adv.lib
+- wxWidgets\lib\vc_lib\wxmsw31ud_core.lib
+- wxWidgets\lib\vc_lib\wxmsw31ud_html.lib
+- wxWidgets\lib\vc_lib\wxmsw31ud_richtext.lib
+- wxWidgets\lib\vc_lib\wxmsw31ud_aui.lib
+- wxWidgets\lib\vc_lib\wxmsw31u_adv.lib
+- wxWidgets\lib\vc_lib\wxmsw31u_core.lib
+- wxWidgets\lib\vc_lib\wxmsw31u_html.lib
+- wxWidgets\lib\vc_lib\wxmsw31u_richtext.lib
+- wxWidgets\lib\vc_lib\wxmsw31u_aui.lib
+- wxWidgets\lib\vc_lib\wxpng.lib
+- wxWidgets\lib\vc_lib\wxpngd.lib
+- wxWidgets\lib\vc_lib\wxregexu.lib
+- wxWidgets\lib\vc_lib\wxregexud.lib
+- wxWidgets\lib\vc_lib\wxtiff.lib
+- wxWidgets\lib\vc_lib\wxtiffd.lib
+- wxWidgets\lib\vc_lib\wxzlib.lib
+- wxWidgets\lib\vc_lib\wxzlibd.lib
 
-New in Tarrasch V3
-==================
-
-Tarrasch V3 seeks to add the following features to the existing Tarrasch V2
-
-* Improved portability, including a working Mac version.
-* Database features. Browse existing games that have reached a position of interest and explore move and transposition statistics.
-* A tabbed workspace. An essential complement to the database features.
-* Publish to .html (and possibly .rtf).
-* Work with huge files, easily preview games before loading.
 
 Bill Forster <billforsternz@gmail.com>

@@ -24,6 +24,7 @@
 #include "PanelContext.h"
 #include "GameState.h"
 #include "Database.h"
+#include "MonitorUsagePattern.h"
 
 class GameLogic
 {
@@ -77,6 +78,7 @@ public:
     void CmdFileNew();
     void CmdFileOpen();
     void CmdFileOpenShell( std::string &filename );
+    void CmdFileOpenShellAsk( std::string &filename );
     void CmdFileOpenMru( int mru_idx );
     void CmdFileOpenLog();
     void CmdFileOpenInner( std::string &filename );
@@ -228,6 +230,7 @@ private:
     void KibitzIntro();
     void KibitzClearMultiPV();
     uint32_t game_being_edited_tag;
+    MonitorUsagePattern monitor_usage_pattern;
 
     // public data
 public:

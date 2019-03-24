@@ -256,7 +256,7 @@ void PgnDialog::GdvListColClick( int compare_col_ )
         // If we need to load games, put up a progress dialog box
         else
         {
-            wxProgressDialog progress( "Loading games", "Loading games", 100, NULL,
+            wxProgressDialog progress( "Loading games", "Loading games", 100, this,
                                       wxPD_APP_MODAL+
                                       wxPD_AUTO_HIDE+
                                       wxPD_ELAPSED_TIME+

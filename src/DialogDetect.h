@@ -19,7 +19,14 @@ public:
 
 	~DialogDetect()
 	{
-		counter--;
+        counter--;
+        if( counter==0 && func )
+        {
+            void (*temp)(std::string&);
+            temp = func;
+            func = 0;
+            temp(parm);
+        }
 	}
 
 	static bool IsOpen()
@@ -27,8 +34,16 @@ public:
 		return counter>0;
 	}
 
+	static void OnClose( void (*f)(std::string&), std::string p )
+	{
+        func = f;
+		parm = p;
+	}
+
 private:
 	static int counter;
+    static void (*func)( std::string& );
+    static std::string parm;
 };
 
 #endif // DIALOG_DETECT_H
