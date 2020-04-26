@@ -74,8 +74,25 @@ level directory;
 - sudo apt install libwxgtk-media3.0-dev
 - sudo apt install libwxgtk-webview3.0-dev
 - wx-config --version
+  - (should return 3.0.2)
  
- (should return 3.0.2)
+ 
+## Building Tarrasch on Linux (Ubuntu 18.04)
+
+- sudo apt install libwxgtk3.0-dev
+- sudo apt install libwxgtk-media3.0-dev
+- sudo apt install libwxgtk-webview3.0-gtk3-dev
+- wx-config --version
+  - (should return 3.0.4)
+  
+After building and starting Tarrasch from the terminal it might complain from failing to load module `canberra-gtk-module`.
+To fix this install the module: `sudo apt install libcanberra-gtk-module libcanberra-gtk3-module`.
+
+Tarrasch binary will also complain about not finding `book.pgn` file. This file is located inside the `install/` directory. 
+Just copy Tarrasch binary to the `install/` directory and start it from there and it will find the file.
+
+Tarrash will also build successfully with clang-6.0. 
+
 
 Look for John's merged pull request for further discussion.
 
