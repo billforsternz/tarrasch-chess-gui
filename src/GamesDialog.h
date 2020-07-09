@@ -115,9 +115,10 @@ class GamesDialogResizer
     std::vector<wxSize>     panel_sizes;
     std::vector<wxWindow *> panel_windows;
     std::vector<bool>       panel_stretch_widths;
-    bool first_time=true;   //C++11 allows this construct which I didn't know about until recently
+    bool first_time; //=true;   //C++11 allows this construct which I didn't know about until recently
                             // no need for a constructor if you only need to do things like this
 public:
+    GamesDialogResizer() { first_time=true; }
     void RegisterPanelWindow( wxWindow *window, bool stretch_width=false );
     bool Layout( wxWindow *dialog, wxWindow *list, wxWindow *line );
     void AnchorOriginalPositions( wxWindow *dialog, wxWindow *list, wxWindow *line );

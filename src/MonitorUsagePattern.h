@@ -19,9 +19,10 @@ public:
     void ShowNewDocument();
     void TabModified();
     bool DontNeedNewTab( unsigned long insertion_point );
+    MonitorUsagePattern() { after_file_open_dialog_cancel=false; initial_insertion_point=0; }
 private:
-    bool after_file_open_dialog_cancel=false;
-    unsigned long initial_insertion_point=0;
+    bool after_file_open_dialog_cancel;
+    unsigned long initial_insertion_point;
 };
 
 #endif // MONITOR_USAGE_PATTERN_H

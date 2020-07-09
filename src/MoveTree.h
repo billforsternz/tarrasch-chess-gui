@@ -81,8 +81,9 @@ typedef std::vector<MoveTree> VARIATION;
 
 struct VARIATION_STACK_ELEMENT
 {
-    VARIATION *v=NULL;
-    int imove=-1;
+    VARIATION *v;
+    int imove;
+    VARIATION_STACK_ELEMENT() {v=NULL;imove=-1;}
 };
 
 #endif //MOVE_TREE_H

@@ -352,8 +352,9 @@ public:
 	//  want and is better practice than the old memcpy() versions (which
 	//  copy the vtable ptr as well - we don't want that). Thanks to Github
 	//  user metiscus for the pull request that fixed this.
-    ChessPosition( const ChessPosition& src ) = default;
-    ChessPosition& operator=( const ChessPosition& src ) = default;
+    //  BUT that ^ isnt supported by Visual Studio 2010 - so do this instead v
+    ChessPosition( const ChessPosition& src ) { memcpy( &white, &src.white, sizeof(ChessPositionRaw) ); }
+    ChessPosition& operator=( const ChessPosition& src ) { memcpy( &white, &src.white, sizeof(ChessPositionRaw) ); return *this; }
 
     // Equality operator
     bool operator ==( const ChessPosition &other ) const

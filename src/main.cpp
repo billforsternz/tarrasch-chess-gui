@@ -436,7 +436,7 @@ public:
     virtual int  OnExit();
 private:
     wxSingleInstanceChecker m_one;
-	InterProcessCommunicationServer *m_server=NULL;
+	InterProcessCommunicationServer *m_server; //=NULL; can't init like this in Visual Studio C++ 2010
 };
 
 CtrlBoxBookMoves *gbl_book_moves;
@@ -881,6 +881,8 @@ const char *gbl_spell_colour;	// "colour" or "color"
 
 bool ChessApp::OnInit()
 {
+    m_server = NULL;
+
     // Check if there is another process running.
     if( m_one.IsAnotherRunning() ) {
 
@@ -989,7 +991,7 @@ bool ChessApp::OnInit()
 	if( pos_siz_restored && pt.y<0 && pt.x<0 )
 		maximize = true;
 	char buf[80];
-	snprintf(buf,sizeof(buf),"Tarrasch Chess GUI %s",MASTER_VERSION_BASE);
+	sprintf(buf,"Tarrasch Chess GUI %s",MASTER_VERSION_BASE);
     ChessFrame *frame = new ChessFrame (buf,
                                   pt, sz, pos_siz_restored );
     if( maximize )
