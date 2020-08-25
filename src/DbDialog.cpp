@@ -242,7 +242,7 @@ bool DbDialog::ReadGameFromSearchResults( int item, CompactGame &pact )
 int DbDialog::GetBasePositionIdx( CompactGame &pact, bool receiving_focus )
 { 
     int idx = 0;
-    if( db_req == REQ_PATTERN )
+    if( pm.IsReady() && db_req == REQ_PATTERN )
     {
         if( receiving_focus )
         {
@@ -992,6 +992,7 @@ void DbDialog::PatternSearch()
             sprintf( buf, "%s (stats adjusted for %d reverse %s game%s)", base, stats_.nbr_reversed_games, gbl_spell_colour, stats_.nbr_reversed_games>1 ? "s": "" );
     }
     title_ctrl->SetLabel( buf );
+    pm.NowReady();
     int top = list_ctrl->GetTopItem();
     int count = 1 + list_ctrl->GetCountPerPage();
     if( count > nbr_games_in_list_ctrl )
