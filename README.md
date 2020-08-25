@@ -57,7 +57,7 @@ Note that if you get nothing but compile errors like this;
 
 Cannot open include file: 'wx/wx.h': No such file or directory
 
-That is a strong indication that you either ommitted step 4) or didn't unzip into
+That is a strong indication that you either omitted step 4) or didn't unzip into
 the right place in the directory hierarchy. It is really important to have a directory
 wxWidgets (not wxWidgets-3.1.0 any more! change made with Tarrasch V3.12) in your
 working directory and to have valid lib and include directories within that.
