@@ -922,6 +922,13 @@ void GamesDialog::Goto( int idx )
             list_ctrl->EnsureVisible(idx);
         }
         list_ctrl->SetFocus();
+        // It seems that on Windows at least we must always EnsureVisible() after SetFocus()
+        //  it order to guarantee that the highlighted game at index 0 will actually be
+        //  visible when a games dialog opens.
+        if(  0<=idx && idx<sz )
+            list_ctrl->EnsureVisible(idx);
+        else
+            list_ctrl->EnsureVisible(0);
     }
 }
 
