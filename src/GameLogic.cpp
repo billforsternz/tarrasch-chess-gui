@@ -662,7 +662,7 @@ void GameLogic::CmdFileOpen()
             wxFileName::SplitPath( wx_filename, &dir2, &name, &ext );
 			objs.repository->nv.m_doc_dir = dir2;
 			std::string filename( wx_filename.c_str() );
-			if( ext == "tdb" )
+            if( ext.Lower() == "tdb" )
 			{
 				CmdDatabaseOpen( filename );
 				status_field4 = objs.db->GetStatus();
@@ -686,40 +686,56 @@ void GameLogic::CmdFileOpenShellAsk( std::string &filename )
     wxString name;
     wxString ext;
     wxFileName::SplitPath( wx_filename, &dir, &name, &ext );
-    wxString msg = "Do you still want to open file ";
-    msg += name;
-    msg += ".";
-    msg += ext;
-    msg += "?";
-    DialogDetect detect;
-    int answer = wxMessageBox( msg, "A previous file open command can now take place", wxYES_NO);
-    if( answer == wxYES )
-        CmdFileOpenShell( filename );
+    if( ext.Lower()=="pgn" || ext.Lower()=="tdb" )
+    {
+        wxString msg = "Do you still want to open file ";
+        msg += name;
+        msg += ".";
+        msg += ext;
+        msg += "?";
+        DialogDetect detect;
+        int answer = wxMessageBox( msg, "A previous file open command can now take place", wxYES_NO);
+        if( answer == wxYES )
+            CmdFileOpenShell( filename );
+    }
 }
 
 void GameLogic::CmdFileOpenShell( std::string &filename )
 {
     Atomic begin;
-    wxFileName fn(filename.c_str());
-	std::string name      = std::string(fn.GetFullName().c_str());
-	std::string dir       = std::string(fn.GetPath().c_str());
-	std::string full_path = std::string(fn.GetFullPath().c_str());
-	bool ok            = fn.IsOk();
-	bool exists        = fn.FileExists();
-	bool readable      = fn.IsFileReadable();
-	cprintf( "file=%s, name=%s, dir=%s, full_path=%s, ok=%s exists=%s, readable=%s\n", filename.c_str(), name.c_str(), dir.c_str(), full_path.c_str(), ok?"true":"false", exists?"true":"false", readable?"true":"false" );
-	if( ok && exists )
-	{
-		if( objs.cws->FileOpen() )
-		{
-			wxString wx_filename = fn.GetFullPath();
-			wxString dir2 = fn.GetPath();
-			objs.repository->nv.m_doc_dir = dir2;
-			mru.AddFileToHistory(wx_filename);
-			std::string the_file(wx_filename.c_str());
-			CmdFileOpenInner(the_file);
-		}
-	}
+    wxFileName fn;
+    if( !wxDirExists(filename.c_str()) )
+    {
+        fn.Assign(filename.c_str());
+        std::string name      = std::string(fn.GetFullName().c_str());
+        std::string dir       = std::string(fn.GetPath().c_str());
+        std::string full_path = std::string(fn.GetFullPath().c_str());
+        wxString ext = fn.GetExt();
+        bool ext_ok = (ext.Lower()=="pgn" || ext.Lower()=="tdb");
+        bool ok            = fn.IsOk();
+        bool exists        = fn.FileExists();
+        bool readable      = fn.IsFileReadable();
+        cprintf( "file=%s, name=%s, dir=%s, full_path=%s, ok=%s exists=%s, readable=%s\n", filename.c_str(), name.c_str(), dir.c_str(), full_path.c_str(), ok?"true":"false", exists?"true":"false", readable?"true":"false" );
+        if( ok && ext_ok && exists )
+        {
+            wxString wx_filename = fn.GetFullPath();
+            std::string the_file(wx_filename.c_str());
+            if( ext.Lower()=="pgn" && objs.cws->FileOpen() )
+            {
+                wxString dir2 = fn.GetPath();
+                objs.repository->nv.m_doc_dir = dir2;
+                mru.AddFileToHistory(wx_filename);
+                CmdFileOpenInner(the_file);
+            }
+            else if( ext.Lower()=="tdb" ) 
+            {
+                CmdDatabaseOpen( the_file );
+                status_field4 = objs.db->GetStatus();
+                objs.frame->SetStatusText( status_field4.c_str(), 3 );
+                CmdDatabaseShowAll();
+            }
+        }
+    }
     atom.StatusUpdate();
 }
 
@@ -2274,8 +2290,31 @@ void GameLogic::OnIdle()
         StatusInit();
         if( argv1 != "" )
         {
-            std::string filename( argv1.c_str() );
-            CmdFileOpenInner( filename );
+            wxFileName fname;
+            if( !wxDirExists(argv1) )
+            {
+                fname.Assign( argv1 );
+                if( fname.FileExists() )
+                {
+                    wxString ext = fname.GetExt();
+                    wxString wx_filename = fname.GetFullPath();
+                    objs.repository->nv.m_doc_dir = fname.GetPath();
+                    std::string filename( wx_filename.c_str() );
+                    if( ext.Lower() == "tdb" )
+                    {
+                        cprintf( "CmdDatabaseOpen(%s)\n", filename.c_str() );
+                        CmdDatabaseOpen( filename );
+                        status_field4 = objs.db->GetStatus();
+                        objs.frame->SetStatusText( status_field4.c_str(), 3 );
+                        CmdDatabaseShowAll();
+                    }
+                    if( ext.Lower() == "pgn" )
+                    {
+                        mru.AddFileToHistory( wx_filename );
+                        CmdFileOpenInner( filename );
+                    }
+                }
+            }
         }
         SetFocusOnList();
         objs.canvas->notebook->AdvanceSelection();
