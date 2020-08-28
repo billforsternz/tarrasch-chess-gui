@@ -12,7 +12,7 @@
 
 #define MASTER_VERSION_BASE "V3.12b"    //add asterisk prefix between releases
 
-#define USING_KINGBASE
+//#define USING_KINGBASE
 // no suffix indicates default .tdb is kingbase
 #ifdef  USING_KINGBASE
 #ifdef THC_WINDOWS
