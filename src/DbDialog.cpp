@@ -242,7 +242,7 @@ bool DbDialog::ReadGameFromSearchResults( int item, CompactGame &pact )
 int DbDialog::GetBasePositionIdx( CompactGame &pact, bool receiving_focus )
 { 
     int idx = 0;
-    if( db_req == REQ_PATTERN )
+    if( pm.IsReady() && db_req == REQ_PATTERN )
     {
         if( receiving_focus )
         {
@@ -686,7 +686,8 @@ void DbDialog::StatsCalculate()
         ProgressBar progress("Calculating Stats","Calculating Stats",false);
         for( size_t i=0; i<nbr_found_games; i++ )
         {
-            progress.Permill(i*1000/nbr_found_games);
+            double permill = (static_cast<double>(i) * 1000.0) / static_cast<double>(nbr_found_games);
+            progress.Permill( static_cast<int>(permill) );
             int idx                   = found_games[i].idx;
             unsigned short offset_first = found_games[i].offset_first;
             unsigned short offset_last  = found_games[i].offset_last;
@@ -992,6 +993,7 @@ void DbDialog::PatternSearch()
             sprintf( buf, "%s (stats adjusted for %d reverse %s game%s)", base, stats_.nbr_reversed_games, gbl_spell_colour, stats_.nbr_reversed_games>1 ? "s": "" );
     }
     title_ctrl->SetLabel( buf );
+    pm.NowReady();
     int top = list_ctrl->GetTopItem();
     int count = 1 + list_ctrl->GetCountPerPage();
     if( count > nbr_games_in_list_ctrl )

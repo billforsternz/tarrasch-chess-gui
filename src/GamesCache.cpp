@@ -704,7 +704,8 @@ void GamesCache::Eco(  GamesCache *UNUSED(gc_clipboard) )
     ProgressBar pb( "Calculate missing ECO codes", "Calculate missing ECO codes" );
     for( int i=0; i<gds_nbr; i++ )
     {
-        pb.Permill( (i*1000L) / (gds_nbr?gds_nbr:1) );
+        double permill = (static_cast<double>(i) * 1000.0) / static_cast<double>(gds_nbr?gds_nbr:1);
+        pb.Permill( static_cast<int>(permill) );
         ListableGame *mptr = gds[i].get();
         CompactGame pact;
         mptr->GetCompactGame( pact );
@@ -737,7 +738,8 @@ void GamesCache::Eco(  GamesCache *gc_clipboard )
     int failures=0;
     for( int i=0; i<gds_nbr; i++ )
     {
-        pb.Permill( (i*1000L) / (gds_nbr?gds_nbr:1) );
+        double permill = (static_cast<double>(i) * 1000.0) / static_cast<double>(gds_nbr?gds_nbr:1);
+        pb.Permill( static_cast<int>(permill) );
         ListableGame *mptr = gds[i].get();
         std::string eco  = mptr->Eco();
         std::string blob = mptr->CompressedMoves();

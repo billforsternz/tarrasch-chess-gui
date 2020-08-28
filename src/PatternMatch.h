@@ -133,6 +133,10 @@ public:
     // Start of game
     void NewGame() { in_a_row=0; }
 
+    // Search Complete ?
+    void NowReady() { ready = true; }
+    bool IsReady()  { return ready; }
+
     // Test for pattern
     bool Test( bool &reverse, MpsSide *ws, MpsSide *bs, bool white, const char *squares_rover, bool may_need_to_rebuild_side )
     {
@@ -172,6 +176,7 @@ private:
     // Reflection and Reversal loop controller
     int reflect_and_reverse;
     int in_a_row;
+    bool ready;
 };
 
 #endif    // PATTERN_MATCH_H
