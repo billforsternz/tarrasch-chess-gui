@@ -686,7 +686,8 @@ void DbDialog::StatsCalculate()
         ProgressBar progress("Calculating Stats","Calculating Stats",false);
         for( size_t i=0; i<nbr_found_games; i++ )
         {
-            progress.Permill(i*1000/nbr_found_games);
+            double permill = (static_cast<double>(i) * 1000.0) / static_cast<double>(nbr_found_games);
+            progress.Permill( static_cast<int>(permill) );
             int idx                   = found_games[i].idx;
             unsigned short offset_first = found_games[i].offset_first;
             unsigned short offset_last  = found_games[i].offset_last;
