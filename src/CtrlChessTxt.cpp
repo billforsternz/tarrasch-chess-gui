@@ -334,7 +334,26 @@ void CtrlChessTxt::Paste()
 			bool check_tag = gd->IsEmpty();
             for( unsigned int i=0; i<txt_to_paste.Length(); i++ )
             {
+#ifdef THC_LINUX
+				// Recently (V3.12a and b, September 2020), found that pasting any non
+				//  ascii text in Linux was crashing due to an assert originating in the
+				//  call stack triggered by the following line of code when c is declared
+				//  as char rather than int;
+				//   (https://github.com/billforsternz/tarrasch-chess-gui/issues/20)
+				//  Avoiding the crash is as simple as changing char to int, but actually
+				//  allowing non ascii text to be pasted or indeed typed in Linux is
+				//  perplexing and is put aside for the moment.
+                int c=txt_to_paste[i];
+				//if( c == 8212 )	// If user pastes EmDash we get unicode 8212 as expected
+				//	c = 0x97;   	//   if we change it to ANSI EmDash we get a line feed or something
+					            	//   if we don't we get a funny little four panel box
+				//if( c == 8211 )
+				//	c = 0x96;
+				if( c > 0x80 )		//   so for now we'll just show a '?' which is what we intended in Linux for now
+                    c = '?'; 
+#else					
                 char c=txt_to_paste[i];
+#endif
                 /* Did some debugging to sort out an issue with en dash. Some old code
                    in GameDocument.cpp did special handling to treat en dash as ascii
                    dash, but had forgotten about it, and didn't actually know it was
@@ -358,10 +377,10 @@ void CtrlChessTxt::Paste()
                     cprintf( "Special unicode en dash handling\n" );
                 }
 				*/
-#ifdef THC_LINUX
+/* #ifdef THC_LINUX
 				if( c & 0x80 )  // pu this back for Linux only, fixes a crash bug
                     c = '?'; 
-#endif
+#endif */
                 if( c == '\n' )
 				{
 					if( !check_tag )
