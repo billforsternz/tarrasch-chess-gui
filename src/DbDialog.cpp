@@ -501,12 +501,32 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
     {
         CompactGame pact;
         size_t nbr = list_ctrl->GetItemCount();
+        cprintf( "CopyOrAdd() Loop begin\n" );
+#if 1
+        int i = -1;
+        i = list_ctrl->GetNextItem(i,
+                                wxLIST_NEXT_ALL,
+                                wxLIST_STATE_FOCUSED);
+        if( i != -1 )
+            idx_focus = i;
+        i = -1;
+        for(;;)
+        {
+            i = list_ctrl->GetNextItem(i,
+                                    wxLIST_NEXT_ALL,
+                                    wxLIST_STATE_SELECTED);
+            if( i == -1 )
+                break;
+            else
+            {
+#else
         for( size_t i=0; i<nbr; i++ )
         {
             if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
                 idx_focus = i;
             if( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED) )
             {
+#endif
                 if( clear_clipboard )
                 {
                     clear_clipboard = false;
@@ -525,6 +545,7 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
                 nbr_copied++;
             }
         }
+        cprintf( "CopyOrAdd() Loop end\n" );
         if( nbr_copied==0 && idx_focus>=0 )
         {
             if( clear_clipboard )
