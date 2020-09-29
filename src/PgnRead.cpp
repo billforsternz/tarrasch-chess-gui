@@ -995,7 +995,7 @@ void PgnRead::Header( char *buf )
             {
                 s++;
                 src = s;
-                if( i==1 || i==2 || i==3 || i>6 ) // white, black, result, desc, desc2, name, variation
+                if( i==1 || i==2 || i==3 || i==5 || i==6 || i>6 ) // white, black, result, site, event, name, variation
                 {
                     while( *s && *s != '\"' )
                         s++;
