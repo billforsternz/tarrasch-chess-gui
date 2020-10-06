@@ -20,6 +20,7 @@
 #include "DebugPrintf.h"
 #include "thc.h"
 #include "GameDetailsDialog.h"
+#include "TournamentDialog.h"
 #include "GamePrefixDialog.h"
 #include "GameLogic.h"
 #include "Objects.h"
@@ -56,6 +57,7 @@ BEGIN_EVENT_TABLE( GamesDialog, wxDialog )
     EVT_BUTTON( ID_BUTTON_5,            GamesDialog::OnButton5 )
 
     EVT_BUTTON( ID_BOARD2GAME,          GamesDialog::OnBoard2Game )
+    EVT_BUTTON( ID_TOURNAMENT_GAMES,    GamesDialog::OnTournamentGames )
 //    EVT_CHECKBOX( ID_REORDER,           GamesDialog::OnRenumber )
     EVT_BUTTON( ID_ADD_TO_CLIPBOARD,    GamesDialog::OnAddToClipboard )
     EVT_BUTTON( ID_PGN_DIALOG_GAME_DETAILS,   GamesDialog::OnEditGameDetails )
@@ -1435,6 +1437,48 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
 			sprintf(buf,"%d games",sz);
             objs.gl->gd = gd;
             objs.gl->GameRedisplayPlayersResult();
+		    title_ctrl->SetLabel( buf );
+        }
+    } 
+}
+
+void GamesDialog::OnTournamentGames( wxCommandEvent& WXUNUSED(event) )
+{
+    int sz=gc->gds.size();
+    dirty = true;
+    if( list_ctrl && list_ctrl->GetItemCount()==sz && 0<=focus_idx && focus_idx<(sz>=1?sz:1) )
+    {
+        int insert_idx = focus_idx;
+        if( insert_idx+1 <= sz )
+            insert_idx++;
+        cprintf( "insert_idx=%d\n", insert_idx );
+        std::vector<CompactGame> skeleton_games;
+		TournamentDialog dialog( this );
+        CompactGame proto;
+        if( focus_idx < sz )
+            gc->gds[focus_idx]->GetCompactGame( proto );
+        else
+            proto.Downscale( objs.gl->gd );
+		bool ok = dialog.Run( proto, skeleton_games );
+		if( ok )
+        {
+            gc->file_irrevocably_modified = true;
+            for( auto i = skeleton_games.rbegin();  i != skeleton_games.rend(); ++i )
+            {
+                GameDocument gd;
+                i->Upscale(gd);
+                gd.game_id = GameIdAllocateBottom(1);
+                make_smart_ptr( GameDocument, new_doc, gd );
+                std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin() + insert_idx;
+                gc->gds.insert( iter, std::move(new_doc) ); // invalidates iter
+                sz++;
+                list_ctrl->SetItemCount( sz );
+            }
+            Goto( focus_idx );
+            if( sz>0 )
+                list_ctrl->RefreshItems(0,sz-1);
+			char buf[80];
+			sprintf(buf,"%d games",sz);
 		    title_ctrl->SetLabel( buf );
         }
     } 

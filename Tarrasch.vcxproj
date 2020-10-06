@@ -167,6 +167,7 @@
     <ClCompile Include="src\Log.cpp" />
     <ClCompile Include="src\LogDialog.cpp" />
     <ClCompile Include="src\MonitorUsagePattern.cpp" />
+    <ClCompile Include="src\TournamentDialog.cpp" />
     <ClCompile Include="src\UnixUciInterface.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MaintenanceDialog.cpp" />
@@ -270,6 +271,7 @@
     <ClInclude Include="src\ProgressBar.h" />
     <ClInclude Include="src\Repository.h" />
     <ClInclude Include="src\Roster.h" />
+    <ClInclude Include="src\TournamentDialog.h" />
     <ClInclude Include="src\UciInterface.h" />
     <ClInclude Include="src\Session.h" />
     <ClInclude Include="src\SuspendEngine.h" />
