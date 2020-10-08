@@ -78,36 +78,53 @@ public:
         pact.transpo_nbr = 0;
         pact.game_id = game_id;
     }
+private:
+    uint8_t  game_attributes;    // At the moment there are two attributes, promotion (game has at least one
+                                 //  pawn promotion) and locked (restrict game export to PGN)
     
 public:
     uint32_t game_id;
-    uint8_t  game_attributes;            // at the moment this is effectively bool game_has_promotion;
     bool     saved;
-    virtual void SetAttributes( const char *blob, int len )
+    bool TestPromotion() { return (game_attributes&1) ? true : false; }
+    void SetPromotion( bool has_promotion ) { if( has_promotion ) game_attributes |= 1; else game_attributes &= (~1); }
+    bool TestLocked() { return (game_attributes&2) ? true : false; }
+    void SetLocked( bool is_locked ) { if( is_locked ) game_attributes |= 2; else game_attributes &= (~2); }
+    virtual void CalculatePromotionAttribute( const char *blob, int len )
     {
-        game_attributes = static_cast<uint8_t>(false);
+        bool has_promotion = false;
         while( len-- )
         {
-            if( (*blob++&0x8c) > 0x80 )     // binary 1pppttxx is a pawn move, ppp selects the pawn,
+            if( (*blob++&0x8c) > 0x80 )     // Binary 1pppttxx is a pawn move, ppp selects the pawn,
             {                               //  tt selects the major move type, xx selects the minor
                                             //  move type. Only tt=00 is a non-promoting pawn move
-                game_attributes = static_cast<uint8_t>(true);
+                                            // So (move & 0x8c) < 0x80 for a non pawn move,
+                                            //                  == 0x80 for a non promoting pawn move
+                                            //                  > 0x80 for a promoting pawn move
+                                            // Importantly, fallback mode (where move is actually an
+                                            //  index into list of legal moves) can only happen when
+                                            //  we've already had at least one promotion. But we
+                                            //  are assuming we are scanning a complete game from
+                                            //  not starting in a position where there's already been
+                                            //  a promotion
+                has_promotion = true;
                 break;
             }
         }
+        SetPromotion( has_promotion );
     }
-    virtual void SetAttributes()
+    virtual void CalculatePromotionAttribute()
     {
         const char *blob = CompressedMoves();
-        game_attributes = static_cast<uint8_t>(false);
+        bool has_promotion = false;
         while( *blob )
         {
             if( (*blob++&0x8c) > 0x80 )
             {
-                game_attributes = static_cast<uint8_t>(true);
+                has_promotion = true;
                 break;
             }
         }
+        SetPromotion( has_promotion );
     }
     virtual bool UsesControlBlock( uint8_t & ) { return false; }
  
