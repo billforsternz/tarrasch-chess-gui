@@ -683,7 +683,7 @@ void DbDialog::StatsCalculate()
 
         // The promotion attribute is only set automatically for the tiny database games (at the moment)
         for( size_t i=0; i<source->size(); i++ )
-            (*source)[i]->SetAttributes();
+            (*source)[i]->CalculatePromotionAttribute();
         ProgressBar progress2("Searching Clipboard", "Searching",false);
         game_count = mps->DoSearch(cr_to_match,&progress2,source);
     }
@@ -964,7 +964,7 @@ void DbDialog::PatternSearch()
 
         // The promotion attribute is only set automatically for the tiny database games (at the moment)
         for( size_t i=0; i<source->size(); i++ )
-            (*source)[i]->SetAttributes();
+            (*source)[i]->CalculatePromotionAttribute();
         ProgressBar progress2(objs.gl->db_clipboard ? "Searching" : "Searching", "Searching",false);
         game_count = mps->DoPatternSearch(pm,&progress2,stats_,source);
     }
