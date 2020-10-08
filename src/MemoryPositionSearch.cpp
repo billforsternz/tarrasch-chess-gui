@@ -720,7 +720,10 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
                 games_found.push_back( dsfg );
             }
             if( (i&0xff)==0 && progress )
-                progress->Permill( i*1000 / nbr );
+            {
+                double permill = (static_cast<double>(i) * 1000.0) / static_cast<double>(nbr);
+                progress->Permill( static_cast<int>(permill) );
+            }
         }    
     }                         
     return games_found.size();

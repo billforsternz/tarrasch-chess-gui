@@ -10,9 +10,9 @@
 #include "wx/wx.h"
 #include "Portability.h"
 
-#define MASTER_VERSION_BASE "V3.12a"    //add asterisk prefix between releases
+#define MASTER_VERSION_BASE "V3.12b*"    //add asterisk prefix between releases
 
-#define USING_KINGBASE
+//#define USING_KINGBASE
 // no suffix indicates default .tdb is kingbase
 #ifdef  USING_KINGBASE
 #ifdef THC_WINDOWS
@@ -50,7 +50,7 @@
 #endif
 
 // Conditional compiles
-//#define DURING_DEVELOPMENT		    // If defined we get a console window for cprintf()
+#define DURING_DEVELOPMENT		    // If defined we get a console window for cprintf()
 #define AUI_NOTEBOOK				// Define this to get X close boxes on tabs
 //#define NEW_TAB_LAUNCHES_TESTBED	// If defined new tab feature actually launches testbed window instead
 #ifndef DURING_DEVELOPMENT

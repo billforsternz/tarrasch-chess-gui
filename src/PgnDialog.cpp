@@ -46,10 +46,10 @@ wxSizer *PgnDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
         //vsiz_panel_buttons->Add(edit_game_prefix, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
         // Paste game / Board->Game
-        wxButton* board2game = new wxButton ( this, ID_BOARD2GAME, wxT("Paste current game"),
+        wxButton* tournament_games = new wxButton ( this, ID_TOURNAMENT_GAMES, wxT("New Pairings"), // TEMP TEMP wxT("Paste current game"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        gdr.RegisterPanelWindow( board2game );
-        vsiz_panel_buttons->Add(board2game, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        gdr.RegisterPanelWindow( tournament_games );
+        vsiz_panel_buttons->Add(tournament_games, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
         // Delete
         wxButton* delete_ = new wxButton ( this, wxID_DELETE, wxT("Delete"),

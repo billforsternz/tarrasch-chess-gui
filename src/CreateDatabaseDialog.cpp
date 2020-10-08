@@ -35,6 +35,9 @@ EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER_DB, CreateDatabaseDialog::OnDbFilePi
 EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER1,   CreateDatabaseDialog::OnPgnFile1Picked )
 EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER2,   CreateDatabaseDialog::OnPgnFile2Picked )
 EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER3,   CreateDatabaseDialog::OnPgnFile3Picked )
+EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER4,   CreateDatabaseDialog::OnPgnFile4Picked )
+EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER5,   CreateDatabaseDialog::OnPgnFile5Picked )
+EVT_FILEPICKER_CHANGED( ID_CREATE_DB_PICKER6,   CreateDatabaseDialog::OnPgnFile6Picked )
 END_EVENT_TABLE()
 
 CreateDatabaseDialog::CreateDatabaseDialog(
@@ -593,6 +596,24 @@ void CreateDatabaseDialog::OnPgnFile3Picked( wxFileDirPickerEvent& event )
 {
     wxString file = event.GetPath();
     pgn_filename3 = file;
+}
+
+void CreateDatabaseDialog::OnPgnFile4Picked( wxFileDirPickerEvent& event )
+{
+    wxString file = event.GetPath();
+    pgn_filename4 = file;
+}
+
+void CreateDatabaseDialog::OnPgnFile5Picked( wxFileDirPickerEvent& event )
+{
+    wxString file = event.GetPath();
+    pgn_filename5 = file;
+}
+
+void CreateDatabaseDialog::OnPgnFile6Picked( wxFileDirPickerEvent& event )
+{
+    wxString file = event.GetPath();
+    pgn_filename6 = file;
 }
 
 void CreateDatabaseDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )

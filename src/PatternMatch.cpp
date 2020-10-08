@@ -11,6 +11,7 @@
 // Constructor
 PatternMatch::PatternMatch()
 {
+    ready = false;
 }
 
 // Prepare for series of calls to Test()
