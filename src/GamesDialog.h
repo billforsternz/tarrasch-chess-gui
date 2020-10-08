@@ -43,6 +43,7 @@ enum
     ID_PGN_DIALOG_SESSION  ,
     ID_GAMES_DIALOG_DATABASE   ,
     ID_BOARD2GAME          ,
+    ID_TOURNAMENT_GAMES,
     ID_PGN_DIALOG_GAME_DETAILS,
     ID_REORDER           ,
     ID_ADD_TO_CLIPBOARD  ,
@@ -195,6 +196,7 @@ public:
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_OK
     void OnOkClick( wxCommandEvent& event );
     void OnCancel( wxCommandEvent& event );
+    void OnTournamentGames( wxCommandEvent& event );
     void OnBoard2Game( wxCommandEvent& event );
     void OnRenumber( wxCommandEvent& event );
     void OnSiteEvent( wxCommandEvent& event );

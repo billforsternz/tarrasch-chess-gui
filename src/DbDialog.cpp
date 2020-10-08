@@ -242,7 +242,7 @@ bool DbDialog::ReadGameFromSearchResults( int item, CompactGame &pact )
 int DbDialog::GetBasePositionIdx( CompactGame &pact, bool receiving_focus )
 { 
     int idx = 0;
-    if( db_req == REQ_PATTERN )
+    if( pm.IsReady() && db_req == REQ_PATTERN )
     {
         if( receiving_focus )
         {
@@ -501,12 +501,32 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
     {
         CompactGame pact;
         size_t nbr = list_ctrl->GetItemCount();
+        cprintf( "CopyOrAdd() Loop begin\n" );
+#if 1
+        int i = -1;
+        i = list_ctrl->GetNextItem(i,
+                                wxLIST_NEXT_ALL,
+                                wxLIST_STATE_FOCUSED);
+        if( i != -1 )
+            idx_focus = i;
+        i = -1;
+        for(;;)
+        {
+            i = list_ctrl->GetNextItem(i,
+                                    wxLIST_NEXT_ALL,
+                                    wxLIST_STATE_SELECTED);
+            if( i == -1 )
+                break;
+            else
+            {
+#else
         for( size_t i=0; i<nbr; i++ )
         {
             if( wxLIST_STATE_FOCUSED & list_ctrl->GetItemState(i,wxLIST_STATE_FOCUSED) )
                 idx_focus = i;
             if( wxLIST_STATE_SELECTED & list_ctrl->GetItemState(i,wxLIST_STATE_SELECTED) )
             {
+#endif
                 if( clear_clipboard )
                 {
                     clear_clipboard = false;
@@ -525,6 +545,7 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
                 nbr_copied++;
             }
         }
+        cprintf( "CopyOrAdd() Loop end\n" );
         if( nbr_copied==0 && idx_focus>=0 )
         {
             if( clear_clipboard )
@@ -686,7 +707,8 @@ void DbDialog::StatsCalculate()
         ProgressBar progress("Calculating Stats","Calculating Stats",false);
         for( size_t i=0; i<nbr_found_games; i++ )
         {
-            progress.Permill(i*1000/nbr_found_games);
+            double permill = (static_cast<double>(i) * 1000.0) / static_cast<double>(nbr_found_games);
+            progress.Permill( static_cast<int>(permill) );
             int idx                   = found_games[i].idx;
             unsigned short offset_first = found_games[i].offset_first;
             unsigned short offset_last  = found_games[i].offset_last;
@@ -992,6 +1014,7 @@ void DbDialog::PatternSearch()
             sprintf( buf, "%s (stats adjusted for %d reverse %s game%s)", base, stats_.nbr_reversed_games, gbl_spell_colour, stats_.nbr_reversed_games>1 ? "s": "" );
     }
     title_ctrl->SetLabel( buf );
+    pm.NowReady();
     int top = list_ctrl->GetTopItem();
     int count = 1 + list_ctrl->GetCountPerPage();
     if( count > nbr_games_in_list_ctrl )

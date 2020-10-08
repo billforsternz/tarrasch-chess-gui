@@ -79,6 +79,9 @@ public:
     void OnPgnFile1Picked( wxFileDirPickerEvent& event );
     void OnPgnFile2Picked( wxFileDirPickerEvent& event );
     void OnPgnFile3Picked( wxFileDirPickerEvent& event );
+    void OnPgnFile4Picked( wxFileDirPickerEvent& event );
+    void OnPgnFile5Picked( wxFileDirPickerEvent& event );
+    void OnPgnFile6Picked( wxFileDirPickerEvent& event );
     void OnCreateTinyDb( wxCommandEvent& event );
     
     // CreateDatabaseDialog member variables
