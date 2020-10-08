@@ -465,7 +465,7 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, ProgressBar *
                         in_memory_game_cache[i]->White(),  r.white.c_str(),
                         in_memory_game_cache[i]->Black(),  r.black.c_str(),
                         in_memory_game_cache[i]->CompressedMoves() ); */
-            bool promotion_in_game = (p->game_attributes!=0);
+            bool promotion_in_game = p->TestPromotion();
             bool game_found;
             #ifdef CONSERVATIVE
             game_found = SearchGameSlowPromotionAllowed( std::string(p->CompressedMoves()), dsfg.offset_first, dsfg.offset_last  );
@@ -688,7 +688,7 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
             dsfg.game_id = p->game_id;
             dsfg.offset_first=0;
             dsfg.offset_last=0;
-            bool promotion_in_game = (p->game_attributes!=0);
+            bool promotion_in_game = p->TestPromotion();
             bool game_found, reverse;
             pm.NewGame();
             if( promotion_in_game )
