@@ -22,7 +22,7 @@ public:
         : pack( cb_idx, binary_game )
     {
         this->game_id = game_id;
-        SetAttributes();
+        CalculatePromotionAttribute();
     }
 
     ListableGameBinDb( 
@@ -55,7 +55,7 @@ public:
     )
     {
         this->game_id = game_id;
-        SetAttributes( compressed_moves.c_str(), compressed_moves.length() );
+        CalculatePromotionAttribute( compressed_moves.c_str(), compressed_moves.length() );
     }
 
     virtual void GetCompactGame( CompactGame &pact )
