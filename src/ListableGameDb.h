@@ -62,7 +62,7 @@ public:
             moves_blob, len12
         )
     {
-        SetAttributes(moves_blob,len12);
+        CalculatePromotionAttribute(moves_blob,len12);
     }
 
     virtual void GetCompactGame( CompactGame &pact )

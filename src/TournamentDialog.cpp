@@ -23,6 +23,10 @@ BEGIN_EVENT_TABLE( TournamentDialog, wxDialog )
     EVT_BUTTON( wxID_OK, TournamentDialog::OnOkClick )
 END_EVENT_TABLE()
 
+// From my utility library, should probably link it in properly
+static void rtrim( std::string &s );
+static std::string sprintf( const char *fmt, ... );
+
 // TournamentDialog constructors
 TournamentDialog::TournamentDialog()
 {
@@ -44,7 +48,6 @@ void TournamentDialog::Init()
     site        = "";               // Site
     date        = "";               // Date
     round       = "";               // Round
-	previous_child_window = NULL;
 }
 
 // Create dialog
@@ -179,7 +182,7 @@ void TournamentDialog::CreateControls()
     // Text control for pairings_txt
     wxSize sz_multi = sz;
     sz_multi.x = 4*WIDTH;
-    sz_multi.y = 5*WIDTH;
+    sz_multi.y = 2*WIDTH;
     pairings_txt =
           // Don't change this without looking for all instances of 2499!
           "Paste Players and Ratings here, using the format shown below;\n"
@@ -192,9 +195,9 @@ void TournamentDialog::CreateControls()
           "If your pairing program produces something that doesn't work, email me at billforsternz@gmail.com with "
           "a sample, and if you ask nicely I'll adapt Tarrasch for you.\n\n"
           "This help information will be ignored if it is present, so you can paste above, paste below or Ctrl-A to select all and paste over the top.\n";
-    eco_ctrl = new wxTextCtrl ( this, ID_TOURNAMENT_ECO, "",
+    pairings_ctrl = new wxTextCtrl ( this, ID_TOURNAMENT_PAIRINGS, "",
         wxDefaultPosition, sz_multi, wxTE_MULTILINE );
-    user_text_sizer->Add(eco_ctrl, 0, wxGROW|wxALL, SMALL);
+    user_text_sizer->Add(pairings_ctrl, 0, wxGROW|wxALL, SMALL);
 
     box_sizer->Add(user_text_sizer, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 15);
 
@@ -234,8 +237,8 @@ void TournamentDialog::SetDialogValidators()
         wxTextValidator(wxFILTER_ASCII, &date));
     FindWindow(ID_TOURNAMENT_ROUND)->SetValidator(
         wxTextValidator(wxFILTER_ASCII, &round));
-    FindWindow(ID_TOURNAMENT_ECO)->SetValidator(
-        wxTextValidator(wxFILTER_ASCII, &pairings_txt));
+    FindWindow(ID_TOURNAMENT_PAIRINGS)->SetValidator(
+        wxTextValidator(wxFILTER_NONE, &pairings_txt));
 }
 
 // Sets the help text for the dialog controls
@@ -247,8 +250,8 @@ void TournamentDialog::SetDialogHelp()
           "their game won't be skipped unless they are both rated 2499!\n"
       );
 
-    FindWindow(ID_TOURNAMENT_ECO)->SetHelpText(the_help);
-    FindWindow(ID_TOURNAMENT_ECO)->SetToolTip(the_help);
+    FindWindow(ID_TOURNAMENT_PAIRINGS)->SetHelpText(the_help);
+    FindWindow(ID_TOURNAMENT_PAIRINGS)->SetToolTip(the_help);
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_PLAYER_RESET
@@ -380,7 +383,7 @@ static void rtrim( std::string &s )
 
 
 // From my utility library, should probably link it in properly
-std::string sprintf( const char *fmt, ... )
+static std::string sprintf( const char *fmt, ... )
 {
     int size = strlen(fmt) * 3;   // guess at size
     std::string str;
@@ -404,15 +407,26 @@ std::string sprintf( const char *fmt, ... )
     return str;
 }
 
-void parse_players_txt( const char *txt, std::vector<CompactGame> &games );
+static void parse_players_txt( const char *txt, std::vector<CompactGame> &games );
 bool TournamentDialog::Run( CompactGame &proto, std::vector<CompactGame> &games )
 {
     games.clear();
     event     = proto.r.event;          // "Event"
     site      = proto.r.site;           // "Site"
-    round     = proto.r.round;          // "Round"
-    if( round=="" || round == "?" )
+    std::string base = proto.r.round;   // "Round"
+    if( base=="" || base == "?" )
         round = "1";
+    else
+    {
+        size_t offset = round.find_last_of(".");
+        if( offset != std::string::npos )
+            base = round.substr(0,offset);
+        int ibase = atoi( base.c_str() );
+        if( ibase < 1 )
+            round = "1";
+        else
+            round = sprintf("%d",ibase + 1);
+    }
     time_t rawtime;
     struct tm * timeinfo;
     time( &rawtime );
@@ -461,7 +475,7 @@ bool TournamentDialog::Run( CompactGame &proto, std::vector<CompactGame> &games 
     }
     parse_players_txt( pairings_txt.c_str(), games );
     size_t offset = round.find_last_of(".");
-    std::string base=round;
+    base=round;
     int board=1;
     if( offset != std::string::npos )
     {
@@ -476,17 +490,16 @@ bool TournamentDialog::Run( CompactGame &proto, std::vector<CompactGame> &games 
         pact.r.site  = site;
         pact.r.date  = date;
         pact.r.round  = base + "." + sprintf("%d",board++);
-        pact.r.result = "*";
     }
     return games.size() > 1;
 }
 
-void parse_players_txt( const char *txt, std::vector<CompactGame> &games )
+static void parse_players_txt( const char *txt, std::vector<CompactGame> &games )
 {
 
     // 2 Dive, Russell         2414 [3.5]     :     Ker, Anthony        2437 [3.5]
     enum {init,in_name,in_rating} state=init;
-    std::string name, rating, first, second, first_rating, second_rating;
+    std::string name, rating, first, first_rating, between, second, second_rating;
     char previous=' ';
     for(;;)
     {
@@ -501,10 +514,17 @@ void parse_players_txt( const char *txt, std::vector<CompactGame> &games )
                     name = "";
                     name += c;
                 }
+                else
+                {
+                    if( first_rating!="" && second=="" )
+                        between += c;
+                }
                 break;
             }
             case in_name:
             {
+                std::string s;
+                s += c;
                 if( isascii(c) && isdigit(c) && (previous==' '||previous=='\t') )
                 {
                     rtrim(name);
@@ -512,7 +532,9 @@ void parse_players_txt( const char *txt, std::vector<CompactGame> &games )
                     rating = "";
                     rating += c;
                 }
-                else
+                else if( isascii(c) && std::string::npos==s.find_first_of("!#$%^&*(){}[]") )
+                    name += c;
+                else if( c=='.' || c==',' || c==' ' )
                     name += c;
                 break;
             }
@@ -564,6 +586,13 @@ void parse_players_txt( const char *txt, std::vector<CompactGame> &games )
                     second_rating = "9999";
                 pact.r.white_elo = first_rating;
                 pact.r.black_elo = second_rating;
+                pact.r.result = "*";
+                if( std::string::npos != between.find("1:0") )
+                    pact.r.result = "1-0";
+                else if( std::string::npos != between.find("0:1") )
+                    pact.r.result = "0-1";
+                else if( std::string::npos != between.find("\xbd:\xbd") )
+                    pact.r.result = "1/2-1/2";
                 games.push_back(pact);
             }
             if( c=='\0' )

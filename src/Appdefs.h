@@ -40,9 +40,10 @@
 
 #define DEFAULT_ENGINE "stockfish_8_x32.exe"
 #define DEFAULT_ENGINE_64 "stockfish_8_x64.exe"
-#define DATABASE_VERSION_NUMBER_LEGACY 1    // Old SQL type = supported with V3.03a
-#define DATABASE_VERSION_NUMBER_TINY   2    // Some kind of intermediate version, we don't support it any more at all
-#define DATABASE_VERSION_NUMBER_BIN_DB 3    // Only type this version of Tarrasch supports
+#define DATABASE_VERSION_NUMBER_LEGACY   1    // Old SQL type = supported with V3.03a
+#define DATABASE_VERSION_NUMBER_TINY     2    // Some kind of intermediate version, we don't support it any more at all
+#define DATABASE_VERSION_NUMBER_BIN_DB   3    // Up until V3.12b
+#define DATABASE_VERSION_NUMBER_LOCKABLE 4    // V3.12b** onward, supports lockable databases (retain support for previous version too) 
 #ifdef  USING_KINGBASE
 #define DEFAULT_DATABASE "kingbase-lite.tdb"
 #else

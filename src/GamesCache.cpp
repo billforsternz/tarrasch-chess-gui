@@ -542,12 +542,26 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
     long write_posn=0;
 	bool saving_work_file = (this==&objs.gl->gc_pgn);
     ProgressBar pb( "Saving file", "Saving file" );
+    bool reached_limit=false;
+    int count_to_limit=0, nbr_omitted=0;
     for( int i=0; i<gds_nbr; i++ )
     {
         bool abort = pb.Perfraction( i, gds_nbr );
         if( abort )
             break;
         ListableGame *mptr = gds[i].get();
+        if( !reached_limit && mptr->TestLocked()  )
+        {
+            if( count_to_limit >= 1000 )
+                reached_limit = true;
+            else
+                count_to_limit++;
+        }
+        if( reached_limit && mptr->TestLocked()  )
+        {
+            nbr_omitted++;
+            continue;
+        }
         mptr->saved = true;
 		int pgn_handle2;
 		bool is_pgn = mptr->GetPgnHandle(pgn_handle2);
@@ -655,8 +669,15 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
         write_posn += game_len;
     }
     delete[] buf;
+    if( reached_limit )
+    {
+        wxString msg;
+        msg.sprintf( "Some games were from a database that does not allow unrestricted export to PGN\n"
+            "%d such games were written to PGN\n"
+            "%d such games were omitted\n", count_to_limit, nbr_omitted );
+        wxMessageBox( msg, "Some games omitted from saved file\n", wxOK|wxICON_WARNING );
+    }
 }
-
 
 void GamesCache::Debug( const char *UNUSED(intro_message) )
 {

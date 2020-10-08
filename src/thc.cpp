@@ -2328,7 +2328,6 @@ void ChessRules::GenLegalMoveList( MOVELIST *list )
 {
     int i, j;
     bool okay;
-    TERMINAL terminal_score;
     MOVELIST list2;
 
     // Generate all moves, including illegal (eg put king in check) moves
@@ -2338,7 +2337,7 @@ void ChessRules::GenLegalMoveList( MOVELIST *list )
     for( i=j=0; i<list2.count; i++ )
     {
         PushMove( list2.moves[i] );
-        okay = Evaluate(terminal_score);
+        okay = Evaluate();
         PopMove( list2.moves[i] );
         if( okay )
             list->moves[j++] = list2.moves[i];
@@ -3386,6 +3385,13 @@ bool ChessRules::AttackedSquare( Square square, bool enemy_is_white )
 /****************************************************************************
  * Evaluate a position, returns bool okay (not okay means illegal position)
  ****************************************************************************/
+bool ChessRules::Evaluate()
+{
+    Square enemy_king = (Square)(white ? bking_square : wking_square);
+    // Enemy king is attacked and our move, position is illegal
+    return !AttackedPiece(enemy_king);
+}
+
 bool ChessRules::Evaluate( TERMINAL &score_terminal )
 {
 	return( Evaluate(NULL,score_terminal) );
@@ -3465,11 +3471,11 @@ void ChessRules::Transform()
         {
             src = SQ(file,r1);
             dst = SQ(file,r2);
-            if( wking_square_ == src )
+            if( wking_square == src )
                 bking_square_ = dst;
-            if( bking_square_ == src )
+            if( bking_square == src )
                 wking_square_ = dst;
-            if( enpassant_target_ == src )
+            if( enpassant_target == src )
                 enpassant_target_ = dst;
         }
     }

@@ -24,7 +24,7 @@ enum
     ID_TOURNAMENT_SITE      = 10003,
     ID_TOURNAMENT_DATE      = 10004,
     ID_TOURNAMENT_ROUND     = 10005,
-    ID_TOURNAMENT_ECO       = 10006
+    ID_TOURNAMENT_PAIRINGS  = 10006
 };
 
 // TournamentDialog class declaration
@@ -83,7 +83,7 @@ public:
     wxTextCtrl* site_ctrl;
     wxTextCtrl* date_ctrl;
     wxTextCtrl* round_ctrl;
-    wxTextCtrl* eco_ctrl;
+    wxTextCtrl* pairings_ctrl;
     static wxString remember_event;
     static wxString remember_site;
 
@@ -95,10 +95,6 @@ public:
     wxString    pairings_txt;   // White player rating Black player rating
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
 	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
-
-private:
-	std::map< std::string, std::string > lookup_elo;
-	wxWindow *previous_child_window;
 };
 
 #endif    // TOURNAMENT_DIALOG_H
