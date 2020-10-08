@@ -1244,260 +1244,261 @@ static void replace_once( std::string &s, const std::string from, const std::str
 
 
 // New in V3.01a - incorporate write file so can do that before writing dups to TarraschDbDuplicate.pgn
-bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, wxWindow *window )
+bool BinDbRemoveDuplicatesAndWrite(std::string &title, int step, FILE *ofile, wxWindow *window)
 {
 #ifdef  EXTRA_DEDUP_DIAGNOSTIC_FILE
-    wxFileName wfn2(objs.repository->log.m_file.c_str());
-    if( !wfn2.IsOk() )
-        wfn2.SetFullName("TarraschDbDuplicatesFileSpecial.pgn");
-    wfn2.SetExt("pgn");
-    wfn2.SetName("TarraschDbDuplicatesFileSpecial");
-    wxString dups_filename2 = wfn2.GetFullPath();
-    FILE *pgn_dup2 = fopen(dups_filename2.c_str(),"wb");
+	wxFileName wfn2(objs.repository->log.m_file.c_str());
+	if (!wfn2.IsOk())
+		wfn2.SetFullName("TarraschDbDuplicatesFileSpecial.pgn");
+	wfn2.SetExt("pgn");
+	wfn2.SetName("TarraschDbDuplicatesFileSpecial");
+	wxString dups_filename2 = wfn2.GetFullPath();
+	FILE *pgn_dup2 = fopen(dups_filename2.c_str(), "wb");
 #endif
-    bool ok=true;
+	bool ok = true;
 
-    // Bug fix: V3.01 Establish contiguous id range - if we have assembled multiple files it won't have happened
-    size_t nbr = games.size();
-    uint32_t id = GameIdAllocateTop(nbr);
-    for( size_t i=0; i<nbr; i++ )
-        games[i]->game_id = id++;
+	// Bug fix: V3.01 Establish contiguous id range - if we have assembled multiple files it won't have happened
+	size_t nbr = games.size();
+	uint32_t id = GameIdAllocateTop(nbr);
+	for (size_t i = 0; i < nbr; i++)
+		games[i]->game_id = id++;
 
-    // Last three steps - remove duplicates, write to file, write duplicates to TarraschDbDuplicates.pgn
-    char buf[200];
-    sprintf( buf, "%s, step %d of %d", title.c_str(), step, step+2 );
-    std::string dup_title(buf);
-    sprintf( buf, "%s, step %d of %d", title.c_str(), step+1, step+2 );
-    std::string write_title(buf);
-    sprintf( buf, "%s, step %d of %d", title.c_str(), step+2, step+2 );
-    std::string optional_title(buf);
-    {
-        BinDbShowDebugOrder( games, "Duplicate Removal - phase 1 before");
-        std::string desc("Duplicate Removal - phase 1");
-        ProgressBar progress_bar( dup_title, desc, true, window );
-        progress_bar.DrawNow();
-        sort_before( games.begin(), games.end(), predicate_sorts_by_game_moves, &progress_bar );
-        std::sort( games.begin(), games.end(), predicate_sorts_by_game_moves );
-        sort_after();
-        BinDbShowDebugOrder( games, "Duplicate Removal - phase 1 after");
-    }
-    {
-        BinDbShowDebugOrder( games, "Duplicate Removal - phase 2 before");
-        std::string desc("Duplicate Removal - phase 2");
-        ProgressBar progress_bar( dup_title, desc, true, window );
-        progress_bar.DrawNow();
-        ProgressBar *pb = &progress_bar;
-        int nbr_games = games.size();
-
-        // State variable - true when traversing duplicates
-        bool in_dups=false;
-
-        // State variable - points to first of group of duplicates
-        int start=0;
-        for( int i=0; i<nbr_games-1; i++ )    // note we stop at second last element
-        {
-            if( pb->Perfraction( i,nbr_games) )
-                return false;   // abort
-
-            // Does this element match the next element? (there's always another element because
-            //  remember we stop at second to last element not last element)
-            bool next_matches = (0 == strcmp(games[i]->CompressedMoves(),games[i+1]->CompressedMoves()) );
-
-            // end will point beyond end of a group of duplicates if we identify such a group this time
-            //  through the loop
-            int end = i;
-
-            // State machine to maintain in_dups and start state variables
-            if( in_dups )
-            {
-                if( !next_matches )
-                {
-                    in_dups = false;
-                    end = i+1;  // Leaving a group of duplicates, evaluate them
-                }
-            }
-            else
-            {
-                if( next_matches )
-                {
-                    in_dups = true;
-                    start = i;
-                }
-            }
-
-            // One special case - a group of duplicates at the end
-            bool last = (i+1 >= nbr_games-1);  // is this the last time thru loop?
-            if( last && in_dups )
-                end = i+2;  // i points at second last element, end should point beyond last element
-
-            // Found a group of (potential) duplicates. So far we only know that the moves are
-            //  identical. We have more work to do to identify the real duplicates. Real duplicates
-            //  are marked with id = GAME_ID_SENTINEL so that they group together when we do a final
-            //  sort by id.
-            if( end > i )
-            {
-
-                // First reorder the group by id
-                std::sort( games.begin()+start, games.begin()+end, predicate_sorts_by_id );
-#if 0
-                {
-                    cprintf( "Eval Dups in\n" );
-                    for( int idx=start; idx<end; idx++ )
-                    {
-                        smart_ptr<ListableGame> p = games[idx];
-                        cprintf( "%d: %s-%s, %s %d ply\n", p->game_id, p->White(), p->Black(), p->Event(), strlen(p->CompressedMoves()) );
-                    }
-                }
-#endif
-
-                // For each game in group of duplicates
-                for( int idx=start; idx<end; idx++ )
-                {
-                    smart_ptr<ListableGame> p = games[idx];
-
-                    // If the game hasn't already been marked as a dup (note first of the group is never marked as a dup)
-                    if( p->game_id != GAME_ID_SENTINEL )
-                    {
-
-                        // Sweep through the rest of the group and mark each game in turn a dup if it matches
-                        std::vector<std::string> white_tokens;
-                        Split(p->White(),white_tokens);
-                        std::vector<std::string> black_tokens;
-                        Split(p->Black(),black_tokens);
-
-                        // Note that this is a O(2) type algorithm sadly, we loop through a group of games for each
-                        //  game in main loop
-#ifdef EXTRA_DEDUP_DIAGNOSTIC_FILE
-                        int nbr_dups=0;
-#endif
-                        std::string str_dup_games;
-                        for( int j=idx+1; j<end; j++ )
-                        {
-                            smart_ptr<ListableGame> q = games[j];
-                            if( q->game_id!=GAME_ID_SENTINEL && DupDetect(p,white_tokens,black_tokens,q) )
-                            {
-                                q->game_id = GAME_ID_SENTINEL;    
-#ifdef EXTRA_DEDUP_DIAGNOSTIC_FILE
-                                GameDocument the_game;
-                                CompactGame pact;
-                                std::string str;
-                                if( nbr_dups == 0 )
-                                {
-                                    p->GetCompactGame( pact );
-                                    pact.Upscale(the_game);
-                                    the_game.ToFileTxtGameDetails( str );
-                                    str_dup_games += str;
-                                    the_game.ToFileTxtGameBody( str );
-                                    str_dup_games += str;
-                                }
-                                nbr_dups++;
-                                q->GetCompactGame( pact );
-                                pact.Upscale(the_game);
-                                the_game.ToFileTxtGameDetails( str );
-                                    str_dup_games += str;
-                                the_game.ToFileTxtGameBody( str );
-                                str_dup_games += str;
-#endif
-                            }
-#ifdef EXTRA_DEDUP_DIAGNOSTIC_FILE
-                        if( pgn_dup2 && nbr_dups>0 )
-                        {
-                            if( nbr_dups > 1 )
-                                replace_once( str_dup_games, "[White \"", "[White \"MORE-THAN-2- " ); 
-                            fwrite(str_dup_games.c_str(),1,str_dup_games.length(),pgn_dup2);
-                        }
-#endif
-                    }
-                }
-#if 0           
-                {
-                    cprintf( "Eval Dups out\n" );
-                    for( int idx=start; idx<end; idx++ )
-                    {
-                        smart_ptr<ListableGame> p = games[idx];
-                        cprintf( "%d: %s-%s, %s %d ply\n", p->game_id, p->White(), p->Black(), p->Event(), strlen(p->CompressedMoves()) );
-                    }
-                }
-#endif
-            }
-        }
-        BinDbShowDebugOrder( games, "Duplicate Removal - phase 2 after");
-    }
-    int nbr_deleted=0;
-    {
-        BinDbShowDebugOrder( games, "Duplicate Removal - phase 3 before");
-        std::string desc("Duplicate Removal - phase 3");
-        ProgressBar progress_bar( dup_title, desc, true, window );
-        //progress_bar.DrawNow();
-        sort_before( games.begin(), games.end(), predicate_sorts_by_id, &progress_bar );
-        std::sort( games.begin(), games.end(), predicate_sorts_by_id );
-        sort_after();
-
-        // Games to be deleted are at the end - with id GAME_ID_SENTINEL, count them
-        for( int i=games.size()-1; i>=0; i-- )
-        {
-            if( games[i]->game_id != GAME_ID_SENTINEL )
-                break;
-            else
-                nbr_deleted++;
-        }
-		BinDbShowDebugOrder(games, "Duplicate Removal - phase 3 after");
+	// Last three steps - remove duplicates, write to file, write duplicates to TarraschDbDuplicates.pgn
+	char buf[200];
+	sprintf(buf, "%s, step %d of %d", title.c_str(), step, step + 2);
+	std::string dup_title(buf);
+	sprintf(buf, "%s, step %d of %d", title.c_str(), step + 1, step + 2);
+	std::string write_title(buf);
+	sprintf(buf, "%s, step %d of %d", title.c_str(), step + 2, step + 2);
+	std::string optional_title(buf);
+	{
+		BinDbShowDebugOrder(games, "Duplicate Removal - phase 1 before");
+		std::string desc("Duplicate Removal - phase 1");
+		ProgressBar progress_bar(dup_title, desc, true, window);
+		progress_bar.DrawNow();
+		sort_before(games.begin(), games.end(), predicate_sorts_by_game_moves, &progress_bar);
+		std::sort(games.begin(), games.end(), predicate_sorts_by_game_moves);
+		sort_after();
+		BinDbShowDebugOrder(games, "Duplicate Removal - phase 1 after");
 	}
+	{
+		BinDbShowDebugOrder(games, "Duplicate Removal - phase 2 before");
+		std::string desc("Duplicate Removal - phase 2");
+		ProgressBar progress_bar(dup_title, desc, true, window);
+		progress_bar.DrawNow();
+		ProgressBar *pb = &progress_bar;
+		int nbr_games = games.size();
 
-    // New in V3.01a - incorporate write file so can do that before writing dups to TarraschDbDuplicate.pgn
-    if( ofile )
-    {
-        std::string desc("Writing file");
-        ProgressBar progress_bar( write_title, desc, true, window );
-        ok = BinDbWriteOutToFile(ofile,nbr_deleted,&progress_bar);
-    }
+		// State variable - true when traversing duplicates
+		bool in_dups = false;
 
-    if( nbr_deleted )
-    {
-        wxFileName wfn(objs.repository->log.m_file.c_str());
-        if( !wfn.IsOk() )
-            wfn.SetFullName("TarraschDbDuplicatesFile.pgn");
-        wfn.SetExt("pgn");
-        wfn.SetName("TarraschDbDuplicatesFile");
-        wxString dups_filename = wfn.GetFullPath();
-        FILE *pgn_dup = fopen(dups_filename.c_str(),"wb");
-        if( pgn_dup )
-	    {
-		    BinDbShowDebugOrder(games, "Duplicate Removal - phase 4 before");
-		    std::string desc("Saving duplicates to TarraschDbDuplicatesFile.pgn, cancel if not needed");
-		    ProgressBar progress_bar(optional_title, desc, true, window);
-            for( int i=games.size()-1; i>=0; i-- )
-            {
-                if( games[i]->game_id != GAME_ID_SENTINEL )
-                    break;
-                else
-                {
-                    GameDocument  the_game;
-                    CompactGame pact;
-                    games[i]->GetCompactGame( pact );
-                    pact.Upscale(the_game);
-                    std::string str;
-                    the_game.ToFileTxtGameDetails( str );
-                    if( pgn_dup )
-                        fwrite(str.c_str(),1,str.length(),pgn_dup);
-                    the_game.ToFileTxtGameBody( str );
-                    if( pgn_dup )
-                        fwrite(str.c_str(),1,str.length(),pgn_dup);
-                    if( progress_bar.Perfraction( games.size()-i, nbr_deleted ) )
-                        break;
-                }
-            }
-            fclose(pgn_dup);
-        }
-        games.erase( games.end()-nbr_deleted, games.end() );
-        cprintf( "Number of duplicates deleted: %d\n", nbr_deleted );
-        BinDbShowDebugOrder( games, "Duplicate Removal - phase 4 after");
-    }
+		// State variable - points to first of group of duplicates
+		int start = 0;
+		for (int i = 0; i < nbr_games - 1; i++)    // note we stop at second last element
+		{
+			if (pb->Perfraction(i, nbr_games))
+				return false;   // abort
+
+			// Does this element match the next element? (there's always another element because
+			//  remember we stop at second to last element not last element)
+			bool next_matches = (0 == strcmp(games[i]->CompressedMoves(), games[i + 1]->CompressedMoves()));
+
+			// end will point beyond end of a group of duplicates if we identify such a group this time
+			//  through the loop
+			int end = i;
+
+			// State machine to maintain in_dups and start state variables
+			if (in_dups)
+			{
+				if (!next_matches)
+				{
+					in_dups = false;
+					end = i + 1;  // Leaving a group of duplicates, evaluate them
+				}
+			}
+			else
+			{
+				if (next_matches)
+				{
+					in_dups = true;
+					start = i;
+				}
+			}
+
+			// One special case - a group of duplicates at the end
+			bool last = (i + 1 >= nbr_games - 1);  // is this the last time thru loop?
+			if (last && in_dups)
+				end = i + 2;  // i points at second last element, end should point beyond last element
+
+			// Found a group of (potential) duplicates. So far we only know that the moves are
+			//  identical. We have more work to do to identify the real duplicates. Real duplicates
+			//  are marked with id = GAME_ID_SENTINEL so that they group together when we do a final
+			//  sort by id.
+			if (end > i)
+			{
+
+				// First reorder the group by id
+				std::sort(games.begin() + start, games.begin() + end, predicate_sorts_by_id);
+#if 0
+				{
+					cprintf("Eval Dups in\n");
+					for (int idx = start; idx < end; idx++)
+					{
+						smart_ptr<ListableGame> p = games[idx];
+						cprintf("%d: %s-%s, %s %d ply\n", p->game_id, p->White(), p->Black(), p->Event(), strlen(p->CompressedMoves()));
+					}
+				}
+#endif
+
+				// For each game in group of duplicates
+				for (int idx = start; idx < end; idx++)
+				{
+					smart_ptr<ListableGame> p = games[idx];
+
+					// If the game hasn't already been marked as a dup (note first of the group is never marked as a dup)
+					if (p->game_id != GAME_ID_SENTINEL)
+					{
+
+						// Sweep through the rest of the group and mark each game in turn a dup if it matches
+						std::vector<std::string> white_tokens;
+						Split(p->White(), white_tokens);
+						std::vector<std::string> black_tokens;
+						Split(p->Black(), black_tokens);
+
+						// Note that this is a O(2) type algorithm sadly, we loop through a group of games for each
+						//  game in main loop
 #ifdef EXTRA_DEDUP_DIAGNOSTIC_FILE
-    if( pgn_dup2 )
-        fclose(pgn_dup2);
+						int nbr_dups = 0;
+#endif
+						std::string str_dup_games;
+						for (int j = idx + 1; j < end; j++)
+						{
+							smart_ptr<ListableGame> q = games[j];
+							if (q->game_id != GAME_ID_SENTINEL && DupDetect(p, white_tokens, black_tokens, q))
+							{
+								q->game_id = GAME_ID_SENTINEL;
+#ifdef EXTRA_DEDUP_DIAGNOSTIC_FILE
+								GameDocument the_game;
+								CompactGame pact;
+								std::string str;
+								if (nbr_dups == 0)
+								{
+									p->GetCompactGame(pact);
+									pact.Upscale(the_game);
+									the_game.ToFileTxtGameDetails(str);
+									str_dup_games += str;
+									the_game.ToFileTxtGameBody(str);
+									str_dup_games += str;
+								}
+								nbr_dups++;
+								q->GetCompactGame(pact);
+								pact.Upscale(the_game);
+								the_game.ToFileTxtGameDetails(str);
+								str_dup_games += str;
+								the_game.ToFileTxtGameBody(str);
+								str_dup_games += str;
+#endif
+							}
+#ifdef EXTRA_DEDUP_DIAGNOSTIC_FILE
+							if (pgn_dup2 && nbr_dups > 0)
+							{
+								if (nbr_dups > 1)
+									replace_once(str_dup_games, "[White \"", "[White \"MORE-THAN-2- ");
+								fwrite(str_dup_games.c_str(), 1, str_dup_games.length(), pgn_dup2);
+							}
+#endif
+						}
+					}
+#if 0           
+					{
+						cprintf("Eval Dups out\n");
+						for (int idx = start; idx < end; idx++)
+						{
+							smart_ptr<ListableGame> p = games[idx];
+							cprintf("%d: %s-%s, %s %d ply\n", p->game_id, p->White(), p->Black(), p->Event(), strlen(p->CompressedMoves()));
+						}
+					}
+#endif
+				}
+			}
+			BinDbShowDebugOrder(games, "Duplicate Removal - phase 2 after");
+		}
+		int nbr_deleted = 0;
+		{
+			BinDbShowDebugOrder(games, "Duplicate Removal - phase 3 before");
+			std::string desc("Duplicate Removal - phase 3");
+			ProgressBar progress_bar(dup_title, desc, true, window);
+			//progress_bar.DrawNow();
+			sort_before(games.begin(), games.end(), predicate_sorts_by_id, &progress_bar);
+			std::sort(games.begin(), games.end(), predicate_sorts_by_id);
+			sort_after();
+
+			// Games to be deleted are at the end - with id GAME_ID_SENTINEL, count them
+			for (int i = games.size() - 1; i >= 0; i--)
+			{
+				if (games[i]->game_id != GAME_ID_SENTINEL)
+					break;
+				else
+					nbr_deleted++;
+			}
+			BinDbShowDebugOrder(games, "Duplicate Removal - phase 3 after");
+		}
+
+		// New in V3.01a - incorporate write file so can do that before writing dups to TarraschDbDuplicate.pgn
+		if (ofile)
+		{
+			std::string desc("Writing file");
+			ProgressBar progress_bar(write_title, desc, true, window);
+			ok = BinDbWriteOutToFile(ofile, nbr_deleted, &progress_bar);
+		}
+
+		if (nbr_deleted)
+		{
+			wxFileName wfn(objs.repository->log.m_file.c_str());
+			if (!wfn.IsOk())
+				wfn.SetFullName("TarraschDbDuplicatesFile.pgn");
+			wfn.SetExt("pgn");
+			wfn.SetName("TarraschDbDuplicatesFile");
+			wxString dups_filename = wfn.GetFullPath();
+			FILE *pgn_dup = fopen(dups_filename.c_str(), "wb");
+			if (pgn_dup)
+			{
+				BinDbShowDebugOrder(games, "Duplicate Removal - phase 4 before");
+				std::string desc("Saving duplicates to TarraschDbDuplicatesFile.pgn, cancel if not needed");
+				ProgressBar progress_bar(optional_title, desc, true, window);
+				for (int i = games.size() - 1; i >= 0; i--)
+				{
+					if (games[i]->game_id != GAME_ID_SENTINEL)
+						break;
+					else
+					{
+						GameDocument  the_game;
+						CompactGame pact;
+						games[i]->GetCompactGame(pact);
+						pact.Upscale(the_game);
+						std::string str;
+						the_game.ToFileTxtGameDetails(str);
+						if (pgn_dup)
+							fwrite(str.c_str(), 1, str.length(), pgn_dup);
+						the_game.ToFileTxtGameBody(str);
+						if (pgn_dup)
+							fwrite(str.c_str(), 1, str.length(), pgn_dup);
+						if (progress_bar.Perfraction(games.size() - i, nbr_deleted))
+							break;
+					}
+				}
+				fclose(pgn_dup);
+			}
+			games.erase(games.end() - nbr_deleted, games.end());
+			cprintf("Number of duplicates deleted: %d\n", nbr_deleted);
+			BinDbShowDebugOrder(games, "Duplicate Removal - phase 4 after");
+		}
+#ifdef EXTRA_DEDUP_DIAGNOSTIC_FILE
+		if (pgn_dup2)
+			fclose(pgn_dup2);
 #endif    
-    return true;
+		return true;
+	}
 }
 
 // Return bool okay
