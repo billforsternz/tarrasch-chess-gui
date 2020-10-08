@@ -563,6 +563,7 @@ public:
     bool IsInsufficientDraw( bool white_asks, DRAWTYPE &result );
 
     // Evaluate a position, returns bool okay (not okay means illegal position)
+    bool Evaluate();
     bool Evaluate( TERMINAL &score_terminal );
 
     // Is a square is attacked by enemy ?
