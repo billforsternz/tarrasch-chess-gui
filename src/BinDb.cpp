@@ -186,7 +186,7 @@ static uint8_t compatibility_header[] =
  /*000480*/  0x65, 0x20, 0x6E, 0x65, 0x77, 0x65, 0x72, 0x20, 0x63, 0x75, 0x73, 0x74, 0x6F, 0x6D, 0x20, 0x69,  //e newer custom i
  /*000490*/  0x6E, 0x2D, 0x6D, 0x65, 0x6D, 0x6F, 0x72, 0x79, 0x20, 0x62, 0x69, 0x6E, 0x61, 0x72, 0x79, 0x20,  //n-memory binary
  /*0004A0*/  0x64, 0x61, 0x74, 0x61, 0x62, 0x61, 0x73, 0x65, 0x20, 0x66, 0x6F, 0x72, 0x6D, 0x61, 0x74,        //database format
- /*0004AF*/  DATABASE_VERSION_NUMBER_BIN_DB                                                                   //.
+ /*0004AF*/  DATABASE_VERSION_NUMBER_LOCKABLE                                                                 //.
 };
 
 #define COMPATIBILITY_HEADER_SIZE 1200  // = 0x4b0
@@ -227,6 +227,7 @@ bool BinDbOpen( const char *db_file, std::string &error_msg )
                 int version = buf[compatibility_header_size-1];
                 char vtxt[40];
                 sprintf( vtxt, "%d", version );
+                bool lockable = false;
                 if( version == DATABASE_VERSION_NUMBER_BIN_DB )
                     ok = true;
                 else if( version < DATABASE_VERSION_NUMBER_BIN_DB )
@@ -236,7 +237,12 @@ bool BinDbOpen( const char *db_file, std::string &error_msg )
                         "If that works, append a small (even empty) pgn to rewrite to a newer format. "
                         "Tarrasch V3.03 can be downloaded from https://triplehappy.com/downloads/portable-tarrasch-v3.03a-g.zip.";
                 }
-                else if( version > DATABASE_VERSION_NUMBER_BIN_DB )
+                else if( version == DATABASE_VERSION_NUMBER_LOCKABLE )
+                {
+                    lockable = true;
+                    ok = true;
+                }
+                else if( version > DATABASE_VERSION_NUMBER_LOCKABLE )
                 {
                     error_msg = "Tarrasch database file " + std::string(db_file) + " expects a more recent version of Tarrasch (DB format =" + std::string(vtxt) + "), it is incompatible with this older version of Tarrasch";
                 }
@@ -707,11 +713,12 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
 
 struct FileHeader
 {
-    int hdr_len;       // This was first version, then reserved, now is a future compatibility feature
+    int hdr_len;        // This was first version, then reserved, now is a future compatibility feature
     int nbr_players;
     int nbr_events;
     int nbr_sites;
     int nbr_games;
+    int locked;         // added with DATABASE_VERSION_NUMBER_LOCKABLE
 };
 
 bool TestBinaryBlock()
@@ -1521,6 +1528,7 @@ bool BinDbWriteOutToFile( FILE *ofile, int nbr_to_omit_from_end, ProgressBar *pb
     fh.nbr_events  = std::distance( set_event.begin(),  set_event.end() );
     fh.nbr_sites   = std::distance( set_site.begin(),   set_site.end() );
     fh.nbr_games   = games.size() - nbr_to_omit_from_end;
+    fh.locked = false;
     cprintf( "%d games, %d players, %d events, %d sites\n", fh.nbr_games, fh.nbr_players, fh.nbr_events, fh.nbr_sites );
     int nbr_bits_player = BitsRequired(fh.nbr_players);
     int nbr_bits_event  = BitsRequired(fh.nbr_events);  
@@ -1665,10 +1673,16 @@ bool BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > 
     int nbr_bits_site   = BitsRequired(fh.nbr_sites);
     cprintf( "%d player bits, %d event bits, %d site bits\n", nbr_bits_player, nbr_bits_event, nbr_bits_site );
     int hdr_len = fh.hdr_len;   // future compatibility feature - if FileHeader gets longer so will fh.hdr_len
-    if( hdr_len < sizeof(FileHeader) )
-        hdr_len = sizeof(FileHeader);  
+    bool locked_database = false;
+    if( hdr_len >= sizeof(FileHeader) )  // we support VERSION_NUMBER_BIN_DB which predates VERSION_NUMBER_BIN_LOCKABLE
+    {                                    //  databases of that version have a smaller header without lockable
+        locked_database = static_cast<bool>(fh.locked);
+    }
     if( hdr_len != sizeof(FileHeader) )
-        fseek(fin,compatibility_header_size+hdr_len,SEEK_SET);  // if necessary skip over unknown extensions to header
+    {
+        fseek(fin,compatibility_header_size+hdr_len,SEEK_SET);  // if necessary skip to a different point than
+                                                                //  beyond header
+    }
     ReadStrings( fin, fh.nbr_players, cb.players );
     cprintf( "Players ReadStrings() complete\n" );
     ReadStrings( fin, fh.nbr_events, cb.events );
@@ -1759,6 +1773,7 @@ bool BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > 
 		std::string blob = game_header + game_moves;
         ListableGameBinDb info( cb_idx, game_id, blob );
         make_smart_ptr( ListableGameBinDb, new_info, info );
+        new_info->SetLocked( locked_database );
         mega_cache.push_back( std::move(new_info) );
         int num = i;
         int den = game_count?game_count:1;
@@ -1767,7 +1782,7 @@ bool BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > 
         else
             background_load_permill = (num*1000) / den;
         nbr_games++;
-        if( info.game_attributes )
+        if( info.TestPromotion() )
             nbr_promotion_games++;
         if(
 #ifdef _DEBUG
