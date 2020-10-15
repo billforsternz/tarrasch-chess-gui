@@ -58,3 +58,55 @@ void Log::SaveGame( GameDocument *gd, bool editing_log )
     }
 }
 
+void Log::EmergencySaveGame( GameDocument *gd, bool first, bool last, std::string &filename_used )
+{
+    if( first )
+    {
+        emergency_file = NULL;
+        filename_used = "";
+        emergency_filelen_delta = 0;
+        std::string log_filename( objs.repository->log.m_file.c_str() );
+        if( ::wxFileExists(log_filename) )
+            emergency_filetime_before = ::wxFileModificationTime(log_filename);
+        emergency_file = fopen( log_filename.c_str(), "ab" );
+
+        // If cannot open the normal log file, try writing to EmergencySaveFile.pgn instead
+        if( !emergency_file )
+        {
+            wxFileName wfn(log_filename.c_str());
+            if( !wfn.IsOk() )
+                wfn.SetFullName("EmergencySaveFile.pgn");
+            wfn.SetExt("pgn");
+            wfn.SetName("EmergencySaveFile");
+            log_filename = wfn.GetFullPath();
+            if( ::wxFileExists(log_filename) )
+                emergency_filetime_before = ::wxFileModificationTime(log_filename);
+            emergency_file = fopen( log_filename.c_str(), "ab" );
+        }
+        if( emergency_file )
+        {
+            filename_used = log_filename;
+			objs.gl->mru.AddFileToHistory( log_filename.c_str() );
+        }
+    }
+    if( emergency_file && !gd->IsEmpty() )
+    {
+        gd->FleshOutDate();
+        gd->FleshOutMoves();
+        std::string head2;
+        gd->ToFileTxtGameDetails( head2 );
+        std::string body2;
+        gd->ToFileTxtGameBody( body2 );
+        fseek(emergency_file,0,SEEK_END);
+        if( first )
+            emergency_filelen_before = ftell(emergency_file);
+        fwrite( head2.c_str(), 1, head2.length(), emergency_file );
+        fwrite( body2.c_str(), 1, body2.length(), emergency_file );
+        emergency_filelen_delta += (head2.length()+body2.length());
+    }
+    if( emergency_file && last )
+    {
+        fclose( emergency_file );
+        objs.gl->pf.UpdateKnownFile( filename_used, emergency_filetime_before, emergency_filelen_before, emergency_filelen_delta );
+    }
+}

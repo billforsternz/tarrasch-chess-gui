@@ -6,6 +6,7 @@
  ****************************************************************************/
 #include <time.h> // time_t
 #include <stdio.h>
+#include <set>
 #include "wx/wx.h"
 #include "wx/valtext.h"
 #include "wx/valgen.h"
@@ -24,11 +25,30 @@
 #include "ListableGamePgn.h"
 #include "PgnRead.h"
 #include "ProgressBar.h"
+#include "Log.h"
 #include "Eco.h"
 #include "GamesCache.h"
 using namespace std;
 
 bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen );
+
+static void FileConflictError( const wxString &msg,  bool unconditional=false );
+static void FileConflictError( bool unconditional=false )
+{
+    wxString default_msg =
+        "Error: An external program may have modified a PGN file or files Tarrasch is using.\n" 
+        "Please save any work in progress to a fresh file and restart Tarrasch (i.e. shut it down and and start it again).\n";
+    FileConflictError( default_msg, unconditional );
+}
+
+static void FileConflictError( const wxString &msg, bool unconditional )
+{
+    static unsigned long previous = 0;
+    unsigned long now = GetTickCount();
+    if( unconditional || previous==0 || now-previous>10000 ) // no more than once every 10 seconds
+        wxMessageBox( msg, "File usage conflict detected\n", wxOK|wxICON_ERROR );
+    previous = now;
+}
 
 #if 0
 static bool operator < (const smart_ptr<GameDocument>& left,
@@ -296,9 +316,19 @@ void *ReadGameFromPgnInLoop( int pgn_handle, long fposn, CompactGame &pact, void
         pgn_file  = objs.gl->pf.ReopenRead( pgn_handle );
         save_pgn_handle = pgn_handle;
     }
-    fseek( pgn_file, fposn, SEEK_SET );
-    phook = &pact;
-    pgn->Process(pgn_file);
+    if( pgn_file )
+    {
+        fseek( pgn_file, fposn, SEEK_SET );
+        phook = &pact;
+        pgn->Process(pgn_file);
+    }
+    else
+    {
+        // This shouldn't happen
+        CompactGame empty;
+        pact = empty;
+        FileConflictError();
+    }
     if( end )
     {
         objs.gl->pf.Close();
@@ -319,6 +349,15 @@ void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &new_doc )
     FILE *pgn_file = objs.gl->pf.ReopenRead( pgn_handle );
     std::string moves;
     int typ;
+    if( !pgn_file )
+    {
+        // This shouldn't happen
+        GameDocument empty;
+        new_doc = empty;
+        FileConflictError();
+        objs.gl->pf.Close();
+        return;
+    }
     fseek( pgn_file, fposn, SEEK_SET );
     char buf[2048];
     bool done = PgnStateMachine( NULL, typ,  buf, sizeof(buf) );
@@ -473,7 +512,11 @@ void GamesCache::FileSave( GamesCache *gc_clipboard )
     FILE *pgn_in;
     FILE *pgn_out;
     bool ok = objs.gl->pf.ReopenModify( pgn_handle, pgn_in, pgn_out, gc_clipboard );
-    if( ok )
+    if( !ok )
+    {
+        FileConflictError();
+    }
+    else
     {
         FileSaveInner( pgn_out );
         objs.gl->pf.Close( gc_clipboard );    // close all handles
@@ -486,7 +529,11 @@ void GamesCache::FileSaveAs( std::string &filename, GamesCache *gc_clipboard )
     FILE *pgn_in;
     FILE *pgn_out;
     bool ok = objs.gl->pf.ReopenCopy( pgn_handle, filename, pgn_in, pgn_out, gc_clipboard );
-    if( ok )
+    if( !ok )
+    {
+        FileConflictError();
+    }
+    else
     {
         pgn_filename = filename;
 		wxString wx_filename(filename.c_str());
@@ -541,26 +588,54 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
     int gds_nbr = gds.size();
     long write_posn=0;
 	bool saving_work_file = (this==&objs.gl->gc_pgn);
+    int nbr_game_documents=0, nbr_emergency_games_written=0;
+    int nbr_unavailable_games=0, nbr_unavailable_files=0;
+    std::set<int> handles;
+    std::set<int> unavailable_handles;
+    for( int i=0; i<gds_nbr; i++ )
+    {
+        ListableGame *mptr = gds[i].get();
+        if( mptr->IsGameDocument() && !mptr->IsGameDocument()->IsEmpty() )
+            nbr_game_documents++;
+		int pgn_handle2;
+		bool is_pgn = mptr->GetPgnHandle(pgn_handle2);
+        if( is_pgn )
+            handles.insert(pgn_handle2);
+    }
+    bool unavailable_handles_found = false;
+    for( int handle: handles )
+    {
+        if( !objs.gl->pf.IsAvailable(handle))
+        {
+            nbr_unavailable_files++;
+            unavailable_handles.insert(handle);
+            unavailable_handles_found = true;
+        }
+    }
     ProgressBar pb( "Saving file", "Saving file" );
     bool reached_limit=false;
-    int count_to_limit=0, nbr_omitted=0;
+    int count_to_limit=0, nbr_locked=0, nbr_omitted=0;
     for( int i=0; i<gds_nbr; i++ )
     {
         bool abort = pb.Perfraction( i, gds_nbr );
         if( abort )
             break;
         ListableGame *mptr = gds[i].get();
-        if( !reached_limit && mptr->TestLocked()  )
+        if( mptr->TestLocked()  )
         {
-            if( count_to_limit >= 1000 )
-                reached_limit = true;
+            nbr_locked++;
+            if( reached_limit )
+            {
+                nbr_omitted++;
+                continue;
+            }
             else
-                count_to_limit++;
-        }
-        if( reached_limit && mptr->TestLocked()  )
-        {
-            nbr_omitted++;
-            continue;
+            {
+                if( count_to_limit >= 1000 )
+                    reached_limit = true;
+                else
+                    count_to_limit++;
+            }
         }
         mptr->saved = true;
 		int pgn_handle2;
@@ -569,30 +644,35 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
         if( is_pgn )
         {
 
-            // Read data from a .pgn
-            long fposn = mptr->GetFposn();
-
-            // If we are copying the file, update the position to be the new write position in the file
-            if( pgn_handle == pgn_handle2 )
-                mptr->SetFposn( write_posn );
-
-            // Get FILE * for reading - note this doesn't usually require a new fopen()
-            FILE *pgn_in2 = objs.gl->pf.ReopenRead( pgn_handle2);
-            if( pgn_in2 )
+            // Just skip over unavailable games
+            if( unavailable_handles.find(pgn_handle2) == unavailable_handles.end() )
             {
-                fseek( pgn_in2, fposn, SEEK_SET );
-                char buf2[2048];
-                int typ;
-                bool done = PgnStateMachine( NULL, typ,  buf2, sizeof(buf2) );
-                while( !done )
+
+                // Read data from a .pgn
+                long fposn = mptr->GetFposn();
+
+                // If we are copying the file, update the position to be the new write position in the file
+                if( pgn_handle == pgn_handle2 )
+                    mptr->SetFposn( write_posn );
+
+                // Get FILE * for reading - note this doesn't usually require a new fopen()
+                FILE *pgn_in2 = objs.gl->pf.ReopenRead( pgn_handle2);
+                if( pgn_in2 )
                 {
-                    done = PgnStateMachine( pgn_in2, typ,  buf2, sizeof(buf2) );
-                    if( !done )
+                    fseek( pgn_in2, fposn, SEEK_SET );
+                    char buf2[2048];
+                    int typ;
+                    bool done = PgnStateMachine( NULL, typ,  buf2, sizeof(buf2) );
+                    while( !done )
                     {
-                        fputs( buf2, pgn_out );
-                        game_len += strlen(buf2);
-                        if( typ == 'G' )
-                            break;
+                        done = PgnStateMachine( pgn_in2, typ,  buf2, sizeof(buf2) );
+                        if( !done )
+                        {
+                            fputs( buf2, pgn_out );
+                            game_len += strlen(buf2);
+                            if( typ == 'G' )
+                                break;
+                        }
                     }
                 }
             }
@@ -619,7 +699,7 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
 					objs.tabs->Iterate(handle,pd,pu);
 				}
 			}
-			if (!ptr)
+            if( !ptr )
 			{
 				mptr->ConvertToGameDocument(gd_temp);
 				ptr = &gd_temp;
@@ -631,6 +711,8 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
             ptr->pgn_handle = pgn_handle;  // irrespective of where it came from, now this
                                            //  game is in this file
             ptr->fposn0 = write_posn;      // at this position
+                                           // This worried me one time I looked at it - what if it's say a DB game?
+                                           //  in that case we are only changing the gd_temp *temporary* document
             std::string s = ptr->prefix_txt;
             int len = s.length();
             #ifdef _WINDOWS
@@ -662,7 +744,6 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
             fwrite(str.c_str(),1,str.length(),pgn_out);
             game_len += str.length();
             ptr->fposn3 = write_posn + game_len;
-                    
 			if( save_changes_back_to_tab )
 				*save_changes_back_to_tab = *ptr;
         }
@@ -672,10 +753,69 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
     if( reached_limit )
     {
         wxString msg;
-        msg.sprintf( "Some games were from a database that does not allow unrestricted export to PGN\n"
-            "%d such games were written to PGN\n"
-            "%d such games were omitted\n", count_to_limit, nbr_omitted );
+        if( nbr_locked >= gds_nbr )
+        {
+            msg.sprintf( "These games are from a database that does not allow unrestricted export to PGN\n"
+                "%d such games were written to PGN\n"
+                "%d such games were omitted\n", count_to_limit, nbr_omitted );
+        }
+        else
+        {
+            msg.sprintf( "Some games were from a database that does not allow unrestricted export to PGN\n"
+                "%d such games were written to PGN\n"
+                "%d such games were omitted\n", count_to_limit, nbr_omitted );
+        }
         wxMessageBox( msg, "Some games omitted from saved file\n", wxOK|wxICON_WARNING );
+    }
+    if( unavailable_handles_found )
+    {
+        std::string filename_used;
+        bool first=true, last=false;
+        for( int i=0; i<gds_nbr && nbr_game_documents>0; i++ )
+        {
+            ListableGame *mptr = gds[i].get();
+		    int pgn_handle2;
+    		bool is_pgn = mptr->GetPgnHandle(pgn_handle2);
+            if( is_pgn && unavailable_handles.find(pgn_handle2) != unavailable_handles.end() )
+                nbr_unavailable_games++;
+            if( mptr->IsGameDocument() && !mptr->IsGameDocument()->IsEmpty() )
+            {
+                last = (++nbr_emergency_games_written >= nbr_game_documents);
+                objs.log->EmergencySaveGame( mptr->IsGameDocument(), first, last, filename_used );
+                if( first && filename_used == "" )
+                    break;
+                first = false;
+            }
+        }
+        if( filename_used=="" || nbr_game_documents==0 )
+        {
+            FileConflictError( true );  // just use default message
+        }
+        else
+        {
+            wxString msg;
+            if( nbr_game_documents + nbr_unavailable_games >= gds_nbr )
+            {
+                msg.sprintf( "Error: An external program may have modified a PGN file or files Tarrasch is using.\n" 
+                "To try to avoid losing your work %d %s added to file %s.\n"
+                "Please save any other work in progress to a fresh file and restart Tarrasch (i.e. shut it down and and start it again).\n",
+                    nbr_game_documents, nbr_game_documents>1 ?"games were":"game was", filename_used
+                  );
+
+            }
+            else
+            {
+                msg.sprintf( "The file could not be written completely because it contained %d %s from %s apparently been changed by an external program.\n"
+                "To try to avoid losing your work %d %s added to file %s.\n"
+                "Please save any other work in progress to a fresh file and restart Tarrasch (i.e. shut it down and and start it again).\n",
+                    nbr_unavailable_games,
+                    nbr_unavailable_games>1 ? "games" : "game",
+                    nbr_unavailable_files>1 ? "PGN files that have" : "a PGN file that has",
+                    nbr_game_documents, nbr_game_documents>1?"games were":"game was", filename_used
+                  );
+            }
+            FileConflictError( msg, true );
+        }
     }
 }
 
