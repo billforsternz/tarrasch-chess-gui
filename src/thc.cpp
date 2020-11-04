@@ -7007,31 +7007,60 @@ bool Move::NaturalIn( ChessRules *cr, const char *natural_in )
         }
 
         // Promotion
-        if( strchr(move,'=') )
-        {
-            switch( move[len-1] )
+        if( len>2 )  // We are supporting "ab" to mean Pawn a5xb6 (say), and this test makes sure we don't
+        {            // mix that up with a lower case bishop promotion, and that we don't reject "ef" say
+                     // on the basis that 'F' is not a promotion indication. We've never supported "abQ" say
+                     // as a7xb8=Q, and we still don't so "abb" as a bishop promotion doesn't work, but we
+                     // continue to support "ab=Q", and even "ab=b".
+                     // The test also ensures we can access move[len-2] below
+                     // These comments added when we changed the logic to support "b8Q" and "a7xb8Q", the
+                     // '=' can optionally be omitted in such cases, the first change in this code for many,
+                     // many years.
+            char last = move[len-1];
+            bool is_file = ('1'<=last && last<='8');
+            if( !is_file )
             {
-                case 'q':
-                case 'Q':   promotion='Q';  break;
-                case 'r':
-                case 'R':   promotion='R';  break;
-                case 'b':
-                case 'B':   promotion='B';  break;
-                case 'n':
-                case 'N':   promotion='N';  break;
-                default:    okay = false;   break;
-            }
-            if( okay )
-            {
+                switch( last )
+                {
+                    case 'O':
+                    case 'o':   break;  // Allow castling!
+                    case 'q':
+                    case 'Q':   promotion='Q';  break;
+                    case 'r':
+                    case 'R':   promotion='R';  break;
+                    case 'b':   if( len==3 && '2'<=move[1] && move[1]<='7' )
+                                    break;  // else fall through to promotion - allows say "a5b" as disambiguating
+                                            //  version of "ab" if there's more than one "ab" available! Something
+                                            //  of an ultra refinement
+                    case 'B':   promotion='B';  break;
+                    case 'n':
+                    case 'N':   promotion='N';  break;
+                    default:    okay = false;   break;   // Castling and promotions are the only cases longer than 2
+                                                         //  chars where a non-file ends a move. (Note we still accept
+                                                         //  2 character pawn captures like "ef").
+                }
+                if( promotion )
+                {
+                    switch( move[len-2] )
+                    {
+                        case '=':
+                        case '1':   // we now allow '=' to be omitted, as eg ChessBase mobile seems to (sometimes?)
+                        case '8':   break;
+                        default:    okay = false;   break;
+                    }
+                    if( okay )
+                    {
 
-                // Trim string from end, again
-                move[len-1] = '\0';
-                s = strchr(move,'\0') - 1;
-                while( s>=move && !(isascii(*s) && isalnum(*s)) )
-                    *s-- = '\0';
-                len = (int)strlen(move);
-            }
-        }    
+                        // Trim string from end, again
+                        move[len-1] = '\0';     // Get rid of 'Q', 'N' etc
+                        s = move + len-2;
+                        while( s>=move && !(isascii(*s) && isalnum(*s)) )
+                            *s-- = '\0';    // get rid of '=' but not '1','8'
+                        len = (int)strlen(move);
+                    }
+                }
+            }    
+        }
     }
 
     // Castling
@@ -7061,8 +7090,15 @@ bool Move::NaturalIn( ChessRules *cr, const char *natural_in )
         if( len==2 && 'a'<=move[0] && move[0]<='h'
                    && 'a'<=move[1] && move[1]<='h' )
         {
-            src_file = move[0]; // pawn takes pawn
+            src_file = move[0]; // eg "ab" pawn takes pawn
             dst_file = move[1];
+        }
+        else if( len==3 && 'a'<=move[0] && move[0]<='h'
+                        && '2'<=move[1] && move[1]<='7'
+                        && 'a'<=move[2] && move[2]<='h' )
+        {
+            src_file = move[0]; // eg "a3b"  pawn takes pawn
+            dst_file = move[2];
         }
         else if( len>=2 && 'a'<=move[len-2] && move[len-2]<='h'
                         && '1'<=move[len-1] && move[len-1]<='8' )
@@ -7300,6 +7336,8 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
      Handles moves of the following type
      exd8=N
      e8=B
+     exd8N
+     e8B
      exd5
      e4
      Nf3
@@ -7344,8 +7382,10 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                 }
 
                 // Non capturing, promoting pawn move
-                else if( r=='8' && *natural_in++=='=' )
+                else if( r=='8' )
                 {
+                    if( *natural_in == '=' )    // now optional
+                        natural_in++;
                     mv.dst = SQ(f,r);
                     mv.src = SOUTH(mv.dst);
                     if( cr->squares[mv.src]=='P' && cr->squares[mv.dst]==' ')
@@ -7414,8 +7454,10 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                     }
                     
                     // Promoting, capturing pawn move
-                    else if( r=='8' && *natural_in++=='=' )
+                    else if( r=='8' )
                     {
+                        if( *natural_in == '=' )    // now optional
+                            natural_in++;
                         mv.dst = SQ(g,r);
                         mv.src = SQ(f,r-1);
                         if( cr->squares[mv.src]=='P' && IsBlack(cr->squares[mv.dst]) )
@@ -7694,8 +7736,10 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                 }
                 
                 // Non capturing, promoting pawn move
-                else if( r=='1' && *natural_in++=='=' )
+                else if( r=='1' )
                 {
+                    if( *natural_in == '=' )    // now optional
+                        natural_in++;
                     mv.dst = SQ(f,r);
                     mv.src = NORTH(mv.dst);
                     if( cr->squares[mv.src]=='p' && cr->squares[mv.dst]==' ')
@@ -7764,8 +7808,10 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                     }
                     
                     // Promoting, capturing pawn move
-                    else if( r=='1' && *natural_in++=='=' )
+                    else if( r=='1' )
                     {
+                        if( *natural_in == '=' )    // now optional
+                            natural_in++;
                         mv.dst = SQ(g,r);
                         mv.src = SQ(f,r+1);
                         if( cr->squares[mv.src]=='p' && IsWhite(cr->squares[mv.dst]) )
