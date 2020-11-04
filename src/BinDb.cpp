@@ -979,6 +979,21 @@ static bool IsPlayerMatch( const char *player, std::vector<std::string> &tokens 
     return false;
 }
 
+//  match only if years are present and match
+static bool IsYearMatch( const char *date1, const char *date2 )
+{
+    if( !date1 || !date2 )
+        return false;
+    for( int i=0; i<4; i++ )
+    {
+        if( *date1=='\0' || *date2=='\0' )
+            return false;
+        if( *date1++ != *date2++ )
+            return false;
+    }
+    return true;
+}
+
 uint32_t BinDbGetGamesSize()
 {
     return games.size();
@@ -1045,7 +1060,8 @@ static bool DupDetect( smart_ptr<ListableGame> p1, std::vector<std::string> &whi
     if( !black_match )
         black_match = IsPlayerMatch(p2->Black(),black_tokens1);
     bool result_match = (p1->ResultBin() == p2->ResultBin() );
-    bool dup = (white_match && black_match && /*date_match &&*/ result_match);
+    bool year_match = IsYearMatch( p1->Date(),  p2->Date() );   // best by test - require a yyyy match, but not an exact yyyy-mm-dd match
+    bool dup = (white_match && black_match && year_match && result_match);
     return dup;
 }
 
