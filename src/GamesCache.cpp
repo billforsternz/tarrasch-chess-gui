@@ -756,14 +756,16 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
         if( nbr_locked >= gds_nbr )
         {
             msg.sprintf( "These games are from a database that does not allow unrestricted export to PGN\n"
-                "%d such games were written to PGN\n"
-                "%d such games were omitted\n", count_to_limit, nbr_omitted );
+                "%d such %s written to PGN\n"
+                "%d such %s omitted\n", count_to_limit, count_to_limit==1?"game was":"games were", 
+                                        nbr_omitted, nbr_omitted==1?"game was":"games were" );
         }
         else
         {
             msg.sprintf( "Some games were from a database that does not allow unrestricted export to PGN\n"
-                "%d such games were written to PGN\n"
-                "%d such games were omitted\n", count_to_limit, nbr_omitted );
+                "%d such %s written to PGN\n"
+                "%d such %s omitted\n", count_to_limit, count_to_limit==1?"game was":"games were", 
+                                        nbr_omitted, nbr_omitted==1?"game was":"games were" );
         }
         wxMessageBox( msg, "Some games omitted from saved file\n", wxOK|wxICON_WARNING );
     }
