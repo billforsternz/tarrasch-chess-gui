@@ -1306,9 +1306,6 @@ bool GameLogic::ProbeControlBlocks()
 
 void GameLogic::CmdDatabaseSelect()
 {
-    bool okay=ProbeControlBlocks();
-    if( !okay )
-        return;
     Atomic begin;
     wxFileDialog fd( objs.frame, "Select current database", "", "", "*.tdb", wxFD_FILE_MUST_EXIST );
     wxString path( objs.repository->database.m_file );
@@ -1324,15 +1321,56 @@ void GameLogic::CmdDatabaseSelect()
         wxMutexLocker lock(*ptr_mutex_tiny_database);
         {
             cprintf( "...CmdDatabaseSelect() if we did wait, that wait is now over (%d)\n", temp );
-            wxString s = fd.GetPath();
+            bool okay=ProbeControlBlocks();
+            if( okay )
+            {
+                wxString s = fd.GetPath();
+                wxString previous = objs.repository->database.m_file;
+                const char *filename = s.c_str();
+                cprintf( "File is %s\n", filename );
+                objs.db->Reopen(filename);
+                std::string error_msg;
+                bool operational = objs.db->IsOperational(error_msg);
+                if( operational )
+                    objs.repository->database.m_file = s;
+                else
+                {
+                    objs.db->Reopen(previous);
+                    wxMessageBox( error_msg.c_str(), "Database selection failed", wxOK|wxICON_ERROR );
+                }
+            }
+        }
+    }
+    atom.StatusUpdate();
+}
+
+void GameLogic::CmdDatabaseOpen( std::string filename )
+{
+    Atomic begin;
+    static int count;
+    int temp = ++count;
+    cprintf( "CmdDatabaseOpen(): May (not) wait for tiny database load here (%d)...\n", temp );
+    extern wxMutex *DontWaitForWorkerThread();
+    wxMutex *ptr_mutex_tiny_database = DontWaitForWorkerThread();
+    wxMutexLocker lock(*ptr_mutex_tiny_database);
+    {
+        cprintf( "...CmdDatabaseOpen() if we did wait, that wait is now over (%d)\n", temp );
+        bool okay=ProbeControlBlocks();
+        if( okay )
+        {
             wxString previous = objs.repository->database.m_file;
-            const char *filename = s.c_str();
-            cprintf( "File is %s\n", filename );
-            objs.db->Reopen(filename);
+            cprintf( "File is %s\n", filename.c_str() );
+		    std::string current;
+		    bool running = objs.db->GetFile(current);
+		    if( !running || current!=filename )
+			    objs.db->Reopen(filename.c_str());
             std::string error_msg;
             bool operational = objs.db->IsOperational(error_msg);
             if( operational )
+		    {
+	            wxString s(filename.c_str());
                 objs.repository->database.m_file = s;
+		    }
             else
             {
                 objs.db->Reopen(previous);
@@ -1343,47 +1381,8 @@ void GameLogic::CmdDatabaseSelect()
     atom.StatusUpdate();
 }
 
-void GameLogic::CmdDatabaseOpen( std::string filename )
-{
-    bool okay=ProbeControlBlocks();
-    if( !okay )
-        return;
-    Atomic begin;
-    static int count;
-    int temp = ++count;
-    cprintf( "CmdDatabaseOpen(): May (not) wait for tiny database load here (%d)...\n", temp );
-    extern wxMutex *DontWaitForWorkerThread();
-    wxMutex *ptr_mutex_tiny_database = DontWaitForWorkerThread();
-    wxMutexLocker lock(*ptr_mutex_tiny_database);
-    {
-        cprintf( "...CmdDatabaseOpen() if we did wait, that wait is now over (%d)\n", temp );
-        wxString previous = objs.repository->database.m_file;
-        cprintf( "File is %s\n", filename.c_str() );
-		std::string current;
-		bool running = objs.db->GetFile(current);
-		if( !running || current!=filename )
-			objs.db->Reopen(filename.c_str());
-        std::string error_msg;
-        bool operational = objs.db->IsOperational(error_msg);
-        if( operational )
-		{
-	        wxString s(filename.c_str());
-            objs.repository->database.m_file = s;
-		}
-        else
-        {
-            objs.db->Reopen(previous);
-            wxMessageBox( error_msg.c_str(), "Database selection failed", wxOK|wxICON_ERROR );
-        }
-    }
-    atom.StatusUpdate();
-}
-
 void GameLogic::CmdDatabaseCreate()
 {
-    bool okay=ProbeControlBlocks();
-    if( !okay )
-        return;
     Atomic begin;
     wxString db_name;
 	DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
@@ -1408,18 +1407,22 @@ void GameLogic::CmdDatabaseCreate()
             wxMutexLocker lock(s_mutex_tiny_database);
             {
                 cprintf( "...CmdDatabaseCreate() if we did wait, that wait is now over (%d)\n", temp );
-                wxString previous = objs.repository->database.m_file;
-                const char *filename = db_name.c_str();
-                cprintf( "File is %s\n", filename );
-                objs.db->Reopen(filename);
-                std::string error_msg;
-                bool operational = objs.db->IsOperational(error_msg);
-                if( operational )
-                    objs.repository->database.m_file = db_name;
-                else
+                bool okay=ProbeControlBlocks();
+                if( okay )
                 {
-                    objs.db->Reopen(previous);
-                    wxMessageBox( error_msg.c_str(), "Database selection failed", wxOK|wxICON_ERROR );
+                    wxString previous = objs.repository->database.m_file;
+                    const char *filename = db_name.c_str();
+                    cprintf( "File is %s\n", filename );
+                    objs.db->Reopen(filename);
+                    std::string error_msg;
+                    bool operational = objs.db->IsOperational(error_msg);
+                    if( operational )
+                        objs.repository->database.m_file = db_name;
+                    else
+                    {
+                        objs.db->Reopen(previous);
+                        wxMessageBox( error_msg.c_str(), "Database selection failed", wxOK|wxICON_ERROR );
+                    }
                 }
             }
         }
@@ -1429,9 +1432,6 @@ void GameLogic::CmdDatabaseCreate()
 
 void GameLogic::CmdDatabaseAppend()
 {
-    bool okay=ProbeControlBlocks();
-    if( !okay )
-        return;
     Atomic begin;
     bool ok=false;
 	DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
@@ -1456,18 +1456,22 @@ void GameLogic::CmdDatabaseAppend()
             wxMutexLocker lock(s_mutex_tiny_database);
             {
                 cprintf( "...CmdDatabaseCreate() if we did wait, that wait is now over (%d)\n", temp );
-                wxString previous = objs.repository->database.m_file;
-                const char *filename = db_name.c_str();
-                cprintf( "File is %s\n", filename );
-                objs.db->Reopen(filename);
-                std::string error_msg;
-                bool operational = objs.db->IsOperational(error_msg);
-                if( operational )
-                    objs.repository->database.m_file = db_name;
-                else
+                bool okay=ProbeControlBlocks();
+                if( okay )
                 {
-                    objs.db->Reopen(previous);
-                    wxMessageBox( error_msg.c_str(), "Database selection failed", wxOK|wxICON_ERROR );
+                    wxString previous = objs.repository->database.m_file;
+                    const char *filename = db_name.c_str();
+                    cprintf( "File is %s\n", filename );
+                    objs.db->Reopen(filename);
+                    std::string error_msg;
+                    bool operational = objs.db->IsOperational(error_msg);
+                    if( operational )
+                        objs.repository->database.m_file = db_name;
+                    else
+                    {
+                        objs.db->Reopen(previous);
+                        wxMessageBox( error_msg.c_str(), "Database selection failed", wxOK|wxICON_ERROR );
+                    }
                 }
             }
         }
