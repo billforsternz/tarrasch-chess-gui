@@ -27,8 +27,9 @@ struct TabElement
     GameDocument gd;
     Undo undo;
     unsigned long pos;
+    bool normal_orientation;
     int scroll_x, scroll_y;
-    TabElement(GameLogic *gl) : undo(gl) { pos=0; scroll_x=0; scroll_y=0; }
+    TabElement(GameLogic *gl) : undo(gl) { pos=0; scroll_x=0; scroll_y=0; normal_orientation=true; }
 };
 
 class Tabs

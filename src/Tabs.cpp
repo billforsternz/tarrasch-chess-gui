@@ -33,6 +33,7 @@ void Tabs::TabNew( GameDocument &new_gd )
         int x=0, y=0;
         if( ctrl )
             ctrl->GetScrollHelper()->GetViewStart( &x, &y );
+        v[current_idx].normal_orientation = objs.canvas->GetNormalOrientation();
         v[current_idx].scroll_x = x;
         v[current_idx].scroll_y = y;
         v[current_idx].undo = gl->undo;
@@ -71,12 +72,14 @@ bool Tabs::TabSelected( int idx )
             int x=0, y=0;
             if( ctrl )
                 ctrl->GetScrollHelper()->GetViewStart( &x, &y );
+            v[current_idx].normal_orientation = objs.canvas->GetNormalOrientation();
             v[current_idx].scroll_x = x;
             v[current_idx].scroll_y = y;
             gl->gd = v[idx].gd;
             gl->undo = v[idx].undo;
             pos = v[idx].pos;
             gl->gd.non_zero_start_pos = pos;
+            objs.canvas->SetNormalOrientation(v[idx].normal_orientation);
             if( ctrl )
                 ctrl->GetScrollHelper()->Scroll( v[idx].scroll_x, v[idx].scroll_y );
             current_idx = idx;
@@ -191,6 +194,7 @@ int Tabs::TabDelete()
         unsigned long pos = v[idx].pos;
         gl->gd.SetInsertionPoint(pos);
         gl->gd.non_zero_start_pos = pos;
+        objs.canvas->SetNormalOrientation(v[idx].normal_orientation);
         wxRichTextCtrl *ctrl = objs.canvas->lb;
         if( ctrl )
             ctrl->GetScrollHelper()->Scroll( v[idx].scroll_x, v[idx].scroll_y );
