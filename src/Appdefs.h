@@ -12,9 +12,9 @@
 
 #define MASTER_VERSION_BASE "V3.12b**"    //add asterisk(s) prefix between releases
 
-//#define USING_KINGBASE
-// no suffix indicates default .tdb is kingbase
-#ifdef  USING_KINGBASE
+//#define USING_TARRASCH_BASE
+// no suffix indicates default .tdb is tarrasch-base
+#ifdef  USING_TARRASCH_BASE
 #ifdef THC_WINDOWS
 #define MASTER_VERSION MASTER_VERSION_BASE "-Windows"
 #endif
@@ -38,14 +38,15 @@
 #endif
 #endif
 
-#define DEFAULT_ENGINE "stockfish_8_x32.exe"
-#define DEFAULT_ENGINE_64 "stockfish_8_x64.exe"
+#define DEFAULT_ENGINE "stockfish_11_x32.exe"
+#define DEFAULT_ENGINE_64 "stockfish_11_x64.exe"
+#define DEFAULTS_STEPPER_LEVEL 2
 #define DATABASE_VERSION_NUMBER_LEGACY   1    // Old SQL type = supported with V3.03a
 #define DATABASE_VERSION_NUMBER_TINY     2    // Some kind of intermediate version, we don't support it any more at all
 #define DATABASE_VERSION_NUMBER_BIN_DB   3    // Up until V3.12b
 #define DATABASE_VERSION_NUMBER_LOCKABLE 4    // V3.12b** onward, supports lockable databases (retain support for previous version too) 
-#ifdef  USING_KINGBASE
-#define DEFAULT_DATABASE "kingbase-lite.tdb"
+#ifdef  USING_TARRASCH_BASE
+#define DEFAULT_DATABASE "tarrasch-base.tdb"
 #else
 #define DEFAULT_DATABASE "great-players-demo.tdb"
 #endif
