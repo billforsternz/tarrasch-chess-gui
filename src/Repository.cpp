@@ -188,6 +188,59 @@ Repository::Repository( bool use_defaults )
 		config->Read("GeneralHighlightLineSquaresGreen",           &general.m_highlight_line_colour_g );
 		config->Read("GeneralHighlightLineSquaresBlue",            &general.m_highlight_line_colour_b );
 
+        // NonVolatile - DefaultsStepper
+        //
+        //  In general we respect the users configuration items. However, with V3.13a we
+        //  introduced the DefaultsStepper mechanism, to allow us to move the user to
+        //  enhanced defaults (engine and database initially), if and only if they are
+        //  using the previous defaults. Initially this will mean that we can change from
+        //  kingbase-lite to the new TWIC based tarrasch-base, and from Stockfish 8 to
+        //  Stockfish 11 (12?) without upgrading users having to do anything at all.
+        bool default_stepper_exists = config->Read("NonVolatileDefaultsStepper", &nv.m_defaults_stepper );
+        if( !default_stepper_exists )
+            nv.m_defaults_stepper = 1;  // we introduced mechanism at DEFAULTS_STEPPER_LEVEL = 2, assign level 1
+                                        // to all prior versions
+        int old_level = nv.m_defaults_stepper;
+        int new_level = DEFAULTS_STEPPER_LEVEL;
+        if( old_level+1 == new_level )
+        {
+            std::string database_steps [] = {"","kingbase-lite","tarrasch-base"};
+            std::string engine_64_steps[] = {"","stockfish_8_x64","stockfish_11_x64"};
+            std::string engine_32_steps[] = {"","stockfish_8_x32","stockfish_11_x32"};
+            wxFileName wfn1(database.m_file);
+            if( wfn1.IsOk() && wfn1.GetName()==database_steps[old_level])
+            {
+                wfn1.SetName(database_steps[new_level]);
+                if( wfn1.FileExists() )
+                {
+                    database.m_file = wfn1.GetFullPath();
+                    std::string s = database.m_file;
+                    cprintf( "One time only change to database file: %s\n", s.c_str() );
+                }
+            }
+            wxFileName wfn2(engine.m_file);
+            if( wfn2.IsOk() && wfn2.GetName()==engine_64_steps[old_level])
+            {
+                wfn2.SetName(engine_64_steps[new_level]);
+                if( wfn2.FileExists() )
+                {
+                    engine.m_file = wfn2.GetFullPath();
+                    std::string s = engine.m_file;
+                    cprintf( "One time only change to engine file: %s\n", s.c_str() );
+                }
+            }
+            else if( wfn2.IsOk() && wfn2.GetName()==engine_32_steps[old_level])
+            {
+                wfn2.SetName(engine_32_steps[new_level]);
+                if( wfn2.FileExists() )
+                {
+                    engine.m_file = wfn2.GetFullPath();
+                    std::string s = engine.m_file;
+                    cprintf( "One time only change to engine file: %s\n", s.c_str() );
+                }
+            }
+        }
+
         // NonVolatile
         config->Read("NonVolatileX",                      &nv.m_x );
         config->Read("NonVolatileY",                      &nv.m_y );
@@ -298,6 +351,7 @@ Repository::~Repository()
 	config->Write("GeneralHighlightLineSquaresBlue",            general.m_highlight_line_colour_b );
 
     // NonVolatile
+    config->Write("NonVolatileDefaultsStepper",     DEFAULTS_STEPPER_LEVEL );
     config->Write("NonVolatileX",                   nv.m_x );
     config->Write("NonVolatileY",                   nv.m_y );
     config->Write("NonVolatileW",                   nv.m_w );

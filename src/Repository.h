@@ -282,6 +282,7 @@ struct GeneralConfig
 // Miscellaneous, non-user editable non volatile stuff
 struct NonVolatile
 {
+    int         m_defaults_stepper;
     int         m_x;
     int         m_y;
     int         m_w;
@@ -310,6 +311,7 @@ struct NonVolatile
     bool        m_event_not_site;
     NonVolatile()
     {
+        m_defaults_stepper = DEFAULTS_STEPPER_LEVEL;
         m_x = -1;
         m_y = -1;
         m_w = -1;
