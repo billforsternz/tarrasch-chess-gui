@@ -222,7 +222,7 @@ GamesListCtrl::GamesListCtrl( GamesDialog *parent, wxWindowID id, const wxPoint 
 void GamesListCtrl::ReceiveFocus( int focus_idx )
 {
     int nbr_items = GetItemCount();
-    if( 0<=focus_idx && focus_idx<nbr_items )
+    if( nbr_items>0 && 0<=focus_idx && focus_idx<nbr_items )
     {
         track->focus_idx = focus_idx;
         parent->ReadItemWithSingleLineCache( focus_idx, track->info );
@@ -787,7 +787,7 @@ void GamesDialog::CreateControls()
     gdr.RegisterPanelWindow( help );
     vsiz_panel_buttons->Add(help, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-    player_names = new wxStaticText( this, wxID_ANY, "White - Black",
+    player_names = new wxStaticText( this, wxID_ANY, "",
                                     wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL );
     gdr.RegisterPanelWindow( player_names );
     box_sizer->Add(player_names, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxBOTTOM, 10);
@@ -799,6 +799,7 @@ void GamesDialog::CreateControls()
 
     // Overridden by specialised classes
     GdvEnumerateGames();
+    GdvEnableControlsIfGamesFound( nbr_games_in_list_ctrl > 0 );
 
     // Select site/or event
     wxRadioButton *site_button = new wxRadioButton( this, ID_SITE_EVENT,
@@ -813,7 +814,6 @@ void GamesDialog::CreateControls()
     vsiz_panel_buttons->Add(event_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
 }
-
 
 void GamesDialog::OnSize( wxSizeEvent &evt )
 {
@@ -904,6 +904,8 @@ void GamesDialog::Goto( int idx )
     if( list_ctrl )
     {
         int sz = list_ctrl->GetItemCount();
+        if( sz == 0 )
+            player_names->SetLabel("");
         if(  0<=idx && idx<sz )
         {
 
@@ -1167,8 +1169,7 @@ void GamesDialog::OnNextMove( wxCommandEvent &event )
 void GamesDialog::GdvNextMove( int WXUNUSED(idx) )
 {
 }
-   
-    
+
 bool GamesDialog::ShowModalOk( std::string title )
 {
     Init();
@@ -1340,6 +1341,7 @@ void GamesDialog::OnCutOrDelete( bool cut )
             }
             sz-=nbr_cut;
             list_ctrl->SetItemCount(sz);
+            GdvEnableControlsIfGamesFound( sz > 0 );
             Goto( 0<=idx_focus && idx_focus<sz ? idx_focus : sz-1 );
             if( sz>0 )
                 list_ctrl->RefreshItems(0,sz-1);
@@ -1430,6 +1432,7 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
             //cprintf( "ret=%d\n", ret );
             list_ctrl->SetItemState( insert_idx, 0, wxLIST_STATE_FOCUSED );
             list_ctrl->SetItemState( insert_idx, 0, wxLIST_STATE_SELECTED );
+            GdvEnableControlsIfGamesFound( sz > 0 );
             Goto( insert_idx );
             if( sz>0 )
                 list_ctrl->RefreshItems(0,sz-1);
@@ -1474,6 +1477,7 @@ void GamesDialog::OnTournamentGames( wxCommandEvent& WXUNUSED(event) )
                 sz++;
                 list_ctrl->SetItemCount( sz );
             }
+            GdvEnableControlsIfGamesFound( sz > 0 );
             Goto( focus_idx );
             if( sz>0 )
                 list_ctrl->RefreshItems(0,sz-1);
@@ -1530,6 +1534,7 @@ void GamesDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
         }
         sz += sz2;
         list_ctrl->SetItemCount(sz);
+        GdvEnableControlsIfGamesFound( sz > 0 );
         Goto(idx_focus);
         if( sz>0 )
             list_ctrl->RefreshItems(0,sz-1);

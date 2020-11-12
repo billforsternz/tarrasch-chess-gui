@@ -132,6 +132,36 @@ wxSizer *PgnDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
     return vsiz_panel_buttons;
 }
 
+void PgnDialog::GdvEnableControlsIfGamesFound( bool have_games )
+{
+    FindWindow(wxID_OK)->Enable(have_games);                            // Load Game
+    if( id==ID_PGN_DIALOG_FILE || id==ID_PGN_DIALOG_CURRENT_FILE )
+    {
+        // Don't selectively disable the save buttons, we want to be able to save zero length PGN files
+        //FindWindow(wxID_SAVE)->Enable(have_games);                      // Save
+        //FindWindow(ID_SAVE_ALL_TO_A_FILE)->Enable(have_games);          // Save all
+        FindWindow(ID_PGN_DIALOG_GAME_DETAILS)->Enable(have_games);     // Edit Game Details
+        FindWindow(wxID_COPY)->Enable(have_games);                      // Copy
+        FindWindow(wxID_CUT)->Enable(have_games);                       // Cut
+        FindWindow(wxID_DELETE)->Enable(have_games);                    // Delete
+        FindWindow(ID_ADD_TO_CLIPBOARD)->Enable(have_games);            // Add to clipboard
+        //FindWindow(ID_PGN_DIALOG_PUBLISH)->Enable(have_games);          // Publish
+        FindWindow(ID_DIALOG_ECO)->Enable(have_games);                  // ECO codes
+    }
+    else if( id == ID_PGN_DIALOG_CLIPBOARD )
+    {
+        FindWindow(ID_PGN_DIALOG_GAME_DETAILS)->Enable(have_games);     // Edit Game Details
+        FindWindow(wxID_DELETE)->Enable(have_games);                    // Delete
+        //FindWindow(ID_SAVE_ALL_TO_A_FILE)->Enable(have_games);          // Save all
+    }
+    else if( id == ID_PGN_DIALOG_SESSION )
+    {
+        FindWindow(ID_ADD_TO_CLIPBOARD)->Enable(have_games);            // Add to clipboard
+        FindWindow(wxID_COPY)->Enable(have_games);                      // Copy
+        //FindWindow(ID_SAVE_ALL_TO_A_FILE)->Enable(have_games);          // Save all
+    }
+}
+
 
 void PgnDialog::GetCachedDocumentRaw( int idx, GameDocument &gd )
 {

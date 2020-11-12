@@ -164,6 +164,16 @@ wxSizer *DbDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
     return vsiz_panel_buttons;   
 }
 
+// Games Dialog Override - Disable features that make no sense without a game (enable them otherwise)
+void DbDialog::GdvEnableControlsIfGamesFound( bool have_games )
+{                                            
+    FindWindow(wxID_OK)    ->Enable(have_games);     // Load Game
+    FindWindow(ID_BUTTON_2)->Enable(have_games);     // Add to Clipboard
+    FindWindow(ID_BUTTON_3)->Enable(have_games);     // Add All Player's White Games
+    FindWindow(ID_BUTTON_4)->Enable(have_games);     // Add All Player's Black Games
+    FindWindow(ID_BUTTON_5)->Enable(have_games);     // Use game
+}
+
 // Games Dialog Override - One time activation
 void DbDialog::GdvOnActivate()
 {
@@ -620,7 +630,7 @@ std::multimap<B,A> flip_and_sort_map(const std::map<A,B> &src)
     return dst;
 }
 
-// Heart and sole of DbDialog() - do the search and calculate the stats
+// Heart and soul of DbDialog() - do the search and calculate the stats
 void DbDialog::StatsCalculate()
 {
     wxString save_title = GetTitle();
@@ -890,15 +900,6 @@ void DbDialog::StatsCalculate()
                 total_white_wins, total_black_wins, total_draws );
         cprintf( "Got here #5, %s\n", buf );
         title_ctrl->SetLabel( buf );
-
-    /*   int top = list_ctrl->GetTopItem();
-        int count = 1 + list_ctrl->GetCountPerPage();
-        if( count > nbr_games_in_list_ctrl )
-            count = nbr_games_in_list_ctrl;
-        for( int i=0; i<count; i++ )
-            list_ctrl->RefreshItem(top++);
-        list_ctrl->SetFocus(); */
-
         if( !list_ctrl_stats )
         {
             //wxSize sz4 = mini_board->GetSize();
@@ -921,15 +922,14 @@ void DbDialog::StatsCalculate()
         nbr_games_in_list_ctrl = gc_db_displayed_games.gds.size();
         dirty = true;
         list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
-    //    if( nbr_games_in_list_ctrl>0 )
-    //        list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
+        bool have_games = (nbr_games_in_list_ctrl>0);
+        GdvEnableControlsIfGamesFound( have_games );
         if( nbr_games_in_list_ctrl>0 )
             list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
     }
     Goto(0);
     SetTitle(save_title);
 }
-
 
 // Search for patterns
 void DbDialog::PatternSearch()
@@ -987,6 +987,8 @@ void DbDialog::PatternSearch()
     nbr_games_in_list_ctrl = gc_db_displayed_games.gds.size();
     dirty = true;
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
+    bool have_games = (nbr_games_in_list_ctrl>0);
+    GdvEnableControlsIfGamesFound( have_games );
     if( nbr_games_in_list_ctrl>0 )
         list_ctrl->RefreshItems( 0, nbr_games_in_list_ctrl-1 );
     char buf[1000];
