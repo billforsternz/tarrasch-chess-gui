@@ -922,26 +922,11 @@ void GamesDialog::Goto( int idx )
                 list_ctrl->SetItemState( old, 0, wxLIST_STATE_FOCUSED );
                 list_ctrl->SetItemState( old, 0, wxLIST_STATE_SELECTED );
             }
-            list_ctrl->SetFocus();
-            list_ctrl->EnsureVisible(idx);
+            //list_ctrl->EnsureVisible(idx);  // For some reason including this actually stops idx=0 from being visible
+                                              // after a pattern search (game 6 or so goes to the top of the window
+                                              // instead)
         }
         list_ctrl->SetFocus();
-
-// In V3.12b we made a change that improved DB pattern search, but actually made the more normal DB position
-//  search worse. Obviously a bad thing. For V3.13a we want the best of both worlds. This comment and
-//  the #define PATTERN_SEARCH_WORKS_BEST capture the situation for the Git log as we begin to work on it.
-//  (The problem is that the first highlighted game after a search is not visible, you see about the sixth
-//     game at the top of the window instead)
-// #define PATTERN_SEARCH_WORKS_BEST
-#ifdef PATTERN_SEARCH_WORKS_BEST
-        // It seems that on Windows at least we must always EnsureVisible() after SetFocus()
-        //  it order to guarantee that the highlighted game at index 0 will actually be
-        //  visible when a games dialog opens.
-        if(  0<=idx && idx<sz )
-            list_ctrl->EnsureVisible(idx);
-        else
-            list_ctrl->EnsureVisible(0);
-#endif
     }
 }
 
