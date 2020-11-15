@@ -100,6 +100,9 @@ public:
     void StatsCalculate();
     void PatternSearch();
 
+    // Sets the help text for the dialog controls
+    void SetDialogHelp();
+
     // Data members
 private:
     std::map< char, MOVE_STATS > stats; // map each compressed move in the position to move stats
