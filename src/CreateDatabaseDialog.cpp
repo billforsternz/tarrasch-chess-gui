@@ -104,7 +104,7 @@ void CreateDatabaseDialog::CreateControls()
     box_sizer->Add(descr, 0, wxALIGN_LEFT|wxALL, 5);
     
     // Spacer
-    box_sizer->Add(5, 5, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
+    //box_sizer->Add(5, 5, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
     
     // Label for file
     wxStaticText* db_file_label = new wxStaticText ( this, wxID_STATIC,
@@ -125,6 +125,12 @@ void CreateDatabaseDialog::CreateControls()
                                                             wxFLP_USE_TEXTCTRL|wxFLP_FILE_MUST_EXIST
                                                        );
     box_sizer->Add(picker_db, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
+    restricted_box = NULL;
+    if( create_mode )
+    {
+        restricted_box = new wxCheckBox( this, ID_CREATE_RESTRICTED, "Restricted export database", wxDefaultPosition, wxDefaultSize );
+        box_sizer->Add(restricted_box, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
+    }
 
     // Label for file
     wxStaticText* pgn_file_label = new wxStaticText ( this, wxID_STATIC,
@@ -262,6 +268,11 @@ void CreateDatabaseDialog::SetDialogValidators()
 // Sets the help text for the dialog controls
 void CreateDatabaseDialog::SetDialogHelp()
 {
+    char buf[200];
+    sprintf( buf, "If this is selected, exporting games from the new database to PGN will be restricted (no more than %d at a time).", DATABASE_LOCKABLE_LIMIT );
+    wxString restricted_help(buf);
+    FindWindow(ID_CREATE_RESTRICTED)->SetHelpText(restricted_help);
+    FindWindow(ID_CREATE_RESTRICTED)->SetToolTip(restricted_help);
 }
 
 // wxID_OK handler
@@ -398,7 +409,8 @@ void CreateDatabaseDialog::OnCreateDatabase()
     {
         std::string title( "Creating database");    // Step 2,3 and 4 of 4
         int step=2;
-        ok = BinDbRemoveDuplicatesAndWrite(title,step,ofile,this);
+        bool locked = (restricted_box ? restricted_box->GetValue() : false);
+        ok = BinDbRemoveDuplicatesAndWrite(title,step,ofile,locked,this);
     }
     if( ofile )
     {
@@ -432,6 +444,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
 void CreateDatabaseDialog::OnAppendDatabase()
 {
     bool ok=true;
+    bool locked=false;
 	bool created_new_db_file = false;
     std::string files[6];
     int cnt=0;
@@ -491,7 +504,7 @@ void CreateDatabaseDialog::OnAppendDatabase()
         ProgressBar progress_bar( title, desc, true, this );
         std::vector< smart_ptr<ListableGame> > &mega_cache = BinDbLoadAllGamesGetVector();
 		cprintf( "Appending to database, step 1 of 5 begin\n" );
-        bool killed = BinDbLoadAllGames( true, mega_cache, dummyi, dummyb, &progress_bar );
+        bool killed = BinDbLoadAllGames( locked, true, mega_cache, dummyi, dummyb, &progress_bar );
 		cprintf( "Appending to database, step 1 of 5 end, killed=%s\n", killed?"true":"false" );
 		if( killed )
 			ok=false;
@@ -544,7 +557,7 @@ void CreateDatabaseDialog::OnAppendDatabase()
     {
         std::string title3( "Appending to database");    // Step 3,4 and 5 of 5
         int step=3;
-        ok = BinDbRemoveDuplicatesAndWrite(title3,step,ofile,this);
+        ok = BinDbRemoveDuplicatesAndWrite(title3,step,ofile,locked,this);
     }
 	if( ofile )
 	{
