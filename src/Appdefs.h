@@ -44,7 +44,8 @@
 #define DATABASE_VERSION_NUMBER_LEGACY   1    // Old SQL type = supported with V3.03a
 #define DATABASE_VERSION_NUMBER_TINY     2    // Some kind of intermediate version, we don't support it any more at all
 #define DATABASE_VERSION_NUMBER_BIN_DB   3    // Up until V3.12b
-#define DATABASE_VERSION_NUMBER_LOCKABLE 4    // V3.12b** onward, supports lockable databases (retain support for previous version too) 
+#define DATABASE_VERSION_NUMBER_LOCKABLE 4    // V3.12b** onward, supports lockable databases (retain support for previous version too)
+#define DATABASE_LOCKABLE_LIMIT 10000         // Max number of restricted games we can write
 #ifdef  USING_TARRASCH_BASE
 #define DEFAULT_DATABASE "tarrasch-base.tdb"
 #else
