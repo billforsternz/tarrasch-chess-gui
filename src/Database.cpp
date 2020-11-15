@@ -600,7 +600,8 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGam
     kill_background_load = false;
     mega_cache.clear();
 	is_partial_load = false;
-    bool killed = BinDbLoadAllGames( false, mega_cache, background_load_permill, kill_background_load );
+    bool locked = false;
+    bool killed = BinDbLoadAllGames( locked, false, mega_cache, background_load_permill, kill_background_load );
 	is_partial_load = killed;
     BinDbClose();
     int cache_nbr = mega_cache.size();
