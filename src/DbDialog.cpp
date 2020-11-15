@@ -161,6 +161,7 @@ wxSizer *DbDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
                                         wxDefaultPosition, wxDefaultSize, 0 );
     gdr.RegisterPanelWindow( spacer1 );
     vsiz_panel_buttons->Add(spacer1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    SetDialogHelp();
     return vsiz_panel_buttons;   
 }
 
@@ -172,6 +173,19 @@ void DbDialog::GdvEnableControlsIfGamesFound( bool have_games )
     FindWindow(ID_BUTTON_3)->Enable(have_games);     // Add All Player's White Games
     FindWindow(ID_BUTTON_4)->Enable(have_games);     // Add All Player's Black Games
     FindWindow(ID_BUTTON_5)->Enable(have_games);     // Use game
+}
+
+void DbDialog::SetDialogHelp()
+{
+    if( db_req == REQ_PLAYERS )
+    {
+        wxString white_player_help = "Enter a complete or partial player name here, then search for it.";
+        wxString search_help = "Enter a complete or partial player name to the left, then search for it. If the player name is partial, multiple presses find all matching players.";
+        FindWindow(ID_DB_TEXT)->SetHelpText(white_player_help);
+        FindWindow(ID_DB_TEXT)->SetToolTip(white_player_help);
+        FindWindow(ID_DB_SEARCH)->SetHelpText(search_help);
+        FindWindow(ID_DB_SEARCH)->SetToolTip(search_help);
+    }
 }
 
 // Games Dialog Override - One time activation
