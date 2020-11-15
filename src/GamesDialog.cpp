@@ -735,10 +735,13 @@ void GamesDialog::CreateControls()
     mini_board_container->Add( mini_board, 1, wxALIGN_LEFT|wxTOP|wxRIGHT|wxBOTTOM|wxFIXED_MINSIZE, 5 );
     hsiz_panel->Add(mini_board_container, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxTOP, 0);
 
-    wxBoxSizer *button_panel = new wxBoxSizer(wxVERTICAL);
-    hsiz_panel->Add(button_panel, 0, wxALIGN_TOP|wxALL, 10);
+    // Spacer
+    hsiz_panel->Add(10, 0, 0, wxALIGN_TOP|wxALL, 0);
 
-    vsiz_panel_buttons = new wxFlexGridSizer(8,2,0,0);
+    wxBoxSizer *button_panel = new wxBoxSizer(wxVERTICAL);
+    hsiz_panel->Add(button_panel, 0, wxALIGN_TOP|wxALL, 0);
+
+    vsiz_panel_buttons = new wxFlexGridSizer(9,2,0,0);
     button_panel->Add(vsiz_panel_buttons, 0, wxALIGN_TOP|wxALL, 0);
 
     // Load / Ok / Game->Board
@@ -922,9 +925,12 @@ void GamesDialog::Goto( int idx )
                 list_ctrl->SetItemState( old, 0, wxLIST_STATE_FOCUSED );
                 list_ctrl->SetItemState( old, 0, wxLIST_STATE_SELECTED );
             }
-            //list_ctrl->EnsureVisible(idx);  // For some reason including this actually stops idx=0 from being visible
-                                              // after a pattern search (game 6 or so goes to the top of the window
-                                              // instead)
+            if( idx != 0 )
+            {
+                list_ctrl->EnsureVisible(idx);  // For some reason including this actually stops idx=0 from being visible
+                                                // after a pattern search (game 6 or so goes to the top of the window
+                                                // instead)
+            }
         }
         list_ctrl->SetFocus();
     }
