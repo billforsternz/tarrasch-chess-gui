@@ -58,9 +58,9 @@ The following are not needed for A) only for B) and C)
 6) void BinDbNormaliseOrder( uint32_t begin, uint32_t end )
     After all games from one pgn file appended to games array, normalise their order (older first, newer last)
     This function either leaves the games alone or reverses them
-7) bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, wxWindow *window )
+7) bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, bool locked, wxWindow *window )
     New in V3.01a - incorporate write file so can do that before writing dups to TarraschDbDuplicate.pgn
-8) bool BinDbWriteOutToFile( FILE *ofile, int nbr_to_omit_from_end, ProgressBar *pb )
+8) bool BinDbWriteOutToFile( FILE *ofile, int nbr_to_omit_from_end, bool locked, ProgressBar *pb )
     Now only called by BinDbRemoveDuplicatesAndWrite()
 9) void BinDbCreationEnd()
     clears internal games vector
@@ -319,7 +319,7 @@ void Pgn2Tdb( FILE *fin, FILE *fout )
     #else
     PgnRead pr('B',0);
     pr.Process(fin);
-    BinDbWriteOutToFile(fout,0);
+    BinDbWriteOutToFile(fout,0,false);
     #endif
 }
 
@@ -1218,9 +1218,29 @@ void BinDbDatabaseInitialSort( std::vector< smart_ptr<ListableGame> > &games_, b
 {
 
     // Usually the database is sorted according to game_id - bail out quickly if no need to sort
-    if( !sort_by_player_name )
+    bool sorted=true;
+    if( sort_by_player_name )
     {
-        bool sorted=true;
+        uint32_t prev_id=0;
+        int prev_white_bin=0;
+        for( uint32_t i=0; sorted && i<games_.size(); i++ )
+        {
+            uint32_t id = games_[i]->game_id;
+            int white_bin = games_[i]->WhiteBin();
+        	bool eq = (white_bin == prev_white_bin);
+            bool lt;
+    	    if( eq )
+	    	    lt = id < prev_id;   // This means the "Show all by player" feature shows each players game in db order
+	        else
+		        lt = white_bin < prev_white_bin;
+            if( lt )
+                sorted = false;
+            prev_id = id;
+            prev_white_bin = white_bin;
+        }
+    }
+    else
+    {
         uint32_t prev=0;
         for( uint32_t i=0; sorted && i<games_.size(); i++ )
         {
@@ -1229,13 +1249,10 @@ void BinDbDatabaseInitialSort( std::vector< smart_ptr<ListableGame> > &games_, b
                 sorted = false;
             prev = id;
         }
-        if( sorted )
-        {
-            cprintf( "Already sorted\n" );
-            return;
-        }
     }
-    cprintf( "Not already sorted\n" );
+    cprintf( "%s sorted by %s\n", sorted?"Already":"Not already", sort_by_player_name?"player name":"id" );
+    if( sorted )
+        return;
     std::string desc(sort_by_player_name?"Sorting by player name":"Initial sort");
     ProgressBar progress_bar( "Sorting", desc, true );
     //progress_bar.DrawNow();
@@ -1260,7 +1277,7 @@ static void replace_once( std::string &s, const std::string from, const std::str
 
 
 // New in V3.01a - incorporate write file so can do that before writing dups to TarraschDbDuplicate.pgn
-bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, wxWindow *window )
+bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, bool locked, wxWindow *window )
 {
 #ifdef  EXTRA_DEDUP_DIAGNOSTIC_FILE
     wxFileName wfn2(objs.repository->log.m_file.c_str());
@@ -1466,7 +1483,7 @@ bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, w
     {
         std::string desc("Writing file");
         ProgressBar progress_bar( write_title, desc, true, window );
-        ok = BinDbWriteOutToFile(ofile,nbr_deleted,&progress_bar);
+        ok = BinDbWriteOutToFile(ofile,nbr_deleted,locked,&progress_bar);
     }
 
     if( nbr_deleted )
@@ -1518,7 +1535,7 @@ bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, w
 }
 
 // Return bool okay
-bool BinDbWriteOutToFile( FILE *ofile, int nbr_to_omit_from_end, ProgressBar *pb )
+bool BinDbWriteOutToFile( FILE *ofile, int nbr_to_omit_from_end, bool locked, ProgressBar *pb )
 {
     std::set<std::string> set_player;
     std::set<std::string> set_site;
@@ -1536,7 +1553,19 @@ bool BinDbWriteOutToFile( FILE *ofile, int nbr_to_omit_from_end, ProgressBar *pb
     std::map<std::string,int> map_player;
     std::map<std::string,int> map_event;
     std::map<std::string,int> map_site;
-    fwrite( &compatibility_header, sizeof(compatibility_header), 1, ofile );
+    if( locked )
+        fwrite( &compatibility_header, sizeof(compatibility_header), 1, ofile );
+    else
+    {
+        // If not locked, we may as well make it usable by older versions. Subtle point:
+        //  older versions will quite happily accept the new FileHeader below, with the
+        //  locked flag they don't know about and don't need. Reason: Older versions know
+        //  to use the hdr_len field of the FileHeader rather than their own sizeof(FileHeader)
+        //  when stepping beyond the FileHeader as they read the database.
+        fwrite( &compatibility_header, sizeof(compatibility_header)-1, 1, ofile );
+        uint8_t ver=DATABASE_VERSION_NUMBER_BIN_DB;
+        fwrite( &ver, 1, 1, ofile );
+    }
     std::set<std::string>::iterator it = set_player.begin();
     FileHeader fh;
     fh.hdr_len     = sizeof(FileHeader);
@@ -1544,7 +1573,7 @@ bool BinDbWriteOutToFile( FILE *ofile, int nbr_to_omit_from_end, ProgressBar *pb
     fh.nbr_events  = std::distance( set_event.begin(),  set_event.end() );
     fh.nbr_sites   = std::distance( set_site.begin(),   set_site.end() );
     fh.nbr_games   = games.size() - nbr_to_omit_from_end;
-    fh.locked = false;
+    fh.locked      = locked;
     cprintf( "%d games, %d players, %d events, %d sites\n", fh.nbr_games, fh.nbr_players, fh.nbr_events, fh.nbr_sites );
     int nbr_bits_player = BitsRequired(fh.nbr_players);
     int nbr_bits_event  = BitsRequired(fh.nbr_events);  
@@ -1666,9 +1695,10 @@ void ReadStrings( FILE *fin, int nbr_strings, std::vector<std::string> &strings 
 }
 
 // Returns bool killed;
-bool BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb )
+bool BinDbLoadAllGames( bool &locked, bool for_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb )
 {
 	bool killed=false;
+    locked = false;
 
     // When loading the system database for searches, reverse order so most recent games come first 
     bool do_reverse = !for_append;
@@ -1689,10 +1719,9 @@ bool BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > 
     int nbr_bits_site   = BitsRequired(fh.nbr_sites);
     cprintf( "%d player bits, %d event bits, %d site bits\n", nbr_bits_player, nbr_bits_event, nbr_bits_site );
     int hdr_len = fh.hdr_len;   // future compatibility feature - if FileHeader gets longer so will fh.hdr_len
-    bool locked_database = false;
     if( hdr_len >= sizeof(FileHeader) )  // we support VERSION_NUMBER_BIN_DB which predates VERSION_NUMBER_BIN_LOCKABLE
     {                                    //  databases of that version have a smaller header without lockable
-        locked_database = static_cast<bool>(fh.locked);
+        locked = static_cast<bool>(fh.locked);
     }
     if( hdr_len != sizeof(FileHeader) )
     {
@@ -1706,7 +1735,7 @@ bool BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > 
     ReadStrings( fin, fh.nbr_sites, cb.sites );
     cprintf( "Sites ReadStrings() complete\n" );
 
-	// Use this BinaryBlack if we need to translate
+	// Use this BinaryBlock if we need to translate
 	BinaryBlock bb;
     bb.Next(nbr_bits_event);    // Event
     bb.Next(nbr_bits_site);     // Site
@@ -1789,7 +1818,7 @@ bool BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > 
 		std::string blob = game_header + game_moves;
         ListableGameBinDb info( cb_idx, game_id, blob );
         make_smart_ptr( ListableGameBinDb, new_info, info );
-        new_info->SetLocked( locked_database );
+        new_info->SetLocked( locked );
         mega_cache.push_back( std::move(new_info) );
         int num = i;
         int den = game_count?game_count:1;
