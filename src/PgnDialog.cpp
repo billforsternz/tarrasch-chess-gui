@@ -46,10 +46,10 @@ wxSizer *PgnDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
         //vsiz_panel_buttons->Add(edit_game_prefix, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
         // Paste game / Board->Game
-        wxButton* tournament_games = new wxButton ( this, ID_TOURNAMENT_GAMES, wxT("New Pairings"), // TEMP TEMP wxT("Paste current game"),
+        wxButton* board_to_game = new wxButton ( this, ID_BOARD2GAME, wxT("Paste current game"),
             wxDefaultPosition, wxDefaultSize, 0 );
-        gdr.RegisterPanelWindow( tournament_games );
-        vsiz_panel_buttons->Add(tournament_games, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+        gdr.RegisterPanelWindow( board_to_game );
+        vsiz_panel_buttons->Add(board_to_game, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
         // Delete
         wxButton* delete_ = new wxButton ( this, wxID_DELETE, wxT("Delete"),
@@ -92,6 +92,15 @@ wxSizer *PgnDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
             wxDefaultPosition, wxDefaultSize, 0 );
         gdr.RegisterPanelWindow( eco_codes );
         vsiz_panel_buttons->Add(eco_codes, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+        // New pairings
+        wxButton* tournament_games = new wxButton ( this, ID_TOURNAMENT_GAMES, wxT("New Pairings"), // TEMP TEMP wxT("Paste current game"),
+            wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( tournament_games );
+        vsiz_panel_buttons->Add(tournament_games, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+        // Spacer
+        vsiz_panel_buttons->Add(5, 5, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
     }
     else if( id == ID_PGN_DIALOG_CLIPBOARD )
     {
