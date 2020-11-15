@@ -68,7 +68,7 @@ void ReportOnProgress
 
 // Initialise the game logic
 GameLogic::GameLogic( PanelContext *canvas, CtrlChessTxt *lb, wxMenu *menu_file )
-    : atom(this), gd(this), undo(this)
+    : atom(this), gd(this), undo(this), mru(20)
 {
 	mru.UseMenu(menu_file);
 	mru.AddFilesToMenu(menu_file);
