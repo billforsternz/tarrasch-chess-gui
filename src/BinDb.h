@@ -14,7 +14,7 @@
 
 bool BinDbOpen( const char *db_file, std::string &error_msg );
 void BinDbClose();
-bool BinDbLoadAllGames( bool for_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb=NULL  );
+bool BinDbLoadAllGames( bool &locked, bool for_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb=NULL  );
 std::vector< smart_ptr<ListableGame> > &BinDbLoadAllGamesGetVector();
 
 bool bin_db_append( const char *fen, const char *event, const char *site, const char *date, const char *round,
@@ -26,8 +26,8 @@ void BinDbCreationEnd();
 uint8_t BinDbReadBegin();
 uint32_t BinDbGetGamesSize();
 void BinDbNormaliseOrder( uint32_t begin, uint32_t end );
-bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, wxWindow *window );
-bool BinDbWriteOutToFile( FILE *ofile, int nbr_to_omit_from_end, ProgressBar *pb=NULL );
+bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, bool locked, wxWindow *window );
+bool BinDbWriteOutToFile( FILE *ofile, int nbr_to_omit_from_end, bool locked, ProgressBar *pb=NULL );
 bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen );
 
 void Pgn2Tdb( const char *infile, const char *outfile );
