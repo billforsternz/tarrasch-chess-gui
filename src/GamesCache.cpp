@@ -588,19 +588,29 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
     int gds_nbr = gds.size();
     long write_posn=0;
 	bool saving_work_file = (this==&objs.gl->gc_pgn);
-    int nbr_game_documents=0, nbr_emergency_games_written=0;
+    int nbr_locked=0, nbr_game_documents=0, nbr_emergency_games_written=0;
     int nbr_unavailable_games=0, nbr_unavailable_files=0;
     std::set<int> handles;
     std::set<int> unavailable_handles;
     for( int i=0; i<gds_nbr; i++ )
     {
         ListableGame *mptr = gds[i].get();
+        if( mptr->TestLocked() )
+            nbr_locked++;
         if( mptr->IsGameDocument() && !mptr->IsGameDocument()->IsEmpty() )
             nbr_game_documents++;
 		int pgn_handle2;
 		bool is_pgn = mptr->GetPgnHandle(pgn_handle2);
         if( is_pgn )
             handles.insert(pgn_handle2);
+    }
+    int expected_total_games = gds_nbr;
+    bool restrictions_apply = (nbr_locked > DATABASE_LOCKABLE_LIMIT);
+    if( restrictions_apply )
+    {
+        int expected_omissions = nbr_locked - DATABASE_LOCKABLE_LIMIT;
+        expected_total_games -= expected_omissions;
+        cprintf( "expected_total_games=%d\n", expected_total_games );
     }
     bool unavailable_handles_found = false;
     for( int handle: handles )
@@ -612,12 +622,13 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
             unavailable_handles_found = true;
         }
     }
-    ProgressBar pb( "Saving file", "Saving file" );
+    ProgressBar pb( "Saving file", restrictions_apply?"Saving file (restrictions apply)":"Saving file" );
     bool reached_limit=false;
-    int count_to_limit=0, nbr_locked=0, nbr_omitted=0;
+    int count_to_limit=0, nbr_omitted=0, count_to_expected_total_games=0;
+    nbr_locked=0;
     for( int i=0; i<gds_nbr; i++ )
     {
-        bool abort = pb.Perfraction( i, gds_nbr );
+        bool abort = pb.Perfraction( count_to_expected_total_games, expected_total_games );
         if( abort )
             break;
         ListableGame *mptr = gds[i].get();
@@ -631,12 +642,15 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
             }
             else
             {
-                if( count_to_limit >= 1000 )
-                    reached_limit = true;
-                else
+                if( count_to_limit < DATABASE_LOCKABLE_LIMIT )
+                {
                     count_to_limit++;
+                    if( count_to_limit >= DATABASE_LOCKABLE_LIMIT )
+                        reached_limit = true;
+                }
             }
         }
+        count_to_expected_total_games++;
         mptr->saved = true;
 		int pgn_handle2;
 		bool is_pgn = mptr->GetPgnHandle(pgn_handle2);
@@ -756,8 +770,8 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
         if( nbr_locked >= gds_nbr )
         {
             msg.sprintf( "These games are from a database that does not allow unrestricted export to PGN\n"
-                "%d such %s written to PGN\n"
-                "%d such %s omitted\n", count_to_limit, count_to_limit==1?"game was":"games were", 
+                "%d %s written to PGN\n"
+                "%d %s omitted\n", count_to_limit, count_to_limit==1?"game was":"games were", 
                                         nbr_omitted, nbr_omitted==1?"game was":"games were" );
         }
         else
