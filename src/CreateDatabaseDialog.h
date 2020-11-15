@@ -27,7 +27,8 @@ enum
     ID_CREATE_DB_PICKER4         = 10007,
     ID_CREATE_DB_PICKER5         = 10008,
     ID_CREATE_DB_PICKER6         = 10009,
-    ID_CREATE_ELO_CUTOFF         = 10010
+    ID_CREATE_ELO_CUTOFF         = 10010,
+    ID_CREATE_RESTRICTED         = 10011
 };
 
 // CreateDatabaseDialog class declaration
@@ -108,7 +109,7 @@ public:
     wxRadioButton *fail;
     wxRadioButton *pass;
     wxRadioButton *pass_before;
-
+    wxCheckBox *restricted_box;
 };
 
 #endif    // CREATE_DATABASE_DIALOG_H
