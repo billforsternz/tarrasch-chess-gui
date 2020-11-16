@@ -94,7 +94,7 @@ wxSizer *PgnDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
         vsiz_panel_buttons->Add(eco_codes, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
         // New pairings
-        wxButton* tournament_games = new wxButton ( this, ID_TOURNAMENT_GAMES, wxT("New Pairings"), // TEMP TEMP wxT("Paste current game"),
+        wxButton* tournament_games = new wxButton ( this, ID_TOURNAMENT_GAMES, wxT("New Pairings"),
             wxDefaultPosition, wxDefaultSize, 0 );
         gdr.RegisterPanelWindow( tournament_games );
         vsiz_panel_buttons->Add(tournament_games, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
