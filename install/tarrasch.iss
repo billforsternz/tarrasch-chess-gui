@@ -3,7 +3,7 @@
 
 [Setup]
 AppName=Tarrasch Chess GUI
-AppVerName=Tarrasch Chess GUI V3.12b-Windows
+AppVerName=Tarrasch Chess GUI V3.13a-Windows
 AppPublisher=Triple Happy Ltd.
 AppPublisherURL=http://www.triplehappy.com
 AppSupportURL=http://www.triplehappy.com
@@ -36,16 +36,17 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 [Files]
 Source: "Tarrasch.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Engines\TarraschToyEngine.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
+Source: "Engines\Sargon-1978.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "Engines\Rybka v2.3.2a.mp.w32.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
-Source: "Engines\komodo-8-32bit.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
-Source: "Engines\komodo-8-64bit.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
-Source: "Engines\stockfish_8_x64.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
-Source: "Engines\stockfish_8_x32.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
+Source: "Engines\komodo-12.1.1-32bit.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
+Source: "Engines\komodo-12.1.1-64bit.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
+Source: "Engines\stockfish_11_x64.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
+Source: "Engines\stockfish_11_x32.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "Engines\Houdini_15a_w32.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "Engines\Houdini_15a_x64.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "book.pgn"; DestDir: "{app}"; Flags: ignoreversion
 Source: "book.pgn_compiled"; DestDir: "{app}"; Flags: ignoreversion
-Source: "kingbase-lite.tdb"; DestDir: "{app}"; Flags: ignoreversion
+Source: "great-players-demo.tdb"; DestDir: "{app}"; Flags: ignoreversion
 Source: "web.zip"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
