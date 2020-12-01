@@ -21,10 +21,12 @@
 
  */
 
-#include "Portability.h"
 #include <stddef.h>
 #include <string>
 #include <vector>
+
+// Simple definitions to aid platform portability (only remains of former Portability.h)
+int strcmp_ignore( const char *s, const char *t ); // return 0 if case insensitive match
 
 /****************************************************************************
  * Chessdefs.h Chess classes - Common definitions
@@ -65,6 +67,14 @@ enum Square
     a1, b1, c1, d1, e1, f1, g1, h1,
     SQUARE_INVALID
 };
+
+// thc::Square utilities
+inline char get_file( Square sq )
+    { return static_cast<char> (  (static_cast<int>(sq)&0x07) + 'a' ); }           // eg c5->'c'
+inline char get_rank( Square sq )
+    { return static_cast<char> (  '8' - ((static_cast<int>(sq)>>3) & 0x07) ); }    // eg c5->'5'
+inline Square make_square( char file, char rank )
+    { return static_cast<Square> ( ('8'-(rank))*8 + ((file)-'a') );  }            // eg ('c','5') -> c5
 
 // Special (i.e. not ordinary) move types
 enum SPECIAL
@@ -327,7 +337,7 @@ public:
     void Init()
     {
         white = true;
-        strcpy( squares,
+        strcpy_s( squares, sizeof(squares),
            "rnbqkbnr"
            "pppppppp"
            "        "
@@ -709,89 +719,3 @@ private:
 } //namespace thc
 
 #endif //CHESSEVALUATION_H
-
-/****************************************************************************
- * ChessEngine.h Chess classes - Simple chess AI, add search to ChessEvaluation
- *  Author:  Bill Forster
- *  License: MIT license. Full text of license is in associated file LICENSE
- *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
- ****************************************************************************/
-#ifndef CHESSENGINE_H
-#define CHESSENGINE_H
-
-// TripleHappyChess
-namespace thc
-{
-
-class ChessEngine: public ChessEvaluation
-{
-public:
-
-    // Default contructor
-    ChessEngine() : ChessEvaluation() 
-    {
-    }
-
-    // Copy constructor
-    ChessEngine( const ChessPosition& src ) : ChessEvaluation( src ) 
-    {
-    }
-
-    // Assignment operator
-    ChessEngine& operator=( const ChessPosition& src )
-    {
-        *((ChessEvaluation *)this) = src;
-        return *this;
-    }
-
-    // Calculate a new move, returns bool have_move, sets score in units of balance*decipawns (white positive)
-    bool CalculateNextMove( bool &only_move, int &score, Move &move, int balance, int depth );
-
-    // A version for Multi-PV mode, called repeatedly, removes best move from
-    //  movelist each time
-    bool CalculateNextMove( int &score, Move &move, int balance, int depth, bool first );
-
-    // Public interface to version for repitition avoidance
-    bool CalculateNextMove( bool new_game, std::vector<Move> &pv, Move &bestmove, int &score_cp,
-                            unsigned long ms_time,
-                            unsigned long ms_budget,
-                            int balance,
-                            int &depth );
-
-    // Retrieve PV (primary variation?), call after CalculateNextMove()
-    void GetPV( std::vector<Move> &pv );
-
-    // Run test(s)
-    void Test();
-
-private:
-    //###################################
-    //#
-    //#  Internal stuff
-    //#
-    //###################################
-
-    // Internal version for repitition avoidance
-    bool CalculateNextMove( MOVELIST &ml, bool &only_move, int &score, int &besti, int balance, int depth );
-
-    // Has this position occurred before ?
-    bool IsRepitition();
-
-    // Do an careful (i.e. expensive) sort on the movelist
-    void CarefulSort( MOVELIST &ml );
-
-    // Recursive scoring function
-    int Score( MOVELIST &ml, int &besti );
-    int ScoreBlackToMove( MOVELIST &ml, int &besti, int white_mobility );
-    int ScoreWhiteToMove( MOVELIST &ml, int &besti, int black_mobility );
-
-    // Internal test suite
-    void TestInternals();
-    void TestGame();
-    void TestPosition();
-    void TestEnprise();
-};
-
-} //namespace thc
-
-#endif //CHESSENGINE_H
