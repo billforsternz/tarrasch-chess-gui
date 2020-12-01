@@ -10,9 +10,9 @@
 #include "wx/wx.h"
 #include "Portability.h"
 
-#define MASTER_VERSION_BASE "V3.13a"    //add '-' or '+' prefix between releases
+#define MASTER_VERSION_BASE "V3.13a+"    //add '-' or '+' prefix between releases
 
-//#define USING_TARRASCH_BASE
+#define USING_TARRASCH_BASE
 // no suffix indicates default .tdb is tarrasch-base
 #ifdef  USING_TARRASCH_BASE
 #ifdef THC_WINDOWS
