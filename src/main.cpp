@@ -940,8 +940,8 @@ bool ChessApp::OnInit()
         #endif
     }
     #endif
-    thc::ChessRules cr;
-    cr.TestInternals();
+    //thc::ChessRules cr;
+    //cr.TestInternals();
 	int lang = wxLocale::GetSystemLanguage();
 	gbl_spelling_us = (lang==wxLANGUAGE_ENGLISH_US);
 	gbl_spell_colour = gbl_spelling_us ? "color" : "colour";
