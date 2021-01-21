@@ -214,7 +214,7 @@ Repository::Repository( bool use_defaults )
                 if( wfn1.FileExists() )
                 {
                     database.m_file = wfn1.GetFullPath();
-                    std::string s = database.m_file;
+                    std::string s = database.m_file.ToStdString();
                     cprintf( "One time only change to database file: %s\n", s.c_str() );
                 }
             }
@@ -225,7 +225,7 @@ Repository::Repository( bool use_defaults )
                 if( wfn2.FileExists() )
                 {
                     engine.m_file = wfn2.GetFullPath();
-                    std::string s = engine.m_file;
+                    std::string s = engine.m_file.ToStdString();
                     cprintf( "One time only change to engine file: %s\n", s.c_str() );
                 }
             }
@@ -235,7 +235,7 @@ Repository::Repository( bool use_defaults )
                 if( wfn2.FileExists() )
                 {
                     engine.m_file = wfn2.GetFullPath();
-                    std::string s = engine.m_file;
+                    std::string s = engine.m_file.ToStdString();
                     cprintf( "One time only change to engine file: %s\n", s.c_str() );
                 }
             }

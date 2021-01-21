@@ -1457,7 +1457,7 @@ const char *str_pattern_smart( const char *str, const char *pattern )
             }
             *dst = '\0';
             bool match;
-            match = (0 == strcmpi(buf_pattern,buf_str));
+            match = (0 == strcmp_ignore(buf_pattern,buf_str));
             if( match )
                 found_token_in_patterns = true;
             if( c != '|' )
