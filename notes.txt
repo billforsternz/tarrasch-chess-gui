@@ -1,3 +1,13 @@
+20 Jan 2021
+Investigating bug report
+What PGN file created V3.13a release tarrasch-base.tdb ?
+Confirmed that it's file ChessDatabase\twicbase\compose\tlpgn.pgn
+18/11/2020  11:41 AM     2,548,355,636 tlpgn.pgn
+
+In Tarrasch's db create dialog box the date for tlpgn.pgn is different - it shows as 15/11/2020 5:33 PM 2,488,629 KB
+Windows explorer agrees exactly with Tarrasch's db create dialog box --EXCEPT-- it agrees with dir's time and date
+So weird !! Note that 2,548,355,636 / 1024 = 2488628.551 (so agrees after round up)
+
 4 March 2019
 Some improvements to aim for;
 1) Don't keep opening a new tab for every file opened. It's okay if the current tab has been used, but if it's occupied by

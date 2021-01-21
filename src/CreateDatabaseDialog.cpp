@@ -271,8 +271,12 @@ void CreateDatabaseDialog::SetDialogHelp()
     char buf[200];
     sprintf( buf, "If this is selected, exporting games from the new database to PGN will be restricted (no more than %d at a time).", DATABASE_LOCKABLE_LIMIT );
     wxString restricted_help(buf);
-    FindWindow(ID_CREATE_RESTRICTED)->SetHelpText(restricted_help);
-    FindWindow(ID_CREATE_RESTRICTED)->SetToolTip(restricted_help);
+    wxWindow *w = FindWindow(ID_CREATE_RESTRICTED);
+    if( w )
+    {
+        w->SetHelpText(restricted_help);
+        w->SetToolTip(restricted_help);
+    }
 }
 
 // wxID_OK handler
