@@ -3,7 +3,7 @@
 
 [Setup]
 AppName=Tarrasch Chess GUI
-AppVerName=Tarrasch Chess GUI V3.13a-Windows
+AppVerName=Tarrasch Chess GUI V3.13b-Windows
 AppPublisher=Triple Happy Ltd.
 AppPublisherURL=http://www.triplehappy.com
 AppSupportURL=http://www.triplehappy.com
@@ -46,7 +46,7 @@ Source: "Engines\Houdini_15a_w32.exe"; DestDir: "{app}\Engines"; Flags: ignoreve
 Source: "Engines\Houdini_15a_x64.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "book.pgn"; DestDir: "{app}"; Flags: ignoreversion
 Source: "book.pgn_compiled"; DestDir: "{app}"; Flags: ignoreversion
-Source: "great-players-demo.tdb"; DestDir: "{app}"; Flags: ignoreversion
+Source: "tarrasch-base.tdb"; DestDir: "{app}"; Flags: ignoreversion
 Source: "web.zip"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
