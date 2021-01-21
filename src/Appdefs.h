@@ -12,7 +12,7 @@
 
 #define MASTER_VERSION_BASE "V3.13b"    //add '-' or '+' prefix between releases
 
-#define USING_TARRASCH_BASE
+//#define USING_TARRASCH_BASE
 // no suffix indicates default .tdb is tarrasch-base
 #ifdef  USING_TARRASCH_BASE
 #ifdef THC_WINDOWS
