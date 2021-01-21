@@ -587,11 +587,12 @@ static void parse_players_txt( const char *txt, std::vector<CompactGame> &games 
                 pact.r.white_elo = first_rating;
                 pact.r.black_elo = second_rating;
                 pact.r.result = "*";
-                if( std::string::npos != between.find("1:0") )
+                if( std::string::npos != between.find("1:0") ||  std::string::npos != between.find("1-0") )
                     pact.r.result = "1-0";
-                else if( std::string::npos != between.find("0:1") )
+                else if( std::string::npos != between.find("0:1") || std::string::npos != between.find("0-1") )
                     pact.r.result = "0-1";
-                else if( std::string::npos != between.find("\xbd:\xbd") )
+                else if( std::string::npos != between.find("\xbd") || std::string::npos != between.find("0.5")
+                    || std::string::npos != between.find("1/2") )
                     pact.r.result = "1/2-1/2";
                 games.push_back(pact);
             }
@@ -604,6 +605,7 @@ static void parse_players_txt( const char *txt, std::vector<CompactGame> &games 
                 second = "";
                 first_rating = "";
                 second_rating = "";
+                between = "";
             }
         }
     }
