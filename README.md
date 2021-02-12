@@ -70,11 +70,12 @@ Cheetham, Tarrasch on Linux has moved forward significantly. To try this out on
 Ubuntu 16.04 LTS (say), perform the following steps then simply make in the top
 level directory;
 
+- sudo apt install g++
 - sudo apt install libwxgtk3.0-dev
 - sudo apt install libwxgtk-media3.0-dev
-- sudo apt install libwxgtk-webview3.0-dev
+- sudo apt install libwxgtk-webview3.0-gtk3-0v5
 - wx-config --version
-  - (should return 3.0.2)
+  - (should return 3.0.4)
  
  
 ## Building Tarrasch on Linux (Ubuntu 18.04)
