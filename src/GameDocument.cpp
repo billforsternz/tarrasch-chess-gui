@@ -2171,6 +2171,14 @@ void GameDocument::ToFileTxtGameDetails( std::string &str )
         str1 += start_position.ForsythPublish();
         str1 += "\"]" EOL;
     }
+    for( std::pair<std::string,std::string> key_value: extra_tags )
+    {
+        str1 += "[";
+        str1 += key_value.first;    // key
+        str1 += " \"";
+        str1 += key_value.second;    // value
+        str1 += "\"]" EOL;
+    }
     str1 += EOL;
     str = str1;
 }

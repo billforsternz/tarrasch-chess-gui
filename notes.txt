@@ -5,8 +5,12 @@ Confirmed that it's file ChessDatabase\twicbase\compose\tlpgn.pgn
 18/11/2020  11:41 AM     2,548,355,636 tlpgn.pgn
 
   Piwari, Dyland Tama 2118  0:1 Xie, Felix 2003
-  Dive, R 2371       1:0   Van der Hoorn, Thomas 1418
-  Hart, Ralph 2235   1:0   Hague, Ben 2429
+  Dive, R 2371       1/2   Van der Hoorn, Thomas 1418
+  Dive, R 2371       1/2-1/2   Van der Hoorn, Thomas 1418
+  Hart, Ralph 2235   1-0   Hague, Ben 2429
+  Hart, Ralph 2235   0.5   Hague, Ben 2429
+  Hart, Ralph 2235   0.5-0.5   Hague, Ben 2429
+  Hart, Ralph 2235   0.5:0.5   Hague, Ben 2429
   Croad, Nicholas 2323  ½:½  Ker, Anthon F 2385
   
 In Tarrasch's db create dialog box the date for tlpgn.pgn is different - it shows as 15/11/2020 5:33 PM 2,488,629 KB

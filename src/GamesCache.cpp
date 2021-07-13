@@ -461,28 +461,33 @@ bool GamesCache::Tagline( GameDocument &gd,  const char *s )
             string val(val_begin,val_end-val_begin);
             if( stag == "White" )
                 gd.r.white = val;
-            if( stag == "Black" )
+            else if( stag == "Black" )
                 gd.r.black = val;
-            if( stag == "Event" )
+            else if( stag == "Event" )
                 gd.r.event = val;
-            if( stag == "Site" )
+            else if( stag == "Site" )
                 gd.r.site = val;
-            if( stag == "Date" )
+            else if( stag == "Date" )
                 gd.r.date = val;
-            if( stag == "Round" )
+            else if( stag == "Round" )
                 gd.r.round = val;
-            if( stag == "Result" )
+            else if( stag == "Result" )
                 gd.r.result = val;
-            if( stag == "ECO" )
+            else if( stag == "ECO" )
                 gd.r.eco = val;
-            if( stag == "WhiteElo" )
+            else if( stag == "WhiteElo" )
                 gd.r.white_elo = val;
-            if( stag == "BlackElo" )
+            else if( stag == "BlackElo" )
                 gd.r.black_elo = val;
-            if( stag == "FEN" )
+            else if( stag == "FEN" )
             {
                 gd.r.fen = val;
                 gd.start_position.Forsyth(val.c_str());
+            }
+            else
+            {
+                std::pair<std::string,std::string> key_value(stag,val);
+                gd.extra_tags.push_back(key_value);
             }
         }
     }

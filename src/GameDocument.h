@@ -99,6 +99,7 @@ public:
         pgn_handle      = src.pgn_handle;
         sort_idx        = src.sort_idx;
         r               = src.r;
+        extra_tags      = src.extra_tags;
 		game_id         = src.game_id;
         start_position  = src.start_position;
         master_position = src.master_position;
@@ -138,6 +139,7 @@ public:
 
     // Data
     Roster      r;  // white, black, event, site, date etc.
+    std::vector<std::pair<std::string,std::string>> extra_tags;
     unsigned long non_zero_start_pos;
     bool        game_details_edited;
     bool        game_prefix_edited;
