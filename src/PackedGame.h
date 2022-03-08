@@ -14,7 +14,7 @@ class PackedGame
 private:
     std::string fields;
     //std::vector<char> fields;
-    
+
 public:
     bool Empty() { return fields.size() == 0; }
     PackedGame() {}

@@ -26,7 +26,7 @@ public:
         #ifdef THC_WINDOWS
         // get ticks per second
         QueryPerformanceFrequency(&frequency);
-    
+
         // start timer
         QueryPerformanceCounter(&t1);
         #endif
@@ -49,7 +49,7 @@ public:
         #ifdef THC_UNIX
         // stop timer
         gettimeofday(&t2, NULL);
-    
+
         // compute the elapsed time in millisec
         elapsed_time = (t2.tv_sec - t1.tv_sec) * 1000.0;      // sec to ms
         elapsed_time += (t2.tv_usec - t1.tv_usec) / 1000.0;   // us to ms

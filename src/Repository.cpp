@@ -88,7 +88,7 @@ Repository::Repository( bool use_defaults )
         config->Read("BookPostLimitPercent", &book.m_post_limit_percent );
 
         // Player
-        config->Read("PlayerHuman",          &player.m_human            );   
+        config->Read("PlayerHuman",          &player.m_human            );
     //  config->Read("PlayerComputer",       &player.m_computer         );
     //  config->Read("PlayerWhite",          &player.m_white            );
     //  config->Read("PlayerBlack",          &player.m_black            );
@@ -123,10 +123,10 @@ Repository::Repository( bool use_defaults )
         // Engine
         config->Read("EngineExeFile",         &engine.m_file            );
         ReadBool    ("EnginePonder",           engine.m_ponder          );
-		ReadBool	("EngineNormalPriority",   engine.m_normal_priority );
-		ReadBool	("EngineLowPriority",	   engine.m_low_priority    );
-		ReadBool	("EngineIdlePriority",	   engine.m_idle_priority   );
-		config->Read("EngineHash",            &engine.m_hash            );
+        ReadBool    ("EngineNormalPriority",   engine.m_normal_priority );
+        ReadBool    ("EngineLowPriority",      engine.m_low_priority    );
+        ReadBool    ("EngineIdlePriority",     engine.m_idle_priority   );
+        config->Read("EngineHash",            &engine.m_hash            );
         config->Read("EngineMaxCpuCores",     &engine.m_max_cpu_cores   );
         config->Read("EngineCustom1a",        &engine.m_custom1a        );
         config->Read("EngineCustom1b",        &engine.m_custom1b        );
@@ -150,43 +150,43 @@ Repository::Repository( bool use_defaults )
         ReadBool    ("TrainingBlindfoldHideBlackPieces",  training.m_blindfold_hide_black_pieces );
 
         // Database
-        config->Read("DatabaseFile",				&database.m_file          );
-        config->Read("DatabaseEloCutoff",			&database.m_elo_cutoff    );
+        config->Read("DatabaseFile",                &database.m_file          );
+        config->Read("DatabaseEloCutoff",           &database.m_elo_cutoff    );
         config->Read("DatabaseEloCutoffBeforeYear", &database.m_elo_cutoff_before_year );
-        ReadBool    ("DatabaseEloCutoffIgnore",		database.m_elo_cutoff_ignore );
-        ReadBool    ("DatabaseEloCutoffOne",		database.m_elo_cutoff_one    );
-        ReadBool    ("DatabaseEloCutoffBoth",		database.m_elo_cutoff_both );
-        ReadBool    ("DatabaseEloCutoffFail",		database.m_elo_cutoff_fail );
-        ReadBool    ("DatabaseEloCutoffPass",		database.m_elo_cutoff_pass );
+        ReadBool    ("DatabaseEloCutoffIgnore",     database.m_elo_cutoff_ignore );
+        ReadBool    ("DatabaseEloCutoffOne",        database.m_elo_cutoff_one    );
+        ReadBool    ("DatabaseEloCutoffBoth",       database.m_elo_cutoff_both );
+        ReadBool    ("DatabaseEloCutoffFail",       database.m_elo_cutoff_fail );
+        ReadBool    ("DatabaseEloCutoffPass",       database.m_elo_cutoff_pass );
         ReadBool    ("DatabaseEloCutoffPassBefore", database.m_elo_cutoff_pass_before );
-        
+
         // General
         config->Read("GeneralNotationLanguage",          &general.m_notation_language );
         LangSet(general.m_notation_language);
         ReadBool    ("GeneralNoItalics",                  general.m_no_italics        );
         ReadBool    ("GeneralStraightToGame",             general.m_straight_to_game  );
         ReadBool    ("GeneralStraightToFirstGame",        general.m_straight_to_first_game  );
-		config->Read("GeneralFontSize",                  &general.m_font_size );
+        config->Read("GeneralFontSize",                  &general.m_font_size );
         ReadBool    ("GeneralHeadingAboveBoard",          general.m_heading_above_board );
         ReadBool    ("GeneralNoAutoFlip",                 general.m_no_auto_flip  );
         ReadBool    ("GeneralEmitBellWhenEngineMoves",    general.m_bell  );
-		ReadBool    ("GeneralSuppressHighlight",		  general.m_suppress_highlight  );
-		ReadBool    ("GeneralLineHighlight",			  general.m_line_highlight  );
-		config->Read("GeneralLightSquaresRed",            &general.m_light_colour_r );
-		config->Read("GeneralLightSquaresGreen",          &general.m_light_colour_g );
-		config->Read("GeneralLightSquaresBlue",           &general.m_light_colour_b );
-		config->Read("GeneralDarkSquaresRed",             &general.m_dark_colour_r );
-		config->Read("GeneralDarkSquaresGreen",           &general.m_dark_colour_g );
-		config->Read("GeneralDarkSquaresBlue",            &general.m_dark_colour_b );
-		config->Read("GeneralHighlightLightSquaresRed",            &general.m_highlight_light_colour_r );
-		config->Read("GeneralHighlightLightSquaresGreen",          &general.m_highlight_light_colour_g );
-		config->Read("GeneralHighlightLightSquaresBlue",           &general.m_highlight_light_colour_b );
-		config->Read("GeneralHighlightDarkSquaresRed",             &general.m_highlight_dark_colour_r );
-		config->Read("GeneralHighlightDarkSquaresGreen",           &general.m_highlight_dark_colour_g );
-		config->Read("GeneralHighlightDarkSquaresBlue",            &general.m_highlight_dark_colour_b );
-		config->Read("GeneralHighlightLineSquaresRed",             &general.m_highlight_line_colour_r );
-		config->Read("GeneralHighlightLineSquaresGreen",           &general.m_highlight_line_colour_g );
-		config->Read("GeneralHighlightLineSquaresBlue",            &general.m_highlight_line_colour_b );
+        ReadBool    ("GeneralSuppressHighlight",          general.m_suppress_highlight  );
+        ReadBool    ("GeneralLineHighlight",              general.m_line_highlight  );
+        config->Read("GeneralLightSquaresRed",            &general.m_light_colour_r );
+        config->Read("GeneralLightSquaresGreen",          &general.m_light_colour_g );
+        config->Read("GeneralLightSquaresBlue",           &general.m_light_colour_b );
+        config->Read("GeneralDarkSquaresRed",             &general.m_dark_colour_r );
+        config->Read("GeneralDarkSquaresGreen",           &general.m_dark_colour_g );
+        config->Read("GeneralDarkSquaresBlue",            &general.m_dark_colour_b );
+        config->Read("GeneralHighlightLightSquaresRed",            &general.m_highlight_light_colour_r );
+        config->Read("GeneralHighlightLightSquaresGreen",          &general.m_highlight_light_colour_g );
+        config->Read("GeneralHighlightLightSquaresBlue",           &general.m_highlight_light_colour_b );
+        config->Read("GeneralHighlightDarkSquaresRed",             &general.m_highlight_dark_colour_r );
+        config->Read("GeneralHighlightDarkSquaresGreen",           &general.m_highlight_dark_colour_g );
+        config->Read("GeneralHighlightDarkSquaresBlue",            &general.m_highlight_dark_colour_b );
+        config->Read("GeneralHighlightLineSquaresRed",             &general.m_highlight_line_colour_r );
+        config->Read("GeneralHighlightLineSquaresGreen",           &general.m_highlight_line_colour_g );
+        config->Read("GeneralHighlightLineSquaresBlue",            &general.m_highlight_line_colour_b );
 
         // NonVolatile - DefaultsStepper
         //
@@ -270,7 +270,7 @@ Repository::Repository( bool use_defaults )
         ReadBool    ("NonVolatileEventNotSite",            nv.m_event_not_site );
     }
 #ifdef MAC_FIX_LATER
-    book.m_enabled = false;	// book doesn't work on Mac
+    book.m_enabled = false; // book doesn't work on Mac
 #endif
 }
 
@@ -284,7 +284,7 @@ Repository::~Repository()
     config->Write("BookPostLimitPercent", book.m_post_limit_percent );
 
     // Player
-    config->Write("PlayerHuman",          player.m_human            );   
+    config->Write("PlayerHuman",          player.m_human            );
 //  config->Write("PlayerComputer",       player.m_computer         );
 //  config->Write("PlayerWhite",          player.m_white            );
 //  config->Write("PlayerBlack",          player.m_black            );
@@ -332,23 +332,23 @@ Repository::~Repository()
     config->Write("GeneralHeadingAboveBoard",         (int)general.m_heading_above_board  );
     config->Write("GeneralNoAutoFlip",                (int)general.m_no_auto_flip );
     config->Write("GeneralEmitBellWhenEngineMoves",   (int)general.m_bell  );
-    config->Write("GeneralSuppressHighlight",		  (int)general.m_suppress_highlight  );
-    config->Write("GeneralLineHighlight",			  (int)general.m_line_highlight  );
-	config->Write("GeneralLightSquaresRed",            general.m_light_colour_r );
-	config->Write("GeneralLightSquaresGreen",          general.m_light_colour_g );
-	config->Write("GeneralLightSquaresBlue",           general.m_light_colour_b );
-	config->Write("GeneralDarkSquaresRed",             general.m_dark_colour_r );
-	config->Write("GeneralDarkSquaresGreen",           general.m_dark_colour_g );
-	config->Write("GeneralDarkSquaresBlue",            general.m_dark_colour_b );
-	config->Write("GeneralHighlightLightSquaresRed",            general.m_highlight_light_colour_r );
-	config->Write("GeneralHighlightLightSquaresGreen",          general.m_highlight_light_colour_g );
-	config->Write("GeneralHighlightLightSquaresBlue",           general.m_highlight_light_colour_b );
-	config->Write("GeneralHighlightDarkSquaresRed",             general.m_highlight_dark_colour_r );
-	config->Write("GeneralHighlightDarkSquaresGreen",           general.m_highlight_dark_colour_g );
-	config->Write("GeneralHighlightDarkSquaresBlue",            general.m_highlight_dark_colour_b );
-	config->Write("GeneralHighlightLineSquaresRed",             general.m_highlight_line_colour_r );
-	config->Write("GeneralHighlightLineSquaresGreen",           general.m_highlight_line_colour_g );
-	config->Write("GeneralHighlightLineSquaresBlue",            general.m_highlight_line_colour_b );
+    config->Write("GeneralSuppressHighlight",         (int)general.m_suppress_highlight  );
+    config->Write("GeneralLineHighlight",             (int)general.m_line_highlight  );
+    config->Write("GeneralLightSquaresRed",            general.m_light_colour_r );
+    config->Write("GeneralLightSquaresGreen",          general.m_light_colour_g );
+    config->Write("GeneralLightSquaresBlue",           general.m_light_colour_b );
+    config->Write("GeneralDarkSquaresRed",             general.m_dark_colour_r );
+    config->Write("GeneralDarkSquaresGreen",           general.m_dark_colour_g );
+    config->Write("GeneralDarkSquaresBlue",            general.m_dark_colour_b );
+    config->Write("GeneralHighlightLightSquaresRed",            general.m_highlight_light_colour_r );
+    config->Write("GeneralHighlightLightSquaresGreen",          general.m_highlight_light_colour_g );
+    config->Write("GeneralHighlightLightSquaresBlue",           general.m_highlight_light_colour_b );
+    config->Write("GeneralHighlightDarkSquaresRed",             general.m_highlight_dark_colour_r );
+    config->Write("GeneralHighlightDarkSquaresGreen",           general.m_highlight_dark_colour_g );
+    config->Write("GeneralHighlightDarkSquaresBlue",            general.m_highlight_dark_colour_b );
+    config->Write("GeneralHighlightLineSquaresRed",             general.m_highlight_line_colour_r );
+    config->Write("GeneralHighlightLineSquaresGreen",           general.m_highlight_line_colour_g );
+    config->Write("GeneralHighlightLineSquaresBlue",            general.m_highlight_line_colour_b );
 
     // NonVolatile
     config->Write("NonVolatileDefaultsStepper",     DEFAULTS_STEPPER_LEVEL );
@@ -380,23 +380,23 @@ Repository::~Repository()
     config->Write("NonVolatileEventNotSite",        (int)nv.m_event_not_site );
 
     // Database
-    config->Write("DatabaseFile",				 database.m_file       );
-    config->Write("DatabaseEloCutoff",			 database.m_elo_cutoff );
+    config->Write("DatabaseFile",                database.m_file       );
+    config->Write("DatabaseEloCutoff",           database.m_elo_cutoff );
     config->Write("DatabaseEloCutoffBeforeYear", database.m_elo_cutoff_before_year );
-    config->Write("DatabaseEloCutoffIgnore",	 (int)database.m_elo_cutoff_ignore );
-    config->Write("DatabaseEloCutoffOne",		 (int)database.m_elo_cutoff_one    );
-    config->Write("DatabaseEloCutoffBoth",		 (int)database.m_elo_cutoff_both );
-    config->Write("DatabaseEloCutoffFail",		 (int)database.m_elo_cutoff_fail );
-    config->Write("DatabaseEloCutoffPass",		 (int)database.m_elo_cutoff_pass );
+    config->Write("DatabaseEloCutoffIgnore",     (int)database.m_elo_cutoff_ignore );
+    config->Write("DatabaseEloCutoffOne",        (int)database.m_elo_cutoff_one    );
+    config->Write("DatabaseEloCutoffBoth",       (int)database.m_elo_cutoff_both );
+    config->Write("DatabaseEloCutoffFail",       (int)database.m_elo_cutoff_fail );
+    config->Write("DatabaseEloCutoffPass",       (int)database.m_elo_cutoff_pass );
     config->Write("DatabaseEloCutoffPassBefore", (int)database.m_elo_cutoff_pass_before );
-    
+
     // Engine
     config->Write("EngineExeFile",      engine.m_file   );
     config->Write("EnginePonder",       (int)engine.m_ponder     );
-    config->Write("EngineNormalPriority",	(int)engine.m_normal_priority );
-	config->Write("EngineLowPriority",		(int)engine.m_low_priority);
-	config->Write("EngineIdlePriority",		(int)engine.m_idle_priority);
-	config->Write("EngineHash",         engine.m_hash            );
+    config->Write("EngineNormalPriority",   (int)engine.m_normal_priority );
+    config->Write("EngineLowPriority",      (int)engine.m_low_priority);
+    config->Write("EngineIdlePriority",     (int)engine.m_idle_priority);
+    config->Write("EngineHash",         engine.m_hash            );
     config->Write("EngineMaxCpuCores",  engine.m_max_cpu_cores   );
     config->Write("EngineCustom1a",     engine.m_custom1a        );
     config->Write("EngineCustom1b",     engine.m_custom1b        );
@@ -421,16 +421,16 @@ static void TestStandardPaths()
 {
 // Results of running this in debug mode during development
 //=========================================================
-// Config dir (sys):	C:\Documents and Settings\All Users\Application Data\Tarrasch
-// Config dir (user):	C:\Documents and Settings\Bill\Application Data
-// Data dir (sys):		c:\Documents and Settings\Bill\My Documents\Chess\wx
-// Data dir (sys local):	c:\Documents and Settings\Bill\My Documents\Chess\wx
-// Data dir (user):	C:\Documents and Settings\Bill\Application Data\Tarrasch
-// Data dir (user local):	C:\Documents and Settings\Bill\Local Settings\Application Data\Tarrasch
-// Documents dir:		C:\Documents and Settings\Bill\My Documents
-// Executable path:	c:\Documents and Settings\Bill\My Documents\Chess\wx\vc_mswd\Tarrasch.exe
-// Plugins dir:		c:\Documents and Settings\Bill\My Documents\Chess\wx
-// Resources dir:		c:\Documents and Settings\Bill\My Documents\Chess\wx
+// Config dir (sys):    C:\Documents and Settings\All Users\Application Data\Tarrasch
+// Config dir (user):   C:\Documents and Settings\Bill\Application Data
+// Data dir (sys):      c:\Documents and Settings\Bill\My Documents\Chess\wx
+// Data dir (sys local):    c:\Documents and Settings\Bill\My Documents\Chess\wx
+// Data dir (user): C:\Documents and Settings\Bill\Application Data\Tarrasch
+// Data dir (user local):   C:\Documents and Settings\Bill\Local Settings\Application Data\Tarrasch
+// Documents dir:       C:\Documents and Settings\Bill\My Documents
+// Executable path: c:\Documents and Settings\Bill\My Documents\Chess\wx\vc_mswd\Tarrasch.exe
+// Plugins dir:     c:\Documents and Settings\Bill\My Documents\Chess\wx
+// Resources dir:       c:\Documents and Settings\Bill\My Documents\Chess\wx
 
     wxStandardPathsBase& stdp = wxStandardPaths::Get();
     dbg_printf( "Config dir (sys):\t%s\n", stdp.GetConfigDir().c_str());
@@ -467,7 +467,7 @@ void Repository::SetDirectories()
         doc = without_end;
     cprintf( "Windows document directory after : %s\n", static_cast<const char *>(doc.c_str()) );
     wxString tmp = stdp.GetExecutablePath();            // eg "C:\Program Files\Tarrasch\Tarrasch.exe"
-    wxFileName exe(tmp);     
+    wxFileName exe(tmp);
     wxArrayString dirs = exe.GetDirs();
     exe_dir = exe.GetPath();
     if( dirs.Count() > 1 )
@@ -514,7 +514,7 @@ void Repository::SetDirectories()
         okay = wxRenameFile( exe_dir+"/book.pgn_compiled", doc_dir+"/book.pgn_compiled" );
         cprintf( "Move book.pgn_compiled %s\n", okay?"okay":"error" );
 #endif
-		// rename can fail embarrassingly for permissions reasons
+        // rename can fail embarrassingly for permissions reasons
         bool okay = wxCopyFile( exe_dir+"/book.pgn", doc_dir+"/book.pgn" );
         cprintf( "Copy book.pgn %s\n", okay?"okay":"error" );
         okay = wxCopyFile( exe_dir+"/book.pgn_compiled", doc_dir+"/book.pgn_compiled" );
@@ -539,8 +539,8 @@ void Repository::SetDirectories()
     }
     if( replace )
     {
-		const char *exe_db_c = exe_db.c_str();
-		const char *doc_db_c = doc_db.c_str();
+        const char *exe_db_c = exe_db.c_str();
+        const char *doc_db_c = doc_db.c_str();
         cprintf( "wxCopyFile(\"%s\",\"%s\") IN\n", exe_db_c, doc_db_c );
         bool okay = wxCopyFile( exe_db, doc_db );
         cprintf( "wxCopyFile() OUT %s\n", okay?"okay":"error" );

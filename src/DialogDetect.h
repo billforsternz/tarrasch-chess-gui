@@ -12,13 +12,13 @@
 class DialogDetect
 {
 public:
-	DialogDetect()
-	{
-		counter++;
-	}
+    DialogDetect()
+    {
+        counter++;
+    }
 
-	~DialogDetect()
-	{
+    ~DialogDetect()
+    {
         counter--;
         if( counter==0 && func )
         {
@@ -27,21 +27,21 @@ public:
             func = 0;
             temp(parm);
         }
-	}
+    }
 
-	static bool IsOpen()
-	{
-		return counter>0;
-	}
+    static bool IsOpen()
+    {
+        return counter>0;
+    }
 
-	static void OnClose( void (*f)(std::string&), std::string p )
-	{
+    static void OnClose( void (*f)(std::string&), std::string p )
+    {
         func = f;
-		parm = p;
-	}
+        parm = p;
+    }
 
 private:
-	static int counter;
+    static int counter;
     static void (*func)( std::string& );
     static std::string parm;
 };

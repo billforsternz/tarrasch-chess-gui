@@ -57,7 +57,7 @@ enum
 
 // PatternDialog class declaration
 class PatternDialog: public wxDialog
-{    
+{
     DECLARE_CLASS( PatternDialog )
     DECLARE_EVENT_TABLE()
 
@@ -111,7 +111,7 @@ public:
 private:
     wxString        fen;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
-	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
+    DialogDetect    detect;     // similarly the presence of this var allows tracking of open dialogs
     wxStaticText*   lockdown_text;
     wxCheckBox*     inc_reverse;
     wxCheckBox*     inc_reflection;

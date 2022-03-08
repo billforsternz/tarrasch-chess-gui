@@ -20,8 +20,8 @@
 
 CtrlChessBoard::CtrlChessBoard
 (
-	bool interactive_,
-	bool normal_orientation,
+    bool interactive_,
+    bool normal_orientation,
     wxWindow *parent,
     wxWindowID id,
     const wxPoint& point,
@@ -29,17 +29,17 @@ CtrlChessBoard::CtrlChessBoard
 )   : wxControl( parent, id, point, size, wxBORDER_NONE ) //wxBORDER_SIMPLE ) //wxBORDER_NONE /*BORDER_COMMON*/ )
             // for the moment we get a strange artifact effect on resize sometimes unless wxBORDER_NONE
 {
-	wxSize sz=size;
-	interactive = interactive_;
-	if( sz.x<=0 || sz.y<=0 )
-	{
+    wxSize sz=size;
+    interactive = interactive_;
+    if( sz.x<=0 || sz.y<=0 )
+    {
         unsigned int square_size = GetDefaultSquareSize();
-		sz = wxSize(square_size*8,square_size*8);
-		SetSize(sz);
-	}
+        sz = wxSize(square_size*8,square_size*8);
+        SetSize(sz);
+    }
     int min = sz.x<sz.y ? sz.x : sz.y;
     int pix = min/8;
-	thc::ChessPosition cp;
+    thc::ChessPosition cp;
     cbb.CreateAsChessBoardOnly( wxSize(pix*8,pix*8), normal_orientation, cp );
 }
 
@@ -60,53 +60,53 @@ void CtrlChessBoard::OnSize(wxSizeEvent& WXUNUSED(evt))
 // Figure out which square is clicked on the board
 void CtrlChessBoard::HitTest( wxPoint hit, char &file, char &rank )
 {
-	unsigned long row = ( hit.y / (cbb.height/8) );
-	unsigned long col = ( (hit.x*cbb.density) / (cbb.width_bytes/8) );
+    unsigned long row = ( hit.y / (cbb.height/8) );
+    unsigned long col = ( (hit.x*cbb.density) / (cbb.width_bytes/8) );
     //dbg_printf( "Hit test: x=%ld y=%ld\n", hit.x, hit.y );
-	if( cbb.normal_orientation )
-	{
-		rank = '1'+ (int)(7-row);
-		file = 'a'+ (int)col;
-	}
-	else
-	{
-		file = 'a'+ (int)(7-col);
-		rank = '1'+ (int)row;
-	}
+    if( cbb.normal_orientation )
+    {
+        rank = '1'+ (int)(7-row);
+        file = 'a'+ (int)col;
+    }
+    else
+    {
+        file = 'a'+ (int)(7-col);
+        rank = '1'+ (int)row;
+    }
 }
 
 // Figure out which square is at shift offset from this square
 void CtrlChessBoard::HitTestEx( char &file, char &rank, wxPoint shift )
 {
-	long row, y, col, x;
-	if( cbb.normal_orientation )
-	{
-		row = 7 - (rank-'1');
-		col = file - 'a';
-	}
-	else
-	{
-		row = rank-'1';
-		col = 7 - (file-'a');
-	}
+    long row, y, col, x;
+    if( cbb.normal_orientation )
+    {
+        row = 7 - (rank-'1');
+        col = file - 'a';
+    }
+    else
+    {
+        row = rank-'1';
+        col = 7 - (file-'a');
+    }
     y = row*(cbb.height/8);
-	x = (col*(cbb.width_bytes/8)) / cbb.density;
+    x = (col*(cbb.width_bytes/8)) / cbb.density;
     //dbg_printf( "Ex, shift:     x=%ld y=%ld\n", shift.x, shift.y );
     //dbg_printf( "Ex, src raw:   x=%ld y=%ld\n", x, y );
     y += cbb.height/16;
-	x += (cbb.width_bytes/16) / cbb.density;
+    x += (cbb.width_bytes/16) / cbb.density;
     //dbg_printf( "Ex  src+half:  x=%ld y=%ld\n", x, y );
     y += shift.y;
-	x += shift.x;
+    x += shift.x;
     //dbg_printf( "Ex  src+shift: x=%ld y=%ld\n", x, y );
     if( y < (int)(cbb.height/16) )
         y = cbb.height/16;
     else if( y > (int)((cbb.height/16) + 7*(cbb.height/8)) )
         y = ((cbb.height/16) + 7*(cbb.height/8));
-	if( x < (int)((cbb.width_bytes/16)/cbb.density) )
-	    x = (int)((cbb.width_bytes/16)/cbb.density);
-	else if( x > (int)(( cbb.width_bytes/16 + 7*(cbb.width_bytes/8)) / cbb.density ) )
-	    x = (int)( (cbb.width_bytes/16 + 7*(cbb.width_bytes/8)) / cbb.density );
+    if( x < (int)((cbb.width_bytes/16)/cbb.density) )
+        x = (int)((cbb.width_bytes/16)/cbb.density);
+    else if( x > (int)(( cbb.width_bytes/16 + 7*(cbb.width_bytes/8)) / cbb.density ) )
+        x = (int)( (cbb.width_bytes/16 + 7*(cbb.width_bytes/8)) / cbb.density );
     //dbg_printf( "Ex  src+shift constrained: x=%ld y=%ld\n", x, y );
     wxPoint adjusted;
     adjusted.x = x;
@@ -118,7 +118,7 @@ void CtrlChessBoard::HitTestEx( char &file, char &rank, wxPoint shift )
 void CtrlChessBoard::OnMouseLeftDown( wxMouseEvent &event )
 {
     if( !interactive )
-		return;//	event.StopPropagation();
+        return;//   event.StopPropagation();
     wxPoint point = event.GetPosition();
     wxPoint click = point;
     wxPoint pos = GetPosition();
@@ -147,7 +147,7 @@ void CtrlChessBoard::OnMouseLeftDown( wxMouseEvent &event )
 void CtrlChessBoard::OnMouseMove( wxMouseEvent &event )
 {
     if( !interactive )
-		return;//	event.StopPropagation();
+        return;//   event.StopPropagation();
     wxPoint point = event.GetPosition();
     if( cbb.sliding )
     {
@@ -163,7 +163,7 @@ void CtrlChessBoard::OnMouseMove( wxMouseEvent &event )
 void CtrlChessBoard::OnMouseLeftUp( wxMouseEvent &event )
 {
     if( !interactive )
-		return;//	event.StopPropagation();
+        return;//   event.StopPropagation();
 
     cbb.sliding = false;
     wxPoint point = event.GetPosition();
@@ -173,9 +173,9 @@ void CtrlChessBoard::OnMouseLeftUp( wxMouseEvent &event )
     click.y += pos.y;
     point.x -= cbb.pickup_point.x;
     point.y -= cbb.pickup_point.y;
-	char file=cbb.pickup_file;
+    char file=cbb.pickup_file;
     char rank=cbb.pickup_rank;
-  	HitTestEx( file, rank, point );
+    HitTestEx( file, rank, point );
     if( 'a'<=file && file<='h' && '1'<=rank && rank<='8' )
     {
         dbg_printf( "UP file=%c rank=%c\n", file, rank );

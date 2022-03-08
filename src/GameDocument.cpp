@@ -94,31 +94,31 @@ int NagAlternative( const char *s )
     int nag = 0;
     if( *s == '!' )
     {
-        if( 0 == strcmp(s,"!") )        nag=1;  // $1   
-        else if( 0 == strcmp(s,"!!") )  nag=3;  // $3   
-        else if( 0 == strcmp(s,"!?") )  nag=5;  // $5   
+        if( 0 == strcmp(s,"!") )        nag=1;  // $1
+        else if( 0 == strcmp(s,"!!") )  nag=3;  // $3
+        else if( 0 == strcmp(s,"!?") )  nag=5;  // $5
     }
     else if( *s == '?' )
     {
-        if( 0 == strcmp(s,"?") )        nag=2;  // $2   
-        else if( 0 == strcmp(s,"??") )  nag=4;  // $4   
-        else if( 0 == strcmp(s,"?!") )  nag=6;  // $6   
+        if( 0 == strcmp(s,"?") )        nag=2;  // $2
+        else if( 0 == strcmp(s,"??") )  nag=4;  // $4
+        else if( 0 == strcmp(s,"?!") )  nag=6;  // $6
     }
     else if( *s == '=' )
     {
-        if( 0 == strcmp(s,"=") )        nag=10;  // $10  
-        else if( 0 == strcmp(s,"=+") )  nag=15;  // $15  
+        if( 0 == strcmp(s,"=") )        nag=10;  // $10
+        else if( 0 == strcmp(s,"=+") )  nag=15;  // $15
     }
     else if( *s == '+' )
     {
-        if( 0 == strcmp(s,"+=") )       nag=14;  // $14  
-        else if( 0 == strcmp(s,"+/-") ) nag=16;  // $16  
-        else if( 0 == strcmp(s,"+-")  ) nag=18;  // $18  
+        if( 0 == strcmp(s,"+=") )       nag=14;  // $14
+        else if( 0 == strcmp(s,"+/-") ) nag=16;  // $16
+        else if( 0 == strcmp(s,"+-")  ) nag=18;  // $18
     }
     else if( *s == '-' )
     {
-        if( 0 == strcmp(s,"-/+") )      nag=17;  // $17  
-        else if( 0 == strcmp(s,"-+") )  nag=19;  // $19  
+        if( 0 == strcmp(s,"-/+") )      nag=17;  // $17
+        else if( 0 == strcmp(s,"-+") )  nag=19;  // $19
     }
     return nag;
 }
@@ -135,7 +135,7 @@ bool PgnTestResult( const char *s )
         is_pgn_result = true;
     else if( 0 == strcmp(s,"*") )
         is_pgn_result = true;
-    return is_pgn_result;    
+    return is_pgn_result;
 }
 
 /*
@@ -163,7 +163,7 @@ bool PgnTestResult( const char *s, PGN_RESULT &pgn_result )
         pgn_result = PGN_RESULT_NULL;
         is_pgn_result = true;
     }
-    return is_pgn_result;    
+    return is_pgn_result;
 }
 
 */
@@ -272,7 +272,7 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
  // thc::ChessRules   cr;            // the current chess position
     PSTATE       state;         // the current state machine state
 
-    // Allow stacking of the key state variables    
+    // Allow stacking of the key state variables
     const int MAX_DEPTH=20;
     struct STACK_ELEMENT
     {
@@ -497,26 +497,26 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
                     const char *nag_array[] =
                     {
                         "",
-                        " !",     // $1   
-                        " ?",     // $2   
-                        " !!",    // $3   
-                        " ??",    // $4   
-                        " !?",    // $5   
-                        " ?!",    // $6   
-                        "",       // $7   
-                        "",       // $8   
-                        " ??",    // $9   
-                        " =",     // $10  
-                        " =",     // $11  
-                        " =",     // $12  
-                        "",       // $13  
-                        " +=",    // $14  
-                        " =+",    // $15  
-                        " +/-",   // $16  
-                        " -/+",   // $17  
-                        " +-",    // $18  
-                        " -+",    // $19  
-                        " +-",    // $20  
+                        " !",     // $1
+                        " ?",     // $2
+                        " !!",    // $3
+                        " ??",    // $4
+                        " !?",    // $5
+                        " ?!",    // $6
+                        "",       // $7
+                        "",       // $8
+                        " ??",    // $9
+                        " =",     // $10
+                        " =",     // $11
+                        " =",     // $12
+                        "",       // $13
+                        " +=",    // $14
+                        " =+",    // $15
+                        " +/-",   // $16
+                        " -/+",   // $17
+                        " +-",    // $18
+                        " -+",    // $19
+                        " +-",    // $20
                         " -+"     // $21
                     };  */
                     if( 1<=nag_value && nag_value<=9 && (*pvar).size() != 0 )
@@ -582,7 +582,7 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
                     {
                         stk_idx++;
                         stk = &stk_array[stk_idx];
-                        imove = (imove==-1 ? (*pvar).size()-1 : imove); 
+                        imove = (imove==-1 ? (*pvar).size()-1 : imove);
                         if( imove < 0 )
                         {
                             Error("Cannot branch from empty variation");
@@ -594,7 +594,7 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
                             imove = -1;
 
                             // Undo the last move to start the new branch
-                            cr.PopMove( (*pnode).game_move.move );    
+                            cr.PopMove( (*pnode).game_move.move );
 
                             // Start a new, currently empty, variation
                             VARIATION variation;
@@ -714,7 +714,7 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
                             was_in_move = true;
                         }
 
-                        // Support '?', '!!' etc as text rather than only as NAG codes        
+                        // Support '?', '!!' etc as text rather than only as NAG codes
                         int nag_value2 = NagAlternative(move_str.c_str());
                         if( 1<=nag_value2 && nag_value2<=9 && (*pvar).size() != 0 )
                         {
@@ -780,7 +780,7 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
                                         break;
                                     }
                                 }
-                            }        
+                            }
                             if( !okay )
                             {
                                 Error("Illegal move");
@@ -804,7 +804,7 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
                             }
                         }
                     }
-                }                        
+                }
                 break;
             }
         }
@@ -967,8 +967,8 @@ MoveTree *GameDocument::MakeMove( GAME_MOVE game_move, bool allow_overwrite )
             new_variation.push_back(node);
             variation[imove].variations.push_back( new_variation );
             VARIATION &inplace_variation = variation[imove].variations[variation[imove].variations.size()-1];
-            move_played = &inplace_variation[inplace_variation.size()-1];                
-        }            
+            move_played = &inplace_variation[inplace_variation.size()-1];
+        }
 
         // New variation for parent
         else if( at_move0 && parent!= &tree )
@@ -985,10 +985,10 @@ MoveTree *GameDocument::MakeMove( GAME_MOVE game_move, bool allow_overwrite )
             new_variation.push_back(node);
             parent->variations.push_back( new_variation );
             VARIATION &inplace_variation = parent->variations[parent->variations.size()-1];
-            move_played = &inplace_variation[inplace_variation.size()-1];                
-        }            
+            move_played = &inplace_variation[inplace_variation.size()-1];
+        }
 
-        // New variation    
+        // New variation
         else if( sz > imove+1 )
         {
             bool last_move_of_main_line = false;
@@ -999,7 +999,7 @@ MoveTree *GameDocument::MakeMove( GAME_MOVE game_move, bool allow_overwrite )
                                                     //  move, so you can create a variation indicating rest of game
             }
             if( !last_move_of_main_line && game_move.move==variation[imove+1].game_move.move && allow_overwrite )
-                move_played = &variation[imove+1];                
+                move_played = &variation[imove+1];
             else
             {
                 VARIATION new_variation;
@@ -1011,13 +1011,13 @@ MoveTree *GameDocument::MakeMove( GAME_MOVE game_move, bool allow_overwrite )
                     game_move.pre_comment += objs.repository->player.m_black;
                 }
                 node.game_move = game_move;
-                new_variation.push_back( node );                
+                new_variation.push_back( node );
                 MoveTree &existing_node = variation[ imove + (at_move0?0:1) ];
                 existing_node.variations.push_back( new_variation );
                 VARIATION &inplace_variation = existing_node.variations[existing_node.variations.size()-1];
-                move_played = &inplace_variation[inplace_variation.size()-1];                
+                move_played = &inplace_variation[inplace_variation.size()-1];
             }
-        }            
+        }
 
         // Append
         else if( sz <= imove+1 )
@@ -1031,8 +1031,8 @@ MoveTree *GameDocument::MakeMove( GAME_MOVE game_move, bool allow_overwrite )
             }
             node.game_move = game_move;
             variation.push_back( node );
-            move_played = &variation[variation.size()-1];                
-        }            
+            move_played = &variation[variation.size()-1];
+        }
         if( empty_with_comment && move_played )
         {
             move_played->game_move.pre_comment = tree.game_move.comment;
@@ -1044,7 +1044,7 @@ MoveTree *GameDocument::MakeMove( GAME_MOVE game_move, bool allow_overwrite )
         gl->atom.Display( pos2 );
     }
     return move_played;
-}    
+}
 
 
 // Are we at the end of the main line ?
@@ -1080,7 +1080,7 @@ bool GameDocument::AtEndOfMainLine()
     }
     return at_end;
     #endif
-}    
+}
 
 
 bool GameDocument::AreWeInMain()
@@ -1102,7 +1102,7 @@ bool GameDocument::AreWeInMain()
             is_main = true;
     }
     return is_main;
-}    
+}
 
 // Where are we in the document
 unsigned long GameDocument::GetInsertionPoint()
@@ -1114,12 +1114,12 @@ unsigned long GameDocument::GetInsertionPoint()
 void GameDocument::SetInsertionPoint(unsigned long pos)
 {
     // This sets the physical insertion point in a control - is that really what we want ?
-	//  29/9/2018 we checked it out, it is subtle but it is a little more than that - it
-	//	also a peer to gets insertion point above and this might be used to locate the users
-	//  cursor position and set the the game board position and title. In fact we only found
-	//  this function called from one point - to set the position in a different tab after
-	//  a tab delete - and subsequently ShowNewDocument picked up and located the position
-	//  properly.
+    //  29/9/2018 we checked it out, it is subtle but it is a little more than that - it
+    //  also a peer to gets insertion point above and this might be used to locate the users
+    //  cursor position and set the the game board position and title. In fact we only found
+    //  this function called from one point - to set the position in a different tab after
+    //  a tab delete - and subsequently ShowNewDocument picked up and located the position
+    //  properly.
     gl->atom.SetInsertionPoint(pos);
 }
 
@@ -1202,8 +1202,8 @@ MoveTree *GameDocument::KibitzCaptureStart( const char *engine_name, const char 
                 if( idx != std::string::npos )
                     tmp = tmp.substr(0,idx+1);
                 std::string s(engine_name);
-                s += " ";            
-                s += tmp;            
+                s += " ";
+                s += tmp;
                 node.game_move.pre_comment = s;
                 if( use_repeat_one_move )
                 {
@@ -1214,7 +1214,7 @@ MoveTree *GameDocument::KibitzCaptureStart( const char *engine_name, const char 
             }
             new_variation.push_back(node);
         }
-     
+
         // New variation for parent
         sz = variation.size();
         if( at_move0 )
@@ -1239,13 +1239,13 @@ MoveTree *GameDocument::KibitzCaptureStart( const char *engine_name, const char 
             }
         }
 
-        // New variation    
+        // New variation
         else if( sz > imove+1 )
         {
             MoveTree &existing_node = variation[imove+1];
             insertion_point = &existing_node;
             insertion_point->variations.push_back( new_variation );
-        }            
+        }
 
         // Need our repeat move
         else if( use_repeat_one_move )
@@ -1253,7 +1253,7 @@ MoveTree *GameDocument::KibitzCaptureStart( const char *engine_name, const char 
             MoveTree &existing_node = variation[variation.size()-1];
             insertion_point = &existing_node;
             insertion_point->variations.push_back( new_variation );
-        }            
+        }
 
         // Rebuild
         Rebuild();
@@ -1293,12 +1293,12 @@ void GameDocument::KibitzCapture( MoveTree *node, const char *txt, std::vector<t
         if( at_move0 && parent!= &tree )
             parent->variations.push_back( new_variation );
 
-        // New variation    
+        // New variation
         else if( variation.size() > imove+1 )
         {
             MoveTree &existing_node = variation[imove+1];
             existing_node.variations.push_back( new_variation );
-        }            
+        }
     }
 */
 
@@ -1518,7 +1518,7 @@ void GameDocument::PromoteToVariation( unsigned long offset_within_comment )
         int nbr_converted_scenario_1b=0;
         int nbr_converted_scenario_2a=0;
         int nbr_converted_scenario_2b=0;
-        
+
         // Try scenario 1;
         //   Comment extends from current move, eg 1.e4 e5 2.Nf3 {2...Nc6 3.Bb5}
         //   OR is a well formed variation already, eg 1.e4 e5 2.Nf3 {(2.Nc3 Nf6 3.f4)}
@@ -1541,7 +1541,7 @@ void GameDocument::PromoteToVariation( unsigned long offset_within_comment )
                 if( nbr_converted_scenario_1a > 0 )
                     candidate_scenario_1a = tree;
             }
-        }   
+        }
 
         // Scenario 1b, use English
         tree = save;
@@ -1563,7 +1563,7 @@ void GameDocument::PromoteToVariation( unsigned long offset_within_comment )
                 if( nbr_converted_scenario_1b > 0 )
                     candidate_scenario_1b = tree;
             }
-        }   
+        }
 
         // Try scenario 2;
         //   Comment works as a variation, but is not yet parenthesised,
@@ -1620,7 +1620,7 @@ void GameDocument::PromoteToVariation( unsigned long offset_within_comment )
         }
 
         // Select one or the scenarios (or none if nothing worked)
-        if( nbr_converted_scenario_1a==0  && nbr_converted_scenario_1b==0 && 
+        if( nbr_converted_scenario_1a==0  && nbr_converted_scenario_1b==0 &&
             nbr_converted_scenario_2a==0  && nbr_converted_scenario_2b==0 )
         {
             tree = save;
@@ -1956,7 +1956,7 @@ void GameDocument::DeleteVariation()
     }
 }
 
-// A start position, a vector of moves, leading to a final position    
+// A start position, a vector of moves, leading to a final position
 void GameDocument::GetSummary( thc::ChessPosition &start_position_, std::vector<GAME_MOVE> &game_moves, thc::ChessPosition &end_pos )
 {
     unsigned long pos = GetInsertionPoint();
@@ -1994,7 +1994,7 @@ void GameDocument::GetSummary( thc::ChessPosition &start_position_, std::vector<
                 for( int i=(leaf?imove:imove-1); i>=0; i-- )
                 {
                     GAME_MOVE game_move;
-                    game_move = variation[i].game_move; 
+                    game_move = variation[i].game_move;
                     temp.push_back( game_move );
                 }
             }
@@ -2016,14 +2016,14 @@ void GameDocument::GetSummary( thc::ChessPosition &start_position_, std::vector<
 //  Return ptr to the last move played,  NULL if no last move OR if nbr_half_moves_lag
 GAME_MOVE *GameDocument::GetSummaryTitle( thc::ChessRules &cr, std::string &title_txt, int nbr_half_moves_lag )
 {
-	GAME_MOVE *last_move = NULL;
+    GAME_MOVE *last_move = NULL;
     if( nbr_half_moves_lag )
     {
         thc::ChessPosition end;
         std::vector<GAME_MOVE> game_moves;
-		static GAME_MOVE ret;	// Return pointer to a static GAME_MOVE not a dynamic element in a local vector!
-								// Fixes Github issue: Several functions can access memory through invalid pointers #13
-								//  Thanks Github user metiscus for identifying this!
+        static GAME_MOVE ret;   // Return pointer to a static GAME_MOVE not a dynamic element in a local vector!
+                                // Fixes Github issue: Several functions can access memory through invalid pointers #13
+                                //  Thanks Github user metiscus for identifying this!
         GetSummary( cr, game_moves, end );
         int nbr = game_moves.size();
         if( nbr == 0 )
@@ -2048,8 +2048,8 @@ GAME_MOVE *GameDocument::GetSummaryTitle( thc::ChessRules &cr, std::string &titl
             {
                 for( int i=0; i<nbr-1; i++ )
                     cr.PlayMove( game_moves[i].move );
-				ret = game_moves[nbr-1];
-				last_move = &ret;
+                ret = game_moves[nbr-1];
+                last_move = &ret;
                 std::string s = last_move->move.NaturalOut(&cr);
                 LangOut(s);
                 sprintf( buf, "Position after %d%s%s",
@@ -2067,13 +2067,13 @@ GAME_MOVE *GameDocument::GetSummaryTitle( thc::ChessRules &cr, std::string &titl
         cr = this->start_position;
         bool at_move0=false;
         MoveTree *found = Locate( pos, cr, title_txt, at_move0 );
-		if( found )
-		{
-			if( !at_move0 )
-				last_move = &found->game_move;
-			else
-				last_move = gv.LocateAtMoveZeroGetLastMove();
-		}
+        if( found )
+        {
+            if( !at_move0 )
+                last_move = &found->game_move;
+            else
+                last_move = gv.LocateAtMoveZeroGetLastMove();
+        }
     }
     return( last_move );
 }
@@ -2081,7 +2081,7 @@ GAME_MOVE *GameDocument::GetSummaryTitle( thc::ChessRules &cr, std::string &titl
 //  We should define and use some simple recipes like this
 MoveTree *GameDocument::GetSummary()
 {
-    MoveTree *found = NULL; 
+    MoveTree *found = NULL;
     unsigned long pos = GetInsertionPoint();
     thc::ChessRules cr;
     found = Locate( pos, cr );
@@ -2092,14 +2092,14 @@ MoveTree *GameDocument::GetSummary()
 //  Return ptr to the last move played,  NULL if no last move OR if nbr_half_moves_lag
 GAME_MOVE *GameDocument::GetSummaryMove( thc::ChessRules &cr, std::string &move_txt )
 {
-    MoveTree *found = NULL; 
+    MoveTree *found = NULL;
     unsigned long pos = GetInsertionPoint();
     cr = this->start_position;
     bool at_move0=false;
     move_txt = "";
     std::string title_txt;
     found = Locate( pos, cr, title_txt, at_move0 );
-    if( title_txt.substr(0,15) == "Position after " ) 
+    if( title_txt.substr(0,15) == "Position after " )
         move_txt = title_txt.substr(15);
     return( found && !found->root ? &found->game_move : NULL );
 }
@@ -2249,7 +2249,7 @@ bool GameDocument::IsDiff( GameDocument &other )
 /*
 void GameDocument::Temp()
 {
-    // Allow stacking of the key state variables    
+    // Allow stacking of the key state variables
     const int MAX_DEPTH=20;
     struct STACK_ELEMENT
     {

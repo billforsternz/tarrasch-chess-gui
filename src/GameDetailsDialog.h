@@ -36,7 +36,7 @@ enum
 
 // GameDetailsDialog class declaration
 class GameDetailsDialog: public wxDialog
-{    
+{
     DECLARE_CLASS( GameDetailsDialog )
     DECLARE_EVENT_TABLE()
 
@@ -78,7 +78,7 @@ public:
 
     // wxEVT_UPDATE_UI event handler for ID_???
     //void On???Update( wxUpdateUIEvent& event );
-	void OnChildFocus(wxChildFocusEvent& );
+    void OnChildFocus(wxChildFocusEvent& );
 
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_RESET
     void OnResetClick( wxCommandEvent& event );
@@ -117,11 +117,11 @@ public:
     wxString    white_elo;      // WhiteElo
     wxString    black_elo;      // BlackElo
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
-	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
+    DialogDetect    detect;     // similarly the presence of this var allows tracking of open dialogs
 
 private:
-	std::map< std::string, std::string > lookup_elo;
-	wxWindow *previous_child_window;
+    std::map< std::string, std::string > lookup_elo;
+    wxWindow *previous_child_window;
 };
 
 #endif    // GAME_DETAILS_DIALOG_H

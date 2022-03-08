@@ -10,12 +10,12 @@
 #include "Tabs.h"
 
 BEGIN_EVENT_TABLE(NotebookPage,wxTextCtrl)
-	EVT_SET_FOCUS(NotebookPage::RedirectFocus)
+    EVT_SET_FOCUS(NotebookPage::RedirectFocus)
 END_EVENT_TABLE()
 
 void NotebookPage::RedirectFocus(wxFocusEvent& WXUNUSED(event))
 {
-	objs.gl->SetFocusOnList();
+    objs.gl->SetFocusOnList();
 }
 
 void Tabs::TabNew( GameDocument &new_gd )
@@ -97,31 +97,31 @@ bool Tabs::TabSelected( int idx )
 //  nesting, i.e. more than one Iterate() series can occur at once.
 int Tabs::Iterate( int handle, GameDocument *&gd, Undo *&undo, bool exclude_foreground )
 {
-	if( handle == 0 )
-	{
-		handle = next_handle++;
-		if( next_handle >= sizeof(iter_buf)/(sizeof(iter_buf[0])) )
-			next_handle = 1;
-		iter_buf[handle] = 0;
-		iter_exclude_foreground[handle] = exclude_foreground;
-	}
-	int iter = iter_buf[handle];
-	if( iter_exclude_foreground[handle] && iter==current_idx )
-		iter++;
+    if( handle == 0 )
+    {
+        handle = next_handle++;
+        if( next_handle >= sizeof(iter_buf)/(sizeof(iter_buf[0])) )
+            next_handle = 1;
+        iter_buf[handle] = 0;
+        iter_exclude_foreground[handle] = exclude_foreground;
+    }
+    int iter = iter_buf[handle];
+    if( iter_exclude_foreground[handle] && iter==current_idx )
+        iter++;
     int sz=v.size();
     if( 0<=iter && iter<sz )
     {
         gd   = iter==current_idx ? &gl->gd : &v[iter].gd;
         undo = iter==current_idx ? &gl->undo : &v[iter].undo;
-		pos_iterate = (iter==current_idx ? gl->gd.GetInsertionPoint() : v[iter].pos);
-		iter_buf[handle] = ++iter;
+        pos_iterate = (iter==current_idx ? gl->gd.GetInsertionPoint() : v[iter].pos);
+        iter_buf[handle] = ++iter;
     }
-	else
-	{
+    else
+    {
         gd   = NULL;
         undo = NULL;
-	}
-	return handle;
+    }
+    return handle;
 }
 
 
@@ -136,8 +136,8 @@ void Tabs::SetTitle( GameDocument &gd )
     else
     {
         gd.gv.ToString( s );
-		if( s.length()>1 && s[s.length()-1] == '*' )
-			s.pop_back();	// remove '*' at end
+        if( s.length()>1 && s[s.length()-1] == '*' )
+            s.pop_back();   // remove '*' at end
         if( s.length() < 4 )
         {
             s = "New Game";

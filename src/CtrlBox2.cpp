@@ -57,7 +57,7 @@ void CtrlBox2::SetTxt( const wxString &txt_, bool WXUNUSED(redraw) )
             Refresh(true);
             Update();
         } */
-    } 
+    }
 }
 
 /*

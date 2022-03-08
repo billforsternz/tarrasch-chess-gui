@@ -14,8 +14,8 @@ class BinaryBlock
     int shift[20];
     int mask[20];
     int idx;
-    int bit_offset;  
-    int frozen_size;  
+    int bit_offset;
+    int frozen_size;
 public:
     BinaryBlock() { idx=0; bit_offset=0; }
     void Clear() { idx=0; bit_offset=0; }
@@ -52,7 +52,7 @@ public:
             case 24: mask[idx] = 0xffffff;    break;
         }
         idx++;
-        bit_offset += nbits;        
+        bit_offset += nbits;
     }
     int Size()
     {
@@ -76,7 +76,7 @@ public:
         raw = raw & (~msk);
         raw = raw | dat;
         *p = raw;
-    }    
+    }
     uint32_t Read( int idx_ )
     {
         uint32_t *p = reinterpret_cast<uint32_t *>(&buf[offset[idx_]]);
@@ -84,7 +84,7 @@ public:
         raw = raw >> (shift[idx_]);
         uint32_t dat = raw & mask[idx_];
         return dat;
-    }    
+    }
     uint32_t Read( int idx_, const char *location )
     {
         const uint32_t *p = reinterpret_cast<const uint32_t *>(&location[offset[idx_]]);
@@ -92,7 +92,7 @@ public:
         raw = raw >> (shift[idx_]);
         uint32_t dat = raw & mask[idx_];
         return dat;
-    }    
+    }
 };
 
 #endif // BINARY_BLOCK_H

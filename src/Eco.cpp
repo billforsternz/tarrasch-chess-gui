@@ -647,7 +647,7 @@ static void eco_codes_inner()
         ECO_CODE *p = &eco_codes[i];
         CompressMoves press;
         std::vector<thc::Move> v = press.Uncompress(p->compressed_moves);
-        #if 1 
+        #if 1
         thc::ChessRules cr;
         uint64_t hash = hash_base;
         for( size_t j=0; j<v.size(); j++ )

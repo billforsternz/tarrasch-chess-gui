@@ -71,7 +71,7 @@ std::string CompactGame::Description()
 void CompactGame::Upscale( GameDocument &gd )
 {
     gd.r = r;
-	gd.game_id = game_id;
+    gd.game_id = game_id;
     bool have_start_position = HaveStartPosition();
     if( have_start_position )
         gd.start_position =  GetStartPosition();
@@ -91,9 +91,9 @@ void CompactGame::Upscale( GameDocument &gd )
 void CompactGame::Downscale( GameDocument &gd )
 {
     r = gd.r;
-	game_id = gd.game_id;
+    game_id = gd.game_id;
     transpo_nbr = 0;
-	start_position = gd.start_position;
+    start_position = gd.start_position;
     std::vector<MoveTree> &variation = gd.tree.variations[0];
     moves.clear();
     for( size_t i=0; i<variation.size(); i++ )

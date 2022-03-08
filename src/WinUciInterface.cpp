@@ -174,9 +174,9 @@ static void ErrorMessage( const char *filename_uci_exe, char *str )  //display d
 //  Unicode vs Ansi issues
 wchar_t *convertCharArrayToLPCWSTR(const char* charArray)
 {
-	wchar_t* wString = new wchar_t[4096];
-	MultiByteToWideChar(CP_ACP, 0, charArray, -1, wString, 4096);
-	return wString;
+    wchar_t* wString = new wchar_t[4096];
+    MultiByteToWideChar(CP_ACP, 0, charArray, -1, wString, 4096);
+    return wString;
 }
 
 //---------------------------------------------------------------------------
@@ -206,16 +206,16 @@ UciInterface::UciInterface( const char *filename_uci_exe )
     hash_min = 1;
     hash_max = 1024;
     max_cpu_cores_found = false;
-    max_cpu_cores_first = true; 
+    max_cpu_cores_first = true;
     max_cpu_cores_min = 1;
     max_cpu_cores_max = nbr_cpus;
     max_cpu_cores_name[0] = '\0';
-    custom1_first = true; 
-    custom2_first = true; 
-    custom3_first = true; 
-    custom4_first = true; 
-    custom5_first = true; 
-    custom6_first = true; 
+    custom1_first = true;
+    custom2_first = true;
+    custom3_first = true;
+    custom4_first = true;
+    custom5_first = true;
+    custom6_first = true;
 
     okay = false;
     suspended = false;
@@ -231,7 +231,7 @@ UciInterface::UciInterface( const char *filename_uci_exe )
     {
         DWORD program_type;
         BOOL is_exe;
-		is_exe = GetBinaryType(
+        is_exe = GetBinaryType(
 #if wxABI_VERSION > 28600
         convertCharArrayToLPCWSTR(filename_uci_exe),
 #else
@@ -280,13 +280,13 @@ UciInterface::UciInterface( const char *filename_uci_exe )
     //spawn the child process
     EngineConfig *rep = &objs.repository->engine;
     DWORD dwCreationFlags = CREATE_NEW_CONSOLE;
-	if( rep->m_low_priority )
-		dwCreationFlags |= BELOW_NORMAL_PRIORITY_CLASS;
-	else if( rep->m_idle_priority )
-		dwCreationFlags |= IDLE_PRIORITY_CLASS;
+    if( rep->m_low_priority )
+        dwCreationFlags |= BELOW_NORMAL_PRIORITY_CLASS;
+    else if( rep->m_idle_priority )
+        dwCreationFlags |= IDLE_PRIORITY_CLASS;
     int i_okay = CreateProcessA(filename_uci_exe,NULL,NULL,NULL,TRUE,dwCreationFlags,
                        NULL,NULL,&si,&pi);
-    if( !i_okay )  
+    if( !i_okay )
     {
        //DWORD err=GetLastError();
        ErrorMessage(filename_uci_exe,"CreateProcess");
@@ -309,54 +309,54 @@ UciInterface::UciInterface( const char *filename_uci_exe )
 }
 
 void UciInterface::SuspendResume( bool resume )
-{ 
-    HANDLE        hThreadSnap = NULL; 
-    THREADENTRY32 te32        = {0}; 
+{
+    HANDLE        hThreadSnap = NULL;
+    THREADENTRY32 te32        = {0};
     if( (suspended&&resume)     ||      // makes sense to ask for resume OR
         (!suspended&&!resume)           // makes sense to ask for suspend
       )
     {
- 
-        // Take a snapshot of all threads currently in the system. 
-        hThreadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0); 
-        if( hThreadSnap != INVALID_HANDLE_VALUE ) 
-        { 
-            // Fill in the size of the structure before using it. 
-            te32.dwSize = sizeof(THREADENTRY32); 
-         
-            // Walk the thread snapshot to find all threads of the process. 
-            if( Thread32First(hThreadSnap, &te32) ) 
-            { 
-		        if( resume )
-			        release_printf( "Chess Engine resuming\n" );
-		        else
-			        release_printf( "Chess Engine suspending\n" );
-                do 
-                { 
+
+        // Take a snapshot of all threads currently in the system.
+        hThreadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+        if( hThreadSnap != INVALID_HANDLE_VALUE )
+        {
+            // Fill in the size of the structure before using it.
+            te32.dwSize = sizeof(THREADENTRY32);
+
+            // Walk the thread snapshot to find all threads of the process.
+            if( Thread32First(hThreadSnap, &te32) )
+            {
+                if( resume )
+                    release_printf( "Chess Engine resuming\n" );
+                else
+                    release_printf( "Chess Engine suspending\n" );
+                do
+                {
                     if( te32.th32OwnerProcessID == pi.dwProcessId )    //@@
                     {
-				        HANDLE hThread = OpenThread(THREAD_SUSPEND_RESUME, FALSE, te32.th32ThreadID);
-				        if( resume )
-				        {
-					        ResumeThread(hThread);
+                        HANDLE hThread = OpenThread(THREAD_SUSPEND_RESUME, FALSE, te32.th32ThreadID);
+                        if( resume )
+                        {
+                            ResumeThread(hThread);
                             suspended = false;
-				        }
-				        else
-				        {
-					        SuspendThread(hThread);
+                        }
+                        else
+                        {
+                            SuspendThread(hThread);
                             suspended = true;
-				        }
-				        CloseHandle(hThread);
-                    } 
+                        }
+                        CloseHandle(hThread);
+                    }
                 }
-                while( Thread32Next(hThreadSnap, &te32) ); 
-            } 
-     
-            // Do not forget to clean up the snapshot object. 
+                while( Thread32Next(hThreadSnap, &te32) );
+            }
+
+            // Do not forget to clean up the snapshot object.
             CloseHandle( hThreadSnap );
         }
     }
-} 
+}
 
 
 bool UciInterface::Start()
@@ -364,20 +364,20 @@ bool UciInterface::Start()
     if( okay )
     {
         NewState( "Start()", INIT );
-        unsigned long base_time = GetTickCount();	
+        unsigned long base_time = GetTickCount();
         while( gbl_state != READY )
         {
             bool running = Run();
             if( !running )
                 break;
-            unsigned long now_time = GetTickCount();	
+            unsigned long now_time = GetTickCount();
             unsigned long elapsed_time = now_time-base_time;
             if( elapsed_time > 20000 )   // 20 seconds
             {
                 okay = false;
                 break;
             }
-            Sleep(0);    
+            Sleep(0);
         }
     }
     return okay;
@@ -410,7 +410,7 @@ void UciInterface::StartThinking( bool ponder, thc::ChessPosition &pos, const ch
         else if( btime > 100 )
             btime = 100;
     }
-    cprintf( "Condition times to avoid race when engine is almost out of time: wtime=%ld (wtime_ms=%ld), btime=%ld (btime_ms=%ld)\n", 
+    cprintf( "Condition times to avoid race when engine is almost out of time: wtime=%ld (wtime_ms=%ld), btime=%ld (btime_ms=%ld)\n",
             wtime, wtime_ms, btime, btime_ms );
     wxSprintf( gbl_go, "go%s wtime %ld btime %ld winc %ld binc %ld",
                          (ponder?" ponder":""), wtime, btime, winc_ms, binc_ms );
@@ -448,7 +448,7 @@ void UciInterface::StartThinking( bool ponder, thc::ChessPosition &pos, const ch
         else if( btime > 100 )
             btime = 100;
     }
-    cprintf( "Condition times to avoid race when engine is almost out of time: wtime=%ld (wtime_ms=%ld), btime=%ld (btime_ms=%ld)\n", 
+    cprintf( "Condition times to avoid race when engine is almost out of time: wtime=%ld (wtime_ms=%ld), btime=%ld (btime_ms=%ld)\n",
             wtime, wtime_ms, btime, btime_ms );
     wxSprintf( gbl_go, "go%s wtime %ld btime %ld winc %ld binc %ld",
                          (ponder?" ponder":""), wtime, btime, winc_ms, binc_ms );
@@ -596,7 +596,7 @@ bool UciInterface::KibitzPeek( bool run, int multi_idx, bool &cleared, char buf[
     if( run )
         Run();
     have_data = kq[multi_idx].Get( buf, max_strlen );
-    return have_data;    
+    return have_data;
 }
 
 bool UciInterface::KibitzPeekEngineToMove( bool run, bool &cleared, char buf[], unsigned int max_strlen )
@@ -607,7 +607,7 @@ bool UciInterface::KibitzPeekEngineToMove( bool run, bool &cleared, char buf[], 
     if( run )
         Run();
     have_data = kq_engine_to_move.Get( buf, max_strlen );
-    return have_data;    
+    return have_data;
 }
 
 thc::Move UciInterface::CheckBestMove( thc::Move &ponder )
@@ -641,13 +641,13 @@ void UciInterface::Stop()
             last_command_was_go_infinite = true;    // usually only send stop if go infinite, but here if waiting
                                                     //  for engine to move, also need to send stop
         NewState( "Stop()", SEND_QUIT_1 );
-        unsigned long base_time = GetTickCount();	
+        unsigned long base_time = GetTickCount();
         unsigned long elapsed_time_changed=0;
         bool first_time=true;
         for( unsigned long i=0; true /*i<10000*/; i++ )
         {
             bool running = Run();
-            unsigned long now_time = GetTickCount();	
+            unsigned long now_time = GetTickCount();
             unsigned long elapsed_time = now_time-base_time;
             if( first_time || elapsed_time!=elapsed_time_changed )
                 release_printf( "Waiting for engine to die: running=%s, elapsed_time=%lu, loops=%lu\n", running?"true":"false", elapsed_time, i );
@@ -657,7 +657,7 @@ void UciInterface::Stop()
                 break;
             if( elapsed_time > 20000 )   // 20 seconds
                 break;
-            Sleep(0);    
+            Sleep(0);
         }
     }
 }
@@ -881,7 +881,7 @@ const char *UciInterface::user_hook_in()
                     case 2:
                     {
                         if( hash_found )
-                        { 
+                        {
                             if( hash_first || hash_sent!=rep->m_hash )
                             {
                                 hash_first = false;
@@ -972,7 +972,7 @@ const char *UciInterface::user_hook_in()
                         }
                         break;
                     }
-                    case 8:		// Add two new custom commands begin
+                    case 8:     // Add two new custom commands begin
                     {
                         if( custom5_first )
                         {
@@ -998,14 +998,14 @@ const char *UciInterface::user_hook_in()
                                 wxSprintf( option_buf, "setoption name %s value %s", rep->m_custom6a.c_str(), rep->m_custom6b.c_str() );
                             }
                         }
-                        break;	// Add two new custom commands end
+                        break;  // Add two new custom commands end
                     }
                 }   // end switch
                 stepper++;
             } // end while
 
             if( found_something_to_send )
-                s = option_buf;    
+                s = option_buf;
             else
             {
                 s = NULL;
@@ -1089,7 +1089,7 @@ const char *UciInterface::user_hook_in()
                     case 1:
                     {
                         if( hash_found )
-                        { 
+                        {
                             if( hash_first || hash_sent!=rep->m_hash )
                             {
                                 hash_first = false;
@@ -1180,7 +1180,7 @@ const char *UciInterface::user_hook_in()
                         }
                         break;
                     }
-                    case 7:	  // Add two new custom options begin
+                    case 7:   // Add two new custom options begin
                     {
                         if( custom5_first )
                         {
@@ -1213,7 +1213,7 @@ const char *UciInterface::user_hook_in()
             } // end while
 
             if( found_something_to_send )
-                s = option_buf;    
+                s = option_buf;
             else
             {
                 s = NULL;
@@ -1270,23 +1270,23 @@ const char *UciInterface::user_hook_in()
     if( s )
     {
         release_printf( "in: %s\n", s );
-		if( 0 != strcmp(s,"ponderhit") )	// ponderhit shouldn't change last_command_was_go_infinite - it's a command sent after a
-											// go ponder, whilst the engine is sending us (infinite) evaluations, it simply tells
-											// the engine to cease infinite eval and come up with a bestmove. Then last_command_was_go_infinite
-											// will be reset when and if the bestmove arrives (see below). Only when the bestmove
-											// arrives do we no longer need to "stop".
-		{
-			last_command_was_go_infinite = (	// BUG FIX JUST BEFORE Tarrasch V3. The purpose of last_command_was_go_infinite
-												// is to send a "stop" to engine to interrupt indefinite thinking, but we also
-												// need to follow other "go" commands with a "stop" if we ask the engine to do
-												// something else (eg if force move, fixed time period, undo) before the engine
-												// returns "bestmove". So set the flag always, and reset it if bestmove does
-												// arrive (search for other instance of "BUG FIX JUST BEFORE Tarrasch V3")
-												0 == memcmp(s,"go ",3)
-												//0 == memcmp(s,"go infinite",11) ||
-												//0 == memcmp(s,"go ponder",9)
-										   );
-		}
+        if( 0 != strcmp(s,"ponderhit") )    // ponderhit shouldn't change last_command_was_go_infinite - it's a command sent after a
+                                            // go ponder, whilst the engine is sending us (infinite) evaluations, it simply tells
+                                            // the engine to cease infinite eval and come up with a bestmove. Then last_command_was_go_infinite
+                                            // will be reset when and if the bestmove arrives (see below). Only when the bestmove
+                                            // arrives do we no longer need to "stop".
+        {
+            last_command_was_go_infinite = (    // BUG FIX JUST BEFORE Tarrasch V3. The purpose of last_command_was_go_infinite
+                                                // is to send a "stop" to engine to interrupt indefinite thinking, but we also
+                                                // need to follow other "go" commands with a "stop" if we ask the engine to do
+                                                // something else (eg if force move, fixed time period, undo) before the engine
+                                                // returns "bestmove". So set the flag always, and reset it if bestmove does
+                                                // arrive (search for other instance of "BUG FIX JUST BEFORE Tarrasch V3")
+                                                0 == memcmp(s,"go ",3)
+                                                //0 == memcmp(s,"go infinite",11) ||
+                                                //0 == memcmp(s,"go ponder",9)
+                                           );
+        }
     }
     return s;
 }
@@ -1361,8 +1361,8 @@ void UciInterface::line_out( const char *s )
                 {
                     gbl_bestmove = move;
                     bestmove_received = true;
-					cprintf( "last_command_was_go_infinite was %s\n", last_command_was_go_infinite?"true":"false" );
-					last_command_was_go_infinite = false;	// search for "BUG FIX JUST BEFORE Tarrasch V3"
+                    cprintf( "last_command_was_go_infinite was %s\n", last_command_was_go_infinite?"true":"false" );
+                    last_command_was_go_infinite = false;   // search for "BUG FIX JUST BEFORE Tarrasch V3"
                     NewState( "line_out()", READY );
                     p = strstr(s,temp="ponder ");
                     if( p && ponder_sent )
@@ -1513,15 +1513,15 @@ void UciInterface::OptionIn( const char *s )
         // alternative check for StockFish, which also has "Max Threads per Split Point",
         // and str_pattern_smart() isn't quite smart enough to discriminate ;)
         parm = str_pattern(s, "Threads", true);
-		if( parm )
-			parm--;	// avoid sending two spaces after Threads
+        if( parm )
+            parm--; // avoid sending two spaces after Threads
     }
     if( parm && str_search(parm,"type spin",true) )
     {
         memset( max_cpu_cores_name, 0, sizeof(max_cpu_cores_name) );
         int len = parm-s;
-        if( len >= sizeof(max_cpu_cores_name) ) 
-            len = sizeof(max_cpu_cores_name)-1; 
+        if( len >= sizeof(max_cpu_cores_name) )
+            len = sizeof(max_cpu_cores_name)-1;
         memcpy( max_cpu_cores_name, s, len );
         const char *parm2;
         max_cpu_cores_found = true;
@@ -1534,7 +1534,7 @@ void UciInterface::OptionIn( const char *s )
             if( max_cpu_cores_min < 1 )
                 max_cpu_cores_min = 1;
             if( max_cpu_cores_min > nbr_cpus )
-                max_cpu_cores_min = nbr_cpus;  
+                max_cpu_cores_min = nbr_cpus;
         }
         parm2 = str_search(parm,"max",true);
         if( parm2 )
@@ -1669,7 +1669,7 @@ const char *str_pattern_smart( const char *str, const char *pattern )
         {
             ultimate_success = true;
             break;
-        }    
+        }
 
         // Failure ?
         else if( *str == '\0' )
@@ -1689,9 +1689,9 @@ const char *str_pattern_smart( const char *str, const char *pattern )
             if( isascii(c) && isascii(d) )
             {
                 if( isupper(c) && !isalpha(d) ) // eg MAX_
-                    break;                            
+                    break;
                 if( islower(c) && !islower(d) ) // eg MaxN
-                    break;                            
+                    break;
             }
         }
         *dst = '\0';

@@ -31,7 +31,7 @@
         #define dbg_printf(...) core_printf ( __VA_ARGS__ )
         #define cprintf(...)    core_printf ( __VA_ARGS__ )
     #else
-        #define dbg_printf(...) 
+        #define dbg_printf(...)
         #define cprintf(...)    core_printf ( __VA_ARGS__ )
     #endif
     int core_printf( const char *fmt, ... );
@@ -45,4 +45,4 @@ public:
     ~DebugPrintfTime();
 };
 
-#endif			// DEBUG_PRINTF_H
+#endif          // DEBUG_PRINTF_H

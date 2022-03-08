@@ -200,7 +200,7 @@ bool MemoryPositionSearch::TryFastMode( MpsSide *side )
     side->nbr_queens        = 0;
     for( int i=0; okay && i<64; i++ )
     {
-        
+
         // Pawns are traversed according to pawn_ordering[]
         int j = static_cast<int>(traverse_order[i]);
         if( msi.cr.squares[j] == (side->white?'P':'p') )
@@ -210,7 +210,7 @@ bool MemoryPositionSearch::TryFastMode( MpsSide *side )
             else
                 okay = false;
         }
-        
+
         // Other pieces are traversed in normal square convention order
         if( msi.cr.squares[i] == (side->white?'R':'r') )
         {
@@ -485,8 +485,8 @@ int  MemoryPositionSearch::DoSearch( const thc::ChessPosition &cp, ProgressBar *
             }
             if( (i&0xff)==0 && progress )
                 progress->Perfraction( i, nbr );
-        }    
-    }                         
+        }
+    }
     return games_found.size();
 }
 
@@ -724,8 +724,8 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
                 double permill = (static_cast<double>(i) * 1000.0) / static_cast<double>(nbr);
                 progress->Permill( static_cast<int>(permill) );
             }
-        }    
-    }                         
+        }
+    }
     return games_found.size();
 }
 
@@ -747,12 +747,12 @@ thc::Move MemoryPositionSearch::UncompressSlowMode( char code )
     temp.wqueen = 1;
     temp.bking = 1;
     temp.bqueen = 1;
-    
+
     // Generate a list of all legal moves, in string form, sorted
     std::vector<thc::Move> moves;
     temp.GenLegalMoveList( moves );
     std::vector<std::string> moves_alpha;
-    
+
     // Coding scheme relies on 254 valid codes 0x02-0xff and one error code 0x01,
     size_t len = moves.size();
     for( size_t i=0; i<len; i++ )
@@ -761,7 +761,7 @@ thc::Move MemoryPositionSearch::UncompressSlowMode( char code )
         moves_alpha.push_back(s);
     }
     std::sort( moves_alpha.begin(), moves_alpha.end() );
-    
+
     // '\xff' (i.e. 255) is first move in list, '\fe' (i.e. 254) is second etc
     unsigned int ucode = static_cast<size_t>( code );
     ucode &= 0xff;
@@ -820,20 +820,20 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
             side->king = dst = src+delta;
             break;
         }
-            
+
         case CODE_ROOK_LO:
         case CODE_ROOK_HI:
         {
             int rook_offset = (hi_nibble==CODE_ROOK_LO ? 0 : 1 );
             src = side->rooks[rook_offset];
-			if( code & R_RANK )                // code encodes rank ?
-			{
+            if( code & R_RANK )                // code encodes rank ?
+            {
                 dst = ((code<<3)&0x38) | (src&7);   // same file as src, rank from code
-			}
-			else
-			{
+            }
+            else
+            {
                 dst = (src&0x38) | (code&7);        // same rank as src, file from code
-			}
+            }
             side->rooks[rook_offset] = dst;
 
             // swap ?
@@ -845,7 +845,7 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
             }
             break;
         }
-            
+
         case CODE_BISHOP_DARK:
         {
             src = side->bishop_dark;
@@ -857,7 +857,7 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
             side->bishop_dark = dst;
             break;
         }
-            
+
         case CODE_BISHOP_LIGHT:
         {
             src = side->bishop_light;
@@ -869,13 +869,13 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
             side->bishop_light = dst;
             break;
         }
-            
+
         case CODE_QUEEN_ROOK:
         {
             src = side->queens[0];
-			if( code & R_RANK )                // code encodes rank ?
+            if( code & R_RANK )                // code encodes rank ?
                 dst = ((code<<3)&0x38) | (src&7);   // same file as src, rank from code
-			else
+            else
                 dst = (src&0x38) | (code&7);        // same rank as src, file from code
             side->queens[0] = dst;
 
@@ -908,7 +908,7 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
             }
             break;
         }
-            
+
         case CODE_KNIGHT:
         {
             int knight_offset = ((code&N_HI) ? 1 : 0 );;
@@ -939,7 +939,7 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
             }
             break;
         }
-            
+
         case CODE_PAWN_6:   // if nbr_queens==2 this is the hi QUEEN_ROOK
         {
             if( side->nbr_queens < 2 )
@@ -947,9 +947,9 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
             else
             {
                 src = side->queens[1];
-			    if( code & R_RANK )                // code encodes rank ?
+                if( code & R_RANK )                // code encodes rank ?
                     dst = ((code<<3)&0x38) | (src&7);   // same file as src, rank from code
-			    else
+                else
                     dst = (src&0x38) | (code&7);        // same rank as src, file from code
                 side->queens[1] = dst;
 
@@ -988,7 +988,7 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
                 break;
             }
         }
-            
+
         // PAWN
         default:
         {
@@ -1072,7 +1072,7 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
             break;
         }   // end PAWN
     }   // end switch on moving piece
-    
+
     // Accomodate captured piece on other side, if other side is in fast mode
     int  capture_location=dst;
     if( special == thc::SPECIAL_WEN_PASSANT )
@@ -1144,10 +1144,10 @@ thc::Move MemoryPositionSearch::UncompressFastMode( char code, MpsSide *side, Mp
 }
 
 
-#define WHITE_HOME_ROW_TEST ((*mq.rank2_ptr & white_home_mask) == white_home_pawns)    
-#define BLACK_HOME_ROW_TEST ((*mq.rank7_ptr & black_home_mask) == black_home_pawns)    
-#define SLOW_WHITE_HOME_ROW_TEST ((*ms.slow_rank2_ptr & white_home_mask) == white_home_pawns)    
-#define SLOW_BLACK_HOME_ROW_TEST ((*ms.slow_rank7_ptr & black_home_mask) == black_home_pawns)    
+#define WHITE_HOME_ROW_TEST ((*mq.rank2_ptr & white_home_mask) == white_home_pawns)
+#define BLACK_HOME_ROW_TEST ((*mq.rank7_ptr & black_home_mask) == black_home_pawns)
+#define SLOW_WHITE_HOME_ROW_TEST ((*ms.slow_rank2_ptr & white_home_mask) == white_home_pawns)
+#define SLOW_BLACK_HOME_ROW_TEST ((*ms.slow_rank7_ptr & black_home_mask) == black_home_pawns)
 
 
 bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *moves_in, unsigned short &offset_first, unsigned short &offset_last )
@@ -1159,7 +1159,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
     {
         // Check for match before every move
         if(
-            target_white && 
+            target_white &&
             #if 1
             *mq.rank3_ptr == mq.rank3_target &&
             *mq.rank4_ptr == mq.rank4_target &&
@@ -1238,20 +1238,20 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                 mqi.squares[src] = EMPTY_CHARACTER;
                 break;
             }
-            
+
             case CODE_ROOK_LO:
             case CODE_ROOK_HI:
             {
                 int rook_offset = (hi_nibble==CODE_ROOK_LO ? 0 : 1 );
                 src = mqi.side_white.rooks[rook_offset];
-			    if( code & R_RANK )                // code encodes rank ?
-			    {
+                if( code & R_RANK )                // code encodes rank ?
+                {
                     dst = ((code<<3)&0x38) | (src&7);   // same file as src, rank from code
-			    }
-			    else
-			    {
+                }
+                else
+                {
                     dst = (src&0x38) | (code&7);        // same rank as src, file from code
-			    }
+                }
                 mqi.side_white.rooks[rook_offset] = dst;
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'R';
@@ -1266,7 +1266,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                 }
                 break;
             }
-            
+
             case CODE_BISHOP_DARK:
             {
                 src = mqi.side_white.bishop_dark;
@@ -1281,7 +1281,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                 mqi.side_white.bishop_dark = dst;
                 break;
             }
-            
+
             case CODE_BISHOP_LIGHT:
             {
                 src = mqi.side_white.bishop_light;
@@ -1296,13 +1296,13 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                 mqi.side_white.bishop_light = dst;
                 break;
             }
-            
+
             case CODE_QUEEN_ROOK:
             {
                 src = mqi.side_white.queens[0];
-			    if( code & R_RANK )                // code encodes rank ?
+                if( code & R_RANK )                // code encodes rank ?
                     dst = ((code<<3)&0x38) | (src&7);   // same file as src, rank from code
-			    else
+                else
                     dst = (src&0x38) | (code&7);        // same rank as src, file from code
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'Q';
@@ -1325,7 +1325,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                 mqi.side_white.queens[0] = dst;
                 break;
             }
-            
+
             case CODE_KNIGHT:
             {
                 int knight_offset = ((code&N_HI) ? 1 : 0 );
@@ -1359,7 +1359,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                 }
                 break;
             }
-            
+
             // PAWN
             default:
             {
@@ -1411,7 +1411,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                         else if( 48<=src && src<56 && !WHITE_HOME_ROW_TEST )
                             return false;
 
-                        // Decreasing capture possibly requires reordering White pawns 
+                        // Decreasing capture possibly requires reordering White pawns
                         for( int i=pawn_offset; i-1>=0 && pawn_ordering[mqi.side_white.pawns[i-1]]>pawn_ordering[mqi.side_white.pawns[i]]; i-- )
                         {
                             int temp = mqi.side_white.pawns[i-1];
@@ -1511,8 +1511,8 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
             }
         }
 
-        if( 
-            !target_white && 
+        if(
+            !target_white &&
             #if 1
             *mq.rank3_ptr == mq.rank3_target &&
             *mq.rank4_ptr == mq.rank4_target &&
@@ -1590,20 +1590,20 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                 mqi.squares[src] = EMPTY_CHARACTER;
                 break;
             }
-            
+
             case CODE_ROOK_LO:
             case CODE_ROOK_HI:
             {
                 int rook_offset = (hi_nibble==CODE_ROOK_LO ? 0 : 1 );
                 src = mqi.side_black.rooks[rook_offset];
-			    if( code & R_RANK )                // code encodes rank ?
-			    {
+                if( code & R_RANK )                // code encodes rank ?
+                {
                     dst = ((code<<3)&0x38) | (src&7);   // same file as src, rank from code
-			    }
-			    else
-			    {
+                }
+                else
+                {
                     dst = (src&0x38) | (code&7);        // same rank as src, file from code
-			    }
+                }
                 mqi.side_black.rooks[rook_offset] = dst;
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'r';
@@ -1618,7 +1618,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                 }
                 break;
             }
-            
+
             case CODE_BISHOP_DARK:
             {
                 src = mqi.side_black.bishop_dark;
@@ -1633,7 +1633,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                 mqi.side_black.bishop_dark = dst;
                 break;
             }
-            
+
             case CODE_BISHOP_LIGHT:
             {
                 src = mqi.side_black.bishop_light;
@@ -1648,13 +1648,13 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                 mqi.side_black.bishop_light = dst;
                 break;
             }
-            
+
             case CODE_QUEEN_ROOK:
             {
                 src = mqi.side_black.queens[0];
-			    if( code & R_RANK )                // code encodes rank ?
+                if( code & R_RANK )                // code encodes rank ?
                     dst = ((code<<3)&0x38) | (src&7);   // same file as src, rank from code
-			    else
+                else
                     dst = (src&0x38) | (code&7);        // same rank as src, file from code
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'q';
@@ -1677,7 +1677,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                 mqi.side_black.queens[0] = dst;
                 break;
             }
-            
+
             case CODE_KNIGHT:
             {
                 int knight_offset = ((code&N_HI) ? 1 : 0 );
@@ -1711,7 +1711,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                 }
                 break;
             }
-            
+
             // PAWN
             default:
             {
@@ -1789,7 +1789,7 @@ bool MemoryPositionSearch::SearchGameOptimisedNoPromotionAllowed( const char *mo
                         else if( 8<=src && src<16 && !BLACK_HOME_ROW_TEST )    // en-passant capture can't be from home row
                             return false;
 
-                        // Decreasing capture possibly requires reordering Black pawns 
+                        // Decreasing capture possibly requires reordering Black pawns
                         for( int i=pawn_offset; i-1>=0 && pawn_ordering[mqi.side_black.pawns[i-1]]>pawn_ordering[mqi.side_black.pawns[i]]; i-- )
                         {
                             int temp = mqi.side_black.pawns[i-1];
@@ -1902,7 +1902,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
         #define SIMPLE_PATTERN_COUNT_OPTIMISATION
         #ifdef SIMPLE_PATTERN_COUNT_OPTIMISATION
         if( total_count < ms.total_count_target )
-            return false;            
+            return false;
         #endif
 
         // White move
@@ -1958,20 +1958,20 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
                 mqi.squares[src] = EMPTY_CHARACTER;
                 break;
             }
-            
+
             case CODE_ROOK_LO:
             case CODE_ROOK_HI:
             {
                 int rook_offset = (hi_nibble==CODE_ROOK_LO ? 0 : 1 );
                 src = mqi.side_white.rooks[rook_offset];
-			    if( code & R_RANK )                // code encodes rank ?
-			    {
+                if( code & R_RANK )                // code encodes rank ?
+                {
                     dst = ((code<<3)&0x38) | (src&7);   // same file as src, rank from code
-			    }
-			    else
-			    {
+                }
+                else
+                {
                     dst = (src&0x38) | (code&7);        // same rank as src, file from code
-			    }
+                }
                 mqi.side_white.rooks[rook_offset] = dst;
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'R';
@@ -1986,7 +1986,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
                 }
                 break;
             }
-            
+
             case CODE_BISHOP_DARK:
             {
                 src = mqi.side_white.bishop_dark;
@@ -2001,7 +2001,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
                 mqi.side_white.bishop_dark = dst;
                 break;
             }
-            
+
             case CODE_BISHOP_LIGHT:
             {
                 src = mqi.side_white.bishop_light;
@@ -2016,13 +2016,13 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
                 mqi.side_white.bishop_light = dst;
                 break;
             }
-            
+
             case CODE_QUEEN_ROOK:
             {
                 src = mqi.side_white.queens[0];
-			    if( code & R_RANK )                // code encodes rank ?
+                if( code & R_RANK )                // code encodes rank ?
                     dst = ((code<<3)&0x38) | (src&7);   // same file as src, rank from code
-			    else
+                else
                     dst = (src&0x38) | (code&7);        // same rank as src, file from code
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'Q';
@@ -2045,7 +2045,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
                 mqi.side_white.queens[0] = dst;
                 break;
             }
-            
+
             case CODE_KNIGHT:
             {
                 int knight_offset = ((code&N_HI) ? 1 : 0 );
@@ -2079,7 +2079,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
                 }
                 break;
             }
-            
+
             // PAWN
             default:
             {
@@ -2125,7 +2125,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
                             mqi.squares[dst=src-1] = EMPTY_CHARACTER;
                         }
 
-                        // Decreasing capture possibly requires reordering White pawns 
+                        // Decreasing capture possibly requires reordering White pawns
                         for( int i=pawn_offset; i-1>=0 && pawn_ordering[mqi.side_white.pawns[i-1]]>pawn_ordering[mqi.side_white.pawns[i]]; i-- )
                         {
                             int temp = mqi.side_white.pawns[i-1];
@@ -2241,7 +2241,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
         }
         #ifdef SIMPLE_PATTERN_COUNT_OPTIMISATION
         if( total_count < ms.total_count_target )
-            return false;            
+            return false;
         #endif
 
         // Black move
@@ -2296,20 +2296,20 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
                 mqi.squares[src] = EMPTY_CHARACTER;
                 break;
             }
-            
+
             case CODE_ROOK_LO:
             case CODE_ROOK_HI:
             {
                 int rook_offset = (hi_nibble==CODE_ROOK_LO ? 0 : 1 );
                 src = mqi.side_black.rooks[rook_offset];
-			    if( code & R_RANK )                // code encodes rank ?
-			    {
+                if( code & R_RANK )                // code encodes rank ?
+                {
                     dst = ((code<<3)&0x38) | (src&7);   // same file as src, rank from code
-			    }
-			    else
-			    {
+                }
+                else
+                {
                     dst = (src&0x38) | (code&7);        // same rank as src, file from code
-			    }
+                }
                 mqi.side_black.rooks[rook_offset] = dst;
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'r';
@@ -2324,7 +2324,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
                 }
                 break;
             }
-            
+
             case CODE_BISHOP_DARK:
             {
                 src = mqi.side_black.bishop_dark;
@@ -2339,7 +2339,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
                 mqi.side_black.bishop_dark = dst;
                 break;
             }
-            
+
             case CODE_BISHOP_LIGHT:
             {
                 src = mqi.side_black.bishop_light;
@@ -2354,13 +2354,13 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
                 mqi.side_black.bishop_light = dst;
                 break;
             }
-            
+
             case CODE_QUEEN_ROOK:
             {
                 src = mqi.side_black.queens[0];
-			    if( code & R_RANK )                // code encodes rank ?
+                if( code & R_RANK )                // code encodes rank ?
                     dst = ((code<<3)&0x38) | (src&7);   // same file as src, rank from code
-			    else
+                else
                     dst = (src&0x38) | (code&7);        // same rank as src, file from code
                 captured = mqi.squares[dst];
                 mqi.squares[dst] = 'q';
@@ -2383,7 +2383,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
                 mqi.side_black.queens[0] = dst;
                 break;
             }
-            
+
             case CODE_KNIGHT:
             {
                 int knight_offset = ((code&N_HI) ? 1 : 0 );
@@ -2417,7 +2417,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
                 }
                 break;
             }
-            
+
             // PAWN
             default:
             {
@@ -2487,7 +2487,7 @@ bool MemoryPositionSearch::PatternSearchGameOptimisedNoPromotionAllowed( Pattern
                             mqi.squares[dst=src-1] = EMPTY_CHARACTER;
                         }
 
-                        // Decreasing capture possibly requires reordering Black pawns 
+                        // Decreasing capture possibly requires reordering Black pawns
                         for( int i=pawn_offset; i-1>=0 && pawn_ordering[mqi.side_black.pawns[i-1]]>pawn_ordering[mqi.side_black.pawns[i]]; i-- )
                         {
                             int temp = mqi.side_black.pawns[i-1];
@@ -2567,7 +2567,7 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( const std::string &mo
     SlowGameInit();
     int len = moves_in.size();
     if(
-        (msi.cr.white == target_white) && 
+        (msi.cr.white == target_white) &&
         *ms.slow_rank3_ptr == *ms.slow_rank3_target_ptr &&
         *ms.slow_rank4_ptr == *ms.slow_rank4_target_ptr &&
         *ms.slow_rank5_ptr == *ms.slow_rank5_target_ptr &&
@@ -2617,8 +2617,8 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( const std::string &mo
         }
         //std::string s = msi.cr.ToDebugStr();
         //cprintf( "After %s\n%s\n", mvs.c_str(), s.c_str() );
-        if( 
-            (msi.cr.white == target_white) && 
+        if(
+            (msi.cr.white == target_white) &&
             *ms.slow_rank3_ptr == *ms.slow_rank3_target_ptr &&
             *ms.slow_rank4_ptr == *ms.slow_rank4_target_ptr &&
             *ms.slow_rank5_ptr == *ms.slow_rank5_target_ptr &&
@@ -2642,7 +2642,7 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( const std::string &mo
             {
                 black_count--;
                 if( black_count < ms.black_count_target )
-                    return false;            
+                    return false;
                 if( mv.capture == 'p' )
                 {
                     black_pawn_count--;  // pawns can also disappear at promotion time
@@ -2653,14 +2653,14 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( const std::string &mo
                         return false;
                     if(  8<=mv.dst && mv.dst<16 && !SLOW_BLACK_HOME_ROW_TEST )
                         return false;
-            
+
                 }
             }
             else
             {
                 white_count--;
                 if( white_count < ms.white_count_target )
-                    return false;            
+                    return false;
                 if( mv.capture == 'P' )
                 {
                     white_pawn_count--;  // pawns can also disappear at promotion time
@@ -2668,7 +2668,7 @@ bool MemoryPositionSearch::SearchGameSlowPromotionAllowed( const std::string &mo
                                          //  continue searching unnecessarily but
                                          //  doesn't cause errors
                     if( white_pawn_count < ms.white_pawn_count_target )
-                        return false;            
+                        return false;
                     if( 48<=mv.dst && mv.dst<56 && !SLOW_WHITE_HOME_ROW_TEST )
                         return false;
                 }
@@ -2732,7 +2732,7 @@ bool MemoryPositionSearch::PatternSearchGameSlowPromotionAllowed( PatternMatch &
         {
             total_count--;
             if( total_count < ms.total_count_target )
-                return false;            
+                return false;
         }
         #endif
     }

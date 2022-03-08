@@ -14,7 +14,7 @@
 class ClipboardDialog: public PgnDialog
 {
 public:
-    
+
     // Constructors
     ClipboardDialog
     (
@@ -25,7 +25,7 @@ public:
      const wxPoint& pos = wxDefaultPosition,
      const wxSize& size = wxDefaultSize
      );
-    
+
     // Overrides
     virtual wxSizer *GdvAddExtraControls(  bool big_display );
     virtual void GdvCheckBox( bool checked );

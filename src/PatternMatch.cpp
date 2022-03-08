@@ -20,7 +20,7 @@ void PatternMatch::PrimePattern( const thc::ChessPosition *rover )
     in_a_row = 0;
 
     // Calculate number of positions to test each time (note that 3 is actually
-    //  used to indicate 2 tests - 
+    //  used to indicate 2 tests -
     //     reflect and not reverse = 2
     //     reverse and not reflect = 3 (but also represents 2 tests)
     if( parm.include_reflections )
@@ -261,7 +261,7 @@ bool PatternMatch::TestPattern( bool &reverse, bool white, const char *squares_r
         match = target->parm.either_to_move || (white==target->parm.white_to_move);
         if( match )
         {
-            match = 
+            match =
             (*reinterpret_cast<const uint64_t *>(&squares_rover[40]) & target->rank3_mask) == *target->rank3_target_ptr &&
             (*reinterpret_cast<const uint64_t *>(&squares_rover[32]) & target->rank4_mask) == *target->rank4_target_ptr &&
             (*reinterpret_cast<const uint64_t *>(&squares_rover[24]) & target->rank5_mask) == *target->rank5_target_ptr &&
@@ -292,7 +292,7 @@ bool PatternMatch::TestPattern( bool &reverse, bool white, const char *squares_r
             cprintf( "rank2=%s\n", rank2?"true":"false" );
         } */
     }
-    return match;    
+    return match;
 }
 
 
@@ -353,7 +353,7 @@ void PatternMatch::InitSide( MpsSide *side, bool white, const char *squares_rove
                                 side->nbr_dark_bishops++;   break;
                 case 'Q':   side->nbr_queens++;             break;
             }
-        }    
+        }
     }
     else
     {
@@ -375,7 +375,7 @@ void PatternMatch::InitSide( MpsSide *side, bool white, const char *squares_rove
                                 side->nbr_dark_bishops++;   break;
                 case 'q':   side->nbr_queens++;             break;
             }
-        }    
+        }
     }
 }
 
@@ -419,7 +419,7 @@ bool PatternMatch::TestMaterialBalanceInner( bool &reverse, MpsSide *ws, MpsSide
         //    match = true;
         //else
         {
-            match = 
+            match =
             (*reinterpret_cast<const uint64_t *>(&squares_rover[40]) & target->rank3_mask) == *target->rank3_target_ptr &&
             (*reinterpret_cast<const uint64_t *>(&squares_rover[32]) & target->rank4_mask) == *target->rank4_target_ptr &&
             (*reinterpret_cast<const uint64_t *>(&squares_rover[24]) & target->rank5_mask) == *target->rank5_target_ptr &&
@@ -432,7 +432,7 @@ bool PatternMatch::TestMaterialBalanceInner( bool &reverse, MpsSide *ws, MpsSide
         if( match )
         {
             match =
-            ( 
+            (
                 (target->parm.more_pieces_wp ?
                 ws->nbr_pawns   >= target->side_w.nbr_pawns  :
                 ws->nbr_pawns   == target->side_w.nbr_pawns)   &&
@@ -482,7 +482,7 @@ bool PatternMatch::TestMaterialBalanceInner( bool &reverse, MpsSide *ws, MpsSide
             else
             {
                 match =
-                ( 
+                (
                     (target->parm.more_pieces_wb ?
                         (ws->nbr_light_bishops +
                             ws->nbr_dark_bishops)

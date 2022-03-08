@@ -55,15 +55,15 @@ static void LoadInBackground( Database *ptr1 )
     the_database = ptr1;
     WorkerThread *thread = new WorkerThread;
     int err = thread->Create();
-    cprintf( "LoadInBackground(), err=%d\n", err ); 
+    cprintf( "LoadInBackground(), err=%d\n", err );
     if( err == wxTHREAD_NO_ERROR )
     {
-        cprintf( "Running worker thread\n" ); 
+        cprintf( "Running worker thread\n" );
         thread->Run();
     }
 }
 
-wxMutex s_mutex_tiny_database;   
+wxMutex s_mutex_tiny_database;
 
 // Some experiments on indexing the database for more speed - eg if searching for a position with a
 //  White Knight on f3, don't bother searching the 10% or so of games where no white knight ever lands
@@ -73,7 +73,7 @@ wxMutex s_mutex_tiny_database;
 //
 //#define DATABASE_EXPERIMENTS
 #ifndef DURING_DEVELOPMENT
-#undef  DATABASE_EXPERIMENTS	// Never unless during development
+#undef  DATABASE_EXPERIMENTS    // Never unless during development
 #endif
 #ifdef DATABASE_EXPERIMENTS
 
@@ -197,7 +197,7 @@ void * WorkerThread::Entry()
             }
             int nbr_games = the_database->tiny_db.in_memory_game_cache.size();
             for( int i=0; i<nbr_games; i++ )
-	        {
+            {
                 int modulo = i<10000 ? 1000 : (i<10000?10000:100000);
                 if( i%modulo == 0 )
                     cprintf( "Investigation %d games\n", i );
@@ -211,9 +211,9 @@ void * WorkerThread::Entry()
                             p->game_count++;
                     }
                 }
-		        smart_ptr<ListableGame> ptr = the_database->tiny_db.in_memory_game_cache[i];
+                smart_ptr<ListableGame> ptr = the_database->tiny_db.in_memory_game_cache[i];
                 CompactGame pact;
-		        ptr->GetCompactGame( pact );
+                ptr->GetCompactGame( pact );
                 int nbr_moves = pact.moves.size();
                 thc::ChessRules cr;
                 for( int ply=0; ply<nbr_moves; ply++ )
@@ -327,7 +327,7 @@ void * WorkerThread::Entry()
                         p->search_frequency = sum / (PLY_MAX-PLY_MIN+1);   // Average rate at which piece/square combo
                                                                            //  appears in position between PLY_MIN and PLY_MAX
 
-                        // Calculate E = effectiveness,  E = S*(1-H) 
+                        // Calculate E = effectiveness,  E = S*(1-H)
                         // If search position contains the combo, then no need to search games where combo not hit
                         // So EFFECTIVENESS = AVG * proportion of games where combo not hit
                         //  eg if Nf3 appears in 40% of positions, and is hit somewhere in 90% of games
@@ -394,7 +394,7 @@ void * WorkerThread::Entry()
                             cprintf( "\nSorting in order of search frequency S\n" );
                             break;
                 }
-                
+
                 PieceSquareCombo *p = &stats[1][0];
                 double cumulative = 1.0;
                 for( int j=0; j<32; )
@@ -438,7 +438,7 @@ void * WorkerThread::Entry()
 }
 
 wxMutex *KillWorkerThread()
-{   
+{
     if( the_database )
         the_database->kill_background_load = true;
     return &s_mutex_tiny_database;
@@ -446,7 +446,7 @@ wxMutex *KillWorkerThread()
 
 
 wxMutex *WaitForWorkerThread( const char *title )
-{   
+{
     if( wxMUTEX_BUSY == s_mutex_tiny_database.TryLock() )
     {
         int base = the_database->background_load_permill;
@@ -459,10 +459,10 @@ wxMutex *WaitForWorkerThread( const char *title )
             //    cprintf( "base=%d, now=%d, now-base=%d, 1000-base=%d\n", base, now, now-base, 1000-base );
             //now_before = now;
             if( progress.Perfraction( now-base, 1000-base ) )
-			{
-				the_database->kill_background_load = true;
-				break;
-			}
+            {
+                the_database->kill_background_load = true;
+                break;
+            }
             wxSafeYield();
         }
     }
@@ -472,9 +472,9 @@ wxMutex *WaitForWorkerThread( const char *title )
 }
 
 wxMutex *DontWaitForWorkerThread()
-{   
+{
     if( the_database )
-		the_database->kill_background_load = true;
+        the_database->kill_background_load = true;
     s_mutex_tiny_database.TryLock();
     wxSafeYield();
     s_mutex_tiny_database.Unlock();
@@ -488,40 +488,40 @@ Database::Database( const char *db_file, bool another_instance_running )
     if( is_suspended )
         database_error_msg = "Database is not open, database is not automatically loaded if another instance of Tarrasch is running";
     else
-	{
-		database_error_msg = "Database not yet open";
+    {
+        database_error_msg = "Database not yet open";
         Reopen( db_file );
-	}
+    }
 }
 
 std::string Database::GetStatus()
 {
     std::string s("Db: ");
     if( is_open )
-	{
-		wxFileName fn(db_filename.c_str());
-		std::string name_without_directory = std::string(fn.GetFullName().c_str());
+    {
+        wxFileName fn(db_filename.c_str());
+        std::string name_without_directory = std::string(fn.GetFullName().c_str());
         s += name_without_directory;
-		if( is_partial_load )
-	        s += " (partial)"; 
-	}
+        if( is_partial_load )
+            s += " (partial)";
+    }
     else if( is_suspended )
-        s += "(not loaded)"; 
-	else
-        s += "(none)"; 
+        s += "(not loaded)";
+    else
+        s += "(none)";
     return s;
 }
 
 bool Database::GetFile( std::string &filename )
 {
-	filename = db_filename;
-	return( is_open && !is_partial_load );
+    filename = db_filename;
+    return( is_open && !is_partial_load );
 }
 
 void Database::Reopen( const char *db_file )
 {
-	is_suspended = false;
-	is_partial_load = false;
+    is_suspended = false;
+    is_partial_load = false;
     background_load_permill = 0;
     kill_background_load = false;
     player_search_in_progress = false;
@@ -533,7 +533,7 @@ void Database::Reopen( const char *db_file )
     is_open = BinDbOpen( db_file, database_error_msg );
     if( is_open )
         LoadInBackground( this );
-    
+
     // If connection failed, handle returns NULL
     cprintf( "Startup %s\n", is_open ? "SUCCESSFUL" : "FAILED" );
 }
@@ -558,29 +558,29 @@ int Database::SetDbPosition( DB_REQ db_req_ )
     this->db_req = db_req_;
     extern void BinDbDatabaseInitialSort( std::vector< smart_ptr<ListableGame> > &games, bool sort_by_player_name );
     BinDbDatabaseInitialSort( objs.db->tiny_db.in_memory_game_cache, db_req_==REQ_PLAYERS );
-	int nbr = tiny_db.in_memory_game_cache.size();
+    int nbr = tiny_db.in_memory_game_cache.size();
     if( nbr )
     {
-	    smart_ptr<ListableGame> p = objs.db->tiny_db.in_memory_game_cache[0];
-	    cprintf( "index 0: %s\n", p->White() );
+        smart_ptr<ListableGame> p = objs.db->tiny_db.in_memory_game_cache[0];
+        cprintf( "index 0: %s\n", p->White() );
     }
-	return nbr;
+    return nbr;
 }
 
 int Database::LoadPlayerGamesWithQuery(  std::string &player_name, bool white, std::vector< smart_ptr<ListableGame> > &games )
 {
-	int nbr_before = games.size();
+    int nbr_before = games.size();
     int nbr= tiny_db.in_memory_game_cache.size();
-	const char *player = player_name.c_str();
+    const char *player = player_name.c_str();
     for( int i=0; i<nbr; i++ )
-	{
-		smart_ptr<ListableGame> p = tiny_db.in_memory_game_cache[i];
-		const char *rover = (white ? p->White() : p->Black()); 
-		if( 0 == strcmp(rover,player) )
-			games.push_back(p);
-	}
-	int nbr_after = games.size();
-	return nbr_after-nbr_before;
+    {
+        smart_ptr<ListableGame> p = tiny_db.in_memory_game_cache[i];
+        const char *rover = (white ? p->White() : p->Black());
+        if( 0 == strcmp(rover,player) )
+            games.push_back(p);
+    }
+    int nbr_after = games.size();
+    return nbr_after-nbr_before;
 }
 
 int Database::GetRow( int row, CompactGame *pact )
@@ -599,10 +599,10 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGam
     background_load_permill = 0;
     kill_background_load = false;
     mega_cache.clear();
-	is_partial_load = false;
+    is_partial_load = false;
     bool locked = false;
     bool killed = BinDbLoadAllGames( locked, false, mega_cache, background_load_permill, kill_background_load );
-	is_partial_load = killed;
+    is_partial_load = killed;
     BinDbClose();
     int cache_nbr = mega_cache.size();
     cprintf( "Number of games = %d\n", cache_nbr );
@@ -615,35 +615,35 @@ bool Database::LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGam
 }
 
 // Transform to lower case, collapse multiple spaces to 1, remove spaces after comma
-void Normalise( std::string &in, std::string &out ) 
+void Normalise( std::string &in, std::string &out )
 {
-	bool nuke_spaces=false;
-	size_t len=in.length();
-	out.clear();
-	for( size_t i=0; i<len; i++ )
-	{
-		int ch = in[i];
+    bool nuke_spaces=false;
+    size_t len=in.length();
+    out.clear();
+    for( size_t i=0; i<len; i++ )
+    {
+        int ch = in[i];
 
-		// To lower case
-		if( isascii(ch) && isupper(ch) )
-			ch = tolower(ch);
+        // To lower case
+        if( isascii(ch) && isupper(ch) )
+            ch = tolower(ch);
 
-		// After ',' or space, remove immediately following spaces
-		if( nuke_spaces )
-		{
-			if( ch != ' ' )
-			{
-				out.push_back(ch);
-				nuke_spaces=false;
-			}
-		}
-		else
-		{
-			out.push_back(ch);
-			if( ch==' ' || ch==',' )
-				nuke_spaces = true;
-		}
-	}
+        // After ',' or space, remove immediately following spaces
+        if( nuke_spaces )
+        {
+            if( ch != ' ' )
+            {
+                out.push_back(ch);
+                nuke_spaces=false;
+            }
+        }
+        else
+        {
+            out.push_back(ch);
+            if( ch==' ' || ch==',' )
+                nuke_spaces = true;
+        }
+    }
 }
 
 
@@ -652,9 +652,9 @@ int Database::FindPlayer( std::string &name, std::string &current, int start_row
 {
     unsigned int row = 0;
     std::string input;
-	Normalise(name,input);
-	std::string normalised_current;
-	Normalise(current, normalised_current );
+    Normalise(name,input);
+    std::string normalised_current;
+    Normalise(current, normalised_current );
     int input_len = input.length();
 
     // If continue search, step
@@ -675,14 +675,14 @@ int Database::FindPlayer( std::string &name, std::string &current, int start_row
     }
 
     // Loop looking for matches
-    while( row < tiny_db.in_memory_game_cache.size() ) 
+    while( row < tiny_db.in_memory_game_cache.size() )
     {
         const char *val;
         smart_ptr<ListableGame> p = tiny_db.in_memory_game_cache[row];
         val = white ? p->White() : p->Black();
         std::string raw_player(val);
         std::string player;
-		Normalise(raw_player,player);
+        Normalise(raw_player,player);
         int player_len = player.length();
 
         // If white we want to skip further games played by the same player, (since the list is sorted by white

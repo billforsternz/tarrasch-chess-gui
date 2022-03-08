@@ -19,7 +19,7 @@ public:
                   wxWindow* parent,
                   wxWindowID id = wxID_ANY,
                   const wxPoint& point = wxDefaultPosition,
-				  const wxSize& size = wxDefaultSize );
+                  const wxSize& size = wxDefaultSize );
     void Set( const thc::ChessPosition &cp_, const bool *lockdown_=0 );
     thc::ChessPosition cp;
     bool         lockdown[64];
@@ -29,7 +29,7 @@ public:
 
 private:
     wxTimer      m_timer;
-	ChessBoardBitmap cbb;
+    ChessBoardBitmap cbb;
     char         cursor;
     char         wait_cursor;
     int          wait_offset;

@@ -58,7 +58,7 @@ bool ClockDialog::Create( wxWindow* parent,
 
         // This fits the dialog to the minimum size dictated by the sizers
         GetSizer()->Fit(this);
-        
+
         // This ensures that the dialog cannot be sized smaller than the minimum size
         GetSizer()->SetSizeHints(this);
 
@@ -70,12 +70,12 @@ bool ClockDialog::Create( wxWindow* parent,
 
 // Control creation for ClockDialog
 void ClockDialog::CreateControls()
-{    
+{
 #if 0
     // A top-level sizer
     wxBoxSizer* top_sizer = new wxBoxSizer(wxVERTICAL);
     this->SetSizer(top_sizer);
-    
+
     // A second box sizer to give more space around the controls
     wxBoxSizer* box_sizer = new wxBoxSizer(wxVERTICAL);
     top_sizer->Add(box_sizer, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
@@ -540,16 +540,16 @@ void ClockDialog::OnFixedPeriodMode( wxCommandEvent& WXUNUSED(event) )
             now_human_visible   ->SetValue( false );
             now_engine_running  ->SetValue( true );
             now_engine_visible  ->SetValue( true );
-            now_engine_minutes  ->SetValue( dat.m_engine_fixed_minutes );  
-            now_engine_seconds  ->SetValue( dat.m_engine_fixed_seconds );  
+            now_engine_minutes  ->SetValue( dat.m_engine_fixed_minutes );
+            now_engine_seconds  ->SetValue( dat.m_engine_fixed_seconds );
             now_engine_increment->SetValue( 0 );
         }
         else
         {
-            now_human_minutes   ->SetValue( dat.m_human_time  ); 
-            now_engine_minutes  ->SetValue( dat.m_engine_time );  
-            now_human_seconds   ->SetValue( 0 );  
-            now_engine_seconds  ->SetValue( 0 );  
+            now_human_minutes   ->SetValue( dat.m_human_time  );
+            now_engine_minutes  ->SetValue( dat.m_engine_time );
+            now_human_seconds   ->SetValue( 0 );
+            now_engine_seconds  ->SetValue( 0 );
             now_human_increment ->SetValue( dat.m_human_increment  );
             now_engine_increment->SetValue( dat.m_engine_increment );
             now_human_running   ->SetValue( true );

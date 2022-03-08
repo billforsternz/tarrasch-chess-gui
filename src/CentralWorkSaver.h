@@ -16,9 +16,9 @@
 #include "GamesCache.h"
 
 class CentralWorkSaver
-{    
+{
 public:
-	CentralWorkSaver() { any_cancel=false; save_orphans=false; just_closing_tab=false; }
+    CentralWorkSaver() { any_cancel=false; save_orphans=false; just_closing_tab=false; }
     void Init( Undo *undo_, GameDocument *gd_, GamesCache *gc_, GamesCache *gc_clipboard_ ) {this->undo=undo_, this->gd=gd_; this->gc=gc_; this->gc_clipboard=gc_clipboard_;}
     void SetTitle();
     bool FileNew();
@@ -37,11 +37,11 @@ private:
     bool TestFileModified();
     bool TestGameModified();
     bool TestGameInFile();
-	bool TestGameInFileAndOthersModified();
-	bool TestModifiedOrphanTabs( int &nbr_orphans );
+    bool TestGameInFileAndOthersModified();
+    bool TestModifiedOrphanTabs( int &nbr_orphans );
     void AddGameToFile();
     void PutBackDocument();
-	void AddOrphansToFile();
+    void AddOrphansToFile();
 
     enum FILE_MODE
     {
@@ -64,8 +64,8 @@ private:
     GamesCache   *gc;
     GamesCache   *gc_clipboard;
     bool         any_cancel;
-	bool		 save_orphans;
-	bool		 just_closing_tab;
+    bool         save_orphans;
+    bool         just_closing_tab;
 };
 
 #endif    // TOP_LEVEL_CONTEXT_H

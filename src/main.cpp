@@ -367,59 +367,59 @@ Objects objs;
 
 static void OpenShellFile( std::string &filename_from_shell )
 {
-	if( filename_from_shell != "" )
-	{
-		wxCommandEvent *p = new wxCommandEvent(wxEVT_MENU, ID_FILE_OPEN_SHELL);
-		objs.gl->filename_from_shell = filename_from_shell;
-		objs.frame->GetEventHandler()->QueueEvent(p);
-	}
+    if( filename_from_shell != "" )
+    {
+        wxCommandEvent *p = new wxCommandEvent(wxEVT_MENU, ID_FILE_OPEN_SHELL);
+        objs.gl->filename_from_shell = filename_from_shell;
+        objs.frame->GetEventHandler()->QueueEvent(p);
+    }
 }
 
 static void OpenShellFileAsk( std::string &filename_from_shell )
 {
-	if( filename_from_shell != "" )
+    if( filename_from_shell != "" )
     {
-		wxCommandEvent *p = new wxCommandEvent(wxEVT_MENU, ID_FILE_OPEN_SHELL_ASK);
-		objs.gl->filename_from_shell = filename_from_shell;
-		objs.frame->GetEventHandler()->QueueEvent(p);
+        wxCommandEvent *p = new wxCommandEvent(wxEVT_MENU, ID_FILE_OPEN_SHELL_ASK);
+        objs.gl->filename_from_shell = filename_from_shell;
+        objs.frame->GetEventHandler()->QueueEvent(p);
     }
 }
 
 // Some IPC stuff to support proper instance handling
-int DialogDetect::counter=0;	              // Don't accept shell commands if we are running a dialog
+int DialogDetect::counter=0;                  // Don't accept shell commands if we are running a dialog
 void (*DialogDetect::func)(std::string &);    // Run them when the dialog exits
 std::string DialogDetect::parm;
 class InterProcessCommunicationConnection : public wxConnection
 {
 protected:
-	bool OnExec(const wxString& topic, const wxString& data)
-	{
-		if( topic == "Activate" )
-		{
-			cprintf("Activated by another instance starting\n");
-			if( objs.frame && objs.gl )
-			{
-				objs.frame->Raise();
-				std::string filename_from_shell = std::string(data.c_str());
-				if( DialogDetect::IsOpen() )
+    bool OnExec(const wxString& topic, const wxString& data)
+    {
+        if( topic == "Activate" )
+        {
+            cprintf("Activated by another instance starting\n");
+            if( objs.frame && objs.gl )
+            {
+                objs.frame->Raise();
+                std::string filename_from_shell = std::string(data.c_str());
+                if( DialogDetect::IsOpen() )
                 {
-				    DialogDetect::OnClose( OpenShellFileAsk, filename_from_shell );
+                    DialogDetect::OnClose( OpenShellFileAsk, filename_from_shell );
                 }
                 else
-				{
+                {
                     OpenShellFile( filename_from_shell );
-				}
-			}
-		}
-		return true;
-	}
+                }
+            }
+        }
+        return true;
+    }
 };
 
 class InterProcessCommunicationServer : public wxServer
 {
 public:
     wxConnectionBase *OnAcceptConnection( const wxString& WXUNUSED(topic) )
-	{
+    {
         return new InterProcessCommunicationConnection;
     }
 };
@@ -436,7 +436,7 @@ public:
     virtual int  OnExit();
 private:
     wxSingleInstanceChecker m_one;
-	InterProcessCommunicationServer *m_server=NULL;
+    InterProcessCommunicationServer *m_server=NULL;
 };
 
 CtrlBoxBookMoves *gbl_book_moves;
@@ -448,16 +448,16 @@ public:
 #ifdef AUI_NOTEBOOK
     void OnTabSelected( wxAuiNotebookEvent& event );
     void OnTabClose( wxAuiNotebookEvent& event );
-    wxAuiNotebook	*notebook;
+    wxAuiNotebook   *notebook;
 #else
     void OnTabSelected( wxBookCtrlEvent& event );
     wxNotebook *notebook;
 #endif
-	void OnTabNew( wxCommandEvent& event );
+    void OnTabNew( wxCommandEvent& event );
     void OnSize( wxSizeEvent &evt );
     int book_moves_width;
     int new_tab_button_width;
-	wxButton *new_tab_button;
+    wxButton *new_tab_button;
     DECLARE_EVENT_TABLE()
 };
 
@@ -477,7 +477,7 @@ END_EVENT_TABLE()
 // Constructor
 PanelNotebook::PanelNotebook
 (
-    wxWindow *parent, 
+    wxWindow *parent,
     wxWindowID id,
     const wxPoint &point,
     const wxSize &siz,
@@ -490,13 +490,13 @@ PanelNotebook::PanelNotebook
     // wxNotebook think it's less short fixes this - and it still appears nice and short through the
     // short panel parenting it. [Removed this when changing to wxAuiNotebook]
     book_moves_width = book_moves_width_;
-	new_tab_button = new wxButton( this, ID_BUTTON_TAB_NEW, "New Tab" );
+    new_tab_button = new wxButton( this, ID_BUTTON_TAB_NEW, "New Tab" );
     wxClientDC dc(new_tab_button);
     wxCoord width, height, descent, external_leading;
     dc.GetTextExtent( "New Tab", &width, &height, &descent, &external_leading );
     new_tab_button_width = (width*130) / 100;
-	//wxSize butt_sz = new_tab_button->GetSize();
-	//new_tab_button_width = butt_sz.x;
+    //wxSize butt_sz = new_tab_button->GetSize();
+    //new_tab_button_width = butt_sz.x;
 #ifdef AUI_NOTEBOOK
     notebook = new wxAuiNotebook(this, wxID_ANY, wxPoint(5,0),  wxSize(siz.x-book_moves_width-10-new_tab_button_width-10,siz.y*5),
         wxAUI_NB_TOP | wxAUI_NB_SCROLL_BUTTONS | /* wxAUI_NB_WINDOWLIST_BUTTON | /*wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | wxAUI_NB_SCROLL_BUTTONS |*/ wxAUI_NB_CLOSE_ON_ACTIVE_TAB );
@@ -514,10 +514,10 @@ PanelNotebook::PanelNotebook
                           wxID_ANY,
                           pt,
                           sz );
-	pt.x -= (new_tab_button_width+10);
-	sz.x  =  new_tab_button_width;
-	new_tab_button->SetPosition(pt);
-	new_tab_button->SetSize(sz);
+    pt.x -= (new_tab_button_width+10);
+    sz.x  =  new_tab_button_width;
+    new_tab_button->SetPosition(pt);
+    new_tab_button->SetSize(sz);
 }
 
 void PanelNotebook::OnSize( wxSizeEvent &evt )
@@ -530,35 +530,35 @@ void PanelNotebook::OnSize( wxSizeEvent &evt )
     wxSize  sz(book_moves_width,siz.y-8);
     wxPoint pt(siz.x-book_moves_width-2,8);
     gbl_book_moves->SetPosition(pt);
-	pt.x -= (new_tab_button_width+10);
-	sz.x  =  new_tab_button_width;
-	new_tab_button->SetPosition(pt);
-	new_tab_button->SetSize(sz);
+    pt.x -= (new_tab_button_width+10);
+    sz.x  =  new_tab_button_width;
+    new_tab_button->SetPosition(pt);
+    new_tab_button->SetSize(sz);
 }
 
 void PanelNotebook::OnTabNew( wxCommandEvent& WXUNUSED(event) )
 {
-	objs.gl->CmdTabNew();
+    objs.gl->CmdTabNew();
 }
 
 #ifdef AUI_NOTEBOOK
 void PanelNotebook::OnTabClose( wxAuiNotebookEvent& event )
 {
-	if(	objs.tabs->GetNbrTabs() > 1 )
-	{
+    if( objs.tabs->GetNbrTabs() > 1 )
+    {
 #if 1
-		event.Veto();				// stop system closing tab
-		objs.gl->CmdTabClose();		// Okay if always close active tab
+        event.Veto();               // stop system closing tab
+        objs.gl->CmdTabClose();     // Okay if always close active tab
 #else
-		int idx = event.GetSelection();
+        int idx = event.GetSelection();
         objs.gl->OnTabClose(idx);
 #endif
-	}
-	else
-	{
-		event.Veto();			// never close last tab
-		objs.frame->Close();	// same as exit from main menu
-	}
+    }
+    else
+    {
+        event.Veto();           // never close last tab
+        objs.frame->Close();    // same as exit from main menu
+    }
 }
 
 void PanelNotebook::OnTabSelected( wxAuiNotebookEvent& event )
@@ -595,8 +595,8 @@ int core_printf( const char *fmt, ... )
     if( !dbg_console_enabled )
         return 0;
     int ret=0;
-	va_list args;
-	va_start( args, fmt );
+    va_list args;
+    va_start( args, fmt );
     char buf[1000];
     char *p = buf;
     if( dbg_printf_prepend_time )
@@ -617,7 +617,7 @@ int core_printf( const char *fmt, ... )
             p = strchr(buf,'\n');
         }
     }
-    vsnprintf( p, sizeof(buf)-2-(p-buf), fmt, args ); 
+    vsnprintf( p, sizeof(buf)-2-(p-buf), fmt, args );
     fputs(buf,stdout);
     if( teefile )
         fputs(buf,teefile);
@@ -636,41 +636,41 @@ void RedirectIOToConsole()
     // allocate a console for this app
     AllocConsole();
 
-	// set the screen buffer to be big enough to let us scroll text
-	HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
-	GetConsoleScreenBufferInfo(handle, &coninfo);
+    // set the screen buffer to be big enough to let us scroll text
+    HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    GetConsoleScreenBufferInfo(handle, &coninfo);
 
-	coninfo.dwSize.Y = MAX_CONSOLE_LINES;
-	SetConsoleScreenBufferSize(handle, coninfo.dwSize);
+    coninfo.dwSize.Y = MAX_CONSOLE_LINES;
+    SetConsoleScreenBufferSize(handle, coninfo.dwSize);
 
-	int height = 60;
-	int width = 80;
+    int height = 60;
+    int width = 80;
 
-	_SMALL_RECT rect;
-	rect.Top = 0;
-	rect.Left = 0;
-	rect.Bottom = height - 1;
-	rect.Right = width - 1;
+    _SMALL_RECT rect;
+    rect.Top = 0;
+    rect.Left = 0;
+    rect.Bottom = height - 1;
+    rect.Right = width - 1;
 
-	SetConsoleWindowInfo(handle, TRUE, &rect);            // Set Window Size
+    SetConsoleWindowInfo(handle, TRUE, &rect);            // Set Window Size
 
 #if 1
-	// Redirect the CRT standard input, output, and error handles to the console
-	freopen("CONIN$", "r", stdin);
-	freopen("CONOUT$", "w", stdout);
-	freopen("CONOUT$", "w", stderr);
+    // Redirect the CRT standard input, output, and error handles to the console
+    freopen("CONIN$", "r", stdin);
+    freopen("CONOUT$", "w", stdout);
+    freopen("CONOUT$", "w", stderr);
 
-	//Clear the error state for each of the C++ standard stream objects. We need to do this, as
-	//attempts to access the standard streams before they refer to a valid target will cause the
-	//iostream objects to enter an error state. In versions of Visual Studio after 2005, this seems
-	//to always occur during startup regardless of whether anything has been read from or written to
-	//the console or not.
-	std::wcout.clear();
-	std::cout.clear();
-	std::wcerr.clear();
-	std::cerr.clear();
-	std::wcin.clear();
-	std::cin.clear();
+    //Clear the error state for each of the C++ standard stream objects. We need to do this, as
+    //attempts to access the standard streams before they refer to a valid target will cause the
+    //iostream objects to enter an error state. In versions of Visual Studio after 2005, this seems
+    //to always occur during startup regardless of whether anything has been read from or written to
+    //the console or not.
+    std::wcout.clear();
+    std::cout.clear();
+    std::wcerr.clear();
+    std::cerr.clear();
+    std::wcin.clear();
+    std::cin.clear();
 #else
 
 
@@ -685,7 +685,7 @@ void RedirectIOToConsole()
     setvbuf( stdout, NULL, _IONBF, 0 );
 
     // redirect unbuffered STDIN to the console
-	/*
+    /*
     lStdHandle = (long)GetStdHandle(STD_INPUT_HANDLE);
     hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
     fp = _fdopen( hConHandle, "r" );
@@ -714,7 +714,7 @@ public:
     ~ChessFrame()
     {
         context->resize_ready = false;   // stops a bogus resize during shutdown on mac
-    }  
+    }
     void OnIdle(wxIdleEvent& event);
     void OnMove       (wxMoveEvent &event);
     void OnMouseWheel( wxMouseEvent &event );
@@ -803,7 +803,7 @@ public:
         void OnUpdateFileOpen(wxUpdateUIEvent &);
     void OnFileOpenShell (wxCommandEvent &);
     void OnFileOpenShellAsk (wxCommandEvent &);
-	void OnFileOpenMru(wxCommandEvent&);
+    void OnFileOpenMru(wxCommandEvent&);
     void OnFileOpenLog (wxCommandEvent &);
         void OnUpdateFileOpenLog(wxUpdateUIEvent &);
     void OnFileSave (wxCommandEvent &);
@@ -876,42 +876,42 @@ extern void JobBegin();
 extern void JobEnd();
 
 wxString argv1;  // can pass a .pgn file on command line
-bool gbl_spelling_us;			// True for US spelling
-const char *gbl_spell_colour;	// "colour" or "color"
+bool gbl_spelling_us;           // True for US spelling
+const char *gbl_spell_colour;   // "colour" or "color"
 
 bool ChessApp::OnInit()
 {
     // Check if there is another process running.
     if( m_one.IsAnotherRunning() ) {
 
-		// If we have a valid filename as a parameter, open it in other instance
-		if( argc > 1 )
-		{
-			wxFileName fn(argv[1]);
-			std::string name      = std::string(fn.GetFullName().c_str());
-			std::string dir       = std::string(fn.GetPath().c_str());
-			std::string full_path = std::string(fn.GetFullPath().c_str());
-			if( dir == "" )
-			{
-				fn.Assign(wxFileName::GetCwd(),argv[1]);
-				name      = std::string(fn.GetFullName().c_str());
-				dir       = std::string(fn.GetPath().c_str());
-				full_path = std::string(fn.GetFullPath().c_str());
-			}
-			bool ok            = fn.IsOk();
-			bool exists        = fn.FileExists();
-			if( ok && exists )
-			{
-				// Create a IPC client and use it to ask the existing process to show itself.
-				wxClient *client = new wxClient;
-				wxConnectionBase *conn = client->MakeConnection("localhost", "/tmp/a_socket" /* or a port number */, "Activate");
-				conn->Execute( full_path.c_str() );
-				delete conn;
-				delete client;
-				// Don't enter the message loop.
-				return false;
-			}
-		}
+        // If we have a valid filename as a parameter, open it in other instance
+        if( argc > 1 )
+        {
+            wxFileName fn(argv[1]);
+            std::string name      = std::string(fn.GetFullName().c_str());
+            std::string dir       = std::string(fn.GetPath().c_str());
+            std::string full_path = std::string(fn.GetFullPath().c_str());
+            if( dir == "" )
+            {
+                fn.Assign(wxFileName::GetCwd(),argv[1]);
+                name      = std::string(fn.GetFullName().c_str());
+                dir       = std::string(fn.GetPath().c_str());
+                full_path = std::string(fn.GetFullPath().c_str());
+            }
+            bool ok            = fn.IsOk();
+            bool exists        = fn.FileExists();
+            if( ok && exists )
+            {
+                // Create a IPC client and use it to ask the existing process to show itself.
+                wxClient *client = new wxClient;
+                wxConnectionBase *conn = client->MakeConnection("localhost", "/tmp/a_socket" /* or a port number */, "Activate");
+                conn->Execute( full_path.c_str() );
+                delete conn;
+                delete client;
+                // Don't enter the message loop.
+                return false;
+            }
+        }
     }
 
     //_CrtSetBreakAlloc(1050656);
@@ -942,10 +942,10 @@ bool ChessApp::OnInit()
     #endif
     //thc::ChessRules cr;
     //cr.TestInternals();
-	int lang = wxLocale::GetSystemLanguage();
-	gbl_spelling_us = (lang==wxLANGUAGE_ENGLISH_US);
-	gbl_spell_colour = gbl_spelling_us ? "color" : "colour";
-	cprintf( "Spelling uses US English? %s\n", gbl_spelling_us?"Yes":"No" );
+    int lang = wxLocale::GetSystemLanguage();
+    gbl_spelling_us = (lang==wxLANGUAGE_ENGLISH_US);
+    gbl_spell_colour = gbl_spelling_us ? "color" : "colour";
+    cprintf( "Spelling uses US English? %s\n", gbl_spelling_us?"Yes":"No" );
     wxString error_msg;
     int disp_width, disp_height;
     wxDisplaySize(&disp_width, &disp_height);
@@ -966,7 +966,7 @@ bool ChessApp::OnInit()
         objs.repository->nv.m_y,
         objs.repository->nv.m_w,
         objs.repository->nv.m_h );
-	bool pos_siz_not_saved = ( objs.repository->nv.m_x==-1 &&
+    bool pos_siz_not_saved = ( objs.repository->nv.m_x==-1 &&
         objs.repository->nv.m_y==-1 &&
         objs.repository->nv.m_w==-1 &&
         objs.repository->nv.m_h==-1 );
@@ -980,16 +980,16 @@ bool ChessApp::OnInit()
     }
 
     // Improved detect MAXIMISED frame logic (single display initial x,y slightly negative), multiple
-	//  display one might be very negative)
+    //  display one might be very negative)
     bool  maximize = false;
     objs.repository->nv.m_x = pt.x;
     objs.repository->nv.m_y = pt.y;
     objs.repository->nv.m_w = sz.x;
     objs.repository->nv.m_h = sz.y;
-	if( pos_siz_restored && pt.y<0 && pt.x<0 )
-		maximize = true;
-	char buf[80];
-	snprintf(buf,sizeof(buf),"Tarrasch Chess GUI %s",MASTER_VERSION_BASE);
+    if( pos_siz_restored && pt.y<0 && pt.x<0 )
+        maximize = true;
+    char buf[80];
+    snprintf(buf,sizeof(buf),"Tarrasch Chess GUI %s",MASTER_VERSION_BASE);
     ChessFrame *frame = new ChessFrame (buf,
                                   pt, sz, pos_siz_restored );
     if( maximize )
@@ -1005,7 +1005,7 @@ bool ChessApp::OnInit()
     bool another_instance_running = m_one.IsAnotherRunning();
     cprintf( "Another Instance running = %s\n", another_instance_running?"true":"false" );
     objs.db  = new Database( objs.repository->database.m_file.c_str(), another_instance_running );
-	objs.canvas->SetBoardTitle( "Initial Position" );
+    objs.canvas->SetBoardTitle( "Initial Position" );
     if( objs.gl )
         objs.gl->StatusUpdate();
     return true;
@@ -1014,13 +1014,13 @@ bool ChessApp::OnInit()
 
 int ChessApp::OnExit()
 {
-	if( m_server )
-		delete m_server;
-	if (teefile)
-	{
-		fclose(teefile);
-		teefile = NULL;
-	}
+    if( m_server )
+        delete m_server;
+    if (teefile)
+    {
+        fclose(teefile);
+        teefile = NULL;
+    }
     cprintf( "ChessApp::OnExit(): May wait for tiny database load here...\n" );
     extern wxMutex *KillWorkerThread();
     wxMutex *ptr_mutex_tiny_database = KillWorkerThread();
@@ -1123,7 +1123,7 @@ BEGIN_EVENT_TABLE(ChessFrame, wxFrame)
         EVT_UPDATE_UI (wxID_NEW,                ChessFrame::OnUpdateFileNew)
     EVT_MENU (wxID_OPEN,                    ChessFrame::OnFileOpen)
         EVT_UPDATE_UI (wxID_OPEN,               ChessFrame::OnUpdateFileOpen)
-	EVT_MENU_RANGE(wxID_FILE1,wxID_FILE1+19, ChessFrame::OnFileOpenMru)
+    EVT_MENU_RANGE(wxID_FILE1,wxID_FILE1+19, ChessFrame::OnFileOpenMru)
     EVT_MENU (ID_FILE_OPEN_LOG,             ChessFrame::OnFileOpenLog)
         EVT_UPDATE_UI (ID_FILE_OPEN_LOG,        ChessFrame::OnUpdateFileOpenLog)
     EVT_MENU (wxID_SAVE,                    ChessFrame::OnFileSave)
@@ -1209,8 +1209,8 @@ BEGIN_EVENT_TABLE(ChessFrame, wxFrame)
         EVT_UPDATE_UI (ID_DATABASE_MATERIAL,            ChessFrame::OnUpdateDatabaseMaterial)
     EVT_MENU (ID_DATABASE_MAINTENANCE,              ChessFrame::OnDatabaseMaintenance)
         EVT_UPDATE_UI (ID_DATABASE_MAINTENANCE,          ChessFrame::OnUpdateDatabaseMaintenance)
-    EVT_MENU (ID_FILE_OPEN_SHELL,                    ChessFrame::OnFileOpenShell)	// Doesn't appear in any actual menu, used to open files from Windows Explorer
-    EVT_MENU (ID_FILE_OPEN_SHELL_ASK,                ChessFrame::OnFileOpenShellAsk)	// Doesn't appear in any actual menu, used to open files from Windows Explorer
+    EVT_MENU (ID_FILE_OPEN_SHELL,                    ChessFrame::OnFileOpenShell)   // Doesn't appear in any actual menu, used to open files from Windows Explorer
+    EVT_MENU (ID_FILE_OPEN_SHELL_ASK,                ChessFrame::OnFileOpenShellAsk)    // Doesn't appear in any actual menu, used to open files from Windows Explorer
 
     EVT_TOOL (ID_CMD_FLIP,         ChessFrame::OnFlip)
     EVT_TOOL (ID_CMD_NEXT_GAME,    ChessFrame::OnNextGame)
@@ -1242,8 +1242,8 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     wxMenu *menu_file     = new wxMenu;
     menu_file->Append (wxID_NEW,                    "New\tCtrl+N", "Start afresh with a new .pgn file with no games");
     menu_file->Append (wxID_OPEN,                   "Open\tCtrl+O", "Open an existing .pgn file" );
-	wxMenu *menu_recent = new wxMenu;
-	menu_file->AppendSubMenu( menu_recent, "Open Recent" );
+    wxMenu *menu_recent = new wxMenu;
+    menu_file->AppendSubMenu( menu_recent, "Open Recent" );
     menu_file->Append (ID_FILE_OPEN_LOG,            "Open log file", "Open the file in which Tarrasch logs games");
     menu_file->Append (wxID_SAVE,                   "Save\tCtrl+S", "Save the current .pgn file" );
     menu_file->Append (wxID_SAVEAS,                 "Save as", "Save the current .pgn file with a different name");
@@ -1491,10 +1491,10 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     objs.tabs->gl   = gl;
     GameDocument    blank;
     objs.tabs->TabNew( blank );
-    objs.cws->Init( &objs.gl->undo, &objs.gl->gd, &objs.gl->gc_pgn, &objs.gl->gc_clipboard ); 
+    objs.cws->Init( &objs.gl->undo, &objs.gl->gd, &objs.gl->gc_pgn, &objs.gl->gc_clipboard );
     context->SetPlayers( "", "" );
     context->resize_ready = true;
-	context->AuiBegin( this, skinny, pb, lb, context, pos_siz_restored );
+    context->AuiBegin( this, skinny, pb, lb, context, pos_siz_restored );
 }
 
 
@@ -1503,23 +1503,23 @@ void ChessFrame::OnClose( wxCloseEvent& WXUNUSED(event) )
     bool okay = objs.gl->OnExit();
     if( okay )
     {
-		context->AuiEnd();
+        context->AuiEnd();
         wxSize sz = GetSize();
         wxPoint pt = GetPosition();
         if( objs.repository->nv.m_x == -1 &&
-			objs.repository->nv.m_y == -1 &&
-			objs.repository->nv.m_w == -1 &&
-			objs.repository->nv.m_h == -1)
-		{
-			// Allow user to manually set factory defaults and retain this setting until next session
-		}
-		else
-		{
-			objs.repository->nv.m_x = pt.x;
-			objs.repository->nv.m_y = pt.y;
-			objs.repository->nv.m_w = sz.x;
-			objs.repository->nv.m_h = sz.y;
-		}
+            objs.repository->nv.m_y == -1 &&
+            objs.repository->nv.m_w == -1 &&
+            objs.repository->nv.m_h == -1)
+        {
+            // Allow user to manually set factory defaults and retain this setting until next session
+        }
+        else
+        {
+            objs.repository->nv.m_x = pt.x;
+            objs.repository->nv.m_y = pt.y;
+            objs.repository->nv.m_w = sz.x;
+            objs.repository->nv.m_h = sz.y;
+        }
         Destroy();  // only exit if OnExit() worked okay (eg, if it wasn't cancelled)
     }
 }
@@ -1545,7 +1545,7 @@ void ChessFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
         "Visit the publisher's website www.triplehappy.com for Tarrasch "
         "Chess GUI news and updates."
     );
-    DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
+    DialogDetect detect;        // an instance of DialogDetect as a local variable allows tracking of open dialogs
     wxMessageBox(msg, "About the Tarrasch Chess GUI " MASTER_VERSION, wxOK|wxICON_INFORMATION|wxCENTRE, this);
 }
 
@@ -1615,13 +1615,13 @@ void ChessFrame::OnHelp(wxCommandEvent& WXUNUSED(event))
         "get the chess engine to provide commentary when you are "
         "playing against it."
         "\n\n"
-		"Tarrasch now includes database facilities for easily finding "
-		"games and move frequency statistics for openings you are interested in. You can search "
-		"for positions, patterns and material balances and conveniently "
-		"play through the games found."
-		, gbl_spell_colour
+        "Tarrasch now includes database facilities for easily finding "
+        "games and move frequency statistics for openings you are interested in. You can search "
+        "for positions, patterns and material balances and conveniently "
+        "play through the games found."
+        , gbl_spell_colour
     );
-    DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
+    DialogDetect detect;        // an instance of DialogDetect as a local variable allows tracking of open dialogs
     wxMessageBox(msg, "Tarrasch Chess GUI Help", wxOK|wxICON_INFORMATION|wxCENTRE, this);
 }
 
@@ -1642,7 +1642,7 @@ void ChessFrame::OnCredits(wxCommandEvent& WXUNUSED(event))
         "Thanks to David L Brown and the Good Companions for the chess "
         "graphics."
         "\n\n"
-		"Thanks to Yusuke Kamiyamane (Fugue icons) for some of the toolbar icons."
+        "Thanks to Yusuke Kamiyamane (Fugue icons) for some of the toolbar icons."
         "\n\n"
         "Special thanks to Mark Crowther for permission to use TWIC to build tarrasch-base the default database, TWIC "
         "underlies all modern chess database curation, the chess community owes Mark a massive debt."
@@ -1664,16 +1664,16 @@ void ChessFrame::OnCredits(wxCommandEvent& WXUNUSED(event))
         "Thanks to Julian Smart, Vadim Zeitlin and the wxWidgets community "
         "for the GUI library."
         "\n\n"
-		"Thanks to Garry Peek and the Radium team (Norman Bartholomew, John Cocks, Jaron Peek, Tim McEwan, Brian Peach, Dr Garry Brown, Corwin Newall, Kate Hyndman and James Herbison) "
-		"for providing office space and good company through much of the V3 development grind."
+        "Thanks to Garry Peek and the Radium team (Norman Bartholomew, John Cocks, Jaron Peek, Tim McEwan, Brian Peach, Dr Garry Brown, Corwin Newall, Kate Hyndman and James Herbison) "
+        "for providing office space and good company through much of the V3 development grind."
         "\n\n"
         "Thanks to my dear wife Maria Champion-Forster, for not only tolerating me "
-		"spending (wasting?) thousands of hours on this project, but actually encouraging it."
+        "spending (wasting?) thousands of hours on this project, but actually encouraging it."
         "\n\n"
         "Dedicated to the memory of John Victor Forster 1949-2001. We "
         "miss him every day.")
     );
-    DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
+    DialogDetect detect;        // an instance of DialogDetect as a local variable allows tracking of open dialogs
     wxMessageBox(msg, "Credits", wxOK|wxICON_INFORMATION|wxCENTRE, this);
 }
 
@@ -1825,7 +1825,7 @@ void ChessFrame::OnFileOpenShellAsk(wxCommandEvent &)
 
 void ChessFrame::OnFileOpenMru(wxCommandEvent& event)
 {
-	int mru_idx = (event.GetId() - wxID_FILE1);
+    int mru_idx = (event.GetId() - wxID_FILE1);
     objs.gl->CmdFileOpenMru( mru_idx );
 }
 
@@ -2030,7 +2030,7 @@ void ChessFrame::OnUpdateEditCut( wxUpdateUIEvent &event )
 
 void ChessFrame::OnUpdateEditPaste( wxUpdateUIEvent &event )
 {
-#ifdef WINDOWS_FIX_LATER    
+#ifdef WINDOWS_FIX_LATER
     bool enabled = (wxTheClipboard->Open() && wxTheClipboard->IsSupported( wxDF_TEXT ));
     event.Enable(enabled);
 #endif
@@ -2296,7 +2296,7 @@ void ChessFrame::OnOptionsReset(wxCommandEvent &)
             bool error = objs.book->Load( error_msg, objs.repository->book.m_file );
             if( error )
             {
-                DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
+                DialogDetect detect;        // an instance of DialogDetect as a local variable allows tracking of open dialogs
                 wxMessageBox( error_msg, "Error loading book", wxOK|wxICON_ERROR );
             }
             objs.canvas->BookUpdate( false );
@@ -2317,11 +2317,11 @@ void ChessFrame::OnOptionsReset(wxCommandEvent &)
     RefreshLanguageFont( from, before_font_size, before_no_italics,
                            to,  after_font_size,  after_no_italics );
     if( before_heading_above_board != after_heading_above_board )
-	{
-		context->AuiRefresh();
-		context->pb->SetBoardTitle();
-	}
-	context->pb->gb->Redraw();
+    {
+        context->AuiRefresh();
+        context->pb->SetBoardTitle();
+    }
+    context->pb->gb->Redraw();
     SetFocusOnList();
 }
 
@@ -2348,7 +2348,7 @@ void ChessFrame::OnBook(wxCommandEvent &)
                 bool error = objs.book->Load( error_msg, objs.repository->book.m_file );
                 if( error )
                 {
-                    DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
+                    DialogDetect detect;        // an instance of DialogDetect as a local variable allows tracking of open dialogs
                     wxMessageBox( error_msg, "Error loading book", wxOK|wxICON_ERROR );
                 }
                 objs.canvas->BookUpdate( false );
@@ -2384,9 +2384,9 @@ void ChessFrame::OnUpdateLog(wxUpdateUIEvent &event )
 void ChessFrame::OnEngine(wxCommandEvent &)
 {
     wxString old_file     = objs.repository->engine.m_file;
-	bool old_normal_priority = objs.repository->engine.m_normal_priority;
-	bool old_low_priority = objs.repository->engine.m_low_priority;
-	bool old_idle_priority = objs.repository->engine.m_idle_priority;
+    bool old_normal_priority = objs.repository->engine.m_normal_priority;
+    bool old_low_priority = objs.repository->engine.m_low_priority;
+    bool old_idle_priority = objs.repository->engine.m_idle_priority;
     EngineDialog dialog( objs.repository->engine, this );
     if( wxID_OK == dialog.ShowModal() )
     {
@@ -2394,10 +2394,10 @@ void ChessFrame::OnEngine(wxCommandEvent &)
         const char *s = dialog.dat.m_file.c_str();
         cprintf( "file=%s\n", s );
         if( old_file != objs.repository->engine.m_file ||
-			old_normal_priority != objs.repository->engine.m_normal_priority ||
-			old_low_priority != objs.repository->engine.m_low_priority ||
-			old_idle_priority != objs.repository->engine.m_idle_priority )
-		{
+            old_normal_priority != objs.repository->engine.m_normal_priority ||
+            old_low_priority != objs.repository->engine.m_low_priority ||
+            old_idle_priority != objs.repository->engine.m_idle_priority )
+        {
             objs.gl->EngineChanged();
         }
     }
@@ -2525,19 +2525,19 @@ void ChessFrame::OnGeneral(wxCommandEvent &)
                                  s, dialog.dat.m_no_italics,
                                  dialog.dat.m_straight_to_game );
         const char *to = LangCheckDiffEnd();
-		bool after_heading_above_board = objs.repository->general.m_heading_above_board;
+        bool after_heading_above_board = objs.repository->general.m_heading_above_board;
         int  after_font_size = objs.repository->general.m_font_size;
         bool after_no_italics = objs.repository->general.m_no_italics;
         RefreshLanguageFont( from, before_font_size, before_no_italics,
                              to,   after_font_size,  after_no_italics );
 
-		// Change board colours
-		if( before_heading_above_board != after_heading_above_board )
-		{
-			context->AuiRefresh();
-			context->pb->SetBoardTitle();
-		}
-		objs.canvas->pb->gb->Redraw();
+        // Change board colours
+        if( before_heading_above_board != after_heading_above_board )
+        {
+            context->AuiRefresh();
+            context->pb->SetBoardTitle();
+        }
+        objs.canvas->pb->gb->Redraw();
     }
     SetFocusOnList();
 }
@@ -2545,8 +2545,8 @@ void ChessFrame::OnGeneral(wxCommandEvent &)
 void ChessFrame::RefreshLanguageFont( const char *UNUSED(from), int before_font_size, bool before_no_italics,
                                       const char *to,   int after_font_size,  bool after_no_italics )
 {
-	if( before_font_size != after_font_size )
-		objs.gl->lb->SetFontSize();
+    if( before_font_size != after_font_size )
+        objs.gl->lb->SetFontSize();
     bool redisplayed = false;
     if( to )
     {

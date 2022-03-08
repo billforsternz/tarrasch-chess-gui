@@ -22,7 +22,7 @@ class wxVirtualPgnListCtrl;
 
 // PgnDialog class declaration
 class PgnDialog: public GamesDialog
-{    
+{
 
 public:
     GameDocument *GetCachedDocument( int idx );
@@ -40,7 +40,7 @@ public:
         const wxPoint& pos = wxDefaultPosition,
         const wxSize& size = wxDefaultSize
     );
-    
+
     // Overrides
     virtual void GdvEnumerateGames();
     virtual wxSizer *GdvAddExtraControls( bool big_display );
@@ -55,7 +55,7 @@ public:
 
     // Return true if a game has been selected
     bool LoadGame( GameLogic *gl, GameDocument& gd );
-	int GetSelectedGame( int *offset );  // towards replacing LoadGame();
+    int GetSelectedGame( int *offset );  // towards replacing LoadGame();
 };
 
 #endif    // PGN_DIALOG_H

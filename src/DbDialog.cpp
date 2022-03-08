@@ -27,7 +27,7 @@
 #include <fstream>
 #include <string>
 #include <iterator>
-#include <list>    
+#include <list>
 #include <algorithm>
 
 // DbDialog constructors
@@ -101,8 +101,8 @@ wxSizer *DbDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
         //wxSize sz3=reload->GetSize();
         //text_ctrl->SetSize( sz3.x*2, sz3.y );      // temp temp
     }
- 
-    
+
+
 //    wxStaticText* spacer1 = new wxStaticText( this, wxID_ANY, wxT(""),
 //                                     wxDefaultPosition, wxDefaultSize, 0 );
 //    vsiz_panel_buttons->Add(spacer1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
@@ -120,7 +120,7 @@ wxSizer *DbDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
                                    wxDefaultPosition, wxDefaultSize, 0 );
     gdr.RegisterPanelWindow( btn2 );
     vsiz_panel_buttons->Add(btn2, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    
+
     wxButton* btn3 = new wxButton ( this, ID_BUTTON_3, wxT("Add All Player's White Games"),
                                      wxDefaultPosition, wxDefaultSize, 0 );
     gdr.RegisterPanelWindow( btn3 );
@@ -137,21 +137,21 @@ wxSizer *DbDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
     gdr.RegisterPanelWindow( btn4 );
     vsiz_panel_buttons->Add(btn4, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-    if( db_req == REQ_PLAYERS )	// Save all button assumes games are in the gc_db_displayed_games cache. Not true if REQ_PLAYERS
-	{
-		wxStaticText* spacer1 = new wxStaticText( this, wxID_ANY, wxT(""),
-										 wxDefaultPosition, wxDefaultSize, 0 );
+    if( db_req == REQ_PLAYERS ) // Save all button assumes games are in the gc_db_displayed_games cache. Not true if REQ_PLAYERS
+    {
+        wxStaticText* spacer1 = new wxStaticText( this, wxID_ANY, wxT(""),
+                                         wxDefaultPosition, wxDefaultSize, 0 );
         gdr.RegisterPanelWindow( spacer1 );
-		vsiz_panel_buttons->Add(spacer1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-	}
-	else
-	{
-		wxButton* save_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save all"),
-			wxDefaultPosition, wxDefaultSize, 0 );
+        vsiz_panel_buttons->Add(spacer1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    }
+    else
+    {
+        wxButton* save_all_to_a_file = new wxButton ( this, ID_SAVE_ALL_TO_A_FILE, wxT("Save all"),
+            wxDefaultPosition, wxDefaultSize, 0 );
         gdr.RegisterPanelWindow( save_all_to_a_file );
-		vsiz_panel_buttons->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-	}
-    
+        vsiz_panel_buttons->Add(save_all_to_a_file, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    }
+
     filter_ctrl = new wxCheckBox( this, ID_DB_CHECKBOX, "&Clipboard as temp database", wxDefaultPosition, wxDefaultSize, 0 );
                              //       big_display?"&Clipboard as temporary database":"&Clipboard as temp database", wxDefaultPosition, wxDefaultSize, 0 );
     gdr.RegisterPanelWindow( filter_ctrl );
@@ -162,12 +162,12 @@ wxSizer *DbDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
     gdr.RegisterPanelWindow( spacer1 );
     vsiz_panel_buttons->Add(spacer1, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
     SetDialogHelp();
-    return vsiz_panel_buttons;   
+    return vsiz_panel_buttons;
 }
 
 // Games Dialog Override - Disable features that make no sense without a game (enable them otherwise)
 void DbDialog::GdvEnableControlsIfGamesFound( bool have_games )
-{                                            
+{
     FindWindow(wxID_OK)    ->Enable(have_games);     // Load Game
     FindWindow(ID_BUTTON_2)->Enable(have_games);     // Add to Clipboard
     FindWindow(ID_BUTTON_3)->Enable(have_games);     // Add All Player's White Games
@@ -208,7 +208,7 @@ void DbDialog::GdvOnActivate()
         // Else calculate stats
         else
         {
-            StatsCalculate();                                 
+            StatsCalculate();
         }
         Goto(0); // list_ctrl->SetFocus();
     }
@@ -264,7 +264,7 @@ bool DbDialog::ReadGameFromSearchResults( int item, CompactGame &pact )
 
 // Overidden function used to set initial position when navigating game
 int DbDialog::GetBasePositionIdx( CompactGame &pact, bool receiving_focus )
-{ 
+{
     int idx = 0;
     if( pm.IsReady() && db_req == REQ_PATTERN )
     {
@@ -289,7 +289,7 @@ int DbDialog::GetBasePositionIdx( CompactGame &pact, bool receiving_focus )
 
 // Overidden function used for smart move column compare
 int DbDialog::CalculateTranspo( const char *blob, int &transpo )
-{        
+{
     transpo = 0;
     unsigned int sz2 = transpositions.size();
     for( unsigned int j=0; j<sz2; j++ )
@@ -310,7 +310,7 @@ void DbDialog::GdvListColClick( int compare_col_ )
 {
     if( db_req == REQ_PLAYERS )
         return; // not supported
-    ColumnSort( compare_col_, gc_db_displayed_games.gds );  
+    ColumnSort( compare_col_, gc_db_displayed_games.gds );
 }
 
 // Games Dialog Override - Search feature
@@ -320,7 +320,7 @@ void DbDialog::GdvSearch()
     {
         wxString name = text_ctrl->GetValue();
         std::string sname(name.c_str());
-    
+
         // Do a "find on page type feature"
         if( sname.length()>0 && db_req == REQ_PLAYERS )
         {
@@ -390,14 +390,14 @@ void DbDialog::GdvHelpClick()
     " by player menu to search for players."
     "\n\n"
     "You can sort on any column including the Moves column. The Moves column sort is statistical (most popular lines first) "
-	"rather than alphabetical. Sort history is respected in tie breaks. For example, if you "
-	"sort on Moves, then on Black, then on White; The games will be sorted by White "
-	"player, but all opponents will be grouped together (because of the earlier sort on Black), "
-	"and if there are multiple games between the same players, the games will be sorted according "
-	"to the most common opening sequences between those two players (because of the earlier sort on Moves). "
-	"The first column (column '#') is provided only to allow "
+    "rather than alphabetical. Sort history is respected in tie breaks. For example, if you "
+    "sort on Moves, then on Black, then on White; The games will be sorted by White "
+    "player, but all opponents will be grouped together (because of the earlier sort on Black), "
+    "and if there are multiple games between the same players, the games will be sorted according "
+    "to the most common opening sequences between those two players (because of the earlier sort on Moves). "
+    "The first column (column '#') is provided only to allow "
     "a sort on initial order (for restoring or reversing the initial order). To reverse "
-	"sort click twice." 
+    "sort click twice."
     "\n\n";
     wxMessageBox(helpText,
     wxT("Database Dialog Help"),
@@ -501,7 +501,7 @@ void DbDialog::GdvCheckBox( bool checked )
                 //  (not really - searching for initial position picks up every game - quick enough to work well)
         {
             nbr_games_in_list_ctrl = objs.db->SetDbPosition( db_req );
-        
+
             // We have shown stats while db_clipboard was true. So to avoid going back to
             //  situation where stats must be requested, unconditionally load games into
             //  memory (Calculate Stats button loads games into memory)
@@ -609,7 +609,7 @@ void DbDialog::GdvNextMove( int idx )
         thc::Move this_one = moves_in_this_position[idx];
         moves_from_base_position.push_back(this_one);
     }
-    
+
     thc::ChessRules cr_to_match = this->cr;
     for( size_t i=0; i<moves_from_base_position.size(); i++ )
     {
@@ -677,7 +677,7 @@ void DbDialog::StatsCalculate()
             add_go_back = true;
         }
         cr_to_match.PlayMove(mv);
-    }       
+    }
 
     // hash to match
     uint64_t gbl_hash = cr_to_match.Hash64Calculate();
@@ -722,11 +722,11 @@ void DbDialog::StatsCalculate()
             game_count = mps->DoSearch(cr_to_match,&progress2);
         }
     }
-    
+
     std::vector< smart_ptr<ListableGame> >  &db_games    = mps->GetVectorSourceGames();
     std::vector<DoSearchFoundGame>          &found_games = mps->GetVectorGamesFound();
     size_t nbr_found_games = found_games.size();
-    
+
     {
         ProgressBar progress("Calculating Stats","Calculating Stats",false);
         for( size_t i=0; i<nbr_found_games; i++ )
@@ -738,7 +738,7 @@ void DbDialog::StatsCalculate()
             unsigned short offset_last  = found_games[i].offset_last;
             temp.gds.push_back(db_games[idx]);
             std::string blob = db_games[idx]->CompressedMoves();
-        
+
             // Search for a match to this game
             bool new_transposition_found=false;
             bool found=false;
@@ -757,7 +757,7 @@ void DbDialog::StatsCalculate()
                     }
                 }
             }
-            
+
             // If none so far add the one from this game
             if( !found )
             {
@@ -803,7 +803,7 @@ void DbDialog::StatsCalculate()
                     it->second.nbr_draws++;
             }
 
-            // For speed, have the most frequent transpositions first        
+            // For speed, have the most frequent transpositions first
             if( new_transposition_found )
             {
                 std::sort( transpositions.rbegin(), transpositions.rend() );
@@ -919,13 +919,13 @@ void DbDialog::StatsCalculate()
             //wxSize sz4 = mini_board->GetSize();
             //sz4.x = (sz4.x*50)/100;
             //sz4.y = (sz4.y*50)/100;
-            
+
             list_ctrl_stats   = new wxListBox( notebook, ID_DB_LISTBOX_STATS, wxDefaultPosition, wxDefaultSize, 0, NULL, wxLB_HSCROLL );
             list_ctrl_transpo = new wxListBox( notebook, ID_DB_LISTBOX_TRANSPO, wxDefaultPosition, wxDefaultSize, 0, NULL, wxLB_HSCROLL );
             notebook->AddPage(list_ctrl_stats,"Next Move",true);
             notebook->AddPage(list_ctrl_transpo,"Transpositions",false);
         }
-        
+
         list_ctrl_stats->Clear();
         list_ctrl_transpo->Clear();
         if( !strings_stats.IsEmpty() )
@@ -987,17 +987,17 @@ void DbDialog::PatternSearch()
         ProgressBar progress2("Searching", "Searching",false);
         game_count = mps->DoPatternSearch(pm,&progress2,stats_);
     }
-    
+
     std::vector< smart_ptr<ListableGame> >  &db_games    = mps->GetVectorSourceGames();
     std::vector<DoSearchFoundGame>          &found_games = mps->GetVectorGamesFound();
     size_t nbr_found_games = found_games.size();
-    
+
     for( size_t i=0; i<nbr_found_games; i++ )
     {
         int idx                     = found_games[i].idx;
         gc_db_displayed_games.gds.push_back(db_games[idx]);
     }
-        
+
     nbr_games_in_list_ctrl = gc_db_displayed_games.gds.size();
     dirty = true;
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);

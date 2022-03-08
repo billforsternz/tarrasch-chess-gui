@@ -94,7 +94,7 @@ void GamesDialogResizer::RegisterPanelWindow( wxWindow *window, bool stretch_wid
 
 bool GamesDialogResizer::Layout( wxWindow *dialog, wxWindow *list, wxWindow *line )
 {
-	bool was_first_time = first_time;
+    bool was_first_time = first_time;
     if( first_time )
     {
         cprintf( "GamesDialogResizer::Layout() first time\n" );
@@ -108,7 +108,7 @@ bool GamesDialogResizer::Layout( wxWindow *dialog, wxWindow *list, wxWindow *lin
         ReLayout( dialog, list, line );
         Refresh( dialog, list, line );
     }
-	return was_first_time;
+    return was_first_time;
 }
 
 void GamesDialogResizer::AnchorOriginalPositions( wxWindow *dialog, wxWindow *list, wxWindow *line )
@@ -154,8 +154,8 @@ void GamesDialogResizer::ReLayout( wxWindow *dialog, wxWindow *list, wxWindow *l
         list_h2 = dialog_h2 - (dialog_h-list_h)
                 = dialog_h2-dialog_h + list_h
                 = list_h + stretch_h         (stretch_h = dialog_h2-dialog_h, how much we've stretched the dialog down)
-            
-            
+
+
     */
     int w2, h2, stretch_h, stretch_w;
     dialog->GetSize( &w2, &h2 );
@@ -205,7 +205,7 @@ void GamesDialogResizer::Refresh( wxWindow *dialog, wxWindow *WXUNUSED(list), wx
             window->Refresh();
             cprintf( "Refresh() notebook\n" );
         }
-    } 
+    }
 }
 
 GamesListCtrl::GamesListCtrl( GamesDialog *parent, wxWindowID id, const wxPoint &pos, const wxSize &size )
@@ -233,18 +233,18 @@ void GamesListCtrl::ReceiveFocus( int focus_idx )
         if( mini_board )
         {
             std::string previous_move;
-			thc::Move previous_move_bin;
+            thc::Move previous_move_bin;
             CalculateMoveTxt( previous_move, previous_move_bin );
-			if( previous_move_bin.Valid() )
-			{
-				mini_board->SetHighlight1(previous_move_bin.src);
-				mini_board->SetHighlight2(previous_move_bin.dst);
-			}
-			else
-			{
-				mini_board->ClearHighlight1();
-				mini_board->ClearHighlight2();
-			}
+            if( previous_move_bin.Valid() )
+            {
+                mini_board->SetHighlight1(previous_move_bin.src);
+                mini_board->SetHighlight2(previous_move_bin.dst);
+            }
+            else
+            {
+                mini_board->ClearHighlight1();
+                mini_board->ClearHighlight2();
+            }
             mini_board->SetChessPosition( track->updated_position );
             std::string desc = track->info.Description();
             if( previous_move.length() > 0 )
@@ -284,9 +284,9 @@ std::string GamesListCtrl::CalculateMoveTxt( CompactGame &info, int offset ) con
 std::string GamesListCtrl::CalculateMoveTxt( std::string &previous_move, CompactGame &info, int focus_offset, thc::ChessPosition &updated_position, thc::Move &previous_move_bin ) const
 {
     bool position_updated = false;
-	previous_move_bin.Invalid();
+    previous_move_bin.Invalid();
     std::string move_txt;
-	thc::ChessRules cr=info.GetStartPosition();
+    thc::ChessRules cr=info.GetStartPosition();
     int nbr_moves = info.moves.size();
     for( int i=0; i<nbr_moves; i++ )
     {
@@ -309,10 +309,10 @@ std::string GamesListCtrl::CalculateMoveTxt( std::string &previous_move, Compact
                 s = std::string(buf) + s;
             }
             if( prev_move )
-			{
+            {
                 previous_move = s;
-				previous_move_bin = mv;
-			}
+                previous_move_bin = mv;
+            }
             else
             {
                 move_txt += s;
@@ -341,7 +341,7 @@ std::string GamesListCtrl::CalculateMoveTxt( std::string &previous_move, Compact
     }
     return move_txt;
 }
-    
+
 wxString GamesListCtrl::OnGetItemText( long item, long column) const
 {
     char buf[1000];
@@ -423,23 +423,23 @@ void GamesListCtrl::OnChar( wxKeyEvent &event )
     if( update )
     {
         RefreshItem(track->focus_idx);
-		if( track->info.game_id != 0 )	// only map games that have a real game_id
-	        browse_map[track->info.game_id] = track->focus_offset;
+        if( track->info.game_id != 0 )  // only map games that have a real game_id
+            browse_map[track->info.game_id] = track->focus_offset;
         if( mini_board )
         {
             std::string previous_move;
-			thc::Move previous_move_bin;
+            thc::Move previous_move_bin;
             CalculateMoveTxt( previous_move, previous_move_bin );
-			if( previous_move_bin.Valid() )
-			{
-				mini_board->SetHighlight1(previous_move_bin.src);
-				mini_board->SetHighlight2(previous_move_bin.dst);
-			}
-			else
-			{
-				mini_board->ClearHighlight1();
-				mini_board->ClearHighlight2();
-			}
+            if( previous_move_bin.Valid() )
+            {
+                mini_board->SetHighlight1(previous_move_bin.src);
+                mini_board->SetHighlight2(previous_move_bin.dst);
+            }
+            else
+            {
+                mini_board->ClearHighlight1();
+                mini_board->ClearHighlight2();
+            }
             mini_board->SetChessPosition( track->updated_position );
             std::string desc = track->info.Description();
             if( previous_move.length() > 0 )
@@ -453,7 +453,7 @@ void GamesListCtrl::OnChar( wxKeyEvent &event )
             }
             parent->player_names->SetLabel(wxString(desc.c_str()));
         }
-        
+
     }
 }
 
@@ -526,7 +526,7 @@ bool GamesDialog::Create( wxWindow* parent,
     wxDisplaySize(&disp_width, &disp_height);
 
     // Calculate Minimum()
-	wxPoint temp = parent->GetPosition();
+    wxPoint temp = parent->GetPosition();
     wxSize sz_minimum( disp_width/10, disp_height/10 );
     wxPoint pos_minimum( temp.x+disp_width/20, temp.y+disp_height/20 );
 
@@ -534,7 +534,7 @@ bool GamesDialog::Create( wxWindow* parent,
     wxSize  sz_zero(0,0);
     wxSize  sz_actual = sz_zero; // refinement, fallback to a size calculated below based on minimum dialog size //sz_fallback;
     wxPoint pos_actual = pos_minimum;
-	bool pos_siz_not_saved = ( objs.repository->nv.m_games_x==-1 &&
+    bool pos_siz_not_saved = ( objs.repository->nv.m_games_x==-1 &&
         objs.repository->nv.m_games_y==-1 &&
         objs.repository->nv.m_games_w==-1 &&
         objs.repository->nv.m_games_h==-1 );
@@ -546,7 +546,7 @@ bool GamesDialog::Create( wxWindow* parent,
         sz_actual.y  = objs.repository->nv.m_games_h;
     }
 
-    // Start with minimum 
+    // Start with minimum
     size  = sz_minimum;
     pos = pos_minimum;
 
@@ -564,7 +564,7 @@ bool GamesDialog::Create( wxWindow* parent,
 
         // This fits the dialog to the minimum size dictated by the sizers
         GetSizer()->Fit(this);
-        
+
         // This ensures that the dialog cannot be sized smaller than the minimum size
         GetSizer()->SetSizeHints(this);
 
@@ -617,33 +617,33 @@ bool GamesDialog::Create( wxWindow* parent,
         {
             unsigned int x = CtrlChessBoard::GetDefaultSquareSize();
             objs.repository->nv.m_col0 = cols[0] =  x*9/16;     // "#"
-            objs.repository->nv.m_col1 = cols[1] =  x*3/1;      // "White" 
+            objs.repository->nv.m_col1 = cols[1] =  x*3/1;      // "White"
             objs.repository->nv.m_col2 = cols[2] =  x*16/16;    // "Elo W"
-            objs.repository->nv.m_col3 = cols[3] =  x*3/1;      // "Black" 
-            objs.repository->nv.m_col4 = cols[4] =  x*16/16;    // "Elo B" 
-            objs.repository->nv.m_col5 = cols[5] =  x*9/5;      // "Date"  
-            objs.repository->nv.m_col6 = cols[6] =  x*4/1;      // "Site/Event"  
-            objs.repository->nv.m_col7 = cols[7] =  x*5/4;      // "Round" 
+            objs.repository->nv.m_col3 = cols[3] =  x*3/1;      // "Black"
+            objs.repository->nv.m_col4 = cols[4] =  x*16/16;    // "Elo B"
+            objs.repository->nv.m_col5 = cols[5] =  x*9/5;      // "Date"
+            objs.repository->nv.m_col6 = cols[6] =  x*4/1;      // "Site/Event"
+            objs.repository->nv.m_col7 = cols[7] =  x*5/4;      // "Round"
             objs.repository->nv.m_col8 = cols[8] =  x*23/16;    // "Result"
-            objs.repository->nv.m_col9 = cols[9] =  x*15/16;    // "ECO"   
+            objs.repository->nv.m_col9 = cols[9] =  x*15/16;    // "ECO"
             objs.repository->nv.m_col10= cols[10]=  x*8/1;      // "Moves"
-            objs.repository->nv.m_col11 = cols[11]= x*14/16;    // "Ply"   
+            objs.repository->nv.m_col11 = cols[11]= x*14/16;    // "Ply"
         }
         list_ctrl->SetColumnWidth( 0, cols[0] );    // "Game #"
-        list_ctrl->SetColumnWidth( 1, cols[1] );    // "White" 
-        list_ctrl->SetColumnWidth( 2, cols[2] );    // "Elo W" 
-        list_ctrl->SetColumnWidth( 3, cols[3] );    // "Black" 
-        list_ctrl->SetColumnWidth( 4, cols[4] );    // "Elo B" 
-        list_ctrl->SetColumnWidth( 5, cols[5] );    // "Date"  
-        list_ctrl->SetColumnWidth( 6, cols[6] );    // "Site/Event"  
+        list_ctrl->SetColumnWidth( 1, cols[1] );    // "White"
+        list_ctrl->SetColumnWidth( 2, cols[2] );    // "Elo W"
+        list_ctrl->SetColumnWidth( 3, cols[3] );    // "Black"
+        list_ctrl->SetColumnWidth( 4, cols[4] );    // "Elo B"
+        list_ctrl->SetColumnWidth( 5, cols[5] );    // "Date"
+        list_ctrl->SetColumnWidth( 6, cols[6] );    // "Site/Event"
         list_ctrl->SetColumnWidth( 7, cols[7] );    // "Round"
         list_ctrl->SetColumnWidth( 8, cols[8] );    // "Result"
-        list_ctrl->SetColumnWidth( 9, cols[9] );    // "ECO"   
+        list_ctrl->SetColumnWidth( 9, cols[9] );    // "ECO"
         list_ctrl->SetColumnWidth(10, cols[11] );   // "Ply"
         list_ctrl->SetColumnWidth(11, cols[10] );   // "Moves"  // No Ply in Tarrasch V2, so Moves is [10], Ply is[11]
 
         SetPosition(pos=pos_actual);
-		cprintf( "######  Games Dialog initial pos.x=%d, pos.y=%d\n", pos.x, pos.y );
+        cprintf( "######  Games Dialog initial pos.x=%d, pos.y=%d\n", pos.x, pos.y );
 
         // Calculate a starting size based on the minimum size set by the sizer
         if( sz_actual.x==0 || sz_actual.y==0 )
@@ -663,19 +663,19 @@ bool GamesDialog::Create( wxWindow* parent,
 
 // Control creation for GamesDialog
 void GamesDialog::CreateControls()
-{    
+{
 
     // A top-level sizer
     wxBoxSizer* top_sizer = new wxBoxSizer(wxVERTICAL);
     this->SetSizer(top_sizer);
-    
+
     // A second box sizer to give more space around the controls
     wxBoxSizer* box_sizer = new wxBoxSizer(wxVERTICAL);
     top_sizer->Add(box_sizer, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
 
     // A friendly message
     char buf[200];
-	buf[0] = '\0';
+    buf[0] = '\0';
     if( !db_search )
     {
         nbr_games_in_list_ctrl = gc->gds.size();
@@ -690,9 +690,9 @@ void GamesDialog::CreateControls()
     {
         nbr_games_in_list_ctrl = objs.db->SetDbPosition( db_req );
         if( db_req == REQ_POSITION )
-            nbr_games_in_list_ctrl = 0;		// message will be calculated later
-		else
-	        sprintf(buf,"%d games",nbr_games_in_list_ctrl);
+            nbr_games_in_list_ctrl = 0;     // message will be calculated later
+        else
+            sprintf(buf,"%d games",nbr_games_in_list_ctrl);
     }
 
     title_ctrl = new wxStaticText( this, wxID_STATIC,
@@ -719,9 +719,9 @@ void GamesDialog::CreateControls()
     // Create a panel beneath the list control, containing everything else
     hsiz_panel = new wxBoxSizer(wxHORIZONTAL);
     box_sizer->Add(hsiz_panel, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxTOP, 10);
-	bool interactive = false;
-	bool normal_orientation = objs.canvas->GetNormalOrientation();
-    mini_board = new CtrlChessBoard(interactive,normal_orientation,this);	// non interactive CtrlChessBoard
+    bool interactive = false;
+    bool normal_orientation = objs.canvas->GetNormalOrientation();
+    mini_board = new CtrlChessBoard(interactive,normal_orientation,this);   // non interactive CtrlChessBoard
     gdr.RegisterPanelWindow( mini_board );
     list_ctrl->mini_board = mini_board;
     track = &mini_board_game;
@@ -749,7 +749,7 @@ void GamesDialog::CreateControls()
         wxDefaultPosition, wxDefaultSize, 0 );
     gdr.RegisterPanelWindow( ok_button );
     vsiz_panel_buttons->Add(ok_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    
+
     // Save all games to a file
     if( id==ID_PGN_DIALOG_FILE || id==ID_PGN_DIALOG_CURRENT_FILE )
     {
@@ -779,8 +779,8 @@ void GamesDialog::CreateControls()
 
     // The Cancel button
     wxButton* cancel = new wxButton ( this, wxID_CANCEL,
-         id==ID_PGN_DIALOG_FILE ? "Close" : "Cancel",	// Can't really cancel open file dialog any more - still get a new game
-		 wxDefaultPosition, wxDefaultSize, 0 );
+         id==ID_PGN_DIALOG_FILE ? "Close" : "Cancel",   // Can't really cancel open file dialog any more - still get a new game
+         wxDefaultPosition, wxDefaultSize, 0 );
     gdr.RegisterPanelWindow( cancel );
     vsiz_panel_buttons->Add(cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
@@ -794,7 +794,7 @@ void GamesDialog::CreateControls()
                                     wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL );
     gdr.RegisterPanelWindow( player_names );
     box_sizer->Add(player_names, 0, wxALIGN_LEFT|wxLEFT|wxRIGHT|wxBOTTOM, 10);
-    
+
     int disp_width, disp_height;
     wxDisplaySize(&disp_width, &disp_height);
     bool big_display = (disp_width > 1366);
@@ -828,9 +828,9 @@ void GamesDialog::OnSize( wxSizeEvent &evt )
     if(list_ctrl)
     {
         if( gdr.Layout( this, list_ctrl, line_ctrl ) )
-			Goto(focus_idx);	// If first time through, establish starting index (normally 0 but see ID_PGN_DIALOG_CURRENT_FILE)
-		else
-			list_ctrl->SetFocus();
+            Goto(focus_idx);    // If first time through, establish starting index (normally 0 but see ID_PGN_DIALOG_CURRENT_FILE)
+        else
+            list_ctrl->SetFocus();
     }
 }
 
@@ -958,7 +958,7 @@ void GamesDialog::LoadGameForPreview( int idx, int focus_offset )
     ReadItemWithSingleLineCache( idx, info );
     GameDocument gd;
     gd.r = info.r;
-	gd.game_id = info.game_id;
+    gd.game_id = info.game_id;
     gd.LoadFromMoveList( info.moves, focus_offset );
     preview_game = gd;
     preview_game_set = true;
@@ -1185,13 +1185,13 @@ bool GamesDialog::ShowModalOk( std::string title )
     objs.repository->nv.m_col1  = list_ctrl->GetColumnWidth( 1 );    // "White"
     objs.repository->nv.m_col2  = list_ctrl->GetColumnWidth( 2 );    // "Elo W"
     objs.repository->nv.m_col3  = list_ctrl->GetColumnWidth( 3 );    // "Black"
-    objs.repository->nv.m_col4  = list_ctrl->GetColumnWidth( 4 );    // "Elo B" 
-    objs.repository->nv.m_col5  = list_ctrl->GetColumnWidth( 5 );    // "Date"  
+    objs.repository->nv.m_col4  = list_ctrl->GetColumnWidth( 4 );    // "Elo B"
+    objs.repository->nv.m_col5  = list_ctrl->GetColumnWidth( 5 );    // "Date"
     objs.repository->nv.m_col6  = list_ctrl->GetColumnWidth( 6 );    // "Site/Event"
     cprintf( "Site width = %d\n",   objs.repository->nv.m_col6 );
-    objs.repository->nv.m_col7  = list_ctrl->GetColumnWidth( 7 );    // "Round" 
+    objs.repository->nv.m_col7  = list_ctrl->GetColumnWidth( 7 );    // "Round"
     objs.repository->nv.m_col8  = list_ctrl->GetColumnWidth( 8 );    // "Result"
-    objs.repository->nv.m_col9  = list_ctrl->GetColumnWidth( 9 );    // "ECO"   
+    objs.repository->nv.m_col9  = list_ctrl->GetColumnWidth( 9 );    // "ECO"
     objs.repository->nv.m_col10 = list_ctrl->GetColumnWidth(11 );    // "Moves"
             // Note that Ply and Moves are inverted here for compatibility with T2 (on T2 there is no Ply so nv.m_col10 is Moves)
     objs.repository->nv.m_col11 = list_ctrl->GetColumnWidth(10 );    // "Ply"
@@ -1219,8 +1219,8 @@ void GamesDialog::OnEditGameDetails( wxCommandEvent& WXUNUSED(event) )
     int idx = track->focus_idx;
     if( idx != -1 )
     {
-		GameDocument temp;
-		gc->gds[idx]->ConvertToGameDocument(temp);
+        GameDocument temp;
+        gc->gds[idx]->ConvertToGameDocument(temp);
         GameDetailsDialog dialog( this );
         if( dialog.Run( temp, true ) )
         {
@@ -1233,8 +1233,8 @@ void GamesDialog::OnEditGameDetails( wxCommandEvent& WXUNUSED(event) )
             list_ctrl->SetItem( idx, 7, temp.r.round );
             list_ctrl->SetItem( idx, 8, temp.r.result );
             list_ctrl->SetItem( idx, 9, temp.r.eco );
-			make_smart_ptr(GameDocument, new_smart_ptr, temp);
-			gc->gds[idx] = std::move(new_smart_ptr);
+            make_smart_ptr(GameDocument, new_smart_ptr, temp);
+            gc->gds[idx] = std::move(new_smart_ptr);
             objs.gl->GameRedisplayPlayersResult();
             Goto(idx);
         }
@@ -1317,7 +1317,7 @@ void GamesDialog::OnCutOrDelete( bool cut )
                 nbr_cut++;
             }
         }
-        
+
         if( nbr_cut==0 && 0<=idx_focus && idx_focus<sz )
         {
             if( cut )
@@ -1334,9 +1334,9 @@ void GamesDialog::OnCutOrDelete( bool cut )
             for( size_t j=0; j<games_to_cut.size(); j++ )
             {
                 int idx = games_to_cut[j];
-                idx -= j;					//compensates for games cut earlier in this loop
+                idx -= j;                   //compensates for games cut earlier in this loop
                 gc->gds.erase(iter+idx);
-				iter = gc->gds.begin();
+                iter = gc->gds.begin();
                 idx_focus = idx;
             }
             sz-=nbr_cut;
@@ -1345,9 +1345,9 @@ void GamesDialog::OnCutOrDelete( bool cut )
             Goto( 0<=idx_focus && idx_focus<sz ? idx_focus : sz-1 );
             if( sz>0 )
                 list_ctrl->RefreshItems(0,sz-1);
-			char buf[80];
-			sprintf(buf,"%d games",sz);
-		    title_ctrl->SetLabel( buf );
+            char buf[80];
+            sprintf(buf,"%d games",sz);
+            title_ctrl->SetLabel( buf );
         }
     }
     dbg_printf( "%d games %s\n", nbr_cut, cut?"cut":"deleted" );
@@ -1381,7 +1381,7 @@ void GamesDialog::OnSiteEvent( wxCommandEvent& WXUNUSED(event) )
     if( end > gds_nbr )
         end = gds_nbr;
     objs.repository->nv.m_event_not_site = !objs.repository->nv.m_event_not_site;
-    for( int i=top; i<end; i++ )    
+    for( int i=top; i<end; i++ )
     {
         CompactGame info;
         GdvReadItem( i, info );
@@ -1408,23 +1408,23 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
         cprintf( "insert_idx=%d\n", insert_idx );
         std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin() + insert_idx;
         GameDocument gd = objs.gl->gd;
-		bool ok = true;
+        bool ok = true;
         if( gd.r.white == "" )
-		{
-			GameDetailsDialog dialog( this );
-			ok = dialog.Run(gd);
-		}
-		if( ok )
         {
-			gd.modified |= objs.gl->undo.IsModified();
+            GameDetailsDialog dialog( this );
+            ok = dialog.Run(gd);
+        }
+        if( ok )
+        {
+            gd.modified |= objs.gl->undo.IsModified();
             gc->file_irrevocably_modified = true;
             gd.game_id = GameIdAllocateBottom(1);
             make_smart_ptr( GameDocument, new_doc, gd );
 
-			// #Workflow Paste game into working file, create edit relationship if not already editing same game
-			bool already_in = gc->TestGameInCache(gd);
-			if( gc==&objs.gl->gc_pgn && !already_in )
-				objs.gl->SetGameBeingEdited(gd,*new_doc);
+            // #Workflow Paste game into working file, create edit relationship if not already editing same game
+            bool already_in = gc->TestGameInCache(gd);
+            if( gc==&objs.gl->gc_pgn && !already_in )
+                objs.gl->SetGameBeingEdited(gd,*new_doc);
             gc->gds.insert( iter, std::move(new_doc) );
             sz++;
             list_ctrl->SetItemCount( sz );
@@ -1436,13 +1436,13 @@ void GamesDialog::OnBoard2Game( wxCommandEvent& WXUNUSED(event) )
             Goto( insert_idx );
             if( sz>0 )
                 list_ctrl->RefreshItems(0,sz-1);
-			char buf[80];
-			sprintf(buf,"%d games",sz);
+            char buf[80];
+            sprintf(buf,"%d games",sz);
             objs.gl->gd = gd;
             objs.gl->GameRedisplayPlayersResult();
-		    title_ctrl->SetLabel( buf );
+            title_ctrl->SetLabel( buf );
         }
-    } 
+    }
 }
 
 void GamesDialog::OnTournamentGames( wxCommandEvent& WXUNUSED(event) )
@@ -1456,14 +1456,14 @@ void GamesDialog::OnTournamentGames( wxCommandEvent& WXUNUSED(event) )
             insert_idx++;
         cprintf( "insert_idx=%d\n", insert_idx );
         std::vector<CompactGame> skeleton_games;
-		TournamentDialog dialog( this );
+        TournamentDialog dialog( this );
         CompactGame proto;
         if( focus_idx < sz )
             gc->gds[focus_idx]->GetCompactGame( proto );
         else
             proto.Downscale( objs.gl->gd );
-		bool ok = dialog.Run( proto, skeleton_games );
-		if( ok )
+        bool ok = dialog.Run( proto, skeleton_games );
+        if( ok )
         {
             gc->file_irrevocably_modified = true;
             for( auto i = skeleton_games.rbegin();  i != skeleton_games.rend(); ++i )
@@ -1481,11 +1481,11 @@ void GamesDialog::OnTournamentGames( wxCommandEvent& WXUNUSED(event) )
             Goto( focus_idx );
             if( sz>0 )
                 list_ctrl->RefreshItems(0,sz-1);
-			char buf[80];
-			sprintf(buf,"%d games",sz);
-		    title_ctrl->SetLabel( buf );
+            char buf[80];
+            sprintf(buf,"%d games",sz);
+            title_ctrl->SetLabel( buf );
         }
-    } 
+    }
 }
 
 // override
@@ -1518,7 +1518,7 @@ void GamesDialog::OnDelete( wxCommandEvent& WXUNUSED(event) )
 
 void GamesDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
 {
-	dirty = true;
+    dirty = true;
     int idx_focus=focus_idx;
     int sz=gc->gds.size();
     if( list_ctrl && list_ctrl->GetItemCount()==sz && 0<=idx_focus && idx_focus<(sz>=1?sz:1) )
@@ -1526,11 +1526,11 @@ void GamesDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
         int sz2 = gc_clipboard->gds.size();
         std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin() + idx_focus;
         for( int i=sz2-1; i>=0; i-- )
-        {                                 
-			gc_clipboard->gds[i]->SetGameBeingEdited(0);	// #Workflow, don't initially have edit relationships with pasted games
+        {
+            gc_clipboard->gds[i]->SetGameBeingEdited(0);    // #Workflow, don't initially have edit relationships with pasted games
             gc->gds.insert( iter, gc_clipboard->gds[i] );
-			iter = gc->gds.begin() + idx_focus;
-			gc->file_irrevocably_modified = true;
+            iter = gc->gds.begin() + idx_focus;
+            gc->file_irrevocably_modified = true;
         }
         sz += sz2;
         list_ctrl->SetItemCount(sz);
@@ -1538,9 +1538,9 @@ void GamesDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
         Goto(idx_focus);
         if( sz>0 )
             list_ctrl->RefreshItems(0,sz-1);
-		char buf[80];
-  		sprintf(buf,"%d games",sz);
-		title_ctrl->SetLabel( buf );
+        char buf[80];
+        sprintf(buf,"%d games",sz);
+        title_ctrl->SetLabel( buf );
     }
 }
 
@@ -1566,7 +1566,7 @@ void GamesDialog::OnEco( wxCommandEvent& WXUNUSED(event) )
 
 #if 0
 static void print_vector_int( const char *desc, std::vector<int> &v )
-{ 
+{
     char buf[500];
     char *p = buf;
     for( size_t i=0; i<v.size(); i++ )
@@ -1601,7 +1601,7 @@ static bool no_recurs;
 static uint32_t predicate_step;
 static int permill_initial;
 static int permill_max_so_far;
-static ProgressBar *predicate_pb; 
+static ProgressBar *predicate_pb;
 //std::vector<int> sort_scan_vector;
 
 static void dump( const uint8_t *ptr )
@@ -1663,7 +1663,7 @@ static int sort_scan()
 static void sort_before( std::vector< smart_ptr<ListableGame> >::iterator begin,
                    std::vector< smart_ptr<ListableGame> >::iterator end,
                    bool (*predicate)( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 ),
-                   ProgressBar *pb 
+                   ProgressBar *pb
                  )
 {
     //sort_scan_vector.clear();
@@ -1700,7 +1700,7 @@ static void sort_before( std::vector< smart_ptr<ListableGame> >::iterator begin,
 
 static void sort_before_mc( std::vector< MoveColCompareElement >::iterator begin,
                    std::vector< MoveColCompareElement >::iterator end,
-                   ProgressBar *pb 
+                   ProgressBar *pb
                  )
 {
     predicate_count = 0;
@@ -1907,8 +1907,8 @@ static bool master_predicate_mc( const MoveColCompareElement &e1, const MoveColC
     predicate_count++;
     if( (predicate_count & 0xffff) == 0 )
         sort_progress_probe();
-    smart_ptr<ListableGame> &g1 = *(base_mc+e1.idx);        
-    smart_ptr<ListableGame> &g2 = *(base_mc+e2.idx);        
+    smart_ptr<ListableGame> &g1 = *(base_mc+e1.idx);
+    smart_ptr<ListableGame> &g2 = *(base_mc+e2.idx);
     bool lt=false; bool eq=true;  // Note that both of these cannot, ever, both be true
     for( int i=0; eq && i<NBR_COLUMNS; i++ )  // tie break loop
     {
@@ -2072,7 +2072,7 @@ static bool compare_counts( const MoveColCompareElement &e1, const MoveColCompar
 
 // Overridable - base classes may calculate transpo
 int GamesDialog::CalculateTranspo( const char *UNUSED(blob), int &transpo )
-{        
+{
     transpo = 0;
     return 0;
 }
@@ -2096,8 +2096,8 @@ static bool do_column( std::vector< MoveColCompareElement >::iterator begin, std
 {
     bool done=true;
     std::vector< MoveColCompareElement >::iterator rover=begin;
-    int max_clump_count = 2; 
-    if( do_column_count<5 || (do_column_count<50 && do_column_count%10==0) ||  do_column_count%100==0 )   
+    int max_clump_count = 2;
+    if( do_column_count<5 || (do_column_count<50 && do_column_count%10==0) ||  do_column_count%100==0 )
         cprintf( "%d> do_column() in\n", do_column_count );
     ++do_column_count;
 
@@ -2106,7 +2106,7 @@ static bool do_column( std::vector< MoveColCompareElement >::iterator begin, std
     {
 
         // Identify multiple possible ranges
-        //  range = series of elements with same count 
+        //  range = series of elements with same count
         if( rover->count < 2 )
         {
             rover++;
@@ -2129,7 +2129,7 @@ static bool do_column( std::vector< MoveColCompareElement >::iterator begin, std
                 std::vector< MoveColCompareElement >::iterator clump = range;
                 char prev = '\0';
                 int clump_count=0;
-                while( range != rover )  
+                while( range != rover )
                 {
                     char c = *range->blob;
                     if( c == '\0' )
@@ -2153,7 +2153,7 @@ static bool do_column( std::vector< MoveColCompareElement >::iterator begin, std
                     clump++;
                 }
                 if( clump_count > max_clump_count )
-                    max_clump_count = clump_count;    
+                    max_clump_count = clump_count;
             }
 
             // Sort the whole range
@@ -2169,7 +2169,7 @@ static bool do_column( std::vector< MoveColCompareElement >::iterator begin, std
     if( max_clump_count == 2 )
         done = true;
     return done;
-}    
+}
 
 
 void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displayed_games  )
@@ -2206,7 +2206,7 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
     {
         whole = false;
         fragments++;
-    }    
+    }
 
     // Do the whole sort using an intermediate representation
     AutoTimer at("MoveColCompare()");
@@ -2214,7 +2214,7 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
     cprintf( "Copy to intermediate representation in\n" );
     std::vector< MoveColCompareElement> inter;     // intermediate representation
     //std::vector< MoveColCompareElement *> inter_ptr;            // sort ptrs, it's faster
-    
+
     // Copy to the intermediate representation
     int idx=0;
     base_mc = displayed_games.begin();
@@ -2238,7 +2238,7 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
         ProgressBar pb(primary?"Column Sort: Moves column requires two stages":"Column Sort: Moves column included in sort", "Requires two stages, stage 1", false );
         sort_before_mc( inter.begin(),
                         inter.end(),
-                        &pb 
+                        &pb
                 );
         cprintf( "Conventional sort in\n" );
         std::sort( inter.begin(), inter.end(), master_predicate_mc );
@@ -2280,7 +2280,7 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
                 {
                     case 0:  same = (g1.game_id == g2.game_id);                break;
                     case 1:  same = (0 == strcmp(g1.White(),g2.White()));      break;
-                    case 2:  same = (g1.WhiteEloBin() == g2.WhiteEloBin());    break; 
+                    case 2:  same = (g1.WhiteEloBin() == g2.WhiteEloBin());    break;
                     case 3:  same = (0 == strcmp(g1.Black(),g2.Black()));      break;
                     case 4:  same = (g1.BlackEloBin() == g2.BlackEloBin());    break;
                     case 5:  same = (g1.DateBin() == g2.DateBin());            break;
@@ -2326,7 +2326,7 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
         ProgressBar pb(primary?"Column Sort: Moves column requires two stages":"Column Sort: Moves column included in sort", "Requires two stages, stage 2", false);//!primary );
         bool done = false;
         int permill = 0;
-        for(;;) //int col=0; col<120; col++ )    // after 120 columns (i.e. plys) we surely are only tiebreaking very unlikely duplicates 
+        for(;;) //int col=0; col<120; col++ )    // after 120 columns (i.e. plys) we surely are only tiebreaking very unlikely duplicates
         {
             //DebugRange( "Before do_column()", inter.begin(), inter.end() );
             done = do_column( inter.begin(), inter.end() );
@@ -2380,7 +2380,7 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
     }
     #endif
     cprintf( "Subsort on each column of moves out\n" );
-    
+
     // Step 4 build sorted version of games list
     cprintf( "Rebuild displayed games vector in\n" );
     std::vector< smart_ptr<ListableGame> > temp;
@@ -2390,7 +2390,7 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
         temp.push_back( displayed_games[e.idx] );
     }
     cprintf( "Rebuild displayed games vector out\n" );
-    
+
     // Step 5 replace original games list
     cprintf( "Replace displayed games vector in\n" );
     displayed_games = temp;
@@ -2434,7 +2434,7 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
      F)  7
      G)  7
      // col 1 B) sort based on these counts (unchanged due to the tie-break order)
-    
+
      // col 2 range is whole array (because col 1 count is uniform)
      // col 2 A) count the moves
          col=1 col=2 col=3 col=4 col=5
@@ -2456,7 +2456,7 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
      A)  7     3
      B)  7     3
      C)  7     3
-     
+
      // col 3 two ranges (because two groups of col 2 counts)
      // col 3 range 1 A) count the moves
      // col 3 range 1 B) sort based on these counts
@@ -2465,21 +2465,21 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
      E)  7     4     4    col 3 count 4 2.c4 s
      F)  7     4     4     then sort (sort doesn't change order as 4s all rank equally)
      G)  7     4     4
-     A)  7     3     
-     B)  7     3     
-     C)  7     3     
+     A)  7     3
+     B)  7     3
+     C)  7     3
 
      // col 3 range 2 A) count the moves
      // col 3 range 2 B) sort based on these counts
               col=1 col=2 col=3 col=4 col=5
-     D)  7     4     
-     E)  7     4     
-     F)  7     4     
-     G)  7     4     
+     D)  7     4
+     E)  7     4
+     F)  7     4
+     G)  7     4
      A)  7     3     3 c4
      B)  7     3     3    col 3 count 3 2.c4 s
      C)  7     3     3     then sort (sort doesn't change order as 3s all rank equally)
-     
+
      // col 4 two ranges (because two groups of col 3 counts)
      // col 4 range 1 A) count the moves
      // col 4 range 1 B) sort based on these counts (no changes as 3 e6s were ahead of 1 c5 anyway)
@@ -2488,17 +2488,17 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
      E)  7     4     4     3
      F)  7     4     4     3
      G)  7     4     4     1 c5
-     A)  7     3     3     
-     B)  7     3     3     
-     C)  7     3     3     
+     A)  7     3     3
+     B)  7     3     3
+     C)  7     3     3
 
      // col 4 range 2 A) count the moves
      // col 4 range 2 B) sort based on these counts (no changes)
          col=1 col=2 col=3 col=4 col=5
-     D)  7     4     4     
-     E)  7     4     4     
-     F)  7     4     4     
-     G)  7     4     4     
+     D)  7     4     4
+     E)  7     4     4
+     F)  7     4     4
+     G)  7     4     4
      A)  7     3     3     3 e6
      B)  7     3     3     3
      C)  7     3     3     3
@@ -2509,52 +2509,52 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
      D)  7     4     4     3     1 Nc3
      E)  7     4     4     3     2 Nf3
      F)  7     4     4     3     2
-     G)  7     4     4     1     
-     A)  7     3     3     3     
-     B)  7     3     3     3     
-     C)  7     3     3     3     
+     G)  7     4     4     1
+     A)  7     3     3     3
+     B)  7     3     3     3
+     C)  7     3     3     3
 
      // col 5 range 1 B) sort based on these counts (E and F move ahead of D)
          col=1 col=2 col=3 col=4 col=5
      E)  7     4     4     3     2 Nf3
      F)  7     4     4     3     2
      D)  7     4     4     3     1 Nc3
-     G)  7     4     4     1     
-     A)  7     3     3     3     
-     B)  7     3     3     3     
-     C)  7     3     3     3     
+     G)  7     4     4     1
+     A)  7     3     3     3
+     B)  7     3     3     3
+     C)  7     3     3     3
 
      // col 5 range 2 A) count the moves
      // col 5 range 2 B) sort based on these counts (no change)
          col=1 col=2 col=3 col=4 col=5
-     E)  7     4     4     3      
-     F)  7     4     4     3      
-     D)  7     4     4     3      
+     E)  7     4     4     3
+     F)  7     4     4     3
+     D)  7     4     4     3
      G)  7     4     4     1     1 e3
-     A)  7     3     3     3      
-     B)  7     3     3     3      
+     A)  7     3     3     3
+     B)  7     3     3     3
      C)  7     3     3     3
 
      // col 5 range 3 A) count the moves
          col=1 col=2 col=3 col=4 col=5
-     E)  7     4     4     3      
-     F)  7     4     4     3      
-     D)  7     4     4     3      
-     G)  7     4     4     1      
-     A)  7     3     3     3     1 Nc3 
+     E)  7     4     4     3
+     F)  7     4     4     3
+     D)  7     4     4     3
+     G)  7     4     4     1
+     A)  7     3     3     3     1 Nc3
      B)  7     3     3     3     2 Nf3
      C)  7     3     3     3     2
 
      // col 5 range 3 B) sort (B and C move ahead of A)
          col=1 col=2 col=3 col=4 col=5
-     E)  7     4     4     3      
-     F)  7     4     4     3      
-     D)  7     4     4     3      
-     G)  7     4     4     1      
+     E)  7     4     4     3
+     F)  7     4     4     3
+     D)  7     4     4     3
+     G)  7     4     4     1
      B)  7     3     3     3     2 Nf3
      C)  7     3     3     3     2
-     A)  7     3     3     3     1 Nc3 
-     
+     A)  7     3     3     3     1 Nc3
+
      // So final ordering is according to line popularity
      E)  1.d4 d5 2.c4 e6 3.Nf3
      F)  1.d4 d5 2.c4 e6 3.Nf3
@@ -2573,11 +2573,11 @@ void GamesDialog::MoveColCompare( std::vector< smart_ptr<ListableGame> > &displa
      this couldn't reverse this trend, the ranges and counts would not increase relative
      to column 39, (they would actually remain the same).
 
-*/    
+*/
 
 void GamesDialog::ColumnSort( int compare_col_, std::vector< smart_ptr<ListableGame> > &displayed_games )
 {
-	dirty = true;
+    dirty = true;
     uint32_t sz = displayed_games.size();
     uint32_t game_id_restore = GAME_ID_SENTINEL;    // no game should match this
     if( sz > 1 )
@@ -2586,7 +2586,7 @@ void GamesDialog::ColumnSort( int compare_col_, std::vector< smart_ptr<ListableG
             game_id_restore = displayed_games[ track->focus_idx]->game_id;
         backdoor = this;
 
-        // If we sort on the same column as last time....    
+        // If we sort on the same column as last time....
         if( compare_col_ == col_last_time )
         {
 
@@ -2603,7 +2603,7 @@ void GamesDialog::ColumnSort( int compare_col_, std::vector< smart_ptr<ListableG
                 sort_forward[i] = sort_forward[i-1];
             }
 
-            // Sort the selected column, forward first 
+            // Sort the selected column, forward first
             sort_order[0]   = compare_col_;
             sort_forward[0] = true;
 
@@ -2672,7 +2672,7 @@ void GamesDialog::ColumnSort( int compare_col_, std::vector< smart_ptr<ListableG
             }
             // else don't meddle
         }
-        
+
         // We need a more elaborate algorithm if the moves column is part of the sort
         bool use_move_col_algorithm = false;
         for( int i=0; i<NBR_COLUMNS; i++ )
@@ -2700,7 +2700,7 @@ void GamesDialog::ColumnSort( int compare_col_, std::vector< smart_ptr<ListableG
             sort_before( displayed_games.begin(),
                    displayed_games.end(),
                    master_predicate,
-                   &pb 
+                   &pb
                  );
             std::sort( displayed_games.begin(), displayed_games.end(), master_predicate );
             sort_after();

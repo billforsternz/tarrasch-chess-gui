@@ -36,9 +36,9 @@ class CreateDatabaseDialog: public wxDialog
 {
     DECLARE_CLASS( CreateDatabaseDialog )
     DECLARE_EVENT_TABLE()
-    
+
 public:
-    
+
     // Constructor
     CreateDatabaseDialog(
                  wxWindow* parent,
@@ -47,7 +47,7 @@ public:
                  const wxPoint& pos = wxDefaultPosition,
                  const wxSize& size = wxDefaultSize,
                  long style = wxCAPTION|wxRESIZE_BORDER|wxSYSTEM_MENU|wxCLOSE_BOX  );
-    
+
     // Creation
     bool Create( wxWindow* parent,
                 wxWindowID id = ID_CREATE_DB_DIALOG,
@@ -55,18 +55,18 @@ public:
                 const wxPoint& pos = wxDefaultPosition,
                 const wxSize& size = wxDefaultSize,
                 long style = wxCAPTION|wxRESIZE_BORDER|wxSYSTEM_MENU|wxCLOSE_BOX );
-    
+
     // Creates the controls and sizers
     void CreateControls();
-    
+
     // Sets the validators for the dialog controls
     void SetDialogValidators();
-    
+
     // Sets the help text for the dialog controls
     void SetDialogHelp();
-    
+
     // CreateDatabaseDialog event handler declarations
-    
+
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_OK
     void OnOk( wxCommandEvent& event );  // selects one of the following
     void OnCreateDatabase();
@@ -74,7 +74,7 @@ public:
 
     // Help button
     void OnHelpClick( wxCommandEvent& event ) ;
-    
+
     // File pickers
     void OnDbFilePicked( wxFileDirPickerEvent& event );
     void OnPgnFile1Picked( wxFileDirPickerEvent& event );
@@ -84,12 +84,12 @@ public:
     void OnPgnFile5Picked( wxFileDirPickerEvent& event );
     void OnPgnFile6Picked( wxFileDirPickerEvent& event );
     void OnCreateTinyDb( wxCommandEvent& event );
-    
+
     // CreateDatabaseDialog member variables
-    
+
     // Data members
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
-	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
+    DialogDetect    detect;     // similarly the presence of this var allows tracking of open dialogs
     wxString db_filename;
     wxString pgn_filename1;
     wxString pgn_filename2;

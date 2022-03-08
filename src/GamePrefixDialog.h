@@ -24,7 +24,7 @@ enum
 
 // GamePrefixDialog class declaration
 class GamePrefixDialog: public wxDialog
-{    
+{
     DECLARE_CLASS( GamePrefixDialog )
     DECLARE_EVENT_TABLE()
 
@@ -77,7 +77,7 @@ public:
     // Data members
     wxString        prefix_txt;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
-	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
+    DialogDetect    detect;     // similarly the presence of this var allows tracking of open dialogs
 };
 
 #endif    // GAME_PREFIX_DIALOG_H

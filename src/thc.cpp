@@ -80,7 +80,7 @@ inline Square& operator++ ( Square& sq )
     return sq;
 }
 
-// Macro to convert chess notation to Square convention,   
+// Macro to convert chess notation to Square convention,
 //  eg SQ('c','5') -> c5
 //  (We didn't always have such a sensible Square convention. SQ() remains
 //  useful for cases like SQ(file,rank), but you may actually see examples
@@ -139,9 +139,9 @@ inline Square& operator++ ( Square& sq )
 
 // Bits corresponding to detail bits wking, wqueen, bking, bqueen for
 //  DETAIL_CASTLING
-#define WKING   0x01    
-#define WQUEEN  0x02    
-#define BKING   0x04    
+#define WKING   0x01
+#define WQUEEN  0x02
+#define BKING   0x04
 #define BQUEEN  0x08
 
 

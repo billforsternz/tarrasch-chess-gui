@@ -13,8 +13,8 @@ class Log
 {
 public:
 
-	// Init
-	Log();
+    // Init
+    Log();
 
 public:
     void SaveGame( GameDocument *gd, bool editing_log );

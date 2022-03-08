@@ -65,7 +65,7 @@ bool LogDialog::Create( wxWindow* parent,
 
         // This fits the dialog to the minimum size dictated by the sizers
         GetSizer()->Fit(this);
-        
+
         // This ensures that the dialog cannot be sized smaller than the minimum size
         GetSizer()->SetSizeHints(this);
 
@@ -77,12 +77,12 @@ bool LogDialog::Create( wxWindow* parent,
 
 // Control creation for LogDialog
 void LogDialog::CreateControls()
-{    
+{
 
     // A top-level sizer
     wxBoxSizer* top_sizer = new wxBoxSizer(wxVERTICAL);
     this->SetSizer(top_sizer);
-    
+
     // A second box sizer to give more space around the controls
     wxBoxSizer* box_sizer = new wxBoxSizer(wxVERTICAL);
     top_sizer->Add(box_sizer, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
@@ -103,8 +103,8 @@ void LogDialog::CreateControls()
     // File picker control
     wxString path = dat.m_file;
     wxFilePickerCtrl *picker = new wxFilePickerCtrl( this, ID_LOG_PICKER, path, wxT("Select log file"),
-        "*.pgn", wxDefaultPosition, wxDefaultSize, 
-        wxFLP_USE_TEXTCTRL|wxFLP_OPEN );    
+        "*.pgn", wxDefaultPosition, wxDefaultSize,
+        wxFLP_USE_TEXTCTRL|wxFLP_OPEN );
     box_sizer->Add(picker, 1, wxALIGN_LEFT|wxEXPAND|wxALL, 5);
 
     // File enabled

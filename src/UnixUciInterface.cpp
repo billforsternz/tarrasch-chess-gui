@@ -171,14 +171,14 @@ UciInterface::UciInterface( const char *filename_uci_exe )
     hash_min = 1;
     hash_max = 1024;
     max_cpu_cores_found = false;
-    max_cpu_cores_first = true; 
+    max_cpu_cores_first = true;
     max_cpu_cores_min = 1;
     max_cpu_cores_max = nbr_cpus;
     max_cpu_cores_name[0] = '\0';
-    custom1_first = true; 
-    custom2_first = true; 
-    custom3_first = true; 
-    custom4_first = true; 
+    custom1_first = true;
+    custom2_first = true;
+    custom3_first = true;
+    custom4_first = true;
 
     okay = false;
     suspended = false;
@@ -192,7 +192,7 @@ UciInterface::UciInterface( const char *filename_uci_exe )
     pid_t nPid;
     int pipeto[2];      // pipe to feed the exec'ed program input
     int pipefrom[2];    // pipe to get the exec'ed program output
-    
+
     if ( pipe( pipeto ) != 0 )
     {
         perror( "pipe() to" );
@@ -203,14 +203,14 @@ UciInterface::UciInterface( const char *filename_uci_exe )
         perror( "pipe() from" );
         _exit(255);
     }
-    
+
     nPid = fork();
     if ( nPid < 0 )
     {
         perror( "fork() 1" );
         _exit(255);
     }
-    
+
     //
     //  fork in the road A) used to fire up the engine
     //
@@ -234,13 +234,13 @@ UciInterface::UciInterface( const char *filename_uci_exe )
         perror( "execlp()" );
         _exit(255);
     }
-    
+
     //
     // fork in the road B) our program continues
     //
     else
     {
-        
+
         // Close unused pipe ends. This is especially important for the
         //  pipefrom[1] write descriptor, otherwise readFromPipe will never
         //  get an EOF.
@@ -253,7 +253,7 @@ UciInterface::UciInterface( const char *filename_uci_exe )
 }
 
 void UciInterface::SuspendResume( bool resume )
-{ 
+{
 }
 
 
@@ -262,13 +262,13 @@ bool UciInterface::Start()
     if( okay )
     {
         NewState( "Start()", INIT );
-        unsigned long base_time = GetTickCount();	
+        unsigned long base_time = GetTickCount();
         while( gbl_state != READY )
         {
             bool running = Run();
             if( !running )
                 break;
-            unsigned long now_time = GetTickCount();	
+            unsigned long now_time = GetTickCount();
             unsigned long elapsed_time = now_time-base_time;
             if( elapsed_time > 20000 )   // 20 seconds
             {
@@ -308,7 +308,7 @@ void UciInterface::StartThinking( bool ponder, thc::ChessPosition &pos, const ch
         else if( btime > 100 )
             btime = 100;
     }
-    cprintf( "Condition times to avoid race when engine is almost out of time: wtime=%ld (wtime_ms=%ld), btime=%ld (btime_ms=%ld)\n", 
+    cprintf( "Condition times to avoid race when engine is almost out of time: wtime=%ld (wtime_ms=%ld), btime=%ld (btime_ms=%ld)\n",
             wtime, wtime_ms, btime, btime_ms );
     sprintf( gbl_go, "go%s wtime %ld btime %ld winc %ld binc %ld",
                          (ponder?" ponder":""), wtime, btime, winc_ms, binc_ms );
@@ -346,7 +346,7 @@ void UciInterface::StartThinking( bool ponder, thc::ChessPosition &pos, const ch
         else if( btime > 100 )
             btime = 100;
     }
-    cprintf( "Condition times to avoid race when engine is almost out of time: wtime=%ld (wtime_ms=%ld), btime=%ld (btime_ms=%ld)\n", 
+    cprintf( "Condition times to avoid race when engine is almost out of time: wtime=%ld (wtime_ms=%ld), btime=%ld (btime_ms=%ld)\n",
             wtime, wtime_ms, btime, btime_ms );
     sprintf( gbl_go, "go%s wtime %ld btime %ld winc %ld binc %ld",
                          (ponder?" ponder":""), wtime, btime, winc_ms, binc_ms );
@@ -494,7 +494,7 @@ bool UciInterface::KibitzPeek( bool run, int multi_idx, bool &cleared, char buf[
     if( run )
         Run();
     have_data = kq[multi_idx].Get( buf, max_strlen );
-    return have_data;    
+    return have_data;
 }
 
 bool UciInterface::KibitzPeekEngineToMove( bool run, bool &cleared, char buf[], unsigned int max_strlen )
@@ -505,7 +505,7 @@ bool UciInterface::KibitzPeekEngineToMove( bool run, bool &cleared, char buf[], 
     if( run )
         Run();
     have_data = kq_engine_to_move.Get( buf, max_strlen );
-    return have_data;    
+    return have_data;
 }
 
 thc::Move UciInterface::CheckBestMove( thc::Move &ponder )
@@ -539,13 +539,13 @@ void UciInterface::Stop()
             last_command_was_go_infinite = true;    // usually only send stop if go infinite, but here if waiting
                                                     //  for engine to move, also need to send stop
         NewState( "Stop()", SEND_QUIT_1 );
-        unsigned long base_time = GetTickCount();	
+        unsigned long base_time = GetTickCount();
         unsigned long elapsed_time_changed=0;
         bool first=true;
         for( unsigned long i=0; true /*i<10000*/; i++ )
         {
             bool running = Run();
-            unsigned long now_time = GetTickCount();	
+            unsigned long now_time = GetTickCount();
             unsigned long elapsed_time = now_time-base_time;
             if( first || elapsed_time!=elapsed_time_changed )
                 release_printf( "Waiting for engine to die: running=%s, elapsed_time=%lu, loops=%lu\n", running?"true":"false", elapsed_time, i );
@@ -705,7 +705,7 @@ const char *UciInterface::user_hook_in()
                     case 2:
                     {
                         if( hash_found )
-                        { 
+                        {
                             if( hash_first || hash_sent!=rep->m_hash )
                             {
                                 hash_first = false;
@@ -809,7 +809,7 @@ const char *UciInterface::user_hook_in()
             } // end while
 
             if( found_something_to_send )
-                s = option_buf;    
+                s = option_buf;
             else
             {
                 s = NULL;
@@ -896,7 +896,7 @@ const char *UciInterface::user_hook_in()
                     case 1:
                     {
                         if( hash_found )
-                        { 
+                        {
                             if( hash_first || hash_sent!=rep->m_hash )
                             {
                                 hash_first = false;
@@ -1000,7 +1000,7 @@ const char *UciInterface::user_hook_in()
             } // end while
 
             if( found_something_to_send )
-                s = option_buf;    
+                s = option_buf;
             else
             {
                 s = NULL;
@@ -1264,8 +1264,8 @@ void UciInterface::OptionIn( const char *s )
     {
         memset( max_cpu_cores_name, 0, sizeof(max_cpu_cores_name) );
         int len = parm-s;
-        if( len >= sizeof(max_cpu_cores_name) ) 
-            len = sizeof(max_cpu_cores_name)-1; 
+        if( len >= sizeof(max_cpu_cores_name) )
+            len = sizeof(max_cpu_cores_name)-1;
         memcpy( max_cpu_cores_name, s, len );
         const char *parm2;
         max_cpu_cores_found = true;
@@ -1278,7 +1278,7 @@ void UciInterface::OptionIn( const char *s )
             if( max_cpu_cores_min < 1 )
                 max_cpu_cores_min = 1;
             if( max_cpu_cores_min > nbr_cpus )
-                max_cpu_cores_min = nbr_cpus;  
+                max_cpu_cores_min = nbr_cpus;
         }
         parm2 = str_search(parm,"max",true);
         if( parm2 )
@@ -1411,7 +1411,7 @@ const char *str_pattern_smart( const char *str, const char *pattern )
         {
             ultimate_success = true;
             break;
-        }    
+        }
 
         // Failure ?
         else if( *str == '\0' )
@@ -1431,9 +1431,9 @@ const char *str_pattern_smart( const char *str, const char *pattern )
             if( isascii(c) && isascii(d) )
             {
                 if( isupper(c) && !isalpha(d) ) // eg MAX_
-                    break;                            
+                    break;
                 if( islower(c) && !islower(d) ) // eg MaxN
-                    break;                            
+                    break;
             }
         }
         *dst = '\0';

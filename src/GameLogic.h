@@ -30,16 +30,16 @@ class GameLogic
 {
 public:
 
-	// Initialise, shutdown
-	GameLogic( PanelContext *canvas, CtrlChessTxt *lb, wxMenu *menu_file );
+    // Initialise, shutdown
+    GameLogic( PanelContext *canvas, CtrlChessTxt *lb, wxMenu *menu_file );
 
     // The user hovers over the book moves rectangle
     void BookHover( wxPoint &point );
 
-	// React to a square being clicked
-	bool MouseDown( char file, char rank, wxPoint &point );
-	void MouseUp( char file, char rank, wxPoint &point );
-	void MouseUp();
+    // React to a square being clicked
+    bool MouseDown( char file, char rank, wxPoint &point );
+    void MouseUp( char file, char rank, wxPoint &point );
+    void MouseUp();
 
     // Get blindfold mode for sliding
     bool ShowSlidingPieceOnly();
@@ -54,12 +54,12 @@ public:
     void PutBackDocument();
     void GameRedisplayPlayersResult();
     bool InHumanEngineGame( bool &human_is_white );
-	void SetGameBeingEdited( GameDocument &first, ListableGame &second ) { int tag = ++game_being_edited_tag;
-		first.game_being_edited=tag; second.SetGameBeingEdited(tag); }
-	int GetCurrentGameInFileIndex();
+    void SetGameBeingEdited( GameDocument &first, ListableGame &second ) { int tag = ++game_being_edited_tag;
+        first.game_being_edited=tag; second.SetGameBeingEdited(tag); }
+    int GetCurrentGameInFileIndex();
 
-	// Idle routine
-	void OnIdle();
+    // Idle routine
+    void OnIdle();
     bool OnIdleNeeded();
     int MillisecsToNextSecond();
 
@@ -194,8 +194,8 @@ private:
     // Update kibitz while engine thinking
     void KibitzUpdateEngineToMove( bool ponder, int unsigned idx, const char *txt );
 
-	// Set new state
-	void NewState( GAME_STATE new_state, bool from_mouse_move=false );
+    // Set new state
+    void NewState( GAME_STATE new_state, bool from_mouse_move=false );
     wxString ponder_nmove_txt;
     GAME_STATE human_or_pondering;  // most recent value of state if state==HUMAN || state==PONDERING
     char src_file;
@@ -215,7 +215,7 @@ private:
     int     engine_millisecs_time_start;
     bool    kibitz;
     bool    kibitz_text_to_clear;
-	unsigned int		analysis_idx;
+    unsigned int        analysis_idx;
     std::string status_field1;
     std::string status_field2;
     std::string status_field4;
@@ -234,12 +234,12 @@ private:
 
     // public data
 public:
-	bool fix_layout_flag;
+    bool fix_layout_flag;
     std::string filename_from_shell;
     GAME_STATE state;
     CtrlChessTxt *lb;
     Tabs *tabs;
-	int	games_in_file_idx;
+    int games_in_file_idx;
     thc::Move ponder_move;
     GameLifecycle glc;
     GameDocument gd;
@@ -248,7 +248,7 @@ public:
     GamesCache gc_session;
     GamesCache gc_database;
     PgnFiles pf;
-	wxFileHistory mru;
+    wxFileHistory mru;
     GameClock chess_clock;
     bool db_clipboard;
     Undo undo;

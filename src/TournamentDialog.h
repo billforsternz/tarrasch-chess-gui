@@ -29,7 +29,7 @@ enum
 
 // TournamentDialog class declaration
 class TournamentDialog: public wxDialog
-{    
+{
     DECLARE_CLASS( TournamentDialog )
     DECLARE_EVENT_TABLE()
 
@@ -94,7 +94,7 @@ public:
     wxString    round;          // Round
     wxString    pairings_txt;   // White player rating Black player rating
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
-	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
+    DialogDetect    detect;     // similarly the presence of this var allows tracking of open dialogs
 };
 
 #endif    // TOURNAMENT_DIALOG_H

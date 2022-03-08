@@ -18,7 +18,7 @@ CompressedXpm *GetBestFit( int pitch_in, int &pitch_out );
 /* We want a decent set of pre-rendered chess graphic bitmaps and in .xpm form they are
     very big. This simple scheme encodes in about 7 times less space in the executable
     program.
-  
+
     Compression system works for up to 17 colours (a background colour plus up to 16
     other colours) - uses run length encoding and nibble coding for the non-background
     colours.
@@ -68,7 +68,7 @@ public:
     int    GetXpmLen()    {return nbr_xpm_strings;}
 private:
     char **xpm;
-    int  nbr_xpm_strings; 
+    int  nbr_xpm_strings;
     char *string_storage;
 };
 

@@ -82,7 +82,7 @@ bool PatternDialog::Create( wxWindow* parent,
 
         // This fits the dialog to the minimum size dictated by the sizers
         GetSizer()->Fit(this);
-        
+
         // This ensures that the dialog cannot be sized smaller than the minimum size
         GetSizer()->SetSizeHints(this);
 
@@ -94,12 +94,12 @@ bool PatternDialog::Create( wxWindow* parent,
 
 // Control creation for PatternDialog
 void PatternDialog::CreateControls()
-{    
+{
 
     // A top-level sizer
     wxBoxSizer* top_sizer = new wxBoxSizer(wxVERTICAL);
     this->SetSizer(top_sizer);
-    
+
     // A second box sizer to give more space around the controls
     wxBoxSizer* box_sizer = new wxBoxSizer(wxVERTICAL);
     top_sizer->Add(box_sizer, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
@@ -167,13 +167,13 @@ void PatternDialog::CreateControls()
         wxStaticText* move_count_label = new wxStaticText ( this, wxID_STATIC,
             wxT("Balance must persist for at\nleast this many half moves"), wxDefaultPosition, wxDefaultSize, 0 );
         move_count_ctrl = new wxSpinCtrl ( this, ID_PATTERN_MOVE_COUNT,
-            wxEmptyString, wxDefaultPosition, wxSize(50, wxDefaultCoord), //wxDefaultSize, 
+            wxEmptyString, wxDefaultPosition, wxSize(50, wxDefaultCoord), //wxDefaultSize,
             wxSP_ARROW_KEYS, 1, 500, parm->number_of_ply );
         move_count_sizer->Add(move_count_label, 0, wxBOTTOM|wxALIGN_CENTER_VERTICAL, 10);
         move_count_sizer->Add( 10, 5, 1, wxALL, 0);
         move_count_sizer->Add(move_count_ctrl,  0, wxBOTTOM|wxALIGN_CENTER_VERTICAL, 10);
     }
-   
+
     castling_box->Add( inc_reflection, 0,
         wxALL, 5);
     castling_box->Add( inc_reverse, 0,
@@ -195,13 +195,13 @@ void PatternDialog::CreateControls()
     }
     if( b_ply )
     {
-        castling_box->Add(move_count_sizer, 
+        castling_box->Add(move_count_sizer,
          wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 5);
          //wxALL, 5);
     }
 
     if( b_white )
-    { 
+    {
         who_box->Add( white_to_move, 0,
             wxALL, 5);
         who_box->Add( black_to_move, 0,
@@ -252,9 +252,9 @@ void PatternDialog::CreateControls()
     {
         wxStaticBox *lockdown = new wxStaticBox(this, wxID_ANY, "&Optionally right click to lock down squares" );
         wxSizer     *lockdown_vert  = new wxStaticBoxSizer(lockdown, wxHORIZONTAL );
-        lockdown_text = new wxStaticText(this, wxID_ANY, "Currently there are no locked down squares" );   
+        lockdown_text = new wxStaticText(this, wxID_ANY, "Currently there are no locked down squares" );
         wxStaticBox *more_pieces = new wxStaticBox(this, wxID_ANY, "&Optionally allow some extra material" );
-        wxSizer     *more_pieces_vert  = new wxStaticBoxSizer(more_pieces, wxVERTICAL );   
+        wxSizer     *more_pieces_vert  = new wxStaticBoxSizer(more_pieces, wxVERTICAL );
         wxStaticBox *more_pieces1 = new wxStaticBox(this, wxID_ANY, "&White" );
         wxStaticBox *more_pieces2 = new wxStaticBox(this, wxID_ANY, "&Black" );
         wxSizer     *more_pieces_horiz1 = new wxStaticBoxSizer(more_pieces1,wxHORIZONTAL);
@@ -343,11 +343,11 @@ void PatternDialog::SetDialogHelp()
     FindWindow(ID_PATTERN_INC_REFLECTION)->SetHelpText(help1);
     FindWindow(ID_PATTERN_INC_REFLECTION)->SetToolTip(help1);
     wxString help2 = gbl_spelling_us?"Set to include reversed colors form of this pattern in search"
-								    :"Set to include reversed colours form of this pattern in search";
+                                    :"Set to include reversed colours form of this pattern in search";
     FindWindow(ID_PATTERN_INC_REVERSE)->SetHelpText(help2);
     FindWindow(ID_PATTERN_INC_REVERSE)->SetToolTip(help2);
     wxString help3 = gbl_spelling_us?"Set to forbid extra pieces - setting this makes pattern search the same as position search (with extra options - eg reversed colors)"
-								    :"Set to forbid extra pieces - setting this makes pattern search the same as position search (with extra options - eg reversed colours)";
+                                    :"Set to forbid extra pieces - setting this makes pattern search the same as position search (with extra options - eg reversed colours)";
     if( b_dont_allow_more )
     {
         FindWindow(ID_PATTERN_DONT_ALLOW_MORE)->SetHelpText(help3);
@@ -449,7 +449,7 @@ void PatternDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
       "\nUse this panel to search the database for games where a specified pattern (arrangement of some pieces) occurs at some point. "
       "Put the pieces you want on the board, and the search will locate games where those pieces occupied those squares. "
       "The material balance search is also available, and is more flexible (but also more complicated). To make the material balance "
-      "search more like the pattern search, lock down the position of pieces you care about with right clicks." 
+      "search more like the pattern search, lock down the position of pieces you care about with right clicks."
      );
     wxMessageBox(helpText,
       wxT("Pattern Dialog Help"),
@@ -486,13 +486,13 @@ void PatternDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
         if( b_bishops )
             parm->bishops_must_be_same_colour   = bishops_same_colour->GetValue();
         if( b_ply )
-            parm->number_of_ply                 = move_count_ctrl->GetValue();    
+            parm->number_of_ply                 = move_count_ctrl->GetValue();
         if( b_white )
         {
             parm->white_to_move                 = white_to_move->GetValue();
             parm->either_to_move                = either_to_move->GetValue();
         }
-        TransferDataToWindow();    
+        TransferDataToWindow();
     }
     if( !err )
         AcceptAndClose();
@@ -549,7 +549,7 @@ void PatternDialog::ModifyLockdown( int offset )
             case 'b': s = "a black bishop";   break;
             case 'n': s = "a black knight";   break;
             case 'p': s = "a black pawn";     break;
-        } 
+        }
         char buf2[200];
         buf2[0] = '\0';
         if( count-1 > 0 )
@@ -557,7 +557,7 @@ void PatternDialog::ModifyLockdown( int offset )
         sprintf( buf, "There %s %d locked down square%s\n %c%c must be %s%s", count>1?"are":"is", count, count>1?"s":"", 'a'+file, '1'+rank, s, buf2 );
     }
     offset_persist = offset;
-    lockdown_text->SetLabel( wxString(buf) );   
+    lockdown_text->SetLabel( wxString(buf) );
 }
 
 

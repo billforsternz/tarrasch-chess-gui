@@ -25,7 +25,7 @@ public:
         CalculatePromotionAttribute();
     }
 
-    ListableGameBinDb( 
+    ListableGameBinDb(
         uint8_t cb_idx,
         uint32_t game_id,
         std::string event,
@@ -63,8 +63,8 @@ public:
         pack.Unpack(pact);
         pact.game_id = game_id;
     }
-    
-	virtual void ConvertToGameDocument(GameDocument &gd)
+
+    virtual void ConvertToGameDocument(GameDocument &gd)
     {
         CompactGame pact;
         GetCompactGame( pact );
@@ -73,7 +73,7 @@ public:
     }
 
     virtual bool HaveStartPosition() { return false; }
-    
+
     virtual Roster &RefRoster()
     {
         static Roster r;
@@ -104,7 +104,7 @@ public:
         GetCompactGame( pact );
         return pact.start_position;
     }
-    
+
     // For now at least, the following are used for fast sorting on column headings
     virtual const char *White()     { return pack.White();    }
     virtual const char *Black()     { return pack.Black();    }
@@ -118,7 +118,7 @@ public:
     virtual const char *BlackElo()  { return pack.BlackElo(); }
     virtual const char *Fen()       { return pack.Fen();      }
     virtual const char *CompressedMoves() {return pack.Blob();  }
-	virtual int WhiteBin()			{ return pack.WhiteBin(); }
+    virtual int WhiteBin()          { return pack.WhiteBin(); }
     virtual int BlackBin()          { return pack.BlackBin(); }
     virtual int EventBin()          { return pack.EventBin(); }
     virtual int SiteBin()           { return pack.SiteBin(); }

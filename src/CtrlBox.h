@@ -14,8 +14,8 @@ class CtrlBox : public wxControl
     DECLARE_EVENT_TABLE()
 
 public:
-	// Constructor
-	CtrlBox( wxWindow *parent,
+    // Constructor
+    CtrlBox( wxWindow *parent,
              wxWindowID id,
              const wxPoint& point,
              const wxSize& size,
@@ -28,7 +28,7 @@ private:
     wxString txt;
     void OnMouseLeftDown (wxMouseEvent& WXUNUSED(event));
     void OnEraseBackGround(wxEraseEvent& WXUNUSED(event)) {};
-	void OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(event) );
+    void OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUSED(event) );
 
 public:
     bool     hack_its_a_clock;

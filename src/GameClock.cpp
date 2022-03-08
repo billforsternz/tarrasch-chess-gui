@@ -177,15 +177,15 @@ void GameClock::Swap( bool human_is_white )
 void GameClock::GameStart( bool white_to_move )
 {
     if( white_to_move )
-	{
+    {
         white.Start();
-		black.SetTicking(false);	// To stop the clock showing up as red, when it's not really ticking, after Undo with only one clock running
-	}
+        black.SetTicking(false);    // To stop the clock showing up as red, when it's not really ticking, after Undo with only one clock running
+    }
     else
-	{
+    {
         black.Start();
-		white.SetTicking(false);	// To stop the clock showing up as red, when it's not really ticking, after Undo with only one clock running
-	}
+        white.SetTicking(false);    // To stop the clock showing up as red, when it's not really ticking, after Undo with only one clock running
+    }
 }
 
 bool GameClock::Run( bool white_to_move )
@@ -198,7 +198,7 @@ bool GameClock::Run( bool white_to_move )
         else
             white.SetTicking( false );
     }
-    if( white_to_move ) 
+    if( white_to_move )
         expired = white.Run();
     else
         expired = black.Run();
@@ -225,9 +225,9 @@ void GameClock::Press( bool white_move, bool ingame, bool human_is_white )
             rep->m_black_time      = rep->m_engine_fixed_minutes;
             rep->m_black_secs      = rep->m_engine_fixed_seconds;
             rep->m_black_increment = 0;
-        }    
-        else 
-        {    
+        }
+        else
+        {
             rep->m_white_time      = rep->m_engine_fixed_minutes;
             rep->m_white_secs      = rep->m_engine_fixed_seconds;
             rep->m_white_increment = 0;

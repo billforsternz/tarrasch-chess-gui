@@ -90,10 +90,10 @@ public:
     int              button3_cmd;
     int              button4_cmd;
     CtrlBoxBookMoves *book_moves;
-	void			AuiBegin( wxFrame *frame, wxWindow *top, wxWindow *left, wxWindow *right, wxWindow *bottom, bool restore );
-	void			AuiEnd();
-	void			AuiFixLayout();
-	void			AuiRefresh() { int panel1, panel2, panel3, panel4; GetAuiLayout(panel1,panel2,panel3,panel4); SetAuiLayout(panel1,panel2,panel3,panel4); }
+    void            AuiBegin( wxFrame *frame, wxWindow *top, wxWindow *left, wxWindow *right, wxWindow *bottom, bool restore );
+    void            AuiEnd();
+    void            AuiFixLayout();
+    void            AuiRefresh() { int panel1, panel2, panel3, panel4; GetAuiLayout(panel1,panel2,panel3,panel4); SetAuiLayout(panel1,panel2,panel3,panel4); }
 
     #ifdef AUI_NOTEBOOK
     wxAuiNotebook    *notebook;
@@ -108,9 +108,9 @@ private:
     wxFont       *font3;
     wxFont       *font_book;
     wxFont       *font_clock;
-	wxAuiManager m_mgr;
-	void GetAuiLayout( int &panel1, int &panel2, int &panel3, int &panel4 );
-	void SetAuiLayout( int panel1, int panel2, int panel3, int panel4 );
+    wxAuiManager m_mgr;
+    void GetAuiLayout( int &panel1, int &panel2, int &panel3, int &panel4 );
+    void SetAuiLayout( int panel1, int panel2, int panel3, int panel4 );
 
     void         ButtonCmd( int cmd );
     DECLARE_EVENT_TABLE()

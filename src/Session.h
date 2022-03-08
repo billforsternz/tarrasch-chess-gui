@@ -12,8 +12,8 @@ class Session
 {
 public:
 
-	// Init
-	Session();
+    // Init
+    Session();
 
 public:
     void SaveGame( GameDocument *gd );

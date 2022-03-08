@@ -41,7 +41,7 @@ enum
 
 // ClockDialog class declaration
 class ClockDialog: public wxDialog
-{    
+{
     DECLARE_CLASS( ClockDialog )
     DECLARE_EVENT_TABLE()
 
@@ -90,7 +90,7 @@ public:
     // Data members
     ClockConfig dat;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
-	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
+    DialogDetect    detect;     // similarly the presence of this var allows tracking of open dialogs
 
 private:
     wxCheckBox* human_visible_checkbox;

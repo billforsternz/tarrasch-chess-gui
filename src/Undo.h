@@ -32,15 +32,15 @@ class Undo
 {
 public:
 
-	// Init
-	Undo( GameLogic *gl );
+    // Init
+    Undo( GameLogic *gl );
     Undo();
     void Clear( GameDocument &gd, GAME_STATE game_state=MANUAL );
 
     // Copy constructor needed because it_saved needs special attention
     Undo( const Undo& copy_from_me );
     Undo & operator= (const Undo & copy_from_me );
-    
+
 public:
     void Save( long undo_previous_posn, GameDocument &gd, GAME_STATE game_state=MANUAL );
     GAME_STATE DoUndo( GameDocument &gd, bool takeback=false );

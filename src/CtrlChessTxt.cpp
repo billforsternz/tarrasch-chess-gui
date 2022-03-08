@@ -41,16 +41,16 @@ CtrlChessTxt::CtrlChessTxt
 {
     gl = 0;
     context_menu = 0;
-	wxFont temp(*wxNORMAL_FONT);
-	font = temp;
-	SetFontSize();
+    wxFont temp(*wxNORMAL_FONT);
+    font = temp;
+    SetFontSize();
 }
 
 void CtrlChessTxt::SetFontSize()
 {
-	int font_size = objs.repository->general.m_font_size;
-	font.SetPointSize(font_size);
-	SetFont(font);
+    int font_size = objs.repository->general.m_font_size;
+    font.SetPointSize(font_size);
+    SetFont(font);
 }
 
 void CtrlChessTxt::SetGameDocument( GameDocument *gd_ )
@@ -116,21 +116,21 @@ void CtrlChessTxt::OnContext( wxContextMenuEvent &event )
         }
         context_menu = new wxMenu;
         context_menu->SetTitle( move_txt.c_str() );
-        context_menu->Append(ID_ANNOT1, "!"  );    // $1 
-        context_menu->Append(ID_ANNOT2, "?"  );    // $2 
-        context_menu->Append(ID_ANNOT3, "!!" );    // $3 
-        context_menu->Append(ID_ANNOT4, "??" );    // $4 
-        context_menu->Append(ID_ANNOT5, "!?" );    // $5 
-        context_menu->Append(ID_ANNOT6, "?!" );    // $6 
+        context_menu->Append(ID_ANNOT1, "!"  );    // $1
+        context_menu->Append(ID_ANNOT2, "?"  );    // $2
+        context_menu->Append(ID_ANNOT3, "!!" );    // $3
+        context_menu->Append(ID_ANNOT4, "??" );    // $4
+        context_menu->Append(ID_ANNOT5, "!?" );    // $5
+        context_menu->Append(ID_ANNOT6, "?!" );    // $6
         context_menu->Append(ID_ANNOT7,"None of the above");
         context_menu->AppendSeparator();
-        context_menu->Append(ID_ANNOT10, "="  );   // $10 
-        context_menu->Append(ID_ANNOT14, "+=" );   // $14 
-        context_menu->Append(ID_ANNOT15, "=+" );   // $15 
-        context_menu->Append(ID_ANNOT16, "+/-");   // $16 
-        context_menu->Append(ID_ANNOT17, "-/+");   // $17 
-        context_menu->Append(ID_ANNOT18, "+-" );   // $18 
-        context_menu->Append(ID_ANNOT19, "-+" );   // $19 
+        context_menu->Append(ID_ANNOT10, "="  );   // $10
+        context_menu->Append(ID_ANNOT14, "+=" );   // $14
+        context_menu->Append(ID_ANNOT15, "=+" );   // $15
+        context_menu->Append(ID_ANNOT16, "+/-");   // $16
+        context_menu->Append(ID_ANNOT17, "-/+");   // $17
+        context_menu->Append(ID_ANNOT18, "+-" );   // $18
+        context_menu->Append(ID_ANNOT19, "-+" );   // $19
         context_menu->Append(ID_ANNOT20,"None of the above");
         wxPoint pos = event.GetPosition();
 //        wxPoint pos2 = GetParent()->GetPosition();
@@ -282,7 +282,7 @@ bool Tagline( const char *s, GameDocument &gd )
             s++;
 
         // If we have a 2nd " then we have a tag and a val, i.e. a header
-        if( *s == '\"' )        
+        if( *s == '\"' )
         {
             is_header = true;
             val_end = s;
@@ -322,7 +322,7 @@ void CtrlChessTxt::Paste()
 {
     Atomic begin;
     dbg_printf( "Paste 1\n" );
-	int nbr_tags_processed=0;
+    int nbr_tags_processed=0;
     if( wxTheClipboard->Open() )
     {
         if( wxTheClipboard->IsSupported( wxDF_TEXT ) )
@@ -331,27 +331,27 @@ void CtrlChessTxt::Paste()
             wxTheClipboard->GetData( data );
             wxString txt_to_paste = data.GetText();
             std::string txt_to_insert;
-			bool check_tag = gd->IsEmpty();
+            bool check_tag = gd->IsEmpty();
             for( unsigned int i=0; i<txt_to_paste.Length(); i++ )
             {
 #ifdef THC_LINUX
-				// Recently (V3.12a and b, September 2020), found that pasting any non
-				//  ascii text in Linux was crashing due to an assert originating in the
-				//  call stack triggered by the following line of code when c is declared
-				//  as char rather than int;
-				//   (https://github.com/billforsternz/tarrasch-chess-gui/issues/20)
-				//  Avoiding the crash is as simple as changing char to int, but actually
-				//  allowing non ascii text to be pasted or indeed typed in Linux is
-				//  perplexing and is put aside for the moment.
+                // Recently (V3.12a and b, September 2020), found that pasting any non
+                //  ascii text in Linux was crashing due to an assert originating in the
+                //  call stack triggered by the following line of code when c is declared
+                //  as char rather than int;
+                //   (https://github.com/billforsternz/tarrasch-chess-gui/issues/20)
+                //  Avoiding the crash is as simple as changing char to int, but actually
+                //  allowing non ascii text to be pasted or indeed typed in Linux is
+                //  perplexing and is put aside for the moment.
                 int c=txt_to_paste[i];
-				//if( c == 8212 )	// If user pastes EmDash we get unicode 8212 as expected
-				//	c = 0x97;   	//   if we change it to ANSI EmDash we get a line feed or something
-					            	//   if we don't we get a funny little four panel box
-				//if( c == 8211 )
-				//	c = 0x96;
-				if( c > 0x80 )		//   so for now we'll just show a '?' which is what we intended in Linux for now
-                    c = '?'; 
-#else					
+                //if( c == 8212 )   // If user pastes EmDash we get unicode 8212 as expected
+                //  c = 0x97;       //   if we change it to ANSI EmDash we get a line feed or something
+                                    //   if we don't we get a funny little four panel box
+                //if( c == 8211 )
+                //  c = 0x96;
+                if( c > 0x80 )      //   so for now we'll just show a '?' which is what we intended in Linux for now
+                    c = '?';
+#else
                 char c=txt_to_paste[i];
 #endif
                 /* Did some debugging to sort out an issue with en dash. Some old code
@@ -376,29 +376,29 @@ void CtrlChessTxt::Paste()
                     c = '-';
                     cprintf( "Special unicode en dash handling\n" );
                 }
-				*/
+                */
 /* #ifdef THC_LINUX
-				if( c & 0x80 )  // pu this back for Linux only, fixes a crash bug
-                    c = '?'; 
+                if( c & 0x80 )  // pu this back for Linux only, fixes a crash bug
+                    c = '?';
 #endif */
                 if( c == '\n' )
-				{
-					if( !check_tag )
-						txt_to_insert += ' ';
-					else
-					{
-						if(  txt_to_insert.length()>0 && txt_to_insert[0]=='[' && Tagline(txt_to_insert.c_str(),*gd) )
-						{
-							nbr_tags_processed++;
-							txt_to_insert.clear();
-						}
-						else if( txt_to_insert.length() > 0 )
-						{
-							check_tag = false;
-							txt_to_insert += ' ';
-						}
-					}
-				}
+                {
+                    if( !check_tag )
+                        txt_to_insert += ' ';
+                    else
+                    {
+                        if(  txt_to_insert.length()>0 && txt_to_insert[0]=='[' && Tagline(txt_to_insert.c_str(),*gd) )
+                        {
+                            nbr_tags_processed++;
+                            txt_to_insert.clear();
+                        }
+                        else if( txt_to_insert.length() > 0 )
+                        {
+                            check_tag = false;
+                            txt_to_insert += ' ';
+                        }
+                    }
+                }
                 else if( c != '\r' )
                     txt_to_insert += c;
             }
@@ -411,13 +411,13 @@ void CtrlChessTxt::Paste()
             }
             if( !gd->PromotePaste(txt_to_insert) )
                 gd->CommentEdit(this,txt_to_insert);
-        }  
+        }
         wxTheClipboard->Close();
     }
-	if( nbr_tags_processed > 0 )
-	{
-        gl->GameRedisplayPlayersResult();        
-	}
+    if( nbr_tags_processed > 0 )
+    {
+        gl->GameRedisplayPlayersResult();
+    }
 }
 
 void CtrlChessTxt::Copy()
@@ -472,264 +472,264 @@ void CtrlChessTxt::OnTextMaxLen(wxCommandEvent& WXUNUSED(event) )
 void CtrlChessTxt::OnChar(wxKeyEvent& event)
 {
     if( event.GetModifiers() & wxMOD_ALT )
-	{
+    {
         event.Skip();   //continue to process event - without this alt key is largely ignored and Alt-F for example doesnt
-						// enable file menu
-	}
-	else
-	{
-		Atomic begin(false);
-		NAVIGATION_KEY nk=NK_NULL;
-		bool done=false;
-		bool request_post_key_update = false;
-		bool shift=false;
-		long pos1, pos2;
-		GetSelection( &pos1, &pos2 );
-		bool is_selection = (pos1!=pos2);
-		bool is_selection_in_comment = gd->IsSelectionInComment(this);
-		if( event.GetModifiers() & wxMOD_SHIFT )
-			shift = true;
-		long keycode = event.GetKeyCode();
-		//cprintf( "OnChar() keycode=%lu\n", keycode );
+                        // enable file menu
+    }
+    else
+    {
+        Atomic begin(false);
+        NAVIGATION_KEY nk=NK_NULL;
+        bool done=false;
+        bool request_post_key_update = false;
+        bool shift=false;
+        long pos1, pos2;
+        GetSelection( &pos1, &pos2 );
+        bool is_selection = (pos1!=pos2);
+        bool is_selection_in_comment = gd->IsSelectionInComment(this);
+        if( event.GetModifiers() & wxMOD_SHIFT )
+            shift = true;
+        long keycode = event.GetKeyCode();
+        //cprintf( "OnChar() keycode=%lu\n", keycode );
         char ascii = '\0';
         bool pass_thru_edit = false;   // an optimisation - sometimes we can just let the richtext edit control process the character
-		{
-			switch ( keycode )
-			{
-				case WXK_NUMPAD_DELETE: // fall-thru
-				case WXK_DELETE:
-				{
-					if( !shift )
-					{
-						if( is_selection_in_comment )
-						{
-							gd->DeleteSelection(this);
-							done = true;
-						}
-						else if( is_selection )
-							done = true;
-						else
-						{
-							done = gd->CommentEdit(this,WXK_DELETE,&pass_thru_edit);
-							nk=NK_DELETE;
-						}
-					}
-					break;
-				}
-				case WXK_PAGEUP:                nk=NK_PGUP;     break;
-				case WXK_PAGEDOWN:              nk=NK_PGDOWN;   break;
-				case WXK_HOME:                  nk=NK_HOME;     break;
-				case WXK_END:                   nk=NK_END;      break;
-				case WXK_NUMPAD_LEFT:           nk=NK_LEFT;     break;
-				case WXK_NUMPAD_UP:             nk=NK_UP;       break;
-				case WXK_NUMPAD_RIGHT:          nk=NK_RIGHT;    break;
-				case WXK_NUMPAD_DOWN:           nk=NK_DOWN;     break;
-				case WXK_NUMPAD_HOME:           nk=NK_HOME;     break;
-				case WXK_NUMPAD_PAGEUP:         nk=NK_PGUP;     break;
-				case WXK_NUMPAD_PAGEDOWN:       nk=NK_PGDOWN;   break;
-				case WXK_NUMPAD_END:            nk=NK_END;      break;
-	#ifdef THC_MAC
-				case '[':
-	#endif
-				case WXK_LEFT:
-				{
-					if(!shift)
-						done = gd->CommentEdit(this,WXK_LEFT);
-					nk=NK_LEFT;
-					break;
-				}
-	#ifdef THC_MAC
-				case ']':
-	#endif
-				case WXK_RIGHT:
-				{
-					if( !shift )
-						done = gd->CommentEdit(this,WXK_RIGHT);
-					nk=NK_RIGHT;
-					break;
-				}
-				case WXK_UP:
-				{
-					bool in_comment = gd->IsInComment(this);
-					if( !shift && !in_comment )
-						nk=NK_UP;
-					else if( in_comment )
-						request_post_key_update = true;
-					break;
-				}
-				case WXK_DOWN:
-				{
-					bool in_comment = gd->IsInComment(this);
-					if( !shift && !in_comment )
-						nk=NK_DOWN;
-					else if( in_comment )
-						request_post_key_update = true;
-					break;
-				}
-				case WXK_BACK:
-				{
-					if( is_selection_in_comment )
-					{
-						gd->DeleteSelection(this);
-						done = true;
-					}
-					else if( is_selection )
-						done = true;
-					else
-					{
-						done=gd->CommentEdit(this,WXK_BACK,&pass_thru_edit);
-					}
-					break;
-				}
-				case WXK_SPACE:
+        {
+            switch ( keycode )
+            {
+                case WXK_NUMPAD_DELETE: // fall-thru
+                case WXK_DELETE:
+                {
+                    if( !shift )
+                    {
+                        if( is_selection_in_comment )
+                        {
+                            gd->DeleteSelection(this);
+                            done = true;
+                        }
+                        else if( is_selection )
+                            done = true;
+                        else
+                        {
+                            done = gd->CommentEdit(this,WXK_DELETE,&pass_thru_edit);
+                            nk=NK_DELETE;
+                        }
+                    }
+                    break;
+                }
+                case WXK_PAGEUP:                nk=NK_PGUP;     break;
+                case WXK_PAGEDOWN:              nk=NK_PGDOWN;   break;
+                case WXK_HOME:                  nk=NK_HOME;     break;
+                case WXK_END:                   nk=NK_END;      break;
+                case WXK_NUMPAD_LEFT:           nk=NK_LEFT;     break;
+                case WXK_NUMPAD_UP:             nk=NK_UP;       break;
+                case WXK_NUMPAD_RIGHT:          nk=NK_RIGHT;    break;
+                case WXK_NUMPAD_DOWN:           nk=NK_DOWN;     break;
+                case WXK_NUMPAD_HOME:           nk=NK_HOME;     break;
+                case WXK_NUMPAD_PAGEUP:         nk=NK_PGUP;     break;
+                case WXK_NUMPAD_PAGEDOWN:       nk=NK_PGDOWN;   break;
+                case WXK_NUMPAD_END:            nk=NK_END;      break;
+    #ifdef THC_MAC
+                case '[':
+    #endif
+                case WXK_LEFT:
+                {
+                    if(!shift)
+                        done = gd->CommentEdit(this,WXK_LEFT);
+                    nk=NK_LEFT;
+                    break;
+                }
+    #ifdef THC_MAC
+                case ']':
+    #endif
+                case WXK_RIGHT:
+                {
+                    if( !shift )
+                        done = gd->CommentEdit(this,WXK_RIGHT);
+                    nk=NK_RIGHT;
+                    break;
+                }
+                case WXK_UP:
+                {
+                    bool in_comment = gd->IsInComment(this);
+                    if( !shift && !in_comment )
+                        nk=NK_UP;
+                    else if( in_comment )
+                        request_post_key_update = true;
+                    break;
+                }
+                case WXK_DOWN:
+                {
+                    bool in_comment = gd->IsInComment(this);
+                    if( !shift && !in_comment )
+                        nk=NK_DOWN;
+                    else if( in_comment )
+                        request_post_key_update = true;
+                    break;
+                }
+                case WXK_BACK:
+                {
+                    if( is_selection_in_comment )
+                    {
+                        gd->DeleteSelection(this);
+                        done = true;
+                    }
+                    else if( is_selection )
+                        done = true;
+                    else
+                    {
+                        done=gd->CommentEdit(this,WXK_BACK,&pass_thru_edit);
+                    }
+                    break;
+                }
+                case WXK_SPACE:
                 {
                     ascii = ' ';
-					break;
-				}
-				case WXK_NUMPAD0:
-				{
+                    break;
+                }
+                case WXK_NUMPAD0:
+                {
                     ascii = '0';
                     break;
-				}
-				case WXK_NUMPAD1:
-				{
+                }
+                case WXK_NUMPAD1:
+                {
                     ascii = '1';
-					break;
-				}
-				case WXK_NUMPAD2:
-				{
+                    break;
+                }
+                case WXK_NUMPAD2:
+                {
                     ascii = '2';
-					break;
-				}
-				case WXK_NUMPAD3:   
-				{
+                    break;
+                }
+                case WXK_NUMPAD3:
+                {
                     ascii = '3';
-					break;
-				}
-				case WXK_NUMPAD4: 
-				{
+                    break;
+                }
+                case WXK_NUMPAD4:
+                {
                     ascii = '4';
-					break;
-				}
-				case WXK_NUMPAD5:
-				{
+                    break;
+                }
+                case WXK_NUMPAD5:
+                {
                     ascii = '5';
-					break;
-				}
-				case WXK_NUMPAD6:
-				{
+                    break;
+                }
+                case WXK_NUMPAD6:
+                {
                     ascii = '6';
-					break;
-				}
-				case WXK_NUMPAD7:
-				{
+                    break;
+                }
+                case WXK_NUMPAD7:
+                {
                     ascii = '7';
-					break;
-				}
-				case WXK_NUMPAD8:
-				{
+                    break;
+                }
+                case WXK_NUMPAD8:
+                {
                     ascii = '8';
-					break;
-				}
-				case WXK_NUMPAD9:
-				{
+                    break;
+                }
+                case WXK_NUMPAD9:
+                {
                     ascii = '9';
-					break;
-				}
-				case WXK_MULTIPLY:  
-				{
+                    break;
+                }
+                case WXK_MULTIPLY:
+                {
                     ascii = '*';
-					break;
-				}
-				case WXK_ADD:       
-				{
+                    break;
+                }
+                case WXK_ADD:
+                {
                     ascii = '+';
-					break;
-				}
-				case WXK_SUBTRACT:  
-				{
+                    break;
+                }
+                case WXK_SUBTRACT:
+                {
                     ascii = '-';
-					break;
-				}
-				case WXK_DECIMAL:   
-				{
+                    break;
+                }
+                case WXK_DECIMAL:
+                {
                     ascii = '.';
-					break;
-				}
-				case WXK_DIVIDE:    
-				{
+                    break;
+                }
+                case WXK_DIVIDE:
+                {
                     ascii = '\\';
-					break;
-				}
-				case WXK_TAB:       
-				case WXK_RETURN:    
-				case WXK_ESCAPE:    
-				case WXK_START:     
-				case WXK_LBUTTON:   
-				case WXK_RBUTTON:   
-				case WXK_CANCEL:    
-				case WXK_MBUTTON:   
-				case WXK_CLEAR:     
-				case WXK_SHIFT:     
-				case WXK_ALT:       
-				case WXK_CONTROL:   
-				case WXK_MENU:      
-				case WXK_PAUSE:     
-				case WXK_CAPITAL:   
-				case WXK_SELECT:    
-				case WXK_PRINT:     
-				case WXK_EXECUTE:   
-				case WXK_SNAPSHOT:  
-				case WXK_INSERT:    
-				case WXK_HELP:      
-				case WXK_SEPARATOR: 
-				case WXK_F1:  
-				case WXK_F2:  
-				case WXK_F3:  
-				case WXK_F4:  
-				case WXK_F5:  
-				case WXK_F6:  
-				case WXK_F7:  
-				case WXK_F8:  
-				case WXK_F9:  
-				case WXK_F10: 
-				case WXK_F11: 
-				case WXK_F12: 
-				case WXK_F13: 
-				case WXK_F14: 
-				case WXK_F15: 
-				case WXK_F16: 
-				case WXK_F17: 
-				case WXK_F18: 
-				case WXK_F19: 
-				case WXK_F20: 
-				case WXK_F21: 
-				case WXK_F22: 
-				case WXK_F23: 
-				case WXK_F24: 
-				case WXK_NUMLOCK:           
-				case WXK_SCROLL:            
-				case WXK_NUMPAD_SPACE:      
-				case WXK_NUMPAD_TAB:        
-				case WXK_NUMPAD_ENTER:      
-				case WXK_NUMPAD_F1:         
-				case WXK_NUMPAD_F2:         
-				case WXK_NUMPAD_F3:         
-				case WXK_NUMPAD_F4:         
-				case WXK_NUMPAD_BEGIN:      
-				case WXK_NUMPAD_INSERT:     
-				case WXK_NUMPAD_EQUAL:      
-				case WXK_NUMPAD_MULTIPLY:   
-				case WXK_NUMPAD_ADD:        
-				case WXK_NUMPAD_SEPARATOR:  
-				case WXK_NUMPAD_SUBTRACT:   
-				case WXK_NUMPAD_DECIMAL:
-				{
-					break;
-				}
-				default:
-				{
-					bool iso8859_extended_charset = (0xa0<=keycode && keycode<=0xff);
+                    break;
+                }
+                case WXK_TAB:
+                case WXK_RETURN:
+                case WXK_ESCAPE:
+                case WXK_START:
+                case WXK_LBUTTON:
+                case WXK_RBUTTON:
+                case WXK_CANCEL:
+                case WXK_MBUTTON:
+                case WXK_CLEAR:
+                case WXK_SHIFT:
+                case WXK_ALT:
+                case WXK_CONTROL:
+                case WXK_MENU:
+                case WXK_PAUSE:
+                case WXK_CAPITAL:
+                case WXK_SELECT:
+                case WXK_PRINT:
+                case WXK_EXECUTE:
+                case WXK_SNAPSHOT:
+                case WXK_INSERT:
+                case WXK_HELP:
+                case WXK_SEPARATOR:
+                case WXK_F1:
+                case WXK_F2:
+                case WXK_F3:
+                case WXK_F4:
+                case WXK_F5:
+                case WXK_F6:
+                case WXK_F7:
+                case WXK_F8:
+                case WXK_F9:
+                case WXK_F10:
+                case WXK_F11:
+                case WXK_F12:
+                case WXK_F13:
+                case WXK_F14:
+                case WXK_F15:
+                case WXK_F16:
+                case WXK_F17:
+                case WXK_F18:
+                case WXK_F19:
+                case WXK_F20:
+                case WXK_F21:
+                case WXK_F22:
+                case WXK_F23:
+                case WXK_F24:
+                case WXK_NUMLOCK:
+                case WXK_SCROLL:
+                case WXK_NUMPAD_SPACE:
+                case WXK_NUMPAD_TAB:
+                case WXK_NUMPAD_ENTER:
+                case WXK_NUMPAD_F1:
+                case WXK_NUMPAD_F2:
+                case WXK_NUMPAD_F3:
+                case WXK_NUMPAD_F4:
+                case WXK_NUMPAD_BEGIN:
+                case WXK_NUMPAD_INSERT:
+                case WXK_NUMPAD_EQUAL:
+                case WXK_NUMPAD_MULTIPLY:
+                case WXK_NUMPAD_ADD:
+                case WXK_NUMPAD_SEPARATOR:
+                case WXK_NUMPAD_SUBTRACT:
+                case WXK_NUMPAD_DECIMAL:
+                {
+                    break;
+                }
+                default:
+                {
+                    bool iso8859_extended_charset = (0xa0<=keycode && keycode<=0xff);
                     if (iso8859_extended_charset || wxIsprint((int)keycode))
                     {
                         if( is_selection_in_comment )
@@ -737,17 +737,17 @@ void CtrlChessTxt::OnChar(wxKeyEvent& event)
                             gd->DeleteSelection(this);
                             done = gd->CommentEdit(this, keycode);
                         }
-						else if( is_selection )
-						{
-							done = true;
-						}
-						else
+                        else if( is_selection )
+                        {
+                            done = true;
+                        }
+                        else
                         {
                             done = gd->CommentEdit(this,keycode,&pass_thru_edit);
                         }
-					}
-				}
-			}
+                    }
+                }
+            }
             if(ascii)
             {
                 if( is_selection_in_comment )
@@ -755,16 +755,16 @@ void CtrlChessTxt::OnChar(wxKeyEvent& event)
                     gd->DeleteSelection(this);
                     done = gd->CommentEdit(this,ascii);
                 }
-				else if( is_selection )
-				{
-					done = true;
-				}
-				else
+                else if( is_selection )
+                {
+                    done = true;
+                }
+                else
                 {
                     done = gd->CommentEdit(this,ascii,&pass_thru_edit);
                 }
             }
-		}
+        }
         if( pass_thru_edit )
         {
             SetEditable(true);
@@ -772,23 +772,23 @@ void CtrlChessTxt::OnChar(wxKeyEvent& event)
             SetEditable(false);
         }
         else if( !shift && !done && nk!=NK_NULL )
-		{
-			if( nk == NK_DELETE )
-				gd->DeleteRestOfVariation();
-			else
-				NavigationKey(nk);
-		}
-		else if( !done )
-		{
-	        cprintf( "event.Skip()\n" );
-			event.Skip();   //continue to process event
-			if( request_post_key_update )
-			{
-				wxCommandEvent eventCustom(wxEVT_MY_CUSTOM_COMMAND);
-				wxPostEvent(this, eventCustom);
-			}
-		}
-	}
+        {
+            if( nk == NK_DELETE )
+                gd->DeleteRestOfVariation();
+            else
+                NavigationKey(nk);
+        }
+        else if( !done )
+        {
+            cprintf( "event.Skip()\n" );
+            event.Skip();   //continue to process event
+            if( request_post_key_update )
+            {
+                wxCommandEvent eventCustom(wxEVT_MY_CUSTOM_COMMAND);
+                wxPostEvent(this, eventCustom);
+            }
+        }
+    }
 }
 
 void CtrlChessTxt::OnKeyUp(wxKeyEvent& event)
@@ -798,104 +798,104 @@ void CtrlChessTxt::OnKeyUp(wxKeyEvent& event)
 
 void CtrlChessTxt::OnKeyDown(wxKeyEvent& event)
 {
-	Atomic begin(false);
-	NAVIGATION_KEY nk=NK_NULL;
-	bool done=false;
-	bool request_post_key_update = false;
-	bool shift=false;
-	long pos1, pos2;
-	GetSelection( &pos1, &pos2 );
-	bool is_selection = (pos1!=pos2);
-	bool is_selection_in_comment = gd->IsSelectionInComment(this);
-	if( event.GetModifiers() & wxMOD_SHIFT )
-		shift = true;
-	long keycode = event.GetKeyCode();
-	//cprintf( "OnKeyDown() keycode=%lu\n", keycode );
-	{
-		switch ( keycode )
-		{
-			case WXK_NUMPAD_DELETE: // fall-thru
-			case WXK_DELETE:
-			{
-				if( !shift )
-				{
-					if( is_selection_in_comment )
-					{
-						gd->DeleteSelection(this);
-						done = true;
-					}
-					else if( is_selection )
-						done = true;
-					else
-					{
-						done = gd->CommentEdit(this,WXK_DELETE);
-						nk=NK_DELETE;
-					}
-				}
-				break;
-			}
-			case WXK_PAGEUP:                nk=NK_PGUP;     break;
-			case WXK_PAGEDOWN:              nk=NK_PGDOWN;   break;
-			case WXK_HOME:                  nk=NK_HOME;     break;
-			case WXK_END:                   nk=NK_END;      break;
-			case WXK_NUMPAD_LEFT:           nk=NK_LEFT;     break;
-			case WXK_NUMPAD_UP:             nk=NK_UP;       break;
-			case WXK_NUMPAD_RIGHT:          nk=NK_RIGHT;    break;
-			case WXK_NUMPAD_DOWN:           nk=NK_DOWN;     break;
-			case WXK_NUMPAD_HOME:           nk=NK_HOME;     break;
-			case WXK_NUMPAD_PAGEUP:         nk=NK_PGUP;     break;
-			case WXK_NUMPAD_PAGEDOWN:       nk=NK_PGDOWN;   break;
-			case WXK_NUMPAD_END:            nk=NK_END;      break;
-			case WXK_LEFT:
-			{
-				if(!shift)
-					done = gd->CommentEdit(this,WXK_LEFT);
-				nk=NK_LEFT;
-				break;
-			}
-			case WXK_RIGHT:
-			{
-				if( !shift )
-					done = gd->CommentEdit(this,WXK_RIGHT);
-				nk=NK_RIGHT;
-				break;
-			}
-			case WXK_UP:
-			{
-				bool in_comment = gd->IsInComment(this);
-				if( !shift && !in_comment )
-					nk=NK_UP;
-				else if( in_comment )
-					request_post_key_update = true;
-				break;
-			}
-			case WXK_DOWN:
-			{
-				bool in_comment = gd->IsInComment(this);
-				if( !shift && !in_comment )
-					nk=NK_DOWN;
-				else if( in_comment )
-					request_post_key_update = true;
-				break;
-			}
-		}
-	}
-	if( !shift && !done && nk!=NK_NULL )
-	{
-		if( nk == NK_DELETE )
-			gd->DeleteRestOfVariation();
-		else
-			NavigationKey(nk);
-	}
-	else if( !done )
-	{
-		event.Skip();   //continue to process event
-		if( request_post_key_update )
-		{
-			wxCommandEvent eventCustom(wxEVT_MY_CUSTOM_COMMAND);
-			wxPostEvent(this, eventCustom);
-		}
-	}
+    Atomic begin(false);
+    NAVIGATION_KEY nk=NK_NULL;
+    bool done=false;
+    bool request_post_key_update = false;
+    bool shift=false;
+    long pos1, pos2;
+    GetSelection( &pos1, &pos2 );
+    bool is_selection = (pos1!=pos2);
+    bool is_selection_in_comment = gd->IsSelectionInComment(this);
+    if( event.GetModifiers() & wxMOD_SHIFT )
+        shift = true;
+    long keycode = event.GetKeyCode();
+    //cprintf( "OnKeyDown() keycode=%lu\n", keycode );
+    {
+        switch ( keycode )
+        {
+            case WXK_NUMPAD_DELETE: // fall-thru
+            case WXK_DELETE:
+            {
+                if( !shift )
+                {
+                    if( is_selection_in_comment )
+                    {
+                        gd->DeleteSelection(this);
+                        done = true;
+                    }
+                    else if( is_selection )
+                        done = true;
+                    else
+                    {
+                        done = gd->CommentEdit(this,WXK_DELETE);
+                        nk=NK_DELETE;
+                    }
+                }
+                break;
+            }
+            case WXK_PAGEUP:                nk=NK_PGUP;     break;
+            case WXK_PAGEDOWN:              nk=NK_PGDOWN;   break;
+            case WXK_HOME:                  nk=NK_HOME;     break;
+            case WXK_END:                   nk=NK_END;      break;
+            case WXK_NUMPAD_LEFT:           nk=NK_LEFT;     break;
+            case WXK_NUMPAD_UP:             nk=NK_UP;       break;
+            case WXK_NUMPAD_RIGHT:          nk=NK_RIGHT;    break;
+            case WXK_NUMPAD_DOWN:           nk=NK_DOWN;     break;
+            case WXK_NUMPAD_HOME:           nk=NK_HOME;     break;
+            case WXK_NUMPAD_PAGEUP:         nk=NK_PGUP;     break;
+            case WXK_NUMPAD_PAGEDOWN:       nk=NK_PGDOWN;   break;
+            case WXK_NUMPAD_END:            nk=NK_END;      break;
+            case WXK_LEFT:
+            {
+                if(!shift)
+                    done = gd->CommentEdit(this,WXK_LEFT);
+                nk=NK_LEFT;
+                break;
+            }
+            case WXK_RIGHT:
+            {
+                if( !shift )
+                    done = gd->CommentEdit(this,WXK_RIGHT);
+                nk=NK_RIGHT;
+                break;
+            }
+            case WXK_UP:
+            {
+                bool in_comment = gd->IsInComment(this);
+                if( !shift && !in_comment )
+                    nk=NK_UP;
+                else if( in_comment )
+                    request_post_key_update = true;
+                break;
+            }
+            case WXK_DOWN:
+            {
+                bool in_comment = gd->IsInComment(this);
+                if( !shift && !in_comment )
+                    nk=NK_DOWN;
+                else if( in_comment )
+                    request_post_key_update = true;
+                break;
+            }
+        }
+    }
+    if( !shift && !done && nk!=NK_NULL )
+    {
+        if( nk == NK_DELETE )
+            gd->DeleteRestOfVariation();
+        else
+            NavigationKey(nk);
+    }
+    else if( !done )
+    {
+        event.Skip();   //continue to process event
+        if( request_post_key_update )
+        {
+            wxCommandEvent eventCustom(wxEVT_MY_CUSTOM_COMMAND);
+            wxPostEvent(this, eventCustom);
+        }
+    }
 }
 
 void CtrlChessTxt::OnAnnotNag1( int nag1 )
@@ -1045,20 +1045,20 @@ BEGIN_EVENT_TABLE(CtrlChessTxt, wxRichTextCtrl)
     EVT_KILL_FOCUS(CtrlChessTxt::OnKillFocus)
     EVT_CONTEXT_MENU(CtrlChessTxt::OnContext)
     EVT_MY_CUSTOM_COMMAND(wxID_ANY, CtrlChessTxt::OnProcessCustom)
-    EVT_MENU( ID_ANNOT1, CtrlChessTxt::OnAnnot1 ) //"!"  );    // $1 
-    EVT_MENU( ID_ANNOT2, CtrlChessTxt::OnAnnot2 ) //"?"  );    // $2 
-    EVT_MENU( ID_ANNOT3, CtrlChessTxt::OnAnnot3 ) //"!!" );    // $3 
-    EVT_MENU( ID_ANNOT4, CtrlChessTxt::OnAnnot4 ) //"??" );    // $4 
-    EVT_MENU( ID_ANNOT5, CtrlChessTxt::OnAnnot5 ) //"!?" );    // $5 
-    EVT_MENU( ID_ANNOT6, CtrlChessTxt::OnAnnot6 ) //"?!" );    // $6 
+    EVT_MENU( ID_ANNOT1, CtrlChessTxt::OnAnnot1 ) //"!"  );    // $1
+    EVT_MENU( ID_ANNOT2, CtrlChessTxt::OnAnnot2 ) //"?"  );    // $2
+    EVT_MENU( ID_ANNOT3, CtrlChessTxt::OnAnnot3 ) //"!!" );    // $3
+    EVT_MENU( ID_ANNOT4, CtrlChessTxt::OnAnnot4 ) //"??" );    // $4
+    EVT_MENU( ID_ANNOT5, CtrlChessTxt::OnAnnot5 ) //"!?" );    // $5
+    EVT_MENU( ID_ANNOT6, CtrlChessTxt::OnAnnot6 ) //"?!" );    // $6
     EVT_MENU( ID_ANNOT7, CtrlChessTxt::OnAnnot7 ) //"None of the above");
-    EVT_MENU( ID_ANNOT10, CtrlChessTxt::OnAnnot10 ) //"="  );   // $10 
-    EVT_MENU( ID_ANNOT14, CtrlChessTxt::OnAnnot14 ) //"+=" );   // $14 
-    EVT_MENU( ID_ANNOT15, CtrlChessTxt::OnAnnot15 ) //"=+" );   // $15 
-    EVT_MENU( ID_ANNOT16, CtrlChessTxt::OnAnnot16 ) //"+/-");   // $16 
-    EVT_MENU( ID_ANNOT17, CtrlChessTxt::OnAnnot17 ) //"-/+");   // $17 
-    EVT_MENU( ID_ANNOT18, CtrlChessTxt::OnAnnot18 ) //"+-" );   // $18 
-    EVT_MENU( ID_ANNOT19, CtrlChessTxt::OnAnnot19 ) //"-+" );   // $19 
+    EVT_MENU( ID_ANNOT10, CtrlChessTxt::OnAnnot10 ) //"="  );   // $10
+    EVT_MENU( ID_ANNOT14, CtrlChessTxt::OnAnnot14 ) //"+=" );   // $14
+    EVT_MENU( ID_ANNOT15, CtrlChessTxt::OnAnnot15 ) //"=+" );   // $15
+    EVT_MENU( ID_ANNOT16, CtrlChessTxt::OnAnnot16 ) //"+/-");   // $16
+    EVT_MENU( ID_ANNOT17, CtrlChessTxt::OnAnnot17 ) //"-/+");   // $17
+    EVT_MENU( ID_ANNOT18, CtrlChessTxt::OnAnnot18 ) //"+-" );   // $18
+    EVT_MENU( ID_ANNOT19, CtrlChessTxt::OnAnnot19 ) //"-+" );   // $19
     EVT_MENU( ID_ANNOT20, CtrlChessTxt::OnAnnot20 ) //"None of the above");
 END_EVENT_TABLE()
 

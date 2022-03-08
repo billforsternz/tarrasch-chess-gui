@@ -21,7 +21,7 @@ IMPLEMENT_CLASS( GameDetailsDialog, wxDialog )
 BEGIN_EVENT_TABLE( GameDetailsDialog, wxDialog )
     EVT_BUTTON( ID_GAME_DETAILS_RESET, GameDetailsDialog::OnResetClick )
     EVT_BUTTON( wxID_HELP, GameDetailsDialog::OnHelpClick )
-	EVT_CHILD_FOCUS( GameDetailsDialog::OnChildFocus )
+    EVT_CHILD_FOCUS( GameDetailsDialog::OnChildFocus )
     EVT_BUTTON( wxID_OK, GameDetailsDialog::OnOkClick )
 END_EVENT_TABLE()
 
@@ -52,7 +52,7 @@ void GameDetailsDialog::Init()
     result      = "";               // Result
     white_elo   = "";               // WhiteElo
     black_elo   = "";               // BlackElo
-	previous_child_window = NULL;
+    previous_child_window = NULL;
 }
 
 // Create dialog
@@ -75,7 +75,7 @@ bool GameDetailsDialog::Create( wxWindow* parent,
 
         // This fits the dialog to the minimum size dictated by the sizers
         GetSizer()->Fit(this);
-        
+
         // This ensures that the dialog cannot be sized smaller than the minimum size
         GetSizer()->SetSizeHints(this);
 
@@ -90,12 +90,12 @@ bool GameDetailsDialog::Create( wxWindow* parent,
 
 // Control creation for GameDetailsDialog
 void GameDetailsDialog::CreateControls()
-{    
+{
 
     // A top-level sizer
     wxBoxSizer* top_sizer = new wxBoxSizer(wxVERTICAL);
     this->SetSizer(top_sizer);
-    
+
     // A second box sizer to give more space around the controls
     wxBoxSizer* box_sizer = new wxBoxSizer(wxVERTICAL);
     top_sizer->Add(box_sizer, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, SMALL);
@@ -303,7 +303,7 @@ void GameDetailsDialog::SetDialogValidators()
     FindWindow(ID_WHITE_PLAYER_NAME)->SetValidator(
         wxTextValidator(wxFILTER_NONE, &white));
     FindWindow(ID_BLACK_PLAYER_NAME)->SetValidator(
-        wxTextValidator(wxFILTER_NONE, &black)); 
+        wxTextValidator(wxFILTER_NONE, &black));
     FindWindow(ID_EVENT)->SetValidator(
         wxTextValidator(wxFILTER_NONE, &event));
     FindWindow(ID_SITE)->SetValidator(
@@ -379,26 +379,26 @@ void GameDetailsDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
 
 void GameDetailsDialog::OnChildFocus( wxChildFocusEvent& evt )
 {
-	wxWindow *window = evt.GetWindow();
-	bool leaving_white = (window!=previous_child_window && previous_child_window==white_ctrl);
-	bool leaving_black = (window!=previous_child_window && previous_child_window==black_ctrl);
-	previous_child_window = window;
-	cprintf( "OnChildFocus() in: leaving_white=%s leaving_black=%s\n", leaving_white?"true":"false", leaving_black?"true":"false" );
-	if( leaving_white )
-	{
-		std::string w = std::string(white_ctrl->GetValue());
-		std::string we = std::string(white_elo_ctrl->GetValue());
-		if( we=="" && lookup_elo.count(w)>0 )
-			white_elo_ctrl->SetValue(lookup_elo[w].c_str());
-	}
-	if( leaving_black )
-	{
-		std::string b = std::string(black_ctrl->GetValue());
-		std::string be = std::string(black_elo_ctrl->GetValue());
-		if( be=="" && lookup_elo.count(b)>0 )
-			black_elo_ctrl->SetValue(lookup_elo[b].c_str());
-	}
-	cprintf( "OnChildFocus() out\n" );
+    wxWindow *window = evt.GetWindow();
+    bool leaving_white = (window!=previous_child_window && previous_child_window==white_ctrl);
+    bool leaving_black = (window!=previous_child_window && previous_child_window==black_ctrl);
+    previous_child_window = window;
+    cprintf( "OnChildFocus() in: leaving_white=%s leaving_black=%s\n", leaving_white?"true":"false", leaving_black?"true":"false" );
+    if( leaving_white )
+    {
+        std::string w = std::string(white_ctrl->GetValue());
+        std::string we = std::string(white_elo_ctrl->GetValue());
+        if( we=="" && lookup_elo.count(w)>0 )
+            white_elo_ctrl->SetValue(lookup_elo[w].c_str());
+    }
+    if( leaving_black )
+    {
+        std::string b = std::string(black_ctrl->GetValue());
+        std::string be = std::string(black_elo_ctrl->GetValue());
+        if( be=="" && lookup_elo.count(b)>0 )
+            black_elo_ctrl->SetValue(lookup_elo[b].c_str());
+    }
+    cprintf( "OnChildFocus() out\n" );
 }
 
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_OK
@@ -546,7 +546,7 @@ void GameDetailsDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
                         oki = isdigit(*s);
                     s++;
                     ok = (oki!=0);
-                }           
+                }
             }
             if( !ok )
                 err_msg = "Illegal ECO code";
@@ -600,7 +600,7 @@ wxString GameDetailsDialog::remember_site;
 bool GameDetailsDialog::Run( GameDocument &gd, bool push_changes_to_tabs )
 {
     bool ok=false;
-	Roster before = gd.r;
+    Roster before = gd.r;
     white     = gd.r.white;          // "White"
     black     = gd.r.black;          // "Black"
     event     = gd.r.event;          // "Event"
@@ -612,16 +612,16 @@ bool GameDetailsDialog::Run( GameDocument &gd, bool push_changes_to_tabs )
     white_elo = gd.r.white_elo;      // "WhiteElo"
     black_elo = gd.r.black_elo;      // "BlackElo"
     if( result!="1-0" && result!="0-1" && result!="1/2-1/2" )
-	{
+    {
         result = "(no result)";
-		before.result="*";		// don't set game_details_edited unnecessarily
-	}
+        before.result="*";      // don't set game_details_edited unnecessarily
+    }
     if( eco=="" )
     {
         CompactGame pact;
         gd.GetCompactGame(pact);
         eco = eco_calculate( pact.moves );
-		before.eco = eco;		// don't set game_details_edited unnecessarily
+        before.eco = eco;       // don't set game_details_edited unnecessarily
     }
     if( date=="" )
     {
@@ -632,45 +632,45 @@ bool GameDetailsDialog::Run( GameDocument &gd, bool push_changes_to_tabs )
         char buf[20];
         sprintf( buf, "%04d.%02d.%02d", timeinfo->tm_year+1900, timeinfo->tm_mon+1, timeinfo->tm_mday );
         date = buf;
-		before.date = date;    // don't set game_details_edited unnecessarily
+        before.date = date;    // don't set game_details_edited unnecessarily
     }
     if( event=="" )
-	{
+    {
         event = remember_event;
-		before.event = event; // don't set game_details_edited unnecessarily
-	}
+        before.event = event; // don't set game_details_edited unnecessarily
+    }
     if( site=="" )
-	{
+    {
         site = remember_site;
-		before.site = site;   // don't set game_details_edited unnecessarily
-	}
+        before.site = site;   // don't set game_details_edited unnecessarily
+    }
 
-	// Auto fill out elo field if possible
-	GamesCache *gc = &objs.gl->gc_pgn;
-	if( gc->pgn_filename != "" )
-	{
-		int nbr = gc->gds.size();
-		if( nbr > 1000 )   // don't read huge pgn files in there entirety in order to auto-fill in elo field
-			nbr=1000;
-		void *context=NULL;
-		cprintf( "Loading games into memory\n" );
-	    for( int i=0; i<nbr; i++ )
+    // Auto fill out elo field if possible
+    GamesCache *gc = &objs.gl->gc_pgn;
+    if( gc->pgn_filename != "" )
+    {
+        int nbr = gc->gds.size();
+        if( nbr > 1000 )   // don't read huge pgn files in there entirety in order to auto-fill in elo field
+            nbr=1000;
+        void *context=NULL;
+        cprintf( "Loading games into memory\n" );
+        for( int i=0; i<nbr; i++ )
             context = gc->gds[i]->LoadIntoMemory( context, i+1 >= nbr );
-		cprintf( "Building map begin\n" );
-		lookup_elo.clear();
-		for( int i=0; i<nbr; i++ )
-		{
+        cprintf( "Building map begin\n" );
+        lookup_elo.clear();
+        for( int i=0; i<nbr; i++ )
+        {
             const char *player = gc->gds[i]->White();
             const char *elo    = gc->gds[i]->WhiteElo();
-			if( player && *player && elo && *elo )
-				lookup_elo[std::string(player)] = std::string(elo);
+            if( player && *player && elo && *elo )
+                lookup_elo[std::string(player)] = std::string(elo);
             player = gc->gds[i]->Black();
             elo    = gc->gds[i]->BlackElo();
-			if( player && *player && elo && *elo )
-				lookup_elo[std::string(player)] = std::string(elo);
-		}
-		cprintf( "Building map end\n" );
-	}
+            if( player && *player && elo && *elo )
+                lookup_elo[std::string(player)] = std::string(elo);
+        }
+        cprintf( "Building map end\n" );
+    }
     if( wxID_OK == ShowModal() )
     {
         ok = true;
@@ -738,36 +738,36 @@ bool GameDetailsDialog::Run( GameDocument &gd, bool push_changes_to_tabs )
         gd.r.eco        = eco;          // "ECO"
         gd.r.white_elo  = white_elo;    // "WhiteElo"
         gd.r.black_elo  = black_elo;    // "BlackElo"
-		bool same = gd.r.white == before.white &&
-					gd.r.black == before.black &&
-					gd.r.event == before.event &&
-					gd.r.site == before.site &&
-					gd.r.result == before.result &&
-					gd.r.round == before.round &&
-					gd.r.date == before.date &&
-					gd.r.eco == before.eco &&
-					gd.r.white_elo == before.white_elo &&
-					gd.r.black_elo == before.black_elo &&
-					gd.r.fen == before.fen;
-		gd.game_details_edited |= !same;
+        bool same = gd.r.white == before.white &&
+                    gd.r.black == before.black &&
+                    gd.r.event == before.event &&
+                    gd.r.site == before.site &&
+                    gd.r.result == before.result &&
+                    gd.r.round == before.round &&
+                    gd.r.date == before.date &&
+                    gd.r.eco == before.eco &&
+                    gd.r.white_elo == before.white_elo &&
+                    gd.r.black_elo == before.black_elo &&
+                    gd.r.fen == before.fen;
+        gd.game_details_edited |= !same;
 
-		// Push the changes out to the document immediately
-		if( push_changes_to_tabs && gd.game_details_edited )
-		{
- 			GameDocument *pd;
-			Undo *pu;
-			int handle = objs.tabs->Iterate(0,pd,pu);
-			while( pd && pu )
-			{
-				if( gd.game_being_edited!=0 && (gd.game_being_edited == pd->game_being_edited)  )
-				{
-					pd->r = gd.r;
-					pd->game_details_edited = gd.game_details_edited;
-					break;
-				}
-				objs.tabs->Iterate(handle,pd,pu);
-			}
-		}
+        // Push the changes out to the document immediately
+        if( push_changes_to_tabs && gd.game_details_edited )
+        {
+            GameDocument *pd;
+            Undo *pu;
+            int handle = objs.tabs->Iterate(0,pd,pu);
+            while( pd && pu )
+            {
+                if( gd.game_being_edited!=0 && (gd.game_being_edited == pd->game_being_edited)  )
+                {
+                    pd->r = gd.r;
+                    pd->game_details_edited = gd.game_details_edited;
+                    break;
+                }
+                objs.tabs->Iterate(handle,pd,pu);
+            }
+        }
     }
     return ok;
 }

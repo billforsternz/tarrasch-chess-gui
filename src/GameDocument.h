@@ -23,14 +23,14 @@
 class GameLogic;
 class GameDocument : public ListableGame
 {
-    
+
 public:
     GameDocument( GameLogic *gl );
     GameDocument();
-	virtual GameDocument  *IsGameDocument()   { return this; }
-	virtual void ConvertToGameDocument(GameDocument &gd)   { gd = *this; }
-    virtual long GetFposn()					  { return fposn0; }
-    virtual void SetFposn(long posn)		  { fposn0=posn; }
+    virtual GameDocument  *IsGameDocument()   { return this; }
+    virtual void ConvertToGameDocument(GameDocument &gd)   { gd = *this; }
+    virtual long GetFposn()                   { return fposn0; }
+    virtual void SetFposn(long posn)          { fposn0=posn; }
     virtual Roster &RefRoster() { return r; }
     virtual void SetRoster( Roster &r_in ) { r=r_in; }
 
@@ -79,17 +79,17 @@ public:
     virtual const char *BlackElo()  { return r.black_elo.c_str(); }
     virtual const char *Fen()       { return r.fen.c_str();     }
 
-    
+
     // Copy constructor
     GameDocument( const GameDocument& src )
     {
         *this = src;    // use the assignment operator
     }
-    
+
     // Assignment operator
     GameDocument& operator=( const GameDocument& src )
     {
-        
+
         // Copy all data fields
         gl = src.gl;
         game_details_edited = src.game_details_edited;
@@ -100,7 +100,7 @@ public:
         sort_idx        = src.sort_idx;
         r               = src.r;
         extra_tags      = src.extra_tags;
-		game_id         = src.game_id;
+        game_id         = src.game_id;
         start_position  = src.start_position;
         master_position = src.master_position;
         fposn0          = src.fposn0;
@@ -110,10 +110,10 @@ public:
         prefix_txt      = src.prefix_txt;
         moves_txt       = src.moves_txt;
         non_zero_start_pos = src.non_zero_start_pos;
-        
+
         tree            = src.tree;
         gv              = src.gv;
-        
+
         // Need to rebuild using our copy of the tree to avoid
         //  raw ptrs to the old tree
         tree.root = &start_position;
@@ -131,8 +131,8 @@ public:
     virtual bool IsModified() { return (game_prefix_edited || game_details_edited || modified); }
     virtual void SetGameBeingEdited( uint32_t game_being_edited_ ) { this->game_being_edited = game_being_edited_; }
     virtual uint32_t GetGameBeingEdited() { return game_being_edited; }
-    
- 
+
+
     void FleshOutDate();
     virtual void Init( const thc::ChessPosition &start_position );
     //void GetGameDocumentFromFile( GameDocument &gd );
@@ -147,7 +147,7 @@ public:
     uint32_t    game_being_edited;
     int         pgn_handle;
     int         sort_idx;
-   
+
     thc::ChessPosition start_position;  // the start position
     unsigned long fposn0;       // offset of prefix in .pgn file
     unsigned long fposn1;       // offset of tags in .pgn file
@@ -155,9 +155,9 @@ public:
     unsigned long fposn3;       // offset where moves end in .pgn file
     std::string prefix_txt;     // text between games
     std::string moves_txt;      // "1.e4 e5 2.Nf3.."
-    
+
     std::string Description();
-    
+
     void FleshOutMoves();
     void ToFileTxtGameDetails( std::string &str );
     void ToFileTxtGameBody( std::string &str );
@@ -167,7 +167,7 @@ public:
     void LoadFromMoveList( std::vector<thc::Move> &moves, int move_idx=0 );
     void SetNonZeroStartPosition( int main_line_idx );
 
-    
+
     MoveTree *MakeMove( GAME_MOVE game_move, bool allow_overwrite );
     MoveTree *KibitzCaptureStart( const char *engine_name, const char *txt, std::vector<thc::Move> &var,
                                  bool &use_repeat_one_move,
@@ -191,38 +191,38 @@ public:
     void DeleteVariation();
     void RedisplayRequest( MoveTree *found );
     void Redisplay( unsigned long pos );
-    
+
     // Get a picture of the game, various recipes
     //
-    
+
     // Where are we in the document
     unsigned long GetInsertionPoint();
     void SetInsertionPoint( unsigned long pos );
-    
+
     // A start position, a vector of moves, leading to a final position
     void GetSummary( thc::ChessPosition &start_position, std::vector<GAME_MOVE> &game_moves, thc::ChessPosition &pos );
-    
+
     // The current position, title text for the last move played eg "Position after 23...Nxd5"
     //  Return ptr to the last move played,  NULL if no last move OR if nbr_half_moves_lag
     GAME_MOVE *GetSummaryTitle( thc::ChessRules &cr, std::string &title_txt, int nbr_half_moves_lag=0 );
-    
+
     // The current position, move text for the last move played eg "23...Nxd5"
     //  Return ptr to the last move played,  NULL if no last move OR if nbr_half_moves_lag
     GAME_MOVE *GetSummaryMove( thc::ChessRules &cr, std::string &move_txt );
-    
+
     //  We should define and use some simple recipes like this
     MoveTree *GetSummary();
-    
+
     // Are we at the end of the main line (will a new game be the main game, or not)
     bool AtEndOfMainLine();
-    
+
     // Are we currently in the main game, or not
     bool AreWeInMain();
-    
+
     bool IsEmpty() { return !HaveMoves(); }
     bool HaveMoves();
     bool IsAtEnd();
-    
+
     // Pass through to GameView
     void Debug()
     {  gv.Debug(); }
@@ -246,7 +246,7 @@ public:
     {  return gv.IsSelectionInComment(ctrl); }
     void DeleteSelection( wxRichTextCtrl *ctrl )
     {  return gv.DeleteSelection(ctrl); }
-    
+
     unsigned long NavigationKey( unsigned long pos, NAVIGATION_KEY nk )
     {  return gv.NavigationKey(pos,nk); }
     MoveTree *Locate( unsigned long pos, thc::ChessRules &cr, std::string &title, bool &at_move0 )
@@ -269,5 +269,5 @@ public:
 // We really should use private more in this project. Excellent refactoring opportunity
 private:
 };
-        
+
 #endif //GAME_DOCUMENT_H

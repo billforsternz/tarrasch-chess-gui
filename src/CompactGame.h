@@ -21,17 +21,17 @@ public:
     Roster r;
     thc::ChessPosition start_position;
     std::vector< thc::Move > moves;
-    
+
     // temp stuff hopefully
     uint32_t game_id;
     int transpo_nbr;
-    
+
     std::string Description();
     void Upscale( GameDocument &gd );       // to GameDocument
     void Downscale( GameDocument &gd );     // from GameDocument
     bool HaveStartPosition() { return (r.fen.length() > 0 ); }
     thc::ChessPosition &GetStartPosition() { if( r.fen.length()==0 ) start_position.Init(); else start_position.Forsyth(r.fen.c_str()); return start_position; }
-    
+
     // Return index into vector where start position found
     bool FindPositionInGame( uint64_t hash_to_match, int &idx )
     {
@@ -54,7 +54,7 @@ public:
         }
         return found;
     }
-    
+
 };
 
 #endif  // COMPACT_GAME_H

@@ -6,7 +6,7 @@
  ****************************************************************************/
 #ifndef PORTABILITY_H
 #define PORTABILITY_H
-#include <stdint.h>     // int32_t etc. 
+#include <stdint.h>     // int32_t etc.
 #include "wx/wx.h"
 
 #if defined __WXMSW__
@@ -18,7 +18,7 @@
     #define THC_MAC
     #define THC_UNIX
 #else
-    #error "Unknown target platform - not Windows, Linux GTK or OSX" 
+    #error "Unknown target platform - not Windows, Linux GTK or OSX"
 #endif
 
 #ifdef THC_WINDOWS

@@ -70,29 +70,29 @@ void ReportOnProgress
 GameLogic::GameLogic( PanelContext *canvas, CtrlChessTxt *lb, wxMenu *menu_file )
     : atom(this), gd(this), undo(this), mru(20)
 {
-	mru.UseMenu(menu_file);
-	mru.AddFilesToMenu(menu_file);
-	mru.Load( *objs.repository->GetConfig() );
-	state    = RESET;
+    mru.UseMenu(menu_file);
+    mru.AddFilesToMenu(menu_file);
+    mru.Load( *objs.repository->GetConfig() );
+    state    = RESET;
     db_clipboard = false;
-	fix_layout_flag = false;
+    fix_layout_flag = false;
     game_being_edited_tag = 0;
     engine_name[0] = '\0';
     under_our_program_control = false;
     kibitz_text_to_clear = false;
-	analysis_idx = 0;	  // used when kibitzing on engine as it thinks about move - so analysis not multi-pv
+    analysis_idx = 0;     // used when kibitzing on engine as it thinks about move - so analysis not multi-pv
     this->canvas = canvas;
     this->lb = lb;
     this->tabs = objs.tabs;
     //human_is_white = false;
     thc::ChessPosition temp;
     gd.Init( temp );
-	games_in_file_idx = -1;
+    games_in_file_idx = -1;
     ShowNewDocument();
     if( objs.repository->book.m_enabled )
     {
         wxString error_msg;
-        bool error = objs.book->Load( error_msg, objs.repository->book.m_file ); 
+        bool error = objs.book->Load( error_msg, objs.repository->book.m_file );
         if( error )
             wxMessageBox( error_msg, "Error loading book", wxOK|wxICON_ERROR );
         canvas->BookUpdate( false );
@@ -104,16 +104,16 @@ bool GameLogic::OnExit()
     bool editing_log = objs.gl->EditingLog();
     bool okay = objs.cws->Exit();
     if( okay )
-	{	// if exiting
-		cprintf( "ChessApp::OnExit(): May wait for tiny database load here...\n" );
-		extern wxMutex *KillWorkerThread();
-		wxMutex *ptr_mutex_tiny_database = KillWorkerThread();
-		wxMutexLocker lock(*ptr_mutex_tiny_database);
-		cprintf( "ChessApp::OnExit() if we did wait, that wait is now over\n" );
+    {   // if exiting
+        cprintf( "ChessApp::OnExit(): May wait for tiny database load here...\n" );
+        extern wxMutex *KillWorkerThread();
+        wxMutex *ptr_mutex_tiny_database = KillWorkerThread();
+        wxMutexLocker lock(*ptr_mutex_tiny_database);
+        cprintf( "ChessApp::OnExit() if we did wait, that wait is now over\n" );
 
-		objs.log->SaveGame( &gd, editing_log );
-		mru.Save( *objs.repository->GetConfig() );
-	}
+        objs.log->SaveGame( &gd, editing_log );
+        mru.Save( *objs.repository->GetConfig() );
+    }
     return okay;
 }
 
@@ -139,7 +139,7 @@ void GameLogic::CmdFileNew()
     bool editing_log = objs.gl->EditingLog();
     if( objs.cws->FileNew() )
     {
-		// #Workflow gd and gc_pgn cleared
+        // #Workflow gd and gc_pgn cleared
         gc_pgn.gds.clear();
         gc_pgn.pgn_filename = "";
         objs.log->SaveGame( &gd, editing_log );
@@ -157,7 +157,7 @@ void GameLogic::CmdNewGame()
     bool editing_log = objs.gl->EditingLog();
     if( objs.cws->GameNew() )
     {
-		// #Workflow) gd cleared, and so doesn't correspond to a file cache gd
+        // #Workflow) gd cleared, and so doesn't correspond to a file cache gd
         objs.log->SaveGame( &gd, editing_log );
         objs.session->SaveGame( &gd );
         thc::ChessPosition temp;
@@ -175,7 +175,7 @@ void GameLogic::CmdSetPosition()
     {
         char after[128];
         PositionDialog dialog( objs.frame );
-		DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
+        DialogDetect detect;        // an instance of DialogDetect as a local variable allows tracking of open dialogs
         if( wxID_OK == dialog.ShowModal() )
         {
             strcpy( after, dialog.fen.c_str() );
@@ -183,7 +183,7 @@ void GameLogic::CmdSetPosition()
             bool okay = pos.Forsyth( after ); // "7K/8/7k/8/P7/8/8/8 b KQ a3 0 9" );
             if( okay )
             {
-				// #Workflow) gd cleared, and so doesn't correspond to a file cache gd
+                // #Workflow) gd cleared, and so doesn't correspond to a file cache gd
                 objs.log->SaveGame( &gd, editing_log );
                 objs.session->SaveGame( &gd );
                 gd.Init( pos );
@@ -211,7 +211,7 @@ void GameLogic::ShowNewDocument()
     GAME_RESULT result = RESULT_NONE;
     TERMINAL terminal_score;
 //    DRAWTYPE draw_type1, draw_type2;
-    bool gameover = false; 
+    bool gameover = false;
     gd.master_position.Evaluate(terminal_score);
     gameover = (terminal_score==TERMINAL_WCHECKMATE || terminal_score==TERMINAL_BCHECKMATE ||
                 terminal_score==TERMINAL_WSTALEMATE || terminal_score==TERMINAL_BSTALEMATE);
@@ -227,7 +227,7 @@ void GameLogic::ShowNewDocument()
     }
 /*  else if( gd.master_position.IsDraw(true,draw_type1) && gd.master_position.IsDraw(false,draw_type2) )
     {
-        gameover = true; 
+        gameover = true;
         result = RESULT_DRAW_INSUFFICIENT;
         if( draw_type1==DRAWTYPE_50MOVE || draw_type2==DRAWTYPE_50MOVE )
             result = RESULT_DRAW_50MOVE;
@@ -277,7 +277,7 @@ void GameLogic::CmdPlayWhite()
                 chess_clock.SetTimes( white_millisecs_time, black_millisecs_time );
             }
         }
-		bool show_title=true;
+        bool show_title=true;
         if( cr.white )
         {
             if( move_txt == "" )
@@ -288,7 +288,7 @@ void GameLogic::CmdPlayWhite()
         }
         else
         {
-			show_title = false;
+            show_title = false;
             NewState( StartThinking(NULL) );
         }
         objs.canvas->RedrawClocks();
@@ -324,7 +324,7 @@ void GameLogic::CmdPlayBlack()
                 chess_clock.SetTimes( white_millisecs_time, black_millisecs_time );
             }
         }
-		bool show_title=true;
+        bool show_title=true;
         if( !cr.white )
         {
             if( move_txt == "" )
@@ -334,10 +334,10 @@ void GameLogic::CmdPlayBlack()
             NewState( HUMAN );
         }
         else
-		{
-			show_title = false;
+        {
+            show_title = false;
             NewState( StartThinking(NULL) );
-		}
+        }
         objs.canvas->RedrawClocks();
         SetGroomedPosition( show_title );
         LabelPlayers( true, is_new_game_main );
@@ -383,8 +383,8 @@ bool GameLogic::EngineChanged()
 void GameLogic::CmdTabNew()
 {
 #ifdef NEW_TAB_LAUNCHES_TESTBED
-	void Testbed();
-	//Testbed();
+    void Testbed();
+    //Testbed();
     wxCommandEvent *p = new wxCommandEvent(wxEVT_MENU, 5000);
     objs.frame->GetEventHandler()->QueueEvent(p);
 
@@ -469,23 +469,23 @@ void GameLogic::CmdTabClose()
 void GameLogic::CmdTabClose()
 {
     Atomic begin;
-	int nbr_tabs = tabs->GetNbrTabs();
-	int current_idx = tabs->GetCurrentIdx();
-	if( nbr_tabs>1 && current_idx<nbr_tabs )
-	{
-		bool editing_log = objs.gl->EditingLog();
-		if( objs.cws->TabClose() )
-		{
-			objs.log->SaveGame( &gd, editing_log );
-			objs.session->SaveGame( &gd );
-			tabs->TabSelected( tabs->TabDelete() );
-			Undo temp = undo;
-			ShowNewDocument();  // clears undo
-			undo = temp;
-			atom.NotUndoAble(); // don't save an undo position
-			undo.ShowStackSize( "CmdTabClose()" );
-		}
-	}
+    int nbr_tabs = tabs->GetNbrTabs();
+    int current_idx = tabs->GetCurrentIdx();
+    if( nbr_tabs>1 && current_idx<nbr_tabs )
+    {
+        bool editing_log = objs.gl->EditingLog();
+        if( objs.cws->TabClose() )
+        {
+            objs.log->SaveGame( &gd, editing_log );
+            objs.session->SaveGame( &gd );
+            tabs->TabSelected( tabs->TabDelete() );
+            Undo temp = undo;
+            ShowNewDocument();  // clears undo
+            undo = temp;
+            atom.NotUndoAble(); // don't save an undo position
+            undo.ShowStackSize( "CmdTabClose()" );
+        }
+    }
     atom.StatusUpdate();
 }
 #endif
@@ -517,10 +517,10 @@ void GameLogic::CmdSwapSides()
         objs.repository->player.m_white = temp;
         chess_clock.Swap( glc.human_is_white );
         if( !last_move )
-	        LabelPlayers( false, true );
-		else
-		{
-	        LabelPlayers();
+            LabelPlayers( false, true );
+        else
+        {
+            LabelPlayers();
             long pos = atom.GetInsertionPoint();
             std::string txt;
             if( last_move->comment=="" )
@@ -633,13 +633,13 @@ void GameLogic::CmdMoveNow()
 void GameLogic::CmdExamineGame()
 {
     Atomic begin;
-	unsigned long pos = atom.GetInsertionPoint();
+    unsigned long pos = atom.GetInsertionPoint();
     std::string move_txt;
     bool at_move0;
     thc::ChessRules cr;
     MoveTree *found = gd.Locate( pos, cr, move_txt, at_move0 );
     SetManual(found,at_move0);
-	//objs.canvas->SetChessPosition( cr );
+    //objs.canvas->SetChessPosition( cr );
     //objs.canvas->SetBoardTitle(title.c_str());
 }
 
@@ -652,28 +652,28 @@ void GameLogic::CmdFileOpen()
         wxFileDialog fd( objs.frame, "Select .pgn file (or *.tdb file)", "", "", "*.pgn;*.tdb", wxFD_FILE_MUST_EXIST );//|wxFD_CHANGE_DIR );
         wxString dir = objs.repository->nv.m_doc_dir;
         fd.SetDirectory(dir);
-		DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
+        DialogDetect detect;        // an instance of DialogDetect as a local variable allows tracking of open dialogs
         if( wxID_OK == fd.ShowModal() )
         {
             wxString dir2;
             wxString name;
             wxString ext;
-			wxString wx_filename = fd.GetPath();
+            wxString wx_filename = fd.GetPath();
             wxFileName::SplitPath( wx_filename, &dir2, &name, &ext );
-			objs.repository->nv.m_doc_dir = dir2;
-			std::string filename( wx_filename.c_str() );
+            objs.repository->nv.m_doc_dir = dir2;
+            std::string filename( wx_filename.c_str() );
             if( ext.Lower() == "tdb" )
-			{
-				CmdDatabaseOpen( filename );
-				status_field4 = objs.db->GetStatus();
-				objs.frame->SetStatusText( status_field4.c_str(), 3 );
-				CmdDatabaseShowAll();
-			}
-			else
-			{
-				mru.AddFileToHistory( wx_filename );
-				CmdFileOpenInner( filename );
-			}
+            {
+                CmdDatabaseOpen( filename );
+                status_field4 = objs.db->GetStatus();
+                objs.frame->SetStatusText( status_field4.c_str(), 3 );
+                CmdDatabaseShowAll();
+            }
+            else
+            {
+                mru.AddFileToHistory( wx_filename );
+                CmdFileOpenInner( filename );
+            }
         }
     }
     atom.StatusUpdate();
@@ -727,7 +727,7 @@ void GameLogic::CmdFileOpenShell( std::string &filename )
                 mru.AddFileToHistory(wx_filename);
                 CmdFileOpenInner(the_file);
             }
-            else if( ext.Lower()=="tdb" ) 
+            else if( ext.Lower()=="tdb" )
             {
                 CmdDatabaseOpen( the_file );
                 status_field4 = objs.db->GetStatus();
@@ -745,9 +745,9 @@ void GameLogic::CmdFileOpenMru( int mru_idx )
     if( objs.cws->FileOpen() )
     {
         wxString wx_filename = mru.GetHistoryFile(mru_idx);
-		if( !wx_filename.empty() )
-		{
-			mru.AddFileToHistory( wx_filename );
+        if( !wx_filename.empty() )
+        {
+            mru.AddFileToHistory( wx_filename );
             std::string filename( wx_filename.c_str() );
             CmdFileOpenInner( filename );
         }
@@ -789,56 +789,56 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
     else
     {
         bool load_with_cancel = true;
-		int offset=0;
-		int selected_game = 0;
-		bool goto_first_game =
+        int offset=0;
+        int selected_game = 0;
+        bool goto_first_game =
             ( gc_pgn.gds.size()==1 && objs.repository->general.m_straight_to_game )  ||
             ( gc_pgn.gds.size()>0  && objs.repository->general.m_straight_to_first_game );
-		if( !goto_first_game )
-		{
-			wxPoint pt(0,0);
+        if( !goto_first_game )
+        {
+            wxPoint pt(0,0);
             wxSize sz = objs.frame->GetSize();
             sz.x = (sz.x*9)/10;
             sz.y = (sz.y*9)/10;
             PgnDialog dialog( objs.frame, &gc_pgn, &gc_clipboard, ID_PGN_DIALOG_FILE, pt, sz );   // GamesDialog instance
             std::string title = "File: " + filename;
-			DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
+            DialogDetect detect;        // an instance of DialogDetect as a local variable allows tracking of open dialogs
             bool ok = dialog.ShowModalOk(title);
-			if( ok )
+            if( ok )
             {
-				selected_game = dialog.GetSelectedGame(&offset);
+                selected_game = dialog.GetSelectedGame(&offset);
                 load_with_cancel = false;
             }
-		}
-		if( offset>=0 && selected_game>=0 && static_cast<unsigned int>(selected_game)<gc_pgn.gds.size() )
-		{
+        }
+        if( offset>=0 && selected_game>=0 && static_cast<unsigned int>(selected_game)<gc_pgn.gds.size() )
+        {
             objs.log->SaveGame(&gd,editing_log);
             objs.session->SaveGame(&gd);
 
-			// Upgrade first (or selected) element of games cache to a GameDocument, if necessary
-			GameDocument *gd_file = gc_pgn.gds[selected_game]->IsGameDocument();
+            // Upgrade first (or selected) element of games cache to a GameDocument, if necessary
+            GameDocument *gd_file = gc_pgn.gds[selected_game]->IsGameDocument();
             GameDocument new_gd;
-			if( gd_file )
-				new_gd = *gd_file;
-			else
-			{
-				gc_pgn.gds[selected_game]->ConvertToGameDocument(new_gd);
-				make_smart_ptr(GameDocument, new_smart_ptr, new_gd);
-				gc_pgn.gds[selected_game] = std::move(new_smart_ptr);
-			}
+            if( gd_file )
+                new_gd = *gd_file;
+            else
+            {
+                gc_pgn.gds[selected_game]->ConvertToGameDocument(new_gd);
+                make_smart_ptr(GameDocument, new_smart_ptr, new_gd);
+                gc_pgn.gds[selected_game] = std::move(new_smart_ptr);
+            }
 
-			// #Workflow)  Open file go straight to game or game pulled from
-			// game dialog, game opens in new tab
-			// Set edit correspondence between new_gd and game in file cache
-			SetGameBeingEdited( new_gd, *gc_pgn.gds[selected_game] );
-			if( offset !=0 )
-				new_gd.SetNonZeroStartPosition(offset);
+            // #Workflow)  Open file go straight to game or game pulled from
+            // game dialog, game opens in new tab
+            // Set edit correspondence between new_gd and game in file cache
+            SetGameBeingEdited( new_gd, *gc_pgn.gds[selected_game] );
+            if( offset !=0 )
+                new_gd.SetNonZeroStartPosition(offset);
             bool dont_need_new_tab = is_empty || monitor_usage_pattern.DontNeedNewTab(insertion_point);
-			if( dont_need_new_tab )
-				gd = new_gd;
-			else
-				tabs->TabNew(new_gd);
-			ShowNewDocument();
+            if( dont_need_new_tab )
+                gd = new_gd;
+            else
+                tabs->TabNew(new_gd);
+            ShowNewDocument();
             if( load_with_cancel )
             {
                 unsigned long initial_insertion_point = gd.GetInsertionPoint();
@@ -865,57 +865,57 @@ bool GameLogic::CmdUpdatePreviousGame()
 int GameLogic::GetCurrentGameInFileIndex()
 {
     int nbr = gc_pgn.gds.size();
-	int idx = 0;
+    int idx = 0;
     if( games_in_file_idx!=-1 && 0<=games_in_file_idx && games_in_file_idx<nbr )
-		idx = games_in_file_idx;
-	return idx;
+        idx = games_in_file_idx;
+    return idx;
 }
 
 void GameLogic::NextGamePreviousGame( int idx )
 {
     Atomic begin;
 
-	// Upgrade next/previous element of games cache to a GameDocument, if necessary
-	GameDocument *gd_file = gc_pgn.gds[idx]->IsGameDocument();
-	GameDocument new_gd;
-	if( !gd_file )
-	{
-		gc_pgn.gds[idx]->ConvertToGameDocument(new_gd);
-		make_smart_ptr(GameDocument, new_smart_ptr, new_gd);
-		gc_pgn.gds[idx] = std::move(new_smart_ptr);
-	}
+    // Upgrade next/previous element of games cache to a GameDocument, if necessary
+    GameDocument *gd_file = gc_pgn.gds[idx]->IsGameDocument();
+    GameDocument new_gd;
+    if( !gd_file )
+    {
+        gc_pgn.gds[idx]->ConvertToGameDocument(new_gd);
+        make_smart_ptr(GameDocument, new_smart_ptr, new_gd);
+        gc_pgn.gds[idx] = std::move(new_smart_ptr);
+    }
 
-	// Check to see if the document is being edited in another tab
-	else
-	{
-		new_gd = *gd_file;
+    // Check to see if the document is being edited in another tab
+    else
+    {
+        new_gd = *gd_file;
         GameDocument *pd;
         Undo *pu;
-		int handle = tabs->Iterate(0,pd,pu);
+        int handle = tabs->Iterate(0,pd,pu);
         while( pd && pu )
         {
 
-			// If it is copy it over to this tab
+            // If it is copy it over to this tab
             if( gd_file->game_being_edited>0 && gd_file->game_being_edited==pd->game_being_edited )
-			{
-				new_gd = *pd;
-	            new_gd.non_zero_start_pos = tabs->GetIteratePos();
-				break;
+            {
+                new_gd = *pd;
+                new_gd.non_zero_start_pos = tabs->GetIteratePos();
+                break;
             }
-			tabs->Iterate(handle,pd,pu);
+            tabs->Iterate(handle,pd,pu);
         }
-	}
+    }
 
-	bool editing_log = objs.gl->EditingLog();
-	PutBackDocument();
-	objs.log->SaveGame(&gd, editing_log);
-	objs.session->SaveGame(&gd);
+    bool editing_log = objs.gl->EditingLog();
+    PutBackDocument();
+    objs.log->SaveGame(&gd, editing_log);
+    objs.session->SaveGame(&gd);
 
-	// #Workflow)
-	// Set new edit correspondence, gd to next/previous game in file
-	gd = new_gd;
-	SetGameBeingEdited( gd, *gc_pgn.gds[idx] );
-	ShowNewDocument();
+    // #Workflow)
+    // Set new edit correspondence, gd to next/previous game in file
+    gd = new_gd;
+    SetGameBeingEdited( gd, *gc_pgn.gds[idx] );
+    ShowNewDocument();
     atom.StatusUpdate();
 }
 
@@ -975,7 +975,7 @@ void trim( std::string &s )
 //  loading games into new tabs except when we are editing a file game.
 void GameLogic::PutBackDocument()
 {
-	cprintf( "PutBackDocument 0\n" );
+    cprintf( "PutBackDocument 0\n" );
     for( size_t i=0; i<gc_pgn.gds.size(); i++ )
     {
         smart_ptr<ListableGame> smp = gc_pgn.gds[i];
@@ -984,17 +984,17 @@ void GameLogic::PutBackDocument()
             gd.FleshOutDate();
             gd.FleshOutMoves();
 
-			// #Workflow) The version of the file we put back into the cache includes the modified flag, which
-			//  captures current modifications (from undo) but also historic modifications - for example if we
-			//  keep returning to the game with next/previous buttons without doing more edits. Hence |= (OR=)
-			//  operator below.
-			GameDocument new_gd=gd;
-			new_gd.modified |= undo.IsModified();
+            // #Workflow) The version of the file we put back into the cache includes the modified flag, which
+            //  captures current modifications (from undo) but also historic modifications - for example if we
+            //  keep returning to the game with next/previous buttons without doing more edits. Hence |= (OR=)
+            //  operator below.
+            GameDocument new_gd=gd;
+            new_gd.modified |= undo.IsModified();
             make_smart_ptr( GameDocument, new_smart_ptr, new_gd );
 
-			// #Workflow) Set edited game relationship remains
+            // #Workflow) Set edited game relationship remains
             gc_pgn.gds[i] = std::move(new_smart_ptr);
-			SetGameBeingEdited( gd, *gc_pgn.gds[i] );
+            SetGameBeingEdited( gd, *gc_pgn.gds[i] );
             return;
         }
     }
@@ -1024,21 +1024,21 @@ void GameLogic::CmdGamesCurrent()
         sz.y = (sz.y*9)/10;
         gc_pgn.Debug( "Before loading current file games dialog" );
         PgnDialog dialog( objs.frame, &gc_pgn, &gc_clipboard, ID_PGN_DIALOG_CURRENT_FILE, pt, sz );   // GamesDialog instance
-		DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
+        DialogDetect detect;        // an instance of DialogDetect as a local variable allows tracking of open dialogs
         if( dialog.ShowModalOk("Current file") )
         {
             objs.log->SaveGame(&gd,editing_log);
             objs.session->SaveGame(&gd);
             PutBackDocument();
-			bool game_in_file =	gc_pgn.TestGameInCache(gd);
+            bool game_in_file = gc_pgn.TestGameInCache(gd);
 
-			// #Workflow)  Open file and select new game from list, game opens in same tab, unless not editing a file game
-			//  (Don't want to overwrite a non file game [say an edited database game] - we could lose work unprompted if we do that)
-			// [edit correspondence between new_gd and game in file cache is created inside LoadGame()]
+            // #Workflow)  Open file and select new game from list, game opens in same tab, unless not editing a file game
+            //  (Don't want to overwrite a non file game [say an edited database game] - we could lose work unprompted if we do that)
+            // [edit correspondence between new_gd and game in file cache is created inside LoadGame()]
             GameDocument new_gd;
             if( dialog.LoadGame(this,new_gd) )
             {
-				if( game_in_file || gd.IsEmpty()  )
+                if( game_in_file || gd.IsEmpty()  )
                     gd = new_gd;
                 else
                     tabs->TabNew(new_gd);
@@ -1072,7 +1072,7 @@ void GameLogic::CmdDatabasePattern()
     bool do_search = false;
     {   // scope controls when dialog closes
         PatternDialog dialog( &parm, objs.frame, "Search database for games where pieces reached this position", ID_PATTERN_DIALOG );
-		DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
+        DialogDetect detect;        // an instance of DialogDetect as a local variable allows tracking of open dialogs
         if( wxID_OK == dialog.ShowModal() )
         {
             pp_persist = parm;
@@ -1096,7 +1096,7 @@ void GameLogic::CmdDatabaseMaterial()
     bool do_search = false;
     {
         PatternDialog dialog( &parm, objs.frame, "Search database for games which reached this material balance", ID_MATERIAL_BALANCE_DIALOG );
-		DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
+        DialogDetect detect;        // an instance of DialogDetect as a local variable allows tracking of open dialogs
         if( wxID_OK == dialog.ShowModal() )
         {
             pp_persist_material_balance = parm;
@@ -1132,8 +1132,8 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req, PatternParamete
     wxMutexLocker lock(*ptr_mutex_tiny_database);
     {
         cprintf( "...CmdDatabase() if we did wait, that wait is now over (%d)\n", temp );
-		status_field4 = objs.db->GetStatus();
-		objs.frame->SetStatusText( status_field4.c_str(), 3 );
+        status_field4 = objs.db->GetStatus();
+        objs.frame->SetStatusText( status_field4.c_str(), 3 );
         std::string error_msg;
         bool suspended  = objs.db->IsSuspended();
         bool operational = objs.db->IsOperational(error_msg);
@@ -1142,9 +1142,9 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req, PatternParamete
             wxMessageBox(
                 "The database is not loaded. Tarrasch normally automatically loads the database at startup, but it did not do so on "
                 "this occasion because it detected another instance of Tarrasch already running. "
-				"This is a way of conserving memory, it prevents multiple copies of Tarrasch from all automatically loading "
-				"separate copies of a potentially huge database. You can manually load the database using the File > Open or "
-				"Database > Select current database menu", "Database not loaded", wxOK|wxICON_ERROR
+                "This is a way of conserving memory, it prevents multiple copies of Tarrasch from all automatically loading "
+                "separate copies of a potentially huge database. You can manually load the database using the File > Open or "
+                "Database > Select current database menu", "Database not loaded", wxOK|wxICON_ERROR
             );
         }
         else if( !operational )
@@ -1152,7 +1152,7 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req, PatternParamete
             wxMessageBox(
                 "The database is not currently running. To correct this select a database "
                 "using the 'Select current database' command in the database menu. If you don't have a database, you can download one "
-				"from www.triplehappy.com. Alternatively, you can create your own database "
+                "from www.triplehappy.com. Alternatively, you can create your own database "
                 "from .pgn files with the 'Create new database' command in the database menu.", "Database problem", wxOK|wxICON_ERROR
             );
         }
@@ -1166,7 +1166,7 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req, PatternParamete
             sz.x = (sz.x*9)/10;
             sz.y = (sz.y*9)/10;
             DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard, db_req, parm, ID_GAMES_DIALOG_DATABASE, pt, sz );   // GamesDialog instance
-			DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
+            DialogDetect detect;        // an instance of DialogDetect as a local variable allows tracking of open dialogs
             if( dialog.ShowModalOk("Database games") )
             {
                 objs.log->SaveGame(&gd,editing_log);
@@ -1175,11 +1175,11 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req, PatternParamete
                 GameDocument new_gd;
                 PutBackDocument();
 
-				// #Workflow)  Pull in game from database, opens in new tab
-				// No edit correspondence to games in game caches except for pgn cache, i.e. current working file
-				if( dialog.LoadGameFromPreview(new_gd) )
+                // #Workflow)  Pull in game from database, opens in new tab
+                // No edit correspondence to games in game caches except for pgn cache, i.e. current working file
+                if( dialog.LoadGameFromPreview(new_gd) )
                 {
-					if( gd.IsEmpty() )
+                    if( gd.IsEmpty() )
                         gd = new_gd;
                     else
                         tabs->TabNew(new_gd);
@@ -1272,7 +1272,7 @@ bool GameLogic::ProbeControlBlocks()
 
     // Tell the PackedGameBinDb subsystem which control blocks aren't in use
     int total_control_blocks_in_use = 0;
-    for( int i=0; i<256; i++ )        
+    for( int i=0; i<256; i++ )
     {
         if( used[i] )
         {
@@ -1310,7 +1310,7 @@ void GameLogic::CmdDatabaseSelect()
     wxFileDialog fd( objs.frame, "Select current database", "", "", "*.tdb", wxFD_FILE_MUST_EXIST );
     wxString path( objs.repository->database.m_file );
     fd.SetPath(path);
-	DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
+    DialogDetect detect;        // an instance of DialogDetect as a local variable allows tracking of open dialogs
     if( wxID_OK == fd.ShowModal() )
     {
         static int count;
@@ -1360,17 +1360,17 @@ void GameLogic::CmdDatabaseOpen( std::string filename )
         {
             wxString previous = objs.repository->database.m_file;
             cprintf( "File is %s\n", filename.c_str() );
-		    std::string current;
-		    bool running = objs.db->GetFile(current);
-		    if( !running || current!=filename )
-			    objs.db->Reopen(filename.c_str());
+            std::string current;
+            bool running = objs.db->GetFile(current);
+            if( !running || current!=filename )
+                objs.db->Reopen(filename.c_str());
             std::string error_msg;
             bool operational = objs.db->IsOperational(error_msg);
             if( operational )
-		    {
-	            wxString s(filename.c_str());
+            {
+                wxString s(filename.c_str());
                 objs.repository->database.m_file = s;
-		    }
+            }
             else
             {
                 objs.db->Reopen(previous);
@@ -1385,7 +1385,7 @@ void GameLogic::CmdDatabaseCreate()
 {
     Atomic begin;
     wxString db_name;
-	DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
+    DialogDetect detect;        // an instance of DialogDetect as a local variable allows tracking of open dialogs
     bool ok=false;
     {
         CreateDatabaseDialog dialog( objs.frame, ID_CREATE_DB_DIALOG, true ); // create_mode = true
@@ -1434,7 +1434,7 @@ void GameLogic::CmdDatabaseAppend()
 {
     Atomic begin;
     bool ok=false;
-	DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
+    DialogDetect detect;        // an instance of DialogDetect as a local variable allows tracking of open dialogs
     wxString db_name;
     {
         CreateDatabaseDialog dialog( objs.frame, ID_CREATE_DB_DIALOG, false ); // create_mode = false
@@ -1500,9 +1500,9 @@ void GameLogic::CmdGamesSession()
             GameDocument temp = gd;
             PutBackDocument();
 
-			// #Workflow)  Select game from session list, game opens in new tab
-			// [No edit correspondence between new_gd and game in session cache created inside LoadGame()
-			//   since it's the session cache not the file cache]
+            // #Workflow)  Select game from session list, game opens in new tab
+            // [No edit correspondence between new_gd and game in session cache created inside LoadGame()
+            //   since it's the session cache not the file cache]
             GameDocument new_gd;
             if( dialog.LoadGame(this,new_gd) )
             {
@@ -1532,9 +1532,9 @@ void GameLogic::CmdGamesClipboard()
             objs.session->SaveGame(&gd);
             PutBackDocument();
 
-			// #Workflow)  Select game from clipboard list, game opens in new tab
-			// [No edit correspondence between new_gd and game in clipboard cache created inside LoadGame()
-			//   since it's the clipboard cache not the file cache]
+            // #Workflow)  Select game from clipboard list, game opens in new tab
+            // [No edit correspondence between new_gd and game in clipboard cache created inside LoadGame()
+            //   since it's the clipboard cache not the file cache]
             GameDocument new_gd;
             if( dialog.LoadGame(this,new_gd) )
             {
@@ -1632,7 +1632,7 @@ void GameLogic::FullUndo( GAME_STATE game_state )
             break;
         }
         case PONDERING:         // Human move, but the engine is thinking
-        case HUMAN:		        // Human move
+        case HUMAN:             // Human move
         {
             if( objs.uci_interface )
                 objs.uci_interface->ForceStop();
@@ -1653,7 +1653,7 @@ void GameLogic::FullUndo( GAME_STATE game_state )
             gd.GetSummaryMove( cr2, move_txt2 );
             if( !found || move_txt2=="" )
                 reply_to = "Make your move";
-            else    
+            else
             {
                 reply_to.sprintf( "Reply to %s", move_txt2.c_str() );
                 if( found && found->game_move.flag_ingame )
@@ -1762,7 +1762,7 @@ bool GameLogic::CmdUpdateEditRedo()
 
 bool GameLogic::CmdUpdateTakeback()
 {
-    bool possible = (undo.IsModified() && 
+    bool possible = (undo.IsModified() &&
                         (state==HUMAN || state==PONDERING || state==THINKING || state==FAKE_BOOK_DELAY || state==GAMEOVER)
                     );
     return( possible );
@@ -1790,7 +1790,7 @@ void GameLogic::SetManual( MoveTree *mt, bool at_move0, bool from_mouse_move )
             MoveTree *parent = gd.tree.Parent( mt, cr, ivar, imove );
             if( parent )
             {
-                MoveTree *grand_parent = gd.tree.Parent( parent, cr, ivar, imove ); 
+                MoveTree *grand_parent = gd.tree.Parent( parent, cr, ivar, imove );
                 if( grand_parent )
                 {
                     VARIATION &var = grand_parent->variations[ivar];
@@ -1861,7 +1861,7 @@ void GameLogic::CmdDraw()
             {
                 switch( draw_type )
                 {
-                    case DRAWTYPE_INSUFFICIENT:    
+                    case DRAWTYPE_INSUFFICIENT:
                     case DRAWTYPE_INSUFFICIENT_AUTO:  result = RESULT_DRAW_INSUFFICIENT;   break;
                     case DRAWTYPE_50MOVE:             result = RESULT_DRAW_50MOVE;         break;
                     case DRAWTYPE_REPITITION:         result = RESULT_DRAW_REPITITION;     break;
@@ -1899,7 +1899,7 @@ void GameLogic::CmdWhiteResigns()
     }
     atom.StatusUpdate();
 }
-    
+
 void GameLogic::CmdBlackResigns()
 {
     Atomic begin;
@@ -2005,7 +2005,7 @@ void GameLogic::CmdEditGameDetails()
     GameDetailsDialog dialog( objs.frame );
     bool okay = dialog.Run(gd);
     if( okay )
-        GameRedisplayPlayersResult();        
+        GameRedisplayPlayersResult();
     StatusUpdate();
 }
 
@@ -2099,7 +2099,7 @@ void GameLogic::CmdEditDeleteVariation()
 
 bool GameLogic::CmdUpdateWhiteResigns()
 {
-    bool enabled = (state==MANUAL || state==RESET || 
+    bool enabled = (state==MANUAL || state==RESET ||
                         ((state==HUMAN||state==PONDERING) && glc.human_is_white)
                     );
     return enabled;
@@ -2107,7 +2107,7 @@ bool GameLogic::CmdUpdateWhiteResigns()
 
 bool GameLogic::CmdUpdateBlackResigns()
 {
-    bool enabled = (state==MANUAL || state==RESET || 
+    bool enabled = (state==MANUAL || state==RESET ||
                         ((state==HUMAN||state==PONDERING) && !glc.human_is_white)
                     );
     return enabled;
@@ -2242,7 +2242,7 @@ void GameLogic::LabelPlayers( bool start_game, bool set_document_player_names )
     wxString black = objs.repository->player.m_black;
     if( start_game )
     {
-        if( glc.human_is_white )    
+        if( glc.human_is_white )
         {
             white = objs.repository->player.m_human;
             black = engine_name;
@@ -2279,13 +2279,13 @@ void GameLogic::OnIdle()
 {
     Atomic begin(false);
 
-	// Start with a little kludge, if detected a layout problem in an OnSize(), experience suggests we
-	//  can't fix it in the OnSize() handler, we have to postpone it and do it later here
-	if( fix_layout_flag )
-	{
-		fix_layout_flag = false;
-		canvas->AuiFixLayout();
-	}
+    // Start with a little kludge, if detected a layout problem in an OnSize(), experience suggests we
+    //  can't fix it in the OnSize() handler, we have to postpone it and do it later here
+    if( fix_layout_flag )
+    {
+        fix_layout_flag = false;
+        canvas->AuiFixLayout();
+    }
     static bool not_first_time;
     if( !not_first_time )
     {
@@ -2332,7 +2332,7 @@ void GameLogic::OnIdle()
         if( t-base_time > 500  )
         {
             base_time = t;
-			bool make_move = true;
+            bool make_move = true;
             bool change_pos = false;
             bool add_comment = false;
             thrash_count++;
@@ -2342,41 +2342,41 @@ void GameLogic::OnIdle()
                 thrash_thres = 20 + rand()%20;
                 change_pos = (thrash_thres%3 == 0);
                 add_comment = !change_pos;
-				make_move = false;
+                make_move = false;
             }
-			if( make_move )
-			{
-				vector<thc::Move> moves;
-				gd.master_position.GenLegalMoveList( moves );
-				if( moves.size() == 0 )
-					change_pos = true;
-				else
-				{
-					unsigned int idx = rand() % moves.size();
-					GAME_RESULT result;
-					thc::Move mv = moves[idx];
-					std::string s = mv.NaturalOut(&gd.master_position);
-					cprintf( "Making move %s\n", s.c_str());
-					MakeMove( moves[idx], result );
-				}
+            if( make_move )
+            {
+                vector<thc::Move> moves;
+                gd.master_position.GenLegalMoveList( moves );
+                if( moves.size() == 0 )
+                    change_pos = true;
+                else
+                {
+                    unsigned int idx = rand() % moves.size();
+                    GAME_RESULT result;
+                    thc::Move mv = moves[idx];
+                    std::string s = mv.NaturalOut(&gd.master_position);
+                    cprintf( "Making move %s\n", s.c_str());
+                    MakeMove( moves[idx], result );
+                }
             }
             if( change_pos )
             {
-				cprintf( "Changing position\n");
+                cprintf( "Changing position\n");
                 unsigned int pos = lb->GetLastPosition();
                 pos = (pos*9)/10;
                 atom.Redisplay( rand()%pos );
-				if( new_game_count++ > 100 )
-				{
-					new_game_count = 0;
-					cprintf( "Calling CmdNewGame()\n");
-					CmdNewGame();
-					cprintf( "CmdNewGame() returns\n");
-				}	
+                if( new_game_count++ > 100 )
+                {
+                    new_game_count = 0;
+                    cprintf( "Calling CmdNewGame()\n");
+                    CmdNewGame();
+                    cprintf( "CmdNewGame() returns\n");
+                }
             }
             if( add_comment )
             {
-				cprintf( "Adding comment\n");
+                cprintf( "Adding comment\n");
                 std::string s;
                 int len = rand()%20 + 10;
                 for( int i=0; i<len; i++ )
@@ -2385,7 +2385,7 @@ void GameLogic::OnIdle()
                     s += c;
                 }
                 gd.CommentEdit(lb,s);
-				atom.Redisplay( atom.GetInsertionPoint() );
+                atom.Redisplay( atom.GetInsertionPoint() );
             }
         }
     }
@@ -2396,11 +2396,11 @@ void GameLogic::OnIdle()
     //  case POPUP:
     //  case POPUP_MANUAL:
         case FAKE_BOOK_DELAY:
-        case MANUAL:        
+        case MANUAL:
         case SLIDING_MANUAL:
-        case HUMAN:		    
-        case PONDERING:		    
-        case SLIDING:       
+        case HUMAN:
+        case PONDERING:
+        case SLIDING:
         case THINKING:
         expired = chess_clock.Run( white );     // Here expired means time_remaining < 0 (see below)
     }
@@ -2416,11 +2416,11 @@ void GameLogic::OnIdle()
             case POPUP:
             case POPUP_MANUAL:
             case FAKE_BOOK_DELAY:
-            case MANUAL:        
+            case MANUAL:
             case SLIDING_MANUAL: */
-            case HUMAN:		    
-            case PONDERING:		    
-            case SLIDING:       
+            case HUMAN:
+            case PONDERING:
+            case SLIDING:
             case THINKING:
             {
                 bool computer_to_play = (state==PONDERING||state==THINKING);
@@ -2452,9 +2452,9 @@ void GameLogic::OnIdle()
         }
     }
     wxString txt;
-	bool ticking;
+    bool ticking;
     expired = chess_clock.white.GetDisplay( txt, show_white_expired, ticking );  // Here expired means time_remaining <= 0 (see above)
-																				 // so expired can be true here but false above
+                                                                                 // so expired can be true here but false above
     bool white_is_computer_to_play_fixed = (white && chess_clock.fixed_period_mode && (state==PONDERING||state==THINKING));
     if( expired && white_is_computer_to_play_fixed && !fixed_expired )
     {
@@ -2535,7 +2535,7 @@ void GameLogic::OnIdle()
             {
                 char buf[256];
                 bool cleared;
-				kibitz_pos = gd.master_position;
+                kibitz_pos = gd.master_position;
                 bool have_data = objs.uci_interface->KibitzPeekEngineToMove( run, cleared, buf, sizeof(buf)-1 );
                 run = false;
                 if( cleared )
@@ -2548,7 +2548,7 @@ void GameLogic::OnIdle()
         }
     }
     else if( state == THINKING )
-	{
+    {
         if( kibitz )
         {
             bool run=true;
@@ -2556,7 +2556,7 @@ void GameLogic::OnIdle()
             {
                 char buf[256];
                 bool cleared;
-				kibitz_pos = gd.master_position;
+                kibitz_pos = gd.master_position;
                 bool have_data = objs.uci_interface->KibitzPeekEngineToMove( run, cleared, buf, sizeof(buf)-1 );
                 run = false;
                 if( cleared )
@@ -2654,7 +2654,7 @@ void GameLogic::OnIdle()
         }
     }
     else if( kibitz && (state==MANUAL||state==RESET||state==HUMAN||state==GAMEOVER) )
-	{
+    {
         bool run=true;
         //release_printf( "Entering main kibitz display\n" );
         //int cleared_events=0, have_data_events=0;
@@ -2667,10 +2667,10 @@ void GameLogic::OnIdle()
                 bool have_data = objs.uci_interface->KibitzPeek( run, idx, cleared, buf, sizeof(buf)-1 );
                 run = false;    // don't run multiple times
                 if( cleared )   // do a complete clear, once
-                {   
+                {
                     KibitzClearDisplay();
                     KibitzClearMultiPV();
-                    for( int j=0; j<4; j++ ) 
+                    for( int j=0; j<4; j++ )
                     {
                         if( j != idx )  // if one slot is cleared, all slots are cleared,
                                         //  so flush the other slots (read up until cleared)
@@ -2698,7 +2698,7 @@ void GameLogic::OnIdle()
         //                    cleared_events, have_data_events );
     }
     else if( state == FAKE_BOOK_DELAY )
-	{
+    {
         unsigned long t2 = GetTickCount();
         if( t2-t1_start_delay > fake_book_delay )  // 1 second by default, less if less time
         {
@@ -2761,15 +2761,15 @@ bool GameLogic::OnIdleNeeded()
     {
         default:
         case RESET:
-        case MANUAL:        
+        case MANUAL:
         case GAMEOVER:
             needed = false;
             break;
         case FAKE_BOOK_DELAY:
         case SLIDING_MANUAL:
-        case HUMAN:		    
-        case PONDERING:		    
-        case SLIDING:       
+        case HUMAN:
+        case PONDERING:
+        case SLIDING:
         case THINKING:
         case POPUP:
         case POPUP_MANUAL:
@@ -2793,7 +2793,7 @@ void GameLogic::MouseUp( char file, char rank, wxPoint &point )
 
     // Sliding piece into place ?
     if( state==SLIDING || state==SLIDING_MANUAL )
-	{
+    {
 
         // It's possible there's more than one move (promotion)
         vector<thc::Move> moves;
@@ -2816,11 +2816,11 @@ void GameLogic::MouseUp( char file, char rank, wxPoint &point )
         if( menu.size() == 0 )
         {
             if( state == SLIDING_MANUAL )
-		        NewState( MANUAL );
+                NewState( MANUAL );
             else
             {
                 SetGroomedPosition( false );   // redraw original position
-		        NewState( human_or_pondering );
+                NewState( human_or_pondering );
             }
         }
 
@@ -2898,7 +2898,7 @@ void GameLogic::MouseUp( char file, char rank, wxPoint &point )
             else
             {
                 wxRect dummy;
-                DoPopup( point, menu, book_moves, SLIDE_TO_DESTINATION, dummy );    
+                DoPopup( point, menu, book_moves, SLIDE_TO_DESTINATION, dummy );
                 NewState( state==SLIDING ? POPUP : POPUP_MANUAL );
             }
         }
@@ -2957,16 +2957,16 @@ bool GameLogic::MouseDown( char file, char rank, wxPoint &point )     // return 
     char slide_piece;
     if( objs.uci_interface && state!=THINKING )
         objs.uci_interface->SuspendResume( false );  // suspend if not already
-	switch( state )
-	{
+    switch( state )
+    {
         case RESET: state = MANUAL;
-		// Human move stage 1
-		case MANUAL:
-		case HUMAN:
-		case PONDERING:
-		{
-			src_file   = file;
-			src_rank   = rank;
+        // Human move stage 1
+        case MANUAL:
+        case HUMAN:
+        case PONDERING:
+        {
+            src_file   = file;
+            src_rank   = rank;
             slide_piece = gd.master_position.squares[ ('8'-rank)*8+(file-'a') ];
             bool its_me;
             if( gd.master_position.white )
@@ -3009,7 +3009,7 @@ bool GameLogic::MouseDown( char file, char rank, wxPoint &point )     // return 
                 if( (have_book_moves&&!unique_and_in_book) || menu.size()>1 )
                 {
                     wxRect dummy;
-                    DoPopup( point, menu, book_moves, CLICK_ON_DESTINATION, dummy );    
+                    DoPopup( point, menu, book_moves, CLICK_ON_DESTINATION, dummy );
                     NewState( (state==HUMAN||state==PONDERING) ? POPUP : POPUP_MANUAL );
                 }
                 else if( menu.size() == 1 )
@@ -3059,34 +3059,34 @@ bool GameLogic::MouseDown( char file, char rank, wxPoint &point )     // return 
             break;
         }
 
-		// Sliding
-		case SLIDING:
-		{
+        // Sliding
+        case SLIDING:
+        {
             NewState(HUMAN);   // shouldn't happen
             break;
         }
 
-		// Sliding
-		case SLIDING_MANUAL:
-		{
+        // Sliding
+        case SLIDING_MANUAL:
+        {
             NewState(MANUAL);   // shouldn't happen
             break;
         }
 
-		// Popup
-		case POPUP:
-		{
+        // Popup
+        case POPUP:
+        {
             NewState(HUMAN);   // shouldn't happen
             break;
         }
 
-		// Popup
-		case POPUP_MANUAL:
-		{
+        // Popup
+        case POPUP_MANUAL:
+        {
             NewState(MANUAL);   // shouldn't happen
             break;
         }
-	}
+    }
     return( slide );
 }
 
@@ -3151,8 +3151,8 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
             bool announce = glc.TestResult( result_txt );
             if( announce )
             {
-				canvas->box->SetForegroundColour(*wxRED);
-				canvas->box->SetLabel(result_txt);
+                canvas->box->SetForegroundColour(*wxRED);
+                canvas->box->SetLabel(result_txt);
                 suggestions = false;
             }
             b1 = "New Game";                    b1_cmd = ID_CMD_NEW_GAME;
@@ -3165,8 +3165,8 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
         case PONDERING:
         case POPUP:
         {
-			canvas->box->SetForegroundColour(*wxRED);
-			canvas->box->SetLabel(reply_to.c_str());
+            canvas->box->SetForegroundColour(*wxRED);
+            canvas->box->SetLabel(reply_to.c_str());
             suggestions = false;
             b1 = "New Game";                    b1_cmd = ID_CMD_NEW_GAME;
             b2 = "Swap sides";                  b2_cmd = ID_CMD_SWAP_SIDES;
@@ -3186,8 +3186,8 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
         case FAKE_BOOK_DELAY:
         case THINKING:
         {
-			canvas->box->SetForegroundColour(*wxBLACK);
-			canvas->box->SetLabel("Engine thinking...");
+            canvas->box->SetForegroundColour(*wxBLACK);
+            canvas->box->SetLabel("Engine thinking...");
             suggestions = false;
             b1 = "New Game";                    b1_cmd = ID_CMD_NEW_GAME;
             b2 = "Force immediate move";        b2_cmd = ID_CMD_MOVENOW;
@@ -3196,46 +3196,46 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
         }
 
     }
-	SetGroomedPosition();
+    SetGroomedPosition();
     //if( !show )
-	//    canvas->SetChessPosition( gd.master_position );
+    //    canvas->SetChessPosition( gd.master_position );
     if( suggestions )
-	{
-		canvas->box->SetForegroundColour(*wxBLACK);
+    {
+        canvas->box->SetForegroundColour(*wxBLACK);
         canvas->box->SetLabel( b1 && b2 && b3 && b4 ? "Enter moves, comments and variations freely - or ..." : "Start" );
-	}
+    }
     if( title && !show )
         canvas->SetBoardTitle( title );
     if( !b1 )
-        canvas->button1->Show( false );        
+        canvas->button1->Show( false );
     else
     {
         canvas->button1->SetLabel( b1 );
-        canvas->button1->Show( true );        
+        canvas->button1->Show( true );
         canvas->button1_cmd = b1_cmd;
     }
     if( !b2 )
-        canvas->button2->Show( false );        
+        canvas->button2->Show( false );
     else
     {
         canvas->button2->SetLabel( b2 );
-        canvas->button2->Show( true );        
+        canvas->button2->Show( true );
         canvas->button2_cmd = b2_cmd;
     }
     if( !b3 )
-        canvas->button3->Show( false );        
+        canvas->button3->Show( false );
     else
     {
         canvas->button3->SetLabel( b3 );
-        canvas->button3->Show( true );        
+        canvas->button3->Show( true );
         canvas->button3_cmd = b3_cmd;
     }
     if( !b4 )
-        canvas->button4->Show( false );        
+        canvas->button4->Show( false );
     else
     {
         canvas->button4->SetLabel( b4 );
-        canvas->button4->Show( true );        
+        canvas->button4->Show( true );
         canvas->button4_cmd = b4_cmd;
     }
     if( kibitz )
@@ -3266,7 +3266,7 @@ void GameLogic::NewState( GAME_STATE new_state, bool from_mouse_move )
     canvas->button4->Refresh();
     canvas->BookUpdate( state==THINKING || state==FAKE_BOOK_DELAY );
     wxString txt;
-	bool ticking;
+    bool ticking;
     chess_clock.white.GetDisplay( txt, true, ticking );
     canvas->WhiteClock( txt, ticking );
     chess_clock.black.GetDisplay( txt, true, ticking );
@@ -3306,64 +3306,64 @@ void GameLogic::StatusInit()
 void GameLogic::StatusUpdate( int idx )
 {
     cprintf( "*** StatusUpdate() called\n" );
-	games_in_file_idx = -1;
-	int tabs_current_idx = tabs->GetCurrentIdx();
-	bool tab_in_file=false;
-	if( objs.frame )
+    games_in_file_idx = -1;
+    int tabs_current_idx = tabs->GetCurrentIdx();
+    bool tab_in_file=false;
+    if( objs.frame )
     {
         bool file_loaded =  gc_pgn.pgn_filename != "";
-	    bool tab_modified = false;
+        bool tab_modified = false;
         int  nbr_modified=0;
         bool refresh=false;
-		std::string str;
+        std::string str;
         if( !file_loaded )
-		{
-	        tab_modified = undo.IsModified();
+        {
+            tab_modified = undo.IsModified();
             if( tab_modified )
-				str = "*";
-		}
+                str = "*";
+        }
         else
         {
             size_t nbr = gc_pgn.gds.size();
-#ifdef _DEBUG	// performance sensitive - could be looping through a big file as user types - every character
-			char *dbg = NULL;
-			char dbg_buf[200];
+#ifdef _DEBUG   // performance sensitive - could be looping through a big file as user types - every character
+            char *dbg = NULL;
+            char dbg_buf[200];
             if( nbr < 20 )
-				dbg = dbg_buf;
+                dbg = dbg_buf;
 #endif
             for( size_t i=0; i<nbr; i++ )
             {
                 ListableGame *ptr = gc_pgn.gds[i].get();
-				#ifdef _DEBUG
-				if( dbg )
-				{
-					sprintf( dbg, "> %s-%s", ptr->White(), ptr->Black() );
-					dbg = dbg+strlen(dbg);
-				}
-				#endif
-				if( !ptr->IsGameDocument() )
-				{
-				#ifdef _DEBUG
-					if( dbg )
-					{
-						sprintf( dbg, ": Not Game Document" );
-						dbg = dbg+strlen(dbg);
-					}
-				#endif
-				}
-				else
+                #ifdef _DEBUG
+                if( dbg )
+                {
+                    sprintf( dbg, "> %s-%s", ptr->White(), ptr->Black() );
+                    dbg = dbg+strlen(dbg);
+                }
+                #endif
+                if( !ptr->IsGameDocument() )
+                {
+                #ifdef _DEBUG
+                    if( dbg )
+                    {
+                        sprintf( dbg, ": Not Game Document" );
+                        dbg = dbg+strlen(dbg);
+                    }
+                #endif
+                }
+                else
                 {
                     uint32_t game_being_edited = ptr->GetGameBeingEdited();
                     bool game_modified = ptr->IsModified();
-					#ifdef _DEBUG
-					if( dbg )
-					{
-						sprintf( dbg, ": %u", game_being_edited );
-						dbg = dbg+strlen(dbg);
-					}
-					#endif
+                    #ifdef _DEBUG
+                    if( dbg )
+                    {
+                        sprintf( dbg, ": %u", game_being_edited );
+                        dbg = dbg+strlen(dbg);
+                    }
+                    #endif
 
-					// Loop through tabs looking for this game
+                    // Loop through tabs looking for this game
                     GameDocument *pd;
                     Undo *pu;
                     int tab_idx=0;
@@ -3372,73 +3372,73 @@ void GameLogic::StatusUpdate( int idx )
                     {
                         if( game_being_edited>0 && game_being_edited==pd->game_being_edited )
                         {
-							// Woo hoo, found the game in a tab 
-							// It might be sitting in the tab modified
+                            // Woo hoo, found the game in a tab
+                            // It might be sitting in the tab modified
                             game_modified |= (pd->IsModified() || pu->IsModified());
 
-							// It might be the current tab
-							if( tab_idx == tabs_current_idx )
-							{
-								tab_in_file = true;
-								tab_modified = game_modified;
+                            // It might be the current tab
+                            if( tab_idx == tabs_current_idx )
+                            {
+                                tab_in_file = true;
+                                tab_modified = game_modified;
                                 if( tab_modified )
                                     monitor_usage_pattern.TabModified();
-								idx = i;
-							}
-							#ifdef _DEBUG
-							if( dbg )
-							{
-	  							sprintf( dbg, ": Edit match, %s tab %s", tab_in_file?"Current":"Not current", game_modified?"modified":"not modified" );
-								dbg = dbg+strlen(dbg);
-							}
-							#endif
+                                idx = i;
+                            }
+                            #ifdef _DEBUG
+                            if( dbg )
+                            {
+                                sprintf( dbg, ": Edit match, %s tab %s", tab_in_file?"Current":"Not current", game_modified?"modified":"not modified" );
+                                dbg = dbg+strlen(dbg);
+                            }
+                            #endif
                             break;
                         }
-						else
-						{
-							#ifdef _DEBUG
-							if( dbg )
-							{
-	  							sprintf( dbg, ": %u", pd->game_being_edited );
-								dbg = dbg+strlen(dbg);
-							}
-							#endif
-						}
+                        else
+                        {
+                            #ifdef _DEBUG
+                            if( dbg )
+                            {
+                                sprintf( dbg, ": %u", pd->game_being_edited );
+                                dbg = dbg+strlen(dbg);
+                            }
+                            #endif
+                        }
                         tabs->Iterate(handle,pd,pu);
                         tab_idx++;
                     }
                     if( game_modified )
                         nbr_modified++;
                 }
-				#ifdef _DEBUG
-				if( dbg )
-				{
-					cprintf( "%s\n", dbg_buf );
-					dbg = dbg_buf;
-				}
-				#endif
+                #ifdef _DEBUG
+                if( dbg )
+                {
+                    cprintf( "%s\n", dbg_buf );
+                    dbg = dbg_buf;
+                }
+                #endif
             }
             str = (nbr_modified > 0) ? "*" : "";
             char buf[200];
             if( tab_in_file )
-			{
-				games_in_file_idx = idx;
-				if( nbr_modified )
-				{
-					sprintf( buf, tab_modified?"* Game %d of %ld (%d modified)":"Game %d of %ld (%d modified)",
-							idx+1, gc_pgn.gds.size(), nbr_modified );
-				}
-				else
-				{
-					sprintf( buf, tab_modified?"* Game %d of %ld":"Game %d of %ld",
-							idx+1, gc_pgn.gds.size() );
-				}
-			}
-			else
-			{
-	            tab_modified = gd.IsModified() || undo.IsModified();
+            {
+                games_in_file_idx = idx;
+                if( nbr_modified )
+                {
+                    sprintf( buf, tab_modified?"* Game %d of %ld (%d modified)":"Game %d of %ld (%d modified)",
+                            idx+1, gc_pgn.gds.size(), nbr_modified );
+                }
+                else
+                {
+                    sprintf( buf, tab_modified?"* Game %d of %ld":"Game %d of %ld",
+                            idx+1, gc_pgn.gds.size() );
+                }
+            }
+            else
+            {
+                tab_modified = gd.IsModified() || undo.IsModified();
                 sprintf( buf, " %s( this tab not in file ) ", tab_modified?"*":"" );
-			}
+            }
             str = buf;
         }
         static char status_field3[40];
@@ -3472,7 +3472,7 @@ void GameLogic::StatusUpdate( int idx )
             status_field2 = str;
             refresh=true;
         }
-		bool file_modified = gc_pgn.file_irrevocably_modified || (nbr_modified>0);
+        bool file_modified = gc_pgn.file_irrevocably_modified || (nbr_modified>0);
         str = (file_loaded&&file_modified) ? "* File: " :  "File: ";
         if( !file_loaded )
             str += "(none)";
@@ -3716,13 +3716,13 @@ bool GameLogic::MakeMove( thc::Move move, GAME_RESULT &result )
         game_move.engine_millisecs_time = chess_clock.white.millisecs_time;
         game_move.human_millisecs_time = chess_clock.black.millisecs_time;
     }
-	if( chess_clock.fixed_period_mode )
-		game_move.engine_millisecs_time = 1000*(objs.repository->clock.m_engine_fixed_minutes*60 + objs.repository->clock.m_engine_fixed_seconds);
+    if( chess_clock.fixed_period_mode )
+        game_move.engine_millisecs_time = 1000*(objs.repository->clock.m_engine_fixed_minutes*60 + objs.repository->clock.m_engine_fixed_seconds);
     game_move.flag_ingame = ingame;
     game_move.nag_value1 = 0;
     game_move.nag_value2 = 0;
     bool allow_overwrite = !ingame;
-    bool gameover = false; 
+    bool gameover = false;
     if( !gd.MakeMove( game_move, allow_overwrite) )
         chess_clock.Press( !white, ingame, glc.human_is_white );    // temp hack, undo previous press (almost)
     else
@@ -3745,7 +3745,7 @@ bool GameLogic::MakeMove( thc::Move move, GAME_RESULT &result )
         }
         else if( ingame && gd.master_position.IsDraw(true,draw_type1) && gd.master_position.IsDraw(false,draw_type2) )
         {
-            gameover = true; 
+            gameover = true;
             result = RESULT_DRAW_INSUFFICIENT;
             if( draw_type1==DRAWTYPE_50MOVE || draw_type2==DRAWTYPE_50MOVE )
                 result = RESULT_DRAW_50MOVE;
@@ -3760,9 +3760,9 @@ bool GameLogic::MakeMove( thc::Move move, GAME_RESULT &result )
 void GameLogic::SetGroomedPosition( bool show_title )
 {
     bool ingame=false;
-	CtrlChessBoard *gb = objs.canvas->pb->gb;
-	gb->ClearHighlight1();
-	gb->ClearHighlight2();
+    CtrlChessBoard *gb = objs.canvas->pb->gb;
+    gb->ClearHighlight1();
+    gb->ClearHighlight2();
     switch( state )
     {
         case RESET:                             break;
@@ -3807,9 +3807,9 @@ void GameLogic::SetGroomedPosition( bool show_title )
         GAME_MOVE *game_move = gd.GetSummaryTitle( cr, move_txt, lag_nbr );
         if( game_move )
         {
-			gb->SetHighlight1(game_move->move.src);
-			gb->SetHighlight2(game_move->move.dst);
-		}
+            gb->SetHighlight1(game_move->move.src);
+            gb->SetHighlight2(game_move->move.dst);
+        }
         if( lag_nbr == 0 )
         {
             if( game_move )
@@ -3886,10 +3886,10 @@ void GameLogic::SetGroomedPosition( bool show_title )
             }
         }
     }
-	cprintf( "SetGroomedPosition() calling SetChessPosition()\n" );
+    cprintf( "SetGroomedPosition() calling SetChessPosition()\n" );
     canvas->SetChessPosition( view_pos );
-	if( show_title )
-		canvas->SetBoardTitle( title );
+    if( show_title )
+        canvas->SetBoardTitle( title );
     if( canvas->resize_ready && tabs && show_title )
         tabs->SetTitle( gd );
  }
@@ -3908,7 +3908,7 @@ bool GameLogic::ShowSlidingPieceOnly()
         if( blindfold || lag_nbr!=0 )
             show_sliding_piece_only = !objs.repository->training.m_peek_at_complete_position;
     }
-    return show_sliding_piece_only;    
+    return show_sliding_piece_only;
 }
 
 
@@ -3950,7 +3950,7 @@ GAME_STATE GameLogic::StartThinking( const thc::Move *human_move )
                 {
                     move_list_startpos = cr;
                     saving_moves = true;
-                }    
+                }
             }
             thc::Move move  = game_moves[i].move;
             if( saving_moves )
@@ -3994,7 +3994,7 @@ GAME_STATE GameLogic::StartThinking( const thc::Move *human_move )
                 int percent = x%100;
 
                 // Then if we play a book move say 80% of the time, don't
-                //  play a book move if percent = say 81            
+                //  play a book move if percent = say 81
                 if( percent > objs.repository->book.m_post_limit_percent )
                     have_fast_moves = false;
             }
@@ -4070,7 +4070,7 @@ GAME_STATE GameLogic::StartThinking( const thc::Move *human_move )
         if( book_move.Valid() )
         {
             move_after_delay = book_move;
-            unsigned long time2 = (gd.master_position.WhiteToPlay() ? wtime_ms : btime_ms ); 
+            unsigned long time2 = (gd.master_position.WhiteToPlay() ? wtime_ms : btime_ms );
             fake_book_delay = 1000;     // 1 second by default
             if( time2 < 4000 )
                 fake_book_delay = 200;  // 200mS if less than 4 secs left
@@ -4090,8 +4090,8 @@ GAME_STATE GameLogic::StartThinking( const thc::Move *human_move )
                     cr = move_list_startpos;
                     strcpy( forsyth, cr.ForsythPublish().c_str() );
                 }
-				if( kibitz )
-					kibitz_pos = pos;
+                if( kibitz )
+                    kibitz_pos = pos;
                 objs.uci_interface->StartThinking( false, pos, use_startpos?NULL:forsyth, smoves, wtime_ms, btime_ms, winc_ms, binc_ms );   // ms,ms,inc_ms,inc_ms
             }
             else
@@ -4099,8 +4099,8 @@ GAME_STATE GameLogic::StartThinking( const thc::Move *human_move )
                 bool use_startpos = pos.CmpStrict(std_startpos);
                 if( !use_startpos )
                     strcpy( forsyth, gd.master_position.ForsythPublish().c_str() );
-				if( kibitz )
-					kibitz_pos = pos;
+                if( kibitz )
+                    kibitz_pos = pos;
                 objs.uci_interface->StartThinking( false, pos, use_startpos?NULL:forsyth, wtime_ms, btime_ms, winc_ms, binc_ms );   // ms,ms,inc_ms,inc_ms
             }
             ret = THINKING;
@@ -4135,7 +4135,7 @@ bool GameLogic::StartPondering( thc::Move ponder )
             {
                 move_list_startpos = cr;
                 saving_moves = true;
-            }    
+            }
         }
         thc::Move move  = game_moves[i].move;
         if( saving_moves )
@@ -4187,8 +4187,8 @@ bool GameLogic::StartPondering( thc::Move ponder )
             cr = move_list_startpos;
             strcpy( forsyth, cr.ForsythPublish().c_str() );
         }
-		if( kibitz )
-			kibitz_pos = pos;
+        if( kibitz )
+            kibitz_pos = pos;
         objs.uci_interface->StartThinking( true, pos, use_startpos?NULL:forsyth, smoves, wtime_ms, btime_ms, winc_ms, binc_ms );   // ms,ms,inc_ms,inc_ms
         pondering = true;
     }
@@ -4208,9 +4208,9 @@ struct PV
 void GameLogic::CmdKibitzCaptureAll()
 {
     Atomic begin;
-    if( /*kibitz &&*/ kibitz_pos==gd.master_position &&		// we prefer to test kibitz_pos rather than kibitz flag,
-															//  because kibitz might have been turned off, but the
-															//  kibitz lines are still visible
+    if( /*kibitz &&*/ kibitz_pos==gd.master_position &&     // we prefer to test kibitz_pos rather than kibitz flag,
+                                                            //  because kibitz might have been turned off, but the
+                                                            //  kibitz lines are still visible
         (state==MANUAL || state==RESET || state==HUMAN || state==PONDERING || state==GAMEOVER || state==THINKING)
       )
     {
@@ -4257,9 +4257,9 @@ void GameLogic::CmdKibitzCaptureAll()
 void GameLogic::CmdKibitzCaptureOne()
 {
     Atomic begin;
-    if( /*kibitz &&*/ kibitz_pos==gd.master_position &&		// we prefer to test kibitz_pos rather than kibitz flag,
-															//  because kibitz might have been turned off, but the
-															//  kibitz lines are still visible
+    if( /*kibitz &&*/ kibitz_pos==gd.master_position &&     // we prefer to test kibitz_pos rather than kibitz flag,
+                                                            //  because kibitz might have been turned off, but the
+                                                            //  kibitz lines are still visible
         (state==MANUAL || state==RESET || state==HUMAN || state==PONDERING || state==GAMEOVER || state==THINKING)
       )
     {
@@ -4442,8 +4442,8 @@ void GameLogic::KibitzUpdate( int idx, const char *txt )
 
 void GameLogic::KibitzUpdateEngineToMove( bool ponder, unsigned int idx, const char *txt )
 {
-	// Note idx is just an incrementing integer - used to capture (with capture top and capture
-	//  all buttons) lines of analysis in the same order the engine delivered them
+    // Note idx is just an incrementing integer - used to capture (with capture top and capture
+    //  all buttons) lines of analysis in the same order the engine delivered them
     wxString pv;
     bool have_moves=false;
     thc::Move candidate_move;
@@ -4511,14 +4511,14 @@ void GameLogic::KibitzUpdateEngineToMove( bool ponder, unsigned int idx, const c
             else
             {
                 have_move = move.TerseIn( &cr, txt2 );
-				if( have_move )
-				{
-					txt2 += 4;
-					if( isalpha(*txt2) )   // eg 'Q','R' etc.
-						txt2++;
-					while( *txt2 == ' ' )
-						txt2++;
-				}
+                if( have_move )
+                {
+                    txt2 += 4;
+                    if( isalpha(*txt2) )   // eg 'Q','R' etc.
+                        txt2++;
+                    while( *txt2 == ' ' )
+                        txt2++;
+                }
             }
             if( !have_move )
                 break;
@@ -4548,12 +4548,12 @@ void GameLogic::KibitzUpdateEngineToMove( bool ponder, unsigned int idx, const c
     canvas->KibitzScroll( pv );
     if( !have_moves )
         candidate_move.Invalid();
-	unsigned int nbr = nbrof(kibitz_move);
-	unsigned int slot = idx%nbr;  // just use successive slots, wrapping around
+    unsigned int nbr = nbrof(kibitz_move);
+    unsigned int slot = idx%nbr;  // just use successive slots, wrapping around
     kibitz_pv   [slot] = pv;
     kibitz_depth[slot] = depth;
-    kibitz_rank [slot] = idx;	// when we capture, we sort on this, which will
-								//  so the slots get ordered chronologically
+    kibitz_rank [slot] = idx;   // when we capture, we sort on this, which will
+                                //  so the slots get ordered chronologically
     kibitz_move [slot] = candidate_move;
     kibitz_var  [slot] = var;
 }
@@ -4571,14 +4571,14 @@ void GameLogic::KibitzClearMultiPV()
 
 void GameLogic::KibitzClearDisplay( bool intro )
 {
-	analysis_idx=0;
+    analysis_idx=0;
     if( intro )
         KibitzIntro();
     for( int i=0; i<nbrof(kibitz_sorted); i++ )
-	{
+    {
         kibitz_move  [i].Invalid();
         canvas->Kibitz(i+1, "" );
-	}
+    }
 }
 
 void GameLogic::KibitzIntro()

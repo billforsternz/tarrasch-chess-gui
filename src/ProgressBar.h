@@ -188,7 +188,7 @@ public:
     //  => T = T1/P
     //  If p is permill, then p = P*1000
     //  => T = T1/(p/1000)
-    //  => T = 1000*T1/p, where T1 and T have the same units (milliseconds in this case) 
+    //  => T = 1000*T1/p, where T1 and T have the same units (milliseconds in this case)
     double PredictEnd( int permill )
     {
         if( permill == 0 )

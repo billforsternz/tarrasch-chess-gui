@@ -223,7 +223,7 @@ void wxAuiMSWTabArt::DrawTab(wxDC& dc,
     else
         tabState = TIS_NORMAL;
 
-	wxUxThemeEngine* te = wxUxThemeEngine::Get();
+    wxUxThemeEngine* te = wxUxThemeEngine::Get();
 
     wxUxThemeHandle hTabTheme(wnd, L"Tab");
     RECT tabR;
@@ -231,12 +231,12 @@ void wxAuiMSWTabArt::DrawTab(wxDC& dc,
     te->DrawThemeBackground(hTabTheme, GetHdcOf(dc.GetTempHDC()), TABP_TABITEM,
         tabState,
         &tabR, NULL);
-	if ( tabX == GetIndentSize() ) // Need to add left edge for first tab only
-	{
-		te->DrawThemeBackground(hTabTheme, GetHdcOf(dc.GetTempHDC()), TABP_TABITEMLEFTEDGE,
-			tabState,
-			&tabR, NULL);
-	}
+    if ( tabX == GetIndentSize() ) // Need to add left edge for first tab only
+    {
+        te->DrawThemeBackground(hTabTheme, GetHdcOf(dc.GetTempHDC()), TABP_TABITEMLEFTEDGE,
+            tabState,
+            &tabR, NULL);
+    }
     wxRect textRect = tabRect;
     if ( !page.active )
         textRect.Offset(0, wnd->FromDIP(1));
@@ -244,7 +244,7 @@ void wxAuiMSWTabArt::DrawTab(wxDC& dc,
         textRect.width -= m_closeBtnSize.x + wnd->FromDIP(3);
 
     dc.SetFont(wnd->GetFont());
-	dc.DrawLabel(page.caption, page.bitmap, textRect, wxALIGN_CENTRE);
+    dc.DrawLabel(page.caption, page.bitmap, textRect, wxALIGN_CENTRE);
 
     // draw focus rectangle
     if ( page.active && (wnd->FindFocus() == wnd) )

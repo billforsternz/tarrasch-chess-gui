@@ -21,7 +21,7 @@ public:
                   wxArrayString &strs,
                   wxArrayString &terses,
                   wxArrayString &book,
-                  POPUP_MODE popup_mode,  
+                  POPUP_MODE popup_mode,
                   wxRect     &hover,    // if popup_mode == BOOK_HOVER
                   wxWindowID id = wxID_ANY,
                   const wxPoint& point = wxDefaultPosition );

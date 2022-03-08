@@ -28,15 +28,15 @@ class ListableGame
 public:
     ListableGame() { /*transpo_nbr=0;*/ game_attributes=0; game_id=0; }
     virtual ~ListableGame() {}
-	virtual GameDocument *IsGameDocument()  { return NULL; }		// return ptr to this if and only if this is type GameDocument
-	virtual void ConvertToGameDocument(GameDocument &UNUSED(gd)) {}
-	virtual long GetFposn() { return 0; }
+    virtual GameDocument *IsGameDocument()  { return NULL; }        // return ptr to this if and only if this is type GameDocument
+    virtual void ConvertToGameDocument(GameDocument &UNUSED(gd)) {}
+    virtual long GetFposn() { return 0; }
     virtual void SetFposn( long UNUSED(posn) ) {}
     virtual bool GetPgnHandle( int &UNUSED(pgn_handle) ) { return false; }
     virtual void SetPgnHandle( int UNUSED(pgn_handle) )  {}
     virtual bool IsModified()        { return false; }
     virtual void SetGameBeingEdited( uint32_t UNUSED(game_being_edited) ) {}
-    virtual uint32_t GetGameBeingEdited() { return 0; }	   // only GameDocuments amongst ListableGames can be edited
+    virtual uint32_t GetGameBeingEdited() { return 0; }    // only GameDocuments amongst ListableGames can be edited
     virtual void *LoadIntoMemory( void *UNUSED(context), bool UNUSED(end) )  {return 0;}
     virtual const char *White() {return "";}
     virtual const char *Black() {return "";}
@@ -50,7 +50,7 @@ public:
     virtual const char *BlackElo() {return "";}
     virtual const char *Fen() {return "";}
     virtual const char *CompressedMoves() {return "";}
-	virtual int         WhiteBin() {return 0;}
+    virtual int         WhiteBin() {return 0;}
     virtual int         BlackBin() {return 0;}
     virtual int         EventBin() {return 0;}
     virtual int         SiteBin() {return 0;}
@@ -60,7 +60,7 @@ public:
     virtual int         EcoBin() {return Eco2Bin(Eco());}
     virtual int         WhiteEloBin() {return Elo2Bin(WhiteElo());}
     virtual int         BlackEloBin() {return Elo2Bin(BlackElo());}
-    
+
     // High performance
     virtual Roster                  &RefRoster()          { static Roster r; return r; }
     virtual std::vector<thc::Move>  &RefMoves()           { static std::vector<thc::Move> moves; return moves; }
@@ -68,7 +68,7 @@ public:
 
     // For editing the roster
     virtual void SetRoster( Roster &UNUSED(r) ) {}
-    
+
     // Easy to use
     virtual void GetCompactGame( CompactGame &pact )
     {
@@ -81,7 +81,7 @@ public:
 private:
     uint8_t  game_attributes;    // At the moment there are two attributes, promotion (game has at least one
                                  //  pawn promotion) and locked (restrict game export to PGN)
-    
+
 public:
     uint32_t game_id;
     bool     saved;
@@ -127,8 +127,8 @@ public:
         SetPromotion( has_promotion );
     }
     virtual bool UsesControlBlock( uint8_t & ) { return false; }
- 
+
 };
 
-        
+
 #endif //LISTABLE_GAME_H

@@ -79,7 +79,7 @@ PanelContext::~PanelContext()
 // Constructor
 PanelContext::PanelContext
 (
-    wxWindow *parent, 
+    wxWindow *parent,
     wxWindowID id,
     const wxPoint &point,
     const wxSize &siz,
@@ -126,13 +126,13 @@ PanelContext::PanelContext
     book_moves->SetForegroundColour( *wxBLACK );
     book_moves->SetFont( *font_book );
     book_moves->SetTxt("no book moves",false);
-    
+
     // Create Status box
     box = new wxStaticBox( suggestions_page, ID_BOX,"",wxDefaultPosition, wxDefaultSize );
     //box->SetLabel( "Start" );
 
     // Create flexible buttons
-    button1 = new wxButton( suggestions_page, ID_BUTTON1, "Play engine as white" /*longest button text*/,       wxDefaultPosition, wxDefaultSize ); 
+    button1 = new wxButton( suggestions_page, ID_BUTTON1, "Play engine as white" /*longest button text*/,       wxDefaultPosition, wxDefaultSize );
     button2 = new wxButton( suggestions_page, ID_BUTTON2, "", wxDefaultPosition, wxDefaultSize );
     button3 = new wxButton( suggestions_page, ID_BUTTON3, "",  wxDefaultPosition, wxDefaultSize );
     button4 = new wxButton( suggestions_page, ID_BUTTON4, "",  wxDefaultPosition, wxDefaultSize );
@@ -210,15 +210,15 @@ void PanelContext::OnSize( wxSizeEvent &evt )
     if( true )//resize_ready )
         Layout( siz );
 
-	// Check whether AUI moves panel is too small, if it is request a layout fixup later
-	//  (experience shows it's unwise to try and do it inside an OnSize() handler)
-	if( aui_setup )
-	{
-		int panel1,panel2,panel3,panel4;
-		GetAuiLayout( panel1, panel2, panel3, panel4 );
-		if( siz.x>50 && panel2+50>siz.x && objs.gl )
-			objs.gl->fix_layout_flag = true;
-	}
+    // Check whether AUI moves panel is too small, if it is request a layout fixup later
+    //  (experience shows it's unwise to try and do it inside an OnSize() handler)
+    if( aui_setup )
+    {
+        int panel1,panel2,panel3,panel4;
+        GetAuiLayout( panel1, panel2, panel3, panel4 );
+        if( siz.x>50 && panel2+50>siz.x && objs.gl )
+            objs.gl->fix_layout_flag = true;
+    }
 }
 
 void PanelContext::Layout( wxSize const &siz )
@@ -227,9 +227,9 @@ void PanelContext::Layout( wxSize const &siz )
     PositionSuggestionButtons();
 
     // Make kibitz buttons the same width
-    wxSize button1_size = kibitz_button1->GetSize();    
-    wxSize button2_size = kibitz_button2->GetSize();    
-    wxSize button3_size = kibitz_button3->GetSize();    
+    wxSize button1_size = kibitz_button1->GetSize();
+    wxSize button2_size = kibitz_button2->GetSize();
+    wxSize button3_size = kibitz_button3->GetSize();
     size_t max_width;
     if( button1_size.x > button2_size.x )
         max_width = (button1_size.x > button3_size.x) ? button1_size.x : button3_size.x;
@@ -238,9 +238,9 @@ void PanelContext::Layout( wxSize const &siz )
     button1_size.x = max_width;
     button2_size.x = max_width;
     button3_size.x = max_width;
-    kibitz_button1->SetSize( button1_size);    
-    kibitz_button2->SetSize( button2_size);    
-    kibitz_button3->SetSize( button3_size);    
+    kibitz_button1->SetSize( button1_size);
+    kibitz_button2->SetSize( button2_size);
+    kibitz_button3->SetSize( button3_size);
 
     // Size Kibitz box
     wxPoint kpos;
@@ -294,7 +294,7 @@ void PanelContext::Layout( wxSize const &siz )
 }
 
 
-void PanelContext::PositionSuggestionButtons() 
+void PanelContext::PositionSuggestionButtons()
 {
     int i;
     wxSize sz;
@@ -406,7 +406,7 @@ void PanelContext::ButtonCmd( int cmd )
         case ID_CMD_DRAW:           objs.gl->CmdDraw();         break;
         case ID_CMD_PLAY_WHITE:     objs.gl->CmdPlayWhite();    break;
         case ID_CMD_PLAY_BLACK:     objs.gl->CmdPlayBlack();    break;
-        case ID_CMD_SWAP_SIDES:     objs.gl->CmdSwapSides();    break;    
+        case ID_CMD_SWAP_SIDES:     objs.gl->CmdSwapSides();    break;
         case ID_CMD_NEXT_GAME:      objs.gl->CmdNextGame();     break;
         case ID_CMD_PREVIOUS_GAME:  objs.gl->CmdPreviousGame(); break;
         case ID_DATABASE_SEARCH:    objs.gl->CmdDatabaseSearch();   break;
@@ -543,7 +543,7 @@ void PanelContext::KibitzScroll( const wxString &txt )
 // the frame width minus the board pane width - basically panel3 is don't care
 
 /*
-                                                +--- first parameter is direction 
+                                                +--- first parameter is direction
                                                 |
                                                 v
     wxAUI_DOCK_TOP = 1,               dock_size(1,1,0)    panel1 top
@@ -563,7 +563,7 @@ void PanelContext::GetAuiLayout( int &panel1, int &panel2, int &panel3, int &pan
     panel1=0, panel2=0, panel3=0, panel4=0;
     wxString persp = m_mgr.SavePerspective();
     const char *txt = persp.c_str();
-	cprintf( "Get AUI Layout: %s\n", txt );
+    cprintf( "Get AUI Layout: %s\n", txt );
     std::string s(txt);
     int len = strlen("dock_size(1,1,0)=");
     size_t idx = s.find( "dock_size(1,1,0)=" );
@@ -584,7 +584,7 @@ void PanelContext::SetAuiLayout( int panel1, int panel2, int panel3, int panel4 
 {
     wxString persp = m_mgr.SavePerspective();
     const char *txt = persp.c_str();
-	cprintf( "Get AUI Layout: %s\n", txt );
+    cprintf( "Get AUI Layout: %s\n", txt );
     std::string s(txt);
     size_t idx1 = s.find( "dock_size(1,1,0)=" );
     size_t idx2 = s.find( "dock_size(4,1,0)=" );
@@ -598,29 +598,29 @@ void PanelContext::SetAuiLayout( int panel1, int panel2, int panel3, int panel4 
         )
     {
         char temp[100];
-		wxSize sz = GetSize();
-		panel3 = sz.x - panel2;		// Just insist panel3 has a sensible value
-		if( panel3 < 20 )
-			panel3 = 20;
+        wxSize sz = GetSize();
+        panel3 = sz.x - panel2;     // Just insist panel3 has a sensible value
+        if( panel3 < 20 )
+            panel3 = 20;
         sprintf( temp, "dock_size(1,1,0)=%d|dock_size(4,1,0)=%d|dock_size(5,1,0)=%d|dock_size(3,1,0)=%d|", panel1, panel2, panel3, panel4 );
         std::string s2 = s.substr(0,idx1) + std::string(temp);
         wxString persp2(s2.c_str());
-		cprintf( "Set AUI Layout: %s\n", s2.c_str() );
+        cprintf( "Set AUI Layout: %s\n", s2.c_str() );
         m_mgr.LoadPerspective( persp2, true );
     }
 }
 
 void PanelContext::AuiFixLayout()
 {
-	wxSize siz;
-	siz = GetSize();
-	int panel1,panel2,panel3,panel4;
-	GetAuiLayout( panel1, panel2, panel3, panel4 );
-	if( siz.x>60 && panel2+50>siz.x )
-	{
-		panel2 = siz.x-60;
-		SetAuiLayout(panel1,panel2,panel3,panel4);
-	}
+    wxSize siz;
+    siz = GetSize();
+    int panel1,panel2,panel3,panel4;
+    GetAuiLayout( panel1, panel2, panel3, panel4 );
+    if( siz.x>60 && panel2+50>siz.x )
+    {
+        panel2 = siz.x-60;
+        SetAuiLayout(panel1,panel2,panel3,panel4);
+    }
 }
 
 void PanelContext::AuiBegin( wxFrame *frame, wxWindow *top, wxWindow *left, wxWindow *right, wxWindow *bottom, bool restore )
@@ -628,7 +628,7 @@ void PanelContext::AuiBegin( wxFrame *frame, wxWindow *top, wxWindow *left, wxWi
     // notify wxAUI which frame to use
     m_mgr.SetManagedWindow(frame);
     m_mgr.SetDockSizeConstraint(0.9,0.9);
- 
+
     // add the panes to the manager Note: Experience shows there is no point trying to change a panel's fundamental characteristics
     //  after adding it to the manager - Things like CaptionVisible(false) etc need to be intantiated with the panel
     m_mgr.AddPane(top,
@@ -644,8 +644,8 @@ void PanelContext::AuiBegin( wxFrame *frame, wxWindow *top, wxWindow *left, wxWi
                   CloseButton(false).MaximizeButton(false));
     m_mgr.AddPane(right,
                   wxAuiPaneInfo().
-				  Name("right").Center().Layer(1).Position(2).
-				  CloseButton(false).CaptionVisible(false).MinSize(50,50) );
+                  Name("right").Center().Layer(1).Position(2).
+                  CloseButton(false).CaptionVisible(false).MinSize(50,50) );
     m_mgr.AddPane(bottom,
                   wxAuiPaneInfo().
                   Name("bottom").CaptionVisible(false). //(wxT("Tree Pane")).
@@ -665,26 +665,26 @@ void PanelContext::AuiBegin( wxFrame *frame, wxWindow *top, wxWindow *left, wxWi
         int panel3 = objs.repository->nv.m_panel3;
         int panel4 = objs.repository->nv.m_panel4;
         if( panel1>0 && panel2>0 && panel3>0 && panel4>0 )
-		{
-			SetAuiLayout( panel1, panel2, panel3, panel4 );
-		}
+        {
+            SetAuiLayout( panel1, panel2, panel3, panel4 );
+        }
     }
 
-	aui_setup = true;
+    aui_setup = true;
 }
 
 
 void PanelContext::AuiEnd()
 {
-	// Save the panel layout for next time
-	int panel1=0, panel2=0, panel3=0, panel4=0;
-	GetAuiLayout( panel1, panel2, panel3, panel4 );
-	if( panel1>0 && panel2>0 && panel3>0 && panel4>0 )
-	{
-		objs.repository->nv.m_panel1 = panel1;
-		objs.repository->nv.m_panel2 = panel2;
-		objs.repository->nv.m_panel3 = panel3;
-		objs.repository->nv.m_panel4 = panel4;
-	}
-	m_mgr.UnInit(); // deinitialize the frame manager
+    // Save the panel layout for next time
+    int panel1=0, panel2=0, panel3=0, panel4=0;
+    GetAuiLayout( panel1, panel2, panel3, panel4 );
+    if( panel1>0 && panel2>0 && panel3>0 && panel4>0 )
+    {
+        objs.repository->nv.m_panel1 = panel1;
+        objs.repository->nv.m_panel2 = panel2;
+        objs.repository->nv.m_panel3 = panel3;
+        objs.repository->nv.m_panel4 = panel4;
+    }
+    m_mgr.UnInit(); // deinitialize the frame manager
 }

@@ -141,7 +141,7 @@ void PositionDialog::Pos2Fen( const thc::ChessPosition& pos, wxString& fen_ )
                 ep = true;
             #endif
         }
-    }        
+    }
 
     // Black captures enpassant from a3 to h3
     if( !pos.white && a3<=pos.enpassant_target && pos.enpassant_target<=h3 )
@@ -160,7 +160,7 @@ void PositionDialog::Pos2Fen( const thc::ChessPosition& pos, wxString& fen_ )
                 ep = true;
             #endif
         }
-    }        
+    }
     char castling[5];
     char *pc = castling;
     if( pos.wking_allowed() )
@@ -189,7 +189,7 @@ void PositionDialog::Pos2Fen( const thc::ChessPosition& pos, wxString& fen_ )
         ep_buf[1] = '3';
         ep_buf[2] = '\0';
     }
-    fen_.sprintf( "%s %c %s %s %d %d", 
+    fen_.sprintf( "%s %c %s %s %d %d",
             buf,
             pos.white?'w':'b',
             castling,
@@ -241,7 +241,7 @@ bool PositionDialog::Create( wxWindow* parent,
 
         // This fits the dialog to the minimum size dictated by the sizers
         GetSizer()->Fit(this);
-        
+
         // This ensures that the dialog cannot be sized smaller than the minimum size
         GetSizer()->SetSizeHints(this);
 
@@ -253,12 +253,12 @@ bool PositionDialog::Create( wxWindow* parent,
 
 // Control creation for PositionDialog
 void PositionDialog::CreateControls()
-{    
+{
 
     // A top-level sizer
     wxBoxSizer* top_sizer = new wxBoxSizer(wxVERTICAL);
     this->SetSizer(top_sizer);
-    
+
     // A second box sizer to give more space around the controls
     wxBoxSizer* box_sizer = new wxBoxSizer(wxVERTICAL);
     top_sizer->Add(box_sizer, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
@@ -381,13 +381,13 @@ void PositionDialog::CreateControls()
        wxT("&Black to move"), wxDefaultPosition, wxDefaultSize, 0 );
     white_to_move->SetValue( m_pos.white );
     black_to_move->SetValue( !m_pos.white );
-  
+
     // Move count
     wxBoxSizer* move_count_sizer  = new wxBoxSizer(wxHORIZONTAL);
     wxStaticText* move_count_label = new wxStaticText ( this, wxID_STATIC,
         wxT("&Move count"), wxDefaultPosition, wxDefaultSize, 0 );
     move_count_ctrl = new wxSpinCtrl ( this, ID_MOVE_COUNT,
-        wxEmptyString, wxDefaultPosition, wxSize(50, wxDefaultCoord), //wxDefaultSize, 
+        wxEmptyString, wxDefaultPosition, wxSize(50, wxDefaultCoord), //wxDefaultSize,
         wxSP_ARROW_KEYS, 1, 500, m_pos.full_move_count );
     move_count_sizer->Add(move_count_label, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     move_count_sizer->Add(92, 5, 1, wxALL, 0);
@@ -395,18 +395,18 @@ void PositionDialog::CreateControls()
 /*  itemSizer2->Add(new wxStaticText(this, wxID_ANY, _("&Window:")), 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     itemSizer2->Add(5, 5, 1, wxALL, 0);
     itemSizer2->Add(choice2, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5); */
-  
+
     // Half moves since pawn move or capture
     wxBoxSizer* half_count_sizer  = new wxBoxSizer(wxHORIZONTAL);
     wxStaticText* half_count_label = new wxStaticText ( this, wxID_STATIC,
         wxT("50 move rule count"), wxDefaultPosition, wxDefaultSize, 0 );
     half_count_ctrl = new wxSpinCtrl ( this, ID_HALF_COUNT,
-        wxEmptyString, wxDefaultPosition, wxSize(50, wxDefaultCoord), //wxDefaultSize, 
+        wxEmptyString, wxDefaultPosition, wxSize(50, wxDefaultCoord), //wxDefaultSize,
         wxSP_ARROW_KEYS, 0, 100, m_pos.half_move_clock );
     half_count_sizer->Add(half_count_label, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     half_count_sizer->Add(57, 5, 1, wxALL, 0);
     half_count_sizer->Add(half_count_ctrl,  0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
-  
+
     // En passant target file
     wxBoxSizer* en_passant_sizer  = new wxBoxSizer(wxHORIZONTAL);
     wxStaticText* en_passant_label = new wxStaticText ( this, wxID_STATIC,
@@ -435,7 +435,7 @@ void PositionDialog::CreateControls()
     en_passant_sizer->Add(en_passant_label, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     en_passant_sizer->Add(44, 5, 1, wxALL, 0);
     en_passant_sizer->Add(en_passant_ctrl,  0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
-   
+
     castling_box->Add( white_oo, 0,
         wxALL, 5);
     castling_box->Add( white_ooo, 0,
@@ -450,7 +450,7 @@ void PositionDialog::CreateControls()
     who_box->Add( black_to_move, 0,
         wxALL, 5);
 
-    details_box->Add(move_count_sizer, 
+    details_box->Add(move_count_sizer,
         wxALIGN_LEFT|wxGROW | (wxALL/* & ~wxLEFT */), 5);
         //wxALL, 5);
     details_box->Add(half_count_sizer,
@@ -656,7 +656,7 @@ void PositionDialog::OnChess960Click( wxCommandEvent& WXUNUSED(event) )
 
     // Light squared bishop, one of 4 squares
     int x = rand();
-    int idx = (x%4)*2;                  // 0,2,4 or 6     
+    int idx = (x%4)*2;                  // 0,2,4 or 6
     tmp.squares[idx]       = 'b';
     tmp.squares[idx + 7*8] = 'B';
 
@@ -667,7 +667,7 @@ void PositionDialog::OnChess960Click( wxCommandEvent& WXUNUSED(event) )
     tmp.squares[idx + 7*8] = 'B';
 
     // Queen, one of 6 remaining squares
-    x = rand();                         
+    x = rand();
     idx = (x%6);
     for( int i=0; i<8; i++ )
     {
@@ -683,9 +683,9 @@ void PositionDialog::OnChess960Click( wxCommandEvent& WXUNUSED(event) )
             }
         }
     }
-            
+
     // 1st knight, one of 5 remaining squares
-    x = rand();                         
+    x = rand();
     idx = (x%5);
     for( int i=0; i<8; i++ )
     {
@@ -701,9 +701,9 @@ void PositionDialog::OnChess960Click( wxCommandEvent& WXUNUSED(event) )
             }
         }
     }
-            
+
     // 2nd knight, one of 4 remaining squares
-    x = rand();                         
+    x = rand();
     idx = (x%4);
     for( int i=0; i<8; i++ )
     {
@@ -719,7 +719,7 @@ void PositionDialog::OnChess960Click( wxCommandEvent& WXUNUSED(event) )
             }
         }
     }
-            
+
     // Remaining squares - fill with 'r', 'k', 'r'
     idx = 0;
     for( int i=0; i<8; i++ )
@@ -845,7 +845,7 @@ void PositionDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
             char forsyth[128];
             strcpy( forsyth, cr.ForsythPublish().c_str() );
             fen = forsyth;
-            TransferDataToWindow();    
+            TransferDataToWindow();
         }
     }
     if( !err )
@@ -951,8 +951,8 @@ void PositionDialog::ModifyFen()
     m_pos.bqueen = this->black_ooo->GetValue();
     m_pos.bking  = this->black_oo->GetValue();
 
-    m_pos.full_move_count = move_count_ctrl->GetValue();    
-    m_pos.half_move_clock = half_count_ctrl->GetValue();    
+    m_pos.full_move_count = move_count_ctrl->GetValue();
+    m_pos.half_move_clock = half_count_ctrl->GetValue();
     m_pos.white  = !black_to_move->GetValue();
     m_pos.wqueen = this->white_ooo->GetValue();
     m_pos.wking  = this->white_oo->GetValue();

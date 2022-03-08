@@ -36,7 +36,7 @@ static void FileConflictError( const wxString &msg,  bool unconditional=false );
 static void FileConflictError( bool unconditional=false )
 {
     wxString default_msg =
-        "Error: An external program may have modified a PGN file or files Tarrasch is using.\n" 
+        "Error: An external program may have modified a PGN file or files Tarrasch is using.\n"
         "Please save any work in progress to a fresh file and restart Tarrasch (i.e. shut it down and and start it again).\n";
     FileConflictError( default_msg, unconditional );
 }
@@ -114,14 +114,14 @@ bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen )
             if( tagline )
             {
                 tagline = false;  // unless all checks pass
-                
+
                 // Skip '['
                 p++;
-                
+
                 // Skip whitespace
                 while( *p==' ' || *p=='\t' )
                     p++;
-                
+
                 // Is there a tag before a leading " ?
                 bool tag=false;
                 while( *p && *p!=']' && *p!=' ' && *p!='\t' && *p!='\"' )
@@ -131,7 +131,7 @@ bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen )
                 }
                 if( tag )
                 {
-                    
+
                     // Make sure there is whitespace, but skip it
                     tag = false;
                     while( *p==' ' || *p=='\t' )
@@ -140,16 +140,16 @@ bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen )
                         p++;
                     }
                 }
-                
+
                 // If there is a tag, then whitespace, then a leading "
                 if( tag && *p=='\"')
                 {
                     p++;
-                    
+
                     // Skip to 2nd " or end of string
                     while( *p && *p!='\"' )
                         p++;
-                    
+
                     // If we have a 2nd " then we have a tag and a val, i.e. a header
                     if( *p == '\"' )
                     {
@@ -294,17 +294,17 @@ void pgn_read_hook( const char *fen, const char *white, const char *black, const
 
 void *ReadGameFromPgnInLoop( int pgn_handle, long fposn, CompactGame &pact, void *context, bool end )
 {
-	static int new_count;
+    static int new_count;
     static FILE *pgn_file;
     static int save_pgn_handle;
     PgnRead *pgn;
     if( context )
         pgn = static_cast<PgnRead*>( context );
     else
-	{
-        pgn = new PgnRead('R'); 
-		cprintf( "new count = %d\n", ++new_count );
-	}
+    {
+        pgn = new PgnRead('R');
+        cprintf( "new count = %d\n", ++new_count );
+    }
     if( pgn_file && pgn_handle!=save_pgn_handle )
     {
         objs.gl->pf.Close();
@@ -335,7 +335,7 @@ void *ReadGameFromPgnInLoop( int pgn_handle, long fposn, CompactGame &pact, void
         pgn_file = NULL;
         save_pgn_handle = 0;
         delete pgn;
-		cprintf( "new count = %d\n", --new_count );
+        cprintf( "new count = %d\n", --new_count );
         pgn = 0;
     }
     //cprintf( "ReadGameFromPgnInLoop(%d,%s) %ld (%s-%s)\n", pgn_handle, end?"true":"false", fposn, pact.r.white.c_str(), pact.r.black.c_str() );
@@ -379,8 +379,8 @@ void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &new_doc )
             case 'P':
             case 'p':
             {
-				gd.prefix_txt += std::string(buf);
-				//gd.prefix_txt += '\n';
+                gd.prefix_txt += std::string(buf);
+                //gd.prefix_txt += '\n';
                 break;
             }
             case 'M':
@@ -453,7 +453,7 @@ bool GamesCache::Tagline( GameDocument &gd,  const char *s )
             s++;
 
         // If we have a 2nd " then we have a tag and a val, i.e. a header
-        if( *s == '\"' )        
+        if( *s == '\"' )
         {
             is_header = true;
             val_end = s;
@@ -504,8 +504,8 @@ void GamesCache::FileCreate( std::string &filename )
     {
         loaded = true;
         pgn_filename = filename;
-		wxString wx_filename(filename.c_str());
-		objs.gl->mru.AddFileToHistory( wx_filename );
+        wxString wx_filename(filename.c_str());
+        objs.gl->mru.AddFileToHistory( wx_filename );
         FileSaveInner( pgn_out );
         objs.gl->pf.Close();    // close all handles
     }
@@ -541,8 +541,8 @@ void GamesCache::FileSaveAs( std::string &filename, GamesCache *gc_clipboard )
     else
     {
         pgn_filename = filename;
-		wxString wx_filename(filename.c_str());
-		objs.gl->mru.AddFileToHistory( wx_filename );
+        wxString wx_filename(filename.c_str());
+        objs.gl->mru.AddFileToHistory( wx_filename );
         FileSaveInner( pgn_out );
         objs.gl->pf.Close( gc_clipboard );    // close all handles
     }
@@ -586,13 +586,13 @@ bool GamesCache::TestGameInCache( const GameDocument &gd )
 void GamesCache::FileSaveInner( FILE *pgn_out )
 {
     char *buf;
-	GameDocument gd_temp;
+    GameDocument gd_temp;
     int buflen=100;
     file_irrevocably_modified = false;
     buf = new char [buflen];
     int gds_nbr = gds.size();
     long write_posn=0;
-	bool saving_work_file = (this==&objs.gl->gc_pgn);
+    bool saving_work_file = (this==&objs.gl->gc_pgn);
     int nbr_locked=0, nbr_game_documents=0, nbr_emergency_games_written=0;
     int nbr_unavailable_games=0, nbr_unavailable_files=0;
     std::set<int> handles;
@@ -604,8 +604,8 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
             nbr_locked++;
         if( mptr->IsGameDocument() && !mptr->IsGameDocument()->IsEmpty() )
             nbr_game_documents++;
-		int pgn_handle2;
-		bool is_pgn = mptr->GetPgnHandle(pgn_handle2);
+        int pgn_handle2;
+        bool is_pgn = mptr->GetPgnHandle(pgn_handle2);
         if( is_pgn )
             handles.insert(pgn_handle2);
     }
@@ -657,9 +657,9 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
         }
         count_to_expected_total_games++;
         mptr->saved = true;
-		int pgn_handle2;
-		bool is_pgn = mptr->GetPgnHandle(pgn_handle2);
-		long game_len = 0;
+        int pgn_handle2;
+        bool is_pgn = mptr->GetPgnHandle(pgn_handle2);
+        long game_len = 0;
         if( is_pgn )
         {
 
@@ -696,33 +696,33 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
                 }
             }
         }
-		else
-		{
-			GameDocument *ptr = mptr->IsGameDocument();
-			GameDocument *save_changes_back_to_tab = NULL;
-			if( ptr && saving_work_file )
-			{
-				GameDocument *pd;
-				Undo *pu;
-				int handle = objs.tabs->Iterate(0,pd,pu);
-				while( pd && pu )
-				{
-					if( ptr->game_being_edited!=0 && (ptr->game_being_edited == pd->game_being_edited)  )
-					{
-						*ptr = *pd;
-						if( pu )
-							pu->Clear(*ptr);
-						save_changes_back_to_tab = pd;
-						break;
-					}
-					objs.tabs->Iterate(handle,pd,pu);
-				}
-			}
+        else
+        {
+            GameDocument *ptr = mptr->IsGameDocument();
+            GameDocument *save_changes_back_to_tab = NULL;
+            if( ptr && saving_work_file )
+            {
+                GameDocument *pd;
+                Undo *pu;
+                int handle = objs.tabs->Iterate(0,pd,pu);
+                while( pd && pu )
+                {
+                    if( ptr->game_being_edited!=0 && (ptr->game_being_edited == pd->game_being_edited)  )
+                    {
+                        *ptr = *pd;
+                        if( pu )
+                            pu->Clear(*ptr);
+                        save_changes_back_to_tab = pd;
+                        break;
+                    }
+                    objs.tabs->Iterate(handle,pd,pu);
+                }
+            }
             if( !ptr )
-			{
-				mptr->ConvertToGameDocument(gd_temp);
-				ptr = &gd_temp;
-			}
+            {
+                mptr->ConvertToGameDocument(gd_temp);
+                ptr = &gd_temp;
+            }
 
             ptr->modified = false;
             ptr->game_prefix_edited = false;
@@ -763,8 +763,8 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
             fwrite(str.c_str(),1,str.length(),pgn_out);
             game_len += str.length();
             ptr->fposn3 = write_posn + game_len;
-			if( save_changes_back_to_tab )
-				*save_changes_back_to_tab = *ptr;
+            if( save_changes_back_to_tab )
+                *save_changes_back_to_tab = *ptr;
         }
         write_posn += game_len;
     }
@@ -776,14 +776,14 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
         {
             msg.sprintf( "These games are from a database that does not allow unrestricted export to PGN\n"
                 "%d %s written to PGN\n"
-                "%d %s omitted\n", count_to_limit, count_to_limit==1?"game was":"games were", 
+                "%d %s omitted\n", count_to_limit, count_to_limit==1?"game was":"games were",
                                         nbr_omitted, nbr_omitted==1?"game was":"games were" );
         }
         else
         {
             msg.sprintf( "Some games were from a database that does not allow unrestricted export to PGN\n"
                 "%d such %s written to PGN\n"
-                "%d such %s omitted\n", count_to_limit, count_to_limit==1?"game was":"games were", 
+                "%d such %s omitted\n", count_to_limit, count_to_limit==1?"game was":"games were",
                                         nbr_omitted, nbr_omitted==1?"game was":"games were" );
         }
         wxMessageBox( msg, "Some games omitted from saved file\n", wxOK|wxICON_WARNING );
@@ -795,8 +795,8 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
         for( int i=0; i<gds_nbr && nbr_game_documents>0; i++ )
         {
             ListableGame *mptr = gds[i].get();
-		    int pgn_handle2;
-    		bool is_pgn = mptr->GetPgnHandle(pgn_handle2);
+            int pgn_handle2;
+            bool is_pgn = mptr->GetPgnHandle(pgn_handle2);
             if( is_pgn && unavailable_handles.find(pgn_handle2) != unavailable_handles.end() )
                 nbr_unavailable_games++;
             if( mptr->IsGameDocument() && !mptr->IsGameDocument()->IsEmpty() )
@@ -817,7 +817,7 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
             wxString msg;
             if( nbr_game_documents + nbr_unavailable_games >= gds_nbr )
             {
-                msg.sprintf( "Error: An external program may have modified a PGN file or files Tarrasch is using.\n" 
+                msg.sprintf( "Error: An external program may have modified a PGN file or files Tarrasch is using.\n"
                 "To try to avoid losing your work %d %s added to file %s.\n"
                 "Please save any other work in progress to a fresh file and restart Tarrasch (i.e. shut it down and and start it again).\n",
                     nbr_game_documents, nbr_game_documents>1 ?"games were":"game was", filename_used
@@ -866,7 +866,7 @@ static void PgnNameCommaGroom( std::string &name )
                 lower_surname.push_back(c);
             }
             if( lower_surname.substr(0,3) != "van" )
-            { 
+            {
                 size_t last_space = name.find_last_of(" ");
                 if( last_space != std::string::npos )
                 {
@@ -900,11 +900,11 @@ void GamesCache::Eco(  GamesCache *UNUSED(gc_clipboard) )
                 mptr->SetRoster(pact.r);
             else
             {
-        		GameDocument temp;
-		        mptr->ConvertToGameDocument(temp);
+                GameDocument temp;
+                mptr->ConvertToGameDocument(temp);
                 temp.SetRoster(pact.r);
-			    make_smart_ptr(GameDocument, new_smart_ptr, temp);
-			    gds[i] = std::move(new_smart_ptr);
+                make_smart_ptr(GameDocument, new_smart_ptr, temp);
+                gds[i] = std::move(new_smart_ptr);
             }
         }
     }
@@ -988,12 +988,12 @@ void GamesCache::Publish()
     wxFileDialog fd( objs.frame, "Publish to .html file", "", mdname.c_str(), "*.html", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
 #else
     bool markdown=true;
-    std::string mdname = basename + ".md";    
+    std::string mdname = basename + ".md";
     wxFileDialog fd( objs.frame, "Publish to .md markdown file", "", mdname.c_str(), "*.md", wxFD_SAVE|wxFD_OVERWRITE_PROMPT );
 #endif
     wxString dir = objs.repository->nv.m_doc_dir;
     fd.SetDirectory(dir);
-	DialogDetect detect;		// an instance of DialogDetect as a local variable allows tracking of open dialogs
+    DialogDetect detect;        // an instance of DialogDetect as a local variable allows tracking of open dialogs
     int answer = fd.ShowModal();
     if( answer == wxID_OK)
     {
@@ -1003,7 +1003,7 @@ void GamesCache::Publish()
         wxString wx_filename = fd.GetPath();
         FILE *md_out = fopen( wx_filename.c_str(), "wb" );
         if( md_out )
-        {        
+        {
             if( !markdown )
             {
                 std::string html_intro = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n"
@@ -1021,188 +1021,188 @@ void GamesCache::Publish()
                 "<div id=\"content\">\n";
                 fwrite( html_intro.c_str(), 1, html_intro.length(), md_out );
             }
-            
+
             int gds_nbr = gds.size();
 
             // For each game
             int diagram_base = 0;
             int mv_base = 0;
             int neg_base = -2;
-			for( int i=0; i<gds_nbr; i++ )
-			{
-				GameDocument gd;
-				gds[i]->ConvertToGameDocument(gd);
-				thc::ChessPosition tmp;
+            for( int i=0; i<gds_nbr; i++ )
+            {
+                GameDocument gd;
+                gds[i]->ConvertToGameDocument(gd);
+                thc::ChessPosition tmp;
 
-				int publish_options = 0;
-				bool skip_intro = false;
-				bool skip_game = false;
-				std::string white = gd.r.white;
-				std::string black = gd.r.black;
-				std::string t = black;
-				std::string options = "";
-				bool white_only = (white != "" && white != "?") && (black == "" || black == "?");
-				if (!white_only && t[0] == '@')
-				{
-					size_t at2;
-					at2 = t.substr(1).find('@');
-					if (at2 != std::string::npos)
-					{
-						options = t.substr(0, at2 + 1);
-						black = t.substr(at2 + 2);
-					}
-				}
+                int publish_options = 0;
+                bool skip_intro = false;
+                bool skip_game = false;
+                std::string white = gd.r.white;
+                std::string black = gd.r.black;
+                std::string t = black;
+                std::string options = "";
+                bool white_only = (white != "" && white != "?") && (black == "" || black == "?");
+                if (!white_only && t[0] == '@')
+                {
+                    size_t at2;
+                    at2 = t.substr(1).find('@');
+                    if (at2 != std::string::npos)
+                    {
+                        options = t.substr(0, at2 + 1);
+                        black = t.substr(at2 + 2);
+                    }
+                }
 
-				bool heading_1 = (std::string::npos != options.find('1'));
-				bool heading_2 = (std::string::npos != options.find('2'));
-				bool suppress_move = (std::string::npos != options.find('N'));
-				bool heading = (heading_1 || heading_2 || white_only);
-				bool join = (std::string::npos != options.find('J'));
-				if (join)
-				{
-					white = white + " " + black;
-					black = "";
-				}
+                bool heading_1 = (std::string::npos != options.find('1'));
+                bool heading_2 = (std::string::npos != options.find('2'));
+                bool suppress_move = (std::string::npos != options.find('N'));
+                bool heading = (heading_1 || heading_2 || white_only);
+                bool join = (std::string::npos != options.find('J'));
+                if (join)
+                {
+                    white = white + " " + black;
+                    black = "";
+                }
 
 #ifdef NOMARKDOWN
-				//<h1>Introduction</h1>
-				//<p>Sorry, this was rushed out, I may have time to embellish these brief highlights later. </p>
-				//<h3>Russell Dive - Scott Wastney, Julian Mazur Memorial 2012</h3>
-				std::string s = "";
-				std::string pre = gd.prefix_txt;
-				if (pre.size() > 0 && pre[0] == '#')
-				{
-					size_t off1 = pre.find_first_not_of("#");
-					size_t off2 = pre.find('\n');
-					if (off1 != std::string::npos && off2 != std::string::npos
-						&& off2 > off1)
-					{
-						s += "<h1>";
-						s += pre.substr(off1, off2 - off1);
-						s += "</h1>\n";
-						pre = pre.substr(off2);
-					}
-				}
-				s += "<p>";
-				s += pre;
-				s += "</p>\n";
-				if (heading)
-				{
-					skip_intro = true;
-					if (heading_1)
-						s = "<h1>" + white + "</h1>";
-					else
-						s = "<h2>" + white + "</h2>";
-					s += "\n";
-					publish_options |= GameView::SUPPRESS_NULL_MOVE;
-					publish_options |= GameView::SUPPRESS_VARIATION_PARENS;
-				}
+                //<h1>Introduction</h1>
+                //<p>Sorry, this was rushed out, I may have time to embellish these brief highlights later. </p>
+                //<h3>Russell Dive - Scott Wastney, Julian Mazur Memorial 2012</h3>
+                std::string s = "";
+                std::string pre = gd.prefix_txt;
+                if (pre.size() > 0 && pre[0] == '#')
+                {
+                    size_t off1 = pre.find_first_not_of("#");
+                    size_t off2 = pre.find('\n');
+                    if (off1 != std::string::npos && off2 != std::string::npos
+                        && off2 > off1)
+                    {
+                        s += "<h1>";
+                        s += pre.substr(off1, off2 - off1);
+                        s += "</h1>\n";
+                        pre = pre.substr(off2);
+                    }
+                }
+                s += "<p>";
+                s += pre;
+                s += "</p>\n";
+                if (heading)
+                {
+                    skip_intro = true;
+                    if (heading_1)
+                        s = "<h1>" + white + "</h1>";
+                    else
+                        s = "<h2>" + white + "</h2>";
+                    s += "\n";
+                    publish_options |= GameView::SUPPRESS_NULL_MOVE;
+                    publish_options |= GameView::SUPPRESS_VARIATION_PARENS;
+                }
 #else
-				// Write prefix
-				std::string s = gd.prefix_txt;
-				if (heading)
-				{
-					skip_intro = true;
-					if (heading_1)
-						s = "#" + white;
-					else
-						s = "##" + white;
-					s += "\r";
-					publish_options |= GameView::SUPPRESS_NULL_MOVE;
-					publish_options |= GameView::SUPPRESS_VARIATION_PARENS;
-				}
+                // Write prefix
+                std::string s = gd.prefix_txt;
+                if (heading)
+                {
+                    skip_intro = true;
+                    if (heading_1)
+                        s = "#" + white;
+                    else
+                        s = "##" + white;
+                    s += "\r";
+                    publish_options |= GameView::SUPPRESS_NULL_MOVE;
+                    publish_options |= GameView::SUPPRESS_VARIATION_PARENS;
+                }
 #endif
-				if (suppress_move)
-					publish_options |= GameView::SUPPRESS_MOVE;
-				const char *tags[] =
-				{
-					"#SkipToDiagram",
-					"#SkipIntro",
-					"#SkipGame"
-				};
-				for (int j = 0; j < nbrof(tags); j++)
-				{
-					for (int k = 0; k < 4; k++)
-					{
-						char buf[80];
-						strcpy(buf, tags[j]);
-						switch (k)
-						{
-						case 0: strcat(buf, ", "); break;
-						case 1: strcat(buf, ",");  break;
-						case 2: strcat(buf, " ");  break;
-						default:
-						case 3: break;
-						}
-						const char *pattern;
-						size_t found;
-						pattern = buf;
-						found = s.find(pattern);
-						if (found != std::string::npos)
-						{
-							s = s.substr(0, found) + s.substr(found + strlen(pattern));
-							switch (j)
-							{
-							case 0: publish_options |= GameView::SKIP_TO_FIRST_DIAGRAM; break;
-							case 1: skip_intro = true;   break;
-							case 2: skip_game = true;   break;
-							}
-							break;
-						}
-					}
-				}
-				int len2 = s.length();
-				if (len2 > 0)
-				{
-					if (i != 0)    // blank line needed before all but first prefix
-						fwrite("\n", 1, 1, md_out);
-					fwrite(s.c_str(), 1, len2, md_out);
-					fwrite("\n", 1, 1, md_out);
-				}
-				if (!skip_game)
-				{
+                if (suppress_move)
+                    publish_options |= GameView::SUPPRESS_MOVE;
+                const char *tags[] =
+                {
+                    "#SkipToDiagram",
+                    "#SkipIntro",
+                    "#SkipGame"
+                };
+                for (int j = 0; j < nbrof(tags); j++)
+                {
+                    for (int k = 0; k < 4; k++)
+                    {
+                        char buf[80];
+                        strcpy(buf, tags[j]);
+                        switch (k)
+                        {
+                        case 0: strcat(buf, ", "); break;
+                        case 1: strcat(buf, ",");  break;
+                        case 2: strcat(buf, " ");  break;
+                        default:
+                        case 3: break;
+                        }
+                        const char *pattern;
+                        size_t found;
+                        pattern = buf;
+                        found = s.find(pattern);
+                        if (found != std::string::npos)
+                        {
+                            s = s.substr(0, found) + s.substr(found + strlen(pattern));
+                            switch (j)
+                            {
+                            case 0: publish_options |= GameView::SKIP_TO_FIRST_DIAGRAM; break;
+                            case 1: skip_intro = true;   break;
+                            case 2: skip_game = true;   break;
+                            }
+                            break;
+                        }
+                    }
+                }
+                int len2 = s.length();
+                if (len2 > 0)
+                {
+                    if (i != 0)    // blank line needed before all but first prefix
+                        fwrite("\n", 1, 1, md_out);
+                    fwrite(s.c_str(), 1, len2, md_out);
+                    fwrite("\n", 1, 1, md_out);
+                }
+                if (!skip_game)
+                {
 
-					if (!skip_intro)
-					{
-						// Write header
-						//gd->ToFileTxtGameDetails( s );
+                    if (!skip_intro)
+                    {
+                        // Write header
+                        //gd->ToFileTxtGameDetails( s );
 
-						s = markdown ? "### " : "<h3>";
-						s += white;
-						s += " - ";
-						s += black;
-						if (gd.r.event.find('?') == std::string::npos)
-						{
-							s += " - ";
-							s += gd.r.event;
-						}
-						std::string year = gd.r.date.substr(0, 4);
-						if (year.find('?') == std::string::npos)
-						{
-							s += " ";
-							s += year;
-						}
-						s += (markdown ? "\n" : "</h3>\n");
-						s += (markdown ? "\n" : "</h3>\n");
-						fwrite(s.c_str(), 1, s.length(), md_out);
-					}
+                        s = markdown ? "### " : "<h3>";
+                        s += white;
+                        s += " - ";
+                        s += black;
+                        if (gd.r.event.find('?') == std::string::npos)
+                        {
+                            s += " - ";
+                            s += gd.r.event;
+                        }
+                        std::string year = gd.r.date.substr(0, 4);
+                        if (year.find('?') == std::string::npos)
+                        {
+                            s += " ";
+                            s += year;
+                        }
+                        s += (markdown ? "\n" : "</h3>\n");
+                        s += (markdown ? "\n" : "</h3>\n");
+                        fwrite(s.c_str(), 1, s.length(), md_out);
+                    }
 
-					// Write Game body
-					gd.ToPublishTxtGameBody(s, diagram_base, mv_base, neg_base, publish_options);
-					fwrite(s.c_str(), 1, s.length(), md_out);
-				}
+                    // Write Game body
+                    gd.ToPublishTxtGameBody(s, diagram_base, mv_base, neg_base, publish_options);
+                    fwrite(s.c_str(), 1, s.length(), md_out);
+                }
 
-				if( i+1 == gds_nbr )
-					fwrite("<br/>\n", 1, 6, md_out);
-				else
-					fwrite("\n", 1, 1, md_out);
-				if( !markdown && i+1 == gds_nbr )
-				{
-					fwrite("</div>\n"
-						"</body>\n"
-						"</html>\n", 1, 23, md_out);
-				}
-			}
+                if( i+1 == gds_nbr )
+                    fwrite("<br/>\n", 1, 6, md_out);
+                else
+                    fwrite("\n", 1, 1, md_out);
+                if( !markdown && i+1 == gds_nbr )
+                {
+                    fwrite("</div>\n"
+                        "</body>\n"
+                        "</html>\n", 1, 23, md_out);
+                }
+            }
             fclose( md_out );
         }
     }
