@@ -77,6 +77,10 @@ level directory;
 - wx-config --version
   - (should return 3.0.4)
  
+- MacOS 12 users can do this is one go after installing MacPorts
+- sudo port install wxgtk-3.0
+- wx-config --version
+  - (should return 3.0.5)
  
 ## Building Tarrasch on Linux (Ubuntu 18.04)
 
