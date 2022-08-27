@@ -121,7 +121,7 @@ bool hook_gameover( char callback_code, const char *fen, const char *event, cons
     {
         // Great players database
         case 'G': players_database( event, site, date, round, white, black, result, white_elo, black_elo, eco, nbr_moves, moves, hashes );  break;
-            
+
         // Binary database append
         case 'B': bin_db_append( fen, event, site, date, round, white, black, result, white_elo, black_elo, eco, nbr_moves, moves );  break;
 
@@ -709,7 +709,7 @@ static int candidate( bool &warning, const char *name )
     char second_character = '\0';
 
     // No initial ?
-    if( c != ',' )  
+    if( c != ',' )
     {
         q--;
         i--;
@@ -747,7 +747,7 @@ static int candidate( bool &warning, const char *name )
             if(  0==strcmp(surname,"lasker")  || 0==strcmp(surname,"georgiev") )
                 warning = true;
             if( 0==strcmp(surname,"petrosian")  )
-				return -1;
+                return -1;
         }
         return it->second;
     }
@@ -885,7 +885,7 @@ static void players_database( const char *event, const char *site, const char *d
                     fprintf( logfile, "%s", buf );
                 }
                 int peakw = players[candw].year;
-                if( year-peakw > (players[candw].long_career?50:30) ) 
+                if( year-peakw > (players[candw].long_career?50:30) )
                 {
                     if( players[candw].draws_false_positives )
                         keep = false;
@@ -893,7 +893,7 @@ static void players_database( const char *event, const char *site, const char *d
                     cprintf( "%s", buf );
                     fprintf( logfile, "%s", buf );
                 }
-                if( peakw-year > (players[candw].long_career?30:20) ) 
+                if( peakw-year > (players[candw].long_career?30:20) )
                 {
                     if( players[candw].draws_false_positives )
                         keep = false;
@@ -905,7 +905,7 @@ static void players_database( const char *event, const char *site, const char *d
             if( keep )
             {
                 int peakb = players[candb].year;
-                if( year-peakb > (players[candb].long_career?50:30) ) 
+                if( year-peakb > (players[candb].long_career?50:30) )
                 {
                     if( players[candb].draws_false_positives )
                         keep = false;
@@ -914,7 +914,7 @@ static void players_database( const char *event, const char *site, const char *d
                     fprintf( logfile, "%s", buf );
                 }
                 if( peakb-year > (players[candb].long_career?30:20) )
-                { 
+                {
                     if( players[candb].draws_false_positives )
                         keep = false;
                     sprintf( buf, "%s(%d) in %d %s > %s-%s\n", players[candb].full, players[candb].year, year, keep? "too young?":"definitely too young rejected", white, black );
@@ -972,7 +972,7 @@ static void players_database( const char *event, const char *site, const char *d
                         int col_end_of_next_word = col+1;
                         while( *t!=' ' && *t!='\0' )
                         {
-                            col_end_of_next_word++;    
+                            col_end_of_next_word++;
                             t++;
                         }
                         if( col_end_of_next_word > 81 )

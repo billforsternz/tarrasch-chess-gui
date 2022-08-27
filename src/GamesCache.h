@@ -10,7 +10,7 @@
 
 
 class GamesCache
-{    
+{
 public:
     std::vector< smart_ptr<ListableGame> >  gds;
     std::vector<int>           col_flags;
@@ -32,7 +32,7 @@ public:
     void Publish();
     void Eco( GamesCache *gc_clipboard );
     bool IsLoaded();
-	bool TestGameInCache( const GameDocument &gd );
+    bool TestGameInCache( const GameDocument &gd );
 
 
     // Helpers

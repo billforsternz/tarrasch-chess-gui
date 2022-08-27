@@ -116,7 +116,7 @@ CompressedXpmProcessor::CompressedXpmProcessor( const CompressedXpm *encoded )
 
     */
 
-    // Calculate storage requirements    
+    // Calculate storage requirements
     int nbr_colours = 1 /*background*/ + encoded->nbr_other_colours;
     if( encoded->kludge_idx != -1 )
         nbr_colours++;
@@ -151,21 +151,21 @@ CompressedXpmProcessor::CompressedXpmProcessor( const CompressedXpm *encoded )
     {
         if( i == encoded->kludge_idx )
         {
-            sprintf( s, "%c c #%06x", proxy, 0xffffff & encoded->kludge_colour ); 
+            sprintf( s, "%c c #%06x", proxy, 0xffffff & encoded->kludge_colour );
             xpm[line_idx++] = s;
             s += (strlen(s) + 1);
             proxy_kludge = proxy;
             proxy++;
             while( proxy == '\'' || proxy=='\"' )
-                proxy++; 
+                proxy++;
         }
-        sprintf( s, "%c c #%06x", proxy, 0xffffff & encoded->other_colours[i] ); 
+        sprintf( s, "%c c #%06x", proxy, 0xffffff & encoded->other_colours[i] );
         xpm[line_idx++] = s;
         s += (strlen(s) + 1);
         proxy_colours[i] = proxy;
         proxy++;
         while( proxy == '\'' || proxy=='\"' )
-            proxy++; 
+            proxy++;
     }
 
     int len = encoded->binary_len;
@@ -264,7 +264,7 @@ CompressedXpmProcessor::CompressedXpmProcessor( const CompressedXpm *encoded )
                 {
                     buf[i] = proxy_colours[dat&0x0f];
                     if( i+1 == n )
-                    {        
+                    {
                         src++;
                         len--;
                     }

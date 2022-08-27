@@ -32,10 +32,10 @@ public:
     void Paste();
     void Cut();
     void Delete();
-	void SetFontSize();
+    void SetFontSize();
 
 private:
-	void OnProcessCustom(wxCommandEvent& event);
+    void OnProcessCustom(wxCommandEvent& event);
     void OnMouseMove( wxMouseEvent& event );
     void OnMouseLeftUp( wxMouseEvent &event );
     void OnMouseLeftDown( wxMouseEvent &event );

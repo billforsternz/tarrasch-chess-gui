@@ -109,19 +109,19 @@ wxSizer *PgnDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
                                                     wxDefaultPosition, wxDefaultSize, 0 );
         gdr.RegisterPanelWindow( edit_game_details );
         vsiz_panel_buttons->Add(edit_game_details, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-        
+
         // Paste game / Board->Game
         wxButton* board2game = new wxButton ( this, ID_BOARD2GAME, wxT("Paste current game"),
                                              wxDefaultPosition, wxDefaultSize, 0 );
         gdr.RegisterPanelWindow( board2game );
         vsiz_panel_buttons->Add(board2game, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-        
+
         // Delete
         wxButton* delete_ = new wxButton ( this, wxID_DELETE, wxT("Delete"),
                                           wxDefaultPosition, wxDefaultSize, 0 );
         gdr.RegisterPanelWindow( delete_ );
         vsiz_panel_buttons->Add(delete_, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-        
+
     }
     else if( id == ID_PGN_DIALOG_SESSION )
     {
@@ -130,13 +130,13 @@ wxSizer *PgnDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
                                       wxDefaultPosition, wxDefaultSize, 0 );
         gdr.RegisterPanelWindow( add );
         vsiz_panel_buttons->Add(add, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-        
+
         // Copy
         wxButton* copy = new wxButton ( this, wxID_COPY, wxT("Copy"),
                                        wxDefaultPosition, wxDefaultSize, 0 );
         gdr.RegisterPanelWindow( copy );
         vsiz_panel_buttons->Add(copy, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-        
+
     }
     return vsiz_panel_buttons;
 }
@@ -206,12 +206,12 @@ void PgnDialog::GdvHelpClick()
     "\n\n"
     "You can sort on any column. The first column (column '#') is provided only to allow "
     "a sort on initial order (for restoring or reversing the initial order). To reverse "
-	"sort click twice. The moves column sort is statistical (most popular lines first) "
-	"rather than alphabetical. Sort history is respected in tie breaks. For example, if you "
-	"sort on Moves, then on Black, then on White; The games will be sorted by White "
-	"player, but all opponents will be grouped together (because of the earlier sort on Black), "
-	"and if there are multiple games between the same players, the games will be sorted according "
-	"to the most common opening sequences between those two players (because of the earlier sort on Moves)."
+    "sort click twice. The moves column sort is statistical (most popular lines first) "
+    "rather than alphabetical. Sort history is respected in tie breaks. For example, if you "
+    "sort on Moves, then on Black, then on White; The games will be sorted by White "
+    "player, but all opponents will be grouped together (because of the earlier sort on Black), "
+    "and if there are multiple games between the same players, the games will be sorted according "
+    "to the most common opening sequences between those two players (because of the earlier sort on Moves)."
     "\n\n"
     "Two special features are provided at the moment. ECO calculates ECO codes for games "
     "which do not have them yet."
@@ -229,12 +229,12 @@ void PgnDialog::GdvHelpClick()
     "\n\n"
     "You can sort on any column. The first column (column '#') is provided only to allow "
     "a sort on initial order (for restoring or reversing the initial order). To reverse "
-	"sort click twice. The moves column sort is statistical (most popular lines first) "
-	"rather than alphabetical. Sort history is respected in tie breaks. For example, if you "
-	"sort on Moves, then on Black, then on White; The games will be sorted by White "
-	"player, but all opponents will be grouped together (because of the earlier sort on Black), "
-	"and if there are multiple games between the same players, the games will be sorted according "
-	"to the most common opening sequences between those two players (because of the earlier sort on Moves).";
+    "sort click twice. The moves column sort is statistical (most popular lines first) "
+    "rather than alphabetical. Sort history is respected in tie breaks. For example, if you "
+    "sort on Moves, then on Black, then on White; The games will be sorted by White "
+    "player, but all opponents will be grouped together (because of the earlier sort on Black), "
+    "and if there are multiple games between the same players, the games will be sorted according "
+    "to the most common opening sequences between those two players (because of the earlier sort on Moves).";
 
     else if( id == ID_PGN_DIALOG_SESSION )
         helpText=
@@ -242,12 +242,12 @@ void PgnDialog::GdvHelpClick()
     "\n\n"
     "You can sort on any column. The first column (column '#') is provided only to allow "
     "a sort on initial order (for restoring or reversing the initial order). To reverse "
-	"sort click twice. The moves column sort is statistical (most popular lines first) "
-	"rather than alphabetical. Sort history is respected in tie breaks. For example, if you "
-	"sort on Moves, then on Black, then on White; The games will be sorted by White "
-	"player, but all opponents will be grouped together (because of the earlier sort on Black), "
-	"and if there are multiple games between the same players, the games will be sorted according "
-	"to the most common opening sequences between those two players (because of the earlier sort on Moves).";
+    "sort click twice. The moves column sort is statistical (most popular lines first) "
+    "rather than alphabetical. Sort history is respected in tie breaks. For example, if you "
+    "sort on Moves, then on Black, then on White; The games will be sorted by White "
+    "player, but all opponents will be grouped together (because of the earlier sort on Black), "
+    "and if there are multiple games between the same players, the games will be sorted according "
+    "to the most common opening sequences between those two players (because of the earlier sort on Moves).";
     wxMessageBox(helpText,
     wxT("Games Dialog Help"),
     wxOK|wxICON_INFORMATION, NULL );
@@ -287,7 +287,7 @@ void PgnDialog::GdvListColClick( int compare_col_ )
         end = true; // we don't need to load into memory for column 0
     for( int i=0; !end && i<nbr; i++ )
     {
-        
+
         // If all the games are already in memory, the whole loop will operate here
         if( !context )
             context = gc->gds[i]->LoadIntoMemory( context, i+1 >= nbr );
@@ -330,20 +330,20 @@ bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd )
     int selected_game_ = track->focus_idx;
     if( selected_game_ != -1 )
     {
-		GameDocument *gd_file = gc->gds[selected_game_]->IsGameDocument();
-		if( gd_file )
-			gd = *gd_file;
-		else
-		{
-			gc->gds[selected_game_]->ConvertToGameDocument(gd);
-			make_smart_ptr(GameDocument, new_smart_ptr, gd);
-			gc->gds[selected_game_] = std::move(new_smart_ptr);
-		}
+        GameDocument *gd_file = gc->gds[selected_game_]->IsGameDocument();
+        if( gd_file )
+            gd = *gd_file;
+        else
+        {
+            gc->gds[selected_game_]->ConvertToGameDocument(gd);
+            make_smart_ptr(GameDocument, new_smart_ptr, gd);
+            gc->gds[selected_game_] = std::move(new_smart_ptr);
+        }
 
-		// #Workflow)  Game pulled out of game dialog
-		// if it's the working file dialog establish edit relationship
-		if( gc == &gl->gc_pgn )
-			gl->SetGameBeingEdited( gd, *gc->gds[selected_game_] );
+        // #Workflow)  Game pulled out of game dialog
+        // if it's the working file dialog establish edit relationship
+        if( gc == &gl->gc_pgn )
+            gl->SetGameBeingEdited( gd, *gc->gds[selected_game_] );
         gd.SetNonZeroStartPosition(track->focus_offset);
     }
     return selected_game_ != -1;
@@ -351,6 +351,6 @@ bool PgnDialog::LoadGame( GameLogic *gl, GameDocument& gd )
 
 int PgnDialog::GetSelectedGame( int *offset )
 {
-	*offset = track->focus_offset;
+    *offset = track->focus_offset;
     return track->focus_idx;
 }

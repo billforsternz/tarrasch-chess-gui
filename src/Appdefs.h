@@ -10,7 +10,7 @@
 #include "wx/wx.h"
 #include "Portability.h"
 
-#define MASTER_VERSION_BASE "V3.13b"    //add '-' or '+' prefix between releases
+#define MASTER_VERSION_BASE "V3.13b+"    //add '-' or '+' prefix between releases
 
 //#define USING_TARRASCH_BASE
 // no suffix indicates default .tdb is tarrasch-base
@@ -53,11 +53,11 @@
 #endif
 
 // Conditional compiles
-//#define DURING_DEVELOPMENT		    // If defined we get a console window for cprintf()
-#define AUI_NOTEBOOK				// Define this to get X close boxes on tabs
-//#define NEW_TAB_LAUNCHES_TESTBED	// If defined new tab feature actually launches testbed window instead
+//#define DURING_DEVELOPMENT            // If defined we get a console window for cprintf()
+#define AUI_NOTEBOOK                // Define this to get X close boxes on tabs
+//#define NEW_TAB_LAUNCHES_TESTBED  // If defined new tab feature actually launches testbed window instead
 #ifndef DURING_DEVELOPMENT
-//#undef  NEW_TAB_LAUNCHES_TESTBED	// Never unless during development
+//#undef  NEW_TAB_LAUNCHES_TESTBED  // Never unless during development
 #endif
 
 // Misc
@@ -80,55 +80,55 @@ enum
     ID_FILE_TAB_CLOSE,
     ID_FILE_TAB_INCLUDE,
     ID_CMD_FLIP,
-    ID_CMD_SET_POSITION, 
-    ID_CMD_NEW_GAME,        
-    ID_CMD_TAKEBACK,     
-    ID_CMD_MOVENOW,     
+    ID_CMD_SET_POSITION,
+    ID_CMD_NEW_GAME,
+    ID_CMD_TAKEBACK,
+    ID_CMD_MOVENOW,
     ID_CMD_EXAMINE_GAME,
     ID_CMD_DRAW,
     ID_CMD_WHITE_RESIGNS,
     ID_CMD_BLACK_RESIGNS,
-    ID_CMD_PLAY_WHITE,   
-    ID_CMD_PLAY_BLACK,   
-    ID_CMD_SWAP_SIDES,         
+    ID_CMD_PLAY_WHITE,
+    ID_CMD_PLAY_BLACK,
+    ID_CMD_SWAP_SIDES,
     ID_CMD_KIBITZ,
     ID_CMD_CLEAR_KIBITZ,
     ID_OPTIONS_ENGINE,
-    ID_OPTIONS_PLAYERS, 
+    ID_OPTIONS_PLAYERS,
     ID_OPTIONS_CLOCKS,
     ID_OPTIONS_BOOK,
     ID_OPTIONS_LOG,
     ID_OPTIONS_TRAINING,
     ID_OPTIONS_GENERAL,
-    ID_OPTIONS_RESET,       
-    ID_DATABASE_SEARCH,      
-    ID_DATABASE_SHOW_ALL,    
+    ID_OPTIONS_RESET,
+    ID_DATABASE_SEARCH,
+    ID_DATABASE_SHOW_ALL,
     ID_DATABASE_PLAYERS,
-    ID_DATABASE_SELECT, 
-    ID_DATABASE_CREATE, 
-    ID_DATABASE_APPEND, 
-    ID_DATABASE_PATTERN, 
-    ID_DATABASE_MATERIAL, 
-    ID_DATABASE_MAINTENANCE, 
+    ID_DATABASE_SELECT,
+    ID_DATABASE_CREATE,
+    ID_DATABASE_APPEND,
+    ID_DATABASE_PATTERN,
+    ID_DATABASE_MATERIAL,
+    ID_DATABASE_MAINTENANCE,
     ID_GAMES_CURRENT,
     ID_GAMES_DATABASE,
     ID_GAMES_SESSION,
     ID_GAMES_CLIPBOARD,
     ID_EDIT_GAME_DETAILS,
     ID_EDIT_GAME_PREFIX,
-    ID_EDIT_DELETE_VARIATION,             
-    ID_EDIT_PROMOTE,             
-    ID_EDIT_DEMOTE,              
-    ID_EDIT_DEMOTE_TO_COMMENT,   
+    ID_EDIT_DELETE_VARIATION,
+    ID_EDIT_PROMOTE,
+    ID_EDIT_DEMOTE,
+    ID_EDIT_DEMOTE_TO_COMMENT,
     ID_EDIT_PROMOTE_TO_VARIATION,
     ID_EDIT_PROMOTE_REST_TO_VARIATION,
     ID_HELP_HELP,
     ID_HELP_CREDITS,
-    ID_BUTTON_UP,   
-    ID_BUTTON_DOWN, 
-    ID_BUTTON_LEFT, 
+    ID_BUTTON_UP,
+    ID_BUTTON_DOWN,
+    ID_BUTTON_LEFT,
     ID_BUTTON_RIGHT,
-    ID_CMD_NEXT_GAME, 
+    ID_CMD_NEXT_GAME,
     ID_CMD_PREVIOUS_GAME,
     ID_ANNOT1,
     ID_ANNOT2,
@@ -147,11 +147,11 @@ enum
     ID_ANNOT20,
     ID_COPY_GAME_PGN_TO_CLIPBOARD,
     ID_COPY_FEN_TO_CLIPBOARD,
-	ID_BUTTON_TAB_NEW,
-	ID_STATIC_TXT_PLAYER1,
-	ID_STATIC_TXT_PLAYER2,
-	ID_STATIC_TXT_TIME1,
-	ID_STATIC_TXT_TIME2,
+    ID_BUTTON_TAB_NEW,
+    ID_STATIC_TXT_PLAYER1,
+    ID_STATIC_TXT_PLAYER2,
+    ID_STATIC_TXT_TIME1,
+    ID_STATIC_TXT_TIME2,
     ID_CMD_ABOUT = wxID_ABOUT   // important for possible Mac port that we use this apparently
 };
 
@@ -193,7 +193,7 @@ enum
     ID_PGN_LISTBOX
 };
 
-extern bool gbl_spelling_us;			// True for US spelling
-extern const char *gbl_spell_colour;	// "colour" or "color"
+extern bool gbl_spelling_us;            // True for US spelling
+extern const char *gbl_spell_colour;    // "colour" or "color"
 
 #endif // APPDEFS_H

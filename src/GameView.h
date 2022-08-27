@@ -48,12 +48,12 @@ public:
 
     unsigned long NavigationKey( unsigned long pos, NAVIGATION_KEY nk );
     MoveTree *Locate( unsigned long pos, thc::ChessRules &cr, std::string &title, bool &at_move0 );
-	GAME_MOVE *LocateAtMoveZeroGetLastMove() { return locate_at_move0_last_move; }
+    GAME_MOVE *LocateAtMoveZeroGetLastMove() { return locate_at_move0_last_move; }
     unsigned long FindMove0();
     unsigned long FindEnd();
     bool IsAtEnd( unsigned long pos );
     unsigned long GetMoveOffset( MoveTree *node );
-	void Debug();
+    void Debug();
 
 private:
     enum GAME_VIEW_ELEMENT_TYPE
@@ -65,7 +65,7 @@ private:
         START_OF_VARIATION,
         END_OF_VARIATION,
         NEWLINE,
-        END_OF_GAME 
+        END_OF_GAME
     };
 
     struct GameViewElement
@@ -91,7 +91,7 @@ private:
     std::string result;
     void Crawler( MoveTree *node, bool move0, bool last_move );         // called by Build()
     MoveTree *tree;
-	GAME_MOVE *locate_at_move0_last_move;
+    GAME_MOVE *locate_at_move0_last_move;
     thc::ChessRules start_position;
     thc::ChessRules final_position;
     MoveTree *final_position_node;

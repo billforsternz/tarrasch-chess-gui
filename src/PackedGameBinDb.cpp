@@ -128,7 +128,7 @@ PackedGameBinDb::PackedGameBinDb(
     cb.bb.Write(5,round);                   // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), bb=board(0-1023)
     cb.bb.Write(6,eco);                     // ECO For now 500 codes (9 bits) (A..E)(00..99)
     cb.bb.Write(7,result);                  // Result (2 bits)
-    cb.bb.Write(8,white_elo);               // WhiteElo 12 bits (range 0..4095)                                                                 
+    cb.bb.Write(8,white_elo);               // WhiteElo 12 bits (range 0..4095)
     cb.bb.Write(9,black_elo);               // BlackElo
     std::string fields2 = std::string( cb.bb.GetPtr(), cb.bb.FrozenSize() );
     fields2 += compressed_moves;
@@ -185,9 +185,9 @@ void PackedGameBinDb::Unpack( Roster &r )
     int white_elo = cb->bb.Read(8,&fields[0]);    // WhiteElo 12 bits (range 0..4095)
     int black_elo = cb->bb.Read(9,&fields[0]);    // BlackElo 12 bits (range 0..4095)
     std::string sdate;
-    std::string sround;  
-    std::string seco;    
-    std::string sresult; 
+    std::string sround;
+    std::string seco;
+    std::string sresult;
     Bin2Date  (date,sdate);
     Bin2Round (round,sround);
     Bin2Eco   (eco,seco);

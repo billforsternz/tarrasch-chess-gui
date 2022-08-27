@@ -38,11 +38,11 @@ CtrlChessPositionSetup::CtrlChessPositionSetup
     memset( lockdown, 0, sizeof(lockdown) );
     wxClientDC dc(parent);
     bool normal_orientation = objs.canvas->GetNormalOrientation();
-	wxSize sz_bmp(400,320); //(364,294);
-	cbb.CreateAsBoardSetup( sz_bmp, normal_orientation, cp );
+    wxSize sz_bmp(400,320); //(364,294);
+    cbb.CreateAsBoardSetup( sz_bmp, normal_orientation, cp );
     SetSize( sz_bmp );
     SetCustomCursor( cursor = (normal_orientation?'P':'p') );
-	state = UP_CURSOR_SIDE;
+    state = UP_CURSOR_SIDE;
 }
 
 void CtrlChessPositionSetup::SetState( const char *action, State new_state )
@@ -99,7 +99,7 @@ extern void PositionSetupVeryUglyTemporaryCallback();
 extern void DatabaseSearchVeryUglyTemporaryCallback( int offset );
 void CtrlChessPositionSetup::UpdateBoard()
 {
-	cbb.SetChessPosition(cp,lockdown);
+    cbb.SetChessPosition(cp,lockdown);
     Refresh(false);
     Update();
     if( position_setup )
@@ -113,7 +113,7 @@ void CtrlChessPositionSetup::Set( const thc::ChessPosition &cp_, const bool *loc
     this->cp = cp_;
     if( lockdown_ )
         memcpy(this->lockdown,lockdown_,64);
-	cbb.SetChessPosition(cp,lockdown);
+    cbb.SetChessPosition(cp,lockdown);
     Refresh(false);
     Update();
 }
@@ -299,7 +299,7 @@ void CtrlChessPositionSetup::OnMouseLeftUp( wxMouseEvent& event )
                 int offset = row*8 + col;
                 if( long_clearing_click && offset==wait_offset && movements<5 )
                     ; // don't drop piece onto newly empty square if we haven't
-                      //  moved the cursor after clearing it  
+                      //  moved the cursor after clearing it
                 else
                 {
                     cp.squares[offset] = cursor;
@@ -442,11 +442,11 @@ void CtrlChessPositionSetup::OnMouseCaptureLost( wxMouseCaptureLostEvent& WXUNUS
 void CtrlChessPositionSetup::SetCustomCursor( char piece )
 {
     wxImage img;
-	cbb.GetCustomCursor( piece, img );
+    cbb.GetCustomCursor( piece, img );
     img.SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_X,cbb.dim_pix/2);
     img.SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_Y,cbb.dim_pix/2);
     wxCursor temp(img);
-    SetCursor( temp );    
+    SetCursor( temp );
 }
 
 void CtrlChessPositionSetup::ClearCustomCursor()
@@ -454,14 +454,14 @@ void CtrlChessPositionSetup::ClearCustomCursor()
     SetState( "ClearCustomCursor", UP_IDLE );
     this->cursor = 0;
     wxCursor temp(wxCURSOR_ARROW);
-    SetCursor( temp );    
+    SetCursor( temp );
 }
 
 // Figure out whether a piece or square is pointed to
 bool CtrlChessPositionSetup::HitTest( const wxPoint &point, char &piece, char &file, char &rank )
 {
-	bool hit = cbb.BoardSetupHitTest( point, piece, file, rank );
-	return hit;
+    bool hit = cbb.BoardSetupHitTest( point, piece, file, rank );
+    return hit;
 }
 
 

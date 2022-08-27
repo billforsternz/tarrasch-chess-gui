@@ -15,7 +15,7 @@ using namespace thc;
 MoveTree *MoveTree::Parent( MoveTree *child, thc::ChessRules &cr_out, int &ivar, int &imove )
 {
     MoveTree *found=NULL;
-    if( child != this ) 
+    if( child != this )
     {
         int level=-1;
         bool first = true;
@@ -65,7 +65,7 @@ MoveTree *MoveTree::ParentCrawler( int& level, bool& first, MoveTree *child, thc
                     }
                 }
             }
-        }    
+        }
     }
     level--;
     return found;
@@ -148,7 +148,7 @@ bool MoveTree::FindCrawler( int& level, const MoveTree *target, std::vector<VARI
             }
             stack.pop_back();
             level--;
-        }    
+        }
     }
     return false;
 }
@@ -192,7 +192,7 @@ bool MoveTree::SeekCrawler( int& level, const MoveTree *target, thc::ChessRules 
                             cr.PopMove(var[j].game_move.move);
                 }
             }
-        }    
+        }
     }
     level--;
     return done;
@@ -229,7 +229,7 @@ MoveTree *MoveTree::Promote( MoveTree *child )
 //                         C     C                     1
 //                         C                           2
 //                         C0    C1   [C2]   C3        3=ivar 2=imove  [C2]=child
-//                         B0    B1               
+//                         B0    B1
 //                         C     C                     4
 //       P     P
 //
@@ -237,7 +237,7 @@ MoveTree *MoveTree::Promote( MoveTree *child )
             // Make a copy of the variation to be promoted                           // to_be_promoted
             VARIATION to_be_promoted = parent->variations[ivar];                     //  C0 C1 [C2] C3
                                                                                      //  B0 B1
-            vector<VARIATION>::iterator vpos = parent->variations.begin() + ivar;    //  -> C0 C1 [C2] C3   
+            vector<VARIATION>::iterator vpos = parent->variations.begin() + ivar;    //  -> C0 C1 [C2] C3
                                                                                      //     B0 B1
             // Remove the variation from its current location
             parent->variations.erase(vpos);
@@ -416,7 +416,7 @@ MoveTree *MoveTree::Demote( MoveTree *child )
     }
     return demoted_move;
 }
-        
+
 // Delete the rest of a variation
 void MoveTree::DeleteRestOfVariation( MoveTree *child )
 {

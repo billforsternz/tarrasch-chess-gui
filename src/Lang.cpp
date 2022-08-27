@@ -14,8 +14,8 @@ static const char *known_langs[]=
     "????? (User defined)",
     "KQRNB (English)",
     "KDTSL (German)",
-    "RDTCF (French)",  
-    "RDTCA (Italian)",   
+    "RDTCF (French)",
+    "RDTCA (Italian)",
     "RDTCA (Spanish)",
     "RDTCB (Portuguese)",
     NULL
@@ -76,7 +76,7 @@ void LangOut( std::string &s )
                 case 'B': s[idx+1] = lookup[4];  break;
             }
         }
-    } 
+    }
 }
 
 // Convert move, current language to English

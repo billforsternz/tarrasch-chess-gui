@@ -17,8 +17,8 @@ class CtrlBoxBookMoves : public CtrlBox2
 
 public:
 
-	// Constructor
-	CtrlBoxBookMoves( wxWindow *parent,
+    // Constructor
+    CtrlBoxBookMoves( wxWindow *parent,
                   wxWindowID id,
                   const wxPoint& point,
                   const wxSize& size );

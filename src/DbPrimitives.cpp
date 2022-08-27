@@ -155,7 +155,7 @@ static bool IsDateMatch( const char *date, int yyyy, int mm, int dd )
     bool match = (yyyy == y);   // must match
     if( match )
     {
-        match = (mm==m || mm==0 || m==0);    // if month unspecified still matches 
+        match = (mm==m || mm==0 || m==0);    // if month unspecified still matches
         if( match )
             match = (dd==d || dd==0 || d==0);    // if day unspecified still matches
     }

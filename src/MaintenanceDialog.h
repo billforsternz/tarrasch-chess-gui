@@ -44,9 +44,9 @@ class MaintenanceDialog: public wxDialog
 {
     DECLARE_CLASS( MaintenanceDialog )
     DECLARE_EVENT_TABLE()
-    
+
 public:
-    
+
     // Constructors
     MaintenanceDialog( );
     MaintenanceDialog(
@@ -57,10 +57,10 @@ public:
                  const wxPoint& pos = wxDefaultPosition,
                  const wxSize& size = wxDefaultSize,
                  long style = wxCAPTION|wxRESIZE_BORDER|wxSYSTEM_MENU|wxCLOSE_BOX  );
-    
+
     // Member initialisation
     void Init();
-    
+
     // Creation
     bool Create( wxWindow* parent,
                 wxWindowID id = ID_TEMP_ENGINE_DIALOG,
@@ -68,48 +68,48 @@ public:
                 const wxPoint& pos = wxDefaultPosition,
                 const wxSize& size = wxDefaultSize,
                 long style = wxCAPTION|wxRESIZE_BORDER|wxSYSTEM_MENU|wxCLOSE_BOX );
-    
+
     // Creates the controls and sizers
     void CreateControls();
-    
+
     // Sets the validators for the dialog controls
     void SetDialogValidators();
-    
+
     // Sets the help text for the dialog controls
     void SetDialogHelp();
-    
+
     // MaintenanceDialog event handler declarations
-    
+
     // wxEVT_UPDATE_UI event handler for ID_TEMP_???
     //void On???Update( wxUpdateUIEvent& event );
-    
+
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_TEMP_ENGINE_BROWSE
     //void OnBrowseClick( wxCommandEvent& event );
-    
+
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_1
     void OnMaintenanceSpeed( wxCommandEvent& event );
-    
+
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_4
     void OnMaintenanceVerify( wxCommandEvent& event );
-    
+
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_MAINTENANCE_CMD_5
     void OnMaintenanceCreate( wxCommandEvent& event );
-    
+
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for ID_CREATE_DB_APPEND
     void OnMaintenanceIndexes( wxCommandEvent& event );
-    
+
     // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_HELP
     void OnHelpClick( wxCommandEvent& event );
-    
+
     // ID_TEMP_ENGINE_PICKER
     void OnFilePicked( wxFileDirPickerEvent& event );
-    
+
     // MaintenanceDialog member variables
-    
+
     // Data members
     EngineConfig   dat;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
-	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
+    DialogDetect    detect;     // similarly the presence of this var allows tracking of open dialogs
     wxString pgn_filename;
     int nbr_cpus;
 };

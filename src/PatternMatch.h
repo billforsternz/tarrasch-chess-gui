@@ -114,7 +114,7 @@ struct PatternMatchTarget
 
 // PatternDialog class declaration
 class PatternMatch
-{    
+{
 
 public:
     // Constructor

@@ -55,7 +55,7 @@ void GameClockHalf::GetClock( int &time, int &increment, bool &running_, bool &v
         Stop(false);
     time      = this->millisecs_time/1000;
     increment = this->millisecs_increment/1000;
-    running_  = this->running;             
+    running_  = this->running;
     visible_  = this->visible;
     if( temp )
         Start();
@@ -65,7 +65,7 @@ void GameClockHalf::GetClock( int &time, int &increment, bool &running_, bool &v
 bool GameClockHalf::GetDisplay( wxString &txt, bool expire_show_neg, bool &ticking_  )   // returns bool expired
 {
     bool expired=false;
-	ticking_ = ticking;
+    ticking_ = ticking;
     if( millisecs_time == 0 )
     {
         expired = true;
@@ -79,7 +79,7 @@ bool GameClockHalf::GetDisplay( wxString &txt, bool expire_show_neg, bool &ticki
         int secs = millisecs_time / 1000;
         int mins = secs / 60;
         int remainder_secs = secs % 60;
-        txt.Printf( "%d.%02d", mins, remainder_secs );        
+        txt.Printf( "%d.%02d", mins, remainder_secs );
     }
     return expired;
 }

@@ -36,7 +36,7 @@ END_EVENT_TABLE()
 // Constructor
 PanelBoard::PanelBoard
 (
-    wxWindow *parent, 
+    wxWindow *parent,
     wxWindowID id,
     const wxPoint &point,
     const wxSize &siz
@@ -54,7 +54,7 @@ PanelBoard::PanelBoard
     time_top_red = false;
     time_bottom_red = false;
 
-	who_top     = new wxStaticText(this,wxID_ANY,"B");
+    who_top     = new wxStaticText(this,wxID_ANY,"B");
     who_top->SetFont( *font1 );
     who_bottom  = new wxStaticText(this,wxID_ANY,"W");
     who_bottom->SetFont( *font1 );
@@ -106,8 +106,8 @@ PanelBoard::PanelBoard
     Layout( siz, board );
 
     // Create board
-	bool interactive = true;
-	bool normal_orientation = true;
+    bool interactive = true;
+    bool normal_orientation = true;
     gb = new CtrlChessBoard( interactive, normal_orientation, this,
                             wxID_ANY,
                             wxPoint(board.x,board.y), wxSize(board.width,board.height) );
@@ -116,9 +116,9 @@ PanelBoard::PanelBoard
 
 void PanelBoard::Layout( const wxSize &siz, wxRect &board )
 {
-	m_heading_above_board=false;
-	if( objs.repository )
-		m_heading_above_board = objs.repository->general.m_heading_above_board;
+    m_heading_above_board=false;
+    if( objs.repository )
+        m_heading_above_board = objs.repository->general.m_heading_above_board;
 /*                                 |
                                    v
        +--------------------------------------------+
@@ -153,34 +153,34 @@ void PanelBoard::Layout( const wxSize &siz, wxRect &board )
            = h-t-b  whichever is smaller
 
 */
-	cprintf( "******   m_heading_above_board = %s\n", m_heading_above_board?"true":"false" );
+    cprintf( "******   m_heading_above_board = %s\n", m_heading_above_board?"true":"false" );
     int w = siz.x;
     int h = siz.y;
     wxClientDC dc0(name_top);
     wxCoord txt_width, txt_height, txt_descent, txt_external_leading;
     dc0.GetTextExtent( "Ready", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
     int t1 = 125*(txt_height /*+ txt_descent*/)/100;
-	// Experiments suggest that the descent is information only - no need to add it to height to
-	//  get the actual size - so we made some adjustments to get a bigger chess board into the
-	//  space available, with less white space around the title and player names
+    // Experiments suggest that the descent is information only - no need to add it to height to
+    //  get the actual size - so we made some adjustments to get a bigger chess board into the
+    //  space available, with less white space around the title and player names
     int t1_height = txt_height+1; // /*+ txt_descent*/;
     int board_title_y_offset = t1_height; //100*(txt_height /*+ txt_descent*/)/100;
     wxClientDC dc1(time_top);
     dc1.GetTextExtent( "Player Name", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
     int t2 = txt_height+1; //100*(txt_height /*+ txt_descent*/)/100;
-	if( !m_heading_above_board )
-	{
-		t2++;
-		t1 = t2/3;
-	}
+    if( !m_heading_above_board )
+    {
+        t2++;
+        t1 = t2/3;
+    }
     int t = t1+t2;
     int name_top_y_offset = t2; //100*(txt_height /*+ txt_descent*/)/100;
     board_title_y_offset += name_top_y_offset;
-	cprintf( "t1=%d, t2=%d, t1_height=%d, name_top_y_offset=%d, board_title_y_offset=%d\n",
-								t1, t2, t1_height, name_top_y_offset, board_title_y_offset );
+    cprintf( "t1=%d, t2=%d, t1_height=%d, name_top_y_offset=%d, board_title_y_offset=%d\n",
+                                t1, t2, t1_height, name_top_y_offset, board_title_y_offset );
 
     dc1.GetTextExtent( "120.00", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
-	int time_x_offset = txt_width;
+    int time_x_offset = txt_width;
     wxClientDC dc2(coorda);
     dc2.GetTextExtent( "w", &txt_width, &txt_height, &txt_descent, &txt_external_leading );
     int coord_char_width = txt_width;
@@ -222,8 +222,8 @@ void PanelBoard::Layout( const wxSize &siz, wxRect &board )
     }
 
     // Position of the board
-	if( dim < 15*8 )
-		dim = 15*8;
+    if( dim < 15*8 )
+        dim = 15*8;
     int origin_x = l;
     int origin_y = t;
     int x = origin_x;
@@ -235,23 +235,23 @@ void PanelBoard::Layout( const wxSize &siz, wxRect &board )
 
     // Board title
     wxSize sz;
-	if( !m_heading_above_board )
-	{
-		board_title->SetPosition( wxPoint(x,y) );
-		board_title->SetSize(wxSize(1,1));
-		board_title->Show(false);
-	}
-	else
-	{
-		x = origin_x;
-		y = origin_y - board_title_y_offset;
-		board_title->SetPosition( wxPoint(x,y) );
-		sz = board_title->GetSize();
-		sz.x = dim;
-		sz.y = t1_height;
-		board_title->SetSize(sz);
-		board_title->Show(true);
-	}
+    if( !m_heading_above_board )
+    {
+        board_title->SetPosition( wxPoint(x,y) );
+        board_title->SetSize(wxSize(1,1));
+        board_title->Show(false);
+    }
+    else
+    {
+        x = origin_x;
+        y = origin_y - board_title_y_offset;
+        board_title->SetPosition( wxPoint(x,y) );
+        sz = board_title->GetSize();
+        sz.x = dim;
+        sz.y = t1_height;
+        board_title->SetSize(sz);
+        board_title->Show(true);
+    }
 
     // Name and time, top
     x = origin_x;
@@ -297,7 +297,7 @@ void PanelBoard::Layout( const wxSize &siz, wxRect &board )
 
     // Coords a-h
     half = coord_char_width/4;
-    y = origin_y + dim + coorda_y_offset;     
+    y = origin_y + dim + coorda_y_offset;
     x = origin_x + dim/16 - half;          // 1/16,3/16,5,16,7/16,9/16,11/16,13/16,15/16
     coorda->SetPosition(wxPoint(x,y));
     x = origin_x + (3*dim)/16 - half;      // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
@@ -314,7 +314,7 @@ void PanelBoard::Layout( const wxSize &siz, wxRect &board )
     coordg->SetPosition(wxPoint(x,y));
     x = origin_x + (15*dim)/16 - half;     // 1/16,3/16,5/16,7/16,9/16,11/16,13/16,15/16
     coordh->SetPosition(wxPoint(x,y));
-    
+
     // Name and time, bottom
     x = origin_x;
     y = origin_y + dim + name_bottom_y_offset;
@@ -341,47 +341,47 @@ void PanelBoard::OnSize( wxSizeEvent &evt )
 void PanelBoard::RedrawClocks()
 {
     white_clock_visible = objs.repository->clock.m_white_visible;
-    black_clock_visible = objs.repository->clock.m_black_visible;        
+    black_clock_visible = objs.repository->clock.m_black_visible;
     bool normal = gb->GetNormalOrientation();
     if( normal )
     {
         std::string temp(white_clock_visible ? white_clock_txt.c_str() : "");
-		bool temp_red = white_clock_red;
+        bool temp_red = white_clock_red;
         if( temp !=  time_bottom_txt || temp_red !=  time_bottom_red )
         {
-            time_bottom_txt = temp; 
-            time_bottom_red = temp_red; 
-			time_bottom->SetForegroundColour( temp_red ? *wxRED : *wxBLACK );
+            time_bottom_txt = temp;
+            time_bottom_red = temp_red;
+            time_bottom->SetForegroundColour( temp_red ? *wxRED : *wxBLACK );
             time_bottom->SetLabel( time_bottom_txt.c_str() );
         }
         std::string temp2(black_clock_visible ? black_clock_txt.c_str() : "");
-		bool temp_red2 = black_clock_red;
+        bool temp_red2 = black_clock_red;
         if( temp2 !=  time_top_txt  || temp_red2 !=  time_top_red )
         {
             time_top_txt = temp2;
-            time_top_red = temp_red2; 
-			time_top->SetForegroundColour( temp_red2 ? *wxRED : *wxBLACK );
+            time_top_red = temp_red2;
+            time_top->SetForegroundColour( temp_red2 ? *wxRED : *wxBLACK );
             time_top->SetLabel( time_top_txt.c_str() );
         }
     }
     else
     {
         std::string temp(black_clock_visible ? black_clock_txt.c_str() : "");
-		bool temp_red = black_clock_red;
+        bool temp_red = black_clock_red;
         if( temp != time_bottom_txt )
         {
-            time_bottom_txt = temp; 
-            time_bottom_red = temp_red; 
-			time_bottom->SetForegroundColour( temp_red ? *wxRED : *wxBLACK );
+            time_bottom_txt = temp;
+            time_bottom_red = temp_red;
+            time_bottom->SetForegroundColour( temp_red ? *wxRED : *wxBLACK );
             time_bottom->SetLabel( time_bottom_txt.c_str() );
         }
         std::string temp2(white_clock_visible ? white_clock_txt.c_str() : "");
-		bool temp_red2 = white_clock_red;
+        bool temp_red2 = white_clock_red;
         if( temp2 !=  time_top_txt  || temp_red2 !=  time_top_red  )
         {
             time_top_txt = temp2;
-            time_top_red = temp_red2; 
-			time_top->SetForegroundColour( temp_red2 ? *wxRED : *wxBLACK );
+            time_top_red = temp_red2;
+            time_top->SetForegroundColour( temp_red2 ? *wxRED : *wxBLACK );
             time_top->SetLabel( time_top_txt.c_str() );
         }
     }
@@ -390,55 +390,55 @@ void PanelBoard::RedrawClocks()
 void PanelBoard::ClocksVisible()
 {
     white_clock_visible = objs.repository->clock.m_white_visible;
-    black_clock_visible = objs.repository->clock.m_black_visible;        
+    black_clock_visible = objs.repository->clock.m_black_visible;
     RedrawClocks();
 }
 
 void PanelBoard::WhiteClock( const wxString &txt, bool red )
 {
     white_clock_txt = std::string(txt.c_str());
-	white_clock_red = red;
+    white_clock_red = red;
     RedrawClocks();
 }
 
 void PanelBoard::BlackClock( const wxString &txt, bool red )
 {
     black_clock_txt = std::string(txt.c_str());
-	black_clock_red = red;
+    black_clock_red = red;
     RedrawClocks();
 }
 
 void PanelBoard::SetBoardTitle()
 {
-	std::string title = m_title_saved;
+    std::string title = m_title_saved;
 
-	// Use a copied string title. We used to use m_title_saved
-	// directly but actually then when SetBoardTitle(const char*)
-	// sets m_title_saved it destroys the results of the c_str()
-	// below before it has finished using it!
-	// Thanks to Github user metiscus for the pull request that
-	// fixed this.
-	SetBoardTitle( title.c_str() );
+    // Use a copied string title. We used to use m_title_saved
+    // directly but actually then when SetBoardTitle(const char*)
+    // sets m_title_saved it destroys the results of the c_str()
+    // below before it has finished using it!
+    // Thanks to Github user metiscus for the pull request that
+    // fixed this.
+    SetBoardTitle( title.c_str() );
 }
 
 void PanelBoard::SetBoardTitle( const char *txt )
 {
-	char buf[80];
-	snprintf(buf,sizeof(buf),"Tarrasch Chess GUI %s",MASTER_VERSION_BASE);
-	wxString frame_title(buf);
-	m_title_saved = std::string(txt);
-	cprintf( "SetBoardTitle(\"%s\")\n", txt );
-	if( !m_heading_above_board )
-	{
-		frame_title += "  -  ";
-		frame_title += txt;
-	}
-	else
-	{
-		board_title->SetLabel( txt?txt:"" );
-	}
-	if( objs.frame )
-		objs.frame->SetTitle( frame_title );  
+    char buf[80];
+    snprintf(buf,sizeof(buf),"Tarrasch Chess GUI %s",MASTER_VERSION_BASE);
+    wxString frame_title(buf);
+    m_title_saved = std::string(txt);
+    cprintf( "SetBoardTitle(\"%s\")\n", txt );
+    if( !m_heading_above_board )
+    {
+        frame_title += "  -  ";
+        frame_title += txt;
+    }
+    else
+    {
+        board_title->SetLabel( txt?txt:"" );
+    }
+    if( objs.frame )
+        objs.frame->SetTitle( frame_title );
 }
 
 
@@ -470,13 +470,13 @@ void PanelBoard::SetChessPosition( thc::ChessPosition &pos )
 
 void PanelBoard::SetChessPosition()
 {
-	cprintf( "PanelBoard::SetChessPosition()\n" );
+    cprintf( "PanelBoard::SetChessPosition()\n" );
     bool normal = gb->GetNormalOrientation();
     gb->SetChessPosition( save_position );
 
-	// a refinement - lengthen short names to get something to click on
-	std::string white_player_adjusted = ( white_player.length()<10 ? white_player+"          " : white_player );
-	std::string black_player_adjusted = ( black_player.length()<10 ? black_player+"          " : black_player );
+    // a refinement - lengthen short names to get something to click on
+    std::string white_player_adjusted = ( white_player.length()<10 ? white_player+"          " : white_player );
+    std::string black_player_adjusted = ( black_player.length()<10 ? black_player+"          " : black_player );
     if( normal )
     {
         name_bottom->SetLabel( white_player_adjusted.c_str() );
@@ -558,10 +558,10 @@ END_EVENT_TABLE()
 
 void wxStaticTextSub::OnMouseLeftDown( wxMouseEvent &WXUNUSED(event) )
 {
-	int id = GetId();
-	if( id==ID_STATIC_TXT_PLAYER1 || id==ID_STATIC_TXT_PLAYER2 )
-		objs.gl->CmdPlayers();
-	else if( id==ID_STATIC_TXT_TIME1 || id==ID_STATIC_TXT_TIME2 )
-		objs.gl->CmdClocks();
+    int id = GetId();
+    if( id==ID_STATIC_TXT_PLAYER1 || id==ID_STATIC_TXT_PLAYER2 )
+        objs.gl->CmdPlayers();
+    else if( id==ID_STATIC_TXT_TIME1 || id==ID_STATIC_TXT_TIME2 )
+        objs.gl->CmdClocks();
 }
 

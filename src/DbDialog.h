@@ -30,7 +30,7 @@ struct MOVE_STATS
     int nbr_white_wins;
     int nbr_black_wins;
     int nbr_draws;
-    
+
     // Sort according to number of games
     bool operator < (const MOVE_STATS& ms)  const { return nbr_games < ms.nbr_games; }
     bool operator > (const MOVE_STATS& ms)  const { return nbr_games > ms.nbr_games; }
@@ -43,7 +43,7 @@ struct PATH_TO_POSITION
     PATH_TO_POSITION() { frequency=0; }
     int frequency;
     std::string blob;
-    
+
     // Sort according to frequency
     bool operator < (const PATH_TO_POSITION& ptp)  const { return frequency < ptp.frequency; }
     bool operator > (const PATH_TO_POSITION& ptp)  const { return frequency > ptp.frequency; }
@@ -52,7 +52,7 @@ struct PATH_TO_POSITION
 
 // DbDialog class declaration
 class DbDialog : public GamesDialog
-{    
+{
 public:
     DbDialog
     (

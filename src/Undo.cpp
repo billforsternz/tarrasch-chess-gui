@@ -63,11 +63,11 @@ void Undo::Clear( GameDocument &gd, GAME_STATE game_state )
 bool Undo::CanUndo()
 {
     bool can_undo = true;
-    if( stack.size() <= 1 )		// need at least one restore point to undo back to
+    if( stack.size() <= 1 )     // need at least one restore point to undo back to
         can_undo = false;
     else if( state==UNDOING && it_saved==0 /*stack.begin()*/ )  // in UNDOING state it_saved "points" at the element last restored
-																//  when it gets down to zero we have just restored the oldest restore
-																//  point in the stack
+                                                                //  when it gets down to zero we have just restored the oldest restore
+                                                                //  point in the stack
         can_undo = false;
     return can_undo;
 }
@@ -114,12 +114,12 @@ void Undo::Save( long undo_previous_posn, GameDocument &gd, GAME_STATE game_stat
     }
     stack.push_back(rp);
     cprintf( "push_back() stack_size()=%d, stack.end()-stack.begin()=%d\n", stack.size(), stack.end()-stack.begin() );
-	if( stack.size() > MAX_DEPTH )
-	{
-		stack.pop_front();
-		no_front_pops_yet = false;
-		cprintf( "After popping from front, stack_size()=%d, stack.end()-stack.begin()=%d\n", stack.size(), stack.end()-stack.begin() );
-	}
+    if( stack.size() > MAX_DEPTH )
+    {
+        stack.pop_front();
+        no_front_pops_yet = false;
+        cprintf( "After popping from front, stack_size()=%d, stack.end()-stack.begin()=%d\n", stack.size(), stack.end()-stack.begin() );
+    }
     state = NORMAL;
 }
 
@@ -140,7 +140,7 @@ GAME_STATE Undo::DoUndo( GameDocument &gd, bool takeback )
             long posn = it->previous_posn;
             it--;
             it_saved = it-stack.begin();
-			cprintf( "In DoUndo, it_saved=%d, stack_size()=%d, stack.end()-stack.begin()=%d\n", it_saved, stack.size(), stack.end()-stack.begin() );
+            cprintf( "In DoUndo, it_saved=%d, stack_size()=%d, stack.end()-stack.begin()=%d\n", it_saved, stack.size(), stack.end()-stack.begin() );
             RestorePoint rp;
             rp = *it;
             ret = rp.state;

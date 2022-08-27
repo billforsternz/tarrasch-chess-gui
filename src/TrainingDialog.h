@@ -29,7 +29,7 @@ enum
 
 // TrainingDialog class declaration
 class TrainingDialog: public wxDialog
-{    
+{
     DECLARE_CLASS( TrainingDialog )
     DECLARE_EVENT_TABLE()
 
@@ -80,7 +80,7 @@ public:
     // Data members
     TrainingConfig   dat;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
-	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
+    DialogDetect    detect;     // similarly the presence of this var allows tracking of open dialogs
 };
 
 #endif    // TRAINING_DIALOG_H

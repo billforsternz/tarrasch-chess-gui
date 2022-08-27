@@ -32,12 +32,12 @@ public:
     void SetNormalOrientation( bool normal );
     void SetChessPosition( thc::ChessPosition &pos );
     void SetChessPosition();
-    void ClocksVisible();                  
+    void ClocksVisible();
     void WhiteClock( const wxString &txt, bool red=false );
     void BlackClock( const wxString &txt, bool red=false );
-    void RedrawClocks();                   
+    void RedrawClocks();
     void SetBoardTitle( const char *txt );
-    void SetBoardTitle();	   // to previous value
+    void SetBoardTitle();      // to previous value
     CtrlChessBoard *gb;
 
 private:
@@ -79,12 +79,12 @@ private:
     std::string  time_bottom_txt;
     bool         white_clock_visible;
     bool         black_clock_visible;
-	bool         white_clock_red;
-	bool         black_clock_red;
-	bool         time_top_red;
-	bool         time_bottom_red;
-	bool         m_heading_above_board;
-	std::string  m_title_saved;
+    bool         white_clock_red;
+    bool         black_clock_red;
+    bool         time_top_red;
+    bool         time_bottom_red;
+    bool         m_heading_above_board;
+    std::string  m_title_saved;
     DECLARE_EVENT_TABLE()
 };
 

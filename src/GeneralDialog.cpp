@@ -30,7 +30,7 @@ BEGIN_EVENT_TABLE( GeneralDialog, wxDialog )
     EVT_BUTTON   ( ID_RESTORE_HIGHLIGHT_DARK , GeneralDialog::OnRestoreHighlightDark  )
     EVT_BUTTON   ( ID_RESTORE_HIGHLIGHT_LINE, GeneralDialog::OnRestoreHighlightLine )
     EVT_COMBOBOX ( ID_NOTATION_LANGUAGE,  GeneralDialog::OnNotationLanguage )
-	EVT_COLOURPICKER_CHANGED( wxID_ANY, GeneralDialog::OnColourPicker )
+    EVT_COLOURPICKER_CHANGED( wxID_ANY, GeneralDialog::OnColourPicker )
 END_EVENT_TABLE()
 
 // GeneralDialog constructor
@@ -74,7 +74,7 @@ bool GeneralDialog::Create( wxWindow* parent,
 
         // This fits the dialog to the minimum size dictated by the sizers
         GetSizer()->Fit(this);
-        
+
         // This ensures that the dialog cannot be sized smaller than the minimum size
         GetSizer()->SetSizeHints(this);
 
@@ -86,16 +86,16 @@ bool GeneralDialog::Create( wxWindow* parent,
 
 // Control creation for GeneralDialog
 void GeneralDialog::CreateControls()
-{    
+{
 
     // A top-level sizer
     wxBoxSizer* top_sizer = new wxBoxSizer(wxVERTICAL);
     this->SetSizer(top_sizer);
-    
+
     // A second box sizer to give more space around the controls
     wxBoxSizer* box_sizer = new wxBoxSizer(wxVERTICAL);
     top_sizer->Add(box_sizer, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
-  
+
     // A friendly message
     wxStaticText* descr = new wxStaticText( this, wxID_STATIC,
         wxT("This panel lets you setup some general options."), wxDefaultPosition, wxDefaultSize, 0 );
@@ -103,7 +103,7 @@ void GeneralDialog::CreateControls()
 
 /*  // Spacer
     box_sizer->Add(5, 5, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5); */
-  
+
     // Notation language
     wxBoxSizer* notation_language_sizer  = new wxBoxSizer(wxHORIZONTAL);
     wxStaticText* notation_language_label = new wxStaticText ( this, wxID_STATIC,
@@ -130,7 +130,7 @@ void GeneralDialog::CreateControls()
     wxBoxSizer* colour_sizer1  = new wxBoxSizer(wxHORIZONTAL);
     wxStaticText* colour_label1 = new wxStaticText ( this, wxID_STATIC,
         gbl_spelling_us ? "Light Square Color" : "Light Square Colour", wxDefaultPosition, wxDefaultSize, 0 );
-	wxColour light(dat.m_light_colour_r,dat.m_light_colour_g,dat.m_light_colour_b);
+    wxColour light(dat.m_light_colour_r,dat.m_light_colour_g,dat.m_light_colour_b);
     light_picker = new wxColourPickerCtrl( this, wxID_ANY, light );
     colour_sizer1->Add(colour_label1, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     colour_sizer1->Add(10, 5, 1, wxALL, 0);
@@ -138,12 +138,12 @@ void GeneralDialog::CreateControls()
     wxButton *restore_light = new wxButton ( this, ID_RESTORE_LIGHT, "Restore Default",
         wxDefaultPosition, wxDefaultSize, 0 );
     colour_sizer1->Add(restore_light, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-	box_sizer->Add(colour_sizer1, 0, wxALIGN_LEFT|wxALL, 3);
+    box_sizer->Add(colour_sizer1, 0, wxALIGN_LEFT|wxALL, 3);
 
     wxBoxSizer* colour_sizer2  = new wxBoxSizer(wxHORIZONTAL);
     wxStaticText* colour_label2 = new wxStaticText ( this, wxID_STATIC,
         gbl_spelling_us ? "Dark Square Color" : "Dark Square Colour", wxDefaultPosition, wxDefaultSize, 0 );
-	wxColour dark(dat.m_dark_colour_r,dat.m_dark_colour_g,dat.m_dark_colour_b);
+    wxColour dark(dat.m_dark_colour_r,dat.m_dark_colour_g,dat.m_dark_colour_b);
     dark_picker = new wxColourPickerCtrl( this, wxID_ANY, dark );
     colour_sizer2->Add(colour_label2, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     colour_sizer2->Add(10, 5, 1, wxALL, 0);
@@ -156,7 +156,7 @@ void GeneralDialog::CreateControls()
     wxBoxSizer* colour_sizer3  = new wxBoxSizer(wxHORIZONTAL);
     wxStaticText* colour_label3 = new wxStaticText ( this, wxID_STATIC,
         gbl_spelling_us ? "Highlighted Square Light Color" : "Highlighted Square Light Colour", wxDefaultPosition, wxDefaultSize, 0 );
-	wxColour highlight_light(dat.m_highlight_light_colour_r,dat.m_highlight_light_colour_g,dat.m_highlight_light_colour_b);
+    wxColour highlight_light(dat.m_highlight_light_colour_r,dat.m_highlight_light_colour_g,dat.m_highlight_light_colour_b);
     highlight_light_picker = new wxColourPickerCtrl( this, wxID_ANY, highlight_light );
     colour_sizer3->Add(colour_label3, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     colour_sizer3->Add(10, 5, 1, wxALL, 0);
@@ -169,7 +169,7 @@ void GeneralDialog::CreateControls()
     wxBoxSizer* colour_sizer4  = new wxBoxSizer(wxHORIZONTAL);
     wxStaticText* colour_label4 = new wxStaticText ( this, wxID_STATIC,
         gbl_spelling_us ? "Highlighted Square Dark Color" : "Highlighted Square Dark Colour", wxDefaultPosition, wxDefaultSize, 0 );
-	wxColour highlight_dark(dat.m_highlight_dark_colour_r,dat.m_highlight_dark_colour_g,dat.m_highlight_dark_colour_b);
+    wxColour highlight_dark(dat.m_highlight_dark_colour_r,dat.m_highlight_dark_colour_g,dat.m_highlight_dark_colour_b);
     highlight_dark_picker = new wxColourPickerCtrl( this, wxID_ANY, highlight_dark );
     colour_sizer4->Add(colour_label4, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     colour_sizer4->Add(10, 5, 1, wxALL, 0);
@@ -182,7 +182,7 @@ void GeneralDialog::CreateControls()
     wxBoxSizer* colour_sizer5  = new wxBoxSizer(wxHORIZONTAL);
     wxStaticText* colour_label5 = new wxStaticText ( this, wxID_STATIC,
         gbl_spelling_us ? "Highlighted Square Border Color" : "Highlighted Square Border Colour", wxDefaultPosition, wxDefaultSize, 0 );
-	wxColour highlight_line(dat.m_highlight_line_colour_r,dat.m_highlight_line_colour_g,dat.m_highlight_line_colour_b);
+    wxColour highlight_line(dat.m_highlight_line_colour_r,dat.m_highlight_line_colour_g,dat.m_highlight_line_colour_b);
     highlight_line_picker = new wxColourPickerCtrl( this, wxID_ANY, highlight_line );
     colour_sizer5->Add(colour_label5, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     colour_sizer5->Add(10, 5, 1, wxALL, 0);
@@ -202,8 +202,8 @@ void GeneralDialog::CreateControls()
     // Use line highlighting rather than colour highlighting
     wxCheckBox* line_highlight = new wxCheckBox( this, ID_LINE_HIGHLIGHT,
        gbl_spelling_us ?
-		"Use borders rather than colors for square highlights":
-		"Use borders rather than colours for square highlights", wxDefaultPosition, wxDefaultSize, 0 );
+        "Use borders rather than colors for square highlights":
+        "Use borders rather than colours for square highlights", wxDefaultPosition, wxDefaultSize, 0 );
     line_highlight->SetValue( dat.m_line_highlight );
     box_sizer->Add( line_highlight, 0,
         wxLEFT, 5);
@@ -216,15 +216,15 @@ void GeneralDialog::CreateControls()
         wxLEFT, 5);
 
     // Font size
-	wxBoxSizer* font_size_sizer = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText* font_size_label = new wxStaticText(this, wxID_STATIC,
-		"Font size in points (default is 9)", wxDefaultPosition, wxDefaultSize, 0);
-	wxSpinCtrl *font_size_ctrl = new wxSpinCtrl(this, ID_LARGE_FONT,
-		wxEmptyString, wxDefaultPosition, wxSize(50, wxDefaultCoord), //wxDefaultSize, 
-		wxSP_ARROW_KEYS, 4, 100, dat.m_font_size );
-	font_size_sizer->Add(font_size_ctrl, 0, wxALL | wxALIGN_CENTER_VERTICAL, 0);
-	font_size_sizer->Add(10, 0, 0, wxALL, 0);
-	font_size_sizer->Add(font_size_label, 0, wxALL | wxALIGN_CENTER_VERTICAL, 0);
+    wxBoxSizer* font_size_sizer = new wxBoxSizer(wxHORIZONTAL);
+    wxStaticText* font_size_label = new wxStaticText(this, wxID_STATIC,
+        "Font size in points (default is 9)", wxDefaultPosition, wxDefaultSize, 0);
+    wxSpinCtrl *font_size_ctrl = new wxSpinCtrl(this, ID_LARGE_FONT,
+        wxEmptyString, wxDefaultPosition, wxSize(50, wxDefaultCoord), //wxDefaultSize,
+        wxSP_ARROW_KEYS, 4, 100, dat.m_font_size );
+    font_size_sizer->Add(font_size_ctrl, 0, wxALL | wxALIGN_CENTER_VERTICAL, 0);
+    font_size_sizer->Add(10, 0, 0, wxALL, 0);
+    font_size_sizer->Add(font_size_label, 0, wxALL | wxALIGN_CENTER_VERTICAL, 0);
     box_sizer->Add( font_size_sizer, 0,
         wxLEFT, 5);
 
@@ -365,26 +365,26 @@ void GeneralDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
 // wxEVT_COMMAND_BUTTON_CLICKED event handler for wxID_OK
 void GeneralDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
 {
-	wxColour light = light_picker->GetColour();
-	dat.m_light_colour_r = light.Red();
-	dat.m_light_colour_g = light.Green();
-	dat.m_light_colour_b = light.Blue();
-	wxColour dark  = dark_picker->GetColour();
-	dat.m_dark_colour_r = dark.Red();
-	dat.m_dark_colour_g = dark.Green();
-	dat.m_dark_colour_b = dark.Blue();
-	wxColour highlight_light = highlight_light_picker->GetColour();
-	dat.m_highlight_light_colour_r = highlight_light.Red();
-	dat.m_highlight_light_colour_g = highlight_light.Green();
-	dat.m_highlight_light_colour_b = highlight_light.Blue();
-	wxColour highlight_dark  = highlight_dark_picker->GetColour();
-	dat.m_highlight_dark_colour_r = highlight_dark.Red();
-	dat.m_highlight_dark_colour_g = highlight_dark.Green();
-	dat.m_highlight_dark_colour_b = highlight_dark.Blue();
-	wxColour highlight_line  = highlight_line_picker->GetColour();
-	dat.m_highlight_line_colour_r = highlight_line.Red();
-	dat.m_highlight_line_colour_g = highlight_line.Green();
-	dat.m_highlight_line_colour_b = highlight_line.Blue();
+    wxColour light = light_picker->GetColour();
+    dat.m_light_colour_r = light.Red();
+    dat.m_light_colour_g = light.Green();
+    dat.m_light_colour_b = light.Blue();
+    wxColour dark  = dark_picker->GetColour();
+    dat.m_dark_colour_r = dark.Red();
+    dat.m_dark_colour_g = dark.Green();
+    dat.m_dark_colour_b = dark.Blue();
+    wxColour highlight_light = highlight_light_picker->GetColour();
+    dat.m_highlight_light_colour_r = highlight_light.Red();
+    dat.m_highlight_light_colour_g = highlight_light.Green();
+    dat.m_highlight_light_colour_b = highlight_light.Blue();
+    wxColour highlight_dark  = highlight_dark_picker->GetColour();
+    dat.m_highlight_dark_colour_r = highlight_dark.Red();
+    dat.m_highlight_dark_colour_g = highlight_dark.Green();
+    dat.m_highlight_dark_colour_b = highlight_dark.Blue();
+    wxColour highlight_line  = highlight_line_picker->GetColour();
+    dat.m_highlight_line_colour_r = highlight_line.Red();
+    dat.m_highlight_line_colour_g = highlight_line.Green();
+    dat.m_highlight_line_colour_b = highlight_line.Blue();
     wxString txt = this->notation_language_ctrl->GetValue();
     if( LangValidateString( txt ) )
     {
@@ -407,32 +407,32 @@ void GeneralDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
 //  for "violate DRY" to find out why
 void GeneralDialog::OnRestoreLight( wxCommandEvent& WXUNUSED(event) )
 {
-	wxColour light(255,226,179);
-	light_picker->SetColour( light );
+    wxColour light(255,226,179);
+    light_picker->SetColour( light );
 }
 
 void GeneralDialog::OnRestoreDark( wxCommandEvent& WXUNUSED(event) )
 {
-	wxColour dark(220,162,116);
-	dark_picker->SetColour( dark );
+    wxColour dark(220,162,116);
+    dark_picker->SetColour( dark );
 }
 
 void GeneralDialog::OnRestoreHighlightLight( wxCommandEvent& WXUNUSED(event) )
 {
-	wxColour highlight_light(250,240,160);
-	highlight_light_picker->SetColour( highlight_light );
+    wxColour highlight_light(250,240,160);
+    highlight_light_picker->SetColour( highlight_light );
 }
 
 void GeneralDialog::OnRestoreHighlightDark( wxCommandEvent& WXUNUSED(event) )
 {
-	wxColour highlight_dark(196,160,130);
-	highlight_dark_picker->SetColour( highlight_dark );
+    wxColour highlight_dark(196,160,130);
+    highlight_dark_picker->SetColour( highlight_dark );
 }
 
 void GeneralDialog::OnRestoreHighlightLine( wxCommandEvent& WXUNUSED(event) )
 {
-	wxColour highlight_line(112,146,190);
-	highlight_line_picker->SetColour( highlight_line );
+    wxColour highlight_line(112,146,190);
+    highlight_line_picker->SetColour( highlight_line );
 }
 
 void GeneralDialog::OnNotationLanguage( wxCommandEvent& WXUNUSED(event) )
@@ -451,5 +451,5 @@ void GeneralDialog::OnNotationLanguage( wxCommandEvent& WXUNUSED(event) )
 
 void GeneralDialog::OnColourPicker( wxColourPickerEvent& WXUNUSED(event) )
 {
-	cprintf( "GeneralDialog::OnColourPicker()\n" );
+    cprintf( "GeneralDialog::OnColourPicker()\n" );
 }

@@ -20,23 +20,23 @@ enum
     ID_NOTATION_LANGUAGE = 10001,
     ID_NO_ITALICS        = 10002,
     ID_STRAIGHT_TO_GAME  = 10003,
-    ID_LARGE_FONT        = 10004, 
+    ID_LARGE_FONT        = 10004,
     ID_RESTORE_LIGHT     = 10005,
     ID_RESTORE_DARK      = 10006,
     ID_RESTORE_HIGHLIGHT_LIGHT = 10007,
     ID_RESTORE_HIGHLIGHT_DARK  = 10008,
     ID_RESTORE_HIGHLIGHT_LINE  = 10009,
-    ID_NO_AUTO_FLIP			   = 10010,
+    ID_NO_AUTO_FLIP            = 10010,
     ID_STRAIGHT_TO_FIRST_GAME  = 10011,
     ID_EMIT_BELL               = 10012,
-	ID_SUPPRESS_HIGHLIGHT	   = 10013,
-	ID_HEADING_ABOVE_BOARD     = 10014,
-	ID_LINE_HIGHLIGHT	       = 10015
+    ID_SUPPRESS_HIGHLIGHT      = 10013,
+    ID_HEADING_ABOVE_BOARD     = 10014,
+    ID_LINE_HIGHLIGHT          = 10015
 };
 
 // GeneralDialog class declaration
 class GeneralDialog: public wxDialog
-{    
+{
     DECLARE_CLASS( GeneralDialog )
     DECLARE_EVENT_TABLE()
 
@@ -83,7 +83,7 @@ public:
     void OnRestoreHighlightDark( wxCommandEvent& event );
     void OnRestoreHighlightLine( wxCommandEvent& event );
     void OnNotationLanguage( wxCommandEvent& event );
-	void OnColourPicker( wxColourPickerEvent& event );
+    void OnColourPicker( wxColourPickerEvent& event );
 
     wxArrayString   labels;
 
@@ -94,14 +94,14 @@ public:
     wxString        combo_label;
     GeneralConfig   dat;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
-	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
+    DialogDetect    detect;     // similarly the presence of this var allows tracking of open dialogs
 
 private:
-	wxColourPickerCtrl* light_picker;
-	wxColourPickerCtrl* dark_picker;
-	wxColourPickerCtrl* highlight_light_picker;
-	wxColourPickerCtrl* highlight_dark_picker;
-	wxColourPickerCtrl* highlight_line_picker;
+    wxColourPickerCtrl* light_picker;
+    wxColourPickerCtrl* dark_picker;
+    wxColourPickerCtrl* highlight_light_picker;
+    wxColourPickerCtrl* highlight_dark_picker;
+    wxColourPickerCtrl* highlight_line_picker;
 };
 
 #endif    // GENERAL_DIALOG_H

@@ -86,7 +86,7 @@ void Log::EmergencySaveGame( GameDocument *gd, bool first, bool last, std::strin
         if( emergency_file )
         {
             filename_used = log_filename;
-			objs.gl->mru.AddFileToHistory( log_filename.c_str() );
+            objs.gl->mru.AddFileToHistory( log_filename.c_str() );
         }
     }
     if( emergency_file && !gd->IsEmpty() )

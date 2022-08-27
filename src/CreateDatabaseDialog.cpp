@@ -56,24 +56,24 @@ bool CreateDatabaseDialog::Create( wxWindow* parent,
                           const wxPoint& pos, const wxSize& size, long style )
 {
     bool okay=true;
-    
+
     // We have to set extra styles before creating the dialog
     SetExtraStyle( wxWS_EX_BLOCK_EVENTS/*|wxDIALOG_EX_CONTEXTHELP*/ );
     if( !wxDialog::Create( parent, id, caption, pos, size, style ) )
         okay = false;
     else
     {
-        
+
         CreateControls();
         SetDialogHelp();
         SetDialogValidators();
-        
+
         // This fits the dialog to the minimum size dictated by the sizers
         GetSizer()->Fit(this);
-        
+
         // This ensures that the dialog cannot be sized smaller than the minimum size
         GetSizer()->SetSizeHints(this);
-        
+
         // Centre the dialog on the parent or (if none) screen
         Centre();
     }
@@ -83,15 +83,15 @@ bool CreateDatabaseDialog::Create( wxWindow* parent,
 // Control creation for CreateDatabaseDialog
 void CreateDatabaseDialog::CreateControls()
 {
-    
+
     // A top-level sizer
     wxBoxSizer* top_sizer = new wxBoxSizer(wxVERTICAL);
     this->SetSizer(top_sizer);
-    
+
     // A second box sizer to give more space around the controls
     wxBoxSizer* box_sizer = new wxBoxSizer(wxVERTICAL);
     top_sizer->Add(box_sizer, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
-    
+
     // A friendly message
     wxStaticText* descr = new wxStaticText( this, wxID_STATIC,
            create_mode?
@@ -102,10 +102,10 @@ void CreateDatabaseDialog::CreateControls()
            "more .pgn files with the additional games to go into the database.\n"
            , wxDefaultPosition, wxDefaultSize, 0 );
     box_sizer->Add(descr, 0, wxALIGN_LEFT|wxALL, 5);
-    
+
     // Spacer
     //box_sizer->Add(5, 5, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
-    
+
     // Label for file
     wxStaticText* db_file_label = new wxStaticText ( this, wxID_STATIC,
                                                         create_mode ?
@@ -113,7 +113,7 @@ void CreateDatabaseDialog::CreateControls()
                                                             wxT("&Choose an existing database file"),
                                                         wxDefaultPosition, wxDefaultSize, 0 );
     box_sizer->Add(db_file_label, 0, wxALIGN_LEFT|wxALL, 5);
-    
+
     // File picker controls
     wxFilePickerCtrl *picker_db = new wxFilePickerCtrl( this, ID_CREATE_DB_PICKER_DB, db_filename,
                                                         create_mode ?
@@ -170,7 +170,7 @@ void CreateDatabaseDialog::CreateControls()
     }
 
 
-	wxBoxSizer* h1 = new wxBoxSizer(wxHORIZONTAL);
+    wxBoxSizer* h1 = new wxBoxSizer(wxHORIZONTAL);
     wxBoxSizer* v1 = new wxBoxSizer(wxVERTICAL);
     wxBoxSizer* v2 = new wxBoxSizer(wxVERTICAL);
     wxBoxSizer* v3 = new wxBoxSizer(wxVERTICAL);
@@ -218,10 +218,10 @@ void CreateDatabaseDialog::CreateControls()
         wxSP_ARROW_KEYS, 1400, 2500, 1990 );
     before_year->SetValue( objs.repository->database.m_elo_cutoff_before_year );
 
-	v2->Add(ignore, 0, wxALL, 5);
+    v2->Add(ignore, 0, wxALL, 5);
     v2->Add(at_least_one, 0, wxALL, 5);
     v2->Add(both, 0, wxALL, 5);
-	v3->Add(fail, 0, wxALL, 5);
+    v3->Add(fail, 0, wxALL, 5);
     v3->Add(pass, 0, wxALL, 5);
     v3->Add(pass_before, 0, wxALL, 5);
     v4->Add(spacer1, 0, wxALL, 5);
@@ -233,27 +233,27 @@ void CreateDatabaseDialog::CreateControls()
     h1->Add(v4, 0, wxGROW|wxALL, 5);
     box_sizer->Add(h1, 0, wxGROW|wxALL, 5);
 
-	// A dividing line before the OK and Cancel buttons
+    // A dividing line before the OK and Cancel buttons
     wxStaticLine* line2 = new wxStaticLine ( this, wxID_STATIC,
                                            wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
     box_sizer->Add(line2, 0, wxGROW|wxALL, 5);
-    
+
     // A horizontal box sizer to contain Reset, OK, Cancel and Help
     wxBoxSizer* okCancelBox = new wxBoxSizer(wxHORIZONTAL);
     box_sizer->Add(okCancelBox, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 15);
-  
-   
-    
+
+
+
     // The OK button
     wxButton* ok = new wxButton ( this, wxID_OK, wxT("&OK"),
                                  wxDefaultPosition, wxDefaultSize, 0 );
     okCancelBox->Add(ok, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    
+
     // The Cancel button
     wxButton* cancel = new wxButton ( this, wxID_CANCEL,
                                      wxT("&Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
     okCancelBox->Add(cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    
+
     // The Help button
     wxButton* help = new wxButton( this, wxID_HELP, wxT("&Help"),
                                   wxDefaultPosition, wxDefaultSize, 0 );
@@ -283,13 +283,13 @@ void CreateDatabaseDialog::SetDialogHelp()
 void CreateDatabaseDialog::OnOk( wxCommandEvent& WXUNUSED(event) )
 {
     objs.repository->database.m_elo_cutoff        = elo_cutoff_spin->GetValue();
-	objs.repository->database.m_elo_cutoff_ignore = ignore->GetValue();
-	objs.repository->database.m_elo_cutoff_one    = at_least_one->GetValue();
-	objs.repository->database.m_elo_cutoff_both   = both->GetValue();
-	objs.repository->database.m_elo_cutoff_fail   = fail->GetValue();
-	objs.repository->database.m_elo_cutoff_pass   = pass->GetValue();
-	objs.repository->database.m_elo_cutoff_pass_before = pass_before->GetValue();
-	objs.repository->database.m_elo_cutoff_before_year = before_year->GetValue();
+    objs.repository->database.m_elo_cutoff_ignore = ignore->GetValue();
+    objs.repository->database.m_elo_cutoff_one    = at_least_one->GetValue();
+    objs.repository->database.m_elo_cutoff_both   = both->GetValue();
+    objs.repository->database.m_elo_cutoff_fail   = fail->GetValue();
+    objs.repository->database.m_elo_cutoff_pass   = pass->GetValue();
+    objs.repository->database.m_elo_cutoff_pass_before = pass_before->GetValue();
+    objs.repository->database.m_elo_cutoff_before_year = before_year->GetValue();
     if( create_mode )
         OnCreateDatabase();
     else
@@ -300,12 +300,12 @@ void CreateDatabaseDialog::OnOk( wxCommandEvent& WXUNUSED(event) )
 void CreateDatabaseDialog::OnCreateDatabase()
 {
     bool ok=true;
-	bool created_new_db_file = false;
+    bool created_new_db_file = false;
     std::string files[6];
     int cnt=0;
     std::string error_msg;
     db_primitive_error_msg();   // clear error reporting mechanism
-    
+
     // Collect files
     for( int i=1; i<=6; i++ )
     {
@@ -352,7 +352,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
     FILE *ofile=NULL;
     if( ok )
     {
-		ok = false;
+        ok = false;
         BinDbReadBegin();
         wxString fullpath = db_filename;
         wxFileName wfn(db_filename);
@@ -365,19 +365,19 @@ void CreateDatabaseDialog::OnCreateDatabase()
             if( no_path )
                 wfn.SetPath(cwd);
             fullpath = wfn.GetFullPath();
-		    db_name = std::string( fullpath.c_str() );
-			ofile = fopen( fullpath.c_str(), "wb" );
-			if( ofile )
-			{
-				created_new_db_file = true;
-				ok = true;
-			}
-		}
-		if( !ok )
-		{
-			error_msg = "Cannot create ";
-			error_msg += fullpath;
-		}
+            db_name = std::string( fullpath.c_str() );
+            ofile = fopen( fullpath.c_str(), "wb" );
+            if( ofile )
+            {
+                created_new_db_file = true;
+                ok = true;
+            }
+        }
+        if( !ok )
+        {
+            error_msg = "Cannot create ";
+            error_msg += fullpath;
+        }
     }
     for( int i=0; ok && i<cnt; i++ )
     {
@@ -435,11 +435,11 @@ void CreateDatabaseDialog::OnCreateDatabase()
         if( error_msg == "cancel" )
             error_msg = "Database creation cancelled";
         wxMessageBox( error_msg.c_str(), "Database creation failed", wxOK|wxICON_ERROR );
-		if( created_new_db_file )
+        if( created_new_db_file )
 #ifdef THC_UNIX
-			unlink(db_filename.c_str());
+            unlink(db_filename.c_str());
 #else
-			_unlink(db_filename.c_str());
+            _unlink(db_filename.c_str());
 #endif
     }
     BinDbCreationEnd();
@@ -449,7 +449,7 @@ void CreateDatabaseDialog::OnAppendDatabase()
 {
     bool ok=true;
     bool locked=false;
-	bool created_new_db_file = false;
+    bool created_new_db_file = false;
     std::string files[6];
     int cnt=0;
     std::string error_msg;
@@ -507,11 +507,11 @@ void CreateDatabaseDialog::OnAppendDatabase()
         std::string desc("Reading existing database");
         ProgressBar progress_bar( title, desc, true, this );
         std::vector< smart_ptr<ListableGame> > &mega_cache = BinDbLoadAllGamesGetVector();
-		cprintf( "Appending to database, step 1 of 5 begin\n" );
+        cprintf( "Appending to database, step 1 of 5 begin\n" );
         bool killed = BinDbLoadAllGames( locked, true, mega_cache, dummyi, dummyb, &progress_bar );
-		cprintf( "Appending to database, step 1 of 5 end, killed=%s\n", killed?"true":"false" );
-		if( killed )
-			ok=false;
+        cprintf( "Appending to database, step 1 of 5 end, killed=%s\n", killed?"true":"false" );
+        if( killed )
+            ok=false;
         BinDbClose();
     }
     FILE *ofile=NULL;
@@ -519,8 +519,8 @@ void CreateDatabaseDialog::OnAppendDatabase()
     {
         ofile = fopen( db_name.c_str(), "wb" );
         if( ofile )
-			created_new_db_file = true;
-		else
+            created_new_db_file = true;
+        else
         {
             error_msg = "Cannot open ";
             error_msg += db_name;
@@ -563,11 +563,11 @@ void CreateDatabaseDialog::OnAppendDatabase()
         int step=3;
         ok = BinDbRemoveDuplicatesAndWrite(title3,step,ofile,locked,this);
     }
-	if( ofile )
-	{
+    if( ofile )
+    {
         fclose(ofile);
-		ofile = NULL;
-	}
+        ofile = NULL;
+    }
     if( ok )
     {
         wxSafeYield();
@@ -581,11 +581,11 @@ void CreateDatabaseDialog::OnAppendDatabase()
         if( error_msg == "cancel" )
             error_msg = "Database creation cancelled";
         wxMessageBox( error_msg.c_str(), "Database creation failed", wxOK|wxICON_ERROR );
-		if( created_new_db_file )
+        if( created_new_db_file )
 #ifdef THC_UNIX
-			unlink(db_filename.c_str());
+            unlink(db_filename.c_str());
 #else
-			_unlink(db_filename.c_str());
+            _unlink(db_filename.c_str());
 #endif
     }
     BinDbCreationEnd();
@@ -640,7 +640,7 @@ void CreateDatabaseDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
     /*
      wxGetApp().GetHelpController().DisplaySection(wxT("Personal record dialog"));
      */
-    
+
     wxString helpText =
     wxT("\nTarrasch database files (.tdb files) are compact game collections. ")
     wxT("At the moment only complete games are supported (i.e. no game fragments). ")

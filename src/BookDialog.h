@@ -27,7 +27,7 @@ enum
 
 // BookDialog class declaration
 class BookDialog: public wxDialog
-{    
+{
     DECLARE_CLASS( BookDialog )
     DECLARE_EVENT_TABLE()
 
@@ -83,7 +83,7 @@ public:
     // Data members
     BookConfig   dat;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
-	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
+    DialogDetect    detect;     // similarly the presence of this var allows tracking of open dialogs
 };
 
 #endif    // BOOK_DIALOG_H

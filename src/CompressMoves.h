@@ -62,8 +62,8 @@ public:
     CompressMoves( const CompressMoves& copy_from_me ) { cr=copy_from_me.cr; sides[0]=copy_from_me.sides[0]; sides[1]=copy_from_me.sides[1]; }
     CompressMoves & operator= (const CompressMoves & copy_from_me ) { cr=copy_from_me.cr; sides[0]=copy_from_me.sides[0]; sides[1]=copy_from_me.sides[1]; return *this; }
     void Init() { TryFastMode( &sides[0]); TryFastMode( &sides[1]); }
-	void Init( thc::ChessPosition &cp ) { cr = cp; Init(); }
-    
+    void Init( thc::ChessPosition &cp ) { cr = cp; Init(); }
+
 public:
     thc::ChessRules cr;
     int is_interesting;

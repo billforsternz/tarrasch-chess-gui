@@ -30,19 +30,19 @@ enum
     ID_CUSTOM3A        = 10010,
     ID_CUSTOM3B        = 10011,
     ID_CUSTOM4A        = 10012,
-    ID_CUSTOM4B        = 10013, 
+    ID_CUSTOM4B        = 10013,
     ID_CUSTOM5A        = 10014,
-    ID_CUSTOM5B        = 10015, 
+    ID_CUSTOM5B        = 10015,
     ID_CUSTOM6A        = 10016,
-    ID_CUSTOM6B        = 10017, 
-	ID_NORMAL_PRIORITY = 10018,
-	ID_LOW_PRIORITY    = 10019,
-	ID_IDLE_PRIORITY   = 10020
+    ID_CUSTOM6B        = 10017,
+    ID_NORMAL_PRIORITY = 10018,
+    ID_LOW_PRIORITY    = 10019,
+    ID_IDLE_PRIORITY   = 10020
 };
 
 // EngineDialog class declaration
 class EngineDialog: public wxDialog
-{    
+{
     DECLARE_CLASS( EngineDialog )
     DECLARE_EVENT_TABLE()
 
@@ -64,7 +64,7 @@ public:
 
     // Creation
     bool Create( wxWindow* parent,
-      wxWindowID id = ID_ENGINE_DIALOG,   
+      wxWindowID id = ID_ENGINE_DIALOG,
       const wxString& caption = wxT("Engine settings"),
       const wxPoint& pos = wxDefaultPosition,
       const wxSize& size = wxDefaultSize,
@@ -101,7 +101,7 @@ public:
     // Data members
     EngineConfig   dat;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
-	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
+    DialogDetect    detect;     // similarly the presence of this var allows tracking of open dialogs
     int nbr_cpus;
 };
 

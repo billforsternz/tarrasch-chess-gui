@@ -8,12 +8,12 @@
 #define GAMESTATE_H
 
 // Main game state
-typedef enum 
+typedef enum
 {
     RESET,
     GAMEOVER,
     PONDERING,      // Human move, but the engine is thinking
-    HUMAN,		    // Human move
+    HUMAN,          // Human move
     MANUAL,         // Human but moving manually rather than playing against engine
     SLIDING,        // Sliding
     SLIDING_MANUAL,

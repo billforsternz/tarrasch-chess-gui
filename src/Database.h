@@ -30,7 +30,7 @@ public:
     void Reopen( const char *db_file );
     bool IsSuspended();
     bool IsOperational( std::string &error_msg );
-	int  SetDbPosition(DB_REQ db_req);
+    int  SetDbPosition(DB_REQ db_req);
     int  GetRow( int row, CompactGame *pact );
     bool LoadAllGamesForPositionSearch( std::vector< smart_ptr<ListableGame> > &mega_cache );
     int  FindPlayer( std::string &name, std::string &current, int start_row, bool white );
@@ -39,8 +39,8 @@ public:
     int background_load_permill;
     bool kill_background_load;
     std::string GetStatus();
-	bool GetFile( std::string &filename );	//returns true if database is operational and fully loaded
-  
+    bool GetFile( std::string &filename );  //returns true if database is operational and fully loaded
+
 private:
     std::string db_filename;
     DB_REQ db_req;
@@ -55,7 +55,7 @@ private:
     std::string prev_current;
     bool        prev_white;
     int         prev_row;
-    
+
     // The position we are looking for
 public:
     uint64_t GetPositionHash()                  { return position_hash; }
@@ -63,7 +63,7 @@ public:
     thc::ChessPosition gbl_position;
 private:
     uint64_t position_hash;
-    
+
 };
 
 #endif // Database_H

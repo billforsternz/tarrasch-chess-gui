@@ -83,16 +83,16 @@ class GamesListCtrl: public wxListCtrl
 public:
     GamesListCtrl( GamesDialog *parent, wxWindowID id, const wxPoint &pos, const wxSize &size );
     void OnChar( wxKeyEvent &event );
-    
+
 public:
     GamesDialog   *parent;
     int initial_focus_offset;
     CtrlChessBoard *mini_board;
     MiniBoardGame *track;
-    
+
     // Focus changes to new item;
     void ReceiveFocus( int focus_idx );
-    
+
     // Recipes to calculate move text
     std::string CalculateMoveTxt() const;
     std::string CalculateMoveTxt( std::string &previous_move, thc::Move &previous_move_bin  ) const;
@@ -129,7 +129,7 @@ public:
 
 // GamesDialog class declaration
 class GamesDialog: public wxDialog
-{    
+{
     DECLARE_CLASS( GamesDialog )
     DECLARE_EVENT_TABLE()
 
@@ -138,7 +138,7 @@ protected:
     thc::ChessRules cr_base;
     wxStaticText *title_ctrl;
     GamesDialogResizer gdr;
- 
+
 public:
 
     // Track the game presented on the mini board
@@ -157,7 +157,7 @@ public:
         const wxSize& size = wxDefaultSize,
         long style = wxCAPTION|wxRESIZE_BORDER|wxSYSTEM_MENU|wxCLOSE_BOX
     );
-    
+
     // Member initialisation
     void Init();
 
@@ -214,7 +214,7 @@ public:
     void OnPublish( wxCommandEvent& event );
     void OnEco( wxCommandEvent& event );
     void OnHelpClick( wxCommandEvent& event );
-    
+
     void OnSearch( wxCommandEvent& event );
     void OnUtility( wxCommandEvent& event );
     void OnButton1( wxCommandEvent& event );
@@ -261,22 +261,22 @@ public:
 //  void OnClose( wxCloseEvent& event );
 //  void SaveColumns();
     bool ShowModalOk( std::string title );
-    
+
     // Return true if a game has been selected
     bool LoadGameFromPreview(  GameDocument &gd );
     void LoadGameForPreview( int idx, int focus_offset=0 );
- 
+
     // Helpers
     void OnOk();
     void MoveColCompare( std::vector< smart_ptr<ListableGame> > &displayed_games );
-    
+
     // GamesDialog member variables
 public:
     wxStaticText *player_names;
     CompactGame   single_line_cache;
     int           single_line_cache_idx;
     int           compare_col;
-    
+
 protected:
     wxWindow* parent2;
     wxWindowID id;
@@ -289,7 +289,7 @@ protected:
     wxBoxSizer*  hsiz_panel;
     //wxBoxSizer *button_panel;
     wxFlexGridSizer* vsiz_panel_buttons;
-    
+
     wxNotebook  *notebook;
     int          selected_game;
     void         CopyOrAdd( bool clear_clipboard );
@@ -317,14 +317,14 @@ private:    //TODO - move more vars to private
 public:
     bool transpo_activated;
     int nbr_games_in_list_ctrl;
-    
+
 protected:
     bool preview_game_set;
     GamesCache  *gc;
     GamesCache  *gc_clipboard;
     GameDocument preview_game;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
-	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
+    DialogDetect    detect;     // similarly the presence of this var allows tracking of open dialogs
 };
 
 

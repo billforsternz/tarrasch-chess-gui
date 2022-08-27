@@ -407,16 +407,16 @@ const char *PackedGame::Blob()
 
 const char *PackedGame::White()
 {
-	if( fields.length() == 0 )
-		return( "?" );
+    if( fields.length() == 0 )
+        return( "?" );
     bool single = (fields[0] == '1');
     return &fields[single?HDR_LEN_SINGLE:HDR_LEN_DOUBLE];
 }
 
 const char *PackedGame::GetField( int field_nbr )
 {
-	if( fields.length() == 0 )
-		return( "?" );
+    if( fields.length() == 0 )
+        return( "?" );
     bool single = (fields[0] == '1');
     unsigned int begin_offset=0;
     bool bad=false;

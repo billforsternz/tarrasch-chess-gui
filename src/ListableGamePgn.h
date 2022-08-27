@@ -21,7 +21,7 @@ private:
     int  pgn_handle;
     long fposn;
     PackedGame pack;
-	bool in_memory;
+    bool in_memory;
 public:
     ListableGamePgn( int pgn_handle, long fposn ) { this->pgn_handle=pgn_handle, this->fposn = fposn; in_memory=false;  }
     virtual long GetFposn() { return fposn; }
@@ -36,7 +36,7 @@ public:
             context = ReadGameFromPgnInLoop( pgn_handle, fposn, pact, context, end );
             pack.Pack(pact);
         }
-		in_memory = true;
+        in_memory = true;
         return context;
     }
 
@@ -58,12 +58,12 @@ public:
         pact.r = r;
         pack.Pack(pact);
     }
-    
-	virtual void ConvertToGameDocument(GameDocument &gd)
-	{
-		ReadGameFromPgn(pgn_handle, fposn, gd);
+
+    virtual void ConvertToGameDocument(GameDocument &gd)
+    {
+        ReadGameFromPgn(pgn_handle, fposn, gd);
         gd.game_id = game_id;
-	}
+    }
 
 
     virtual Roster &RefRoster()

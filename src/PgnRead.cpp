@@ -135,7 +135,7 @@ void PgnRead::debug_dump()
         if( c )
             //fprintf( debug_log_file(), "[%s]%c", ShowState(state), c );
             cprintf( "[%s]%c", ShowState(state), c );
-    }    
+    }
     #endif
 }
 
@@ -170,8 +170,8 @@ bool PgnRead::Process( FILE *infile )
             case 'P':
             case 'p':
             {
-				prefix_txt += std::string(buf);
-				//prefix_txt += '\n';
+                prefix_txt += std::string(buf);
+                //prefix_txt += '\n';
                 break;
             }
             case 'M':
@@ -288,26 +288,26 @@ void PgnRead::GameParse( std::string &str )
         /*  const char *nag_array[] =
             {
                 "",
-                " !",     // $1   
-                " ?",     // $2   
-                " !!",    // $3   
-                " ??",    // $4   
-                " !?",    // $5   
-                " ?!",    // $6   
-                "",       // $7   
-                "",       // $8   
-                " ??",    // $9   
-                " =",     // $10  
-                " =",     // $11  
-                " =",     // $12  
-                "",       // $13  
-                " +=",    // $14  
-                " =+",    // $15  
-                " +/-",   // $16  
-                " -/+",   // $17  
-                " +-",    // $18  
-                " -+",    // $19  
-                " +-",    // $20  
+                " !",     // $1
+                " ?",     // $2
+                " !!",    // $3
+                " ??",    // $4
+                " !?",    // $5
+                " ?!",    // $6
+                "",       // $7
+                "",       // $8
+                " ??",    // $9
+                " =",     // $10
+                " =",     // $11
+                " =",     // $12
+                "",       // $13
+                " +=",    // $14
+                " =+",    // $15
+                " +/-",   // $16
+                " -/+",   // $17
+                " +-",    // $18
+                " -+",    // $19
+                " +-",    // $20
                 " -+"     // $21
             };   */
             push_back = ch;
@@ -623,26 +623,26 @@ bool PgnRead::Process( FILE *infile )
         /*  const char *nag_array[] =
             {
                 "",
-                " !",     // $1   
-                " ?",     // $2   
-                " !!",    // $3   
-                " ??",    // $4   
-                " !?",    // $5   
-                " ?!",    // $6   
-                "",       // $7   
-                "",       // $8   
-                " ??",    // $9   
-                " =",     // $10  
-                " =",     // $11  
-                " =",     // $12  
-                "",       // $13  
-                " +=",    // $14  
-                " =+",    // $15  
-                " +/-",   // $16  
-                " -/+",   // $17  
-                " +-",    // $18  
-                " -+",    // $19  
-                " +-",    // $20  
+                " !",     // $1
+                " ?",     // $2
+                " !!",    // $3
+                " ??",    // $4
+                " !?",    // $5
+                " ?!",    // $6
+                "",       // $7
+                "",       // $8
+                " ??",    // $9
+                " =",     // $10
+                " =",     // $11
+                " =",     // $12
+                "",       // $13
+                " +=",    // $14
+                " =+",    // $15
+                " +/-",   // $16
+                " -/+",   // $17
+                " +-",    // $18
+                " -+",    // $19
+                " +-",    // $20
                 " -+"     // $21
             };   */
             push_back = ch;
@@ -716,7 +716,7 @@ bool PgnRead::Process( FILE *infile )
                     {
                         push_back = ch;
                         state = MOVE_NUMBER;
-                    } 
+                    }
                     break;
                 }
 
@@ -888,8 +888,8 @@ bool PgnRead::Process( FILE *infile )
             }
             if( state==HEADER || state==IN_COMMENT || state==MOVE_NUMBER || state==IN_MOVE_WHITE || state==IN_MOVE_BLACK )
                 len=0;
-            if( state==PREFIX && ( 
-                                    //old_state==IN_COMMENT || 
+            if( state==PREFIX && (
+                                    //old_state==IN_COMMENT ||
                                     old_state==BETWEEN_MOVES ||
                                     old_state==MOVE_NUMBER ||
                                     old_state==POST_MOVE_NUMBER ||
@@ -961,7 +961,7 @@ void PgnRead::Header( char *buf )
     const char *array[]=
     {
         "[Date ",
-        "[White ",     // warning! must be offset 1 
+        "[White ",     // warning! must be offset 1
         "[Black ",
         "[Result ",    // warning! must be offset 3
         "[ECO ",
@@ -1128,7 +1128,7 @@ PgnRead::STATE PgnRead::Pop()
     PgnRead::STATE ret=ERROR_STATE;
     STACK_ELEMENT *s = &stack_array[0];
     if( stack_idx == 0 )
-        Error( "Too many pops" );    
+        Error( "Too many pops" );
     else
     {
         s = &stack_array[--stack_idx];
@@ -1196,7 +1196,7 @@ bool PgnRead::DoMove( bool white_, int move_number, char *buf )
         first_move = false;
         first_move_offset = nbr_moves;
     }
-    nbr_moves -= first_move_offset;    
+    nbr_moves -= first_move_offset;
 
 #if 1
     if( nbr_moves > n->nbr_moves )

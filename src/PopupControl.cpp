@@ -20,7 +20,7 @@ PopupControl::PopupControl
     wxArrayString &strs,
     wxArrayString &terses,
     wxArrayString &book,
-    POPUP_MODE     popup_mode,  
+    POPUP_MODE     popup_mode,
     wxRect        &hover,
     wxWindowID     id, //= wxID_ANY,
     const wxPoint &point //= wxDefaultPosition
@@ -67,11 +67,11 @@ PopupControl::PopupControl
     if( popup_mode != BOOK_HOVER )
     {
         int offset = (4*size.x)/5;
-		dbg_printf( "pos.x=%d offset=%d\n", pos.x, offset );
-		if( pos.x > offset+5 )
-			pos.x -= offset;
-		else
-			pos.x = 5;
+        dbg_printf( "pos.x=%d offset=%d\n", pos.x, offset );
+        if( pos.x > offset+5 )
+            pos.x -= offset;
+        else
+            pos.x = 5;
         pos.y -= (max_h/2);
     }
 
@@ -171,7 +171,7 @@ void PopupControl::OnPaint( wxPaintEvent& WXUNUSED(event) )
     //dc.GetTextExtent(s, &w, &height);
     //height = this->height; //size.y / (count?count:1);
     dbg_printf( "size.x=%d, size.y=%d\n", size.x, size.y  );
- // dc.DrawRectangle( 0, 0, 68, 16 );      // need to get the rectangles overlapping, so 
+ // dc.DrawRectangle( 0, 0, 68, 16 );      // need to get the rectangles overlapping, so
  // dc.DrawRectangle( 0, 15, 68, 17 );     //  tweak 16 to 15 or 17, see tweaks below
  // dc.DrawRectangle( 0, 31, 68, 17 );
  // dc.DrawRectangle( 0, 47, 68, 17 );

@@ -70,17 +70,17 @@ public:
         pack.Unpack(pact);
         pact.game_id = game_id;
     }
-    
-	virtual void ConvertToGameDocument(GameDocument &gd)
-	{
-		CompactGame pact;
-		GetCompactGame(pact);
-		pact.Upscale(gd);
+
+    virtual void ConvertToGameDocument(GameDocument &gd)
+    {
+        CompactGame pact;
+        GetCompactGame(pact);
+        pact.Upscale(gd);
         gd.game_id = game_id;
     }
 
     virtual bool HaveStartPosition() { return false; }
-    
+
     virtual Roster &RefRoster()
     {
         static Roster r;
@@ -111,7 +111,7 @@ public:
         GetCompactGame( pact );
         return pact.start_position;
     }
-    
+
     // For now at least, the following are used for fast sorting on column headings
     virtual const char *White()     { return pack.White();    }
     virtual const char *Black()     { return pack.Black();    }

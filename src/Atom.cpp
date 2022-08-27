@@ -12,13 +12,13 @@
 
 Atomic::Atomic( bool set_focus )
 {
-    if( stack_count++ == 0 ) 
+    if( stack_count++ == 0 )
         gl->atom.Begin(set_focus);
 }
 
 Atomic::~Atomic()
 {
-    if( --stack_count == 0 ) 
+    if( --stack_count == 0 )
         gl->atom.End();
 }
 

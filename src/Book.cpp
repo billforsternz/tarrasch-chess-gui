@@ -107,8 +107,8 @@ bool Book::Load( wxString &error_msg, wxString &pgn_file )
     bool error=false;
     wxString compile_msg = "Digesting book";
     wxString pgn_compiled_file;
-    pgn_compiled_file = pgn_file + "_compiled"; 
-    wxFileName pcf(pgn_compiled_file);   
+    pgn_compiled_file = pgn_file + "_compiled";
+    wxFileName pcf(pgn_compiled_file);
     wxFileName pf(pgn_file);
     bool compile = false;
     if( pf.FileExists() )
@@ -182,7 +182,7 @@ void Book::debug_dump()
         debug_ptr &= (nbrof(debug_buf)-1);
         if( c )
             fprintf( debug_log_file(), "[%s]%c", ShowState(state), c );
-    }    
+    }
 }
 
 bool Book::Process( FILE *infile, wxProgressDialog &progress )
@@ -300,26 +300,26 @@ bool Book::Process( FILE *infile, wxProgressDialog &progress )
         /*  const char *nag_array[] =
             {
                 "",
-                " !",     // $1   
-                " ?",     // $2   
-                " !!",    // $3   
-                " ??",    // $4   
-                " !?",    // $5   
-                " ?!",    // $6   
-                "",       // $7   
-                "",       // $8   
-                " ??",    // $9   
-                " =",     // $10  
-                " =",     // $11  
-                " =",     // $12  
-                "",       // $13  
-                " +=",    // $14  
-                " =+",    // $15  
-                " +/-",   // $16  
-                " -/+",   // $17  
-                " +-",    // $18  
-                " -+",    // $19  
-                " +-",    // $20  
+                " !",     // $1
+                " ?",     // $2
+                " !!",    // $3
+                " ??",    // $4
+                " !?",    // $5
+                " ?!",    // $6
+                "",       // $7
+                "",       // $8
+                " ??",    // $9
+                " =",     // $10
+                " =",     // $11
+                " =",     // $12
+                "",       // $13
+                " +=",    // $14
+                " =+",    // $15
+                " +/-",   // $16
+                " -/+",   // $17
+                " +-",    // $18
+                " -+",    // $19
+                " +-",    // $20
                 " -+"     // $21
             };   */
             push_back = ch;
@@ -561,8 +561,8 @@ bool Book::Process( FILE *infile, wxProgressDialog &progress )
             }
             if( state==HEADER || state==IN_COMMENT || state==MOVE_NUMBER || state==IN_MOVE_WHITE || state==IN_MOVE_BLACK )
                 len=0;
-            if( state==PREFIX && ( 
-                                    //old_state==IN_COMMENT || 
+            if( state==PREFIX && (
+                                    //old_state==IN_COMMENT ||
                                     old_state==BETWEEN_MOVES ||
                                     old_state==MOVE_NUMBER ||
                                     old_state==POST_MOVE_NUMBER ||
@@ -605,7 +605,7 @@ bool Book::Process( FILE *infile, wxProgressDialog &progress )
     }
     FileOver();
     return aborted;
-}       
+}
 
 void Book::Header( char *buf )
 {
@@ -624,7 +624,7 @@ void Book::Header( char *buf )
     const char *array[]=
     {
         "[Date ",
-        "[White ",     // warning! must be offset 1 
+        "[White ",     // warning! must be offset 1
         "[Black ",
         "[Result ",    // warning! must be offset 3
         "[ECO ",
@@ -690,8 +690,8 @@ void Book::Header( char *buf )
                                     fen_flag = true;
                                     if( *src && *white )
                                     {
-                                        predefined_labels.Add(white);                  
-                                        predefined_fens.Add(src);                  
+                                        predefined_labels.Add(white);
+                                        predefined_fens.Add(src);
                                     }
                                     chess_rules.Forsyth( src );
                                 }
@@ -745,7 +745,7 @@ Book::STATE Book::Pop()
     Book::STATE ret=ERROR_STATE;
     STACK_ELEMENT *s = &stack_array[0];
     if( stack_idx == 0 )
-        Error( "Too many pops" );    
+        Error( "Too many pops" );
     else
     {
         s = &stack_array[--stack_idx];
@@ -772,7 +772,7 @@ void Book::FileOver()
 
 void Book::Error( const char *msg )
 {
-	cprintf( "Book::Error(%s)\n", msg );
+    cprintf( "Book::Error(%s)\n", msg );
     #ifdef _DEBUG
     int i;
     char c;
@@ -1108,7 +1108,7 @@ bool Book::Compile( wxString &error_msg, wxString &compile_msg, wxString &pgn_fi
     if( file_regen )
         fclose( file_regen );
     #endif
-	return error;
+    return error;
 }
 
 // Load compiled book. Returns bool error
@@ -1207,7 +1207,7 @@ bool Book::LoadCompiled( wxString &error_msg, wxString &pgn_compiled_file )
             // Loop adding BookPositions
             for( unsigned int i=0; i<len; i++ )
             {
-                BookPosition       bp;  
+                BookPosition       bp;
                 BookPositionInFile bpif;
                 fread( &bpif, sizeof(BookPositionInFile), 1, infile );
                 bp.cpos  = bpif.cpos;
@@ -1257,7 +1257,7 @@ bool Book::LoadCompiled( wxString &error_msg, wxString &pgn_compiled_file )
     }
     if( infile )
         fclose( infile );
-	return error;
+    return error;
 }
 
 // Lookup full move list, return true if any moves found

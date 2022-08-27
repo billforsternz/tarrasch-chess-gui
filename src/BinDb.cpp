@@ -66,7 +66,7 @@ The following are not needed for A) only for B) and C)
     clears internal games vector
 */
 
-static uint32_t game_id_bottom = 1;	// reserve 0 as a special value
+static uint32_t game_id_bottom = 1; // reserve 0 as a special value
 static uint32_t game_id_top    = GAME_ID_SENTINEL-1;
 
 // Database game ids are allocated from the top
@@ -84,14 +84,14 @@ uint32_t GameIdAllocateTop( uint32_t count )
 // Other game ids are allocated from the bottom
 uint32_t GameIdAllocateBottom(uint32_t count)
 {
-	if (game_id_bottom + count >= game_id_top)
-	{
-		game_id_bottom = 1;
-		game_id_top = GAME_ID_SENTINEL - 1;
-	}
-	uint32_t temp = game_id_bottom;
-	game_id_bottom += count;
-	return temp;
+    if (game_id_bottom + count >= game_id_top)
+    {
+        game_id_bottom = 1;
+        game_id_top = GAME_ID_SENTINEL - 1;
+    }
+    uint32_t temp = game_id_bottom;
+    game_id_bottom += count;
+    return temp;
 }
 
 
@@ -106,7 +106,7 @@ static FILE         *bin_file;      //temp
 //  In this the description is;
 //    "This header allows the alpha SQL based version of Tarrasch V3 to recognise (but grace
 //    fully reject) the newer custom in-memory binary database format"
-//  And the version is the last byte of the 1200 byte header = 0x03 = 
+//  And the version is the last byte of the 1200 byte header = 0x03 =
 //  DATABASE_VERSION_NUMBER_BIN_DB
 
 static uint8_t compatibility_header[] =
@@ -126,7 +126,7 @@ static uint8_t compatibility_header[] =
  /*0000C0*/  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  //................
  /*0000D0*/  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  //................
  /*0000E0*/  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  //................
- /*0000F0*/  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  //................ 
+ /*0000F0*/  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  //................
  /*000100*/  0x54, 0x44, 0x42, 0x20, 0x66, 0x6F, 0x72, 0x6D, 0x61, 0x74, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  //TDB format......
  /*000110*/  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  //................
  /*000120*/  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  //................
@@ -246,7 +246,7 @@ bool BinDbOpen( const char *db_file, std::string &error_msg )
                 {
                     error_msg = "Tarrasch database file " + std::string(db_file) + " expects a more recent version of Tarrasch (DB format =" + std::string(vtxt) + "), it is incompatible with this older version of Tarrasch";
                 }
-            } 
+            }
             else if( 0 == memcmp(&buf[0], "SQLite format 3", 15) )  // is it an earlier Tarrasch DB SQL based format ?
             {
                 // version = DATABASE_VERSION_NUMBER_LEGACY
@@ -556,10 +556,10 @@ void Bin2Elo( uint32_t bin, std::string &elo )
         bin = 4095;
     else if( bin < 0 )
         bin = 0;
-	if( bin )
-		sprintf( buf, "%d", bin );
-	else
-		buf[0] = '\0';
+    if( bin )
+        sprintf( buf, "%d", bin );
+    else
+        buf[0] = '\0';
     elo = buf;
 }
 
@@ -609,65 +609,65 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
         return false;
     if( nbr_moves < 3 )    // skip 'games' with zero, one or two moves
         return false;           // not inserted, not error
-	int yyyy=0;		// declare here just to avoid unnecessary recalc
-	uint32_t date_bin=0;
-	int elo_w = Elo2Bin(white_elo);
-	int elo_b = Elo2Bin(black_elo);
-	bool elo_cutoff_ignore = objs.repository->database.m_elo_cutoff_ignore;
-	if( !elo_cutoff_ignore )
-	{
-		int elo_cutoff		       = objs.repository->database.m_elo_cutoff;
-		int elo_cutoff_before_year = objs.repository->database.m_elo_cutoff_before_year;
-		bool elo_cutoff_one	   = objs.repository->database.m_elo_cutoff_one;
-		bool elo_cutoff_both   = objs.repository->database.m_elo_cutoff_both;
-		bool elo_cutoff_fail   = objs.repository->database.m_elo_cutoff_fail;
-		bool elo_cutoff_pass   = objs.repository->database.m_elo_cutoff_pass;
-		bool elo_cutoff_pass_before = objs.repository->database.m_elo_cutoff_pass_before;
-		bool elo_w_pass = (elo_w >= elo_cutoff);
-		bool elo_b_pass = (elo_b >= elo_cutoff);
-		if( elo_w==0 || elo_b==0 )
-		{
-			if( elo_cutoff_fail )
-			{
-				if( elo_w == 0 )
-					elo_w_pass = false;
-				if( elo_b == 0 )
-					elo_b_pass = false;
-			}
-			else if( elo_cutoff_pass )
-			{
-				if( elo_w == 0 )
-					elo_w_pass = true;
-				if( elo_b == 0 )
-					elo_b_pass = true;
-			}
-			else if( elo_cutoff_pass_before )
-			{
-				date_bin = Date2Bin(date);
-				// Use 19 bits with format yyyyyyyyyymmmmddddd
-				// y year, 10 bits, values are 0=unknown, 1-1000 are years 1501-2500 (so fixed offset of 1500), 1001-1023 are reserved
-				// m month, 4 bits, values are 0=unknown, 1=January..12=December, 13-15 reserved
-				// d day,   5 bits, values are valid, 0=unknown, 1-31 = conventional date days
-				yyyy = (date_bin>>9);
-				if( 1<=yyyy && yyyy<=1000 )
-					yyyy += 1500; 
-				else
-					yyyy = 1500;	// note that yyyy=0 is not possible if yyyy has been calculated (see use of yyyy to avoid recalculation below)
-				bool old_game = (yyyy < elo_cutoff_before_year);
-				if( elo_w == 0 )
-					elo_w_pass = old_game;
-				if( elo_b == 0 )
-					elo_b_pass = old_game;
-			}
-		}
-		bool ok = true;
-		if( elo_cutoff_one )
-			ok = elo_w_pass||elo_b_pass;
-		else if( elo_cutoff_both )
-			ok = elo_w_pass&&elo_b_pass;
-		if( !ok )
-			return false;   // not inserted, not error
-	}
+    int yyyy=0;     // declare here just to avoid unnecessary recalc
+    uint32_t date_bin=0;
+    int elo_w = Elo2Bin(white_elo);
+    int elo_b = Elo2Bin(black_elo);
+    bool elo_cutoff_ignore = objs.repository->database.m_elo_cutoff_ignore;
+    if( !elo_cutoff_ignore )
+    {
+        int elo_cutoff             = objs.repository->database.m_elo_cutoff;
+        int elo_cutoff_before_year = objs.repository->database.m_elo_cutoff_before_year;
+        bool elo_cutoff_one    = objs.repository->database.m_elo_cutoff_one;
+        bool elo_cutoff_both   = objs.repository->database.m_elo_cutoff_both;
+        bool elo_cutoff_fail   = objs.repository->database.m_elo_cutoff_fail;
+        bool elo_cutoff_pass   = objs.repository->database.m_elo_cutoff_pass;
+        bool elo_cutoff_pass_before = objs.repository->database.m_elo_cutoff_pass_before;
+        bool elo_w_pass = (elo_w >= elo_cutoff);
+        bool elo_b_pass = (elo_b >= elo_cutoff);
+        if( elo_w==0 || elo_b==0 )
+        {
+            if( elo_cutoff_fail )
+            {
+                if( elo_w == 0 )
+                    elo_w_pass = false;
+                if( elo_b == 0 )
+                    elo_b_pass = false;
+            }
+            else if( elo_cutoff_pass )
+            {
+                if( elo_w == 0 )
+                    elo_w_pass = true;
+                if( elo_b == 0 )
+                    elo_b_pass = true;
+            }
+            else if( elo_cutoff_pass_before )
+            {
+                date_bin = Date2Bin(date);
+                // Use 19 bits with format yyyyyyyyyymmmmddddd
+                // y year, 10 bits, values are 0=unknown, 1-1000 are years 1501-2500 (so fixed offset of 1500), 1001-1023 are reserved
+                // m month, 4 bits, values are 0=unknown, 1=January..12=December, 13-15 reserved
+                // d day,   5 bits, values are valid, 0=unknown, 1-31 = conventional date days
+                yyyy = (date_bin>>9);
+                if( 1<=yyyy && yyyy<=1000 )
+                    yyyy += 1500;
+                else
+                    yyyy = 1500;    // note that yyyy=0 is not possible if yyyy has been calculated (see use of yyyy to avoid recalculation below)
+                bool old_game = (yyyy < elo_cutoff_before_year);
+                if( elo_w == 0 )
+                    elo_w_pass = old_game;
+                if( elo_b == 0 )
+                    elo_b_pass = old_game;
+            }
+        }
+        bool ok = true;
+        if( elo_cutoff_one )
+            ok = elo_w_pass||elo_b_pass;
+        else if( elo_cutoff_both )
+            ok = elo_w_pass&&elo_b_pass;
+        if( !ok )
+            return false;   // not inserted, not error
+    }
     const char *s =  white;
     while( *s==' ' )
         s++;
@@ -692,7 +692,7 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
         sblack = sblack.substr( 0, sblack.length()-5 );
     ListableGameBinDb gb
     (
-        bin_db_append_cb_idx, 
+        bin_db_append_cb_idx,
         games.size(),
         sevent,
         ssite,
@@ -1073,7 +1073,7 @@ static bool (*predicate_func)( const smart_ptr<ListableGame> &e1, const smart_pt
 static uint32_t predicate_step;
 static int permill_initial;
 static int permill_max_so_far;
-static ProgressBar *predicate_pb; 
+static ProgressBar *predicate_pb;
 
 static int sort_scan()
 {
@@ -1098,7 +1098,7 @@ static int sort_scan()
 static void sort_before( std::vector< smart_ptr<ListableGame> >::iterator begin,
                    std::vector< smart_ptr<ListableGame> >::iterator end,
                    bool (*predicate)( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 ),
-                   ProgressBar *pb 
+                   ProgressBar *pb
                  )
 {
     predicate_count = 0;
@@ -1173,12 +1173,12 @@ static bool predicate_sorts_by_game_moves( const smart_ptr<ListableGame> &e1, co
 
 static bool predicate_sorts_by_player( const smart_ptr<ListableGame> &e1, const smart_ptr<ListableGame> &e2 )
 {
-	bool ret;
-	bool eq  = e1->WhiteBin() == e2->WhiteBin();
-	if( eq )
-		ret = e1->game_id < e2->game_id;   // This means the "Show all by player" feature shows each players game in db order
-	else
-		ret = e1->WhiteBin() < e2->WhiteBin();
+    bool ret;
+    bool eq  = e1->WhiteBin() == e2->WhiteBin();
+    if( eq )
+        ret = e1->game_id < e2->game_id;   // This means the "Show all by player" feature shows each players game in db order
+    else
+        ret = e1->WhiteBin() < e2->WhiteBin();
     predicate_count++;
     if( (predicate_count & 0xffff) == 0 )
         sort_progress_probe();
@@ -1190,7 +1190,7 @@ void BinDbShowDebugOrder( const std::vector< smart_ptr<ListableGame> > &gms, con
 {
     int sz = gms.size();
     if( sz < 7 )
-	{
+    {
         std::string s;
         for( int idx=0; idx<sz; idx++ )
         {
@@ -1201,7 +1201,7 @@ void BinDbShowDebugOrder( const std::vector< smart_ptr<ListableGame> > &gms, con
                 s +=",";
         }
         cprintf( "%s [%s]\n", msg, s.c_str() );
-	}
+    }
     else
     {
         uint32_t id0 = gms[0]->game_id;
@@ -1227,12 +1227,12 @@ void BinDbDatabaseInitialSort( std::vector< smart_ptr<ListableGame> > &games_, b
         {
             uint32_t id = games_[i]->game_id;
             int white_bin = games_[i]->WhiteBin();
-        	bool eq = (white_bin == prev_white_bin);
+            bool eq = (white_bin == prev_white_bin);
             bool lt;
-    	    if( eq )
-	    	    lt = id < prev_id;   // This means the "Show all by player" feature shows each players game in db order
-	        else
-		        lt = white_bin < prev_white_bin;
+            if( eq )
+                lt = id < prev_id;   // This means the "Show all by player" feature shows each players game in db order
+            else
+                lt = white_bin < prev_white_bin;
             if( lt )
                 sorted = false;
             prev_id = id;
@@ -1409,7 +1409,7 @@ bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, b
                             smart_ptr<ListableGame> q = games[j];
                             if( q->game_id!=GAME_ID_SENTINEL && DupDetect(p,white_tokens,black_tokens,q) )
                             {
-                                q->game_id = GAME_ID_SENTINEL;    
+                                q->game_id = GAME_ID_SENTINEL;
 #ifdef EXTRA_DEDUP_DIAGNOSTIC_FILE
                                 GameDocument the_game;
                                 CompactGame pact;
@@ -1437,13 +1437,13 @@ bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, b
                         if( pgn_dup2 && nbr_dups>0 )
                         {
                             if( nbr_dups > 1 )
-                                replace_once( str_dup_games, "[White \"", "[White \"MORE-THAN-2- " ); 
+                                replace_once( str_dup_games, "[White \"", "[White \"MORE-THAN-2- " );
                             fwrite(str_dup_games.c_str(),1,str_dup_games.length(),pgn_dup2);
                         }
 #endif
                     }
                 }
-#if 0           
+#if 0
                 {
                     cprintf( "Eval Dups out\n" );
                     for( int idx=start; idx<end; idx++ )
@@ -1475,8 +1475,8 @@ bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, b
             else
                 nbr_deleted++;
         }
-		BinDbShowDebugOrder(games, "Duplicate Removal - phase 3 after");
-	}
+        BinDbShowDebugOrder(games, "Duplicate Removal - phase 3 after");
+    }
 
     // New in V3.01a - incorporate write file so can do that before writing dups to TarraschDbDuplicate.pgn
     if( ofile )
@@ -1496,10 +1496,10 @@ bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, b
         wxString dups_filename = wfn.GetFullPath();
         FILE *pgn_dup = fopen(dups_filename.c_str(),"wb");
         if( pgn_dup )
-	    {
-		    BinDbShowDebugOrder(games, "Duplicate Removal - phase 4 before");
-		    std::string desc("Saving duplicates to TarraschDbDuplicatesFile.pgn, cancel if not needed");
-		    ProgressBar progress_bar(optional_title, desc, true, window);
+        {
+            BinDbShowDebugOrder(games, "Duplicate Removal - phase 4 before");
+            std::string desc("Saving duplicates to TarraschDbDuplicatesFile.pgn, cancel if not needed");
+            ProgressBar progress_bar(optional_title, desc, true, window);
             for( int i=games.size()-1; i>=0; i-- )
             {
                 if( games[i]->game_id != GAME_ID_SENTINEL )
@@ -1530,7 +1530,7 @@ bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, b
 #ifdef EXTRA_DEDUP_DIAGNOSTIC_FILE
     if( pgn_dup2 )
         fclose(pgn_dup2);
-#endif    
+#endif
     return true;
 }
 
@@ -1576,8 +1576,8 @@ bool BinDbWriteOutToFile( FILE *ofile, int nbr_to_omit_from_end, bool locked, Pr
     fh.locked      = locked;
     cprintf( "%d games, %d players, %d events, %d sites\n", fh.nbr_games, fh.nbr_players, fh.nbr_events, fh.nbr_sites );
     int nbr_bits_player = BitsRequired(fh.nbr_players);
-    int nbr_bits_event  = BitsRequired(fh.nbr_events);  
-    int nbr_bits_site   = BitsRequired(fh.nbr_sites);   
+    int nbr_bits_event  = BitsRequired(fh.nbr_events);
+    int nbr_bits_site   = BitsRequired(fh.nbr_sites);
     cprintf( "%d player bits, %d event bits, %d site bits\n", nbr_bits_player, nbr_bits_event, nbr_bits_site );
     fwrite( &fh, sizeof(fh), 1, ofile );
     int idx=0;
@@ -1660,7 +1660,7 @@ bool BinDbWriteOutToFile( FILE *ofile, int nbr_to_omit_from_end, bool locked, Pr
             eco_bin = 0;
         bb.Write(6,eco_bin);                // ECO For now 500 codes (9 bits) 0-499 is (A..E)(00..99), sadly A00 indistinguishable from empty
         bb.Write(7,ptr->ResultBin());       // Result (2 bits)
-        bb.Write(8,ptr->WhiteEloBin());     // WhiteElo 12 bits (range 0..4095)                                                                 
+        bb.Write(8,ptr->WhiteEloBin());     // WhiteElo 12 bits (range 0..4095)
         bb.Write(9,ptr->BlackEloBin());     // BlackElo
         fwrite( bb.GetPtr(), bb_sz, 1, ofile );
         int n = strlen(ptr->CompressedMoves()) + 1;
@@ -1690,22 +1690,22 @@ void ReadStrings( FILE *fin, int nbr_strings, std::vector<std::string> &strings 
         }
         strings.push_back(s);
         if( ch == EOF )
-            break;    
+            break;
     }
 }
 
 // Returns bool killed;
 bool BinDbLoadAllGames( bool &locked, bool for_append, std::vector< smart_ptr<ListableGame> > &mega_cache, int &background_load_permill, bool &kill_background_load, ProgressBar *pb )
 {
-	bool killed=false;
+    bool killed=false;
     locked = false;
 
-    // When loading the system database for searches, reverse order so most recent games come first 
+    // When loading the system database for searches, reverse order so most recent games come first
     bool do_reverse = !for_append;
 
-	// When loading a database for appending games, use 24 bit string indexes since we don't know the final number of
-	//  players, events or sites
-	bool translate_to_24_bit = for_append;
+    // When loading a database for appending games, use 24 bit string indexes since we don't know the final number of
+    //  players, events or sites
+    bool translate_to_24_bit = for_append;
 
     uint8_t cb_idx = BinDbReadBegin();
     PackedGameBinDbControlBlock& cb = PackedGameBinDb::GetControlBlock(cb_idx);
@@ -1715,7 +1715,7 @@ bool BinDbLoadAllGames( bool &locked, bool for_append, std::vector< smart_ptr<Li
     fread( &fh, sizeof(fh), 1, fin );
     cprintf( "%d games, %d players, %d events, %d sites\n", fh.nbr_games, fh.nbr_players, fh.nbr_events, fh.nbr_sites );
     int nbr_bits_player = BitsRequired(fh.nbr_players);
-    int nbr_bits_event  = BitsRequired(fh.nbr_events);  
+    int nbr_bits_event  = BitsRequired(fh.nbr_events);
     int nbr_bits_site   = BitsRequired(fh.nbr_sites);
     cprintf( "%d player bits, %d event bits, %d site bits\n", nbr_bits_player, nbr_bits_event, nbr_bits_site );
     int hdr_len = fh.hdr_len;   // future compatibility feature - if FileHeader gets longer so will fh.hdr_len
@@ -1735,8 +1735,8 @@ bool BinDbLoadAllGames( bool &locked, bool for_append, std::vector< smart_ptr<Li
     ReadStrings( fin, fh.nbr_sites, cb.sites );
     cprintf( "Sites ReadStrings() complete\n" );
 
-	// Use this BinaryBlock if we need to translate
-	BinaryBlock bb;
+    // Use this BinaryBlock if we need to translate
+    BinaryBlock bb;
     bb.Next(nbr_bits_event);    // Event
     bb.Next(nbr_bits_site);     // Site
     bb.Next(nbr_bits_player);   // White
@@ -1750,10 +1750,10 @@ bool BinDbLoadAllGames( bool &locked, bool for_append, std::vector< smart_ptr<Li
     bb.Freeze();
     int bb_sz = bb.FrozenSize();
     cb.bb.Clear();
-    cb.bb.Next( translate_to_24_bit ? 24 : nbr_bits_event  );				   // Event
-    cb.bb.Next( translate_to_24_bit ? 24 : nbr_bits_site   );				   // Site
-    cb.bb.Next( translate_to_24_bit ? 24 : nbr_bits_player );				   // White
-    cb.bb.Next( translate_to_24_bit ? 24 : nbr_bits_player );				   // Black
+    cb.bb.Next( translate_to_24_bit ? 24 : nbr_bits_event  );                  // Event
+    cb.bb.Next( translate_to_24_bit ? 24 : nbr_bits_site   );                  // Site
+    cb.bb.Next( translate_to_24_bit ? 24 : nbr_bits_player );                  // White
+    cb.bb.Next( translate_to_24_bit ? 24 : nbr_bits_player );                  // Black
     cb.bb.Next(19);                // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
     cb.bb.Next(16);                // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), cb.bb=board(0-1023)
     cb.bb.Next(9);                 // ECO For now 500 codes (9 bits) (A..E)(00..99)
@@ -1761,31 +1761,31 @@ bool BinDbLoadAllGames( bool &locked, bool for_append, std::vector< smart_ptr<Li
     cb.bb.Next(12);                // WhiteElo 12 bits (range 0..4095)
     cb.bb.Next(12);                // BlackElo
     cb.bb.Freeze();
-	const char *cb_ptr = cb.bb.GetPtr();
-	int cb_sz = cb.bb.FrozenSize();
+    const char *cb_ptr = cb.bb.GetPtr();
+    int cb_sz = cb.bb.FrozenSize();
     uint32_t game_count = fh.nbr_games;
     uint32_t nbr_games=0;
     uint32_t nbr_promotion_games=0;
     uint32_t base = GameIdAllocateTop(game_count);
     for( uint32_t i=0; i<game_count; i++ )
     {
-		if( kill_background_load )
-		{
-			killed = true;
-			break;
-		}
+        if( kill_background_load )
+        {
+            killed = true;
+            break;
+        }
         if( pb && pb->Perfraction(i,game_count) )
-		{
-			killed = true;
-			break;
-		}
+        {
+            killed = true;
+            break;
+        }
         char buf[sizeof(cb.bb)];
 
-		// Read the game header into a std::string
-		fread( buf, bb_sz, 1, fin );
+        // Read the game header into a std::string
+        fread( buf, bb_sz, 1, fin );
         std::string game_header(buf,bb_sz);
 
-		// Read the moves, '\0' terminated string follows game_header
+        // Read the moves, '\0' terminated string follows game_header
         std::string game_moves;
         int ch = fgetc(fin);
         while( ch && ch!=EOF )
@@ -1796,26 +1796,26 @@ bool BinDbLoadAllGames( bool &locked, bool for_append, std::vector< smart_ptr<Li
         if( ch == EOF )
             cprintf( "Whoops\n" );
 
-		// If reading to append, need to translate header from logN bits to 24 bits
-		if( translate_to_24_bit )
-		{
-			const char *game_header_ptr = game_header.c_str();
-			uint32_t x0 = bb.Read(0,game_header_ptr);	cb.bb.Write(0,x0);		// Event
-			uint32_t x1 = bb.Read(1,game_header_ptr);	cb.bb.Write(1,x1);		// Site
-			uint32_t x2 = bb.Read(2,game_header_ptr);	cb.bb.Write(2,x2);		// White
-			uint32_t x3 = bb.Read(3,game_header_ptr);	cb.bb.Write(3,x3);		// Black
-			uint32_t x4 = bb.Read(4,game_header_ptr);	cb.bb.Write(4,x4);		// Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
-			uint32_t x5 = bb.Read(5,game_header_ptr);	cb.bb.Write(5,x5);		// Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), cb.bb=board(0-1023)
-			uint32_t x6 = bb.Read(6,game_header_ptr);	cb.bb.Write(6,x6);		// ECO For now 500 codes (9 bits) (A..E)(00..99)
-			uint32_t x7 = bb.Read(7,game_header_ptr);	cb.bb.Write(7,x7);		// Result (2 bits)
-			uint32_t x8 = bb.Read(8,game_header_ptr);	cb.bb.Write(8,x8);		// WhiteElo 12 bits (range 0..4095)
-			uint32_t x9 = bb.Read(9,game_header_ptr);	cb.bb.Write(9,x9);		// BlackElo
-			game_header = std::string( cb_ptr, cb_sz );
-		}
+        // If reading to append, need to translate header from logN bits to 24 bits
+        if( translate_to_24_bit )
+        {
+            const char *game_header_ptr = game_header.c_str();
+            uint32_t x0 = bb.Read(0,game_header_ptr);   cb.bb.Write(0,x0);      // Event
+            uint32_t x1 = bb.Read(1,game_header_ptr);   cb.bb.Write(1,x1);      // Site
+            uint32_t x2 = bb.Read(2,game_header_ptr);   cb.bb.Write(2,x2);      // White
+            uint32_t x3 = bb.Read(3,game_header_ptr);   cb.bb.Write(3,x3);      // Black
+            uint32_t x4 = bb.Read(4,game_header_ptr);   cb.bb.Write(4,x4);      // Date 19 bits, format yyyyyyyyyymmmmddddd, (year values have 1500 offset)
+            uint32_t x5 = bb.Read(5,game_header_ptr);   cb.bb.Write(5,x5);      // Round for now 16 bits -> rrrrrrbbbbbbbbbb   rr=round (0-63), cb.bb=board(0-1023)
+            uint32_t x6 = bb.Read(6,game_header_ptr);   cb.bb.Write(6,x6);      // ECO For now 500 codes (9 bits) (A..E)(00..99)
+            uint32_t x7 = bb.Read(7,game_header_ptr);   cb.bb.Write(7,x7);      // Result (2 bits)
+            uint32_t x8 = bb.Read(8,game_header_ptr);   cb.bb.Write(8,x8);      // WhiteElo 12 bits (range 0..4095)
+            uint32_t x9 = bb.Read(9,game_header_ptr);   cb.bb.Write(9,x9);      // BlackElo
+            game_header = std::string( cb_ptr, cb_sz );
+        }
 
         uint32_t game_id = base;
         game_id += (do_reverse ? game_count-1-i : i);
-		std::string blob = game_header + game_moves;
+        std::string blob = game_header + game_moves;
         ListableGameBinDb info( cb_idx, game_id, blob );
         make_smart_ptr( ListableGameBinDb, new_info, info );
         new_info->SetLocked( locked );
@@ -1840,7 +1840,7 @@ bool BinDbLoadAllGames( bool &locked, bool for_append, std::vector< smart_ptr<Li
                                         ) */
             )
         {
-			cprintf( "%d games (%d include promotion)\n", nbr_games, nbr_promotion_games );
+            cprintf( "%d games (%d include promotion)\n", nbr_games, nbr_promotion_games );
         }
     }
     if( do_reverse )
@@ -1853,6 +1853,6 @@ bool BinDbLoadAllGames( bool &locked, bool for_append, std::vector< smart_ptr<Li
         cprintf( "First: game_id=%lu, %s-%s %s\n", p1->game_id, p1->White(), p1->Black(), p1->Date() );
         cprintf( "Last:  game_id=%lu, %s-%s %s\n", p2->game_id, p2->White(), p2->Black(), p2->Date() );
     }
-	return killed;
+    return killed;
 }
 

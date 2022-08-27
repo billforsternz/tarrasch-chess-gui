@@ -36,7 +36,7 @@ enum
 
 // PositionDialog class declaration
 class PositionDialog: public wxDialog
-{    
+{
     DECLARE_CLASS( PositionDialog )
     DECLARE_EVENT_TABLE()
 
@@ -113,7 +113,7 @@ public:
     wxString     fen;
 private:
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
-	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
+    DialogDetect    detect;     // similarly the presence of this var allows tracking of open dialogs
     wxCheckBox*     white_ooo;
     wxCheckBox*     white_oo;
     wxCheckBox*     black_ooo;

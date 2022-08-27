@@ -79,7 +79,7 @@ bool EngineDialog::Create( wxWindow* parent,
 
         // This fits the dialog to the minimum size dictated by the sizers
         GetSizer()->Fit(this);
-        
+
         // This ensures that the dialog cannot be sized smaller than the minimum size
         GetSizer()->SetSizeHints(this);
 
@@ -91,12 +91,12 @@ bool EngineDialog::Create( wxWindow* parent,
 
 // Control creation for EngineDialog
 void EngineDialog::CreateControls()
-{    
+{
 
     // A top-level sizer
     wxBoxSizer* top_sizer = new wxBoxSizer(wxVERTICAL);
     this->SetSizer(top_sizer);
-    
+
     // A second box sizer to give more space around the controls
     wxBoxSizer* box_sizer = new wxBoxSizer(wxVERTICAL);
     top_sizer->Add(box_sizer, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
@@ -123,40 +123,40 @@ void EngineDialog::CreateControls()
     wxFilePickerCtrl *picker = new wxFilePickerCtrl( this, ID_ENGINE_PICKER, path, "", //wxT("&Select UCI Engine"),
 #ifdef THC_WINDOWS
         "*.exe", wxDefaultPosition, wxDefaultSize,
-#else         
+#else
         "*", wxDefaultPosition, wxDefaultSize,
-#endif        
-        wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST ); //|wxFLP_CHANGE_DIR );    
+#endif
+        wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST ); //|wxFLP_CHANGE_DIR );
     box_sizer->Add(picker, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 1);
 
-	// Ponder enabled
-	wxCheckBox* ponder_box = new wxCheckBox(this, ID_PONDER,
-		wxT("Ponder      "), wxDefaultPosition, wxDefaultSize, 0);
-	ponder_box->SetValue(dat.m_ponder);
+    // Ponder enabled
+    wxCheckBox* ponder_box = new wxCheckBox(this, ID_PONDER,
+        wxT("Ponder      "), wxDefaultPosition, wxDefaultSize, 0);
+    ponder_box->SetValue(dat.m_ponder);
 
-	// Label for the hash
-	wxStaticText* hash_label = new wxStaticText(this, wxID_STATIC,
-		wxT("Hash size (MB):"), wxDefaultPosition, wxDefaultSize, 0);
+    // Label for the hash
+    wxStaticText* hash_label = new wxStaticText(this, wxID_STATIC,
+        wxT("Hash size (MB):"), wxDefaultPosition, wxDefaultSize, 0);
 
-	// A spin control for the hash
-	wxSpinCtrl* hash_spin = new wxSpinCtrl(this, ID_HASH,
-		wxEmptyString, wxDefaultPosition, wxSize(60, -1),
-		wxSP_ARROW_KEYS, 1, 32768, 64);
+    // A spin control for the hash
+    wxSpinCtrl* hash_spin = new wxSpinCtrl(this, ID_HASH,
+        wxEmptyString, wxDefaultPosition, wxSize(60, -1),
+        wxSP_ARROW_KEYS, 1, 32768, 64);
 
-	// Normal, below Normal, Idle Priority radio options
+    // Normal, below Normal, Idle Priority radio options
     wxStaticBox *box2 = new wxStaticBox(this, wxID_ANY, "&Engine Priority" );
     wxSizer     *who_box = new wxStaticBoxSizer(box2, wxHORIZONTAL);
-	if( !dat.m_low_priority && !dat.m_idle_priority)
-		dat.m_normal_priority = true;
-	wxRadioButton *priority_normal = new wxRadioButton(this, ID_NORMAL_PRIORITY,
-		"Normal", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
-	priority_normal->SetValue(dat.m_normal_priority);
-	wxRadioButton *priority_low = new wxRadioButton(this, ID_LOW_PRIORITY,
-		"Below normal", wxDefaultPosition, wxDefaultSize, 0);
-	priority_low->SetValue(dat.m_low_priority);
-	wxRadioButton *priority_idle = new wxRadioButton(this, ID_IDLE_PRIORITY,
-		"Idle", wxDefaultPosition, wxDefaultSize, 0);
-	priority_idle->SetValue(dat.m_idle_priority);
+    if( !dat.m_low_priority && !dat.m_idle_priority)
+        dat.m_normal_priority = true;
+    wxRadioButton *priority_normal = new wxRadioButton(this, ID_NORMAL_PRIORITY,
+        "Normal", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+    priority_normal->SetValue(dat.m_normal_priority);
+    wxRadioButton *priority_low = new wxRadioButton(this, ID_LOW_PRIORITY,
+        "Below normal", wxDefaultPosition, wxDefaultSize, 0);
+    priority_low->SetValue(dat.m_low_priority);
+    wxRadioButton *priority_idle = new wxRadioButton(this, ID_IDLE_PRIORITY,
+        "Idle", wxDefaultPosition, wxDefaultSize, 0);
+    priority_idle->SetValue(dat.m_idle_priority);
     who_box->Add( priority_normal, 0, wxALL, 1);
     who_box->Add( priority_low, 0, wxALL, 1);
     who_box->Add( priority_idle, 0, wxALL, 1);
@@ -171,16 +171,16 @@ void EngineDialog::CreateControls()
         wxEmptyString, wxDefaultPosition, wxSize(60, -1),
         wxSP_ARROW_KEYS, 1, nbr_cpus, 1 );
 
-	wxBoxSizer* hash_horiz1  = new wxBoxSizer(wxHORIZONTAL);
+    wxBoxSizer* hash_horiz1  = new wxBoxSizer(wxHORIZONTAL);
     wxBoxSizer* hash_horiz2  = new wxBoxSizer(wxHORIZONTAL);
-	hash_horiz1->Add( hash_label, 0, wxALIGN_LEFT | wxGROW | wxALL, 5);
-	hash_horiz1->Add( hash_spin, 0, wxALIGN_LEFT | wxGROW | wxALL, 5);
+    hash_horiz1->Add( hash_label, 0, wxALIGN_LEFT | wxGROW | wxALL, 5);
+    hash_horiz1->Add( hash_spin, 0, wxALIGN_LEFT | wxGROW | wxALL, 5);
     hash_horiz1->Add( max_cpu_cores_label,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
     hash_horiz1->Add( max_cpu_cores_spin,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
-	hash_horiz2->Add( ponder_box, 0, wxALIGN_LEFT | wxGROW | wxALL, 5);
+    hash_horiz2->Add( ponder_box, 0, wxALIGN_LEFT | wxGROW | wxALL, 5);
     hash_horiz2->Add( who_box, 1, wxGROW | (wxALL/* & ~wxTOP  */), 5);
     box_sizer->Add( hash_horiz1, 0, wxTOP|wxBOTTOM|wxRIGHT, 1);
-	box_sizer->Add( hash_horiz2, 0, wxTOP|wxBOTTOM|wxRIGHT, 1);
+    box_sizer->Add( hash_horiz2, 0, wxTOP|wxBOTTOM|wxRIGHT, 1);
 
     // Text controls for custom parameter 1
     wxTextCtrl *custom1a_ctrl = new wxTextCtrl ( this, ID_CUSTOM1A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
@@ -298,11 +298,11 @@ void EngineDialog::SetDialogValidators()
         wxGenericValidator(& dat.m_ponder));
     FindWindow(ID_NORMAL_PRIORITY)->SetValidator(
         wxGenericValidator(& dat.m_normal_priority));
-	FindWindow(ID_LOW_PRIORITY)->SetValidator(
-		wxGenericValidator(&dat.m_low_priority));
-	FindWindow(ID_IDLE_PRIORITY)->SetValidator(
-		wxGenericValidator(&dat.m_idle_priority));
-	FindWindow(ID_HASH)->SetValidator(
+    FindWindow(ID_LOW_PRIORITY)->SetValidator(
+        wxGenericValidator(&dat.m_low_priority));
+    FindWindow(ID_IDLE_PRIORITY)->SetValidator(
+        wxGenericValidator(&dat.m_idle_priority));
+    FindWindow(ID_HASH)->SetValidator(
         wxGenericValidator(& dat.m_hash));
     FindWindow(ID_MAX_CPU_CORES)->SetValidator(
         wxGenericValidator(& dat.m_max_cpu_cores));
@@ -346,11 +346,11 @@ void EngineDialog::SetDialogHelp()
     wxString priority_help = wxT("Three engine CPU priorities are available, \"Normal\" is highest, \"Idle\" is lowest. Lower settings might improve the computer's responsiveness.");
     FindWindow(ID_NORMAL_PRIORITY)->SetHelpText(priority_help);
     FindWindow(ID_NORMAL_PRIORITY)->SetToolTip(priority_help);
-	FindWindow(ID_LOW_PRIORITY)->SetHelpText(priority_help);
-	FindWindow(ID_LOW_PRIORITY)->SetToolTip(priority_help);
-	FindWindow(ID_IDLE_PRIORITY)->SetHelpText(priority_help);
-	FindWindow(ID_IDLE_PRIORITY)->SetToolTip(priority_help);
-	wxString hash_help = wxT("The maximum size of hash table the engine is allowed (in megabytes).");
+    FindWindow(ID_LOW_PRIORITY)->SetHelpText(priority_help);
+    FindWindow(ID_LOW_PRIORITY)->SetToolTip(priority_help);
+    FindWindow(ID_IDLE_PRIORITY)->SetHelpText(priority_help);
+    FindWindow(ID_IDLE_PRIORITY)->SetToolTip(priority_help);
+    wxString hash_help = wxT("The maximum size of hash table the engine is allowed (in megabytes).");
     FindWindow(ID_HASH)->SetHelpText(hash_help);
     FindWindow(ID_HASH)->SetToolTip(hash_help);
     wxString max_cpu_cores_help = wxT("The number of CPU cores the engine can use.");
@@ -422,30 +422,30 @@ void EngineDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
       wxT("stockfish_8_x64.exe.\n\n" )
       wxT("Another example, Komodo 3 64 bit is;\n")
       wxT("komodo3-64.exe." )
-	  wxT("\n\n")
+      wxT("\n\n")
       wxT("One weak engine is provided. TarraschToyEngine.exe is ")
       wxT("good enough to be fun but readily beatable for most players, ")
       wxT("it is ideal for blindfold training (see the training options).")
-	  wxT("\n\n")
+      wxT("\n\n")
       wxT("You can also set three engine options that are useful for ")
       wxT("human versus engine operation. Note that not all engines ")
       wxT("support all these options (the Tarrasch Toy engine doesn't ")
       wxT("actually support any of them!). If you don't care about ")
       wxT("these options then leave the default values (ponder off, ")
       wxT("hash size= 64Mbytes, max cpu cores=1) in place.")
-	  wxT("\n\n")
+      wxT("\n\n")
       wxT("If you are unsure whether an .exe is a UCI engine, first ")
       wxT("run it outside the Tarrasch program. It should open a ")
       wxT("console window and quietly await a text command. The ")
       wxT("command \"uci\" should provide information followed by ")
       wxT("the response \"uciokay\". Then go \"quit\" to finish.")
-	  wxT("\n\n")
+      wxT("\n\n")
       wxT("This process also reveals all parameters supported by ")
       wxT("an engine. Expert users can experiment with these using ")
       wxT("up to six optional custom parameters settings. For ")
       wxT("example Stockfish provides a parameter to artificially reduce its strength. " )
       wxT("To try it out;\n")
-      wxT("  Parameter 1, set name=Skill Level and value=0") 
+      wxT("  Parameter 1, set name=Skill Level and value=0")
       wxT("\n\n" )
       wxT("Experiment with values in the range 0 to 20 (higher is ")
       wxT("stronger - start with 0, and adjust upwards if you find ")

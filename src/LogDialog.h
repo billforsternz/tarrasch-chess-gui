@@ -25,7 +25,7 @@ enum
 
 // LogDialog class declaration
 class LogDialog: public wxDialog
-{    
+{
     DECLARE_CLASS( LogDialog )
     DECLARE_EVENT_TABLE()
 
@@ -75,13 +75,13 @@ public:
 
     // ID_LOG_PICKER
     void OnFilePicked( wxFileDirPickerEvent& event );
-    
+
     // LogDialog member variables
 
     // Data members
     LogConfig   dat;
     SuspendEngine   suspendor;  // the mere presence of this var suspends the engine during the dialog
-	DialogDetect    detect;		// similarly the presence of this var allows tracking of open dialogs
+    DialogDetect    detect;     // similarly the presence of this var allows tracking of open dialogs
 };
 
 #endif    // LOG_DIALOG_H

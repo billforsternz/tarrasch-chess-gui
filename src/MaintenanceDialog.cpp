@@ -62,7 +62,7 @@ bool MaintenanceDialog::Create( wxWindow* parent,
                           const wxPoint& pos, const wxSize& size, long style )
 {
     bool okay=true;
-    
+
     // Get nbr of CPUs
 #ifdef WINDOWS_FIX_LATER
     SYSTEM_INFO sysinfo;
@@ -71,24 +71,24 @@ bool MaintenanceDialog::Create( wxWindow* parent,
 #else
     nbr_cpus = 1;
 #endif
-    
+
     // We have to set extra styles before creating the dialog
     SetExtraStyle( wxWS_EX_BLOCK_EVENTS/*|wxDIALOG_EX_CONTEXTHELP*/ );
     if( !wxDialog::Create( parent, id, caption, pos, size, style ) )
         okay = false;
     else
     {
-        
+
         CreateControls();
         SetDialogHelp();
         SetDialogValidators();
-        
+
         // This fits the dialog to the minimum size dictated by the sizers
         GetSizer()->Fit(this);
-        
+
         // This ensures that the dialog cannot be sized smaller than the minimum size
         GetSizer()->SetSizeHints(this);
-        
+
         // Centre the dialog on the parent or (if none) screen
         Centre();
     }
@@ -98,15 +98,15 @@ bool MaintenanceDialog::Create( wxWindow* parent,
 // Control creation for MaintenanceDialog
 void MaintenanceDialog::CreateControls()
 {
-    
+
     // A top-level sizer
     wxBoxSizer* top_sizer = new wxBoxSizer(wxVERTICAL);
     this->SetSizer(top_sizer);
-    
+
     // A second box sizer to give more space around the controls
     wxBoxSizer* box_sizer = new wxBoxSizer(wxVERTICAL);
     top_sizer->Add(box_sizer, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
-    
+
     // A friendly message
     wxStaticText* descr = new wxStaticText( this, wxID_STATIC,
            "This panel is a placeholder for a proper database management facility.\n"
@@ -117,31 +117,31 @@ void MaintenanceDialog::CreateControls()
            "DbPrimitives.h and DbMaintenance.cpp.\n\n"
            , wxDefaultPosition, wxDefaultSize, 0 );
     box_sizer->Add(descr, 0, wxALIGN_LEFT|wxALL, 5);
-    
+
     // Spacer
     box_sizer->Add(5, 5, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
-    
+
     // Label for file
     wxStaticText* file_label = new wxStaticText ( this, wxID_STATIC,
                                                  wxT("&Choose the next .pgn file with games to append to the database:"), wxDefaultPosition, wxDefaultSize, 0 );
     box_sizer->Add(file_label, 0, wxALIGN_LEFT|wxALL, 5);
-    
+
     // File picker control
     wxString   database_file = DB_MAINTENANCE_FILE;
     wxFileName fn( database_file );
     wxString   pgn_file= DB_MAINTENANCE_PGN_FILE;
     wxFileName fn2( pgn_file );
     pgn_filename = fn2.GetFullPath();
-    
+
     wxFilePickerCtrl *picker = new wxFilePickerCtrl( this, ID_TEMP_ENGINE_PICKER, pgn_filename, wxT("Select .pgn for append operation below"),
                                                     "*.pgn", wxDefaultPosition, wxDefaultSize,
                                                     wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST ); //|wxFLP_CHANGE_DIR );
     box_sizer->Add(picker, 1, wxALIGN_LEFT|wxEXPAND|wxLEFT|wxBOTTOM|wxRIGHT, 5);
 
 /*
- 
+
  I've left this stuff lying around in case it provides useful examples for future maintenance features
- 
+
     // Ponder enabled
     wxCheckBox* ponder_box = new wxCheckBox( this, ID_TEMP_PONDER,
                                             wxT("&Ponder"), wxDefaultPosition, wxDefaultSize, 0 );
@@ -152,17 +152,17 @@ void MaintenanceDialog::CreateControls()
      wxStaticText* hash_label = new wxStaticText ( this, wxID_STATIC,
      wxT("&Hash:"), wxDefaultPosition, wxDefaultSize, 0 );
      box_sizer->Add(hash_label, 0, wxALL, 5);
-     
+
      // A spin control for the hash
      wxSpinCtrl* hash_spin = new wxSpinCtrl ( this, ID_TEMP_HASH,
      wxEmptyString, wxDefaultPosition, wxSize(60, -1),
      wxSP_ARROW_KEYS, 1, 4096, 64 );
      box_sizer->Add(hash_spin, 0, wxALL, 5);
-    
+
     // Label for the hash
     wxStaticText* hash_label = new wxStaticText ( this, wxID_STATIC,
                                                  wxT("&Hash size:"), wxDefaultPosition, wxDefaultSize, 0 );
-    
+
     // A spin control for the hash
     wxSpinCtrl* hash_spin = new wxSpinCtrl ( this, ID_TEMP_HASH,
                                             wxEmptyString, wxDefaultPosition, wxSize(60, -1),
@@ -171,22 +171,22 @@ void MaintenanceDialog::CreateControls()
     hash_horiz->Add( hash_label,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
     hash_horiz->Add( hash_spin,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
     box_sizer->Add( hash_horiz, 0, wxTOP|wxBOTTOM|wxRIGHT, 5);
-    
+
      // Label for max cpu cores
      wxStaticText* max_cpu_cores_label = new wxStaticText ( this, wxID_STATIC,
      wxT("&Max CPU cores:"), wxDefaultPosition, wxDefaultSize, 0 );
      box_sizer->Add(max_cpu_cores_label, 0, wxALL, 5);
-     
+
      // A spin control for max cpu cores
      wxSpinCtrl* max_cpu_cores_spin = new wxSpinCtrl ( this, ID_TEMP_MAX_CPU_CORES,
      wxEmptyString, wxDefaultPosition, wxSize(60, -1),
      wxSP_ARROW_KEYS, 1, nbr_cpus, 1 );
      box_sizer->Add(max_cpu_cores_spin, 0, wxALL, 5);
-    
+
     // Label for max cpu cores
     wxStaticText* max_cpu_cores_label = new wxStaticText ( this, wxID_STATIC,
                                                           wxT("&Max CPU cores:"), wxDefaultPosition, wxDefaultSize, 0 );
-    
+
     // A spin control for max cpu cores
     wxSpinCtrl* max_cpu_cores_spin = new wxSpinCtrl ( this, ID_TEMP_MAX_CPU_CORES,
                                                      wxEmptyString, wxDefaultPosition, wxSize(60, -1),
@@ -195,11 +195,11 @@ void MaintenanceDialog::CreateControls()
     max_cpu_cores_horiz->Add( max_cpu_cores_label,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
     max_cpu_cores_horiz->Add( max_cpu_cores_spin,  0, wxALIGN_LEFT|wxGROW|wxALL, 5);
     box_sizer->Add( max_cpu_cores_horiz, 0, wxTOP|wxBOTTOM|wxRIGHT, 5);
-    
+
     // Text controls for custom parameter 1
     wxTextCtrl *custom1a_ctrl = new wxTextCtrl ( this, ID_TEMP_CUSTOM1A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
     wxTextCtrl *custom1b_ctrl = new wxTextCtrl ( this, ID_TEMP_CUSTOM1B, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
-    
+
     // Label for custom parameter 1
     wxStaticText* custom1_label = new wxStaticText ( this, wxID_STATIC,
                                                     wxT("Custom parameter 1 (name, value):"), wxDefaultPosition, wxDefaultSize, 0 );
@@ -208,11 +208,11 @@ void MaintenanceDialog::CreateControls()
     custom1_horiz->Add( custom1a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
     custom1_horiz->Add( custom1b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
     box_sizer->Add( custom1_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 5 );
-    
+
     // Text controls for custom parameter 2
     wxTextCtrl *custom2a_ctrl = new wxTextCtrl ( this, ID_TEMP_CUSTOM2A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
     wxTextCtrl *custom2b_ctrl = new wxTextCtrl ( this, ID_TEMP_CUSTOM2B, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
-    
+
     // Label for custom parameter 2
     wxStaticText* custom2_label = new wxStaticText ( this, wxID_STATIC,
                                                     wxT("Custom parameter 2 (name, value):"), wxDefaultPosition, wxDefaultSize, 0 );
@@ -221,11 +221,11 @@ void MaintenanceDialog::CreateControls()
     custom2_horiz->Add( custom2a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
     custom2_horiz->Add( custom2b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
     box_sizer->Add( custom2_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 5 );
-    
+
     // Text controls for custom parameter 3
     wxTextCtrl *custom3a_ctrl = new wxTextCtrl ( this, ID_TEMP_CUSTOM3A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
     wxTextCtrl *custom3b_ctrl = new wxTextCtrl ( this, ID_TEMP_CUSTOM3B, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
-    
+
     // Label for custom parameter 3
     wxStaticText* custom3_label = new wxStaticText ( this, wxID_STATIC,
                                                     wxT("Custom parameter 3 (name, value):"), wxDefaultPosition, wxDefaultSize, 0 );
@@ -234,11 +234,11 @@ void MaintenanceDialog::CreateControls()
     custom3_horiz->Add( custom3a_ctrl,  2, wxALIGN_LEFT|wxGROW|wxLEFT|wxBOTTOM|wxRIGHT, 5);
     custom3_horiz->Add( custom3b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
     box_sizer->Add( custom3_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 5 );
-    
+
     // Text controls for custom parameter 4
     wxTextCtrl *custom4a_ctrl = new wxTextCtrl ( this, ID_TEMP_CUSTOM4A, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
     wxTextCtrl *custom4b_ctrl = new wxTextCtrl ( this, ID_TEMP_CUSTOM4B, wxT(""), wxDefaultPosition, wxDefaultSize, 0 );
-    
+
     // Label for custom parameter 4
     wxStaticText* custom4_label = new wxStaticText ( this, wxID_STATIC,
                                                     wxT("Custom parameter 4 (name, value):"), wxDefaultPosition, wxDefaultSize, 0 );
@@ -248,12 +248,12 @@ void MaintenanceDialog::CreateControls()
     custom4_horiz->Add( custom4b_ctrl,  1, wxLEFT|wxBOTTOM|wxRIGHT, 5);
     box_sizer->Add( custom4_horiz, 0, wxALIGN_LEFT|wxLEFT|wxBOTTOM, 5 );
 */
-    
+
     // A dividing line before the database buttons
     wxStaticLine* line = new wxStaticLine ( this, wxID_STATIC,
                                            wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
     box_sizer->Add(line, 0, wxGROW|wxALL, 5);
-    
+
     // Temporary primitive database management functions
     wxBoxSizer* db_vert  = new wxBoxSizer(wxVERTICAL);
     box_sizer->Add( db_vert, 0, wxTOP|wxBOTTOM|wxRIGHT, 5);
@@ -275,29 +275,29 @@ void MaintenanceDialog::CreateControls()
     wxButton* button_cmd_6 = new wxButton( this, ID_CREATE_DB_APPEND, wxT("&DANGER database create indexes"),
                                           wxDefaultPosition, wxDefaultSize, 0 );
     db_vert->Add( button_cmd_6, 0, wxALL, 5);
-    
-    
+
+
     // A dividing line before the OK and Cancel buttons
     wxStaticLine* line2 = new wxStaticLine ( this, wxID_STATIC,
                                            wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
     box_sizer->Add(line2, 0, wxGROW|wxALL, 5);
-    
+
     // A horizontal box sizer to contain Reset, OK, Cancel and Help
     wxBoxSizer* okCancelBox = new wxBoxSizer(wxHORIZONTAL);
     box_sizer->Add(okCancelBox, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 15);
-  
-   
-    
+
+
+
     // The OK button
     wxButton* ok = new wxButton ( this, wxID_OK, wxT("&OK"),
                                  wxDefaultPosition, wxDefaultSize, 0 );
     okCancelBox->Add(ok, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    
+
     // The Cancel button
     wxButton* cancel = new wxButton ( this, wxID_CANCEL,
                                      wxT("&Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
     okCancelBox->Add(cancel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-    
+
     // The Help button
     wxButton* help = new wxButton( this, wxID_HELP, wxT("&Help"),
                                   wxDefaultPosition, wxDefaultSize, 0 );
@@ -410,9 +410,9 @@ void MaintenanceDialog::OnHelpClick( wxCommandEvent& WXUNUSED(event) )
     /*
      wxGetApp().GetHelpController().DisplaySection(wxT("Personal record dialog"));
      */
-    
+
     wxString helpText =
-    wxT("Add help text later.\n"); 
+    wxT("Add help text later.\n");
     wxMessageBox(helpText,
                  wxT("Maintenance dialog help"),
                  wxOK|wxICON_INFORMATION, this);

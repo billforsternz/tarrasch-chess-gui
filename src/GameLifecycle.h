@@ -31,9 +31,9 @@ class GameLifecycle
 public:
     GameLifecycle()                     {this->result = RESULT_NONE; this->human_is_white = true;}
     void Begin( bool human_is_white_ )  {this->result = RESULT_NONE; this->human_is_white = human_is_white_;}
-    void Swap()							{this->human_is_white = !this->human_is_white;}
+    void Swap()                         {this->human_is_white = !this->human_is_white;}
     void Set( GAME_RESULT result_ )     {this->result = result_;}
-    GAME_RESULT Get()					{return this->result;}
+    GAME_RESULT Get()                   {return this->result;}
     bool CanHumanClaimDraw( GAME_RESULT &result );
     bool TestResult( wxString &txt );    // returns true if game is over
     bool human_is_white;

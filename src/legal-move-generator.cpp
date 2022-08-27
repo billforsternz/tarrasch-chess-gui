@@ -1,8 +1,8 @@
 /****************************************************************************
- * Generate a list of all possible moves in a position                
+ * Generate a list of all possible moves in a position
  ****************************************************************************/
 void ChessRules::GenMoveList( MOVELIST *l )
-{    
+{
     Square square;
 
     // Convenient spot for some asserts
@@ -22,16 +22,16 @@ void ChessRules::GenMoveList( MOVELIST *l )
 
     // Loop through all squares
     for( square=a8; square<=h1; ++square )
-    {    
-        
+    {
+
         // If square occupied by a piece of the right colour
         char piece=squares[square];
         if( (white&&IsWhite(piece)) || (!white&&IsBlack(piece)) )
-        {   
+        {
 
             // Generate moves according to the occupying piece
             switch( piece )
-            {    
+            {
                 case 'P':
                 {
                     WhitePawnMoves( l, square );
@@ -44,7 +44,7 @@ void ChessRules::GenMoveList( MOVELIST *l )
                 }
                 case 'N':
                 case 'n':
-                {    
+                {
                     const lte *ptr = knight_lookup[square];
                     ShortMoves( l, square, ptr, NOT_SPECIAL );
                     break;
@@ -76,10 +76,10 @@ void ChessRules::GenMoveList( MOVELIST *l )
                     KingMoves( l, square );
                     break;
                 }
-            }    
-        }    
+            }
+        }
     }
-}    
+}
 
 /****************************************************************************
  * Generate moves for pieces that move along multi-move rays (B,R,Q)
@@ -106,7 +106,7 @@ void ChessRules::LongMoves( MOVELIST *l, Square square, const lte *ptr )
                 m->special = NOT_SPECIAL;
                 m++;
                 l->count++;
-            }    
+            }
 
             // Else must move to end of ray
             else
@@ -123,16 +123,16 @@ void ChessRules::LongMoves( MOVELIST *l, Square square, const lte *ptr )
                     m->capture = piece;
                     l->count++;
                     m++;
-                }    
+                }
             }
-        }    
-    }    
+        }
+    }
 }
 
 /****************************************************************************
  * Generate moves for pieces that move along single move rays (N,K)
  ****************************************************************************/
-void ChessRules::ShortMoves( MOVELIST *l, Square square, 
+void ChessRules::ShortMoves( MOVELIST *l, Square square,
                                          const lte *ptr, SPECIAL special  )
 {
     Move *m=&l->moves[l->count];
@@ -152,7 +152,7 @@ void ChessRules::ShortMoves( MOVELIST *l, Square square,
             m->capture = ' ';
             m++;
             l->count++;
-        }    
+        }
 
         // Else if occupied by enemy man, add move to list as a capture
         else if( (white&&IsBlack(piece)) || (!white&&IsWhite(piece)) )
@@ -163,15 +163,15 @@ void ChessRules::ShortMoves( MOVELIST *l, Square square,
             m->capture = piece;
             m++;
             l->count++;
-        }    
-    }    
+        }
+    }
 }
 
 /****************************************************************************
  * Generate list of king moves
  ****************************************************************************/
 void ChessRules::KingMoves( MOVELIST *l, Square square )
-{    
+{
     const lte *ptr = king_lookup[square];
     ShortMoves( l, square, ptr, SPECIAL_KING_MOVE );
 
@@ -181,10 +181,10 @@ void ChessRules::KingMoves( MOVELIST *l, Square square )
 
     // White castling
     if( square == e1 )   // king on e1 ?
-    { 
+    {
 
         // King side castling
-        if( 
+        if(
             squares[g1] == ' '   &&
             squares[f1] == ' '   &&
             squares[h1] == 'R'   &&
@@ -200,10 +200,10 @@ void ChessRules::KingMoves( MOVELIST *l, Square square )
             m->capture = ' ';
             m++;
             l->count++;
-        }    
+        }
 
         // Queen side castling
-        if( 
+        if(
             squares[b1] == ' '         &&
             squares[c1] == ' '         &&
             squares[d1] == ' '         &&
@@ -225,10 +225,10 @@ void ChessRules::KingMoves( MOVELIST *l, Square square )
 
     // Black castling
     if( square == e8 )   // king on e8 ?
-    { 
+    {
 
         // King side castling
-        if( 
+        if(
             squares[g8] == ' '         &&
             squares[f8] == ' '         &&
             squares[h8] == 'r'         &&
@@ -244,7 +244,7 @@ void ChessRules::KingMoves( MOVELIST *l, Square square )
             m->capture = ' ';
             m++;
             l->count++;
-        }    
+        }
 
         // Queen side castling
         if(
@@ -266,13 +266,13 @@ void ChessRules::KingMoves( MOVELIST *l, Square square )
             l->count++;
         }
     }
-}    
+}
 
 /****************************************************************************
  * Generate list of white pawn moves
  ****************************************************************************/
 void ChessRules::WhitePawnMoves( MOVELIST *l,  Square square )
-{    
+{
     Move *m = &l->moves[l->count];
     const lte *ptr = pawn_white_lookup[square];
     bool promotion = (RANK(square) == '7');
@@ -303,9 +303,9 @@ void ChessRules::WhitePawnMoves( MOVELIST *l,  Square square )
                 l->count++;
             }
             else
-            {    
+            {
 
-                // Generate (under)promotions in the order (Q),N,B,R               
+                // Generate (under)promotions in the order (Q),N,B,R
                 //  but we no longer rely on this elsewhere as it
                 //  stops us reordering moves
                 m->special   = SPECIAL_PROMOTION_QUEEN;
@@ -329,7 +329,7 @@ void ChessRules::WhitePawnMoves( MOVELIST *l,  Square square )
                 m->special   = SPECIAL_PROMOTION_ROOK;
                 m++;
                 l->count++;
-            }    
+            }
         }
     }
 
@@ -352,9 +352,9 @@ void ChessRules::WhitePawnMoves( MOVELIST *l,  Square square )
             l->count++;
         }
         else
-        {    
+        {
 
-            // Generate (under)promotions in the order (Q),N,B,R               
+            // Generate (under)promotions in the order (Q),N,B,R
             //  but we no longer rely on this elsewhere as it
             //  stops us reordering moves
             m->special   = SPECIAL_PROMOTION_QUEEN;
@@ -378,15 +378,15 @@ void ChessRules::WhitePawnMoves( MOVELIST *l,  Square square )
             m->special   = SPECIAL_PROMOTION_ROOK;
             m++;
             l->count++;
-        }    
+        }
     }
-}    
+}
 
 /****************************************************************************
  * Generate list of black pawn moves
  ****************************************************************************/
 void ChessRules::BlackPawnMoves( MOVELIST *l, Square square )
-{    
+{
     Move *m = &l->moves[l->count];
     const lte *ptr = pawn_black_lookup[square];
     bool promotion = (RANK(square) == '2');
@@ -417,9 +417,9 @@ void ChessRules::BlackPawnMoves( MOVELIST *l, Square square )
                 l->count++;
             }
             else
-            {    
+            {
 
-                // Generate (under)promotions in the order (Q),N,B,R               
+                // Generate (under)promotions in the order (Q),N,B,R
                 //  but we no longer rely on this elsewhere as it
                 //  stops us reordering moves
                 m->special   = SPECIAL_PROMOTION_QUEEN;
@@ -443,7 +443,7 @@ void ChessRules::BlackPawnMoves( MOVELIST *l, Square square )
                 m->special   = SPECIAL_PROMOTION_ROOK;
                 m++;
                 l->count++;
-            }    
+            }
         }
     }
 
@@ -466,9 +466,9 @@ void ChessRules::BlackPawnMoves( MOVELIST *l, Square square )
             l->count++;
         }
         else
-        {    
+        {
 
-            // Generate (under)promotions in the order (Q),N,B,R               
+            // Generate (under)promotions in the order (Q),N,B,R
             //  but we no longer rely on this elsewhere as it
             //  stops us reordering moves
             m->special   = SPECIAL_PROMOTION_QUEEN;
@@ -492,9 +492,9 @@ void ChessRules::BlackPawnMoves( MOVELIST *l, Square square )
             m->special   = SPECIAL_PROMOTION_ROOK;
             m++;
             l->count++;
-        }    
+        }
     }
-}    
+}
 
 
 
@@ -519,9 +519,9 @@ void ChessRules::GenLegalMoveList( MOVELIST *list, bool check[MAXMOVES],
         PushMove( list2.moves[i] );
         okay = Evaluate(terminal_score);
         Square king_to_move = (Square)(white ? wking_square : bking_square );
-		bool bcheck = false;
+        bool bcheck = false;
         if( AttackedPiece(king_to_move) )
-		    bcheck = true;
+            bcheck = true;
         PopMove( list2.moves[i] );
         if( okay )
         {
@@ -548,7 +548,7 @@ void ChessRules::GenLegalMoveList( MOVELIST *list, bool check[MAXMOVES],
 /****************************************************************************
  * Generate moves for pieces that move along single move rays (N,K)
  ****************************************************************************/
-void ChessRules::ShortMoves( MOVELIST *l, Square square, 
+void ChessRules::ShortMoves( MOVELIST *l, Square square,
                                          const lte *ptr, SPECIAL special  )
 {
     Move *m=&l->moves[l->count];
@@ -568,7 +568,7 @@ void ChessRules::ShortMoves( MOVELIST *l, Square square,
             m->capture = ' ';
             m++;
             l->count++;
-        }    
+        }
 
         // Else if occupied by enemy man, add move to list as a capture
         else if( (white&&IsBlack(piece)) || (!white&&IsWhite(piece)) )
@@ -579,8 +579,8 @@ void ChessRules::ShortMoves( MOVELIST *l, Square square,
             m->capture = piece;
             m++;
             l->count++;
-        }    
-    }    
+        }
+    }
 }
 
 
@@ -610,10 +610,10 @@ efficiently calculate list of all legal moves
      if possible pin flag already set we are done, else set possible pinned flag
     if empty and first square
      if the square is not attacked save this as a valid move
-  
+
  if check > 1
   we are done because if double check only king moves are possible
-  
+
  if check == 0
   add castling moves if possible
 
@@ -629,7 +629,7 @@ efficiently calculate list of all legal moves
        conditionally save move
         if check save move only if destination is on ray from king to checker
         otherwise just save move
-        
-        
-   
+
+
+
 */

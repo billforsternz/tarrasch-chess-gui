@@ -30,7 +30,7 @@ class PackedGameBinDb
 private:
     uint8_t     cb_idx;     // control block idx
     std::string fields;
-    
+
 public:
     uint8_t     GetControlBlockIdx() { return cb_idx; }
     static int  AllocateNewControlBlock();
@@ -82,10 +82,10 @@ public:
         int sz = cb->bb.FrozenSize();
         return fields.c_str() + sz;
     }
-	int EventBin()    { return bin_db_control_blocks[cb_idx].bb.Read(0,&fields[0]); }
-	int SiteBin()     { return bin_db_control_blocks[cb_idx].bb.Read(1,&fields[0]); }
-	int WhiteBin()    { return bin_db_control_blocks[cb_idx].bb.Read(2,&fields[0]); }
-	int BlackBin()    { return bin_db_control_blocks[cb_idx].bb.Read(3,&fields[0]); }
+    int EventBin()    { return bin_db_control_blocks[cb_idx].bb.Read(0,&fields[0]); }
+    int SiteBin()     { return bin_db_control_blocks[cb_idx].bb.Read(1,&fields[0]); }
+    int WhiteBin()    { return bin_db_control_blocks[cb_idx].bb.Read(2,&fields[0]); }
+    int BlackBin()    { return bin_db_control_blocks[cb_idx].bb.Read(3,&fields[0]); }
     int DateBin()     { return bin_db_control_blocks[cb_idx].bb.Read(4,&fields[0]); }
     int RoundBin()    { return bin_db_control_blocks[cb_idx].bb.Read(5,&fields[0]); }
     int EcoBin()      { return bin_db_control_blocks[cb_idx].bb.Read(6,&fields[0]); }

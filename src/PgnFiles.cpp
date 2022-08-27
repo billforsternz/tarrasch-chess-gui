@@ -336,7 +336,7 @@ void PgnFiles::Close( GamesCache *gc_clipboard )
                     //     wx_filename = "file.pgn" (original file)
                     //     wx_filename_temp = "fileDC46.tmp" (modified file)
                     //  after
-                    //     "fileDC46.pgn" (original file) was "file.pgn", keep this because it contains clipboard games    
+                    //     "fileDC46.pgn" (original file) was "file.pgn", keep this because it contains clipboard games
                     //     "file.pgn" (modified file) was "fileDC46.tmp"
                     // Use standard swap(a,b) algorithm, i.e. rename a->temp, rename b->a, rename temp->b
                     wxString wx_filename_temp2 = wxFileName::CreateTempFileName(wx_filename);
