@@ -678,9 +678,113 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
     int nbr = source->size();
     {
         AutoTimer at("Search time");
+        thc::MOVELIST list;
         for( int i=0; i<nbr; i++ )
         {
             smart_ptr<ListableGame> p = (*source)[i];
+
+            // TEMP TEMP - Find unconverted instances of the "ULTIMATE BLUNDER" players
+            //   consecutively miss mate in one opportunities
+            #if 1
+            thc::ChessRules cr;
+            CompressMoves comp;
+            std::string comp_moves = std::string(p->CompressedMoves());
+            std::vector<thc::Move> v = comp.Uncompress(cr,comp_moves);
+            int prev = -1;
+            bool game_found = false;
+            for( int k=0; k<v.size(); k++ )
+            {
+                thc::Move mv = v[k];
+                cr.PushMove(mv);
+                cr.GenLegalMoveList( &list );
+                for( int j=0; j<list.count; j++ )
+                {
+                    cr.PushMove(list.moves[j]);
+                    thc::TERMINAL score;
+                    cr.Evaluate(score);
+                    cr.PopMove(list.moves[j]);
+                    if( score==thc::TERMINAL_WCHECKMATE || score==thc::TERMINAL_BCHECKMATE )
+                    {
+                        if( prev!=-1 && prev+1==k )
+                        {
+                            game_found = true;
+                            break;
+                        }
+                        prev = k;
+                    }
+                }
+            }
+            if( game_found )
+            {
+                DoSearchFoundGame dsfg;
+                dsfg.idx = i;
+                dsfg.game_id = p->game_id;
+                dsfg.offset_first=prev;
+                dsfg.offset_last=prev+1;
+                stats.nbr_games++;
+                if( 0 == strcmp(p->Result(),"1-0") )
+                    stats.white_wins++;
+                else if( 0 == strcmp(p->Result(),"0-1") )
+                    stats.black_wins++;
+                else
+                    stats.draws++;
+                games_found.push_back( dsfg );
+            }
+            #endif
+            // TEMP TEMP - Find instances of the "ULTIMATE BLUNDER" - the game ends in mate
+            //   the other side could have mated though with their last move
+            #if 0
+            thc::ChessRules cr;
+            CompressMoves comp;
+            std::string comp_moves = std::string(p->CompressedMoves());
+            std::vector<thc::Move> v = comp.Uncompress(cr,comp_moves);
+            for( thc::Move mv: v )
+                cr.PushMove(mv);
+            //cprintf( "Final position is %s\n", cr.ToDebugStr().c_str() );
+            thc::TERMINAL score, find;
+            bool ok = cr.Evaluate(score);
+            bool game_found = false;
+            size_t len = v.size();
+            if( ok && (score == thc::TERMINAL_BCHECKMATE || score == thc::TERMINAL_WCHECKMATE) )
+            {
+                if( score == thc::TERMINAL_BCHECKMATE )
+                    find = thc::TERMINAL_WCHECKMATE;
+                else
+                    find = thc::TERMINAL_BCHECKMATE;
+                if( len >= 2 )
+                {
+                    cr.PopMove(v[len-1]);
+                    cr.PopMove(v[len-2]);
+                    cr.GenLegalMoveList( &list );
+                    for( int j=0; j<list.count; j++ )
+                    {
+                        cr.PushMove(list.moves[j]);
+                        thc::TERMINAL score2;
+                        ok = cr.Evaluate(score2);
+                        cr.PopMove(list.moves[j]);
+                        if( ok && score2==find )
+                            game_found = true;
+                    }
+                }
+            }
+            if( game_found )
+            {
+                DoSearchFoundGame dsfg;
+                dsfg.idx = i;
+                dsfg.game_id = p->game_id;
+                dsfg.offset_first=0;
+                dsfg.offset_last=len-2;
+                stats.nbr_games++;
+                if( 0 == strcmp(p->Result(),"1-0") )
+                    stats.white_wins++;
+                else if( 0 == strcmp(p->Result(),"0-1") )
+                    stats.black_wins++;
+                else
+                    stats.draws++;
+                games_found.push_back( dsfg );
+            }
+            #endif
+            #if 0
             //if( 0 == strcmp(p->White(),"Gu, Xiaobing") &&  0 == strcmp(p->Black(),"Ryjanova, Julia")  )
             //    debug_trigger = true;
             DoSearchFoundGame dsfg;
@@ -719,6 +823,7 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
                 }
                 games_found.push_back( dsfg );
             }
+            #endif
             if( (i&0xff)==0 && progress )
             {
                 double permill = (static_cast<double>(i) * 1000.0) / static_cast<double>(nbr);
