@@ -707,7 +707,7 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
                 int handle = objs.tabs->Iterate(0,pd,pu);
                 while( pd && pu )
                 {
-                    if( ptr->game_being_edited!=0 && (ptr->game_being_edited == pd->game_being_edited)  )
+                    if( ptr->game_being_edited!=0 && (ptr->game_being_edited == pd->game_being_edited) )
                     {
                         *ptr = *pd;
                         if( pu )
@@ -718,53 +718,73 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
                     objs.tabs->Iterate(handle,pd,pu);
                 }
             }
+            const char* blob=0;
             if( !ptr )
             {
-                mptr->ConvertToGameDocument(gd_temp);
-                ptr = &gd_temp;
-            }
-
-            ptr->modified = false;
-            ptr->game_prefix_edited = false;
-            ptr->game_details_edited = false;
-            ptr->pgn_handle = pgn_handle;  // irrespective of where it came from, now this
-                                           //  game is in this file
-            ptr->fposn0 = write_posn;      // at this position
-                                           // This worried me one time I looked at it - what if it's say a DB game?
-                                           //  in that case we are only changing the gd_temp *temporary* document
-            std::string s = ptr->prefix_txt;
-            int len = s.length();
-            #ifdef _WINDOWS
-            #define EOL "\r\n"
-            #else
-            #define EOL "\n"
-            #endif
-            if( len > 0 )
-            {
-                if( i != 0 )    // blank line needed before all but first prefix
+                blob = mptr->CompressedMoves();
+                if( !blob )
                 {
-                    fwrite( EOL, 1, strlen(EOL), pgn_out );
+                    mptr->ConvertToGameDocument(gd_temp);
+                    ptr = &gd_temp;
+                }
+            }
+#ifdef _WINDOWS
+#define EOL "\r\n"
+#else
+#define EOL "\n"
+#endif
+            if( blob )
+            {
+                gd_temp.r = mptr->RefRoster();
+                std::string str;
+                gd_temp.ToFileTxtGameDetails(str);
+                fwrite(str.c_str(), 1, str.length(), pgn_out);
+                game_len += str.length();
+                CompressMoves comp;
+                str = comp.ToNaturalMoves( std::string(blob), gd_temp.r.result );
+                str += EOL;
+                fwrite(str.c_str(), 1, str.length(), pgn_out);
+                game_len += str.length();
+            }
+            else
+            {
+                ptr->modified = false;
+                ptr->game_prefix_edited = false;
+                ptr->game_details_edited = false;
+                ptr->pgn_handle = pgn_handle;  // irrespective of where it came from, now this
+                                               //  game is in this file
+                ptr->fposn0 = write_posn;      // at this position
+                                               // This worried me one time I looked at it - what if it's say a DB game?
+                                               //  in that case we are only changing the gd_temp *temporary* document
+                std::string s = ptr->prefix_txt;
+                int len = s.length();
+                if( len > 0 )
+                {
+                    if( i != 0 )    // blank line needed before all but first prefix
+                    {
+                        fwrite(EOL, 1, strlen(EOL), pgn_out);
+                        game_len += strlen(EOL);
+                    }
+                    fwrite(s.c_str(), 1, len, pgn_out);
+                    game_len += len;
+                    fwrite(EOL, 1, strlen(EOL), pgn_out);
                     game_len += strlen(EOL);
                 }
-                fwrite( s.c_str(), 1, len, pgn_out );
-                game_len += len;
-                fwrite( EOL, 1, strlen(EOL), pgn_out );
-                game_len += strlen(EOL);
+                ptr->fposn1 = write_posn + game_len;
+                std::string str;
+                GameDocument temp = *ptr;
+                temp.r = mptr->RefRoster();
+                temp.ToFileTxtGameDetails(str);
+                fwrite(str.c_str(), 1, str.length(), pgn_out);
+                game_len += str.length();
+                ptr->fposn2 = write_posn + game_len;
+                temp.ToFileTxtGameBody(str);
+                fwrite(str.c_str(), 1, str.length(), pgn_out);
+                game_len += str.length();
+                ptr->fposn3 = write_posn + game_len;
+                if( save_changes_back_to_tab )
+                    *save_changes_back_to_tab = *ptr;
             }
-            ptr->fposn1 = write_posn + game_len;
-            std::string str;
-            GameDocument temp = *ptr;
-            temp.r = mptr->RefRoster();
-            temp.ToFileTxtGameDetails( str );
-            fwrite(str.c_str(),1,str.length(),pgn_out);
-            game_len += str.length();
-            ptr->fposn2 = write_posn + game_len;
-            temp.ToFileTxtGameBody( str );
-            fwrite(str.c_str(),1,str.length(),pgn_out);
-            game_len += str.length();
-            ptr->fposn3 = write_posn + game_len;
-            if( save_changes_back_to_tab )
-                *save_changes_back_to_tab = *ptr;
         }
         write_posn += game_len;
     }
