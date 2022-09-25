@@ -359,6 +359,89 @@ std::vector<thc::Move> CompressMoves::Uncompress( std::string &moves_in )
     return ret;
 }
 
+#ifdef _WINDOWS
+#define EOL "\r\n"
+#else
+#define EOL "\n"
+#endif
+#define WRAP_COLUMN 79
+
+std::string CompressMoves::ToNaturalMoves( const std::string& moves_in, const std::string& result )
+{
+    int nbr = 1;
+    int col = 0;
+    std::string s;
+    sides[0].fast_mode = false;
+    sides[1].fast_mode = false;
+    int len = moves_in.size();
+    for( int i = 0; i < len; i++)
+    {
+        Side* side = cr.white ? &sides[0] : &sides[1];
+        Side* other = cr.white ? &sides[1] : &sides[0];
+        char code = moves_in[i];
+        thc::Move mv;
+        if( side->fast_mode )
+        {
+            mv = UncompressFastMode(code, side, other);
+        }
+        else if (TryFastMode(side))
+        {
+            mv = UncompressFastMode(code, side, other);
+        }
+        else
+        {
+            mv = UncompressSlowMode(code);
+            other->fast_mode = false;   // force other side to reset and retry
+        }
+        if( cr.white )
+        {
+            char buf[40];
+            _itoa(nbr++, buf, 10);
+            std::string t(buf);
+            t += ".";
+            if( col + t.length() >= WRAP_COLUMN )
+            {
+                s += EOL;
+                col = 0;
+            }
+            if( col != 0 )
+            {
+                s += ' ';
+                col++;
+            }
+            s += t;
+            col += t.length();
+        }
+        std::string t = mv.NaturalOut(&cr);
+        if( col + t.length() >= WRAP_COLUMN )
+        {
+            s += EOL;
+            col = 0;
+        }
+        if( col != 0 )
+        {
+            s += ' ';
+            col++;
+        }
+        s += t;
+        col += t.length();
+        cr.PlayMove(mv);
+    }
+    if( col + result.length() >= WRAP_COLUMN )
+    {
+        s += EOL;
+        col = 0;
+    }
+    if( col != 0 )
+    {
+        s += ' ';
+        col++;
+    }
+    s += result;
+    s += EOL;
+    return s;
+}
+
 char CompressMoves::CompressMove( thc::Move mv )
 {
     Side *side  = cr.white ? &sides[0] : &sides[1];
