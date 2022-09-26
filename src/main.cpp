@@ -881,6 +881,9 @@ const char *gbl_spell_colour;   // "colour" or "color"
 
 bool ChessApp::OnInit()
 {
+    extern void compress_temp_lookup_gen_function();
+    compress_temp_lookup_gen_function();
+
     // Check if there is another process running.
     if( m_one.IsAnotherRunning() ) {
 
