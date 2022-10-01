@@ -1328,12 +1328,197 @@ namespace thc
     extern const lte *knight_lookup[];
 }
 
+#define ROOK_ATTACK_SETUP( attack_sq )      \
+    int attack_file = attack_sq&7;          \
+    int attack_rank = attack_sq&0x38;       \
+    if( attack_rank == king_rank )          \
+    {                                       \
+        attack_ray_offset = attack_sq < king_sq ? -1 : +1;  \
+    }                                                       \
+    else if( attack_file == king_file )                     \
+    {                                                       \
+        attack_ray_offset = attack_sq < king_sq ? -8 : +8;  \
+    }
+
+#define BISHOP_ATTACK_SETUP( attack_sq )     \
+    if( attack_sq < king_sq )                                               \
+    {                                                                       \
+        if( attack_file < king_file  )                                      \
+        {                                                                   \
+            /* NW */                                                        \
+            if( king_file-attack_file == ((king_rank-attack_rank)>>3) )     \
+            {                                                               \
+                attack_ray_offset = NW_OFFSET;                              \
+            }                                                               \
+        }                                                                   \
+        else                                                                \
+        {                                                                   \
+            /* NE */                                                        \
+            if( attack_file-king_file == ((king_rank-attack_rank)>>3) )     \
+            {                                                               \
+                attack_ray_offset = NE_OFFSET;                              \
+            }                                                               \
+        }                                                                   \
+    }                                                                       \
+    else                                                                    \
+    {                                                                       \
+        if( attack_file < king_file )                                       \
+        {                                                                   \
+            /* SW */                                                        \
+            if( king_file-attack_file == ((attack_rank-king_rank)>>3) )     \
+            {                                                               \
+                attack_ray_offset = SW_OFFSET;                              \
+            }                                                               \
+        }                                                                   \
+        else                                                                \
+        {                                                                   \
+            /* SE */                                                        \
+            if( attack_file-king_file == ((attack_rank-king_rank)>>3) )     \
+            {                                                               \
+                attack_ray_offset = SE_OFFSET;                              \
+            }                                                               \
+        }                                                                   \
+    }
+
+#define ATTACK_CHECK( attack_sq )                      \
+    check = (attack_ray_offset != 0);              \
+    for( int sq=king_sq+attack_ray_offset; check && sq!=attack_sq; sq+=attack_ray_offset )  \
+    {                                                               \
+        if( cr.squares[sq] != ' ' )                                 \
+            check = false;                                          \
+    }
+
+#define DISCOVERY_DIAGONAL_SETUP()                \
+    int discovery_ray_square = 0;                 \
+    int discovery_ray_offset = 0;                 \
+    int discovery_ray_count  = 0;                 \
+    char discovery_queen  = cr.white ? 'Q' : 'q'; \
+    char discovery_bishop = cr.white ? 'B' : 'b'; \
+    if( src < king_sq )                           \
+    {                                             \
+        if( src_file < king_file  )               \
+        {                                         \
+            if( king_file-src_file == ((king_rank-src_rank)>>3) )   \
+            {                                                       \
+                discovery_ray_square = nw_square[king_sq];      \
+                discovery_ray_count  = nw_count [king_sq];      \
+                discovery_ray_offset = NW_OFFSET;               \
+            }                                                   \
+        }                                                       \
+        else                                                    \
+        {                                                       \
+            if( src_file-king_file == ((king_rank-src_rank)>>3) )   \
+            {                                                       \
+                discovery_ray_square = ne_square[king_sq];      \
+                discovery_ray_count  = ne_count [king_sq];      \
+                discovery_ray_offset = NE_OFFSET;               \
+            }                                                   \
+        }                                                       \
+    }                                                           \
+    else                                                        \
+    {                                                           \
+        if( src_file < king_file )                              \
+        {                                                       \
+            if( king_file-src_file == ((src_rank-king_rank)>>3) )   \
+            {                                                       \
+                discovery_ray_square = sw_square[king_sq];      \
+                discovery_ray_count  = sw_count [king_sq];      \
+                discovery_ray_offset = SW_OFFSET;               \
+            }                                                   \
+        }                                                       \
+        else                                                    \
+        {                                                       \
+            if( src_file-king_file == ((src_rank-king_rank)>>3) )   \
+            {                                                       \
+                discovery_ray_square = se_square[king_sq];      \
+                discovery_ray_count  = se_count [king_sq];      \
+                discovery_ray_offset = SE_OFFSET;               \
+            }                                                   \
+        }                                                       \
+    }
+
+#define DISCOVERY_VACATED_CHECK( discovery_bishop_or_rook ) \
+    /* Look from king position to edge for a queen or bishop on the newly vacated   */ \
+    /*  rank, file or diagonal. There must be at least two steps to the edge,       */ \
+    /*  the square we are vacating cannot be the edge square                        */ \
+    if( discovery_ray_offset!=0 && discovery_ray_count>1 && src!=discovery_ray_square )\
+    {                                                                                  \
+        for( int i=0, sq = king_sq+discovery_ray_offset;  i<discovery_ray_count; i++, sq+=discovery_ray_offset ) \
+        {                                                                                                        \
+            if( cr.squares[sq] == discovery_queen || cr.squares[sq] == discovery_bishop_or_rook )       \
+            {                                                                                           \
+                check = true;   /* if we haven't reached the src square yet that's strange because */   \
+                                /*  the opponent was in check before we made the move              */   \
+                break;                                                                                  \
+            }                                                                                           \
+            if( sq!=src && cr.squares[sq] != ' ' )  /* check for any interruption */                    \
+                break;                                                                                  \
+        }                                                                                               \
+    }
+
+#define DISCOVERY_NOT_VACATED_CHECK( discovery_bishop_or_rook ) \
+    /* Look from king position to edge for a queen or bishop on the newly vacated   */ \
+    /*  rank, file or diagonal. There must be at least two steps to the edge,       */ \
+    /*  the square we are vacating cannot be the edge square                        */ \
+    if( discovery_ray_offset!=0 && discovery_ray_count>1 && src!=discovery_ray_square )\
+    {                                                                                  \
+        for( int i=0, sq = king_sq+discovery_ray_offset;  i<discovery_ray_count; i++, sq+=discovery_ray_offset ) \
+        {                                                                                                        \
+            if( cr.squares[sq] == discovery_queen || cr.squares[sq] == discovery_bishop_or_rook )       \
+            {                                                                                           \
+                check = true;   /* if we haven't reached the src square yet that's strange because */   \
+                                /*  the opponent was in check before we made the move              */   \
+                break;                                                                                  \
+            }                                                                                           \
+            if( sq!=src && cr.squares[sq] != ' ' )  /* check for any interruption */                    \
+                break;                                                                                  \
+            if( sq == dst )  /* A king or pawn move doesn't necessarily vacate ray */                   \
+                break;                                                                                  \
+        }                                                                                               \
+    }
+
+#define  DISCOVERY_ROOK_SETUP()                                             \
+    discovery_ray_offset = 0;                                               \
+    discovery_ray_count  = 0;                                               \
+    char discovery_rook = cr.white ? 'R' : 'r';                             \
+    if( src_rank == king_rank )                                             \
+    {                                                                       \
+        if( src < king_sq )                                                 \
+        {                                                                   \
+            discovery_ray_offset = -1;                                      \
+            discovery_ray_square = king_sq & 0xf8;  /* set file to 0 */     \
+            discovery_ray_count  = king_file;                               \
+        }                                                                   \
+        else                                                                \
+        {                                                                   \
+            discovery_ray_offset = +1;                                      \
+            discovery_ray_square = king_sq | 7;     /* set file to 7 */     \
+            discovery_ray_count  = 7-king_file;                             \
+        }                                                                   \
+    }                                                                       \
+    else if( src_file == king_file )                                        \
+    {                                                                       \
+        if( src < king_sq )                                                 \
+        {                                                                   \
+            discovery_ray_offset = -8;                                      \
+            discovery_ray_square = king_sq & 0xc7;    /* set rank to 0 */   \
+            discovery_ray_count  = king_rank>>3;                            \
+        }                                                                   \
+        else                                                                \
+        {                                                                   \
+            discovery_ray_offset = +8;                                      \
+            discovery_ray_square = king_sq | 0x38;   /* set rank to 0x38 */ \
+            discovery_ray_count  = 7 - (king_rank>>3);                      \
+        }                                                                   \
+    }
+
+
+
 thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other, std::string &san_move )
 {
     DIAG_ONLY( nbr_uncompress_fast++ );
     int src=0;
     int dst=0;
-    int rook_dst=0;
     int hi_nibble = code&0xf0;
     san_move.clear();
     thc::SPECIAL special = thc::NOT_SPECIAL;
@@ -1345,6 +1530,7 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
             src = side->king;
             int delta=0;
             bool castling = false;
+            int attack_sq=0;
             switch( code&0x0f )     // 0, 1, 2
             {                       // 8, 9, 10
                                     // 16,17,18
@@ -1363,7 +1549,7 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
                     int rook_offset = (side->rooks[0]==src+3 ? 0 : 1);  // a rook will be 3 squares to right of king
                     side->rooks[rook_offset] = src+1;                   // that rook ends up 1 square right of king
                     // note that there is no way the rooks ordering can swap during castling
-                    rook_dst = src+1;
+                    attack_sq = src+1;
                     san_move = "O-O";
                     castling = true;
                     break;
@@ -1375,7 +1561,7 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
                     int rook_offset = (side->rooks[0]==src-4 ? 0 : 1);  // a rook will be 4 squares to left of king
                     side->rooks[rook_offset] = src-1;                   // that rook ends up 1 square left of king
                     // note that there is no way the rooks ordering can swap during castling
-                    rook_dst = src-1;
+                    attack_sq = src-1;
                     san_move = "O-O-O";
                     castling = true;
                     break;
@@ -1386,13 +1572,7 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
             // Test whether the King is giving check directly (castling only) and/or discovering an attack by a Queen, Rook or Bishop
             bool check = false;
             int attack_ray_offset = 0;
-            int discovery_ray_square = 0;
-            int discovery_ray_offset = 0;
-            int discovery_ray_count  = 0;
             int king_sq = cr.white ? cr.bking_square : cr.wking_square;   // the other king
-            char discovery_queen  = cr.white ? 'Q' : 'q';
-            char discovery_rook   = cr.white ? 'R' : 'r';
-            char discovery_bishop = cr.white ? 'B' : 'b';
             int king_file = king_sq&7;
             int king_rank = king_sq&0x38;
             int src_file = src&7;
@@ -1401,26 +1581,12 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
             // Direct check (castling only) ?
             if( castling )
             {
-                int dst_file = rook_dst&7;
-                int dst_rank = rook_dst&0x38;
-                if( dst_rank == king_rank )
-                {
-                    attack_ray_offset = rook_dst < king_sq ? -1 : +1;
-                }
-                else if( dst_file == king_file )
-                {
-                    attack_ray_offset = rook_dst < king_sq ? -8 : +8;
-                }
+
+                // Setup variables to test a direct rook check
+                ROOK_ATTACK_SETUP( attack_sq )
 
                 // Direct check ?
-                check = (attack_ray_offset != 0);  // assume check if moving to king's file or rank
-                for( int i=0, sq=king_sq+attack_ray_offset; i<8 && check && sq!=rook_dst; i++, sq+=attack_ray_offset )
-                {
-
-                    // Look from King to new position of Rook, any non empty square interrupts check
-                    if( cr.squares[sq] != ' ' )
-                        check = false;
-                }
+                ATTACK_CHECK( attack_sq )
             }
 
             // Discovery (not castling only) ?
@@ -1429,129 +1595,23 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
 
                 // Diagonal discovery ?
                 // Test whether this square is NW, NE, SW or SE from the king position
-                if( src < king_sq )
-                {
-                    if( src_file < king_file  )
-                    {
-                        // NW
-                        if( king_file-src_file == ((king_rank-src_rank)>>3) )
-                        {
-                            discovery_ray_square = nw_square[king_sq];  // edge square in this direction
-                            discovery_ray_count  = nw_count [king_sq];  // nbr of squares from king to edge
-                            discovery_ray_offset = NW_OFFSET;           // offset for each step in path
-                        }
-                    }
-                    else
-                    {
-                        // NE
-                        if( src_file-king_file == ((king_rank-src_rank)>>3) )
-                        {
-                            discovery_ray_square = ne_square[king_sq];
-                            discovery_ray_count  = ne_count [king_sq];
-                            discovery_ray_offset = NE_OFFSET;
-                        }
-                    }
-                }
-                else
-                {
-                    if( src_file < king_file )
-                    {
-                        // SW
-                        if( king_file-src_file == ((src_rank-king_rank)>>3) )
-                        {
-                            discovery_ray_square = sw_square[king_sq];
-                            discovery_ray_count  = sw_count [king_sq];
-                            discovery_ray_offset = SW_OFFSET;
-                        }
-                    }
-                    else
-                    {
-                        // SE
-                        if( src_file-king_file == ((src_rank-king_rank)>>3) )
-                        {
-                            discovery_ray_square = se_square[king_sq];
-                            discovery_ray_count  = se_count [king_sq];
-                            discovery_ray_offset = SE_OFFSET;
-                        }
-                    }
-                }
+                DISCOVERY_DIAGONAL_SETUP()
 
                 // Look from king position to edge for a queen or bishop on the newly vacated
                 //  diagonal. There must be at least two steps to the edge, and the square we
                 //  are vacating cannot be the edge square
-                if( discovery_ray_offset!=0 && discovery_ray_count>1 && src!=discovery_ray_square )
-                {
-                    for( int i=0, sq = king_sq+discovery_ray_offset;  i<discovery_ray_count; i++, sq+=discovery_ray_offset )
-                    {
-                        if( cr.squares[sq] == discovery_queen || cr.squares[sq] == discovery_bishop )
-                        {
-                            check = true;   // if we haven't reached the src square yet that's strange because
-                                            //  the opponent was in check before we made the move
-                            break;
-                        }
-                        if( sq!=src && cr.squares[sq] != ' ' )  // check for any interruption
-                            break;
-                        if( sq == dst )  // A king move doesn't necessarily vacate diagonal
-                            break;
-                    }
-                }
-
+                DISCOVERY_NOT_VACATED_CHECK( discovery_bishop )
+                    
                 // Rank or file discovery ?
                 if( !check )
                 {
-
-                    discovery_ray_offset = 0;
-                    discovery_ray_count  = 0;
-                    if( src_rank == king_rank )
-                    {
-                        if( src < king_sq )
-                        {
-                            discovery_ray_offset = -1;
-                            discovery_ray_square = king_sq & 0xf8;  // set file to 0
-                            discovery_ray_count  = king_file;
-                        }
-                        else
-                        {
-                            discovery_ray_offset = +1;
-                            discovery_ray_square = king_sq | 7;     // set file to 7
-                            discovery_ray_count  = 7-king_file;
-                        }
-                    }
-                    else if( src_file == king_file )
-                    {
-                        if( src < king_sq )
-                        {
-                            discovery_ray_offset = -8;
-                            discovery_ray_square = king_sq & 0xc7;    // set rank to 0
-                            discovery_ray_count  = king_rank>>3;
-                        }
-                        else
-                        {
-                            discovery_ray_offset = +8;
-                            discovery_ray_square = king_sq | 0x38;    // set rank to 0x38 
-                            discovery_ray_count  = 7 - (king_rank>>3);
-                        }
-                    }
+                    // Test whether this square is N, E, S or E from the king position
+                    DISCOVERY_ROOK_SETUP()
 
                     // Look from king position to edge for a queen or rook on the newly vacated
                     //  file or rank. There must be at least two steps to the edge, and the square we
                     //  are vacating cannot be the edge square
-                    if( discovery_ray_offset!=0 && discovery_ray_count>1 && src!=discovery_ray_square )
-                    {
-                        for( int i=0, sq = king_sq+discovery_ray_offset;  i<discovery_ray_count; i++, sq+=discovery_ray_offset )
-                        {
-                            if( cr.squares[sq] == discovery_queen || cr.squares[sq] == discovery_rook )
-                            {
-                                check = true;   // if we haven't reached the src square yet that's strange because
-                                                //  the opponent was in check before we made the move
-                                break;
-                            }
-                            if( sq!=src && cr.squares[sq] != ' ' )  // check for any interruption
-                                break;
-                            if( sq == dst )  // A king move doesn't necessarily vacate diagonal
-                                break;
-                        }
-                    }
+                    DISCOVERY_NOT_VACATED_CHECK( discovery_rook )
                 }
             }
             char f = get_file((thc::Square)dst);
@@ -1652,107 +1712,28 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
 
             // Test whether the Rook is giving check directly and/or discovering an attack by a Queen or Bishop
             bool check = false;
-            int discovery_ray_square = 0;
-            int discovery_ray_offset = 0;
-            int discovery_ray_count  = 0;
             int attack_ray_offset = 0;
             int king_sq = cr.white ? cr.bking_square : cr.wking_square;   // the other king
-            char discovery_queen = cr.white ? 'Q' : 'q';
-            char discovery_bishop = cr.white ? 'B' : 'b';
             int king_file = king_sq&7;
             int king_rank = king_sq&0x38;
-            int dst_file = dst&7;
-            int dst_rank = dst&0x38;
             int src_file = src&7;
             int src_rank = src&0x38;
-            if( dst_rank == king_rank )
-            {
-                attack_ray_offset = dst < king_sq ? -1 : +1;
-            }
-            else if( dst_file == king_file )
-            {
-                attack_ray_offset = dst < king_sq ? -8 : +8;
-            }
+
+            // Setup variables to test a direct rook check
+            ROOK_ATTACK_SETUP( dst )
 
             // Direct check ?
-            check = (attack_ray_offset != 0);  // assume check if moving to king's file or rank
-            for( int i=0, sq=king_sq+attack_ray_offset; i<8 && check && sq!=dst; i++, sq+=attack_ray_offset )
-            {
-
-                // Look from King to new position of Rook, any non empty square interrupts check
-                if( cr.squares[sq] != ' ' )
-                    check = false;
-            }
+            ATTACK_CHECK( dst )
 
             // Discovery ?
             if( !check )    // no need to test for discovery if already found direct attack
             {
 
-                // Test whether this square is NW, NE, SW or SE from the king position
-                if( src < king_sq )
-                {
-                    if( src_file < king_file  )
-                    {
-                        // NW
-                        if( king_file-src_file == ((king_rank-src_rank)>>3) )
-                        {
-                            discovery_ray_square = nw_square[king_sq];  // edge square in this direction
-                            discovery_ray_count  = nw_count [king_sq];  // nbr of squares from king to edge
-                            discovery_ray_offset = NW_OFFSET;           // offset for each step in path
-                        }
-                    }
-                    else
-                    {
-                        // NE
-                        if( src_file-king_file == ((king_rank-src_rank)>>3) )
-                        {
-                            discovery_ray_square = ne_square[king_sq];
-                            discovery_ray_count  = ne_count [king_sq];
-                            discovery_ray_offset = NE_OFFSET;
-                        }
-                    }
-                }
-                else
-                {
-                    if( src_file < king_file )
-                    {
-                        // SW
-                        if( king_file-src_file == ((src_rank-king_rank)>>3) )
-                        {
-                            discovery_ray_square = sw_square[king_sq];
-                            discovery_ray_count  = sw_count [king_sq];
-                            discovery_ray_offset = SW_OFFSET;
-                        }
-                    }
-                    else
-                    {
-                        // SE
-                        if( src_file-king_file == ((src_rank-king_rank)>>3) )
-                        {
-                            discovery_ray_square = se_square[king_sq];
-                            discovery_ray_count  = se_count [king_sq];
-                            discovery_ray_offset = SE_OFFSET;
-                        }
-                    }
-                }
+                // Setup variables to test a discovered check on the diagonal
+                DISCOVERY_DIAGONAL_SETUP()
 
-                // Look from king position to edge for a queen or bishop on the newly vacated
-                //  diagonal. There must be at least two steps to the edge, and the square we
-                //  are vacating cannot be the edge square
-                if( discovery_ray_offset!=0 && discovery_ray_count>1 && src!=discovery_ray_square )
-                {
-                    for( int i=0, sq = king_sq+discovery_ray_offset;  i<discovery_ray_count; i++, sq+=discovery_ray_offset )
-                    {
-                        if( cr.squares[sq] == discovery_queen || cr.squares[sq] == discovery_bishop )
-                        {
-                            check = true;   // if we haven't reached the src square yet that's strange because
-                                            //  the opponent was in check before we made the move
-                            break;
-                        }
-                        if( sq!=src && cr.squares[sq] != ' ' )  // check for any interruption
-                            break;
-                    }
-                }
+                // Check for discovered check on a diagonal by a piece that always vacates the diagonal
+                DISCOVERY_VACATED_CHECK( discovery_bishop )
             }
             char f = get_file((thc::Square)dst);
             char r = get_rank((thc::Square)dst);
@@ -1784,116 +1765,28 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
             int attack_ray_offset = 0;
             int king_sq = cr.white ? cr.bking_square : cr.wking_square;   // the other king
             char discovery_queen = cr.white ? 'Q' : 'q';
-            char discovery_rook  = cr.white ? 'R' : 'r';
             int king_file = king_sq&7;
             int king_rank = king_sq&0x38;
-            int dst_file = dst&7;
-            int dst_rank = dst&0x38;
             int src_file = src&7;
             int src_rank = src&0x38;
 
             // Test whether destination square is NW, NE, SW or SE from the king position
-            if( dst < king_sq )
-            {
-                if( dst_file < king_file  )
-                {
-                    // NW
-                    if( king_file-dst_file == ((king_rank-dst_rank)>>3) )
-                    {
-                        attack_ray_offset = NW_OFFSET;           // offset for each step in path
-                    }
-                }
-                else
-                {
-                    // NE
-                    if( dst_file-king_file == ((king_rank-dst_rank)>>3) )
-                    {
-                        attack_ray_offset = NE_OFFSET;
-                    }
-                }
-            }
-            else
-            {
-                if( dst_file < king_file )
-                {
-                    // SW
-                    if( king_file-dst_file == ((dst_rank-king_rank)>>3) )
-                    {
-                        attack_ray_offset = SW_OFFSET;
-                    }
-                }
-                else
-                {
-                    // SE
-                    if( dst_file-king_file == ((dst_rank-king_rank)>>3) )
-                    {
-                        attack_ray_offset = SE_OFFSET;
-                    }
-                }
-            }
+            int attack_file = dst&7;
+            int attack_rank = dst&0x38;
+            BISHOP_ATTACK_SETUP( dst )
 
             // Direct check ?
-            check = (attack_ray_offset != 0);  // assume check if moving to king's diagonal
-            for( int i=0, sq=king_sq+attack_ray_offset; i<8 && check && sq!=dst; i++, sq+=attack_ray_offset )
-            {
-
-                // Look from King to new position of Bishop, any non empty square interrupts check
-                if( cr.squares[sq] != ' ' )
-                    check = false;
-            }
+            ATTACK_CHECK( dst )
 
             // Discovery ?
             if( !check )    // no need to test for discovery if already found direct attack
             {
 
-                if( src_rank == king_rank )
-                {
-                    if( src < king_sq )
-                    {
-                        discovery_ray_offset = -1;
-                        discovery_ray_square = king_sq & 0xf8;  // set file to 0
-                        discovery_ray_count  = king_file;
-                    }
-                    else
-                    {
-                        discovery_ray_offset = +1;
-                        discovery_ray_square = king_sq | 7;     // set file to 7
-                        discovery_ray_count  = 7-king_file;
-                    }
-                }
-                else if( src_file == king_file )
-                {
-                    if( src < king_sq )
-                    {
-                        discovery_ray_offset = -8;
-                        discovery_ray_square = king_sq & 0xc7;    // set rank to 0
-                        discovery_ray_count  = king_rank>>3;
-                    }
-                    else
-                    {
-                        discovery_ray_offset = +8;
-                        discovery_ray_square = king_sq | 0x38;    // set rank to 0x38 
-                        discovery_ray_count  = 7 - (king_rank>>3);
-                    }
-                }
+                // Setup variables to test a discovered check from a rook or queen
+                DISCOVERY_ROOK_SETUP()
 
-                // Look from king position to edge for a queen or rook on the newly vacated
-                //  file or rank. There must be at least two steps to the edge, and the square we
-                //  are vacating cannot be the edge square
-                if( discovery_ray_offset!=0 && discovery_ray_count>1 && src!=discovery_ray_square )
-                {
-                    for( int i=0, sq = king_sq+discovery_ray_offset;  i<discovery_ray_count; i++, sq+=discovery_ray_offset )
-                    {
-                        if( cr.squares[sq] == discovery_queen || cr.squares[sq] == discovery_rook )
-                        {
-                            check = true;   // if we haven't reached the src square yet that's strange because
-                                            //  the opponent was in check before we made the move
-                            break;
-                        }
-                        if( sq!=src && cr.squares[sq] != ' ' )  // check for any interruption
-                            break;
-                    }
-                }
+                // Check for discovered check on a rank or file by a piece that always vacates the rank or file
+                DISCOVERY_VACATED_CHECK( discovery_rook )
             }
             char f = get_file((thc::Square)dst);
             char r = get_rank((thc::Square)dst);
@@ -1925,116 +1818,28 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
             int attack_ray_offset = 0;
             int king_sq = cr.white ? cr.bking_square : cr.wking_square;   // the other king
             char discovery_queen = cr.white ? 'Q' : 'q';
-            char discovery_rook  = cr.white ? 'R' : 'r';
             int king_file = king_sq&7;
             int king_rank = king_sq&0x38;
-            int dst_file = dst&7;
-            int dst_rank = dst&0x38;
             int src_file = src&7;
             int src_rank = src&0x38;
 
             // Test whether destination square is NW, NE, SW or SE from the king position
-            if( dst < king_sq )
-            {
-                if( dst_file < king_file  )
-                {
-                    // NW
-                    if( king_file-dst_file == ((king_rank-dst_rank)>>3) )
-                    {
-                        attack_ray_offset = NW_OFFSET;           // offset for each step in path
-                    }
-                }
-                else
-                {
-                    // NE
-                    if( dst_file-king_file == ((king_rank-dst_rank)>>3) )
-                    {
-                        attack_ray_offset = NE_OFFSET;
-                    }
-                }
-            }
-            else
-            {
-                if( dst_file < king_file )
-                {
-                    // SW
-                    if( king_file-dst_file == ((dst_rank-king_rank)>>3) )
-                    {
-                        attack_ray_offset = SW_OFFSET;
-                    }
-                }
-                else
-                {
-                    // SE
-                    if( dst_file-king_file == ((dst_rank-king_rank)>>3) )
-                    {
-                        attack_ray_offset = SE_OFFSET;
-                    }
-                }
-            }
+            int attack_file = dst&7;
+            int attack_rank = dst&0x38;
+            BISHOP_ATTACK_SETUP( dst )
 
             // Direct check ?
-            check = (attack_ray_offset != 0);  // assume check if moving to king's diagonal
-            for( int i=0, sq=king_sq+attack_ray_offset; i<8 && check && sq!=dst; i++, sq+=attack_ray_offset )
-            {
-
-                // Look from King to new position of Bishop, any non empty square interrupts check
-                if( cr.squares[sq] != ' ' )
-                    check = false;
-            }
+            ATTACK_CHECK( dst )
 
             // Discovery ?
             if( !check )    // no need to test for discovery if already found direct attack
             {
 
-                if( src_rank == king_rank )
-                {
-                    if( src < king_sq )
-                    {
-                        discovery_ray_offset = -1;
-                        discovery_ray_square = king_sq & 0xf8;  // set file to 0
-                        discovery_ray_count  = king_file;
-                    }
-                    else
-                    {
-                        discovery_ray_offset = +1;
-                        discovery_ray_square = king_sq | 7;     // set file to 7
-                        discovery_ray_count  = 7-king_file;
-                    }
-                }
-                else if( src_file == king_file )
-                {
-                    if( src < king_sq )
-                    {
-                        discovery_ray_offset = -8;
-                        discovery_ray_square = king_sq & 0xc7;    // set rank to 0
-                        discovery_ray_count  = king_rank>>3;
-                    }
-                    else
-                    {
-                        discovery_ray_offset = +8;
-                        discovery_ray_square = king_sq | 0x38;    // set rank to 0x38 
-                        discovery_ray_count  = 7 - (king_rank>>3);
-                    }
-                }
+                // Setup variables to test a discovered check from a rook or queen
+                DISCOVERY_ROOK_SETUP()
 
-                // Look from king position to edge for a queen or rook on the newly vacated
-                //  file or rank. There must be at least two steps to the edge, and the square we
-                //  are vacating cannot be the edge square
-                if( discovery_ray_offset!=0 && discovery_ray_count>1 && src!=discovery_ray_square )
-                {
-                    for( int i=0, sq = king_sq+discovery_ray_offset;  i<discovery_ray_count; i++, sq+=discovery_ray_offset )
-                    {
-                        if( cr.squares[sq] == discovery_queen || cr.squares[sq] == discovery_rook )
-                        {
-                            check = true;   // if we haven't reached the src square yet that's strange because
-                                            //  the opponent was in check before we made the move
-                            break;
-                        }
-                        if( sq!=src && cr.squares[sq] != ' ' )  // check for any interruption
-                            break;
-                    }
-                }
+                // Check for discovered check on a rank or file by a piece that always vacates the rank or file
+                DISCOVERY_VACATED_CHECK( discovery_rook )
             }
 
             char f = get_file((thc::Square)dst);
@@ -2076,80 +1881,12 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
             int king_sq = cr.white ? cr.bking_square : cr.wking_square;   // the other king
             int king_file = king_sq&7;
             int king_rank = king_sq&0x38;
-            int dst_file = dst&7;
-            int dst_rank = dst&0x38;
-            if( dst_rank == king_rank )
+            ROOK_ATTACK_SETUP( dst )
+            if( attack_ray_offset == 0 )
             {
-                attack_ray_offset = dst < king_sq ? -1 : +1;
+                BISHOP_ATTACK_SETUP( dst )
             }
-            else if( dst_file == king_file )
-            {
-                attack_ray_offset = dst < king_sq ? -8 : +8;
-            }
-
-            // Direct check ?
-            check = (attack_ray_offset != 0);  // assume check if moving to king's file or rank
-            for( int i=0, sq=king_sq+attack_ray_offset; i<8 && check && sq!=dst; i++, sq+=attack_ray_offset )
-            {
-
-                // Look from King to new position of Queen, any non empty square interrupts check
-                if( cr.squares[sq] != ' ' )
-                    check = false;
-            }
-
-            // Test whether destination square is NW, NE, SW or SE from the king position
-            if( !check )
-            {
-                attack_ray_offset = 0;
-                if( dst < king_sq )
-                {
-                    if( dst_file < king_file  )
-                    {
-                        // NW
-                        if( king_file-dst_file == ((king_rank-dst_rank)>>3) )
-                        {
-                            attack_ray_offset = NW_OFFSET;           // offset for each step in path
-                        }
-                    }
-                    else
-                    {
-                        // NE
-                        if( dst_file-king_file == ((king_rank-dst_rank)>>3) )
-                        {
-                            attack_ray_offset = NE_OFFSET;
-                        }
-                    }
-                }
-                else
-                {
-                    if( dst_file < king_file )
-                    {
-                        // SW
-                        if( king_file-dst_file == ((dst_rank-king_rank)>>3) )
-                        {
-                            attack_ray_offset = SW_OFFSET;
-                        }
-                    }
-                    else
-                    {
-                        // SE
-                        if( dst_file-king_file == ((dst_rank-king_rank)>>3) )
-                        {
-                            attack_ray_offset = SE_OFFSET;
-                        }
-                    }
-                }
-
-                // Direct check ?
-                check = (attack_ray_offset != 0);  // assume check if moving to king's diagonal
-                for( int i=0, sq=king_sq+attack_ray_offset; i<8 && check && sq!=dst; i++, sq+=attack_ray_offset )
-                {
-
-                    // Look from King to new position of Queen, any non empty square interrupts check
-                    if( cr.squares[sq] != ' ' )
-                        check = false;
-                }
-            }
+            ATTACK_CHECK( dst )
 
             char f = get_file((thc::Square)dst);
             char r = get_rank((thc::Square)dst);
@@ -2191,80 +1928,12 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
             int king_sq = cr.white ? cr.bking_square : cr.wking_square;   // the other king
             int king_file = king_sq&7;
             int king_rank = king_sq&0x38;
-            int dst_file = dst&7;
-            int dst_rank = dst&0x38;
-            if( dst_rank == king_rank )
+            ROOK_ATTACK_SETUP( dst )
+            if( attack_ray_offset == 0 )
             {
-                attack_ray_offset = dst < king_sq ? -1 : +1;
+                BISHOP_ATTACK_SETUP( dst )
             }
-            else if( dst_file == king_file )
-            {
-                attack_ray_offset = dst < king_sq ? -8 : +8;
-            }
-
-            // Direct check ?
-            check = (attack_ray_offset != 0);  // assume check if moving to king's file or rank
-            for( int i=0, sq=king_sq+attack_ray_offset; i<8 && check && sq!=dst; i++, sq+=attack_ray_offset )
-            {
-
-                // Look from King to new position of Queen, any non empty square interrupts check
-                if( cr.squares[sq] != ' ' )
-                    check = false;
-            }
-            if( !check )
-            {
-
-                // Test whether destination square is NW, NE, SW or SE from the king position
-                attack_ray_offset = 0;
-                if( dst < king_sq )
-                {
-                    if( dst_file < king_file  )
-                    {
-                        // NW
-                        if( king_file-dst_file == ((king_rank-dst_rank)>>3) )
-                        {
-                            attack_ray_offset = NW_OFFSET;           // offset for each step in path
-                        }
-                    }
-                    else
-                    {
-                        // NE
-                        if( dst_file-king_file == ((king_rank-dst_rank)>>3) )
-                        {
-                            attack_ray_offset = NE_OFFSET;
-                        }
-                    }
-                }
-                else
-                {
-                    if( dst_file < king_file )
-                    {
-                        // SW
-                        if( king_file-dst_file == ((dst_rank-king_rank)>>3) )
-                        {
-                            attack_ray_offset = SW_OFFSET;
-                        }
-                    }
-                    else
-                    {
-                        // SE
-                        if( dst_file-king_file == ((dst_rank-king_rank)>>3) )
-                        {
-                            attack_ray_offset = SE_OFFSET;
-                        }
-                    }
-                }
-
-                // Direct check ?
-                check = (attack_ray_offset != 0);  // assume check if moving to king's diagonal
-                for( int i=0, sq=king_sq+attack_ray_offset; i<8 && check && sq!=dst; i++, sq+=attack_ray_offset )
-                {
-
-                    // Look from King to new position of Queen, any non empty square interrupts check
-                    if( cr.squares[sq] != ' ' )
-                        check = false;
-                }
-            }
+            ATTACK_CHECK( dst )
 
             char f = get_file((thc::Square)dst);
             char r = get_rank((thc::Square)dst);
@@ -2332,13 +2001,7 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
 
             // Test whether the Knight is giving check directly and/or discovering an attack by a Queen, Rook or Bishop
             bool check = false;
-            int discovery_ray_square = 0;
-            int discovery_ray_offset = 0;
-            int discovery_ray_count  = 0;
             int king_sq = cr.white ? cr.bking_square : cr.wking_square;   // the other king
-            char discovery_queen  = cr.white ? 'Q' : 'q';
-            char discovery_rook   = cr.white ? 'R' : 'r';
-            char discovery_bishop = cr.white ? 'B' : 'b';
             int king_file = king_sq&7;
             int king_rank = king_sq&0x38;
             int src_file = src&7;
@@ -2361,126 +2024,25 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
             if( !check )    // no need to test for discovery if already found direct attack
             {
 
+                // Diagonal discovery ?
                 // Test whether this square is NW, NE, SW or SE from the king position
-                if( src < king_sq )
-                {
-                    if( src_file < king_file  )
-                    {
-                        // NW
-                        if( king_file-src_file == ((king_rank-src_rank)>>3) )
-                        {
-                            discovery_ray_square = nw_square[king_sq];  // edge square in this direction
-                            discovery_ray_count  = nw_count [king_sq];  // nbr of squares from king to edge
-                            discovery_ray_offset = NW_OFFSET;           // offset for each step in path
-                        }
-                    }
-                    else
-                    {
-                        // NE
-                        if( src_file-king_file == ((king_rank-src_rank)>>3) )
-                        {
-                            discovery_ray_square = ne_square[king_sq];
-                            discovery_ray_count  = ne_count [king_sq];
-                            discovery_ray_offset = NE_OFFSET;
-                        }
-                    }
-                }
-                else
-                {
-                    if( src_file < king_file )
-                    {
-                        // SW
-                        if( king_file-src_file == ((src_rank-king_rank)>>3) )
-                        {
-                            discovery_ray_square = sw_square[king_sq];
-                            discovery_ray_count  = sw_count [king_sq];
-                            discovery_ray_offset = SW_OFFSET;
-                        }
-                    }
-                    else
-                    {
-                        // SE
-                        if( src_file-king_file == ((src_rank-king_rank)>>3) )
-                        {
-                            discovery_ray_square = se_square[king_sq];
-                            discovery_ray_count  = se_count [king_sq];
-                            discovery_ray_offset = SE_OFFSET;
-                        }
-                    }
-                }
+                DISCOVERY_DIAGONAL_SETUP()
 
                 // Look from king position to edge for a queen or bishop on the newly vacated
                 //  diagonal. There must be at least two steps to the edge, and the square we
                 //  are vacating cannot be the edge square
-                if( discovery_ray_offset!=0 && discovery_ray_count>1 && src!=discovery_ray_square )
+                DISCOVERY_VACATED_CHECK( discovery_bishop )
+                    
+                // Rank or file discovery ?
+                if( !check )
                 {
-                    for( int i=0, sq = king_sq+discovery_ray_offset;  i<discovery_ray_count; i++, sq+=discovery_ray_offset )
-                    {
-                        if( cr.squares[sq] == discovery_queen || cr.squares[sq] == discovery_bishop )
-                        {
-                            check = true;   // if we haven't reached the src square yet that's strange because
-                                            //  the opponent was in check before we made the move
-                            break;
-                        }
-                        if( sq!=src && cr.squares[sq] != ' ' )  // check for any interruption
-                            break;
-                    }
-                }
-            }
+                    // Test whether this square is N, E, S or E from the king position
+                    DISCOVERY_ROOK_SETUP()
 
-            // Rank or file discovery ?
-            if( !check )
-            {
-
-                discovery_ray_offset = 0;
-                discovery_ray_count  = 0;
-                if( src_rank == king_rank )
-                {
-                    if( src < king_sq )
-                    {
-                        discovery_ray_offset = -1;
-                        discovery_ray_square = king_sq & 0xf8;  // set file to 0
-                        discovery_ray_count  = king_file;
-                    }
-                    else
-                    {
-                        discovery_ray_offset = +1;
-                        discovery_ray_square = king_sq | 7;     // set file to 7
-                        discovery_ray_count  = 7-king_file;
-                    }
-                }
-                else if( src_file == king_file )
-                {
-                    if( src < king_sq )
-                    {
-                        discovery_ray_offset = -8;
-                        discovery_ray_square = king_sq & 0xc7;    // set rank to 0
-                        discovery_ray_count  = king_rank>>3;
-                    }
-                    else
-                    {
-                        discovery_ray_offset = +8;
-                        discovery_ray_square = king_sq | 0x38;    // set rank to 0x38 
-                        discovery_ray_count  = 7 - (king_rank>>3);
-                    }
-                }
-
-                // Look from king position to edge for a queen or rook on the newly vacated
-                //  file or rank. There must be at least two steps to the edge, and the square we
-                //  are vacating cannot be the edge square
-                if( discovery_ray_offset!=0 && discovery_ray_count>1 && src!=discovery_ray_square )
-                {
-                    for( int i=0, sq = king_sq+discovery_ray_offset;  i<discovery_ray_count; i++, sq+=discovery_ray_offset )
-                    {
-                        if( cr.squares[sq] == discovery_queen || cr.squares[sq] == discovery_rook )
-                        {
-                            check = true;   // if we haven't reached the src square yet that's strange because
-                                            //  the opponent was in check before we made the move
-                            break;
-                        }
-                        if( sq!=src && cr.squares[sq] != ' ' )  // check for any interruption
-                            break;
-                    }
+                    // Look from king position to edge for a queen or rook on the newly vacated
+                    //  file or rank. There must be at least two steps to the edge, and the square we
+                    //  are vacating cannot be the edge square
+                    DISCOVERY_VACATED_CHECK( discovery_rook )
                 }
             }
 
@@ -2642,13 +2204,7 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
 
             // Test whether the Pawn is giving check directly and/or discovering an attack by a Queen, Rook or Bishop
             bool check = false;
-            int discovery_ray_square = 0;
-            int discovery_ray_offset = 0;
-            int discovery_ray_count  = 0;
             int king_sq = cr.white ? cr.bking_square : cr.wking_square;   // the other king
-            char discovery_queen  = cr.white ? 'Q' : 'q';
-            char discovery_rook   = cr.white ? 'R' : 'r';
-            char discovery_bishop = cr.white ? 'B' : 'b';
             int king_file = king_sq&7;
             int king_rank = king_sq&0x38;
             int src_file = src&7;
@@ -2666,130 +2222,25 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
             if( !check )    // no need to test for discovery if already found direct attack
             {
 
+                // Diagonal discovery ?
                 // Test whether this square is NW, NE, SW or SE from the king position
-                if( src < king_sq )
-                {
-                    if( src_file < king_file  )
-                    {
-                        // NW
-                        if( king_file-src_file == ((king_rank-src_rank)>>3) )
-                        {
-                            discovery_ray_square = nw_square[king_sq];  // edge square in this direction
-                            discovery_ray_count  = nw_count [king_sq];  // nbr of squares from king to edge
-                            discovery_ray_offset = NW_OFFSET;           // offset for each step in path
-                        }
-                    }
-                    else
-                    {
-                        // NE
-                        if( src_file-king_file == ((king_rank-src_rank)>>3) )
-                        {
-                            discovery_ray_square = ne_square[king_sq];
-                            discovery_ray_count  = ne_count [king_sq];
-                            discovery_ray_offset = NE_OFFSET;
-                        }
-                    }
-                }
-                else
-                {
-                    if( src_file < king_file )
-                    {
-                        // SW
-                        if( king_file-src_file == ((src_rank-king_rank)>>3) )
-                        {
-                            discovery_ray_square = sw_square[king_sq];
-                            discovery_ray_count  = sw_count [king_sq];
-                            discovery_ray_offset = SW_OFFSET;
-                        }
-                    }
-                    else
-                    {
-                        // SE
-                        if( src_file-king_file == ((src_rank-king_rank)>>3) )
-                        {
-                            discovery_ray_square = se_square[king_sq];
-                            discovery_ray_count  = se_count [king_sq];
-                            discovery_ray_offset = SE_OFFSET;
-                        }
-                    }
-                }
+                DISCOVERY_DIAGONAL_SETUP()
 
                 // Look from king position to edge for a queen or bishop on the newly vacated
                 //  diagonal. There must be at least two steps to the edge, and the square we
                 //  are vacating cannot be the edge square
-                if( discovery_ray_offset!=0 && discovery_ray_count>1 && src!=discovery_ray_square )
+                DISCOVERY_NOT_VACATED_CHECK( discovery_bishop )
+                    
+                // Rank or file discovery ?
+                if( !check )
                 {
-                    for( int i=0, sq = king_sq+discovery_ray_offset;  i<discovery_ray_count; i++, sq+=discovery_ray_offset )
-                    {
-                        if( cr.squares[sq] == discovery_queen || cr.squares[sq] == discovery_bishop )
-                        {
-                            check = true;   // if we haven't reached the src square yet that's strange because
-                                            //  the opponent was in check before we made the move
-                            break;
-                        }
-                        if( sq!=src && cr.squares[sq] != ' ' )  // check for any interruption
-                            break;
-                        if( sq == dst )     // a pawn move doesn't necessarily vacate a diagonal
-                            break;
-                    }
-                }
-            }
+                    // Test whether this square is N, E, S or E from the king position
+                    DISCOVERY_ROOK_SETUP()
 
-            // Rank or file discovery ?
-            if( !check )
-            {
-
-                discovery_ray_offset = 0;
-                discovery_ray_count  = 0;
-                if( src_rank == king_rank )
-                {
-                    if( src < king_sq )
-                    {
-                        discovery_ray_offset = -1;
-                        discovery_ray_square = king_sq & 0xf8;  // set file to 0
-                        discovery_ray_count  = king_file;
-                    }
-                    else
-                    {
-                        discovery_ray_offset = +1;
-                        discovery_ray_square = king_sq | 7;     // set file to 7
-                        discovery_ray_count  = 7-king_file;
-                    }
-                }
-                else if( src_file == king_file )
-                {
-                    if( src < king_sq )
-                    {
-                        discovery_ray_offset = -8;
-                        discovery_ray_square = king_sq & 0xc7;    // set rank to 0
-                        discovery_ray_count  = king_rank>>3;
-                    }
-                    else
-                    {
-                        discovery_ray_offset = +8;
-                        discovery_ray_square = king_sq | 0x38;    // set rank to 0x38 
-                        discovery_ray_count  = 7 - (king_rank>>3);
-                    }
-                }
-
-                // Look from king position to edge for a queen or rook on the newly vacated
-                //  file or rank. There must be at least two steps to the edge, and the square we
-                //  are vacating cannot be the edge square
-                if( discovery_ray_offset!=0 && discovery_ray_count>1 && src!=discovery_ray_square )
-                {
-                    for( int i=0, sq = king_sq+discovery_ray_offset;  i<discovery_ray_count; i++, sq+=discovery_ray_offset )
-                    {
-                        if( cr.squares[sq] == discovery_queen || cr.squares[sq] == discovery_rook )
-                        {
-                            check = true;   // if we haven't reached the src square yet that's strange because
-                                            //  the opponent was in check before we made the move
-                            break;
-                        }
-                        if( sq!=src && cr.squares[sq] != ' ' )  // check for any interruption
-                            break;
-                        if( sq == dst )     // a pawn move doesn't necessarily vacate a file
-                            break;
-                    }
+                    // Look from king position to edge for a queen or rook on the newly vacated
+                    //  file or rank. There must be at least two steps to the edge, and the square we
+                    //  are vacating cannot be the edge square
+                    DISCOVERY_NOT_VACATED_CHECK( discovery_rook )
                 }
             }
 
@@ -2941,3 +2392,125 @@ void compress_temp_lookup_gen_function()
         }
     }
 }
+
+#if 0
+
+            // Test whether the Rook is giving check directly and/or discovering an attack by a Queen or Bishop
+            bool check = false;
+            int discovery_ray_square = 0;
+            int discovery_ray_offset = 0;
+            int discovery_ray_count  = 0;
+            int attack_ray_offset = 0;
+            int king_sq = cr.white ? cr.bking_square : cr.wking_square;   // the other king
+            char discovery_queen = cr.white ? 'Q' : 'q';
+            char discovery_bishop = cr.white ? 'B' : 'b';
+            int king_file = king_sq&7;
+            int king_rank = king_sq&0x38;
+            int dst_file = dst&7;
+            int dst_rank = dst&0x38;
+            int src_file = src&7;
+            int src_rank = src&0x38;
+            if( dst_rank == king_rank )
+            {
+                attack_ray_offset = dst < king_sq ? -1 : +1;
+            }
+            else if( dst_file == king_file )
+            {
+                attack_ray_offset = dst < king_sq ? -8 : +8;
+            }
+
+#define is_rook_check( king_sq, rook_sq, attack_ray_offset )                                    \
+    // Direct check ?                                                                   \
+    check = (offset != 0);  // assume check if moving to king's file or rank            \
+    for( sq=king_sq+offset; check && sq!=rook_sq; sq+=offset )                          \
+    {                                                                                   \
+        // Look from King to new position of Rook, any non empty square interrupts check\
+        if( cr.squares[sq] != ' ' )                                                     \
+            check = false;                                                              \
+    }
+
+#define DISCOVERY_DIAGONAL_SETUP()                    \
+    int discovery_ray_square = 0;                     \
+    int discovery_ray_offset = 0;                     \
+    int discovery_ray_count  = 0;                     \
+    char discovery_queen  = cr.white ? 'Q' : 'q';     \
+    char discovery_bishop = cr.white ? 'B' : 'b';     \
+    int king_file = king_sq&7;                        \
+    int king_rank = king_sq&0x38;                     \
+    int dst_file = dst&7;                             \
+    int dst_rank = dst&0x38;                          \
+    int src_file = src&7;                             \
+    int src_rank = src&0x38;                          \
+    /* Test whether this square is NW, NE, SW or SE from the king position */  \
+    if( src < king_sq )                                                        \
+    {                                                                          \
+        if( src_file < king_file  )                                            \
+        {                                                                      \
+            /* NW */                                                           \
+            if( king_file-src_file == ((king_rank-src_rank)>>3) )              \
+            {                                                                  \
+                discovery_ray_square = nw_square[king_sq];  /* edge square in this direction */    \
+                discovery_ray_count  = nw_count [king_sq];  /* nbr of squares from king to edge */ \
+                discovery_ray_offset = NW_OFFSET;           /* offset for each step in path */     \
+            }                                                   \
+        }                                                       \
+        else                                                    \
+        {                                                       \
+            /* NE */                                            \
+            if( src_file-king_file == ((king_rank-src_rank)>>3) \
+            {                                                   \
+                discovery_ray_square = ne_square[king_sq];      \
+                discovery_ray_count  = ne_count [king_sq];      \
+                discovery_ray_offset = NE_OFFSET;               \
+            }                                                   \
+        }                                                       \
+    }                                                           \
+    else                                                        \
+    {                                                           \
+        if( src_file < king_file )                              \
+        {                                                       \
+            /* SW */                                            \
+            if( king_file-src_file == ((src_rank-king_rank)>>3) \
+            {                                                   \
+                discovery_ray_square = sw_square[king_sq];      \
+                discovery_ray_count  = sw_count [king_sq];      \
+                discovery_ray_offset = SW_OFFSET;               \
+            }                                                   \
+        }                                                       \
+        else                                                    \
+        {                                                       \
+            /* SE */                                            \
+            if( src_file-king_file == ((src_rank-king_rank)>>3) \
+            {                                                   \
+                discovery_ray_square = se_square[king_sq];      \
+                discovery_ray_count  = se_count [king_sq];      \
+                discovery_ray_offset = SE_OFFSET;               \
+            }                                                   \
+        }                                                       \
+    }
+
+                // Look from king position to edge for a queen or bishop on the newly vacated
+                //  diagonal. There must be at least two steps to the edge, and the square we
+                //  are vacating cannot be the edge square
+                if( discovery_ray_offset!=0 && discovery_ray_count>1 && src!=discovery_ray_square )
+                {
+                    for( int i=0, sq = king_sq+discovery_ray_offset;  i<discovery_ray_count; i++, sq+=discovery_ray_offset )
+                    {
+                        if( cr.squares[sq] == discovery_queen || cr.squares[sq] == discovery_bishop )
+                        {
+                            check = true;   // if we haven't reached the src square yet that's strange because
+                                            //  the opponent was in check before we made the move
+                            break;
+                        }
+                        if( sq!=src && cr.squares[sq] != ' ' )  // check for any interruption
+                            break;
+                    }
+                }
+            }
+
+
+
+#endif
+
+
+
