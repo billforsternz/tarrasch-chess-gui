@@ -1325,59 +1325,37 @@ namespace thc
     extern const lte *knight_lookup[];
 }
 
-#define ATTACK_CHECK( attack_sq, offset_type )                      \
-    RayValues *r1 = &ray_lookup_table[attack_sq][king_sq];          \
-    check = (r1->offset_type != 0);              \
-    for( int sq=king_sq+r1->offset_type; check && sq!=attack_sq; sq+=r1->offset_type )  \
+// Set flag if piece on 'from' attacks a piece on 'to', along offset_type ray
+#define ATTACKS( flag, from, to, offset_type )                            \
+    RayValues *r1 = &ray_lookup_table[from][to];          \
+    flag = (r1->offset_type != 0);              \
+    for( int sq=to+r1->offset_type; flag && sq!=from; sq+=r1->offset_type )  \
     {                                                               \
         if( cr.squares[sq] != ' ' )                                 \
-            check = false;                                          \
+            flag = false;                                          \
     }
 
-#define DISCOVERY_VACATED_CHECK( is_white_attacker, offset_type ) \
+// Set flag if a move from src to dst exposes the king on king_sq to attack along offset_type ray
+#define DISCOVERY_CHECK( flag, white_move, src, dst, king_sq, offset_type )  \
     /* Look from king position to edge for a queen/rook/bishop on the newly vacated */ \
     /*  rank, file or diagonal. There must be at least two steps to the edge,       */ \
     /*  the square we are vacating cannot be the edge square                        */ \
-    RayValues *r2 = &ray_lookup_table[src][king_sq];                                    \
-    if( r2->offset_type!=0 && r2->ray_count>1 && src!=r2->ray_square )\
+    RayValues *r2 = &ray_lookup_table[src][king_sq];                                   \
+    if( r2->offset_type!=0 && r2->ray_count>1 && src!=r2->ray_square )                 \
     { \
-        char queen              = 'Q' + (is_white_attacker ? 0 : ' '); \
-        char rook_or_bishop     = (r2->ray_rook_offset ? 'R' :  'B') + (is_white_attacker ? 0 : ' ');    \
-        for( int i=0, sq = king_sq+r2->offset_type;  i<r2->ray_count; i++, sq+=r2->offset_type )           \
-        {                                                                                               \
+        char queen              = 'Q' + (white_move ? 0 : ' '); \
+        char rook_or_bishop     = (r2->ray_rook_offset ? 'R' :  'B') + (white_move ? 0 : ' ');   \
+        for( int i=0, sq = king_sq+r2->offset_type;  sq!=dst && i<r2->ray_count; i++, sq+=r2->offset_type )        \
+        {                          \
             if( cr.squares[sq] == queen || cr.squares[sq] == rook_or_bishop )                           \
             {                                                                                           \
-                check = true;   /* if we haven't reached the src square yet that's strange because */   \
+                flag = true;   /* if we haven't reached the src square yet that's strange because */   \
                                 /*  the opponent was in check before we made the move              */   \
                 break;                                                                                  \
             }                                                                                           \
             if( sq!=src && cr.squares[sq] != ' ' )  /* check for any interruption */                    \
-                break;                                                                                  \
-        }                                                                                               \
-    }
-
-#define DISCOVERY_NOT_VACATED_CHECK( is_white_attacker, offset_type ) \
-    /* Look from king position to edge for a queen or bishop on the newly vacated   */ \
-    /*  rank, file or diagonal. There must be at least two steps to the edge,       */ \
-    /*  the square we are vacating cannot be the edge square                        */ \
-    RayValues *r2 = &ray_lookup_table[src][king_sq];                                    \
-    if( r2->offset_type!=0 && r2->ray_count>1 && src!=r2->ray_square )\
-    { \
-        char queen              = 'Q' + (is_white_attacker ? 0 : ' '); \
-        char rook_or_bishop     = (r2->ray_rook_offset ? 'R' :  'B') + (is_white_attacker ? 0 : ' ');    \
-        for( int i=0, sq = king_sq+r2->offset_type;  i<r2->ray_count; i++, sq+=r2->offset_type )           \
-        {                                                                                               \
-            if( cr.squares[sq] == queen || cr.squares[sq] == rook_or_bishop )                           \
-            {                                                                                           \
-                check = true;   /* if we haven't reached the src square yet that's strange because */   \
-                                /*  the opponent was in check before we made the move              */   \
-                break;                                                                                  \
-            }                                                                                           \
-            if( sq!=src && cr.squares[sq] != ' ' )  /* check for any interruption */                    \
-                break;                                                                                  \
-            if( sq == dst )  /* A king or pawn move doesn't necessarily vacate ray */                   \
-                break;                                                                                  \
-        }                                                                                               \
+                break;  \
+        }               \
     }
 
 
@@ -1444,15 +1422,14 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
             if( castling )
             {
                 // Direct check ?
-                ATTACK_CHECK( attack_sq, ray_rook_offset )
+                ATTACKS( check, attack_sq, king_sq, ray_rook_offset )
             }
 
             // Discovery (not castling only) ?
             else
             {
-
                 // Discovered check on any ray (not necessarily) vacated by the king?
-                DISCOVERY_NOT_VACATED_CHECK( cr.white, ray_offset )
+                DISCOVERY_CHECK( check, cr.white, src, dst, king_sq, ray_offset )
             }
             char f = get_file((thc::Square)dst);
             char r = get_rank((thc::Square)dst);
@@ -1484,57 +1461,23 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
                 dst = (src&0x38) | (code&7);        // same rank as src, file from code
             }
             side->rooks[rook_offset] = dst;
+            int other_rook_ambig = 0;
             if( side->nbr_rooks==2 )
             {
                 int other_rook_offset = (hi_nibble==CODE_ROOK_LO ? 1 : 0 );
-                int other_rook = side->rooks[other_rook_offset];
-                if( (other_rook&7) == (dst&7) )
+                int other_rook = other_rook_ambig = side->rooks[other_rook_offset];
+
+                // Set ambig flag if the other rook can go to ('attacks') the dst square too
+                ATTACKS( ambig, other_rook, dst, ray_rook_offset )
+                if( ambig )
                 {
-                    ambig = true;
-                    if( (other_rook&7) < (dst&7) )
-                    {
-                        other_rook+=8;
-                        while( other_rook < dst )
-                        {
-                            if( cr.squares[other_rook] != ' ' )
-                                ambig = false;
-                            other_rook+=8;
-                        }
-                    }
-                    else
-                    {
-                        other_rook-=8;
-                        while( other_rook > dst )
-                        {
-                            if( cr.squares[other_rook] != ' ' )
-                                ambig = false;
-                            other_rook-=8;
-                        }
-                    }
-                }
-                else if( (other_rook&0x38) == (dst&0x38) )
-                {
-                    ambig = true;
-                    if( (other_rook&0x38) < (dst&0x38) )
-                    {
-                        other_rook++;
-                        while( other_rook < dst )
-                        {
-                            if( cr.squares[other_rook] != ' ' )
-                                ambig = false;
-                            other_rook++;
-                        }
-                    }
-                    else
-                    {
-                        other_rook--;
-                        while( other_rook > dst )
-                        {
-                            if( cr.squares[other_rook] != ' ' )
-                                ambig = false;
-                            other_rook--;
-                        }
-                    }
+                    int our_king_sq = cr.white ? cr.wking_square : cr.bking_square;
+                    bool exposes_our_king=false;
+
+                    // Does the other rook moving to the same dst expose our king to check along any ray ?
+                    DISCOVERY_CHECK( exposes_our_king, !cr.white, other_rook_ambig, dst, our_king_sq, ray_offset )
+                    if( exposes_our_king )
+                        ambig = false;  // if so it's an illegal move, so no need to disambiguate
                 }
 
                 // swap ?
@@ -1545,9 +1488,6 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
                     side->rooks[1] = temp;
                 }
 
-                // Use slow process if ambiguous
-                if( ambig )
-                    break;
             }
 
             // Test whether the Rook is giving check directly and/or discovering an attack by a Queen or Bishop
@@ -1555,18 +1495,28 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
             int king_sq = cr.white ? cr.bking_square : cr.wking_square;   // the other king
 
             // Direct check ?
-            ATTACK_CHECK( dst, ray_rook_offset )
+            ATTACKS( check, dst, king_sq, ray_rook_offset )
 
             // Discovery ?
             if( !check )    // no need to test for discovery if already found direct attack
             {
 
                 // Discovered check on a bishop ray vacated by the rook?
-                DISCOVERY_VACATED_CHECK( cr.white, ray_bishop_offset )
+                DISCOVERY_CHECK( check, cr.white, src, dst, king_sq, ray_bishop_offset )
             }
             char f = get_file((thc::Square)dst);
             char r = get_rank((thc::Square)dst);
             san_move = "R";
+            if( ambig )
+            {
+                char f_src = get_file((thc::Square)src);
+                char r_src = get_rank((thc::Square)src);
+                char f_other = get_file((thc::Square)other_rook_ambig);
+                if( f_src != f_other )
+                    san_move += f_src;
+                else
+                    san_move += r_src;
+            }
             if( cr.squares[dst] != ' ')
                 san_move += 'x';
             san_move += f;
@@ -1591,14 +1541,14 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
             int king_sq = cr.white ? cr.bking_square : cr.wking_square;   // the other king
 
             // Direct check ?
-            ATTACK_CHECK( dst, ray_bishop_offset )
+            ATTACKS( check, dst, king_sq, ray_bishop_offset )
 
             // Discovery ?
             if( !check )    // no need to test for discovery if already found direct attack
             {
 
                 // Discovered check on a rook ray vacated by the bishop?
-                DISCOVERY_VACATED_CHECK( cr.white, ray_rook_offset )
+                DISCOVERY_CHECK( check, cr.white, src, dst, king_sq, ray_rook_offset )
             }
             char f = get_file((thc::Square)dst);
             char r = get_rank((thc::Square)dst);
@@ -1627,14 +1577,14 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
             int king_sq = cr.white ? cr.bking_square : cr.wking_square;   // the other king
 
             // Direct check ?
-            ATTACK_CHECK( dst, ray_bishop_offset  )
+            ATTACKS( check, dst, king_sq, ray_bishop_offset )
 
             // Discovery ?
             if( !check )    // no need to test for discovery if already found direct attack
             {
 
                 // Discovered check on a rook ray vacated by the bishop?
-                DISCOVERY_VACATED_CHECK( cr.white, ray_rook_offset )
+                DISCOVERY_CHECK( check, cr.white, src, dst, king_sq, ray_rook_offset )
             }
 
             char f = get_file((thc::Square)dst);
@@ -1673,7 +1623,7 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
             // Test whether the Queen is giving check (directly - queens can't discover check)
             bool check = false;
             int king_sq = cr.white ? cr.bking_square : cr.wking_square;   // the other king
-            ATTACK_CHECK( dst, ray_offset )
+            ATTACKS( check, dst, king_sq, ray_offset )
 
             char f = get_file((thc::Square)dst);
             char r = get_rank((thc::Square)dst);
@@ -1712,7 +1662,7 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
             // Test whether the Queen is giving check (directly - queens can't discover check)
             bool check = false;
             int king_sq = cr.white ? cr.bking_square : cr.wking_square;   // the other king
-            ATTACK_CHECK( dst, ray_offset )
+            ATTACKS( check, dst, king_sq, ray_offset )
 
             char f = get_file((thc::Square)dst);
             char r = get_rank((thc::Square)dst);
@@ -1748,11 +1698,12 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
             dst = src+delta;
             side->knights[knight_offset] = dst;
 
-
+            int other_knight=0;
             if( side->nbr_knights==2 )
             {
+                // Set ambig flag if the other king can go to ('attacks') the dst square too
                 int other_offset = ((code&N_HI) ? 0 : 1 );
-                int other_knight = side->knights[other_offset];
+                other_knight = side->knights[other_offset];
                 const unsigned char *ptr = thc::knight_lookup[dst];
                 unsigned char nbr_moves = *ptr++;
                 while( nbr_moves-- )
@@ -1764,6 +1715,17 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
                         break;
                     }
                 }
+                if( ambig )
+                {
+                    int our_king_sq = cr.white ? cr.wking_square : cr.bking_square;
+                    bool exposes_our_king=false;
+
+                    // Does the other knight moving to the same dst expose our king to check along any ray ?
+                    DISCOVERY_CHECK( exposes_our_king, !cr.white, other_knight, dst, our_king_sq, ray_offset )
+                    if( exposes_our_king )
+                        ambig = false;  // if so it's an illegal move, so no need to disambiguate
+                }
+
 
                 // swap ?
                 if( side->knights[0]>side->knights[1] )
@@ -1772,10 +1734,6 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
                     side->knights[0] = side->knights[1];
                     side->knights[1] = temp;
                 }
-
-                // Use slow process if ambiguous
-                if( ambig )
-                    break;
             }
 
             // Test whether the Knight is giving check directly and/or discovering an attack by a Queen, Rook or Bishop
@@ -1795,17 +1753,27 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
                 }
             }
 
-            // Diagonal discovery ?
+            // Discovered check ?
             if( !check )    // no need to test for discovery if already found direct attack
             {
 
                 // Discovered check on any ray vacated by the knight ?
-                DISCOVERY_VACATED_CHECK( cr.white, ray_offset )
+                DISCOVERY_CHECK( check, cr.white, src, dst, king_sq, ray_offset )
             }
 
             char f = get_file((thc::Square)dst);
             char r = get_rank((thc::Square)dst);
             san_move = "N";
+            if( ambig )
+            {
+                char f_src = get_file((thc::Square)src);
+                char r_src = get_rank((thc::Square)src);
+                char f_other = get_file((thc::Square)other_knight);
+                if( f_src != f_other )
+                    san_move += f_src;
+                else
+                    san_move += r_src;
+            }
             if( cr.squares[dst] != ' ')
                 san_move += 'x';
             san_move += f;
@@ -1955,10 +1923,6 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
                 }
             }
 
-            // Force slow SAN move calculation
-            if( promotion_char || enpassant )
-                break;
-
             // Test whether the Pawn is giving check directly and/or discovering an attack by a Queen, Rook or Bishop
             bool check = false;
             int king_sq = cr.white ? cr.bking_square : cr.wking_square;   // the other king
@@ -1972,12 +1936,35 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
             else
                 check = (dst_file-1==king_file && check_delta==7) || (dst_file+1==king_file && check_delta==9);
 
-            // Diagonal discovery ?
+            // Discovered (or other tricky) check ?
             if( !check )    // no need to test for discovery if already found direct attack
             {
+                if( enpassant )
+                {
+                    int captured_pawn = cr.white ? dst+8 : dst-8;
+                    cr.squares[dst]           = cr.squares[src];
+                    cr.squares[captured_pawn] = ' ';
+                    cr.squares[src]           = ' ';
+                    check = cr.AttackedPiece(thc::Square(king_sq));
+                    cr.squares[src]           = cr.squares[dst];
+                    cr.squares[captured_pawn] = cr.white ? 'p' : 'P';
+                    cr.squares[dst]           = ' ';
+                }
+                else if( promotion_char )
+                {
+                    char temp = cr.squares[dst];
+                    cr.squares[dst]           = promotion_char + (cr.white ? 0 : ' ');
+                    cr.squares[src]           = ' ';
+                    check = cr.AttackedPiece(thc::Square(king_sq));
+                    cr.squares[src]           = cr.white ? 'P' : 'p';
+                    cr.squares[dst]           = temp;
+                }
+                else
+                {
+                    // Discovered check on any ray (not necessarily) vacated by the pawn?
+                    DISCOVERY_CHECK( check, cr.white, src, dst, king_sq, ray_offset )
+                }
 
-                // Discovered check on any ray (not necessarily) vacated by the pawn?
-                DISCOVERY_NOT_VACATED_CHECK( cr.white, ray_offset )
             }
 
             char f1 = get_file((thc::Square)src);
@@ -2103,28 +2090,28 @@ void compress_temp_lookup_gen_function()
             switch( i )
             {
                 // SW
-                case 0: offset = 7;
+                case 0: offset = SW_OFFSET;
                         file   = 0;
                         rank   = 0x38;
                         ptr_square = sw_square;
                         ptr_count  = sw_count;
                         break;
                 // NE
-                case 1: offset = -7;
+                case 1: offset = NE_OFFSET;
                         file   = 7;
                         rank   = 0;
                         ptr_square = ne_square;
                         ptr_count  = ne_count;
                         break;
                 // NW
-                case 2: offset = -9;
+                case 2: offset = NW_OFFSET;
                         file   = 0;
                         rank   = 0;
                         ptr_square = nw_square;
                         ptr_count  = nw_count;
                         break;
                 // SE
-                case 3: offset = 9;
+                case 3: offset = SE_OFFSET;
                         file   = 7;
                         rank   = 0x38;
                         ptr_square = se_square;
