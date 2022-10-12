@@ -61,7 +61,7 @@ int nbr_games_with_promotions;
 int nbr_games_with_slow_mode;
 int nbr_games_with_two_queens;
 
-void CompressMovesDiagBegin()
+void BytecodeDiagBegin()
 {
     nbr_compress_fast = 0;
     nbr_compress_slow = 0;
@@ -91,14 +91,12 @@ void CompressMovesDiagBegin()
     nbr_games_with_two_queens = 0;
 }
 
-void CompressMovesDiagEnd()
+void BytecodeDiagEnd()
 {
     cprintf( "nbr_compress_fast   = %lu\n", nbr_compress_fast );
     cprintf( "nbr_compress_slow   = %lu\n", nbr_compress_slow );
     cprintf( "nbr_uncompress_fast = %lu\n", nbr_uncompress_fast );
     cprintf( "nbr_uncompress_slow = %lu\n", nbr_uncompress_slow );  // It turns out about 0.015% of moves are in slow mode
-    for(int i=0; i<8; i++)
-        cprintf( "nbr_pawn_swaps_histo[%d] = %lu\n", i, nbr_pawn_swaps_histo[i] );
     for(int i=0; i<8; i++)
         cprintf( "nbr_pawn_swaps_histo_wl[%d] = %lu\n", i, nbr_pawn_swaps_histo_wl[i] );
     for(int i=0; i<8; i++)
@@ -151,16 +149,14 @@ void CompressMovesDiagEnd()
 #define CODE_PAWN_6         0xe0
 #define CODE_PAWN_7         0xf0
 
-#define K_VECTOR_N          0x01
-#define K_VECTOR_NE         0x02
-#define K_VECTOR_E          0x03
-#define K_VECTOR_SE         0x04
-#define K_VECTOR_S          0x05
-#define K_VECTOR_SW         0x06
-#define K_VECTOR_W          0x07
-#define K_VECTOR_NW         0x08
-#define K_K_CASTLING        0x09
-#define K_Q_CASTLING        0x0b
+#define K_VECTOR_N          0x08
+#define K_VECTOR_NE         0x09
+#define K_VECTOR_E          0x0a
+#define K_VECTOR_SE         0x0b
+#define K_VECTOR_S          0x0c
+#define K_VECTOR_SW         0x0d
+#define K_VECTOR_W          0x0e
+#define K_VECTOR_NW         0x0f
 
 #define N_VECTOR_NNE        0x00
 #define N_VECTOR_NEE        0x01
@@ -633,7 +629,7 @@ char Bytecode::CompressFastMode( thc::Move mv, Army *side, Army *other )
                 case 9:     code = CODE_KING + K_VECTOR_SE;    break;  // 18-9
                 case 2:
                 {
-                    code = CODE_KING + K_K_CASTLING;
+                    code = CODE_KING + (side->white ? K_VECTOR_SE : K_VECTOR_NE);     // Kingside castling
                     int rook_offset = (side->rooks[0]==src+3 ? 0 : 1);  // a rook will be 3 squares to right of king
                     side->rooks[rook_offset] = src+1;                   // that rook ends up 1 square right of king
                     // note that there is no way the rooks ordering can swap during castling
@@ -643,7 +639,7 @@ char Bytecode::CompressFastMode( thc::Move mv, Army *side, Army *other )
                 }
                 case -2:
                 {
-                    code = CODE_KING + K_Q_CASTLING;
+                    code = CODE_KING + (side->white ? K_VECTOR_SW : K_VECTOR_NW);     // Queenside castling
                     int rook_offset = (side->rooks[0]==src-4 ? 0 : 1);  // a rook will be 4 squares to left of king
                     side->rooks[rook_offset] = src-1;                   // that rook ends up 1 square left of king
                     // note that there is no way the rooks ordering can swap during castling
@@ -982,34 +978,90 @@ thc::Move Bytecode::UncompressFastMode( char code, Army *side, Army *other )
             special = thc::SPECIAL_KING_MOVE;
             src = side->king;
             int delta=0;
-            switch( code&0x0f )     // 0, 1, 2
-            {                       // 8, 9, 10
-                                    // 16,17,18
-                case K_VECTOR_NW:    delta = -9; break;  // 0-9
-                case K_VECTOR_N:     delta = -8; break;  // 1-9
-                case K_VECTOR_NE:    delta = -7; break;  // 2-9
-                case K_VECTOR_W:     delta = -1; break;  // 8-9
-                case K_VECTOR_E:     delta =  1; break;  // 10-9
-                case K_VECTOR_SW:    delta =  7; break;  // 16-9
-                case K_VECTOR_S:     delta =  8; break;  // 17-9
-                case K_VECTOR_SE:    delta =  9; break;  // 18-9
-                case K_K_CASTLING:
-                {
-                    special = cr.white ? thc::SPECIAL_WK_CASTLING : thc::SPECIAL_BK_CASTLING;
-                    delta = 2;
-                    int rook_offset = (side->rooks[0]==src+3 ? 0 : 1);  // a rook will be 3 squares to right of king
-                    side->rooks[rook_offset] = src+1;                   // that rook ends up 1 square right of king
-                    // note that there is no way the rooks ordering can swap during castling
-                    break;
+            if( side->white )
+            {
+                switch( code&0x0f )     // 0, 1, 2
+                {                       // 8, 9, 10
+                                        // 16,17,18
+                    case K_VECTOR_NW:    delta = -9; break;  // 0-9
+                    case K_VECTOR_N:     delta = -8; break;  // 1-9
+                    case K_VECTOR_NE:    delta = -7; break;  // 2-9
+                    case K_VECTOR_W:     delta = -1; break;  // 8-9
+                    case K_VECTOR_E:     delta =  1; break;  // 10-9
+                    case K_VECTOR_S:     delta =  8; break;  // 17-9
+                    case K_VECTOR_SE:
+                    {
+                        if( src != thc::e1 )
+                            delta =  9; // 18-9  normal SE king move   
+                        else
+                        {
+                            // White kingside castling is encoded as K_VECTOR_SE
+                            special = thc::SPECIAL_WK_CASTLING;
+                            delta = 2;
+                            int rook_offset = (side->rooks[0]==src+3 ? 0 : 1);  // a rook will be 3 squares to right of king
+                            side->rooks[rook_offset] = src+1;                   // that rook ends up 1 square right of king
+                            // note that there is no way the rooks ordering can swap during castling
+                        }
+                        break;
+                    }
+                    case K_VECTOR_SW:
+                    {
+                        if( src != thc::e1 )
+                            delta =  7; // 16-9  normal SE king move   
+                        else
+                        {
+                            // White queenside castling is encoded as K_VECTOR_SW
+                            special = thc::SPECIAL_WQ_CASTLING;
+                            delta = -2;
+                            int rook_offset = (side->rooks[0]==src-4 ? 0 : 1);  // a rook will be 4 squares to left of king
+                            side->rooks[rook_offset] = src-1;                   // that rook ends up 1 square left of king
+                            // note that there is no way the rooks ordering can swap during castling
+                        }
+                        break;
+                    }
                 }
-                case K_Q_CASTLING:
-                {
-                    special = cr.white ? thc::SPECIAL_WQ_CASTLING : thc::SPECIAL_BQ_CASTLING;
-                    delta = -2;
-                    int rook_offset = (side->rooks[0]==src-4 ? 0 : 1);  // a rook will be 4 squares to left of king
-                    side->rooks[rook_offset] = src-1;                   // that rook ends up 1 square left of king
-                    // note that there is no way the rooks ordering can swap during castling
-                    break;
+            }
+            else
+            {
+                switch( code&0x0f )     // 0, 1, 2
+                {                       // 8, 9, 10
+                                        // 16,17,18
+                    case K_VECTOR_N:     delta = -8; break;  // 1-9
+                    case K_VECTOR_W:     delta = -1; break;  // 8-9
+                    case K_VECTOR_E:     delta =  1; break;  // 10-9
+                    case K_VECTOR_SW:    delta =  7; break;  // 16-9
+                    case K_VECTOR_S:     delta =  8; break;  // 17-9
+                    case K_VECTOR_SE:    delta =  9; break;  // 18-9
+                    case K_VECTOR_NE:
+                    {
+                        if( src != thc::e8 )
+                            delta =  -7; // 2-9  normal NE king move   
+                        else
+                        {
+                            // Black kingside castling is encoded as K_VECTOR_NE
+                            special = thc::SPECIAL_BK_CASTLING;
+                            delta = 2;
+                            int rook_offset = (side->rooks[0]==src+3 ? 0 : 1);  // a rook will be 3 squares to right of king
+                            side->rooks[rook_offset] = src+1;                   // that rook ends up 1 square right of king
+                            // note that there is no way the rooks ordering can swap during castling
+                        }
+                        break;
+                    }
+                    case K_VECTOR_NW:    
+                    {
+                        if( src != thc::e8 )
+                            delta = -9;  // 0-9  normal NW king move   
+                        else
+                        {
+                            // Black queenside castling is encoded as K_VECTOR_NW
+                            special = thc::SPECIAL_BQ_CASTLING;
+                            delta = -2;
+                            int rook_offset = (side->rooks[0]==src-4 ? 0 : 1);  // a rook will be 4 squares to left of king
+                            side->rooks[rook_offset] = src-1;                   // that rook ends up 1 square left of king
+                            // note that there is no way the rooks ordering can swap during castling
+                        }
+                        break;
+                    }
                 }
             }
             side->king = dst = src+delta;
@@ -1392,40 +1444,102 @@ thc::Move Bytecode::UncompressFastMode( char code, Army *side, Army *other, std:
             int delta=0;
             bool castling = false;
             int attack_sq=0;
-            switch( code&0x0f )     // 0, 1, 2
-            {                       // 8, 9, 10
-                                    // 16,17,18
-                case K_VECTOR_NW:    delta = -9; break;  // 0-9
-                case K_VECTOR_N:     delta = -8; break;  // 1-9
-                case K_VECTOR_NE:    delta = -7; break;  // 2-9
-                case K_VECTOR_W:     delta = -1; break;  // 8-9
-                case K_VECTOR_E:     delta =  1; break;  // 10-9
-                case K_VECTOR_SW:    delta =  7; break;  // 16-9
-                case K_VECTOR_S:     delta =  8; break;  // 17-9
-                case K_VECTOR_SE:    delta =  9; break;  // 18-9
-                case K_K_CASTLING:
-                {
-                    special = cr.white ? thc::SPECIAL_WK_CASTLING : thc::SPECIAL_BK_CASTLING;
-                    delta = 2;
-                    int rook_offset = (side->rooks[0]==src+3 ? 0 : 1);  // a rook will be 3 squares to right of king
-                    side->rooks[rook_offset] = src+1;                   // that rook ends up 1 square right of king
-                    // note that there is no way the rooks ordering can swap during castling
-                    attack_sq = src+1;
-                    san_move = "O-O";
-                    castling = true;
-                    break;
+            if( side->white )
+            {
+                switch( code&0x0f )     // 0, 1, 2
+                {                       // 8, 9, 10
+                                        // 16,17,18
+                    case K_VECTOR_NW:    delta = -9; break;  // 0-9
+                    case K_VECTOR_N:     delta = -8; break;  // 1-9
+                    case K_VECTOR_NE:    delta = -7; break;  // 2-9
+                    case K_VECTOR_W:     delta = -1; break;  // 8-9
+                    case K_VECTOR_E:     delta =  1; break;  // 10-9
+                    case K_VECTOR_S:     delta =  8; break;  // 17-9
+                    case K_VECTOR_SE:
+                    {
+                        if( src != thc::e1 )
+                            delta =  9; // 18-9  normal SE king move   
+                        else
+                        {
+                            // White kingside castling is encoded as K_VECTOR_SE
+                            special = thc::SPECIAL_WK_CASTLING;
+                            delta = 2;
+                            int rook_offset = (side->rooks[0]==src+3 ? 0 : 1);  // a rook will be 3 squares to right of king
+                            side->rooks[rook_offset] = src+1;                   // that rook ends up 1 square right of king
+                            // note that there is no way the rooks ordering can swap during castling
+                            attack_sq = src+1;
+                            san_move = "O-O";
+                            castling = true;
+                        }
+                        break;
+                    }
+                    case K_VECTOR_SW:
+                    {
+                        if( src != thc::e1 )
+                            delta =  7; // 16-9  normal SE king move   
+                        else
+                        {
+                            // White queenside castling is encoded as K_VECTOR_SW
+                            special = thc::SPECIAL_WQ_CASTLING;
+                            delta = -2;
+                            int rook_offset = (side->rooks[0]==src-4 ? 0 : 1);  // a rook will be 4 squares to left of king
+                            side->rooks[rook_offset] = src-1;                   // that rook ends up 1 square left of king
+                            // note that there is no way the rooks ordering can swap during castling
+                            attack_sq = src-1;
+                            san_move = "O-O-O";
+                            castling = true;
+                        }
+                        break;
+                    }
                 }
-                case K_Q_CASTLING:
-                {
-                    special = cr.white ? thc::SPECIAL_WQ_CASTLING : thc::SPECIAL_BQ_CASTLING;
-                    delta = -2;
-                    int rook_offset = (side->rooks[0]==src-4 ? 0 : 1);  // a rook will be 4 squares to left of king
-                    side->rooks[rook_offset] = src-1;                   // that rook ends up 1 square left of king
-                    // note that there is no way the rooks ordering can swap during castling
-                    attack_sq = src-1;
-                    san_move = "O-O-O";
-                    castling = true;
-                    break;
+            }
+            else
+            {
+                switch( code&0x0f )     // 0, 1, 2
+                {                       // 8, 9, 10
+                                        // 16,17,18
+                    case K_VECTOR_N:     delta = -8; break;  // 1-9
+                    case K_VECTOR_W:     delta = -1; break;  // 8-9
+                    case K_VECTOR_E:     delta =  1; break;  // 10-9
+                    case K_VECTOR_SW:    delta =  7; break;  // 16-9
+                    case K_VECTOR_S:     delta =  8; break;  // 17-9
+                    case K_VECTOR_SE:    delta =  9; break;  // 18-9
+                    case K_VECTOR_NE:
+                    {
+                        if( src != thc::e8 )
+                            delta =  -7; // 2-9  normal NE king move   
+                        else
+                        {
+                            // Black kingside castling is encoded as K_VECTOR_NE
+                            special = thc::SPECIAL_BK_CASTLING;
+                            delta = 2;
+                            int rook_offset = (side->rooks[0]==src+3 ? 0 : 1);  // a rook will be 3 squares to right of king
+                            side->rooks[rook_offset] = src+1;                   // that rook ends up 1 square right of king
+                            // note that there is no way the rooks ordering can swap during castling
+                            attack_sq = src+1;
+                            san_move = "O-O";
+                            castling = true;
+                        }
+                        break;
+                    }
+                    case K_VECTOR_NW:    
+                    {
+                        if( src != thc::e8 )
+                            delta = -9;  // 0-9  normal NW king move   
+                        else
+                        {
+                            // Black queenside castling is encoded as K_VECTOR_NW
+                            special = thc::SPECIAL_BQ_CASTLING;
+                            delta = -2;
+                            int rook_offset = (side->rooks[0]==src-4 ? 0 : 1);  // a rook will be 4 squares to left of king
+                            side->rooks[rook_offset] = src-1;                   // that rook ends up 1 square left of king
+                            // note that there is no way the rooks ordering can swap during castling
+                            attack_sq = src-1;
+                            san_move = "O-O-O";
+                            castling = true;
+                        }
+                        break;
+                    }
                 }
             }
             side->king = dst = src+delta;
