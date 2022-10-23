@@ -38,8 +38,8 @@
 
     Each of variation, comment and meta data is a multi-byte sequence.
     Escape introduces a two byte sequence (escape plus one code byte)
-    The codes 0-7 are *sacrosanct*, no coded data including meta data
-    and the escape code can use codes 0-7.
+    The codes 0-7 are *sacrosanct*, no coded data including comment
+    text, meta data and the escape code can use codes 0-7.
 
     Variations, comments and meta data allow arbitrary nesting, including
     (say) comments within variations OR variations within comments (all
@@ -64,7 +64,7 @@
 
     For example:
 
-    Promotion;
+    Promote variation;
 
     Before: (ghijklmn descends from abcdef)
 
@@ -84,7 +84,7 @@
 */
 
 // Get MovePlus at given offset
-MovePlus GameMoves::GetMovePlus( int offset )
+MovePlus GameMoves::GetMovePlus( int offset_parm )
 {
     MovePlus ret;
     return ret;
@@ -92,24 +92,24 @@ MovePlus GameMoves::GetMovePlus( int offset )
 
 // Promote a variation at given offset
 //  Return offset of promoted variation
-int Promote( int offset)
+int Promote( int offset_parm )
 {
     return 0;
 }
 
 // Demote a variation at given offset
 //  Return offset of promoted variation
-int Demote( int offset )
+int Demote( int offset_parm  )
 {
     return 0;
 }
 
 // Delete the rest of a variation
-void DeleteRestOfVariation( int offset )
+void DeleteRestOfVariation( int offset_parm  )
 {
 }
 
 // Delete variation
-void DeleteVariation( int offset )
+void DeleteVariation( int offset_parm  )
 {
 }

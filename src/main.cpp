@@ -883,6 +883,8 @@ bool ChessApp::OnInit()
 {
     extern void compress_temp_lookup_gen_function();
     compress_temp_lookup_gen_function();
+    extern void compress_temp_lookup_gen_function_legacy();
+    compress_temp_lookup_gen_function_legacy();
 
     // Check if there is another process running.
     if( m_one.IsAnotherRunning() ) {

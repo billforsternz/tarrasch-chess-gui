@@ -13,6 +13,7 @@
 #include "thc.h"
 #include "DebugPrintf.h"
 #include "MoveTree.h"
+#include "GameMoves.h"
 #include "NavigationKey.h"
 #include "GameView.h"
 #include "GameLifecycle.h"
@@ -163,6 +164,7 @@ public:
     void ToFileTxtGameBody( std::string &str );
     void ToPublishTxtGameBody( std::string &str, int &diagram_idx, int &mv_idx, int &neg_base, int publish_options  );
     bool IsDiff( GameDocument &other );
+    bool PgnParse_bc( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language=false, int imove=-1 );
     bool PgnParse( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language=false, int imove=-1 );
     void LoadFromMoveList( std::vector<thc::Move> &moves, int move_idx=0 );
     void SetNonZeroStartPosition( int main_line_idx );
@@ -263,6 +265,7 @@ public:
     GameLogic *gl;
     thc::ChessRules master_position;    // the current position
     MoveTree  tree;                     // the moves
+    GameMoves tree_bc;                  // todo - use the new tree
     GameView gv;
     MoveTree    *gbl_plast_move;
 

@@ -53,34 +53,34 @@ public:
     // Initialisation, different flavours
     GameMoves() { root.Init(); }
     GameMoves( std::string &bytecode ) { Init(bytecode); }
-    GameMoves( thc::ChessPosition &start_position, std::string &bytecode ) { Init(start_position,bytecode); }
-    void Init( thc::ChessPosition &start_position, std::string &bytecode )
+    GameMoves( thc::ChessPosition &start_position, std::string &bytecode_parm ) { Init(start_position,bytecode_parm); }
+    void Init( thc::ChessPosition &start_position, std::string &bytecode_parm )
     {
         root = start_position;
-        this->bytecode = bytecode;
+        bytecode = bytecode_parm;
     }
-    void Init( std::string &bytecode )
+    void Init( std::string &bytecode_parm )
     {
         root.Init();
-        this->bytecode = bytecode;
+        bytecode = bytecode_parm;
     }
 
     // Get MovePlus at given offset
-    MovePlus GetMovePlus( int offset);
+    MovePlus GetMovePlus( int offset_parm );
 
     // Promote a variation at given offset
     //  Return offset of promoted variation
-    int Promote( int offset);
+    int Promote( int offset_parm );
 
     // Demote a variation at given offset
     //  Return offset of promoted variation
-    int Demote( int offset );
+    int Demote( int offset_parm  );
 
     // Delete the rest of a variation
-    void DeleteRestOfVariation( int offset );
+    void DeleteRestOfVariation( int offset_parm  );
 
     // Delete variation
-    void DeleteVariation( int offset );
+    void DeleteVariation( int offset_parm  );
 };
 
 #endif //GAME_MOVES_H

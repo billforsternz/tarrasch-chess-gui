@@ -12,6 +12,7 @@
 #include "thc.h"
 #include "GameLogic.h"
 #include "Lang.h"
+#include "Bytecode.h"
 #include "GameDocument.h"
 
 GameDocument::GameDocument( GameLogic *gl )
@@ -250,6 +251,462 @@ std::string GameDocument::Description()
         label += std::string(buf);
     }
     return label;
+}
+
+bool GameDocument::PgnParse_bc( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language, int imove )
+{
+    std::string bytecode;
+
+    // Main state machine has these states
+    enum PSTATE
+    {
+        BETWEEN_MOVES,
+        IN_COMMENT,
+        IN_DOLLAR,
+        IN_NUMBER,
+        IN_MISC,
+        IN_STAR,
+        IN_MOVE
+    };
+
+    PSTATE       state;         // the current state machine state
+    int offset = 0;
+
+    // Allow stacking of the key state variables
+    const int MAX_DEPTH=20;
+    struct STACK_ELEMENT
+    {
+        PSTATE     state;
+        thc::ChessRules cr;
+        int variation_move_count;
+    };
+    STACK_ELEMENT stk_array[MAX_DEPTH+1];
+    int stk_idx = 0;
+    STACK_ELEMENT *stk = &stk_array[stk_idx];
+
+    // Misc
+    #define Error(x)
+    std::string move_str;
+    std::string comment_str;
+    std::string buffered_comment;
+    std::string prefix;
+    char comment_ch='\0', previous_ch='\0';
+    int nag_value=0;
+    PSTATE old_state, save_state=BETWEEN_MOVES;
+    char ch, push_back='\0';
+    unsigned int str_idx=0;
+    nbr_converted = 0;
+
+    state = BETWEEN_MOVES;      // state machine
+    old_state = BETWEEN_MOVES;
+
+    //
+    //  Later - allow PGN parsing to start at arbitrary offset - legacy code did some weird stack scanning
+    //
+
+    // Start loop
+    bool okay=true;
+    bool eof=false;
+    ch = ' ';   // dummy to start loop
+    while( okay && !eof )
+    {
+        push_back = '\0';
+        old_state = state;
+        if( ch == '\x96' )  // ANSI code for en dash, sometimes used instead of '-'
+            ch = '-';
+        bool in_number = isascii(ch) && isdigit(ch);
+        bool in_move   = isascii(ch) && isalnum(ch);
+        bool in_misc   = (ch=='.'||ch=='?'||ch=='!'||ch=='+'||ch=='-'||ch=='='||ch=='/');
+        bool in_star   = (ch=='*');
+        switch( state )
+        {
+
+            // In a comment
+            case IN_COMMENT:
+            {
+
+                // End of the comment ?
+                if(  (comment_ch=='{' && ch=='}') ||
+                     (comment_ch==';' && ch!=';' && ch!='\n' && ch!='\r' && (previous_ch=='\n'||previous_ch=='\r') )
+                  )
+                {
+                    if( comment_ch == ';' )
+                        push_back = ch;
+                    else
+                    {
+                        // New policy from V2.03c
+                        //  Only create '{' comments (most chess software doesn't understand ';' comments)
+                        //  If  "}" appears in comment transform to "|>"    (change *is* restored when reading .pgn)
+                        //  If  "|>" appears in comment transform to "| >"  (change is *not* restored when reading .pgn)
+                        std::string ReplaceAll( const std::string &in, const std::string &from, const std::string &to );
+                        comment_str = ReplaceAll( comment_str, "|>", "}" );
+                    }
+                    size_t len = bytecode.length();
+                    if( len > 0 && bytecode[len-1] == BC_COMMENT_END )
+                    {
+                        bytecode.pop_back();    // remove COMMENT_END and extend existing comment
+                        bytecode.push_back( ' ' );
+                    }
+                    else
+                        bytecode.push_back( BC_COMMENT_START );
+                    bytecode += comment_str;
+                    bytecode.push_back( BC_COMMENT_END );
+                    state = save_state;
+                }
+
+                // Else continue comment
+                else
+                {
+                    bool skip = (comment_ch==';' && ch==';' && (previous_ch=='\n'||previous_ch=='\r') );
+                    if( !skip )
+                    {
+                        if( ch == '\n' )
+                            comment_str += ' ';
+                        else if( ch != '\r' )
+                            comment_str += (char)ch;
+                    }
+                }
+                break;
+            }
+
+            // Creating NAG value
+            case IN_DOLLAR:
+            {
+                if( isascii(ch) && isdigit(ch) )
+                    nag_value = nag_value*10+(ch-'0');
+                else
+                {
+                    /*
+                    const char *nag_array[] =
+                    {
+                        "",
+                        " !",     // $1
+                        " ?",     // $2
+                        " !!",    // $3
+                        " ??",    // $4
+                        " !?",    // $5
+                        " ?!",    // $6
+                        "",       // $7
+                        "",       // $8
+                        " ??",    // $9
+                        " =",     // $10
+                        " =",     // $11
+                        " =",     // $12
+                        "",       // $13
+                        " +=",    // $14
+                        " =+",    // $15
+                        " +/-",   // $16
+                        " -/+",   // $17
+                        " +-",    // $18
+                        " -+",    // $19
+                        " +-",    // $20
+                        " -+"     // $21
+                    };  */
+                    if( 1<=nag_value && nag_value<=21 )
+                    {
+                        bytecode.push_back( BC_ESCAPE );
+                        bytecode.push_back( 8 + nag_value );
+                    }
+                    push_back = ch;
+                    state = save_state;
+                }
+                break;
+            }
+
+            // Waiting for something to happen
+            case BETWEEN_MOVES:
+            {
+
+                // NAG token ?
+                if( ch == '$' )
+                {
+                    save_state = state;
+                    state = IN_DOLLAR;
+                    nag_value = 0;
+                }
+
+                // Start {comment} style comment ?
+                else if( ch == '{' )
+                {
+                    save_state = state;
+                    comment_ch = '{';
+                    state = IN_COMMENT;
+                    comment_str = "";
+                }
+
+                // Start ;comment style comment ?
+                else if( use_semi && ch == ';' )
+                {
+                    save_state = state;
+                    comment_ch = ';';
+                    state = IN_COMMENT;
+                    comment_str = "";
+                }
+
+                // Start new variation ?
+                else if( ch == '(' )
+                {
+
+                    // Push current state onto a stack
+                    stk->cr    = cr;
+                    stk->state = state;
+                    if( stk_idx+1 >= MAX_DEPTH )
+                    {
+                        Error("Too deep");
+                        okay = false;
+                    }
+                    else
+                    {
+                        stk_idx++;
+                        stk = &stk_array[stk_idx];
+                        stk->variation_move_count = 0;
+                        thc::ChessPosition cp;
+                        std::vector<thc::Move> var;
+                        bc_locate( bytecode, offset, cp, var );
+                        if( var.size() == 0 )
+                        {
+                            Error("Cannot branch from empty variation");
+                            okay = false;
+                        }
+                        else
+                        {
+                            bytecode.push_back( BC_VARIATION_START );
+                        }
+                    }
+                }
+
+                // End variation ?
+                else if( ch == ')' )
+                {
+
+                    // Pop old state off stack
+                    if( stk_idx == 0 )
+                    {
+                        Error("Mismatched )");
+                        okay = false;
+                    }
+                    else
+                    {
+                        stk_idx--;
+                        stk   = &stk_array[stk_idx];
+                        cr    = stk->cr;
+                        state = stk->state;
+                        bytecode.push_back( BC_VARIATION_END );
+
+                        //
+                        // Todo if variation we added was empty, remove it
+                        //
+                    }
+                }
+
+                // Else go into token if possible
+                else
+                {
+                    if( in_number || in_misc || in_star || in_move )
+                    {
+                        move_str = "";
+                        push_back = ch;
+                        if( in_number )
+                            state = IN_NUMBER;
+                        else if( in_move )
+                            state = IN_MOVE;
+                        else if( in_misc )
+                            state = IN_MISC;
+                        else if( in_star )
+                            state = IN_STAR;
+                    }
+                }
+                break;
+            }
+
+            // Collect a token
+            case IN_NUMBER:
+            case IN_MISC:
+            case IN_STAR:
+            case IN_MOVE:
+            {
+                bool keep_buffering=false;
+                if( state == IN_NUMBER )
+                    keep_buffering = in_number || ch=='-' || ch=='/';   // eg 0-1 or 1/2-1/2
+                else if( state == IN_MISC )
+                    keep_buffering = in_misc;
+                else if( state == IN_STAR )
+                    keep_buffering = in_star;
+                else if( state == IN_MOVE )
+                {
+                    if( ch=='=' || ch=='+' || ch=='#' || ch=='-' )  // can also be in moves
+                        keep_buffering = true;
+                    else
+                        keep_buffering = in_move;
+                }
+                if( keep_buffering )
+                    move_str += (char)ch;
+                else
+                {
+                    push_back = ch;
+                    bool was_in_move = (state==IN_MOVE);
+                    bool do_nothing_move = false;
+
+                    // Support some popular variants
+                    if( state == IN_NUMBER )
+                    {
+                        if( move_str == "0-0" )
+                        {
+                            move_str = "O-O";
+                            was_in_move = true;
+                        }
+                        else if( move_str=="0-0-0" )
+                        {
+                            move_str = "O-O-O";
+                            was_in_move = true;
+                        }
+                    }
+                    else if( state == IN_MISC )
+                    {
+                        if( move_str == "--" )     // do nothing or pass move
+                        {
+                            do_nothing_move = true;
+                            was_in_move = true;
+                        }
+
+                        // Support '?', '!!' etc as text rather than only as NAG codes
+                        int nag_value2 = NagAlternative(move_str.c_str());
+                        if( 1<=nag_value2 && nag_value2<=21 && stk->variation_move_count>0 )
+                        {
+                            bytecode.push_back( BC_ESCAPE );
+                            bytecode.push_back( 8 + nag_value2 );
+                            nbr_converted++;    // so just a lone += for example counts
+                        }
+                    }
+                    state = BETWEEN_MOVES;
+                    if( PgnTestResult(move_str.c_str()) )
+                    {
+                        eof = true;     // just stop (a bit simplistic)
+                    }
+                    else if( was_in_move )
+                    {
+                        bool adding_from_middle_to_end_bug = false;
+                        int sz = (*pvar).size();
+                        if( imove!=-1 && imove!=sz-1 )
+                            adding_from_middle_to_end_bug = true;
+                        if( adding_from_middle_to_end_bug )
+                            okay = false;
+                        else
+                        {
+                            std::string temp = move_str;
+                            if( use_current_language )
+                                LangToEnglish(temp);
+                            thc::Move mv;
+                            if( !do_nothing_move )
+                            {
+                                okay = mv.NaturalIn(&cr,temp.c_str());
+                            }
+                            else
+                            {   // Nasty little hack - support "--" = do nothing, create a move from one empty square
+                                //  to same empty square, capturing empty - chess engine will "play" that okay
+                                okay = false;
+                                for( int i=63; i>=0; i-- )  // start search at h1 to avoiding a8a8 which is Invalid move
+                                {   // found an empty square yet ?
+                                    if( cr.squares[i]==' ' || cr.squares[i]=='.' )  // plan to change empty from ' ' to '.', so be prepared
+                                    {   // C++ can't cast into the bitfield, so do this, aaaaaaaargh
+                                        static thc::Square lookup[] = { thc::a8,thc::b8,thc::c8,thc::d8,thc::e8,thc::f8,thc::g8,thc::h8,
+                                                                        thc::a7,thc::b7,thc::c7,thc::d7,thc::e7,thc::f7,thc::g7,thc::h7,
+                                                                        thc::a6,thc::b6,thc::c6,thc::d6,thc::e6,thc::f6,thc::g6,thc::h6,
+                                                                        thc::a5,thc::b5,thc::c5,thc::d5,thc::e5,thc::f5,thc::g5,thc::h5,
+                                                                        thc::a4,thc::b4,thc::c4,thc::d4,thc::e4,thc::f4,thc::g4,thc::h4,
+                                                                        thc::a3,thc::b3,thc::c3,thc::d3,thc::e3,thc::f3,thc::g3,thc::h3,
+                                                                        thc::a2,thc::b2,thc::c2,thc::d2,thc::e2,thc::f2,thc::g2,thc::h2,
+                                                                        thc::a1,thc::b1,thc::c1,thc::d1,thc::e1,thc::f1,thc::g1,thc::h1
+                                                                      };
+                                        mv.src =
+                                        mv.dst = lookup[i];
+                                        mv.capture = cr.squares[i];  // empty
+                                        mv.special = thc::NOT_SPECIAL;
+                                        okay = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if( !okay )
+                            {
+                                Error("Illegal move");
+                                //prefix += move_str;
+                                //prefix += push_back;
+                            }
+                            else
+                            {
+                                prefix = "";
+                                nbr_converted++;
+                                cr.PushMove(mv);
+                                bc_insert(bytecode,offset,cr,mv);
+                                stk->variation_move_count++;
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+        }
+
+        // State changes
+        if( state != old_state )
+        {
+            //fprintf( debug_log_file(), "State change %s->%s\n", ShowState(old_state), ShowState(state) );
+        }
+
+        // Error handling, append the rest of the string as a comment
+        if( !okay )
+        {
+            std::string comment;
+            if( str_idx < str.length() )
+            {
+                std::string temp( str.begin()+str_idx, str.end() );
+                int len = temp.length();
+                if( len>0 && temp[len-1]==')' )
+                    temp = temp.substr(0,len-1);
+                comment += temp;
+            }
+            comment = RemoveLineEnds(comment);
+            if( comment != "" )
+            {
+                size_t len = bytecode.length();
+                if( len > 0 && bytecode[len-1] == BC_COMMENT_END )
+                {
+                    bytecode.pop_back();    // remove COMMENT_END and extend existing comment
+                    bytecode.push_back( ' ' );
+                }
+                else
+                    bytecode.push_back( BC_COMMENT_START );
+                bytecode += comment;
+                bytecode.push_back( BC_COMMENT_END );
+            }
+        }
+
+        // Next character
+        else if( !eof )
+        {
+            if( push_back )
+                ch = push_back;
+            else
+            {
+                previous_ch = ch;
+                if( str_idx < str.length() )
+                {
+                    ch = str[str_idx];
+                    prefix += ch;
+                }
+                else
+                {
+                    ch  = ' ';  // add trailing padding to terminate last token
+                    if( str_idx > str.length()+2 )
+                        eof = true;   // after a trailing ' ' or so, stop
+                }
+                str_idx++;
+            }
+        }
+    }
+    Rebuild();
+    return okay;
 }
 
 bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language, int imove )

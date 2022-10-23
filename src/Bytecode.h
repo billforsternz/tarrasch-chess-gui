@@ -12,6 +12,17 @@
 #include <string>
 #include "thc.h"
 
+
+// Non move byte code values (0 reserved)
+#define BC_VARIATION_START  1 // variation start
+#define BC_VARIATION_END    2 // variation end
+#define BC_COMMENT_START    3 // comment start (comment is text Ansi or UTF-8 for further study)
+#define BC_COMMENT_END      4 // comment end
+#define BC_META_START       5 // meta data start (multi byte meta data)
+#define BC_META_END         6 // meta data end
+#define BC_ESCAPE           7 // escape (single byte meta data)
+
+
 //
 // In branch "new-heart" I am starting out on an ambitious plan to transplant
 //  a new heart into Tarrasch - based on bytecode. The byte code will be the
@@ -93,5 +104,11 @@ private:
     thc::Move UncompressFastMode( char code, Army *side, Army *other );
     thc::Move UncompressFastMode( char code, Army *side, Army *other, std::string &san_move );
 };
+
+// Find the position and moves leading to this offset in the bytecode
+void bc_locate( std::string &bc, int offset, thc::ChessPosition &start, std::vector<thc::Move> var );
+
+// Add a move of bytecode
+void bc_insert( std::string &bc, int offset, thc::ChessRules &cr, thc::Move mv );
 
 #endif // BYTECODE_H

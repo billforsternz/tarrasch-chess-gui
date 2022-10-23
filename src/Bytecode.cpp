@@ -2386,3 +2386,8 @@ void compress_temp_lookup_gen_function()
     }
 }
 
+// Find the position and moves leading to this offset in the bytecode
+void bc_locate( std::string &bc, int offset, thc::ChessPosition &start, std::vector<thc::Move> var ) {/*todo*/}
+
+// Add a move of bytecode
+void bc_insert( std::string &bc, int offset, thc::ChessRules &cr, thc::Move mv ) {/*todo*/}

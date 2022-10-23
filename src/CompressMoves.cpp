@@ -39,11 +39,11 @@ static unsigned long nbr_rook_moves;
 static unsigned long nbr_rook_swaps;
 static unsigned long nbr_rook_swaps_alt;
 static unsigned long nbr_queen_swaps;
-int max_nbr_slow_moves_other;
-int max_nbr_slow_moves_queen;
-int nbr_games_with_promotions;
-int nbr_games_with_slow_mode;
-int nbr_games_with_two_queens;
+int max_nbr_slow_moves_other_legacy;
+int max_nbr_slow_moves_queen_legacy;
+int nbr_games_with_promotions_legacy;
+int nbr_games_with_slow_mode_legacy;
+int nbr_games_with_two_queens_legacy;
 
 void CompressMovesDiagBegin()
 {
@@ -68,11 +68,11 @@ void CompressMovesDiagBegin()
     nbr_rook_swaps = 0;
     nbr_rook_swaps_alt = 0;
     nbr_queen_swaps = 0;
-    max_nbr_slow_moves_other = 0;
-    max_nbr_slow_moves_queen = 0;
-    nbr_games_with_promotions = 0;
-    nbr_games_with_slow_mode = 0;
-    nbr_games_with_two_queens = 0;
+    max_nbr_slow_moves_other_legacy = 0;
+    max_nbr_slow_moves_queen_legacy = 0;
+    nbr_games_with_promotions_legacy = 0;
+    nbr_games_with_slow_mode_legacy = 0;
+    nbr_games_with_two_queens_legacy = 0;
 }
 
 void CompressMovesDiagEnd()
@@ -98,9 +98,9 @@ void CompressMovesDiagEnd()
     cprintf( "nbr_rook_swaps       = %lu\n",         nbr_rook_swaps );
     cprintf( "nbr_rook_swaps_alt   = %lu\n",         nbr_rook_swaps_alt );
     cprintf( "nbr_queen_swaps      = %lu\n",         nbr_queen_swaps );
-    cprintf( "nbr_games_with_promotions = %lu\n",     nbr_games_with_promotions );
-    cprintf( "nbr_games_with_slow_mode  = %lu\n",     nbr_games_with_slow_mode  );
-    cprintf( "nbr games_with_two_queens = %lu\n",     nbr_games_with_two_queens );
+    cprintf( "nbr_games_with_promotions = %lu\n",     nbr_games_with_promotions_legacy );
+    cprintf( "nbr_games_with_slow_mode  = %lu\n",     nbr_games_with_slow_mode_legacy  );
+    cprintf( "nbr games_with_two_queens = %lu\n",     nbr_games_with_two_queens_legacy );
 }
 
 
@@ -2062,7 +2062,7 @@ thc::Move CompressMoves::UncompressFastMode( char code, Side *side, Side *other,
 }
 
 // Call this function *once* at startup to build the fast ray_lookup_table[64][64]
-void compress_temp_lookup_gen_function()
+void compress_temp_lookup_gen_function_legacy()
 {
 
 #define SW_OFFSET 7;
