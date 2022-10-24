@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include "Bytecode.h"
 #include "DebugPrintf.h"
-#include "GameMoves.h"  // temp todo
+#include "GameTree.h"  // temp todo
 
 //
 // In branch "new-heart" I am starting out on an ambitious plan to transplant

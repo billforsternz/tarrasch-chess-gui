@@ -1,0 +1,292 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{853D1FD7-20AB-586C-9699-9680F84AC985}</ProjectGuid>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' == '10.0'">v100</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' == '11.0'">v110</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' == '12.0'">v120</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' == '14.0'">v140_xp</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' == '15.0'">v141</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>14.0.24720.0</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">vc_mswu\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">vc_mswu\$(ProjectName)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">vc_mswud\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">vc_mswud\$(ProjectName)\</IntDir>
+    <GenerateManifest>true</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Midl>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>wxWidgets\lib\vc_lib\mswud;wxWidgets\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>wxWidgets\lib\vc_lib\mswud;wxWidgets\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level4</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+      <AdditionalIncludeDirectories>wxWidgets\lib\vc_lib\mswud;wxWidgets\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>wxmsw31ud_aui.lib;wxmsw31ud_richtext.lib;wxmsw31ud_adv.lib;wxmsw31ud_html.lib;wxmsw31ud_core.lib;wxbase31ud_xml.lib;wxbase31ud.lib;wxtiffd.lib;wxjpegd.lib;wxpngd.lib;wxzlibd.lib;wxregexud.lib;wxexpatd.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;winspool.lib;winmm.lib;shell32.lib;shlwapi.lib;comctl32.lib;ole32.lib;oleaut32.lib;uuid.lib;rpcrt4.lib;advapi32.lib;version.lib;wsock32.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>wxWidgets\lib\vc_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Midl>
+      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;NDEBUG;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>wxWidgets\lib\vc_lib\mswud;wxWidgets\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </Midl>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories>wxWidgets\lib\vc_lib\mswud;wxWidgets\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;NDEBUG;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level4</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;NDEBUG;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+      <AdditionalIncludeDirectories>wxWidgets\lib\vc_lib\mswud;wxWidgets\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>wxmsw31u_aui.lib;wxmsw31u_richtext.lib;wxmsw31u_adv.lib;wxmsw31u_html.lib;wxmsw31u_core.lib;wxbase31u_xml.lib;wxbase31u.lib;wxtiff.lib;wxjpeg.lib;wxpng.lib;wxzlib.lib;wxregexu.lib;wxexpat.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;winspool.lib;winmm.lib;shell32.lib;shlwapi.lib;comctl32.lib;ole32.lib;oleaut32.lib;uuid.lib;rpcrt4.lib;advapi32.lib;version.lib;wsock32.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>wxWidgets\lib\vc_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+    </Link>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Atom.cpp" />
+    <ClCompile Include="src\BinDb.cpp" />
+    <ClCompile Include="src\Book.cpp" />
+    <ClCompile Include="src\BookDialog.cpp" />
+    <ClCompile Include="src\Bytecode.cpp" />
+    <ClCompile Include="src\CentralWorkSaver.cpp" />
+    <ClCompile Include="src\ChessBoardBitmap.cpp" />
+    <ClCompile Include="src\ClipboardDialog.cpp" />
+    <ClCompile Include="src\ClockDialog.cpp" />
+    <ClCompile Include="src\CompactGame.cpp" />
+    <ClCompile Include="src\CompressedBitmaps.cpp" />
+    <ClCompile Include="src\CompressMoves.cpp" />
+    <ClCompile Include="src\CreateDatabaseDialog.cpp" />
+    <ClCompile Include="src\CtrlBox.cpp" />
+    <ClCompile Include="src\CtrlBox2.cpp" />
+    <ClCompile Include="src\CtrlBoxBookMoves.cpp" />
+    <ClCompile Include="src\CtrlChessBoard.cpp" />
+    <ClCompile Include="src\CtrlChessPositionSetup.cpp" />
+    <ClCompile Include="src\CtrlChessTxt.cpp" />
+    <ClCompile Include="src\Database.cpp" />
+    <ClCompile Include="src\DbDialog.cpp" />
+    <ClCompile Include="src\DbMaintenance.cpp" />
+    <ClCompile Include="src\DbPrimitives.cpp" />
+    <ClCompile Include="src\Eco.cpp" />
+    <ClCompile Include="src\EngineDialog.cpp" />
+    <ClCompile Include="src\GameClock.cpp" />
+    <ClCompile Include="src\GameClockHalf.cpp" />
+    <ClCompile Include="src\GameDetailsDialog.cpp" />
+    <ClCompile Include="src\GameDocument.cpp" />
+    <ClCompile Include="src\GameLifecycle.cpp" />
+    <ClCompile Include="src\GameLogic.cpp" />
+    <ClCompile Include="src\GamePrefixDialog.cpp" />
+    <ClCompile Include="src\GamesCache.cpp" />
+    <ClCompile Include="src\GamesDialog.cpp" />
+    <ClCompile Include="src\GameTree.cpp" />
+    <ClCompile Include="src\GameView.cpp" />
+    <ClCompile Include="src\GeneralDialog.cpp" />
+    <ClCompile Include="src\Lang.cpp" />
+    <ClCompile Include="src\Log.cpp" />
+    <ClCompile Include="src\LogDialog.cpp" />
+    <ClCompile Include="src\MonitorUsagePattern.cpp" />
+    <ClCompile Include="src\TournamentDialog.cpp" />
+    <ClCompile Include="src\UnixUciInterface.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\MaintenanceDialog.cpp" />
+    <ClCompile Include="src\MemoryPositionSearch.cpp" />
+    <ClCompile Include="src\MoveTree.cpp" />
+    <ClCompile Include="src\PackedGame.cpp" />
+    <ClCompile Include="src\PackedGameBinDb.cpp" />
+    <ClCompile Include="src\PanelBoard.cpp" />
+    <ClCompile Include="src\PanelContext.cpp" />
+    <ClCompile Include="src\PatternDialog.cpp" />
+    <ClCompile Include="src\PatternMatch.cpp" />
+    <ClCompile Include="src\PgnDialog.cpp" />
+    <ClCompile Include="src\PgnFiles.cpp" />
+    <ClCompile Include="src\PgnRead.cpp" />
+    <ClCompile Include="src\PlayerDialog.cpp" />
+    <ClCompile Include="src\PopupControl.cpp" />
+    <ClCompile Include="src\PositionDialog.cpp" />
+    <ClCompile Include="src\Repository.cpp" />
+    <ClCompile Include="src\Session.cpp" />
+    <ClCompile Include="src\Tabs.cpp" />
+    <ClCompile Include="src\thc.cpp" />
+    <ClCompile Include="src\TrainingDialog.cpp" />
+    <ClCompile Include="src\Undo.cpp" />
+    <ClCompile Include="src\WinUciInterface.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="src\Tarrasch.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Appdefs.h" />
+    <ClInclude Include="src\Atom.h" />
+    <ClInclude Include="src\AutoTimer.h" />
+    <ClInclude Include="src\BinaryBlock.h" />
+    <ClInclude Include="src\BinaryConversions.h" />
+    <ClInclude Include="src\BinDb.h" />
+    <ClInclude Include="src\Book.h" />
+    <ClInclude Include="src\BookDialog.h" />
+    <ClInclude Include="src\Bytecode.h" />
+    <ClInclude Include="src\CentralWorkSaver.h" />
+    <ClInclude Include="src\ChessBoardBitmap.h" />
+    <ClInclude Include="src\ClipboardDialog.h" />
+    <ClInclude Include="src\ClockDialog.h" />
+    <ClInclude Include="src\CompactGame.h" />
+    <ClInclude Include="src\CompressedBitmaps.h" />
+    <ClInclude Include="src\CompressMoves.h" />
+    <ClInclude Include="src\CreateDatabaseDialog.h" />
+    <ClInclude Include="src\CtrlBox.h" />
+    <ClInclude Include="src\CtrlBox2.h" />
+    <ClInclude Include="src\CtrlBoxBookMoves.h" />
+    <ClInclude Include="src\CtrlChessBoard.h" />
+    <ClInclude Include="src\CtrlChessPositionSetup.h" />
+    <ClInclude Include="src\CtrlChessTxt.h" />
+    <ClInclude Include="src\Database.h" />
+    <ClInclude Include="src\DbDialog.h" />
+    <ClInclude Include="src\DbMaintenance.h" />
+    <ClInclude Include="src\DbPrimitives.h" />
+    <ClInclude Include="src\DebugPrintf.h" />
+    <ClInclude Include="src\DialogDetect.h" />
+    <ClInclude Include="src\Eco.h" />
+    <ClInclude Include="src\EngineDialog.h" />
+    <ClInclude Include="src\GameClock.h" />
+    <ClInclude Include="src\GameClockHalf.h" />
+    <ClInclude Include="src\GameDetails.h" />
+    <ClInclude Include="src\GameDetailsDialog.h" />
+    <ClInclude Include="src\GameDocument.h" />
+    <ClInclude Include="src\GameLifecycle.h" />
+    <ClInclude Include="src\GameLogic.h" />
+    <ClInclude Include="src\GamePrefixDialog.h" />
+    <ClInclude Include="src\GamesCache.h" />
+    <ClInclude Include="src\GamesDialog.h" />
+    <ClInclude Include="src\GameState.h" />
+    <ClInclude Include="src\GameTree.h" />
+    <ClInclude Include="src\GameView.h" />
+    <ClInclude Include="src\GeneralDialog.h" />
+    <ClInclude Include="src\kibitzq.h" />
+    <ClInclude Include="src\Lang.h" />
+    <ClInclude Include="src\ListableGame.h" />
+    <ClInclude Include="src\ListableGameBinDb.h" />
+    <ClInclude Include="src\ListableGameDb.h" />
+    <ClInclude Include="src\ListableGamePgn.h" />
+    <ClInclude Include="src\Log.h" />
+    <ClInclude Include="src\LogDialog.h" />
+    <ClInclude Include="src\MaintenanceDialog.h" />
+    <ClInclude Include="src\MemoryPositionSearch.h" />
+    <ClInclude Include="src\MemoryPositionSearchSide.h" />
+    <ClInclude Include="src\MonitorUsagePattern.h" />
+    <ClInclude Include="src\MoveTree.h" />
+    <ClInclude Include="src\NavigationKey.h" />
+    <ClInclude Include="src\Objects.h" />
+    <ClInclude Include="src\PackedGame.h" />
+    <ClInclude Include="src\PackedGameBinDb.h" />
+    <ClInclude Include="src\PanelBoard.h" />
+    <ClInclude Include="src\PanelContext.h" />
+    <ClInclude Include="src\PatternDialog.h" />
+    <ClInclude Include="src\PatternMatch.h" />
+    <ClInclude Include="src\PgnDialog.h" />
+    <ClInclude Include="src\PgnFiles.h" />
+    <ClInclude Include="src\PgnRead.h" />
+    <ClInclude Include="src\PlayerDialog.h" />
+    <ClInclude Include="src\PopupControl.h" />
+    <ClInclude Include="src\Portability.h" />
+    <ClInclude Include="src\PositionDialog.h" />
+    <ClInclude Include="src\ProgressBar.h" />
+    <ClInclude Include="src\Repository.h" />
+    <ClInclude Include="src\Roster.h" />
+    <ClInclude Include="src\TournamentDialog.h" />
+    <ClInclude Include="src\UciInterface.h" />
+    <ClInclude Include="src\Session.h" />
+    <ClInclude Include="src\SuspendEngine.h" />
+    <ClInclude Include="src\Tabs.h" />
+    <ClInclude Include="src\thc.h" />
+    <ClInclude Include="src\TrainingDialog.h" />
+    <ClInclude Include="src\Undo.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

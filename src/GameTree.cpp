@@ -8,7 +8,7 @@
 #include <vector>
 #include "thc.h"
 #include "Bytecode.h"
-#include "GameMoves.h"
+#include "GameTree.h"
 
 //
 // In branch "new-heart" I am starting out on an ambitious plan to transplant
@@ -84,7 +84,7 @@
 */
 
 // Get MovePlus at given offset
-MovePlus GameMoves::GetMovePlus( int offset_parm )
+MovePlus GameTree::GetMovePlus( int offset_parm )
 {
     MovePlus ret;
     return ret;

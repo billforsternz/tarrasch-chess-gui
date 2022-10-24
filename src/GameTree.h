@@ -41,8 +41,8 @@ struct MovePlus
                   human_is_white=false; human_millisecs_time=0; engine_millisecs_time=0; }
 };
 
-// GameMoves = experimental replacement for MoveTree class
-class GameMoves
+// GameTree = experimental replacement for MoveTree class
+class GameTree
 {
 private:
     thc::ChessPosition root;
@@ -51,9 +51,9 @@ private:
 public:
 
     // Initialisation, different flavours
-    GameMoves() { root.Init(); }
-    GameMoves( std::string &bytecode ) { Init(bytecode); }
-    GameMoves( thc::ChessPosition &start_position, std::string &bytecode_parm ) { Init(start_position,bytecode_parm); }
+    GameTree() { root.Init(); }
+    GameTree( std::string &bytecode ) { Init(bytecode); }
+    GameTree( thc::ChessPosition &start_position, std::string &bytecode_parm ) { Init(start_position,bytecode_parm); }
     void Init( thc::ChessPosition &start_position, std::string &bytecode_parm )
     {
         root = start_position;

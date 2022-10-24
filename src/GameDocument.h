@@ -13,7 +13,7 @@
 #include "thc.h"
 #include "DebugPrintf.h"
 #include "MoveTree.h"
-#include "GameMoves.h"
+#include "GameTree.h"
 #include "NavigationKey.h"
 #include "GameView.h"
 #include "GameLifecycle.h"
@@ -265,7 +265,7 @@ public:
     GameLogic *gl;
     thc::ChessRules master_position;    // the current position
     MoveTree  tree;                     // the moves
-    GameMoves tree_bc;                  // todo - use the new tree
+    GameTree tree_bc;                  // todo - use the new tree
     GameView gv;
     MoveTree    *gbl_plast_move;
 
