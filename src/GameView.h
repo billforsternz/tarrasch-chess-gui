@@ -10,6 +10,7 @@
 #include <vector>
 #include "Objects.h"
 #include "MoveTree.h"
+#include "GameTree.h"
 #include "thc.h"
 #include "NavigationKey.h"
 #include "wx/richtext/richtextctrl.h"
@@ -24,6 +25,7 @@ public:
     bool comment_edited;    // sorry very disgusting
     int  puzzle_nbr;        // see above
     void Build( std::string &result, MoveTree *tree, thc::ChessPosition &start_position );
+    void Build_bc( std::string &result, GameTree &tree_bc, thc::ChessPosition &start_position );
     void ToString( std::string &str );
     void ToString( std::string &str, int begin, int end );
     static const int SKIP_TO_FIRST_DIAGRAM=1;
@@ -37,6 +39,7 @@ public:
     void ToCommentString( std::string &str );
     void ToCommentString( std::string &str, int begin, int end );
     int  GetInternalOffset( MoveTree *move );
+    int  GetInternalOffset_bc( int view_offset );
     int  GetInternalOffsetEndOfVariation( int start );
 
     void Display( unsigned long pos );
@@ -48,11 +51,14 @@ public:
 
     unsigned long NavigationKey( unsigned long pos, NAVIGATION_KEY nk );
     MoveTree *Locate( unsigned long pos, thc::ChessRules &cr, std::string &title, bool &at_move0 );
+    int Locate_bc( unsigned long pos, thc::ChessRules &cr, std::string &title, bool &at_move0 );
     GAME_MOVE *LocateAtMoveZeroGetLastMove() { return locate_at_move0_last_move; }
+    MovePlus LocateAtMoveZeroGetLastMove_bc();
     unsigned long FindMove0();
     unsigned long FindEnd();
     bool IsAtEnd( unsigned long pos );
     unsigned long GetMoveOffset( MoveTree *node );
+    int GetMoveOffset( int bc_offset );
     void Debug();
 
 private:
@@ -74,7 +80,9 @@ private:
         int                     level;
         unsigned long           offset1;
         unsigned long           offset2;
+        thc::Move               mv;
         MoveTree               *node;
+        int                     offset_bc;
         std::string             str;
         std::string             str_for_file_move_only;
         char                    nag_value1;
@@ -91,6 +99,7 @@ private:
     std::string result;
     void Crawler( MoveTree *node, bool move0, bool last_move );         // called by Build()
     MoveTree *tree;
+    GameTree tree_bc;
     GAME_MOVE *locate_at_move0_last_move;
     thc::ChessRules start_position;
     thc::ChessRules final_position;

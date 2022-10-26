@@ -265,9 +265,9 @@ public:
     GameLogic *gl;
     thc::ChessRules master_position;    // the current position
     MoveTree  tree;                     // the moves
-    GameTree tree_bc;                  // todo - use the new tree
-    GameView gv;
-    MoveTree    *gbl_plast_move;
+    GameTree  tree_bc;                  // todo - use the new tree
+    GameView  gv;
+    MoveTree  *gbl_plast_move;
 
 // We really should use private more in this project. Excellent refactoring opportunity
 private:

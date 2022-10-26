@@ -8,6 +8,7 @@
 #define GAME_MOVES_H
 #include <string>
 #include <vector>
+#include "Bytecode.h"
 #include "thc.h"
 
 //
@@ -45,24 +46,30 @@ struct MovePlus
 class GameTree
 {
 private:
-    thc::ChessPosition root;
+public:
+    Bytecode press;
     std::string bytecode;
     int offset = 0;
-public:
 
     // Initialisation, different flavours
-    GameTree() { root.Init(); }
-    GameTree( std::string &bytecode ) { Init(bytecode); }
-    GameTree( thc::ChessPosition &start_position, std::string &bytecode_parm ) { Init(start_position,bytecode_parm); }
-    void Init( thc::ChessPosition &start_position, std::string &bytecode_parm )
+    GameTree() { press.Init(); }
+    GameTree( std::string &bytecode_ ) { Init(bytecode_); }
+    GameTree( thc::ChessPosition &start_position ) { Init(start_position); }
+    GameTree( thc::ChessPosition &start_position, std::string &bytecode_ ) { Init(start_position,bytecode_); }
+    void Init( thc::ChessPosition &start_position )
     {
-        root = start_position;
-        bytecode = bytecode_parm;
+        press.Init(start_position);
+        bytecode.clear();
     }
-    void Init( std::string &bytecode_parm )
+    void Init( thc::ChessPosition &start_position, std::string &bytecode_ )
     {
-        root.Init();
-        bytecode = bytecode_parm;
+        press.Init(start_position);
+        bytecode = bytecode_;
+    }
+    void Init( std::string &bytecode_ )
+    {
+        press.Init();
+        bytecode = bytecode_;
     }
 
     // Get MovePlus at given offset

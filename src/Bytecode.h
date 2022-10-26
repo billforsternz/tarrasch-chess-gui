@@ -21,6 +21,7 @@
 #define BC_META_START       5 // meta data start (multi byte meta data)
 #define BC_META_END         6 // meta data end
 #define BC_ESCAPE           7 // escape (single byte meta data)
+#define BC_MOVE_CODES       8 // move codes start here
 
 
 //
@@ -110,5 +111,11 @@ void bc_locate( std::string &bc, int offset, thc::ChessPosition &start, std::vec
 
 // Add a move of bytecode
 void bc_insert( std::string &bc, int offset, thc::ChessRules &cr, thc::Move mv );
+
+// Skip to matching end
+size_t bc_skipover( const std::string &bc, size_t offset );
+
+// Interpret bytecode starting at offset as a comment
+std::string bc_comment( std::string &bc, size_t offset );
 
 #endif // BYTECODE_H

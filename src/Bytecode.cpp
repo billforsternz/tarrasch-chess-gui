@@ -2391,3 +2391,42 @@ void bc_locate( std::string &bc, int offset, thc::ChessPosition &start, std::vec
 
 // Add a move of bytecode
 void bc_insert( std::string &bc, int offset, thc::ChessRules &cr, thc::Move mv ) {/*todo*/}
+
+// Skip to matching end of nested section starting at offset, return 0 if not found
+size_t bc_skipover( const std::string &bc, size_t offset )
+{
+    size_t len = bc.length();
+    int depth = 0;
+    char begin = bc[offset];
+    char end = begin+1;
+    if( begin != BC_VARIATION_START && begin != BC_META_START && begin != BC_COMMENT_START )
+        return 0;
+    for( size_t i=offset+1; i<len; i++  )
+    {
+        char c = bc[i];
+        if( c == begin )
+            depth++;
+        else if( c == end )
+        {
+            depth--;
+            if( depth==0 )
+                return i+1;     // return offset one beyond
+        }
+    }
+    return 0;
+}
+
+std::string bc_comment( std::string &bc, size_t offset )
+{
+    std::string ret;
+    size_t end = bc_skipover( bc, offset );
+    while( offset < end )
+    {
+        char c = bc[offset];
+        if( c >= ' ' )
+            ret += c;
+    }
+    return ret;
+}
+
+

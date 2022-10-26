@@ -10,10 +10,236 @@
 #include "DebugPrintf.h"
 #include "Objects.h"
 #include "Repository.h"
+#include "Bytecode.h"
 #include "DebugPrintf.h"
 #include "GameView.h"
+
 using namespace std;
 using namespace thc;
+
+void GameView::Build_bc( std::string &result_, GameTree &tree_bc_, thc::ChessPosition &start_position_ )
+{
+    this->result = result_;
+    final_position_node = NULL;
+    final_position_txt = "Initial position";
+    final_position.Init();
+    this->tree_bc = tree_bc_;
+    expansion.clear();
+    level = 0;
+    offset = 0;
+    newline = true;
+    this->start_position = start_position_;
+    cr = start_position_;
+    cr = start_position;
+    tree_bc.Init(cr);
+    std::string &bc = tree_bc.bytecode;
+    size_t len = bc.length();
+    for( size_t i=0; i<len; i++ )
+    {
+        char c = bc[i];
+        switch( c )
+        {
+            case BC_VARIATION_START:
+            {
+                level++;
+                GameViewElement gve;
+
+                // If not root variation, add "\n\t\t...\t(" prefix
+                if( level > 1)
+                {
+                    gve.type    = NEWLINE;
+                    newline     = true;
+                    gve.level   = level;
+                    gve.offset1 = offset;
+                    offset++;   // "\n"
+                    gve.offset2 = offset;
+                    gve.node    = NULL;
+                    expansion.push_back(gve);
+                }
+
+                gve.type   = START_OF_VARIATION;
+                gve.offset1 = offset;
+                offset++;   // "("
+                gve.offset2 = offset;
+                expansion.push_back(gve);
+                break;
+            }
+            case BC_VARIATION_END:
+            {
+                level--;
+                // If not root variation, add ")" or ")\n\t\t...\t" suffix
+                if( level > 0 )
+                {
+                    bool another_variation_follows = (i+1<len && bc[i]==BC_VARIATION_START);
+                    GameViewElement gve;
+                    gve.type    = END_OF_VARIATION;
+                    gve.level   = level+1;
+                    gve.offset1 = offset;
+                    offset++;       // ")"
+                    gve.offset2 = offset;
+                    gve.node    = NULL;
+                    expansion.push_back(gve);
+                    if( !another_variation_follows )
+                    {
+                        gve.type    = NEWLINE;
+                        gve.level   = level;
+                        gve.offset1 = offset;
+                        offset++;       // "\n"
+                        gve.offset2 = offset;
+                        newline = true;
+                        expansion.push_back(gve);
+                    }
+                }
+                break;
+            }
+            case BC_COMMENT_START:
+            {
+                GameViewElement gve;
+                gve.type    = COMMENT;
+                gve.level   = level;
+                gve.offset1 = offset;
+                std::string comment_ = bc_comment(bc,i);
+                offset += comment_.length();
+                gve.offset2 = offset;
+                gve.node    = NULL;
+                expansion.push_back(gve);
+                i = bc_skipover(bc,i);
+                i--;    // to cancel the i++ that happens at end of loop
+                break;
+            }
+            case BC_COMMENT_END:
+            {
+                break;
+            }
+            case BC_META_START:
+            {
+                break;
+            }
+            case BC_META_END:
+            {
+                break;
+            }
+            case BC_ESCAPE:
+            {
+                // NAG TODO
+                break;
+            }
+        }
+        if( c < BC_MOVE_CODES )
+            continue;
+
+        // Handle moves
+        bool move0 = (i==0 || bc[i-1]==BC_VARIATION_START);
+        thc::Move mv = tree_bc.press.UncompressMove(c);
+        GameViewElement gve;
+        if( move0 )
+        {
+            gve.type    = MOVE0;
+            gve.level   = level;
+            gve.offset1 = offset;
+            gve.offset2 = offset;
+            gve.mv      = mv;
+            gve.node    = NULL;
+            expansion.push_back(gve);
+        }
+
+        // Body of move
+        char buf[80];
+        bool need_extra_space=true;
+        if( move0 || newline || comment )
+            sprintf( buf, "%d%s", cr.full_move_count, cr.white?".":"..." );
+        else
+        {
+            if( cr.white )
+                sprintf( buf, " %d.", cr.full_move_count );
+            else
+            {
+                strcpy( buf, " " );
+                need_extra_space = false;
+            }
+        }
+        newline = false;
+        comment = false;
+        string intro = buf;
+        string move_body = mv.NaturalOut(&cr);
+        LangOut(move_body);
+        string fragment  = intro + move_body;
+        string file_view = need_extra_space ? (intro + " " + move_body) : fragment;
+
+#if 0 // NAG TODO
+        gve.nag_value1 = 0;
+        if( node->game_move.nag_value1 &&
+            node->game_move.nag_value1 < (sizeof(nag_array1)/sizeof(nag_array1[0]))
+          )
+        {
+            gve.nag_value1 = node->game_move.nag_value1;
+            fragment.append( nag_array1[node->game_move.nag_value1] );
+            char buf2[50];
+            sprintf(buf2," $%d",node->game_move.nag_value1);
+            file_view.append(buf2);
+        }
+        gve.nag_value2 = 0;
+        if( node->game_move.nag_value2 &&
+            node->game_move.nag_value2 < (sizeof(nag_array2)/sizeof(nag_array2[0]))
+          )
+        {
+            gve.nag_value2 = node->game_move.nag_value2;
+            fragment.append( nag_array2[node->game_move.nag_value2] );
+            char buf2[50];
+            sprintf(buf2," $%d",node->game_move.nag_value2);
+            file_view.append(buf2);
+        }
+#endif
+
+#if 0 // FINAL POSITION TODO
+        if( last_move )
+        {
+            if( level == 1 )
+            {
+                final_position = cr;
+                final_position.PlayMove( node->game_move.move );
+                final_position_node = node;
+                sprintf( buf, "Final position after %d%s", cr.full_move_count, cr.white?".":"..." );
+                final_position_txt  = buf + move_body;
+            }
+        }
+#endif
+        gve.type    = MOVE;
+        gve.level   = level;
+        gve.offset1 = offset;
+        offset += (fragment.length());
+        gve.offset2 = offset;
+        gve.node    = NULL;
+        gve.str     = fragment;
+        gve.str_for_file_move_only = file_view;
+        expansion.push_back(gve);
+    }
+
+    // After all root variations done add END_OF_GAME
+    GameViewElement gve;
+    gve.type    = END_OF_GAME;
+    gve.level   = level+1;
+    gve.offset1 = offset;
+
+    // Add space before result if not following comment and not following newline
+    //  (it would be END_OF_VARIATION rather than NEWLINE, except that the last
+    //   variation's END_OF_VARIATION is followed by NEWLINE)
+    int sz=expansion.size();
+    bool add_space = (sz==0 ? false : (expansion[sz-1].type!=NEWLINE && expansion[sz-1].type!=COMMENT) );
+    std::string temp = (result==""?"*":result); // in file case we make sure we DO write "*"
+    gve.str_for_file_move_only = (add_space ? " " + temp : temp);
+    gve.str = "";
+    len = result.length();
+    if( len > 1 )   // not "*", in screen case we make sure we DON'T write "*"
+        gve.str = (add_space ? " " + result : result);
+    offset += gve.str.length();
+    gve.offset2 = offset;
+    gve.node    = NULL;
+    expansion.push_back(gve);
+
+    // Save a copy of the language as it was when we built the view
+    memcpy( language_lookup, LangGet(), sizeof(language_lookup) );
+}
 
 void GameView::Build( std::string &result_, MoveTree *tree_, thc::ChessPosition &start_position_ )
 {
