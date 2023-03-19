@@ -48,7 +48,7 @@ public:
     bool StartEngine();
     void LabelPlayers( bool start_game=false, bool set_document_player_names=false );
     void SetGroomedPosition( bool show_title=true );
-    void SetManual( MoveTree *mt, bool at_move0, bool from_mouse_move=false );
+    void SetManual( int offset, bool at_move0, bool from_mouse_move=false );
     bool IsManual() {return state==MANUAL;}
     void ShowNewDocument();
     void PutBackDocument();

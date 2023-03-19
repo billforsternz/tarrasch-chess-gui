@@ -187,7 +187,11 @@ void CtrlChessTxt::Goto( unsigned long pos, bool from_mouse_move )
     thc::ChessRules cr;
     std::string title;
     bool at_move0;
-    MoveTree *mt = gd->Locate(pos,cr,title,at_move0);
+    bool ok = gd->Locate(pos,cr,title,at_move0);
+    if( !ok )
+    {
+        return;
+    }
     bool unchanged = (from_mouse_move && old_from_mouse_move && pos==old_pos && cr==old_cr && title==old_title && at_move0==old_at_move0);
     if( !unchanged )
     {

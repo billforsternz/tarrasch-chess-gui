@@ -637,8 +637,11 @@ void GameLogic::CmdExamineGame()
     std::string move_txt;
     bool at_move0;
     thc::ChessRules cr;
-    MoveTree *found = gd.Locate( pos, cr, move_txt, at_move0 );
-    SetManual(found,at_move0);
+    bool ok = gd.Locate( pos, cr, move_txt, at_move0 );
+    if( ok )
+    {
+        SetManual(gd.tree_bc.offset,at_move0);
+    }
     //objs.canvas->SetChessPosition( cr );
     //objs.canvas->SetBoardTitle(title.c_str());
 }
@@ -1614,7 +1617,8 @@ void GameLogic::FullUndo( GAME_STATE game_state )
     std::string move_txt;
     bool at_move0;
     thc::ChessRules cr;
-    MoveTree *found = gd.Locate( pos, cr, move_txt, at_move0 );
+    bool found = gd.Locate( pos, cr, move_txt, at_move0 );
+    MovePlus game_move = gd.tree_bc.GetMovePlus();
     switch( game_state )
     {
         case RESET:
@@ -1626,7 +1630,7 @@ void GameLogic::FullUndo( GAME_STATE game_state )
         case GAMEOVER:
         {
             bool game_over = (game_state==GAMEOVER);
-            SetManual(found,at_move0);
+            SetManual(gd.tree_bc.offset,at_move0);
             if( game_over )
                 NewState(GAMEOVER);
             break;
@@ -1656,17 +1660,17 @@ void GameLogic::FullUndo( GAME_STATE game_state )
             else
             {
                 reply_to.sprintf( "Reply to %s", move_txt2.c_str() );
-                if( found && found->game_move.flag_ingame )
+                if( found && game_move.flag_ingame )
                 {
                     if( glc.human_is_white )
                     {
-                        white_millisecs_time = found->game_move.human_millisecs_time;
-                        black_millisecs_time = found->game_move.engine_millisecs_time;
+                        white_millisecs_time = game_move.human_millisecs_time;
+                        black_millisecs_time = game_move.engine_millisecs_time;
                     }
                     else
                     {
-                        white_millisecs_time = found->game_move.engine_millisecs_time;
-                        black_millisecs_time = found->game_move.human_millisecs_time;
+                        white_millisecs_time = game_move.engine_millisecs_time;
+                        black_millisecs_time = game_move.human_millisecs_time;
                     }
                 }
             }
@@ -1721,17 +1725,17 @@ void GameLogic::FullUndo( GAME_STATE game_state )
                 white_millisecs_time = engine_millisecs_time_start;
                 black_millisecs_time = human_millisecs_time_start;
             }
-            if( found && found->game_move.flag_ingame )
+            if( found && game_move.flag_ingame )
             {
                 if( glc.human_is_white )
                 {
-                    white_millisecs_time = found->game_move.human_millisecs_time;
-                    black_millisecs_time = found->game_move.engine_millisecs_time;
+                    white_millisecs_time = game_move.human_millisecs_time;
+                    black_millisecs_time = game_move.engine_millisecs_time;
                 }
                 else
                 {
-                    white_millisecs_time = found->game_move.engine_millisecs_time;
-                    black_millisecs_time = found->game_move.human_millisecs_time;
+                    white_millisecs_time = game_move.engine_millisecs_time;
+                    black_millisecs_time = game_move.human_millisecs_time;
                 }
             }
             chess_clock.SetTimes( white_millisecs_time, black_millisecs_time );
@@ -1768,18 +1772,17 @@ bool GameLogic::CmdUpdateTakeback()
     return( possible );
 }
 
-void GameLogic::SetManual( MoveTree *mt, bool at_move0, bool from_mouse_move )
+void GameLogic::SetManual( int offset, bool at_move0, bool from_mouse_move )
 {
-    //if( mt == NULL )
-    //    mt = gd.GetSummary();
-    if( mt ) //&& (mt->game_move.flag_ingame) )
+    MovePlus game_move = gd.tree_bc.GetMovePlus(offset);
+    if( offset >= 0 && game_move.flag_ingame )
     {
         if( at_move0 )
         {
-            int human_millisecs_time  = mt->game_move.human_millisecs_time;
-            bool white_clock_visible  = mt->game_move.white_clock_visible;
-            int engine_millisecs_time = mt->game_move.engine_millisecs_time;
-            bool black_clock_visible  = mt->game_move.black_clock_visible;
+            int human_millisecs_time  = game_move.human_millisecs_time;
+            bool white_clock_visible  = game_move.white_clock_visible;
+            int engine_millisecs_time = game_move.engine_millisecs_time;
+            bool black_clock_visible  = game_move.black_clock_visible;
             thc::ChessRules cr;
             int ivar, imove;
             human_millisecs_time  = human_millisecs_time_start;
@@ -1787,22 +1790,15 @@ void GameLogic::SetManual( MoveTree *mt, bool at_move0, bool from_mouse_move )
             bool using_default_time=true;
 
             // If possible, get time for previous move in parent variation
-            MoveTree *parent = gd.tree.Parent( mt, cr, ivar, imove );
-            if( parent )
+            int parent = gd.tree_bc.Parent( offset );
+            if( parent >= 0 )
             {
-                MoveTree *grand_parent = gd.tree.Parent( parent, cr, ivar, imove );
-                if( grand_parent )
-                {
-                    VARIATION &var = grand_parent->variations[ivar];
-                    if( imove>0 && var[imove-1].game_move.flag_ingame )
-                    {
-                        human_millisecs_time  = var[imove-1].game_move.human_millisecs_time;
-                        engine_millisecs_time = var[imove-1].game_move.engine_millisecs_time;
-                        using_default_time = false;
-                    }
-                }
+                MovePlus game_move2   = gd.tree_bc.GetMovePlus(parent);
+                human_millisecs_time  = game_move2.human_millisecs_time;
+                engine_millisecs_time = game_move2.engine_millisecs_time;
+                using_default_time = false;
             }
-            if( using_default_time && !mt->game_move.flag_ingame )
+            if( using_default_time && !game_move.flag_ingame )
             {
                 white_clock_visible = false;
                 black_clock_visible = false;
@@ -1824,19 +1820,19 @@ void GameLogic::SetManual( MoveTree *mt, bool at_move0, bool from_mouse_move )
         }
         else
         {
-            if( mt->game_move.human_is_white )
+            if( game_move.human_is_white )
             {
-                chess_clock.SetStaticTimes( mt->game_move.human_millisecs_time,
-                                            mt->game_move.white_clock_visible,
-                                            mt->game_move.engine_millisecs_time,
-                                            mt->game_move.black_clock_visible );
+                chess_clock.SetStaticTimes( game_move.human_millisecs_time,
+                                            game_move.white_clock_visible,
+                                            game_move.engine_millisecs_time,
+                                            game_move.black_clock_visible );
             }
             else
             {
-                chess_clock.SetStaticTimes( mt->game_move.engine_millisecs_time,
-                                            mt->game_move.white_clock_visible,
-                                            mt->game_move.human_millisecs_time,
-                                            mt->game_move.black_clock_visible );
+                chess_clock.SetStaticTimes( game_move.engine_millisecs_time,
+                                            game_move.white_clock_visible,
+                                            game_move.human_millisecs_time,
+                                            game_move.black_clock_visible );
             }
         }
         canvas->RedrawClocks();
@@ -4276,7 +4272,7 @@ void GameLogic::CmdKibitzCaptureOne()
 
         // Write lines in ranked order
         bool first=true;
-        MoveTree *node=NULL;
+        int offset = 0;
         bool use_repeat_one_move=false;
         GAME_MOVE repeat_one_move;
         for( unsigned int i=0; i<1 /*i<nbrof(kibitz_sorted)*/; i++ )
@@ -4288,14 +4284,14 @@ void GameLogic::CmdKibitzCaptureOne()
                 if( first )
                 {
                     first = false;
-                    node = gd.KibitzCaptureStart( engine_name, kibitz_pv[x.idx].c_str(), kibitz_var[x.idx],
+                    offset = gd.KibitzCaptureStart( engine_name, kibitz_pv[x.idx].c_str(), kibitz_var[x.idx],
                         use_repeat_one_move, repeat_one_move );
-                    if( !node )
+                    if( offset < 0 )
                         break;
                 }
                 else
                 {
-                    gd.KibitzCapture( node, kibitz_pv[x.idx].c_str(), kibitz_var[x.idx],
+                    gd.KibitzCapture( offset, kibitz_pv[x.idx].c_str(), kibitz_var[x.idx],
                         use_repeat_one_move, repeat_one_move );
                 }
             }

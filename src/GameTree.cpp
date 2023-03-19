@@ -92,30 +92,34 @@ MovePlus GameTree::GetMovePlus( int offset_parm )
 
 // Promote a variation at given offset
 //  Return offset of promoted variation
-int Promote( int offset_parm )
+int GameTree::Promote( int offset_parm )
 {
     return 0;
 }
 
 // Demote a variation at given offset
 //  Return offset of promoted variation
-int Demote( int offset_parm  )
+int GameTree::Demote( int offset_parm  )
 {
     return 0;
 }
 
 // Delete the rest of a variation
-void DeleteRestOfVariation( int offset_parm  )
+void GameTree::DeleteRestOfVariation( int offset_parm  )
 {
 }
 
 // Delete variation
-void DeleteVariation( int offset_parm  )
+void GameTree::DeleteVariation( int offset_parm  )
 {
 }
 
 
-
+// Find parent of current variation, -1 if none
+int GameTree::Parent( int offset )
+{
+    return -1;
+}
 
 // Insert a move at current location
 // Return true if move played okay

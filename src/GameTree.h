@@ -108,7 +108,11 @@ public:
     // Delete variation at current offset
     bool DeleteVariation();
 
+    // Find parent of variation, -1 if none
+    int Parent( int offset );
+
     // Get MovePlus at given offset
+    MovePlus GetMovePlus() { return GetMovePlus(offset); }
     MovePlus GetMovePlus( int offset_parm );
 
     // Promote a variation at given offset
