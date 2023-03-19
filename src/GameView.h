@@ -50,7 +50,7 @@ public:
     void DeleteSelection( wxRichTextCtrl *ctrl );
 
     unsigned long NavigationKey( unsigned long pos, NAVIGATION_KEY nk );
-    MoveTree *Locate( unsigned long pos, thc::ChessRules &cr, std::string &title, bool &at_move0 );
+    bool Locate( unsigned long pos, thc::ChessRules &cr, std::string &title, bool &at_move0 );
     int Locate_bc( unsigned long pos, thc::ChessRules &cr, std::string &title, bool &at_move0 );
     GAME_MOVE *LocateAtMoveZeroGetLastMove() { return locate_at_move0_last_move; }
     MovePlus LocateAtMoveZeroGetLastMove_bc();

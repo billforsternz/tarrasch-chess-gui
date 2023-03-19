@@ -170,13 +170,13 @@ public:
     void SetNonZeroStartPosition( int main_line_idx );
 
 
-    MoveTree *MakeMove( GAME_MOVE game_move, bool allow_overwrite );
-    MoveTree *KibitzCaptureStart( const char *engine_name, const char *txt, std::vector<thc::Move> &var,
+    bool MakeMove( GAME_MOVE game_move, bool allow_overwrite );
+    int KibitzCaptureStart( const char *engine_name, const char *txt, std::vector<thc::Move> &var,
                                  bool &use_repeat_one_move,
                                  GAME_MOVE &repeat_one_move     // eg variation = e4,c5 new_variation = Nf3,Nc6 etc.
                                                                 //  must make new_variation = c5,Nf3,Nc6 etc.
     );
-    void KibitzCapture( MoveTree *node, const char *txt, std::vector<thc::Move> &var,
+    void KibitzCapture( int offset, const char *txt, std::vector<thc::Move> &var,
                        bool use_repeat_one_move,
                        GAME_MOVE &repeat_one_move       // eg variation = e4,c5 new_variation = Nf3,Nc6 etc.
                                                         //  must make new_variation = c5,Nf3,Nc6 etc.
@@ -191,7 +191,7 @@ public:
     void Rebuild() { gv.Build( r.result, &tree, this->start_position ); }
     void DeleteRestOfVariation();
     void DeleteVariation();
-    void RedisplayRequest( MoveTree *found );
+    void RedisplayRequest();
     void Redisplay( unsigned long pos );
 
     // Get a picture of the game, various recipes
@@ -251,13 +251,13 @@ public:
 
     unsigned long NavigationKey( unsigned long pos, NAVIGATION_KEY nk )
     {  return gv.NavigationKey(pos,nk); }
-    MoveTree *Locate( unsigned long pos, thc::ChessRules &cr, std::string &title, bool &at_move0 )
+    bool Locate( unsigned long pos, thc::ChessRules &cr, std::string &title, bool &at_move0 )
     {   cr = start_position;
         return gv.Locate( pos, cr, title, at_move0 ); }
-    MoveTree *Locate( unsigned long pos, thc::ChessRules &cr, std::string &title )
+    bool Locate( unsigned long pos, thc::ChessRules &cr, std::string &title )
     {   cr = start_position;
         bool at_move0; return gv.Locate( pos, cr, title, at_move0 );   }
-    MoveTree *Locate( unsigned long pos, thc::ChessRules &cr )
+    bool Locate( unsigned long pos, thc::ChessRules &cr )
     {   cr = start_position;
         std::string title; bool at_move0; return gv.Locate( pos, cr, title, at_move0 ); }
 

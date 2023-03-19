@@ -42,6 +42,26 @@ struct MovePlus
                   human_is_white=false; human_millisecs_time=0; engine_millisecs_time=0; }
 };
 
+#ifndef MOVE_TREE_H
+struct GAME_MOVE
+{
+    thc::Move move;
+    int   human_millisecs_time;
+    int   engine_millisecs_time;
+    bool  flag_ingame;
+    bool  white_clock_visible;
+    bool  black_clock_visible;
+    bool  human_is_white;
+    std::string pre_comment;
+    std::string comment;
+    char nag_value1;
+    char nag_value2;
+    GAME_MOVE() { nag_value1=0; nag_value2=0; flag_ingame=0; white_clock_visible=false; black_clock_visible=false;
+                  human_is_white=false; human_millisecs_time=0; engine_millisecs_time=0; }
+};
+#endif
+
+
 // GameTree = experimental replacement for MoveTree class
 class GameTree
 {
@@ -72,6 +92,22 @@ public:
         bytecode = bytecode_;
     }
 
+    // Load from a start position plus a list of moves
+    void Init( const thc::ChessPosition &start_position, const std::vector<thc::Move> &moves );
+    void Init( const std::vector<thc::Move> &moves );
+
+    // Promote a variation at current offset
+    bool Promote();
+
+    // Demote a variation at current offset
+    bool Demote();
+
+    // Delete the rest of variation at current offset
+    bool DeleteRestOfVariation();
+
+    // Delete variation at current offset
+    bool DeleteVariation();
+
     // Get MovePlus at given offset
     MovePlus GetMovePlus( int offset_parm );
 
@@ -88,6 +124,31 @@ public:
 
     // Delete variation
     void DeleteVariation( int offset_parm  );
+
+    // Get main variation
+    std::vector<thc::Move> GetMainVariation(); 
+
+    // Set non zero start position
+    void SetNonZeroStartPosition( int main_line_idx );
+
+    // Is empty except for one comment ?
+    bool IsJustAComment();
+
+    // Is empty ?
+    bool IsEmpty();
+
+    // Insert a move at current location
+    // Return true if move played okay
+    bool InsertMove( GAME_MOVE game_move, bool allow_overwrite );
+
+    // Is the current move the last in the main line (or is the main line empty)
+    bool AtEndOfMainLine();
+
+    // Is the current move in the main line?
+    bool AreWeInMain();
+
+    // Need some KibitzCapture() functions
+
 };
 
 #endif //GAME_MOVES_H

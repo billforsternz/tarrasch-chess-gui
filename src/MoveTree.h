@@ -11,6 +11,7 @@
 #include <vector>
 #include "thc.h"
 
+#ifndef GAME_TREE_H
 struct GAME_MOVE
 {
     thc::Move move;
@@ -27,6 +28,7 @@ struct GAME_MOVE
     GAME_MOVE() { nag_value1=0; nag_value2=0; flag_ingame=0; white_clock_visible=false; black_clock_visible=false;
                   human_is_white=false; human_millisecs_time=0; engine_millisecs_time=0; }
 };
+#endif
 
 struct VARIATION_STACK_ELEMENT;
 

@@ -4227,7 +4227,7 @@ void GameLogic::CmdKibitzCaptureAll()
 
         // Write lines in ranked order
         bool first=true;
-        MoveTree *node=NULL;
+        int offset=0;
         bool use_repeat_one_move=false;
         GAME_MOVE repeat_one_move;
         for( unsigned int i=0; i<nbrof(kibitz_sorted); i++ )
@@ -4239,14 +4239,14 @@ void GameLogic::CmdKibitzCaptureAll()
                 if( first )
                 {
                     first = false;
-                    node = gd.KibitzCaptureStart( engine_name, kibitz_pv[x.idx].c_str(), kibitz_var[x.idx],
+                    offset = gd.KibitzCaptureStart( engine_name, kibitz_pv[x.idx].c_str(), kibitz_var[x.idx],
                         use_repeat_one_move, repeat_one_move );
-                    if( !node )
+                    if( offset < 0 )
                         break;
                 }
                 else
                 {
-                    gd.KibitzCapture( node, kibitz_pv[x.idx].c_str(), kibitz_var[x.idx],
+                    gd.KibitzCapture( offset, kibitz_pv[x.idx].c_str(), kibitz_var[x.idx],
                         use_repeat_one_move, repeat_one_move );
                 }
             }

@@ -113,3 +113,127 @@ void DeleteRestOfVariation( int offset_parm  )
 void DeleteVariation( int offset_parm  )
 {
 }
+
+
+
+
+// Insert a move at current location
+// Return true if move played okay
+bool GameTree::InsertMove( GAME_MOVE game_move, bool allow_overwrite )
+{
+    bool move_played = false;
+#if 0
+    GameTree *move_played=NULL;
+    unsigned long pos = GetInsertionPoint();
+    thc::ChessRules cr = start_position;
+    std::string title;
+    bool at_move0=true;
+    bool empty_with_comment = tree_bc.IsJustAComment();
+    bool found = Locate( pos, cr, title, at_move0 );
+    int ivar=0;
+    int imove=0;
+    if( found )
+    {
+        VARIATION &variation = parent->variations[ivar];
+        int sz = variation.size();
+
+        // If making a move from before start in existing main line
+        bool special_case = (at_move0 && parent==&tree_bc && sz>0 );
+
+        // Get into position
+        for( int i=0; i<imove; i++ )
+            cr.PlayMove( variation[i].game_move.move );
+        if( !at_move0 )
+            cr.PlayMove( variation[imove].game_move.move );
+        master_position = cr;
+
+        // Handle special case first
+        if( special_case )
+        {
+            VARIATION new_variation;
+            GameTree node;
+            if( game_move.flag_ingame )
+            {
+                game_move.pre_comment =  objs.repository->player.m_white;
+                game_move.pre_comment += "-";
+                game_move.pre_comment += objs.repository->player.m_black;
+            }
+            node.game_move = game_move;
+            new_variation.push_back(node);
+            variation[imove].variations.push_back( new_variation );
+            VARIATION &inplace_variation = variation[imove].variations[variation[imove].variations.size()-1];
+            move_played = &inplace_variation[inplace_variation.size()-1];
+        }
+
+        // New variation for parent
+        else if( at_move0 && parent!= &tree_bc )
+        {
+            VARIATION new_variation;
+            GameTree node;
+            if( game_move.flag_ingame )
+            {
+                game_move.pre_comment =  objs.repository->player.m_white;
+                game_move.pre_comment += "-";
+                game_move.pre_comment += objs.repository->player.m_black;
+            }
+            node.game_move = game_move;
+            new_variation.push_back(node);
+            parent->variations.push_back( new_variation );
+            VARIATION &inplace_variation = parent->variations[parent->variations.size()-1];
+            move_played = &inplace_variation[inplace_variation.size()-1];
+        }
+
+        // New variation
+        else if( sz > imove+1 )
+        {
+            bool last_move_of_main_line = false;
+            if( parent==&tree_bc && sz>1 )
+            {
+                if( imove == sz-2 )
+                    last_move_of_main_line = true;  // make a new variation at last move, even if it's the same
+                                                    //  move, so you can create a variation indicating rest of game
+            }
+            if( !last_move_of_main_line && game_move.move==variation[imove+1].game_move.move && allow_overwrite )
+                move_played = &variation[imove+1];
+            else
+            {
+                VARIATION new_variation;
+                GameTree node;
+                if( game_move.flag_ingame )
+                {
+                    game_move.pre_comment =  objs.repository->player.m_white;
+                    game_move.pre_comment += "-";
+                    game_move.pre_comment += objs.repository->player.m_black;
+                }
+                node.game_move = game_move;
+                new_variation.push_back( node );
+                GameTree &existing_node = variation[ imove + (at_move0?0:1) ];
+                existing_node.variations.push_back( new_variation );
+                VARIATION &inplace_variation = existing_node.variations[existing_node.variations.size()-1];
+                move_played = &inplace_variation[inplace_variation.size()-1];
+            }
+        }
+
+        // Append
+        else if( sz <= imove+1 )
+        {
+            GameTree node;
+            if( game_move.flag_ingame && sz>0 && !variation[sz-1].game_move.flag_ingame  )
+            {
+                game_move.pre_comment =  objs.repository->player.m_white;
+                game_move.pre_comment += "-";
+                game_move.pre_comment += objs.repository->player.m_black;
+            }
+            node.game_move = game_move;
+            variation.push_back( node );
+            move_played = &variation[variation.size()-1];
+        }
+        if( empty_with_comment && move_played )
+        {
+            move_played->game_move.pre_comment = tree_bc.game_move.comment;
+            tree_bc.game_move.comment = "";
+        }
+    }
+#endif
+    return move_played;
+}
