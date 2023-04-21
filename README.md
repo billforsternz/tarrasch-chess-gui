@@ -81,7 +81,13 @@ level directory;
 - sudo port install wxgtk-3.0
 - wx-config --version
   - (should return 3.0.5)
- 
+
+## Building Tarrasch on Linux (ArchLinux, Manjaro 22.1)
+
+- sudo pacman -Syy wxwidgets-gtk3
+- wx-config --version
+  - (should return 3.2.2)
+
 ## Building Tarrasch on Linux (Ubuntu 18.04)
 
 - sudo apt install libwxgtk3.0-dev
