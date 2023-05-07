@@ -70,13 +70,24 @@ Cheetham, Tarrasch on Linux has moved forward significantly. To try this out on
 Ubuntu 16.04 LTS (say), perform the following steps then simply make in the top
 level directory;
 
+- sudo apt install g++
 - sudo apt install libwxgtk3.0-dev
 - sudo apt install libwxgtk-media3.0-dev
-- sudo apt install libwxgtk-webview3.0-dev
+- sudo apt install libwxgtk-webview3.0-gtk3-0v5
 - wx-config --version
-  - (should return 3.0.2)
+  - (should return 3.0.4)
  
- 
+- MacOS 12 users can do this is one go after installing MacPorts
+- sudo port install wxgtk-3.0
+- wx-config --version
+  - (should return 3.0.5)
+
+## Building Tarrasch on Linux (ArchLinux, Manjaro 22.1)
+
+- sudo pacman -Syy wxwidgets-gtk3
+- wx-config --version
+  - (should return 3.2.2)
+
 ## Building Tarrasch on Linux (Ubuntu 18.04)
 
 - sudo apt install libwxgtk3.0-dev
