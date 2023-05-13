@@ -373,6 +373,7 @@ void PgnRead::GameParse( std::string &str )
                         else
                         {
                             Error( "Bad move number" );
+                            cprintf( "debugging 1: %s\n", str.c_str( ));
                             state = ERROR_STATE;
                         }
                     }
@@ -396,6 +397,7 @@ void PgnRead::GameParse( std::string &str )
                     else if( ch!=' ' && ch!='\t' && ch!='\n' )
                     {
                         Error( "Bad move number" );
+                        cprintf( "debugging 1: %s\n", str.c_str( ));
                         state = ERROR_STATE;
                     }
                     break;
@@ -449,7 +451,10 @@ void PgnRead::GameParse( std::string &str )
                         if( TestResult(buf) )
                             state = PREFIX;
                         else if( !DoMove(state==IN_MOVE_WHITE,move_number,buf) )
+                        {
+                            cprintf( "debugging 3: %s\n", str.c_str( ));
                             state = ERROR_STATE;
+                        }
                         else
                             state = (state==IN_MOVE_WHITE?PRE_MOVE_BLACK:BETWEEN_MOVES);
                         if( ch=='(' || ch==')' || ch=='{' || ch=='}' || ch=='?' )

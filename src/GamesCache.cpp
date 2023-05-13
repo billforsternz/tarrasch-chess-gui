@@ -911,7 +911,8 @@ void GamesCache::Eco(  GamesCache *UNUSED(gc_clipboard) )
         ListableGame *mptr = gds[i].get();
         CompactGame pact;
         mptr->GetCompactGame( pact );
-        if( pact.r.fen == "" && pact.r.eco == "" )
+        bool needs_calc_elo = (pact.r.eco=="" || pact.r.eco=="A00" || (pact.r.eco.length()>0 && pact.r.eco[0]=='?'));
+        if( pact.r.fen == "" && needs_calc_elo )
         {
             pact.r.eco = eco_calculate( pact.moves );
             //PgnNameCommaGroom( pact.r.black );

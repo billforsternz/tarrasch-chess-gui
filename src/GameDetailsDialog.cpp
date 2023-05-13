@@ -616,7 +616,8 @@ bool GameDetailsDialog::Run( GameDocument &gd, bool push_changes_to_tabs )
         result = "(no result)";
         before.result="*";      // don't set game_details_edited unnecessarily
     }
-    if( eco=="" )
+    bool needs_calc_elo = (eco=="" || eco=="A00" || (eco.length()>0 && eco[0]=='?'));
+    if( needs_calc_elo )
     {
         CompactGame pact;
         gd.GetCompactGame(pact);
