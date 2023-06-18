@@ -86,6 +86,7 @@ private:
     wxFont font;
     wxMenu *context_menu;
     MoveTree *popup_mt;
+    GameTree *popup_gt;
     GameDocument *gd;
     GameView *gv;
     DECLARE_EVENT_TABLE()

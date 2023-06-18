@@ -241,3 +241,43 @@ bool GameTree::InsertMove( GAME_MOVE game_move, bool allow_overwrite )
 #endif
     return move_played;
 }
+
+void GameTree::Init( std::vector<thc::Move> const &mv )
+{
+}
+
+bool  GameTree::Promote(void)
+{
+    return false;
+}
+
+bool  GameTree::Demote(void)
+{
+    return false;
+}
+
+std::vector<thc::Move>  GameTree::GetMainVariation(void)
+{
+    std::vector<thc::Move> dummy;
+    return dummy;
+}
+
+void GameTree::SetNonZeroStartPosition(int)
+{
+}
+
+bool  GameTree::IsEmpty(void)
+{
+    return false;
+}
+
+bool  GameTree::AtEndOfMainLine(void)
+{
+    return false;
+}
+
+bool  GameTree::AreWeInMain(void)
+{
+    return false;
+}
+

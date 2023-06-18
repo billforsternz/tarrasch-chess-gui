@@ -1799,7 +1799,7 @@ int GameView::GetInternalOffsetEndOfVariation( int start )
     return end;
 }
 
-MoveTree *GameView::Locate( unsigned long pos, thc::ChessRules &cr_, string &title, bool &at_move0 )
+bool GameView::Locate( unsigned long pos, thc::ChessRules &cr_, string &title, bool &at_move0 )
 {
     MoveTree *found = NULL;
     at_move0 = false;
@@ -1914,7 +1914,7 @@ MoveTree *GameView::Locate( unsigned long pos, thc::ChessRules &cr_, string &tit
             }
         }
     }
-    return found;
+    return found!=NULL;
 }
 
 void GameView::Debug()
@@ -2001,6 +2001,12 @@ unsigned long GameView::GetMoveOffset( MoveTree *node )
         }
     }
     return pos;
+}
+
+// TEMP
+int GameView::GetMoveOffset( int bc_offset )
+{
+    return 0;
 }
 
 bool GameView::GetOffsetWithinComment( unsigned long pos, unsigned long &pos_within_comment )

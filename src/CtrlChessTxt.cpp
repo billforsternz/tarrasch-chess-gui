@@ -106,7 +106,8 @@ void CtrlChessTxt::OnContext( wxContextMenuEvent &event )
     thc::ChessRules cr;
     std::string move_txt;
     GAME_MOVE *gm = gd->GetSummaryMove( cr, move_txt );
-    popup_mt = gd->GetSummary();
+    popup_gt = gd->GetSummary();
+    popup_mt = 0;   // TEMP TEMP TEMP
     if( gm && popup_mt && move_txt.length() )
     {
         if( context_menu )
@@ -196,7 +197,7 @@ void CtrlChessTxt::Goto( unsigned long pos, bool from_mouse_move )
     if( !unchanged )
     {
         gl->gd.master_position = cr;
-        gl->SetManual( mt, at_move0, from_mouse_move );
+        gl->SetManual( gl->gd.tree_bc.offset, at_move0, from_mouse_move );
         objs.canvas->SetChessPosition( cr );
         objs.canvas->SetBoardTitle(title.c_str());
     }

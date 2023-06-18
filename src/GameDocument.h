@@ -213,7 +213,7 @@ public:
     GAME_MOVE *GetSummaryMove( thc::ChessRules &cr, std::string &move_txt );
 
     //  We should define and use some simple recipes like this
-    MoveTree *GetSummary();
+    GameTree *GetSummary();
 
     // Are we at the end of the main line (will a new game be the main game, or not)
     bool AtEndOfMainLine();

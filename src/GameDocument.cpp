@@ -253,7 +253,7 @@ std::string GameDocument::Description()
     return label;
 }
 
-bool GameDocument::PgnParse_bc( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language, int imove )
+bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language, int imove )
 {
     std::string bytecode;
 
@@ -768,9 +768,9 @@ void GameDocument::SetInsertionPoint(unsigned long pos)
     gl->atom.SetInsertionPoint(pos);
 }
 
-void GameDocument::RedisplayRequest( GameTree *found )
+void GameDocument::RedisplayRequest()
 {
-    unsigned long pos = gv.GetMoveOffset( found->offset );
+    unsigned long pos = gv.GetMoveOffset( tree_bc.offset );
     gl->atom.Redisplay( pos );
 }
 
@@ -792,7 +792,6 @@ void GameDocument::Redisplay( unsigned long pos )
     }
 }
 
-#if 0
 
 // KibitzCapture() needs to be completely rewritten, largely shifted to GameTree
 
@@ -802,6 +801,9 @@ int GameDocument::KibitzCaptureStart( const char *engine_name, const char *txt, 
                                        //  must make new_variation = c5,Nf3,Nc6 etc.
     )
 {
+#if 1
+    return 0;
+#else
     use_repeat_one_move = false;
     GameTree *insertion_point = NULL;
     unsigned long pos = GetInsertionPoint();
@@ -911,15 +913,20 @@ int GameDocument::KibitzCaptureStart( const char *engine_name, const char *txt, 
         gl->atom.Redisplay( pos );
     }
     return insertion_point;
+#endif
 }
 
-
-
-void GameDocument::KibitzCapture( GameTree *node, const char *txt, std::vector<thc::Move> &var,
+/* void GameDocument::KibitzCapture( GameTree *node, const char *txt, std::vector<thc::Move> &var,
             bool use_repeat_one_move,
             GAME_MOVE &repeat_one_move    // eg variation = e4,c5 new_variation = Nf3,Nc6 etc.
-            )                             //  must make new_variation = c5,Nf3,Nc6 etc.
+            )                             //  must make new_variation = c5,Nf3,Nc6 etc. */
+void GameDocument::KibitzCapture( int offset, const char *txt, std::vector<thc::Move> &var,
+                    bool use_repeat_one_move,
+                    GAME_MOVE &repeat_one_move       // eg variation = e4,c5 new_variation = Nf3,Nc6 etc.
+                                                    //  must make new_variation = c5,Nf3,Nc6 etc.
+)
 {
+#if 0
 /*
     unsigned long pos = GetInsertionPoint();
     unsigned long pos_restore = pos;
@@ -986,9 +993,9 @@ void GameDocument::KibitzCapture( GameTree *node, const char *txt, std::vector<t
         gl->atom.Undo();
         gl->atom.Redisplay( pos );
     }
+#endif
 }
 
-#endif
 
 void GameDocument::Promote()
 {
@@ -1046,7 +1053,7 @@ bool GameDocument::PromotePaste( std::string &str )
         Rebuild();
         {
             thc::ChessRules cr2;
-            VARIATION &variation2;
+            VARIATION variation2;
             Rebuild();
             PgnParse( false, nbr_converted_b, str, cr2, &variation2, false );
         }
@@ -1082,6 +1089,7 @@ bool GameDocument::PromotePaste( std::string &str )
 
 void GameDocument::PromoteToVariation( unsigned long offset_within_comment )
 {
+#if 0
     unsigned long pos = GetInsertionPoint();
     unsigned long pos_restore = pos;
     thc::ChessRules cr;
@@ -1309,13 +1317,12 @@ void GameDocument::PromoteToVariation( unsigned long offset_within_comment )
         gl->atom.Undo();
     pos = pos_restore;
     gl->atom.Redisplay( pos );
+#endif
 }
-
-#if 0
-
 
 void GameDocument::DemoteToComment()
 {
+#if 0
     unsigned long pos = GetInsertionPoint();
     thc::ChessRules cr;
     std::string title;
@@ -1384,10 +1391,12 @@ void GameDocument::DemoteToComment()
             }
         }
     }
+#endif
 }
 
 void GameDocument::UseGame( const thc::ChessPosition &cp, const std::vector<thc::Move> &moves_from_base_position, CompactGame &pact )
 {
+#if 0
     unsigned long pos = GetInsertionPoint();
     unsigned long pos_restore = pos;
     thc::ChessRules cr;
@@ -1525,10 +1534,12 @@ void GameDocument::UseGame( const thc::ChessPosition &cp, const std::vector<thc:
     gl->atom.Undo();
     pos = pos_restore;
     gl->atom.Redisplay( pos );
+#endif
 }
 
 void GameDocument::DeleteRestOfVariation()
 {
+#if 0
     unsigned long pos = GetInsertionPoint();
     thc::ChessRules cr;
     std::string title;
@@ -1568,10 +1579,12 @@ void GameDocument::DeleteRestOfVariation()
             }
         }
     }
+#endif
 }
 
 void GameDocument::DeleteVariation()
 {
+#if 0
     unsigned long pos = GetInsertionPoint();
     thc::ChessRules cr;
     std::string title;
@@ -1598,11 +1611,13 @@ void GameDocument::DeleteVariation()
             gl->atom.Redisplay( pos );
         }
     }
+#endif
 }
 
 // A start position, a vector of moves, leading to a final position
 void GameDocument::GetSummary( thc::ChessPosition &start_position_, std::vector<GAME_MOVE> &game_moves, thc::ChessPosition &end_pos )
 {
+#if 0
     unsigned long pos = GetInsertionPoint();
     start_position_ = this->start_position;
     end_pos = start_position_;
@@ -1654,6 +1669,7 @@ void GameDocument::GetSummary( thc::ChessPosition &start_position_, std::vector<
         GAME_MOVE game_move = temp[i];
         game_moves.push_back( game_move );
     }
+#endif
 }
 
 // The current position, title text for the last move played eg "Position after 23...Nxd5"
@@ -1661,6 +1677,7 @@ void GameDocument::GetSummary( thc::ChessPosition &start_position_, std::vector<
 GAME_MOVE *GameDocument::GetSummaryTitle( thc::ChessRules &cr, std::string &title_txt, int nbr_half_moves_lag )
 {
     GAME_MOVE *last_move = NULL;
+#if 0
     if( nbr_half_moves_lag )
     {
         thc::ChessPosition end;
@@ -1719,6 +1736,7 @@ GAME_MOVE *GameDocument::GetSummaryTitle( thc::ChessRules &cr, std::string &titl
                 last_move = gv.LocateAtMoveZeroGetLastMove();
         }
     }
+#endif
     return( last_move );
 }
 
@@ -1726,9 +1744,11 @@ GAME_MOVE *GameDocument::GetSummaryTitle( thc::ChessRules &cr, std::string &titl
 GameTree *GameDocument::GetSummary()
 {
     GameTree *found = NULL;
+#if 0
     unsigned long pos = GetInsertionPoint();
     thc::ChessRules cr;
     found = Locate( pos, cr );
+#endif
     return( found );
 }
 
@@ -1736,6 +1756,7 @@ GameTree *GameDocument::GetSummary()
 //  Return ptr to the last move played,  NULL if no last move OR if nbr_half_moves_lag
 GAME_MOVE *GameDocument::GetSummaryMove( thc::ChessRules &cr, std::string &move_txt )
 {
+#if 0
     GameTree *found = NULL;
     unsigned long pos = GetInsertionPoint();
     cr = this->start_position;
@@ -1746,12 +1767,17 @@ GAME_MOVE *GameDocument::GetSummaryMove( thc::ChessRules &cr, std::string &move_
     if( title_txt.substr(0,15) == "Position after " )
         move_txt = title_txt.substr(15);
     return( found && !found->root ? &found->game_move : NULL );
+#endif
+    return 0;
 }
 
 
 bool GameDocument::HaveMoves()
 {
+#if 0
     return( tree_bc.variations.size()>0 && tree_bc.variations[0].size()>0 );
+#endif
+    return false;
 }
 
 bool GameDocument::IsAtEnd()
@@ -1951,4 +1977,3 @@ void GameDocument::Temp()
 }
   */
 
-#endif
