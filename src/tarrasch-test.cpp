@@ -9,6 +9,8 @@
 #include "thc.h"
 #include "GameTree.h"
 
+int game_tree_test();
+
 int core_printf( const char *fmt, ... )
 {
     int ret=0;
@@ -29,6 +31,82 @@ int main()
     // Test internals, for porting to new environments etc
     bool ok = cr.TestInternals();
     printf( "TestInternals() returns %s\n", ok?"Success":"Fail" );
+
+    game_tree_test();
+    return 0;
+}
+
+int game_tree_test()
+{
+    GameTree gt;
+    std::vector<thc::Move> moves;
+    thc::ChessPosition cp;
+
+    // Load from a start position plus a list of moves
+    // gt.Init( cp, moves );
+    gt.Init( moves );
+
+    // Promote a variation at current offset
+    bool ok = gt.Promote();
+    printf( "GameTree::Promote() returns ok=%s\n", ok?"true":"false" );
+
+    // Demote a variation at current offset
+    ok = gt.Demote();
+    printf( "GameTree::Demote() returns ok=%s\n", ok?"true":"false" );
+
+#if 0
+
+    // Delete the rest of variation at current offset
+    ok = gt.DeleteRestOfVariation();
+    printf( "GameTree::DeleteRestOfVariation() returns ok=%s\n", ok?"true":"false" );
+
+    // Delete variation at current offset
+    ok = gt.DeleteVariation();
+    printf( "GameTree::DeleteRestOfVariation() returns ok=%s\n", ok?"true":"false" );
+
+    // Find parent of variation, -1 if none
+    int gt.Parent( int offset );
+
+    // Get MovePlus at given offset
+    MovePlus gt.GetMovePlus() { return GetMovePlus(offset); }
+    MovePlus gt.GetMovePlus( int offset_parm );
+
+    // Promote a variation at given offset
+    //  Return offset of promoted variation
+    int gt.Promote( int offset_parm );
+
+    // Demote a variation at given offset
+    //  Return offset of promoted variation
+    int gt.Demote( int offset_parm  );
+
+    // Delete the rest of a variation
+    void gt.DeleteRestOfVariation( int offset_parm  );
+
+    // Delete variation
+    void gt.DeleteVariation( int offset_parm  );
+
+    // Get main variation
+    std::vector<thc::Move> gt.GetMainVariation(); 
+
+    // Set non zero start position
+    void gt.SetNonZeroStartPosition( int main_line_idx );
+
+    // Is empty except for one comment ?
+    bool gt.IsJustAComment();
+
+    // Is empty ?
+    bool gt.IsEmpty();
+
+    // Insert a move at current location
+    // Return true if move played okay
+    bool gt.InsertMove( GAME_MOVE game_move, bool allow_overwrite );
+
+    // Is the current move the last in the main line (or is the main line empty)
+    bool gt.AtEndOfMainLine();
+
+    // Is the current move in the main line?
+    bool gt.AreWeInMain();
+#endif
     return 0;
 }
 

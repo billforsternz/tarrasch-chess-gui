@@ -93,7 +93,8 @@ public:
     }
 
     // Load from a start position plus a list of moves
-    //void Init( const thc::ChessPosition &start_position, const std::vector<thc::Move> &moves );
+    void Init( const thc::ChessPosition &start_position, const std::vector<thc::Move> &moves );
+
     void Init( const std::vector<thc::Move> &moves );
 
     // Promote a variation at current offset

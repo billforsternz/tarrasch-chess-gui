@@ -242,11 +242,21 @@ bool GameTree::InsertMove( GAME_MOVE game_move, bool allow_overwrite )
     return move_played;
 }
 
-void GameTree::Init( std::vector<thc::Move> const &mv )
+// Load from a start position plus a list of moves
+void GameTree::Init( const thc::ChessPosition &start_position, const std::vector<thc::Move> &moves )
 {
+    press.Init(start_position);
+    bytecode = press.Compress(moves);
 }
 
-bool  GameTree::Promote(void)
+void GameTree::Init( const std::vector<thc::Move> &moves )
+{
+    press.Init();
+    bytecode = press.Compress(moves);
+}
+
+
+bool GameTree::Promote(void)
 {
     return false;
 }

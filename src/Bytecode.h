@@ -81,8 +81,8 @@ public:
         Init(cp);
     }
     bool TryFastMode( Army *side );
-    std::string Compress( std::vector<thc::Move> &moves_in );
-    std::string Compress( thc::ChessPosition &cp, std::vector<thc::Move> &moves_in );
+    std::string Compress( const std::vector<thc::Move> &moves_in );
+    std::string Compress( thc::ChessPosition &cp, const std::vector<thc::Move> &moves_in );
     std::vector<thc::Move> Uncompress( std::string &moves_in );
     std::vector<thc::Move> Uncompress( thc::ChessPosition &cp, std::string &moves_in );
     std::string ToNaturalMoves( const std::string& moves_in, const std::string& result );
@@ -91,7 +91,7 @@ public:
     Bytecode( const Bytecode& copy_from_me ) { cr=copy_from_me.cr; sides[0]=copy_from_me.sides[0]; sides[1]=copy_from_me.sides[1]; }
     Bytecode & operator= (const Bytecode & copy_from_me ) { cr=copy_from_me.cr; sides[0]=copy_from_me.sides[0]; sides[1]=copy_from_me.sides[1]; return *this; }
     void Init() { TryFastMode( &sides[0]); TryFastMode( &sides[1]); }
-    void Init( thc::ChessPosition &cp ) { cr = cp; Init(); }
+    void Init( const thc::ChessPosition &cp ) { cr = cp; Init(); }
 
 public:
     thc::ChessRules cr;

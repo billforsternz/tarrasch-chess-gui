@@ -24,8 +24,6 @@
 //  necessarily be functional for a while.
 //
 
-
-
 #define DIAG_ONLY(x)
 
 // Lookup tables for fast SAN move generation
@@ -307,14 +305,14 @@ bool Bytecode::TryFastMode( Army *side )
     return okay;
 }
 
-std::string Bytecode::Compress( thc::ChessPosition &cp, std::vector<thc::Move> &moves_in )
+std::string Bytecode::Compress( thc::ChessPosition &cp, const std::vector<thc::Move> &moves_in )
 {
     Init( cp );
     return Bytecode::Compress( moves_in );
 }
 
 
-std::string Bytecode::Compress( std::vector<thc::Move> &moves_in )
+std::string Bytecode::Compress( const std::vector<thc::Move> &moves_in )
 {
     std::string ret;
     sides[0].fast_mode=false;
