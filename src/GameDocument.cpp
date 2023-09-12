@@ -90,7 +90,7 @@ void GameDocument::FleshOutMoves()
     LangLine(moves_txt,NULL,LangGet());    // File line is always English, convert to current language
 }
 
-int NagAlternative( const char *s )
+static int NagAlternative( const char *s )
 {
     int nag = 0;
     if( *s == '!' )
@@ -125,7 +125,7 @@ int NagAlternative( const char *s )
 }
 
 
-bool PgnTestResult( const char *s )
+static bool PgnTestResult( const char *s )
 {
     bool is_pgn_result = false;
     if( 0 == strcmp(s,"1-0") )
@@ -169,7 +169,7 @@ bool PgnTestResult( const char *s, PGN_RESULT &pgn_result )
 
 */
 
-std::string RemoveLineEnds( std::string &s )
+static std::string RemoveLineEnds( std::string &s )
 {
     std::string t;
     int len=s.length();

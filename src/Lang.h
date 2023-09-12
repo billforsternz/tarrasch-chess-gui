@@ -7,7 +7,6 @@
 #ifndef LANG_H
 #define LANG_H
 #include <string>
-#include "wx/wx.h"
 
 // Convert line of text, any language to any language
 void LangLine( std::string &s, const char *from, const char *to );
@@ -22,7 +21,7 @@ const char * LangCheckDiffBegin();
 const char * LangCheckDiffEnd();
 
 // Set new language (sets English if string is invalid)
-void LangSet( wxString &txt );
+void LangSet( std::string &txt );
 
 // Get current language
 const char *LangGet();
@@ -37,6 +36,6 @@ void LangToEnglish( std::string &s, const char *language_lookup=0 );
 void LangLine( std::string &s, const char *from, const char *to );
 
 // Check a language specification string, uppercasing it if necessary
-bool LangValidateString( wxString &txt );
+bool LangValidateString( std::string &txt );
 
 #endif // LANG_H

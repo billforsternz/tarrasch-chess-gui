@@ -162,7 +162,8 @@ Repository::Repository( bool use_defaults )
 
         // General
         config->Read("GeneralNotationLanguage",          &general.m_notation_language );
-        LangSet(general.m_notation_language);
+        std::string lang(general.m_notation_language);
+        LangSet(lang);
         ReadBool    ("GeneralNoItalics",                  general.m_no_italics        );
         ReadBool    ("GeneralStraightToGame",             general.m_straight_to_game  );
         ReadBool    ("GeneralStraightToFirstGame",        general.m_straight_to_first_game  );

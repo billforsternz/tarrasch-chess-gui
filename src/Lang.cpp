@@ -42,7 +42,7 @@ const char * LangCheckDiffEnd()
 }
 
 // Set new language (sets English if string is invalid)
-void LangSet( wxString &txt )
+void LangSet( std::string &txt )
 {
     bool okay = LangValidateString(txt);
     memcpy( lookup, okay ? (const char *)txt.c_str() : "KQRNB", 5 );
@@ -143,7 +143,7 @@ void LangLine( std::string &s, const char *from, const char *to )
 
 
 // Check a language specification string, uppercasing it if necessary
-bool LangValidateString( wxString &txt )
+bool LangValidateString( std::string &txt )
 {
     bool okay=false;
     const char *cstr = txt.c_str();

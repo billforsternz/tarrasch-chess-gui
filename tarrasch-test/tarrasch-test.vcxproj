@@ -142,6 +142,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\Bytecode.cpp" />
     <ClCompile Include="..\src\GameTree.cpp" />
+    <ClCompile Include="..\src\Lang.cpp" />
     <ClCompile Include="..\src\tarrasch-test.cpp" />
     <ClCompile Include="..\src\thc.cpp" />
   </ItemGroup>
@@ -149,6 +150,7 @@
     <ClInclude Include="..\src\Bytecode.h" />
     <ClInclude Include="..\src\DebugPrintf.h" />
     <ClInclude Include="..\src\GameTree.h" />
+    <ClInclude Include="..\src\Lang.h" />
     <ClInclude Include="..\src\Portability.h" />
     <ClInclude Include="..\src\thc.h" />
   </ItemGroup>

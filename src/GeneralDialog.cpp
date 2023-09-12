@@ -385,7 +385,7 @@ void GeneralDialog::OnOkClick( wxCommandEvent& WXUNUSED(event) )
     dat.m_highlight_line_colour_r = highlight_line.Red();
     dat.m_highlight_line_colour_g = highlight_line.Green();
     dat.m_highlight_line_colour_b = highlight_line.Blue();
-    wxString txt = this->notation_language_ctrl->GetValue();
+    std::string txt(this->notation_language_ctrl->GetValue());
     if( LangValidateString( txt ) )
     {
         dat.m_notation_language = txt;

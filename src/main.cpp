@@ -2289,7 +2289,8 @@ void ChessFrame::OnOptionsReset(wxCommandEvent &)
     bool before_no_italics = objs.repository->general.m_no_italics;
     delete objs.repository;
     objs.repository = new Repository(true);
-    LangSet( objs.repository->general.m_notation_language );
+    std::string lang(objs.repository->general.m_notation_language.c_str());
+    LangSet(lang);
     if( objs.repository->engine.m_file != old_engine_file )
         ingame = objs.gl->EngineChanged();
     if( objs.repository->book.m_enabled != old_enabled ||
