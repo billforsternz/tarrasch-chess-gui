@@ -8,6 +8,7 @@
 #include <stdarg.h>
 #include "thc.h"
 #include "GameTree.h"
+#include "Bytecode.h"
 
 int game_tree_test();
 
@@ -53,6 +54,26 @@ int game_tree_test()
     // Demote a variation at current offset
     ok = gt.Demote();
     printf( "GameTree::Demote() returns ok=%s\n", ok?"true":"false" );
+
+    // Bytecode type is intended to be increasingly the heart of Tarrasch
+    Bytecode bc;
+    std::string s("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 dxc6");
+    std::string bytecode = bc.PgnParse(s);
+    thc::ChessRules cr;
+    bc.Export(cr);
+    std::string t = cr.ToDebugStr();
+    std::string expected ="\n"
+        "White to move\n"
+        "r.bqkbnr\n"
+        ".pp..ppp\n"
+        "p.p.....\n"
+        "....p...\n"
+        "....P...\n"
+        ".....N..\n"
+        "PPPP.PPP\n"
+        "RNBQK..R\n";
+    ok = (t == expected);
+    printf( "Bytecode test #1: %s\n", ok?"pass":"fail" );
 
 #if 0
 

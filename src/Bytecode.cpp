@@ -546,7 +546,6 @@ thc::Move Bytecode::UncompressMove( char c )
 //  "R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1 w - - 0 1"
 //
 
-
 char Bytecode::CompressSlowMode( thc::Move mv )
 {
     DIAG_ONLY( nbr_compress_slow++ );
@@ -594,8 +593,8 @@ char Bytecode::CompressSlowMode( thc::Move mv )
     // char generated is '\xff' for first move in list, '\fe' for second etc
     // '\x01' is an error
     code = 255-idx;
-    if( code < 1 )
-        code = 1;
+    if( code < 8 )
+        code = 8;
     DIAG_ONLY( nbr_slow_moves++; )
     return static_cast<char>(code);
 }
@@ -934,7 +933,7 @@ thc::Move Bytecode::UncompressSlowMode( char code )
     cr.GenLegalMoveList( moves );
     std::vector<std::string> moves_alpha;
 
-    // Coding scheme relies on 254 valid codes 0x02-0xff and one error code 0x01,
+    // Coding scheme relies on 247 valid codes 0x09-0xff and one error code 0x08,
     size_t len = moves.size();
     for( size_t i=0; i<len; i++ )
     {
@@ -1393,13 +1392,13 @@ namespace thc
 }
 
 // Set flag if piece on 'from' attacks a piece on 'to', along offset_type ray
-#define ATTACKS( flag, from, to, offset_type )                            \
-    RayValues *r1 = &ray_lookup_table[from][to];          \
-    flag = (r1->offset_type != 0);              \
+#define ATTACKS( flag, from, to, offset_type )    \
+    RayValues *r1 = &ray_lookup_table[from][to];  \
+    flag = (r1->offset_type != 0);                \
     for( int sq=to+r1->offset_type; flag && sq!=from; sq+=r1->offset_type )  \
-    {                                                               \
-        if( cr.squares[sq] != ' ' )                                 \
-            flag = false;                                          \
+    {                                             \
+        if( cr.squares[sq] != ' ' )               \
+            flag = false;                         \
     }
 
 // Set flag if a move from src to dst exposes the king on king_sq to attack along offset_type ray
@@ -1411,13 +1410,13 @@ namespace thc
     if( r2->offset_type!=0 && r2->ray_count>1 && src!=r2->ray_square )                 \
     { \
         char queen              = 'Q' + (white_move ? 0 : ' '); \
-        char rook_or_bishop     = (r2->ray_rook_offset ? 'R' :  'B') + (white_move ? 0 : ' ');   \
-        for( int i=0, sq = king_sq+r2->offset_type;  sq!=dst && i<r2->ray_count; i++, sq+=r2->offset_type )        \
+        char rook_or_bishop     = (r2->ray_rook_offset ? 'R' :  'B') + (white_move ? 0 : ' ');          \
+        for( int i=0, sq = king_sq+r2->offset_type;  sq!=dst && i<r2->ray_count; i++, sq+=r2->offset_type )  \
         {                          \
             if( cr.squares[sq] == queen || cr.squares[sq] == rook_or_bishop )                           \
             {                                                                                           \
-                flag = true;   /* if we haven't reached the src square yet that's strange because */   \
-                                /*  the opponent was in check before we made the move              */   \
+                flag = true;   /* if we haven't reached the src square yet that's strange because */    \
+                               /*  the opponent was in check before we made the move              */    \
                 break;                                                                                  \
             }                                                                                           \
             if( sq!=src && cr.squares[sq] != ' ' )  /* check for any interruption */                    \
@@ -2428,38 +2427,6 @@ std::string bc_comment( std::string &bc, size_t offset )
     return ret;
 }
 
-/*
-std::string Bytecode::Compress( const std::vector<thc::Move> &moves_in )
-{
-    std::string ret;
-    sides[0].fast_mode=false;
-    sides[1].fast_mode=false;
-    int len = moves_in.size();
-    for( int i=0; i<len; i++ )
-    {
-        Army *side  = cr.white ? &sides[0] : &sides[1];
-        Army *other = cr.white ? &sides[1] : &sides[0];
-        char c;
-        thc::Move mv = moves_in[i];
-        if( side->fast_mode )
-        {
-            c = CompressFastMode(mv,side,other);
-        }
-        else if( TryFastMode(side) )
-        {
-            c = CompressFastMode(mv,side,other);
-        }
-        else
-        {
-            c = CompressSlowMode(mv);
-            other->fast_mode = false;   // force other side to reset and retry
-        }
-        cr.PlayMove(mv);
-        ret.push_back(c);
-    }
-    return ret;
-}
-  */
 static int NagAlternative( const char *s )
 {
     int nag = 0;
@@ -2543,10 +2510,24 @@ static std::string RemoveLineEnds( std::string &s )
     return t;
 }
 
+void Bytecode::Export( thc::ChessRules &cr2 )
+{
+    cr2 = cr;
+}
 
 // Later - modify to allow insertion of new material within an existing bytecode (for promote comment feature)
-bool Bytecode::PgnParse( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr2, bool use_current_language )
+std::string Bytecode::PgnParse( thc::ChessRules &cr2, const std::string str, bool use_semi, int &nbr_converted, bool use_current_language )
 {
+    Init( cr2 );
+    return PgnParse( str );
+}
+
+// Later - modify to allow insertion of new material within an existing bytecode (for promote comment feature)
+std::string Bytecode::PgnParse( const std::string str )
+{
+    bool use_semi=false; int nbr_converted=0; bool use_current_language=false;
+    sides[0].fast_mode=false;
+    sides[1].fast_mode=false;
     std::string bytecode;
 
     // Main state machine has these states
@@ -2742,7 +2723,7 @@ bool Bytecode::PgnParse( bool use_semi, int &nbr_converted, const std::string st
                 {
 
                     // Push current state onto a stack
-                    stk->cr2    = cr2;
+                    stk->cr2    = cr;
                     stk->state = state;
                     if( stk_idx+1 >= MAX_DEPTH )
                     {
@@ -2783,7 +2764,7 @@ bool Bytecode::PgnParse( bool use_semi, int &nbr_converted, const std::string st
                     {
                         stk_idx--;
                         stk   = &stk_array[stk_idx];
-                        cr2    = stk->cr2;
+                        cr    = stk->cr2;
                         state = stk->state;
                         bytecode.push_back( BC_VARIATION_END );
 
@@ -2885,7 +2866,7 @@ bool Bytecode::PgnParse( bool use_semi, int &nbr_converted, const std::string st
                         thc::Move mv;
                         if( !do_nothing_move )
                         {
-                            okay = mv.NaturalIn(&cr2,temp.c_str());
+                            okay = mv.NaturalIn(&cr,temp.c_str());
                         }
                         else
                         {   // Nasty little hack - support "--" = do nothing, create a move from one empty square
@@ -2893,7 +2874,7 @@ bool Bytecode::PgnParse( bool use_semi, int &nbr_converted, const std::string st
                             okay = false;
                             for( int i=63; i>=0; i-- )  // start search at h1 to avoiding a8a8 which is Invalid move
                             {   // found an empty square yet ?
-                                if( cr2.squares[i]==' ' || cr2.squares[i]=='.' )  // plan to change empty from ' ' to '.', so be prepared
+                                if( cr.squares[i]==' ' || cr.squares[i]=='.' )  // plan to change empty from ' ' to '.', so be prepared
                                 {   // C++ can't cast into the bitfield, so do this, aaaaaaaargh
                                     static thc::Square lookup[] = { thc::a8,thc::b8,thc::c8,thc::d8,thc::e8,thc::f8,thc::g8,thc::h8,
                                                                     thc::a7,thc::b7,thc::c7,thc::d7,thc::e7,thc::f7,thc::g7,thc::h7,
@@ -2906,7 +2887,7 @@ bool Bytecode::PgnParse( bool use_semi, int &nbr_converted, const std::string st
                                                                     };
                                     mv.src =
                                     mv.dst = lookup[i];
-                                    mv.capture = cr2.squares[i];  // empty
+                                    mv.capture = cr.squares[i];  // empty
                                     mv.special = thc::NOT_SPECIAL;
                                     okay = true;
                                     break;
@@ -2923,8 +2904,24 @@ bool Bytecode::PgnParse( bool use_semi, int &nbr_converted, const std::string st
                         {
                             prefix = "";
                             nbr_converted++;
-                            cr2.PushMove(mv);
-                            bc_insert(bytecode,offset,cr2,mv);
+                            Army *side  = cr.white ? &sides[0] : &sides[1];
+                            Army *other = cr.white ? &sides[1] : &sides[0];
+                            char c;
+                            if( side->fast_mode )
+                            {
+                                c = CompressFastMode(mv,side,other);
+                            }
+                            else if( TryFastMode(side) )
+                            {
+                                c = CompressFastMode(mv,side,other);
+                            }
+                            else
+                            {
+                                c = CompressSlowMode(mv);
+                                other->fast_mode = false;   // force other side to reset and retry
+                            }
+                            bytecode.push_back(c);
+                            cr.PushMove(mv);
                             stk->variation_move_count++;
                         }
                     }
@@ -2990,7 +2987,11 @@ bool Bytecode::PgnParse( bool use_semi, int &nbr_converted, const std::string st
             }
         }
     }
-    return okay;
+    if( !okay )
+    {
+        bytecode.clear();
+        bytecode.push_back(BC_ESCAPE);  // two byte error code
+        bytecode.push_back(0xff);
+    }
+    return bytecode;
 }
-
-

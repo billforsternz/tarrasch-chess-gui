@@ -92,8 +92,9 @@ public:
     Bytecode & operator= (const Bytecode & copy_from_me ) { cr=copy_from_me.cr; sides[0]=copy_from_me.sides[0]; sides[1]=copy_from_me.sides[1]; return *this; }
     void Init() { TryFastMode( &sides[0]); TryFastMode( &sides[1]); }
     void Init( const thc::ChessPosition &cp ) { cr = cp; Init(); }
-    bool PgnParse( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, bool use_current_language );
-
+    std::string PgnParse( thc::ChessRules &cr2, const std::string str, bool use_semi, int &nbr_converted, bool use_current_language );
+    std::string PgnParse( const std::string str );
+    void Export( thc::ChessRules &cr2 );
 public:
     thc::ChessRules cr;
     int is_interesting;
