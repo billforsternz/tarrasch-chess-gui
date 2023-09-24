@@ -57,11 +57,11 @@ int game_tree_test()
 
     // Bytecode type is intended to be increasingly the heart of Tarrasch
     Bytecode bc;
-    std::string s("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 dxc6");
-    std::string bytecode = bc.PgnParse(s);
+    std::string txt_in("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 {The exchange variation} ({Alternatively} 4.Ba4 Nf6 5.O-O {is the main line}) 4... dxc6");
+    std::string bytecode = bc.PgnParse(txt_in);
     thc::ChessRules cr;
-    bc.Export(cr);
-    std::string t = cr.ToDebugStr();
+    std::string t = bc.cr.ToDebugStr();
+    printf( "%s", t.c_str() );
     std::string expected ="\n"
         "White to move\n"
         "r.bqkbnr\n"
@@ -75,6 +75,14 @@ int game_tree_test()
     ok = (t == expected);
     printf( "Bytecode test #1: %s\n", ok?"pass":"fail" );
 
+    Bytecode bc2;
+    std::string rough_out = bc2.RoughDump( bytecode );
+    printf( "Rough dump: %s\n", rough_out.c_str() );
+    Bytecode bc3;
+    std::string txt_out = bc3.ToNaturalMoves( bytecode, "*" );
+    printf( "Refined dump: %s\n", txt_out.c_str() );
+    ok = ((txt_in+" *\n") == txt_out);
+    printf( "Bytecode test #2: %s\n", ok?"pass":"fail" );
 #if 0
 
     // Delete the rest of variation at current offset

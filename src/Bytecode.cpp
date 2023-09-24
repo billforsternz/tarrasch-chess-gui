@@ -388,8 +388,117 @@ std::vector<thc::Move> Bytecode::Uncompress( std::string &moves_in )
 #endif
 #define WRAP_COLUMN 79
 
+
+std::string Bytecode::RoughDump( const std::string& moves_in )
+{
+    std::string s;
+    int state = 0;
+    size_t len = moves_in.length();
+    for( size_t i=0; i<len; i++ )
+    {
+        unsigned char code = moves_in[i];
+        bool printed = false;
+        switch( state )
+        {
+            case 4:
+            {
+                state = 0;
+                break;
+            }
+            case 3:
+            {
+                if( code == BC_META_END )
+                {
+                    s += " BC_META_END";
+                    printed = true;
+                    state = 0;
+                }
+                break;
+            }
+            case 2:
+            {
+                printed = true;
+                if( code != BC_COMMENT_END )
+                    s += ((char)code);
+                else
+                {
+                    s += " BC_COMMENT_END\n";
+                    state = 0;
+                }
+                break;
+            }
+            case 1:
+            {
+                if( code == BC_VARIATION_END )
+                {
+                    s += " BC_VARIATION_END\n";
+                    printed = true;
+                    state = 0;
+                }
+                break;
+            }
+            case 0:
+            {
+                if( code == BC_VARIATION_START )
+                {
+                    s += "\nBC_VARIATION_START ";
+                    printed = true;
+                    state = 1;
+                    break;
+                }
+                if( code == BC_COMMENT_START )
+                {
+                    s += "\nBC_COMMENT_START ";
+                    printed = true;
+                    state = 2;
+                    break;
+                }
+                if( code == BC_META_START )
+                {
+                    s += " BC_META_START";
+                    printed = true;
+                    state = 3;
+                    break;
+                }
+                if( code == BC_ESCAPE )
+                {
+                    s += " BC_ESCAPE";
+                    printed = true;
+                    state = 4;
+                    break;
+                }
+                if( code >= 8 )
+                {
+                    const char *p;
+                    switch( code & 0xf0 )
+                    {
+                        default:                    s += " PAWN";     break;      
+                        case CODE_KING:             s += " KING";     break;      
+                        case CODE_KNIGHT:           s += " KNIGHT";   break;  
+                        case CODE_ROOK_LO:
+                        case CODE_ROOK_HI:          s += " ROOK";     break;
+                        case CODE_BISHOP_DARK:
+                        case CODE_BISHOP_LIGHT:     s += " BISHOP";   break;
+                        case CODE_QUEEN_ROOK:
+                        case CODE_QUEEN_BISHOP:     s += " QUEEN";    break;
+                    }                                           
+                    printed = true;
+                }
+            }
+        }
+        if( !printed )
+        {
+            char buf[20];
+            sprintf( buf, " %02x", code );
+            s += buf;
+        }
+    }
+    return s;
+}
+
 std::string Bytecode::ToNaturalMoves( const std::string& moves_in, const std::string& result )
 {
+    int state =0;
     int nbr = 1;
     int col = 0;
     std::string s;
@@ -398,74 +507,131 @@ std::string Bytecode::ToNaturalMoves( const std::string& moves_in, const std::st
     int len = moves_in.size();
     for( int i = 0; i < len; i++)
     {
-        Army* side = cr.white ? &sides[0] : &sides[1];
-        Army* other = cr.white ? &sides[1] : &sides[0];
         char code = moves_in[i];
-        thc::Move mv;
-        bool have_san_move = false;
-        size_t san_move_len = 0;
-        std::string san_move;
-        if( side->fast_mode )
+        switch( state )
         {
-            mv = UncompressFastMode(code, side, other, san_move);
-            san_move_len = san_move.length();
-            have_san_move = san_move_len > 0;
-        }
-        else if(TryFastMode(side))
-        {
-            mv = UncompressFastMode(code, side, other, san_move);
-            san_move_len = san_move.length();
-            have_san_move = san_move_len > 0;
-        }
-        else
-        {
-            mv = UncompressSlowMode(code);
-            other->fast_mode = false;   // force other side to reset and retry
-        }
-        if( cr.white )
-        {
-            char buf[40];
-            _itoa(nbr++, buf, 10);
-            std::string t(buf);
-            t += ".";
-            if( col + t.length() >= WRAP_COLUMN )
+            case 4:
             {
-                s += EOL;
-                col = 0;
+                state = 0;
+                break;
             }
-            if( col != 0 )
+            case 3:
             {
-                s += ' ';
-                col++;
+                if( code == BC_META_END )
+                {
+                    state = 0;
+                }
+                break;
             }
-            s += t;
-            col += t.length();
-        }
+            case 2:
+            {
+                if( code == BC_COMMENT_END )
+                {
+                    state = 0;
+                }
+                break;
+            }
+            case 1:
+            {
+                if( code == BC_VARIATION_END )
+                {
+                    state = 0;
+                }
+                break;
+            }
+            case 0:
+            {
+                Army* side = cr.white ? &sides[0] : &sides[1];
+                Army* other = cr.white ? &sides[1] : &sides[0];
+        
+                if( code == BC_VARIATION_START )
+                {
+                    state = 1;
+                    break;
+                }
+                if( code == BC_COMMENT_START )
+                {
+                    state = 2;
+                    break;
+                }
+                if( code == BC_META_START )
+                {
+                    state = 3;
+                    break;
+                }
+                if( code == BC_ESCAPE )
+                {
+                    state = 4;
+                    break;
+                }
+                thc::Move mv;
+                bool have_san_move = false;
+                size_t san_move_len = 0;
+                std::string san_move;
+                if( side->fast_mode )
+                {
+                    mv = UncompressFastMode(code, side, other, san_move);
+                    san_move_len = san_move.length();
+                    have_san_move = san_move_len > 0;
+                }
+                else if(TryFastMode(side))
+                {
+                    mv = UncompressFastMode(code, side, other, san_move);
+                    san_move_len = san_move.length();
+                    have_san_move = san_move_len > 0;
+                }
+                else
+                {
+                    mv = UncompressSlowMode(code);
+                    other->fast_mode = false;   // force other side to reset and retry
+                }
+                if( cr.white )
+                {
+                    char buf[40];
+                    _itoa(nbr++, buf, 10);
+                    std::string t(buf);
+                    t += ".";
+                    if( col + t.length() >= WRAP_COLUMN )
+                    {
+                        s += EOL;
+                        col = 0;
+                    }
+                    if( col != 0 )
+                    {
+                        s += ' ';
+                        col++;
+                    }
+                    s += t;
+                    col += t.length();
+                }
 
-        std::string t = have_san_move ? san_move : mv.NaturalOut(&cr);
-        cr.PlayMove(mv);
+                std::string t = have_san_move ? san_move : mv.NaturalOut(&cr);
+                cr.PlayMove(mv);
 
-        // Final move of the game gives check, is it mate ?
-        if( have_san_move && i+1==len && san_move[san_move_len-1]=='+' )
-        {
-            thc::TERMINAL score_terminal;
-            cr.Evaluate( score_terminal );
-            if( score_terminal == thc::TERMINAL_WCHECKMATE || score_terminal == thc::TERMINAL_BCHECKMATE )
-                t[san_move_len-1] = '#';
-        }
+                // Final move of the game gives check, is it mate ?
+                if( have_san_move && i+1==len && san_move[san_move_len-1]=='+' )
+                {
+                    thc::TERMINAL score_terminal;
+                    cr.Evaluate( score_terminal );
+                    if( score_terminal == thc::TERMINAL_WCHECKMATE || score_terminal == thc::TERMINAL_BCHECKMATE )
+                        t[san_move_len-1] = '#';
+                }
 
-        if( col + t.length() >= WRAP_COLUMN )
-        {
-            s += EOL;
-            col = 0;
+                if( col + t.length() >= WRAP_COLUMN )
+                {
+                    s += EOL;
+                    col = 0;
+                }
+                if( col != 0 )
+                {
+                    s += ' ';
+                    col++;
+                }
+                s += t;
+                col += t.length();
+                break;
+            }
         }
-        if( col != 0 )
-        {
-            s += ' ';
-            col++;
-        }
-        s += t;
-        col += t.length();
     }
     if( col + result.length() >= WRAP_COLUMN )
     {
@@ -2510,11 +2676,6 @@ static std::string RemoveLineEnds( std::string &s )
     return t;
 }
 
-void Bytecode::Export( thc::ChessRules &cr2 )
-{
-    cr2 = cr;
-}
-
 // Later - modify to allow insertion of new material within an existing bytecode (for promote comment feature)
 std::string Bytecode::PgnParse( thc::ChessRules &cr2, const std::string str, bool use_semi, int &nbr_converted, bool use_current_language )
 {
@@ -2549,9 +2710,10 @@ std::string Bytecode::PgnParse( const std::string str )
     const int MAX_DEPTH=20;
     struct STACK_ELEMENT
     {
-        PSTATE     state;
-        thc::ChessRules cr2;
-        int variation_move_count;
+        PSTATE          state;
+        thc::ChessRules cr;
+        thc::Move       mv;
+        int variation_move_count=0;
     };
     STACK_ELEMENT stk_array[MAX_DEPTH+1];
     int stk_idx = 0;
@@ -2608,7 +2770,7 @@ std::string Bytecode::PgnParse( const std::string str )
                     else
                     {
                         // New policy from V2.03c
-                        //  Only cr2eate '{' comments (most chess software doesn't understand ';' comments)
+                        //  Only create '{' comments (most chess software doesn't understand ';' comments)
                         //  If  "}" appears in comment transform to "|>"    (change *is* restored when reading .pgn)
                         //  If  "|>" appears in comment transform to "| >"  (change is *not* restored when reading .pgn)
                         std::string ReplaceAll( const std::string &in, const std::string &from, const std::string &to );
@@ -2723,7 +2885,7 @@ std::string Bytecode::PgnParse( const std::string str )
                 {
 
                     // Push current state onto a stack
-                    stk->cr2    = cr;
+                    stk->cr    = cr;
                     stk->state = state;
                     if( stk_idx+1 >= MAX_DEPTH )
                     {
@@ -2732,21 +2894,18 @@ std::string Bytecode::PgnParse( const std::string str )
                     }
                     else
                     {
+
+                        // Pop off most recent move
+                        if( stk->variation_move_count > 0 )
+                            cr.PopMove( stk->mv );
                         stk_idx++;
                         stk = &stk_array[stk_idx];
                         stk->variation_move_count = 0;
-                        thc::ChessPosition cp;
-                        std::vector<thc::Move> var;
-                        bc_locate( bytecode, offset, cp, var );
-                        if( var.size() == 0 )
-                        {
-                            Error("Cannot branch from empty variation");
-                            okay = false;
-                        }
-                        else
-                        {
-                            bytecode.push_back( BC_VARIATION_START );
-                        }
+
+                        // Disrupting encoding, force rescan
+                        sides[0].fast_mode=false;
+                        sides[1].fast_mode=false;
+                        bytecode.push_back( BC_VARIATION_START );
                     }
                 }
 
@@ -2764,9 +2923,13 @@ std::string Bytecode::PgnParse( const std::string str )
                     {
                         stk_idx--;
                         stk   = &stk_array[stk_idx];
-                        cr    = stk->cr2;
+                        cr    = stk->cr;
                         state = stk->state;
                         bytecode.push_back( BC_VARIATION_END );
+
+                        // Disrupting encoding, force rescan
+                        sides[0].fast_mode=false;
+                        sides[1].fast_mode=false;
 
                         //
                         // Todo if variation we added was empty, remove it
@@ -2922,6 +3085,7 @@ std::string Bytecode::PgnParse( const std::string str )
                             }
                             bytecode.push_back(c);
                             cr.PushMove(mv);
+                            stk->mv = mv;
                             stk->variation_move_count++;
                         }
                     }
@@ -2986,12 +3150,6 @@ std::string Bytecode::PgnParse( const std::string str )
                 str_idx++;
             }
         }
-    }
-    if( !okay )
-    {
-        bytecode.clear();
-        bytecode.push_back(BC_ESCAPE);  // two byte error code
-        bytecode.push_back(0xff);
     }
     return bytecode;
 }

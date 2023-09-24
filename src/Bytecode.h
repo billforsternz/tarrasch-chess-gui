@@ -86,6 +86,7 @@ public:
     std::vector<thc::Move> Uncompress( std::string &moves_in );
     std::vector<thc::Move> Uncompress( thc::ChessPosition &cp, std::string &moves_in );
     std::string ToNaturalMoves( const std::string& moves_in, const std::string& result );
+    std::string RoughDump( const std::string& moves_in );
     char      CompressMove( thc::Move mv );
     thc::Move UncompressMove( char c );
     Bytecode( const Bytecode& copy_from_me ) { cr=copy_from_me.cr; sides[0]=copy_from_me.sides[0]; sides[1]=copy_from_me.sides[1]; }
@@ -94,7 +95,6 @@ public:
     void Init( const thc::ChessPosition &cp ) { cr = cp; Init(); }
     std::string PgnParse( thc::ChessRules &cr2, const std::string str, bool use_semi, int &nbr_converted, bool use_current_language );
     std::string PgnParse( const std::string str );
-    void Export( thc::ChessRules &cr2 );
 public:
     thc::ChessRules cr;
     int is_interesting;
