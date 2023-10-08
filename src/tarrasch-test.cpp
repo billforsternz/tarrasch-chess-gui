@@ -57,7 +57,7 @@ int game_tree_test()
 
     // Bytecode type is intended to be increasingly the heart of Tarrasch
     Bytecode bc;
-    std::string txt_in("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 {The exchange variation} ({Alternatively} 4.Ba4 Nf6 5.O-O {is the main line}) 4... dxc6");
+    std::string txt_in("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 {The exchange variation}  ( {Alternatively}  4. Ba4 Nf6 5. O-O {is the main line} )  4... dxc6");
     std::string bytecode = bc.PgnParse(txt_in);
     thc::ChessRules cr;
     std::string t = bc.cr.ToDebugStr();

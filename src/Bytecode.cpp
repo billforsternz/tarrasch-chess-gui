@@ -496,18 +496,32 @@ std::string Bytecode::RoughDump( const std::string& moves_in )
     return s;
 }
 
-std::string Bytecode::ToNaturalMoves( const std::string& moves_in, const std::string& result )
+std::string Bytecode::ToNaturalMoves( const std::string& bc_moves_in, const std::string& result )
 {
+    int offset = 0;
+
+    // Allow stacking of the key state variables
+    const int MAX_DEPTH=20;
+    struct STACK_ELEMENT
+    {
+        thc::ChessRules cr;
+        thc::Move       mv;
+        int             move_nbr=1;
+        int variation_move_count=0;
+    };
+    STACK_ELEMENT stk_array[MAX_DEPTH+1];
+    int stk_idx = 0;
+    STACK_ELEMENT *stk = &stk_array[stk_idx];
+    bool need_move_number = true;
     int state =0;
-    int nbr = 1;
     int col = 0;
     std::string s;
     sides[0].fast_mode = false;
     sides[1].fast_mode = false;
-    int len = moves_in.size();
+    int len = bc_moves_in.size();
     for( int i = 0; i < len; i++)
     {
-        char code = moves_in[i];
+        char code = bc_moves_in[i];
         switch( state )
         {
             case 4:
@@ -528,69 +542,110 @@ std::string Bytecode::ToNaturalMoves( const std::string& moves_in, const std::st
                 if( code == BC_COMMENT_END )
                 {
                     state = 0;
+                    s += "} ";
                 }
-                break;
-            }
-            case 1:
-            {
-                if( code == BC_VARIATION_END )
+                else
                 {
-                    state = 0;
+                    s += code;
                 }
                 break;
             }
             case 0:
             {
-                Army* side = cr.white ? &sides[0] : &sides[1];
-                Army* other = cr.white ? &sides[1] : &sides[0];
-        
                 if( code == BC_VARIATION_START )
                 {
-                    state = 1;
+                    s += " (";
+                    need_move_number = true;
+
+                    // Push current state onto a stack
+                    stk->cr    = cr;
+                    if( stk_idx+1 < MAX_DEPTH )
+                    {
+
+                        // Pop off most recent move
+                        int move_nbr = stk->move_nbr;
+                        if( stk->variation_move_count > 0 )
+                        {
+                            if( cr.white )
+                                move_nbr--;
+                            cr.PopMove( stk->mv );
+                        }
+                        stk_idx++;
+                        stk = &stk_array[stk_idx];
+                        stk->variation_move_count = 0;
+                        stk->move_nbr = move_nbr;
+
+                        // Disrupting encoding, force rescan
+                        sides[0].fast_mode=false;
+                        sides[1].fast_mode=false;
+                    }
                     break;
                 }
-                if( code == BC_COMMENT_START )
+                else if( code == BC_VARIATION_END )
+                {
+                    s += ") ";
+                    need_move_number = true;
+
+                    // Pop old state off stack
+                    if( stk_idx > 0 )
+                    {
+                        stk_idx--;
+                        stk = &stk_array[stk_idx];
+                        cr  = stk->cr;
+
+                        // Disrupting encoding, force rescan
+                        sides[0].fast_mode=false;
+                        sides[1].fast_mode=false;
+                    }
+                    break;
+                }
+                else if( code == BC_COMMENT_START )
                 {
                     state = 2;
+                    s += " {";
+                    need_move_number = true;
                     break;
                 }
-                if( code == BC_META_START )
+                else if( code == BC_META_START )
                 {
                     state = 3;
                     break;
                 }
-                if( code == BC_ESCAPE )
+                else if( code == BC_ESCAPE )
                 {
                     state = 4;
                     break;
                 }
-                thc::Move mv;
+
+                // Uncompress move
+                Army* side = cr.white ? &sides[0] : &sides[1];
+                Army* other = cr.white ? &sides[1] : &sides[0];
                 bool have_san_move = false;
                 size_t san_move_len = 0;
                 std::string san_move;
                 if( side->fast_mode )
                 {
-                    mv = UncompressFastMode(code, side, other, san_move);
+                    stk->mv = UncompressFastMode(code, side, other, san_move);
                     san_move_len = san_move.length();
                     have_san_move = san_move_len > 0;
                 }
                 else if(TryFastMode(side))
                 {
-                    mv = UncompressFastMode(code, side, other, san_move);
+                    stk->mv = UncompressFastMode(code, side, other, san_move);
                     san_move_len = san_move.length();
                     have_san_move = san_move_len > 0;
                 }
                 else
                 {
-                    mv = UncompressSlowMode(code);
+                    stk->mv = UncompressSlowMode(code);
                     other->fast_mode = false;   // force other side to reset and retry
                 }
-                if( cr.white )
+                if( cr.white || need_move_number )
                 {
                     char buf[40];
-                    _itoa(nbr++, buf, 10);
+                    _itoa(stk->move_nbr, buf, 10);
                     std::string t(buf);
-                    t += ".";
+                    t += (cr.white ? "." : "...");
                     if( col + t.length() >= WRAP_COLUMN )
                     {
                         s += EOL;
@@ -604,12 +659,17 @@ std::string Bytecode::ToNaturalMoves( const std::string& moves_in, const std::st
                     s += t;
                     col += t.length();
                 }
+                need_move_number = false;
+                if( !cr.white )
+                    stk->move_nbr++;
 
-                std::string t = have_san_move ? san_move : mv.NaturalOut(&cr);
-                cr.PlayMove(mv);
+                std::string t = have_san_move ? san_move : stk->mv.NaturalOut(&cr);
+                cr.PlayMove(stk->mv);
+                stk->variation_move_count++;
 
-                // Final move of the game gives check, is it mate ?
-                if( have_san_move && i+1==len && san_move[san_move_len-1]=='+' )
+                // Check, is it mate ? [we did have a check for last move - but that was much easier if it's
+                //  a bare sequence though, rather than this, the general case]
+                if( have_san_move && san_move[san_move_len-1]=='+' )
                 {
                     thc::TERMINAL score_terminal;
                     cr.Evaluate( score_terminal );
@@ -617,7 +677,7 @@ std::string Bytecode::ToNaturalMoves( const std::string& moves_in, const std::st
                         t[san_move_len-1] = '#';
                 }
 
-                if( col + t.length() >= WRAP_COLUMN )
+                /* if( col + t.length() >= WRAP_COLUMN )
                 {
                     s += EOL;
                     col = 0;
@@ -627,13 +687,14 @@ std::string Bytecode::ToNaturalMoves( const std::string& moves_in, const std::st
                     s += ' ';
                     col++;
                 }
+                col += t.length(); */
+                s += ' ';
                 s += t;
-                col += t.length();
                 break;
             }
         }
     }
-    if( col + result.length() >= WRAP_COLUMN )
+    /* if( col + result.length() >= WRAP_COLUMN )
     {
         s += EOL;
         col = 0;
@@ -642,7 +703,8 @@ std::string Bytecode::ToNaturalMoves( const std::string& moves_in, const std::st
     {
         s += ' ';
         col++;
-    }
+    }   */
+    s += ' ';
     s += result;
     s += EOL;
     return s;
