@@ -85,7 +85,7 @@ public:
     std::string Compress( thc::ChessPosition &cp, const std::vector<thc::Move> &moves_in );
     std::vector<thc::Move> Uncompress( std::string &moves_in );
     std::vector<thc::Move> Uncompress( thc::ChessPosition &cp, std::string &moves_in );
-    std::string ToNaturalMoves( const std::string& moves_in, const std::string& result );
+    std::string PgnOut( const std::string& bc_moves_in, const std::string& result );
     std::string RoughDump( const std::string& moves_in );
     char      CompressMove( thc::Move mv );
     thc::Move UncompressMove( char c );

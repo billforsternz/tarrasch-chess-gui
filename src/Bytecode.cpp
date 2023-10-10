@@ -496,7 +496,7 @@ std::string Bytecode::RoughDump( const std::string& moves_in )
     return s;
 }
 
-std::string Bytecode::ToNaturalMoves( const std::string& bc_moves_in, const std::string& result )
+std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string& result )
 {
     int offset = 0;
 

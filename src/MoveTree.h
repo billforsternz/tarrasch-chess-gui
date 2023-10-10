@@ -32,7 +32,6 @@ struct GAME_MOVE
 
 struct VARIATION_STACK_ELEMENT;
 
-
 class MoveTree
 {
 
@@ -60,7 +59,6 @@ public:
 
     // Delete the rest of a variation
     void DeleteRestOfVariation( MoveTree *child );
-
     // Delete variation
     void DeleteVariation( MoveTree *child );
 
@@ -77,7 +75,6 @@ public:
     bool Seek( const MoveTree *target, thc::ChessRules &cr );
     bool SeekCrawler( int& level, const MoveTree *target, thc::ChessRules &cr, bool done );
 };
-
 
 typedef std::vector<MoveTree> VARIATION;
 

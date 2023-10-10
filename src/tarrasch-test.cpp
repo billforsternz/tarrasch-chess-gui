@@ -79,7 +79,7 @@ int game_tree_test()
     std::string rough_out = bc2.RoughDump( bytecode );
     printf( "Rough dump: %s\n", rough_out.c_str() );
     Bytecode bc3;
-    std::string txt_out = bc3.ToNaturalMoves( bytecode, "*" );
+    std::string txt_out = bc3.PgnOut( bytecode, "*" );
     printf( "Refined dump: %s\n", txt_out.c_str() );
     ok = ((txt_in+" *\n") == txt_out);
     printf( "Bytecode test #2: %s\n", ok?"pass":"fail" );

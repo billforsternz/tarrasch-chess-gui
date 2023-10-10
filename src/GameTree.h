@@ -4,8 +4,8 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
-#ifndef GAME_MOVES_H
-#define GAME_MOVES_H
+#ifndef GAME_TREE_H
+#define GAME_TREE_H
 #include <string>
 #include <vector>
 #include "Bytecode.h"
@@ -156,4 +156,4 @@ public:
 
 };
 
-#endif //GAME_MOVES_H
+#endif //GAME_TREE_H
