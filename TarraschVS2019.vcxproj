@@ -176,7 +176,6 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MaintenanceDialog.cpp" />
     <ClCompile Include="src\MemoryPositionSearch.cpp" />
-    <ClCompile Include="src\MoveTree.cpp" />
     <ClCompile Include="src\PackedGame.cpp" />
     <ClCompile Include="src\PackedGameBinDb.cpp" />
     <ClCompile Include="src\PanelBoard.cpp" />
@@ -258,7 +257,6 @@
     <ClInclude Include="src\MemoryPositionSearch.h" />
     <ClInclude Include="src\MemoryPositionSearchSide.h" />
     <ClInclude Include="src\MonitorUsagePattern.h" />
-    <ClInclude Include="src\MoveTree.h" />
     <ClInclude Include="src\NavigationKey.h" />
     <ClInclude Include="src\Objects.h" />
     <ClInclude Include="src\PackedGame.h" />

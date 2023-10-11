@@ -9,7 +9,6 @@
 #include <string>
 #include <vector>
 #include "Objects.h"
-#include "MoveTree.h"
 #include "GameTree.h"
 #include "thc.h"
 #include "NavigationKey.h"

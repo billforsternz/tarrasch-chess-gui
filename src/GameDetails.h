@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 #include "thc.h"
-#include "MoveTree.h"
+#include "GameTree.h"
 #include "GameView.h"
 #include "GameLifecycle.h"
 

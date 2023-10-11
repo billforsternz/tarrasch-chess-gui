@@ -42,7 +42,7 @@ struct MovePlus
                   human_is_white=false; human_millisecs_time=0; engine_millisecs_time=0; }
 };
 
-#ifndef MOVE_TREE_H
+// MoveTree stuff remaining - BEGIN
 struct GAME_MOVE
 {
     thc::Move move;
@@ -59,7 +59,28 @@ struct GAME_MOVE
     GAME_MOVE() { nag_value1=0; nag_value2=0; flag_ingame=0; white_clock_visible=false; black_clock_visible=false;
                   human_is_white=false; human_millisecs_time=0; engine_millisecs_time=0; }
 };
-#endif
+
+struct VARIATION_STACK_ELEMENT;
+
+class MoveTree
+{
+
+public:
+    MoveTree *Parent( MoveTree *child, thc::ChessRules &cr_out, int &ivar, int &imove ) {return 0;}
+    bool Find( MoveTree *target, std::vector<VARIATION_STACK_ELEMENT> &stack )  {return false;}
+    thc::ChessPosition *root;
+    GAME_MOVE   game_move;
+    std::vector<std::vector<MoveTree> > variations;
+};
+
+typedef std::vector<MoveTree> VARIATION;
+
+struct VARIATION_STACK_ELEMENT
+{
+    VARIATION *v=NULL;
+    int imove=-1;
+};
+// MoveTree stuff remaining - END
 
 
 // GameTree = experimental replacement for MoveTree class

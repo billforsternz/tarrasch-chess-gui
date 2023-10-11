@@ -10,7 +10,6 @@
 #include <string>
 #include "wx/spinctrl.h"
 #include "wx/statline.h"
-#include "MoveTree.h"   // for PGN_RESULT
 #include "SuspendEngine.h"
 #include "DialogDetect.h"
 #include "GameDocument.h"

@@ -12,7 +12,6 @@
 #include <memory>
 #include "thc.h"
 #include "DebugPrintf.h"
-#include "MoveTree.h"
 #include "GameTree.h"
 #include "NavigationKey.h"
 #include "GameView.h"

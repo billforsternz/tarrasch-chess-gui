@@ -9,6 +9,19 @@
 using namespace std;
 using namespace thc;
 
+// Temp stub prior to removing this abomination
+
+MoveTree *MoveTree::Parent( MoveTree *child, thc::ChessRules &cr_out, int &ivar, int &imove )
+{
+    return 0;
+}
+
+bool MoveTree::Find( MoveTree *target, std::vector<VARIATION_STACK_ELEMENT> &stack )
+{
+    return false;
+}
+
+#if 0
 
 // Find a child node's parent
 #if 1
@@ -459,3 +472,4 @@ void MoveTree::DeleteVariation( MoveTree *child )
 }
 
 
+#endif
