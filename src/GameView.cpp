@@ -1709,11 +1709,33 @@ void GameView::Debug()
             case END_OF_GAME:           s="END_OF_GAME";            break;
             case NEWLINE:               s="NEWLINE";                break;
         }
-        cprintf( "%s level=%d, offset1=%d, offset2=%d, str=%s\n", s,
+        for( int j=0; j<gve.level; j++ )
+            cprintf(" ");
+        cprintf( "(%d) %s offset1=%d, offset2=%d, str=%s",
             gve.level,
+            s,
             gve.offset1,
             gve.offset2,
             gve.str.c_str() );
+        MoveTree *node = gve.node;
+        if( node )
+        {
+            GAME_MOVE gm = gve.node->game_move;
+            if( gve.type==MOVE0 || gve.type==MOVE )
+            {
+                std::string mv = gm.move.TerseOut();
+                cprintf( ", mv=%s", mv.c_str() );
+            }
+            if( gve.type == COMMENT )
+            {
+                cprintf( ", comment=%s", gm.comment.c_str() );
+            }
+            if( gve.type == PRE_COMMENT )
+            {
+                cprintf( ", pre=%s", gm.pre_comment.c_str() );
+            }
+        }
+        cprintf("\n");
     }
 }
 
