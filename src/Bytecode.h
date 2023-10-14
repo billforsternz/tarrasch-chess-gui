@@ -120,4 +120,9 @@ size_t bc_skipover( const std::string &bc, size_t offset );
 // Interpret bytecode starting at offset as a comment
 std::string bc_comment( std::string &bc, size_t offset );
 
+// Find the index of a move within its variation
+//  eg 1. e4 e5 2. Nf3 (2. Nc3 Nf6 3.Bc4 Nxe4)  // idx of 2.Nc3 is 0, idx of 3...Nxe4 is 3)
+int bc_variation_idx( const std::string &bc, size_t offset );
+
+
 #endif // BYTECODE_H

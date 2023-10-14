@@ -12,6 +12,8 @@
 #include "Lang.h"
 #include "GameTree.h"  // temp todo
 
+const int MAX_DEPTH = 30;
+
 //
 // In branch "new-heart" I am starting out on an ambitious plan to transplant
 //  a new heart into Tarrasch - based on bytecode. The byte code will be the
@@ -501,7 +503,6 @@ std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string&
     int offset = 0;
 
     // Allow stacking of the key state variables
-    const int MAX_DEPTH=20;
     struct STACK_ELEMENT
     {
         thc::ChessRules cr;
@@ -2655,6 +2656,74 @@ std::string bc_comment( std::string &bc, size_t offset )
     return ret;
 }
 
+// Find the index of a move within its variation
+//  eg 1. e4 e5 2. Nf3 (2. Nc3 Nf6 3.Bc4 Nxe4)  // idx of 2.Nc3 is 0, idx of 3...Nxe4 is 3)
+int bc_variation_idx( const std::string &bc, size_t offset )
+{
+    struct STACK_ELEMENT
+    {
+        int variation_move_count=0;
+    };
+    STACK_ELEMENT stk_array[MAX_DEPTH+1];
+    STACK_ELEMENT *stk = stk_array;
+    int stack[MAX_DEPTH];
+    int stk_idx = 0, in_meta=0, in_comment=0;
+    bool escape = false;
+    size_t len = bc.length();
+    for( int i=0; i<offset && i<len; i++ )
+    {
+        if( escape )
+        {
+            escape = false;
+            continue;
+        }
+        char c = bc[i];
+        if( c == BC_ESCAPE )
+        {
+            escape = true;
+        }
+        else if( c == BC_VARIATION_START )
+        {
+            if( stk_idx < MAX_DEPTH )
+            {
+                stk_idx++;
+                stk = &stk_array[stk_idx];
+                stk->variation_move_count = 0;
+            }
+        }
+        else if( c == BC_VARIATION_END )
+        {
+            if( stk_idx > 0 )
+            {
+                stk_idx--;
+                stk = &stk_array[stk_idx];
+            }
+        }
+        else if( c == BC_COMMENT_START )
+        {
+            in_comment++;
+        }
+        else if( c == BC_COMMENT_END )
+        {
+            in_comment--;
+        }
+        else if( c == BC_META_START )
+        {
+            in_meta++;
+        }
+        else if( c == BC_VARIATION_END )
+        {
+            in_meta--;
+        }
+        else if( c >= BC_MOVE_CODES && in_comment==0 && in_meta==0 )
+        {
+            stk->variation_move_count++;
+        }
+    }
+    return stk->variation_move_count;
+}
+
+
 static int NagAlternative( const char *s )
 {
     int nag = 0;
@@ -2769,7 +2838,6 @@ std::string Bytecode::PgnParse( const std::string str )
     int offset = 0;
 
     // Allow stacking of the key state variables
-    const int MAX_DEPTH=20;
     struct STACK_ELEMENT
     {
         PSTATE          state;

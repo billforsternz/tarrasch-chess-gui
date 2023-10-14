@@ -29,7 +29,6 @@ void GameView::Build_bc( std::string &result_, GameTree &tree_bc_, thc::ChessPos
     offset = 0;
     newline = true;
     this->start_position = start_position_;
-    cr = start_position_;
     cr = start_position;
     tree_bc.Init(cr);
     std::string &bc = tree_bc.bytecode;
@@ -53,7 +52,7 @@ void GameView::Build_bc( std::string &result_, GameTree &tree_bc_, thc::ChessPos
                     gve.offset1 = offset;
                     offset++;   // "\n"
                     gve.offset2 = offset;
-                    gve.node    = NULL;
+                    // gve.node    = NULL;
                     expansion.push_back(gve);
                 }
 
@@ -70,7 +69,7 @@ void GameView::Build_bc( std::string &result_, GameTree &tree_bc_, thc::ChessPos
                 // If not root variation, add ")" or ")\n\t\t...\t" suffix
                 if( level > 0 )
                 {
-                    bool another_variation_follows = (i+1<len && bc[i]==BC_VARIATION_START);
+                    bool another_variation_follows = (i+1<len && bc[i+1]==BC_VARIATION_START);
                     GameViewElement gve;
                     gve.type    = END_OF_VARIATION;
                     gve.level   = level+1;
@@ -129,7 +128,7 @@ void GameView::Build_bc( std::string &result_, GameTree &tree_bc_, thc::ChessPos
             continue;
 
         // Handle moves
-        bool move0 = (i==0 || bc[i-1]==BC_VARIATION_START);
+        bool move0 = (bc_variation_idx(bc,i)==0);
         thc::Move mv = tree_bc.press.UncompressMove(c);
         GameViewElement gve;
         if( move0 )
