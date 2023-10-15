@@ -382,12 +382,16 @@ bool GameLogic::EngineChanged()
 
 void GameLogic::CmdTabNew()
 {
+#define NEW_TAB_LAUNCHES_TESTBED
 #ifdef NEW_TAB_LAUNCHES_TESTBED
+#if 1
+    gd.gv.Debug();
+#else
     void Testbed();
     //Testbed();
     wxCommandEvent *p = new wxCommandEvent(wxEVT_MENU, 5000);
     objs.frame->GetEventHandler()->QueueEvent(p);
-
+#endif
 #else
     Atomic begin;
     GameDocument temp = gd;

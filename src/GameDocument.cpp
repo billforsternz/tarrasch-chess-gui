@@ -253,6 +253,7 @@ std::string GameDocument::Description()
     return label;
 }
 
+// TODO eliminate this in favour of Bytecode PgnParse()
 bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language, int imove )
 {
     std::string bytecode;

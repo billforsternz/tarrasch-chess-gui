@@ -244,6 +244,7 @@
     <ClInclude Include="src\GameState.h" />
     <ClInclude Include="src\GameTree.h" />
     <ClInclude Include="src\GameView.h" />
+    <ClInclude Include="src\GameViewElement.h" />
     <ClInclude Include="src\GeneralDialog.h" />
     <ClInclude Include="src\kibitzq.h" />
     <ClInclude Include="src\Lang.h" />

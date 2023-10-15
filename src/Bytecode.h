@@ -11,6 +11,7 @@
 #include <vector>
 #include <string>
 #include "thc.h"
+#include "GameViewElement.h"
 
 
 // Non move byte code values (0 reserved)
@@ -22,7 +23,6 @@
 #define BC_META_END         6 // meta data end
 #define BC_ESCAPE           7 // escape (single byte meta data)
 #define BC_MOVE_CODES       8 // move codes start here
-
 
 //
 // In branch "new-heart" I am starting out on an ambitious plan to transplant
@@ -75,7 +75,9 @@ public:
     Bytecode( thc::ChessPosition &cp )
     {
         sides[0].white=true;
+        sides[0].fast_mode=false;
         sides[1].white=false;
+        sides[1].fast_mode=false;
         is_interesting = 0;
         nbr_slow_moves = 0;
         Init(cp);
@@ -86,6 +88,7 @@ public:
     std::vector<thc::Move> Uncompress( std::string &moves_in );
     std::vector<thc::Move> Uncompress( thc::ChessPosition &cp, std::string &moves_in );
     std::string PgnOut( const std::string& bc_moves_in, const std::string& result );
+    void GameViewOut( const std::string& bc_moves_in, const std::string& result, std::vector<GameViewElement> &expansion_out );
     std::string RoughDump( const std::string& moves_in );
     char      CompressMove( thc::Move mv );
     thc::Move UncompressMove( char c );
@@ -123,6 +126,5 @@ std::string bc_comment( std::string &bc, size_t offset );
 // Find the index of a move within its variation
 //  eg 1. e4 e5 2. Nf3 (2. Nc3 Nf6 3.Bc4 Nxe4)  // idx of 2.Nc3 is 0, idx of 3...Nxe4 is 3)
 int bc_variation_idx( const std::string &bc, size_t offset );
-
 
 #endif // BYTECODE_H

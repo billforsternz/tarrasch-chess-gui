@@ -17,8 +17,22 @@
 using namespace std;
 using namespace thc;
 
+
 void GameView::Build_bc( std::string &result_, GameTree &tree_bc_, thc::ChessPosition &start_position_ )
 {
+    start_position = start_position_;
+    tree_bc = tree_bc_;
+    result = result_;
+    Bytecode bc(start_position);
+    bc.GameViewOut( tree_bc.bytecode, result, expansion );
+}
+
+// Migrate in features from this over time as needed
+#if 0
+
+void GameView::Build_bc( std::string &result_, GameTree &tree_bc_, thc::ChessPosition &start_position_ )
+{
+
     this->result = result_;
     final_position_node = NULL;
     final_position_txt = "Initial position";
@@ -239,7 +253,10 @@ void GameView::Build_bc( std::string &result_, GameTree &tree_bc_, thc::ChessPos
     // Save a copy of the language as it was when we built the view
     memcpy( language_lookup, LangGet(), sizeof(language_lookup) );
 }
+#endif
 
+// Can we delete this ?
+#if 0
 void GameView::Build( std::string &result_, MoveTree *tree_, thc::ChessPosition &start_position_ )
 {
     this->result = result_;
@@ -559,6 +576,7 @@ void GameView::Crawler( MoveTree *node, bool move0, bool last_move )
     }
     level--;
 }
+#endif
 
 #if 0
     #define gv_printf(...) cprintf ( __VA_ARGS__ ), cprintf("\n")
@@ -609,12 +627,9 @@ void GameView::Display( unsigned long pos )
             GameViewElement &gve = expansion[i];
             switch( gve.type )
             {
-                case PRE_COMMENT:
-                    c_str = gve.node->game_move.pre_comment.c_str();   // fall-thru
                 case COMMENT:
                 {
-                    if( gve.type != PRE_COMMENT )
-                        c_str = gve.node->game_move.comment.c_str();
+                    c_str = gve.str.c_str();
                     ctrl->BeginTextColour(wxColour(0, 0, 255));
                     gv_printf( "ctrl->BeginTextColour(wxColour(0, 0, 255));" );
                     if( i )
@@ -759,8 +774,6 @@ void GameView::ToString( std::string &str, int begin, int end )
         bool make_comment = false;
         switch( gve.type )
         {
-            case PRE_COMMENT:
-                frag = gve.node->game_move.pre_comment;   // fall-thru
             case COMMENT:
             {
 
@@ -768,8 +781,7 @@ void GameView::ToString( std::string &str, int begin, int end )
                 //  Only create '{' comments (most chess software doesn't understand ';' comments)
                 //  If  "}" appears in comment transform to "|>"    (change *is* restored when reading .pgn)
                 //  If  "|>" appears in comment transform to "| >"  (change is *not* restored when reading .pgn)
-                if( gve.type != PRE_COMMENT )
-                    frag = gve.node->game_move.comment;
+                frag = gve.str;
                 std::string groomed = ReplaceAll(frag,"|>", "| >");
                 groomed = ReplaceAll(groomed,"}","|>");
                 if( i == begin )
@@ -951,11 +963,10 @@ bool GameView::ShouldDiagGoHere( int here, int end, int indent )
         GameViewElement &gve = expansion[i];
         switch( gve.type )
         {
-            case PRE_COMMENT:
             case COMMENT:
             {
                 comment_count++;
-                std::string comment_txt = (gve.type==COMMENT ? gve.node->game_move.comment : gve.node->game_move.pre_comment);
+                std::string comment_txt = gve.str;
                 size_t found, found2;
                 found = comment_txt.find("#Diagram");
                 found2 = comment_txt.find("Diagram #");
@@ -1101,6 +1112,9 @@ static std::string removeExtraLineFeeds( const std::string &in )
 
 void GameView::ToPublishString( std::string &str, int &diagram_base, int &mv_base, int &neg_base, int publish_options, int begin, int end )
 {
+
+    // TODO - remove this feature altogether - deprecated, replaced by WingedSpider
+#if 0
     #define DIAGRAM_SPACING 8
     str = "";
     //int col = 0;
@@ -1185,14 +1199,9 @@ void GameView::ToPublishString( std::string &str, int &diagram_base, int &mv_bas
         //bool make_comment = false;
         switch( gve.type )
         {
-            case PRE_COMMENT:
-                frag = gve.node->game_move.pre_comment;   // fall-thru
             case COMMENT:
             {
-                if( gve.type != PRE_COMMENT )
-                {
-                    frag = gve.node->game_move.comment;
-                }
+                frag = gve.str;
                 if( frag.length()>=2 && frag[0]=='.' && frag[1]==' ' )
                     frag = frag.substr(2);
                 if( str.length()>=1 && !after_diagram && str[str.length()-1]!='\n' )
@@ -1544,6 +1553,7 @@ void GameView::ToPublishString( std::string &str, int &diagram_base, int &mv_bas
     diagram_base += diagram_idx;
     diagram_base++;
     str = removeExtraLineFeeds(str);
+#endif
 }
 
 void GameView::ToCommentString( std::string &str )
@@ -1561,12 +1571,9 @@ void GameView::ToCommentString( std::string &str, int begin, int end )
         GameViewElement &gve = expansion[i];
         switch( gve.type )
         {
-            case PRE_COMMENT:
-                frag = gve.node->game_move.pre_comment;   // fall-thru
             case COMMENT:
             {
-                if( gve.type != PRE_COMMENT )
-                    frag = gve.node->game_move.comment;
+                frag = gve.str;
                 if( i == begin )
                     frag = "{" + frag + "} ";
                 else
@@ -1759,22 +1766,6 @@ unsigned long GameView::NavigationKey( unsigned long pos, NAVIGATION_KEY nk )
     return pos;
 }
 
-int GameView::GetInternalOffset( MoveTree *move )
-{
-    int ret=0;
-    int nbr = expansion.size();
-    for( int i=0; i<nbr; i++ )
-    {
-        GameViewElement gve = expansion[i];
-        if( gve.type==MOVE && gve.node==move )
-        {
-            ret = i;
-            break;
-        }
-    }
-    return ret;
-}
-
 int GameView::GetInternalOffsetEndOfVariation( int start )
 {
     int nbr = expansion.size();
@@ -1800,120 +1791,12 @@ int GameView::GetInternalOffsetEndOfVariation( int start )
 
 bool GameView::Locate( unsigned long pos, thc::ChessRules &cr_, string &title, bool &at_move0 )
 {
-    MoveTree *found = NULL;
-    at_move0 = false;
-    locate_at_move0_last_move = NULL;
-    title = "Initial position";
-    bool have_a_move=false;
-    GameViewElement most_recent_move;
-    most_recent_move.type = END_OF_GAME;
-    int nbr = expansion.size();
-    for( int i=0; i<nbr; i++ )
-    {
-        GameViewElement gve = expansion[i];
-        bool in_range   = (gve.offset1<=pos && pos<=gve.offset2);
-        bool its_a_move = (gve.type==MOVE0 || gve.type==MOVE);
-        bool gone_past  = (pos<gve.offset1);
-        bool not_yet    = (pos>gve.offset2);
+    std::vector<thc::Move> var;
 
-        // Special case 1, after result
-        if( in_range && gve.type==END_OF_GAME && final_position_node )
-        {
-            title = final_position_txt;
-            cr_ = final_position;
-            found = final_position_node;
-        }
-
-        // Special case 2, in lone comment
-        else if( in_range && i==0 && nbr==2 && gve.type==COMMENT )
-        {
-            found = gve.node;
-            break;
-        }
-
-        else
-        {
-            if( not_yet && gve.type==MOVE )
-            {
-                most_recent_move = gve;
-                have_a_move = true;
-            }
-            if( gone_past || (in_range&&its_a_move) )
-            {
-                #if 0
-                if( gone_past )
-                    gve = most_recent_move;
-                else
-                    have_a_move = true;
-                if( gve.type==MOVE0 && gve.offset1==pos )
-                    at_move0 = true;
-                #else
-                if( gve.type==MOVE0 && pos<=gve.offset1 )
-                {
-                    at_move0 = true;
-                    have_a_move = true;
-                }
-                else
-                {
-                    if( gone_past )
-                        gve = most_recent_move;
-                    else
-                        have_a_move = true;
-                }
-                #endif
-                if( have_a_move )
-                {
-                    std::vector<VARIATION_STACK_ELEMENT> stack;
-                    bool ok = tree->Find( gve.node, stack );
-                    if( ok )
-                    {
-                        found = gve.node;
-
-                        // Play all the moves up to the move
-                        if( tree->root )
-                            cr_ = *tree->root;
-                        else
-                            cr_.Init();
-                        int nbr_vars = stack.size();
-                        MoveTree *last_move_played=NULL;
-                        for( int j=0; j<nbr_vars; j++ )
-                        {
-                            vector<MoveTree> &variation = *stack[j].v;
-                            int imove = stack[j].imove;
-                            for( int k=0; k<imove; k++ )
-                            {
-                                cr_.PlayMove( variation[k].game_move.move );
-                                last_move_played = &variation[k];
-                            }
-                        }
-
-                        // Next move *is* the move
-                        std::string nmove = found->game_move.move.NaturalOut(&cr_);
-                        LangOut(nmove);
-                        char buf[80];
-                        sprintf( buf, "%s %d%s%s",
-                                at_move0?"Position before":"Position after",
-                                cr_.full_move_count,
-                                cr_.white?".":"...",
-                                nmove.c_str() );
-                        title = buf;
-                        if( !at_move0 )
-                            cr_.PlayMove(found->game_move.move);
-                        else
-                        {
-                            // Point at the move in the tree that lead to the position before the first
-                            //  move of this variation (so we can highlight it, late change just
-                            //  before publishing V3)
-                            if( last_move_played )
-                                locate_at_move0_last_move = &last_move_played->game_move;
-                        }
-                    }
-                }
-                break;
-            }
-        }
-    }
-    return found!=NULL;
+    // TODO properly match this !
+    bc_locate( tree_bc.bytecode, pos, start_position, var );
+    title = "TODO - describe location";
+    return false;
 }
 
 void GameView::Debug()
@@ -1925,7 +1808,6 @@ void GameView::Debug()
         const char *s="???";
         switch( gve.type )
         {
-            case PRE_COMMENT:           s="PRE_COMMENT";            break;
             case COMMENT:               s="COMMENT";                break;
             case MOVE0:                 s="MOVE0";                  break;
             case MOVE:                  s="MOVE";                   break;
@@ -1934,11 +1816,23 @@ void GameView::Debug()
             case END_OF_GAME:           s="END_OF_GAME";            break;
             case NEWLINE:               s="NEWLINE";                break;
         }
-        cprintf( "%s level=%d, offset1=%d, offset2=%d, str=%s\n", s,
+        for( int j=0; j<gve.level; j++ )
+            cprintf(" ");
+        cprintf( "(%d) %s offset1=%d, offset2=%d, str=%s",
             gve.level,
+            s,
             gve.offset1,
             gve.offset2,
             gve.str.c_str() );
+        if( gve.type==MOVE0 || gve.type==MOVE )
+        {
+            cprintf( ", txt=%s, mv=%s", gve.str.c_str(), gve.mv.TerseOut().c_str() );
+        }
+        if( gve.type == COMMENT )
+        {
+            cprintf( ", comment=%s", gve.str.c_str() );
+        }
+        cprintf("\n");
     }
 }
 
@@ -1986,6 +1880,7 @@ bool GameView::IsAtEnd( unsigned long pos )
     return at_end;
 }
 
+#if 0
 unsigned long GameView::GetMoveOffset( MoveTree *node )
 {
     unsigned long pos=0;
@@ -2001,6 +1896,7 @@ unsigned long GameView::GetMoveOffset( MoveTree *node )
     }
     return pos;
 }
+#endif
 
 // TEMP
 int GameView::GetMoveOffset( int bc_offset )
@@ -2053,7 +1949,7 @@ bool GameView::CommentEdit( wxRichTextCtrl *UNUSED(ctrl), std::string &txt_to_in
         GameViewElement &gve = expansion[i];
         if( gve.offset1<=pos && pos<=gve.offset2 )
         {
-            if( gve.type==COMMENT || gve.type==PRE_COMMENT )
+            if( gve.type==COMMENT )
             {
                 unsigned long home = gve.offset1+1; // 1 after leading ' '
                 unsigned long end  = gve.offset2-1; // 1 before trailing ' '
@@ -2069,16 +1965,8 @@ bool GameView::CommentEdit( wxRichTextCtrl *UNUSED(ctrl), std::string &txt_to_in
                             if( pos > home ) // can't backspace from home
                             {
                                 bool empty;
-                                if( gve.type == COMMENT )
-                                {
-                                    gve.node->game_move.comment.erase( offset_within_comment-1, 1 );
-                                    empty = (gve.node->game_move.comment.length()==0);
-                                }
-                                else
-                                {
-                                    gve.node->game_move.pre_comment.erase( offset_within_comment-1, 1 );
-                                    empty = (gve.node->game_move.pre_comment.length()==0);
-                                }
+                                gve.str.erase( offset_within_comment-1, 1 );
+                                empty = (gve.str.length()==0);
                                 if( home == 0 )
                                     pos--;
                                 else
@@ -2094,16 +1982,8 @@ bool GameView::CommentEdit( wxRichTextCtrl *UNUSED(ctrl), std::string &txt_to_in
                             if( pos < end ) // can't delete at end
                             {
                                 bool empty;
-                                if( gve.type == COMMENT )
-                                {
-                                    gve.node->game_move.comment.erase( offset_within_comment, 1 );
-                                    empty = (gve.node->game_move.comment.length()==0);
-                                }
-                                else
-                                {
-                                    gve.node->game_move.pre_comment.erase( offset_within_comment, 1 );
-                                    empty = (gve.node->game_move.pre_comment.length()==0);
-                                }
+                                gve.str.erase( offset_within_comment, 1 );
+                                empty = (gve.str.length()==0);
                                 comment_edited = true;
                                 used = true;
                                 pass_thru_edit = (end-home > 1);     // only pass thru when substantial amount of comment remains
@@ -2132,10 +2012,7 @@ bool GameView::CommentEdit( wxRichTextCtrl *UNUSED(ctrl), std::string &txt_to_in
                         {
                             if( txt_to_insert.length() )
                             {
-                                if( gve.type == COMMENT )
-                                    gve.node->game_move.comment.insert( offset_within_comment, txt_to_insert );
-                                else
-                                    gve.node->game_move.pre_comment.insert( offset_within_comment, txt_to_insert );
+                                gve.str.insert( offset_within_comment, txt_to_insert );
                                 pos += txt_to_insert.length();
                                 comment_edited = true;
                                 pass_thru_edit = ascii;
@@ -2160,9 +2037,9 @@ bool GameView::CommentEdit( wxRichTextCtrl *UNUSED(ctrl), std::string &txt_to_in
                 {
                     comment_edited = true;
                     if( gve.type == MOVE0 )
-                        gve.node->game_move.pre_comment += txt_to_insert;
+                        gve.str += txt_to_insert;
                     else
-                        gve.node->game_move.comment += txt_to_insert;
+                        gve.str += txt_to_insert;
                     if( create_lone_comment )
                     {
                         used = true;
@@ -2176,7 +2053,7 @@ bool GameView::CommentEdit( wxRichTextCtrl *UNUSED(ctrl), std::string &txt_to_in
                     else
                     {
                         used = true;
-                        pos = gve.offset2 + gve.node->game_move.comment.length() + 1;
+                        pos = gve.offset2 + gve.str.length() + 1;
                     }
                     break;
                 }
@@ -2209,7 +2086,7 @@ bool GameView::IsInComment( wxRichTextCtrl *UNUSED(ctrl) )
     for( int i=0; i<nbr; i++ )
     {
         GameViewElement &gve = expansion[i];
-        if( gve.type==COMMENT || gve.type==PRE_COMMENT )
+        if( gve.type==COMMENT )
         {
             if( gve.offset1<pos && pos<gve.offset2 )
             {
@@ -2232,7 +2109,7 @@ bool GameView::IsSelectionInComment( wxRichTextCtrl *ctrl )
         for( int i=0; i<nbr; i++ )
         {
             GameViewElement &gve = expansion[i];
-            if( gve.type==COMMENT || gve.type==PRE_COMMENT )
+            if( gve.type==COMMENT )
             {
                 if( gve.offset1<=pos1 && pos2<gve.offset2 )
                 {
@@ -2260,7 +2137,7 @@ void GameView::DeleteSelection( wxRichTextCtrl *ctrl )
         if( gve.offset1<=pos && pos<=gve.offset2 && gve.offset1<=pos1 && pos2<=gve.offset2 )
         {
             found = i;
-            if( gve.type==COMMENT || gve.type==PRE_COMMENT )
+            if( gve.type==COMMENT )
             {
                 unsigned long home = gve.offset1+1; // 1 after leading ' '
                 unsigned long end  = gve.offset2-1; // 1 before trailing ' '
@@ -2272,16 +2149,8 @@ void GameView::DeleteSelection( wxRichTextCtrl *ctrl )
                     // First delete, possibly the whole comment
                     int offset_within_comment = pos1 - home;
                     bool empty;
-                    if( gve.type == COMMENT )
-                    {
-                        gve.node->game_move.comment.erase( offset_within_comment, pos2-pos1 );
-                        empty = (gve.node->game_move.comment.length()==0);
-                    }
-                    else
-                    {
-                        gve.node->game_move.pre_comment.erase( offset_within_comment, pos2-pos1 );
-                        empty = (gve.node->game_move.pre_comment.length()==0);
-                    }
+                    gve.str.erase( offset_within_comment, pos2-pos1 );
+                    empty = (gve.str.length()==0);
                     if( home == 0 )
                         pos = empty?home:pos1, empty?end+1:pos2;
                     else
@@ -2313,7 +2182,7 @@ void GameView::DeleteSelection( wxRichTextCtrl *ctrl )
                 gve.offset2 += offset_adjust;
                 if( gve.type==COMMENT && gve.offset1==gve.offset2 )
                 {
-                    if( gve.node->game_move.comment.length() == 0 )
+                    if( gve.str.length() == 0 )
                     {
                         vector<GameViewElement>::iterator it = expansion.begin() + i;
                         expansion.erase(it);

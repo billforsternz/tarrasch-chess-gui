@@ -10,6 +10,7 @@
 #include <vector>
 #include "Objects.h"
 #include "GameTree.h"
+#include "GameViewElement.h"
 #include "thc.h"
 #include "NavigationKey.h"
 #include "wx/richtext/richtextctrl.h"
@@ -61,34 +62,6 @@ public:
     void Debug();
 
 private:
-    enum GAME_VIEW_ELEMENT_TYPE
-    {
-        PRE_COMMENT,
-        COMMENT,
-        MOVE0,
-        MOVE,
-        START_OF_VARIATION,
-        END_OF_VARIATION,
-        NEWLINE,
-        END_OF_GAME
-    };
-
-    struct GameViewElement
-    {
-        GAME_VIEW_ELEMENT_TYPE  type;
-        int                     level;
-        unsigned long           offset1;
-        unsigned long           offset2;
-        thc::Move               mv;
-        MoveTree               *node;
-        int                     offset_bc;
-        std::string             str;
-        std::string             str_for_file_move_only;
-        char                    nag_value1;
-        char                    nag_value2;
-        bool                    published;
-    };
-
     std::vector<GameViewElement> expansion;
     int level;                  // track recursion level, 0 = root
     thc::ChessRules cr;         // track chess position for all operations

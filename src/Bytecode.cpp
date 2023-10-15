@@ -711,6 +711,240 @@ std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string&
     return s;
 }
 
+void Bytecode::GameViewOut( const std::string& bc_moves_in, const std::string& result, std::vector<GameViewElement> &expansion )
+{
+    int offset = 0;
+    expansion.clear();
+
+    // Simple state machine to interpret byte code
+    enum
+    {
+        IN_MOVE,
+        IN_ESCAPE,
+        IN_COMMENT,
+        IN_VARIATION,
+        IN_META
+    } state = IN_MOVE;
+
+    // Allow stacking of the key state variables
+    struct STACK_ELEMENT
+    {
+        thc::ChessRules cr;
+        thc::Move       mv;
+        int             move_nbr=1;
+        int variation_move_count=0;
+    };
+    STACK_ELEMENT stk_array[MAX_DEPTH+1];
+    int stk_idx = 0;
+    STACK_ELEMENT *stk = &stk_array[stk_idx];
+    bool need_move_number = true;
+    std::string comment;
+    sides[0].fast_mode = false;
+    sides[1].fast_mode = false;
+    int len = bc_moves_in.size();
+    for( int i = 0; i < len; i++)
+    {
+        char code = bc_moves_in[i];
+        switch( state )
+        {
+            case IN_ESCAPE:
+            {
+                state = IN_MOVE;
+                break;
+            }
+            case IN_META:
+            {
+                if( code == BC_META_END )
+                {
+                    state = IN_MOVE;
+                }
+                break;
+            }
+            case IN_COMMENT:
+            {
+                if( code == BC_COMMENT_END )
+                {
+                    GameViewElement gve;
+                    gve.type    = COMMENT;
+                    gve.level   = stk_idx;
+                    gve.str     = comment;
+                    gve.offset1 = offset;
+                    offset += comment.length();
+                    gve.offset2 = offset;
+                    expansion.push_back(gve);
+                    state = IN_MOVE;
+                }
+                else
+                {
+                    if( code >= ' ' )
+                        comment += code;
+                }
+                break;
+            }
+            case IN_MOVE:
+            {
+                if( code == BC_VARIATION_START )
+                {
+                    need_move_number = true;
+
+                    // Push current state onto a stack
+                    stk->cr    = cr;
+                    if( stk_idx+1 < MAX_DEPTH )
+                    {
+
+                        GameViewElement gve;
+                        gve.type    = NEWLINE;
+                        gve.level   = stk_idx;
+                        gve.offset1 = offset;
+                        offset++;   // "\n"
+                        gve.offset2 = offset;
+                        expansion.push_back(gve);
+                        gve.type    = START_OF_VARIATION;
+                        gve.level   = stk_idx;
+                        gve.offset1 = offset;
+                        offset++;   // "("
+                        gve.offset2 = offset;
+                        expansion.push_back(gve);
+
+                        // Pop off most recent move
+                        int move_nbr = stk->move_nbr;
+                        if( stk->variation_move_count > 0 )
+                        {
+                            if( cr.white )
+                                move_nbr--;
+                            cr.PopMove( stk->mv );
+                        }
+                        stk_idx++;
+                        stk = &stk_array[stk_idx];
+                        stk->variation_move_count = 0;
+                        stk->move_nbr = move_nbr;
+
+                        // Disrupting encoding, force rescan
+                        sides[0].fast_mode=false;
+                        sides[1].fast_mode=false;
+                    }
+                    break;
+                }
+                else if( code == BC_VARIATION_END )
+                {
+                    need_move_number = true;
+
+                    // Pop old state off stack
+                    if( stk_idx > 0 )
+                    {
+                        stk_idx--;
+                        stk = &stk_array[stk_idx];
+                        cr  = stk->cr;
+
+                        // Disrupting encoding, force rescan
+                        sides[0].fast_mode=false;
+                        sides[1].fast_mode=false;
+                    }
+                    break;
+                }
+                else if( code == BC_COMMENT_START )
+                {
+                    state = IN_COMMENT;
+                    need_move_number = true;
+                    comment.clear();
+                    break;
+                }
+                else if( code == BC_META_START )
+                {
+                    state = IN_META;
+                    break;
+                }
+                else if( code == BC_ESCAPE )
+                {
+                    state = IN_ESCAPE;
+                    break;
+                }
+
+                // Uncompress move
+                std::string s;
+                Army* side = cr.white ? &sides[0] : &sides[1];
+                Army* other = cr.white ? &sides[1] : &sides[0];
+                bool have_san_move = false;
+                size_t san_move_len = 0;
+                std::string san_move;
+                if( side->fast_mode )
+                {
+                    stk->mv = UncompressFastMode(code, side, other, san_move);
+                    san_move_len = san_move.length();
+                    have_san_move = san_move_len > 0;
+                }
+                else if(TryFastMode(side))
+                {
+                    stk->mv = UncompressFastMode(code, side, other, san_move);
+                    san_move_len = san_move.length();
+                    have_san_move = san_move_len > 0;
+                }
+                else
+                {
+                    stk->mv = UncompressSlowMode(code);
+                    other->fast_mode = false;   // force other side to reset and retry
+                }
+                if( cr.white || need_move_number )
+                {
+                    char buf[40];
+                    _itoa(stk->move_nbr, buf, 10);
+                    std::string t(buf);
+                    t += (cr.white ? "." : "...");
+                    s += t;
+                }
+                need_move_number = false;
+                if( !cr.white )
+                    stk->move_nbr++;
+
+                std::string t = have_san_move ? san_move : stk->mv.NaturalOut(&cr);
+                cr.PlayMove(stk->mv);
+                stk->variation_move_count++;
+
+                // Check, is it mate ? [we did have a check for last move - but that was much easier if it's
+                //  a bare sequence though, rather than this, the general case]
+                if( have_san_move && san_move[san_move_len-1]=='+' )
+                {
+                    thc::TERMINAL score_terminal;
+                    cr.Evaluate( score_terminal );
+                    if( score_terminal == thc::TERMINAL_WCHECKMATE || score_terminal == thc::TERMINAL_BCHECKMATE )
+                        t[san_move_len-1] = '#';
+                }
+
+                s += ' ';
+                s += t;
+                GameViewElement gve;
+                if( stk->variation_move_count == 0 )
+                {
+                    gve.type = MOVE0;
+                    gve.level   = stk_idx;
+                    gve.mv = stk->mv;
+                    gve.offset1 = offset;
+                    gve.offset2 = offset;
+                    expansion.push_back(gve);
+                }
+                gve.type = MOVE;
+                gve.level   = stk_idx;
+                gve.mv = stk->mv;
+                gve.str  = s;
+                gve.offset1 = offset;
+                offset += s.length();
+                gve.offset2 = offset;
+                expansion.push_back(gve);
+                break;
+            }
+        }
+    }
+    GameViewElement gve;
+    gve.type    = END_OF_GAME;
+    gve.level   = stk_idx;
+    gve.str     = " ";
+    gve.str     += result;
+    gve.offset1 = offset;
+    offset      += gve.str.length();
+    gve.offset2 = offset;
+    expansion.push_back(gve);
+}
+
 char Bytecode::CompressMove( thc::Move mv )
 {
     Army *side  = cr.white ? &sides[0] : &sides[1];
@@ -2666,7 +2900,6 @@ int bc_variation_idx( const std::string &bc, size_t offset )
     };
     STACK_ELEMENT stk_array[MAX_DEPTH+1];
     STACK_ELEMENT *stk = stk_array;
-    int stack[MAX_DEPTH];
     int stk_idx = 0, in_meta=0, in_comment=0;
     bool escape = false;
     size_t len = bc.length();
