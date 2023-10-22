@@ -632,13 +632,15 @@ static void eco_codes_inner()
         ECO_CODE *p = &eco_codes[i];
         thc::ChessRules cr;
         int nbr_converted;
-        bool ok = gd.PgnParse(true,nbr_converted,p->moves_txt,cr,NULL);
-        //cprintf( "ok=%s\n", ok?"true":"false" );
-        if( ok )
-        {
-            p->compressed_moves = std::string( gd.CompressedMoves() );
-            //cprintf( "%s: %d moves\n", eco_codes[i].eco_code, p->compressed_moves.length() );
-        }
+
+        // GameDocument version
+        // bool PgnParse( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language=false, int imove=-1 );
+        // bool ok = gd.PgnParse(true,nbr_converted,p->moves_txt,cr,NULL);
+
+        // Bytecode version
+        // std::string PgnParse( thc::ChessRules &cr2, const std::string str, bool use_semi, int &nbr_converted, bool use_current_language );
+        gd.tree_bc.bytecode = gd.tree_bc.press.PgnParse( cr, p->moves_txt, true, nbr_converted, false );
+        p->compressed_moves = std::string( gd.CompressedMoves() );
     }
     thc::ChessRules cr_temp;
     uint64_t hash_base = cr_temp.Hash64Calculate();

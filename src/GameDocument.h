@@ -163,7 +163,7 @@ public:
     void ToFileTxtGameBody( std::string &str );
     void ToPublishTxtGameBody( std::string &str, int &diagram_idx, int &mv_idx, int &neg_base, int publish_options  );
     bool IsDiff( GameDocument &other );
-    bool PgnParse( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language=false, int imove=-1 );
+    // bool PgnParse( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language=false, int imove=-1 );
     void LoadFromMoveList( std::vector<thc::Move> &moves, int move_idx=0 );
     void SetNonZeroStartPosition( int main_line_idx );
 

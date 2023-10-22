@@ -398,7 +398,14 @@ void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &new_doc )
     }
     thc::ChessRules cr;
     int nbr_converted;
-    gd.PgnParse(true,nbr_converted,moves,cr,NULL);
+
+    // GameDocument version
+    // bool PgnParse( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language=false, int imove=-1 );
+    // gd.PgnParse(true,nbr_converted,moves,cr,NULL);
+
+    // Bytecode version
+    // std::string PgnParse( thc::ChessRules &cr2, const std::string str, bool use_semi, int &nbr_converted, bool use_current_language );
+    gd.tree_bc.bytecode = gd.tree_bc.press.PgnParse( cr, moves, true, nbr_converted, false );
     gd.fposn0 = fposn;
     gd.SetPgnHandle(pgn_handle);
     new_doc = gd;

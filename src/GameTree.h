@@ -64,16 +64,12 @@ class MoveTree
 {
 
 public:
-    MoveTree *Parent( MoveTree *child, thc::ChessRules &cr_out, int &ivar, int &imove ) {return 0;}
-    thc::ChessPosition *root;
-    GAME_MOVE   game_move;
-    std::vector<std::vector<MoveTree> > variations;
+    thc::ChessPosition *root;                               // 37 errors
+    GAME_MOVE   game_move;                                  // 78 errors
+    std::vector<std::vector<MoveTree> > variations;         // 152 errors
 };
 
-typedef std::vector<MoveTree> VARIATION;
-
 // MoveTree stuff remaining - END
-
 
 // GameTree = experimental replacement for MoveTree class
 class GameTree

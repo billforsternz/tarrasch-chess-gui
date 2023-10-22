@@ -254,6 +254,7 @@ std::string GameDocument::Description()
 }
 
 // TODO eliminate this in favour of Bytecode PgnParse()
+#if 0
 bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::string str, thc::ChessRules &cr, VARIATION *pvar, bool use_current_language, int imove )
 {
     std::string bytecode;
@@ -709,7 +710,7 @@ bool GameDocument::PgnParse( bool use_semi, int &nbr_converted, const std::strin
     Rebuild();
     return okay;
 }
-
+#endif
 
 // Load a GameDocument from a list of moves
 void GameDocument::LoadFromMoveList( std::vector<thc::Move> &moves, int move_idx )
@@ -1031,6 +1032,10 @@ void GameDocument::PromoteRestToVariation()
 
 bool GameDocument::PromotePaste( std::string &str )
 {
+// TODO reimplement with new bytecode heart
+#if 1
+    return false;
+#else
     unsigned long pos = GetInsertionPoint();
     std::string title;
     GameTree save=tree_bc;
@@ -1086,6 +1091,7 @@ bool GameDocument::PromotePaste( std::string &str )
         gl->atom.Undo();
     gl->atom.Redisplay( pos );
     return changes;
+#endif
 }
 
 void GameDocument::PromoteToVariation( unsigned long offset_within_comment )
