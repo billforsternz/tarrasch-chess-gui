@@ -4,6 +4,7 @@
  *  License: MIT license. Full text of license is in associated file LICENSE
  *  Bill Forster <billforsternz at gmail dot com>
  ****************************************************************************/
+#define _CRT_SECURE_NO_WARNINGS
 #include <algorithm>
 #include <vector>
 #include <stdlib.h>

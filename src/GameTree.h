@@ -60,14 +60,11 @@ struct GAME_MOVE
                   human_is_white=false; human_millisecs_time=0; engine_millisecs_time=0; }
 };
 
-struct VARIATION_STACK_ELEMENT;
-
 class MoveTree
 {
 
 public:
     MoveTree *Parent( MoveTree *child, thc::ChessRules &cr_out, int &ivar, int &imove ) {return 0;}
-    bool Find( MoveTree *target, std::vector<VARIATION_STACK_ELEMENT> &stack )  {return false;}
     thc::ChessPosition *root;
     GAME_MOVE   game_move;
     std::vector<std::vector<MoveTree> > variations;
@@ -75,11 +72,6 @@ public:
 
 typedef std::vector<MoveTree> VARIATION;
 
-struct VARIATION_STACK_ELEMENT
-{
-    VARIATION *v=NULL;
-    int imove=-1;
-};
 // MoveTree stuff remaining - END
 
 

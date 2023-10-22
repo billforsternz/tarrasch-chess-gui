@@ -909,7 +909,7 @@ void CtrlChessTxt::OnAnnotNag1( int nag1 )
     popup_mt->game_move.nag_value1 = nag1;
     gl->gd.Rebuild();
     gl->atom.Undo();
-    gl->atom.Redisplay( gl->gd.gv.GetMoveOffset(popup_mt) );
+    gl->atom.Redisplay( gl->gd.gv.GetMoveOffset(gl->gd.tree_bc.offset) );
 }
 
 void CtrlChessTxt::OnAnnotNag2( int nag2 )
@@ -918,7 +918,7 @@ void CtrlChessTxt::OnAnnotNag2( int nag2 )
     popup_mt->game_move.nag_value2 = nag2;
     gl->gd.Rebuild();
     gl->atom.Undo();
-    gl->atom.Redisplay( gl->gd.gv.GetMoveOffset(popup_mt) );
+    gl->atom.Redisplay( gl->gd.gv.GetMoveOffset(gl->gd.tree_bc.offset) );
 }
 
 void CtrlChessTxt::OnUndo(wxCommandEvent& WXUNUSED(event))
