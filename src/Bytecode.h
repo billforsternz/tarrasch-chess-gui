@@ -114,6 +114,13 @@ private:
 // Find the position and moves leading to this offset in the bytecode
 void bc_locate( std::string &bc, int offset, thc::ChessPosition &start, std::vector<thc::Move> var );
 
+// Strip out everything except the main line
+void bc_mainline( const std::string &bc_in,  std::string &bc_out );
+
+// Insert into game
+void bc_insert_str( std::string &bc_in, int offset, const std::string str );
+void bc_insert_nag( std::string &bc_in, int offset, int nag );
+
 // Add a move of bytecode
 void bc_insert( std::string &bc, int offset, thc::ChessRules &cr, thc::Move mv );
 

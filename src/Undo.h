@@ -15,7 +15,7 @@
 
 struct RestorePoint
 {
-    MoveTree    tree;                     // the moves
+    GameTree    tree;
     long        previous_posn;
     long        posn;
     std::string result;

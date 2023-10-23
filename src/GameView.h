@@ -24,7 +24,6 @@ public:
     GameLogic *gl;
     bool comment_edited;    // sorry very disgusting
     int  puzzle_nbr;        // see above
-    void Build( std::string &result, MoveTree *tree, thc::ChessPosition &start_position );
     void Build_bc( std::string &result, GameTree &tree_bc, thc::ChessPosition &start_position );
     void ToString( std::string &str );
     void ToString( std::string &str, int begin, int end );
@@ -38,7 +37,6 @@ public:
     void ToPublishDiagram( std::string &str, thc::ChessPosition &cp );
     void ToCommentString( std::string &str );
     void ToCommentString( std::string &str, int begin, int end );
-    int  GetInternalOffset( MoveTree *move );
     int  GetInternalOffset_bc( int view_offset );
     int  GetInternalOffsetEndOfVariation( int start );
 
@@ -57,7 +55,6 @@ public:
     unsigned long FindMove0();
     unsigned long FindEnd();
     bool IsAtEnd( unsigned long pos );
-    unsigned long GetMoveOffset( MoveTree *node );
     int GetMoveOffset( int bc_offset );
     void Debug();
 
@@ -69,13 +66,10 @@ private:
     bool newline;
     bool comment;
     std::string result;
-    void Crawler( MoveTree *node, bool move0, bool last_move );         // called by Build()
-    MoveTree *tree;
     GameTree tree_bc;
     GAME_MOVE *locate_at_move0_last_move;
     thc::ChessRules start_position;
     thc::ChessRules final_position;
-    MoveTree *final_position_node;
     std::string final_position_txt;
     char language_lookup[6];
 };

@@ -38,30 +38,14 @@ public:
     {
         static std::vector<thc::Move> moves;
         moves.clear();
-        std::vector<MoveTree> &variation = tree.variations[0];
-        for( unsigned int i=0; i<variation.size(); i++ )
-        {
-            thc::Move mv = variation[i].game_move.move;
-            moves.push_back(mv);
-        }
+        Bytecode bc;
+        moves = bc.Uncompress( tree_bc.bytecode );
         return moves;
     }
     std::string blob_recalculated_on_request;
     virtual const char *CompressedMoves()
     {
-        blob_recalculated_on_request.clear();
-        CompressMoves press;
-        if( press.cr == start_position )
-        {
-            std::vector<thc::Move> moves;
-            std::vector<MoveTree> &variation = tree.variations[0];
-            for( unsigned int i=0; i<variation.size(); i++ )
-            {
-                thc::Move mv = variation[i].game_move.move;
-                moves.push_back(mv);
-            }
-            blob_recalculated_on_request = press.Compress( moves );
-        }
+        bc_mainline( tree_bc.bytecode, blob_recalculated_on_request );
         return blob_recalculated_on_request.c_str();
     }
     virtual thc::ChessPosition &RefStartPosition() { return start_position; }
@@ -111,12 +95,11 @@ public:
         moves_txt       = src.moves_txt;
         non_zero_start_pos = src.non_zero_start_pos;
 
-        tree            = src.tree;
+        tree_bc         = src.tree_bc;
         gv              = src.gv;
 
         // Need to rebuild using our copy of the tree to avoid
-        //  raw ptrs to the old tree
-        tree.root = &start_position;
+        //  raw ptrs to the old tree (is this still true?)
         Rebuild();
         return( *this );
     }
@@ -262,10 +245,8 @@ public:
     //Data
     GameLogic *gl;
     thc::ChessRules master_position;    // the current position
-    MoveTree  tree;                     // the moves
     GameTree  tree_bc;                  // todo - use the new tree
     GameView  gv;
-    MoveTree  *gbl_plast_move;
 
 // We really should use private more in this project. Excellent refactoring opportunity
 private:

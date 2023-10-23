@@ -89,7 +89,7 @@ bool Undo::IsModified()
 void Undo::Save( long undo_previous_posn, GameDocument &gd, GAME_STATE game_state )
 {
     RestorePoint rp;
-    rp.tree = gd.tree;
+    rp.tree = gd.tree_bc;
     rp.previous_posn = undo_previous_posn;
     rp.posn = gd.GetInsertionPoint();
     rp.result = gd.r.result;
@@ -145,7 +145,7 @@ GAME_STATE Undo::DoUndo( GameDocument &gd, bool takeback )
             rp = *it;
             ret = rp.state;
             gd.r.result = rp.result;
-            gd.tree = rp.tree;
+            gd.tree_bc = rp.tree;
             gl->ponder_move = rp.ponder_move;
             gl->glc.human_is_white = rp.human_is_white;
             gl->glc.result = rp.game_result;
@@ -193,7 +193,7 @@ GAME_STATE Undo::DoRedo( GameDocument &gd )
                     //  the redo tail)
             ret = rp.takeback ? rp.state : MANUAL;
             #endif
-            gd.tree = rp.tree;
+            gd.tree_bc = rp.tree;
             gd.r.result = rp.result;
             gl->ponder_move = rp.ponder_move;
             gl->glc.human_is_white = rp.human_is_white;

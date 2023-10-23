@@ -73,17 +73,16 @@ void CompactGame::Upscale( GameDocument &gd )
     gd.r = r;
     gd.game_id = game_id;
     bool have_start_position = HaveStartPosition();
+    Bytecode bc;
     if( have_start_position )
-        gd.start_position =  GetStartPosition();
-    else
-        gd.start_position.Init();
-    std::vector<MoveTree> &variation = gd.tree.variations[0];
-    variation.clear();
-    MoveTree m;
-    for( size_t i=0; i<moves.size(); i++ )
     {
-        m.game_move.move = moves[i];
-        variation.push_back(m);
+        gd.start_position =  GetStartPosition();
+        gd.tree_bc.bytecode = bc.Compress(gd.start_position,moves);
+    }
+    else
+    {
+        gd.start_position.Init();
+        gd.tree_bc.bytecode = bc.Compress(moves);
     }
     gd.Rebuild();
 }
@@ -94,12 +93,7 @@ void CompactGame::Downscale( GameDocument &gd )
     game_id = gd.game_id;
     transpo_nbr = 0;
     start_position = gd.start_position;
-    std::vector<MoveTree> &variation = gd.tree.variations[0];
-    moves.clear();
-    for( size_t i=0; i<variation.size(); i++ )
-    {
-        thc::Move mv = variation[i].game_move.move;
-        moves.push_back(mv);
-    }
+    Bytecode bc;
+    moves = bc.Uncompress(start_position,gd.tree_bc.bytecode);
 }
 

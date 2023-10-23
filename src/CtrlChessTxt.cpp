@@ -107,8 +107,7 @@ void CtrlChessTxt::OnContext( wxContextMenuEvent &event )
     std::string move_txt;
     GAME_MOVE *gm = gd->GetSummaryMove( cr, move_txt );
     popup_gt = gd->GetSummary();
-    popup_mt = 0;   // TEMP TEMP TEMP
-    if( gm && popup_mt && move_txt.length() )
+    if( gm && move_txt.length() )
     {
         if( context_menu )
         {
@@ -906,7 +905,7 @@ void CtrlChessTxt::OnKeyDown(wxKeyEvent& event)
 void CtrlChessTxt::OnAnnotNag1( int nag1 )
 {
     Atomic atomic;
-    popup_mt->game_move.nag_value1 = nag1;
+    bc_insert_nag( gl->gd.tree_bc.bytecode, gl->gd.tree_bc.offset, nag1 );
     gl->gd.Rebuild();
     gl->atom.Undo();
     gl->atom.Redisplay( gl->gd.gv.GetMoveOffset(gl->gd.tree_bc.offset) );
@@ -915,7 +914,7 @@ void CtrlChessTxt::OnAnnotNag1( int nag1 )
 void CtrlChessTxt::OnAnnotNag2( int nag2 )
 {
     Atomic atomic;
-    popup_mt->game_move.nag_value2 = nag2;
+    bc_insert_nag( gl->gd.tree_bc.bytecode, gl->gd.tree_bc.offset, nag2 );
     gl->gd.Rebuild();
     gl->atom.Undo();
     gl->atom.Redisplay( gl->gd.gv.GetMoveOffset(gl->gd.tree_bc.offset) );

@@ -2848,6 +2848,9 @@ void compress_temp_lookup_gen_function()
     }
 }
 
+// Strip out everything except the main line
+void bc_mainline( const std::string &bc_in,  std::string &bc_out ) {/*todo*/}
+
 // Find the position and moves leading to this offset in the bytecode
 void bc_locate( std::string &bc, int offset, thc::ChessPosition &start, std::vector<thc::Move> var ) {/*todo*/}
 
@@ -2890,6 +2893,13 @@ std::string bc_comment( std::string &bc, size_t offset )
     }
     return ret;
 }
+
+// Insert into game
+void bc_insert_str( std::string &bc_in, int offset, const std::string str ) {/*todo*/}
+
+// Insert NAG
+//  (should remove nag of same type [type = nag1 or nag2])
+void bc_insert_nag( std::string &bc_in, int offset, int nag )               {/*todo*/}
 
 // Find the index of a move within its variation
 //  eg 1. e4 e5 2. Nf3 (2. Nc3 Nf6 3.Bc4 Nxe4)  // idx of 2.Nc3 is 0, idx of 3...Nxe4 is 3)

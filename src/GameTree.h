@@ -60,15 +60,6 @@ struct GAME_MOVE
                   human_is_white=false; human_millisecs_time=0; engine_millisecs_time=0; }
 };
 
-class MoveTree
-{
-
-public:
-    thc::ChessPosition *root;                               // 37 errors
-    GAME_MOVE   game_move;                                  // 78 errors
-    std::vector<std::vector<MoveTree> > variations;         // 152 errors
-};
-
 // MoveTree stuff remaining - END
 
 // GameTree = experimental replacement for MoveTree class
