@@ -1788,7 +1788,6 @@ void GameLogic::SetManual( int offset, bool at_move0, bool from_mouse_move )
             int engine_millisecs_time = game_move.engine_millisecs_time;
             bool black_clock_visible  = game_move.black_clock_visible;
             thc::ChessRules cr;
-            int ivar, imove;
             human_millisecs_time  = human_millisecs_time_start;
             engine_millisecs_time = engine_millisecs_time_start;
             bool using_default_time=true;

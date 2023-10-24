@@ -472,7 +472,6 @@ std::string Bytecode::RoughDump( const std::string& moves_in )
                 }
                 if( code >= 8 )
                 {
-                    const char *p;
                     switch( code & 0xf0 )
                     {
                         default:                    s += " PAWN";     break;      
@@ -501,8 +500,6 @@ std::string Bytecode::RoughDump( const std::string& moves_in )
 
 std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string& result )
 {
-    int offset = 0;
-
     // Allow stacking of the key state variables
     struct STACK_ELEMENT
     {
@@ -2914,7 +2911,7 @@ int bc_variation_idx( const std::string &bc, size_t offset )
     int stk_idx = 0, in_meta=0, in_comment=0;
     bool escape = false;
     size_t len = bc.length();
-    for( int i=0; i<offset && i<len; i++ )
+    for( size_t i=0; i<offset && i<len; i++ )
     {
         if( escape )
         {
@@ -3079,7 +3076,6 @@ std::string Bytecode::PgnParse( const std::string str )
     };
 
     PSTATE       state;         // the current state machine state
-    int offset = 0;
 
     // Allow stacking of the key state variables
     struct STACK_ELEMENT

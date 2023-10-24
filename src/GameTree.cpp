@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include "thc.h"
+#include "DebugPrintf.h"
 #include "Bytecode.h"
 #include "GameTree.h"
 
@@ -117,7 +118,7 @@ void GameTree::DeleteVariation( int offset_parm  )
 
 
 // Find parent of current variation, -1 if none
-int GameTree::Parent( int offset )
+int GameTree::Parent( int offset_parm )
 {
     return -1;
 }
