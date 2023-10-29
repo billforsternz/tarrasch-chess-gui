@@ -62,14 +62,46 @@ struct GAME_MOVE
 
 // MoveTree stuff remaining - END
 
+// For GetSummary(), find the move corresponding to the current GameTree offset and get details as follows;
+struct Summary
+{
+    thc::ChessPosition start_position;      // If we start at this position
+    std::vector<thc::Move> moves;           // and play these moves, we will get to the current position
+    int  move_idx;                          // Idx of found move
+    int  variation_idx;                     // Idx of found move in variation
+    std::string description;                // eg "Position after 23. f4"
+    std::string pre_comment;                // comment before 23. f4 if it is the start of a variation, of follows a variation
+    std::string comment;                    // comment after 23. f4
+    bool empty;                             // There aren't any moves
+    bool at_move0;                          // Before any moves in this variation
+    bool at_end_of_variation;               // After last move in this variation
+    bool in_comment;                        // In a comment
+    int  move_offset;                       // May be different to GameTree offset (eg if in_comment is true)
+    int  depth;                             // depth = 0 is main line
+    int  nag1;                              // annotation type 1 (!, !!, ? etc)
+    int  nag2;                              // annotation type 2 (+-, += etc)
+};
+
+
 // GameTree = experimental replacement for MoveTree class
 class GameTree
 {
 private:
 public:
-    Bytecode press;
     std::string bytecode;
     int offset = 0;
+#if 1
+    thc::ChessPosition start_position;
+    GameTree() {}
+    GameTree( std::string &bytecode_ ) { start_position.Init(); bytecode = bytecode_; }
+    GameTree( thc::ChessPosition &start_position_ ) { start_position_ = start_position; bytecode.clear(); }
+    GameTree( thc::ChessPosition &start_position_, std::string &bytecode_ ) { start_position = start_position_; bytecode = bytecode_; }
+    void Init( thc::ChessPosition &start_position_ ) { start_position_ = start_position; bytecode.clear(); }
+    void Init( thc::ChessPosition &start_position_, std::string &bytecode_ ) { start_position = start_position_; bytecode = bytecode_; }
+    void Init( std::string &bytecode_ ) { start_position.Init(); bytecode = bytecode_; }
+#else
+
+    Bytecode press;
 
     // Initialisation, different flavours
     GameTree() { press.Init(); }
@@ -91,11 +123,16 @@ public:
         press.Init();
         bytecode = bytecode_;
     }
+#endif
 
     // Load from a start position plus a list of moves
     void Init( const thc::ChessPosition &start_position, const std::vector<thc::Move> &moves );
 
+    // Load from the initial position plus a list of moves
     void Init( const std::vector<thc::Move> &moves );
+
+    // Get a summary of the current situation
+    void GetSummary( Summary &summary );
 
     // Promote a variation at current offset
     bool Promote();

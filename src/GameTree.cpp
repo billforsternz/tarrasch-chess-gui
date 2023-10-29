@@ -245,14 +245,18 @@ bool GameTree::InsertMove( GAME_MOVE game_move, bool allow_overwrite )
 }
 
 // Load from a start position plus a list of moves
-void GameTree::Init( const thc::ChessPosition &start_position, const std::vector<thc::Move> &moves )
+void GameTree::Init( const thc::ChessPosition &start_position_, const std::vector<thc::Move> &moves )
 {
+    Bytecode press;
+    start_position = start_position_;
     press.Init(start_position);
     bytecode = press.Compress(moves);
 }
 
 void GameTree::Init( const std::vector<thc::Move> &moves )
 {
+    Bytecode press;
+    start_position.Init();
     press.Init();
     bytecode = press.Compress(moves);
 }
@@ -292,4 +296,153 @@ bool  GameTree::AreWeInMain(void)
 {
     return false;
 }
+
+/*
+// For GetSummary(), find the move corresponding to the current GameTree offset and get details as follows;
+struct Summary
+{
+    thc::ChessPosition start_position;      // If we start at this position
+    std::vector<thc::Move> moves;           // and play these moves, we will get to the current position
+    std::string description;                // eg "Position after 23. f4"
+    std::string pre_comment;                // comment before 23. f4 if it is the start of a variation, of follows a variation
+    std::string comment;                    // comment after 23. f4
+    bool empty;                             // There aren't any moves
+    bool at_move0;                          // Before any moves in this variation
+    bool at_end_of_variation;               // After last move in this variation
+    bool in_comment;                        // In a comment
+    int  move_offset;                       // May be different to GameTree offset (eg if in_comment is true)
+    int  depth;                             // depth = 0 is main line
+    int  variation_offset;                  // If depth > 1 will not necessarily equal moves.length()
+    int  nag1;                              // annotation type 1 (!, !!, ? etc)
+    int  nag2;                              // annotation type 2 (+-, += etc)
+};
+
+  */
+    // Get a summary of the current situation
+void GameTree::GetSummary( Summary &summary )
+{
+#define MAX_DEPTH 30
+    int most_recent_offset[MAX_DEPTH+1];
+    most_recent_offset[0] = 0;
+    bool escape = false;
+    size_t len = bytecode.length();
+    std::string moves;
+    int last_move_offset = 0;
+    struct STACK_ELEMENT
+    {
+        int variation_move_count = 0;
+        int most_recent_offset = 0;
+    };
+    STACK_ELEMENT stk_array[MAX_DEPTH+1];
+    STACK_ELEMENT *stk = stk_array;
+    int stk_idx = 0;
+
+    // Pass 1, calculate where variations start at each depth
+    size_t idx=0;
+    for( idx=0; idx<(size_t)offset && idx<len; idx++ )
+    {
+        if( escape )
+        {
+            escape = false;
+            continue;
+        }
+        char c = bytecode[idx];
+        if( c == BC_ESCAPE )
+        {
+            escape = true;
+        }
+        else if( c == BC_VARIATION_START )
+        {
+            if( stk_idx < MAX_DEPTH )
+            {
+                stk_idx++;
+                stk = &stk_array[stk_idx];
+                stk->most_recent_offset = idx;
+            }
+        }
+        else if( c == BC_VARIATION_END )
+        {
+            if( stk_idx > 0 )
+            {
+                stk_idx--;
+                stk = &stk_array[stk_idx];
+            }
+        }
+    }
+    int target_depth = stk_idx;
+
+    // Pass 2, build sequence of moves from start of game to offset
+    bool collect = true;
+    bool just_finish_variation = false;
+    stk_idx = 0;
+    int in_meta=0, in_comment=0;
+    for( idx=0; idx<len; idx++ )
+    {
+        if( (int)idx == offset )
+        {
+            summary.move_idx        = moves.length();
+            summary.variation_idx   = moves.length() - stk->variation_move_count;
+            summary.at_move0        = (stk->variation_move_count == 0);
+            summary.move_offset     = last_move_offset;
+            just_finish_variation   = true;
+        }
+        if( escape )
+        {
+            escape = false;
+            continue;
+        }
+        char c = bytecode[idx];
+        if( c == BC_ESCAPE )
+        {
+            escape = true;
+        }
+        else if( c == BC_VARIATION_START )
+        {
+            if( stk_idx < MAX_DEPTH )
+            {
+                stk_idx++;
+                stk = &stk_array[stk_idx];
+                stk->variation_move_count = 0;
+                collect = (stk_idx<=target_depth && ((int)idx)>=stk->most_recent_offset );
+            }
+        }
+        else if( c == BC_VARIATION_END )
+        {
+            if( stk_idx > 0 )
+            {
+                stk_idx--;
+                stk = &stk_array[stk_idx];
+                collect = (stk_idx<=target_depth && ((int)idx)>=stk->most_recent_offset );
+                if( just_finish_variation && stk_idx<target_depth )
+                    break;
+            }
+        }
+        else if( c == BC_COMMENT_START )
+        {
+            in_comment++;
+        }
+        else if( c == BC_COMMENT_END )
+        {
+            in_comment--;
+        }
+        else if( c == BC_META_START )
+        {
+            in_meta++;
+        }
+        else if( c == BC_VARIATION_END )
+        {
+            in_meta--;
+        }
+        else if( c>BC_MOVE_CODES && in_comment==0 && in_meta==0 && collect )
+        {
+            moves += c;
+            last_move_offset = idx;
+            stk->variation_move_count++;
+        }
+    }
+    Bytecode bc;
+    summary.start_position = start_position;
+    summary.moves = bc.Uncompress( start_position, moves );
+}
+
 

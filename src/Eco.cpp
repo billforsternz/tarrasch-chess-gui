@@ -639,7 +639,8 @@ static void eco_codes_inner()
 
         // Bytecode version
         // std::string PgnParse( thc::ChessRules &cr2, const std::string str, bool use_semi, int &nbr_converted, bool use_current_language );
-        gd.tree_bc.bytecode = gd.tree_bc.press.PgnParse( cr, p->moves_txt, true, nbr_converted, false );
+        Bytecode press;
+        gd.tree_bc.bytecode = press.PgnParse( cr, p->moves_txt, true, nbr_converted, false );
         p->compressed_moves = std::string( gd.CompressedMoves() );
     }
     thc::ChessRules cr_temp;
