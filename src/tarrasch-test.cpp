@@ -8,10 +8,12 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "thc.h"
+#include "util.h"
 #include "GameTree.h"
 #include "Bytecode.h"
 
-int game_tree_test();
+int  game_tree_test();
+std::string summary_test( const std::string &bc, size_t offset );
 
 int core_printf( const char *fmt, ... )
 {
@@ -84,6 +86,10 @@ int game_tree_test()
     printf( "Refined dump: %s\n", txt_out.c_str() );
     ok = ((txt_in+" *\n") == txt_out);
     printf( "Bytecode test #2: %s\n", ok?"pass":"fail" );
+    Bytecode bc4;
+    gt.bytecode = bytecode;
+    std::string summary_output = bc4.RoughDump( gt.bytecode, summary_test );
+    printf( "GetSummary test: %s\n", summary_output.c_str() );
 #if 0
 
     // Delete the rest of variation at current offset
@@ -209,4 +215,54 @@ void func()
     // Is the current move in the main line?
     bool AreWeInMain();
 #endif
+}
+
+std::string summary_test( const std::string &bc, size_t offset )
+{
+    std::string s;
+    GameTree gt;
+    gt.bytecode = bc;
+    gt.offset   = offset;
+    Summary summary;
+    gt.GetSummary(summary);
+    thc::ChessRules cr = summary.start_position;
+    s += "[";
+    size_t i=0;
+    if( i == (summary.move_idx - summary.variation_idx) )
+        s +=  "variation_start_ptr-> ";
+    if( i == summary.move_idx )
+        s +=  "ptr-> ";
+    for( i=0; i<summary.moves.size(); i++ )
+    {
+        thc::Move mv = summary.moves[i];
+        if( cr.white || i==0 )
+        {
+            s += util::sprintf( "%d", cr.full_move_count );
+            if( cr.white )
+                s += ".";
+            else
+                s += "...";
+        }
+        s += util::sprintf( "%s", mv.NaturalOut(&cr).c_str() );
+        if( i+1 == (summary.move_idx - summary.variation_idx) )
+            s += " variation_ptr->";
+        if( i+1 == summary.move_idx )
+            s += " ptr->";
+        if( i+1 < summary.moves.size() )
+            s += " ";
+        cr.PlayMove(mv);
+    }
+    s += "]\n";
+    s += util::sprintf( "description: %s\n",         summary.description.c_str()    );
+    s += util::sprintf( "pre_comment: %s\n",         summary.pre_comment.c_str()    );
+    s += util::sprintf( "comment:     %s\n",         summary.comment.c_str()        );
+    s += util::sprintf( "empty:       %s\n",         summary.empty ? "true" : "false" );
+    s += util::sprintf( "at_move0:    %s\n",         summary.at_move0 ? "true" : "false" );
+    s += util::sprintf( "at_end_of_variation: %s\n", summary.at_end_of_variation ? "true" : "false" );
+    s += util::sprintf( "in_comment:  %s\n",         summary.in_comment ? "true" : "false" );
+    s += util::sprintf( "move_offset: %d\n",         summary.move_offset            );
+    s += util::sprintf( "depth:       %d\n",         summary.depth                  );
+    s += util::sprintf( "nag1:        %d\n",         summary.nag1                   );
+    s += util::sprintf( "nag2:        %d\n",         summary.nag2                   );
+    return s;
 }

@@ -391,7 +391,7 @@ void GameTree::GetSummary( Summary &summary )
             escape = false;
             continue;
         }
-        char c = bytecode[idx];
+        uint8_t c = (uint8_t)bytecode[idx];
         if( c == BC_ESCAPE )
         {
             escape = true;

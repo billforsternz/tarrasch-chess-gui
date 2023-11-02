@@ -391,8 +391,7 @@ std::vector<thc::Move> Bytecode::Uncompress( std::string &moves_in )
 #endif
 #define WRAP_COLUMN 79
 
-
-std::string Bytecode::RoughDump( const std::string& moves_in )
+std::string Bytecode::RoughDump( const std::string& moves_in, std::string (*func)(const std::string& bc, size_t offset) )
 {
     std::string s;
     int state = 0;
@@ -493,6 +492,11 @@ std::string Bytecode::RoughDump( const std::string& moves_in )
             char buf[20];
             sprintf( buf, " %02x", code );
             s += buf;
+        }
+        if( func )
+        {
+            s += "\n";
+            s += func(moves_in,i);
         }
     }
     return s;

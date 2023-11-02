@@ -67,21 +67,20 @@ struct Summary
 {
     thc::ChessPosition start_position;      // If we start at this position
     std::vector<thc::Move> moves;           // and play these moves, we will get to the current position
-    int  move_idx;                          // Idx of found move
-    int  variation_idx;                     // Idx of found move in variation
+    int  move_idx=0;                        // Idx of found move
+    int  variation_idx=0;                   // Idx of found move in variation
     std::string description;                // eg "Position after 23. f4"
     std::string pre_comment;                // comment before 23. f4 if it is the start of a variation, of follows a variation
     std::string comment;                    // comment after 23. f4
-    bool empty;                             // There aren't any moves
-    bool at_move0;                          // Before any moves in this variation
-    bool at_end_of_variation;               // After last move in this variation
-    bool in_comment;                        // In a comment
-    int  move_offset;                       // May be different to GameTree offset (eg if in_comment is true)
-    int  depth;                             // depth = 0 is main line
-    int  nag1;                              // annotation type 1 (!, !!, ? etc)
-    int  nag2;                              // annotation type 2 (+-, += etc)
+    bool empty=false;                       // There aren't any moves
+    bool at_move0=false;                    // Before any moves in this variation
+    bool at_end_of_variation=false;         // After last move in this variation
+    bool in_comment=false;                  // In a comment
+    int  move_offset=0;                     // May be different to GameTree offset (eg if in_comment is true)
+    int  depth=0;                           // depth = 0 is main line
+    int  nag1=0;                            // annotation type 1 (!, !!, ? etc)
+    int  nag2=0;                            // annotation type 2 (+-, += etc)
 };
-
 
 // GameTree = experimental replacement for MoveTree class
 class GameTree
