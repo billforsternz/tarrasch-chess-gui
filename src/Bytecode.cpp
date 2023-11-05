@@ -41,6 +41,30 @@ struct RayValues
 };
 static RayValues ray_lookup_table[64][64];
 
+
+const char *codepoint_type_array[] =
+{
+    "ct_move",
+    "ct_variation_start",        
+    "ct_variation_end",        
+    "ct_comment_start",        
+    "ct_comment_end",        
+    "ct_meta_start",        
+    "ct_meta_end",        
+    "ct_escape",
+    "ct_comment_txt",
+    "ct_meta_data",
+    "ct_escape_code"
+};
+
+const char *codepoint_type_txt( codepoint_type ct )
+{
+    if( (size_t)ct < sizeof(codepoint_type_array)/sizeof(codepoint_type_array[0]) )
+        return codepoint_type_array[ct];
+    else
+        return "??";
+}
+
 static unsigned long nbr_compress_fast;
 static unsigned long nbr_compress_slow;
 static unsigned long nbr_uncompress_fast;
@@ -391,116 +415,202 @@ std::vector<thc::Move> Bytecode::Uncompress( std::string &moves_in )
 #endif
 #define WRAP_COLUMN 79
 
-std::string Bytecode::RoughDump( const std::string& moves_in, std::string (*func)(const std::string& bc, size_t offset) )
+void Bytecode::IterateOver( const std::string& bc, void *utility, void (*callback_func)(void *utility, const std::string& bc, size_t offset, Codepoint &cpt) )
 {
-    std::string s;
-    int state = 0;
-    size_t len = moves_in.length();
-    for( size_t i=0; i<len; i++ )
+    enum
     {
-        unsigned char code = moves_in[i];
-        bool printed = false;
+        IN_MOVES,
+        IN_COMMENT,
+        IN_META,
+        AFTER_ESCAPE
+    } state = IN_MOVES;
+
+    // Allow stacking of the key state variables
+    struct STACK_ELEMENT
+    {
+        thc::ChessRules cr;
+        thc::Move       mv;
+        int             variation_move_count=0;
+    };
+    STACK_ELEMENT stk_array[MAX_DEPTH+1];
+    int stk_idx = 0;
+    STACK_ELEMENT *stk = &stk_array[stk_idx];
+    std::string s;
+    sides[0].fast_mode = false;
+    sides[1].fast_mode = false;
+    size_t len = bc.size();
+    Codepoint cpt;
+    cpt.move_nbr_needed = true;
+    for( size_t i=0; i<len; i++)
+    {
+        char code = bc[i];
+        cpt.raw     = code;
+        cpt.is_move = false;
+        cpt.depth   = stk_idx;
+        cpt.cr      = &cr;
         switch( state )
         {
-            case 4:
+            case AFTER_ESCAPE:
             {
-                state = 0;
+
+                cpt.ct = ct_escape_code;
+                state = IN_MOVES;
                 break;
             }
-            case 3:
+            case IN_META:
             {
-                if( code == BC_META_END )
-                {
-                    s += " BC_META_END";
-                    printed = true;
-                    state = 0;
-                }
-                break;
-            }
-            case 2:
-            {
-                printed = true;
-                if( code != BC_COMMENT_END )
-                    s += ((char)code);
+                if( code != BC_META_END )
+                    cpt.ct = ct_meta_data;
                 else
                 {
-                    s += " BC_COMMENT_END\n";
-                    state = 0;
+                    cpt.ct = ct_meta_end;
+                    state = IN_MOVES;
                 }
                 break;
             }
-            case 1:
+            case IN_COMMENT:
             {
-                if( code == BC_VARIATION_END )
+                if( code != BC_COMMENT_END )
                 {
-                    s += " BC_VARIATION_END\n";
-                    printed = true;
-                    state = 0;
+                    cpt.ct = ct_comment_txt;
+                    cpt.comment_offset++;
+                    cpt.comment_txt += code;
+                }
+                else
+                {
+                    cpt.ct = ct_comment_end;
+                    state = IN_MOVES;
                 }
                 break;
             }
-            case 0:
+            case IN_MOVES:
             {
+                cpt.ct = ct_move;
                 if( code == BC_VARIATION_START )
                 {
-                    s += "\nBC_VARIATION_START ";
-                    printed = true;
-                    state = 1;
-                    break;
-                }
-                if( code == BC_COMMENT_START )
-                {
-                    s += "\nBC_COMMENT_START ";
-                    printed = true;
-                    state = 2;
-                    break;
-                }
-                if( code == BC_META_START )
-                {
-                    s += " BC_META_START";
-                    printed = true;
-                    state = 3;
-                    break;
-                }
-                if( code == BC_ESCAPE )
-                {
-                    s += " BC_ESCAPE";
-                    printed = true;
-                    state = 4;
-                    break;
-                }
-                if( code >= 8 )
-                {
-                    switch( code & 0xf0 )
+
+                    // Push current state onto a stack
+                    cpt.ct  = ct_variation_start;
+                    cpt.move_nbr_needed = true;
+                    stk->cr = cr;
+                    if( stk_idx+1 < MAX_DEPTH )
                     {
-                        default:                    s += " PAWN";     break;      
-                        case CODE_KING:             s += " KING";     break;      
-                        case CODE_KNIGHT:           s += " KNIGHT";   break;  
-                        case CODE_ROOK_LO:
-                        case CODE_ROOK_HI:          s += " ROOK";     break;
-                        case CODE_BISHOP_DARK:
-                        case CODE_BISHOP_LIGHT:     s += " BISHOP";   break;
-                        case CODE_QUEEN_ROOK:
-                        case CODE_QUEEN_BISHOP:     s += " QUEEN";    break;
-                    }                                           
-                    printed = true;
+
+                        // Pop off most recent move
+                        if( stk->variation_move_count > 0 )
+                        {
+                            if( cr.white )
+                            {
+                                cr.full_move_count--;   // PushMove()/PopMove()
+                                                        //  don't touch move counts
+                                                        //  we have to since we are
+                                                        //  doing PopMove() without
+                                                        //  PushMove()
+                            }
+                            cr.PopMove( stk->mv );
+                        }
+                        stk_idx++;
+                        stk = &stk_array[stk_idx];
+                        stk->variation_move_count = 0;
+
+                        // Disrupting encoding, force rescan
+                        sides[0].fast_mode=false;
+                        sides[1].fast_mode=false;
+                    }
+                    break;
                 }
+                else if( code == BC_VARIATION_END )
+                {
+                    cpt.ct  = ct_variation_end;
+                    cpt.move_nbr_needed = true;
+
+                    // Pop old state off stack
+                    if( stk_idx > 0 )
+                    {
+                        stk_idx--;
+                        stk = &stk_array[stk_idx];
+                        cr  = stk->cr;
+
+                        // Disrupting encoding, force rescan
+                        sides[0].fast_mode=false;
+                        sides[1].fast_mode=false;
+                    }
+                    break;
+                }
+                else if( code == BC_COMMENT_START )
+                {
+                    state = IN_COMMENT;
+                    cpt.ct  = ct_comment_start;
+                    cpt.comment_offset = 0;
+                    cpt.comment_txt.clear();
+                    cpt.move_nbr_needed = true;
+                    break;
+                }
+                else if( code == BC_META_START )
+                {
+                    state = IN_META;
+                    cpt.ct  = ct_meta_start;
+                    break;
+                }
+                else if( code == BC_ESCAPE )
+                {
+                    state = AFTER_ESCAPE;
+                    cpt.ct = ct_escape;
+                    break;
+                }
+
+                // Uncompress move
+                Army* side = cr.white ? &sides[0] : &sides[1];
+                Army* other = cr.white ? &sides[1] : &sides[0];
+                bool have_san_move = false;
+                size_t san_move_len = 0;
+                std::string san_move;
+                if( side->fast_mode )
+                {
+                    stk->mv = UncompressFastMode(code, side, other, san_move);
+                    san_move_len = san_move.length();
+                    have_san_move = san_move_len > 0;
+                }
+                else if(TryFastMode(side))
+                {
+                    stk->mv = UncompressFastMode(code, side, other, san_move);
+                    san_move_len = san_move.length();
+                    have_san_move = san_move_len > 0;
+                }
+                else
+                {
+                    stk->mv = UncompressSlowMode(code);
+                    other->fast_mode = false;   // force other side to reset and retry
+                }
+
+                cpt.san_move = have_san_move ? san_move : stk->mv.NaturalOut(&cr);
+
+                // Check, is it mate ? (UncompressFastMode() leaves this to the caller
+                //  in order to be as fast as possible)
+                if( have_san_move && san_move[san_move_len-1]=='+' )
+                {
+                    cr.PushMove(stk->mv);   // need to temporarily play the move
+                    thc::TERMINAL score_terminal;
+                    cr.Evaluate( score_terminal );
+                    if( score_terminal == thc::TERMINAL_WCHECKMATE || score_terminal == thc::TERMINAL_BCHECKMATE )
+                        cpt.san_move[san_move_len-1] = '#';
+                    cr.PopMove(stk->mv);
+                }
+                cpt.is_move = true;
+                callback_func( utility, bc, i, cpt );   // callback before playing the move
+                cpt.move_nbr_needed = false;            // false during uninterrupted moves
+                cr.PlayMove(stk->mv);
+                stk->variation_move_count++;
+                break;
             }
         }
-        if( !printed )
-        {
-            char buf[20];
-            sprintf( buf, " %02x", code );
-            s += buf;
-        }
-        if( func )
-        {
-            s += "\n";
-            s += func(moves_in,i);
-        }
+
+        // If it was a move, callback has already been called
+        if( !cpt.is_move )
+            callback_func( utility, bc, i, cpt );
     }
-    return s;
 }
+
 
 std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string& result )
 {

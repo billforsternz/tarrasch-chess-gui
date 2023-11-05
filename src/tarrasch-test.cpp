@@ -7,13 +7,16 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdarg.h>
+#include <iostream>
+#include <fstream>
 #include "thc.h"
 #include "util.h"
 #include "GameTree.h"
 #include "Bytecode.h"
 
 int  game_tree_test();
-std::string summary_test( const std::string &bc, size_t offset );
+void summary_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt);
+void simple_expansion_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt);
 
 int core_printf( const char *fmt, ... )
 {
@@ -60,7 +63,7 @@ int game_tree_test()
 
     // Bytecode type is intended to be increasingly the heart of Tarrasch
     Bytecode bc;
-    std::string txt_in("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 {The exchange variation}  ( {Alternatively}  4. Ba4 Nf6 5. O-O {is the main line} )  4... dxc6");
+    std::string txt_in("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 {The exchange variation} ( {Alternatively} 4. Ba4 Nf6 5. O-O {is the main line} ) 4... dxc6");
     std::string bytecode = bc.PgnParse(txt_in);
     thc::ChessRules cr;
     std::string t = bc.cr.ToDebugStr();
@@ -78,8 +81,9 @@ int game_tree_test()
     ok = (t == expected);
     printf( "Bytecode test #1: %s\n", ok?"pass":"fail" );
 
-    Bytecode bc2;
-    std::string rough_out = bc2.RoughDump( bytecode );
+    std::string rough_out;
+    Bytecode bc2;   // bc.Init() doesn't work, need a new Bytecode, fix this!
+    bc2.IterateOver( bytecode, &rough_out, simple_expansion_test );
     printf( "Rough dump: %s\n", rough_out.c_str() );
     Bytecode bc3;
     std::string txt_out = bc3.PgnOut( bytecode, "*" );
@@ -88,8 +92,11 @@ int game_tree_test()
     printf( "Bytecode test #2: %s\n", ok?"pass":"fail" );
     Bytecode bc4;
     gt.bytecode = bytecode;
-    std::string summary_output = bc4.RoughDump( gt.bytecode, summary_test );
-    printf( "GetSummary test: %s\n", summary_output.c_str() );
+    std::string summary_output;
+    bc4.IterateOver( gt.bytecode, &summary_output, summary_test );
+    std::ofstream fout("test_out.txt");
+    printf( "GetSummary test output in test_out.txt\n" );
+    fout.write( summary_output.c_str(), summary_output.length() );
 #if 0
 
     // Delete the rest of variation at current offset
@@ -217,16 +224,41 @@ void func()
 #endif
 }
 
-std::string summary_test( const std::string &bc, size_t offset )
+void summary_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt)
 {
-    std::string s;
+    // Truncate byte by byte comment analysis
+    if( cpt.ct == ct_comment_txt && cpt.comment_offset>1  )
+        return;
+    std::string *ps = (std::string *)link;
+    std::string &s = *ps;
     GameTree gt;
     gt.bytecode = bc;
     gt.offset   = offset;
     Summary summary;
     gt.GetSummary(summary);
     thc::ChessRules cr = summary.start_position;
-    s += "[";
+    s += codepoint_type_txt(cpt.ct);
+    s += " ";
+    if( cpt.is_move )
+    {
+        s += util::sprintf( "%u", cpt.cr->full_move_count );
+        s += cpt.cr->white? ". " : "... ";
+        s += cpt.san_move;
+    }
+    else if( cpt.ct == ct_comment_txt )
+    {
+        s += util::sprintf( "'%c'", (uint8_t)cpt.raw );
+    }
+    else if( cpt.ct == ct_comment_end )
+    {
+        s += util::sprintf( "\"%s\"", cpt.comment_txt.c_str() );
+    }
+    else
+    {
+        s += util::sprintf( "Raw code: %02x", (uint8_t)cpt.raw );
+    }
+    s += util::sprintf( " depth=%u", cpt.depth );
+    s += " [";
     size_t i=0;
     if( i == (summary.move_idx - summary.variation_idx) )
         s +=  "variation_start_ptr-> ";
@@ -264,5 +296,39 @@ std::string summary_test( const std::string &bc, size_t offset )
     s += util::sprintf( "depth:       %d\n",         summary.depth                  );
     s += util::sprintf( "nag1:        %d\n",         summary.nag1                   );
     s += util::sprintf( "nag2:        %d\n",         summary.nag2                   );
-    return s;
+    s += "\n";
+}
+
+void simple_expansion_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt)
+{
+    // Truncate byte by byte comment analysis
+    if( cpt.ct == ct_comment_txt && cpt.comment_offset>1  )
+        return;
+    std::string s;
+    if( cpt.is_move )
+    {
+        if( cpt.cr->white || cpt.move_nbr_needed )
+            s += util::sprintf( "%u%s ", cpt.cr->full_move_count, cpt.cr->white ? "." : "..." );
+        s += cpt.san_move;
+    }
+    else if( cpt.ct == ct_comment_end )
+    {
+        s += util::sprintf( "{%s}", cpt.comment_txt.c_str() );
+    }
+    else if( cpt.ct == ct_variation_start )
+    {
+        s += "(";
+    }
+    else if( cpt.ct == ct_variation_end )
+    {
+        s += ")";
+    }
+    if( s.length() > 0 )
+    {
+        std::string *ps = (std::string *)link;
+        std::string &t = *ps;
+        if( offset > 0 )
+            t += " ";
+        t += s;
+    }
 }

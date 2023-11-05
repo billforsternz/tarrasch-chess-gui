@@ -60,6 +60,36 @@ struct Army
     int nbr_dark_bishops;   // 0 or 1
 };
 
+enum codepoint_type
+{
+    ct_move,
+    ct_variation_start,        
+    ct_variation_end,        
+    ct_comment_start,        
+    ct_comment_end,        
+    ct_meta_start,        
+    ct_meta_end,        
+    ct_escape,
+    ct_comment_txt,
+    ct_meta_data,
+    ct_escape_code
+};
+const char *codepoint_type_txt( codepoint_type ct );
+
+struct Codepoint
+{
+    int            depth;           // nesting depth
+    uint8_t        raw;             // raw code
+    codepoint_type ct;              // type of code
+    bool           is_move;         // true if it's a ct_move
+    thc::Move      mv;              // if is_move
+    std::string    san_move;        // if is_move
+    thc::ChessRules *cr;            // The current position
+    size_t         comment_offset;  // if it's any of ct_comment _start, _end or _txt
+    std::string    comment_txt;     //  as above
+    bool           move_nbr_needed; // true when next move needs number (even for Black)
+};
+
 class Bytecode
 {
 public:
@@ -71,6 +101,7 @@ public:
         sides[1].fast_mode=false;
         is_interesting = 0;
         nbr_slow_moves = 0;
+        Init();
     }
     Bytecode( thc::ChessPosition &cp )
     {
@@ -89,13 +120,13 @@ public:
     std::vector<thc::Move> Uncompress( thc::ChessPosition &cp, std::string &moves_in );
     std::string PgnOut( const std::string& bc_moves_in, const std::string& result );
     void GameViewOut( const std::string& bc_moves_in, const std::string& result, std::vector<GameViewElement> &expansion_out );
-    std::string RoughDump( const std::string& moves_in, std::string (*func)(const std::string& bc, size_t offset) = NULL );
+    void IterateOver( const std::string& bc, void *utility, void (*callback_func)(void *utility, const std::string& bc, size_t offset, Codepoint &cpt) );
     char      CompressMove( thc::Move mv );
     thc::Move UncompressMove( char c );
     Bytecode( const Bytecode& copy_from_me ) { cr=copy_from_me.cr; sides[0]=copy_from_me.sides[0]; sides[1]=copy_from_me.sides[1]; }
     Bytecode & operator= (const Bytecode & copy_from_me ) { cr=copy_from_me.cr; sides[0]=copy_from_me.sides[0]; sides[1]=copy_from_me.sides[1]; return *this; }
-    void Init() { TryFastMode( &sides[0]); TryFastMode( &sides[1]); }
-    void Init( const thc::ChessPosition &cp ) { cr = cp; Init(); }
+    void Init() { static_cast<thc::ChessPosition>(cr).Init(); TryFastMode( &sides[0]); TryFastMode( &sides[1]); }
+    void Init( const thc::ChessPosition &cp ) { cr = cp; TryFastMode( &sides[0]); TryFastMode( &sides[1]); }
     std::string PgnParse( thc::ChessRules &cr2, const std::string str, bool use_semi, int &nbr_converted, bool use_current_language );
     std::string PgnParse( const std::string str );
 public:
