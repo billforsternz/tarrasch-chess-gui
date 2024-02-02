@@ -301,9 +301,6 @@ void summary_test(void *link, const std::string& bc, size_t offset, Codepoint &c
 
 void simple_expansion_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt)
 {
-    // Truncate byte by byte comment analysis
-    if( cpt.ct == ct_comment_txt && cpt.comment_offset>1  )
-        return;
     std::string s;
     if( cpt.is_move )
     {
@@ -327,7 +324,7 @@ void simple_expansion_test(void *link, const std::string& bc, size_t offset, Cod
     {
         std::string *ps = (std::string *)link;
         std::string &t = *ps;
-        if( offset > 0 )
+        if( t.length() > 0 )
             t += " ";
         t += s;
     }
