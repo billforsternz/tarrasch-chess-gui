@@ -13,6 +13,20 @@
 #include "MemoryPositionSearch.h"
 #include "CompressMoves.h"  //temp testing
 
+// Conditional compilation, a bit of fun
+// Find unconverted instances of the "ULTIMATE BLUNDER" players
+//   consecutively miss mate in one opportunities
+// #define ULTIMATE_BLUNDER1
+// Find instances of the "ULTIMATE BLUNDER" - the game ends in mate
+//   the other side could have mated though with their last move
+// #define ULTIMATE_BLUNDER2
+#ifdef  ULTIMATE_BLUNDER1
+#define TEMP_EXPERIMENT
+#endif
+#ifdef  ULTIMATE_BLUNDER2
+#define TEMP_EXPERIMENT
+#endif
+
 // Note that much of this code duplicates the algorithms implemented
 // in class CompressMoves - This is because we want to play through games
 // encoded by CompressMoves extremely quickly - which precludes us using
@@ -678,14 +692,16 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
     int nbr = source->size();
     {
         AutoTimer at("Search time");
+        #ifdef TEMP_EXPERIMENT
         thc::MOVELIST list;
+        #endif
         for( int i=0; i<nbr; i++ )
         {
             smart_ptr<ListableGame> p = (*source)[i];
 
             // TEMP TEMP - Find unconverted instances of the "ULTIMATE BLUNDER" players
             //   consecutively miss mate in one opportunities
-            #if 1
+            #ifdef ULTIMATE_BLUNDER1
             thc::ChessRules cr;
             CompressMoves comp;
             std::string comp_moves = std::string(p->CompressedMoves());
@@ -733,7 +749,7 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
             #endif
             // TEMP TEMP - Find instances of the "ULTIMATE BLUNDER" - the game ends in mate
             //   the other side could have mated though with their last move
-            #if 0
+            #ifdef ULTIMATE_BLUNDER2
             thc::ChessRules cr;
             CompressMoves comp;
             std::string comp_moves = std::string(p->CompressedMoves());
@@ -784,7 +800,7 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
                 games_found.push_back( dsfg );
             }
             #endif
-            #if 0
+            #ifndef TEMP_EXPERIMENT
             //if( 0 == strcmp(p->White(),"Gu, Xiaobing") &&  0 == strcmp(p->Black(),"Ryjanova, Julia")  )
             //    debug_trigger = true;
             DoSearchFoundGame dsfg;
