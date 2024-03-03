@@ -28,6 +28,12 @@ int cprintf( const char *fmt, ... );
 #define DEFAULT_DATABASE "great-players-demo.tdb"
 #endif
 
+void shim_app_begin();
+void shim_app_end();
+
+void wxSafeYield();
+void AcceptAndClose();
+
 bool progress_update( int permill, std::string="" );
 std::string macro_substitution( const std::string &input,
                                 const std::map<char,std::string> &macros,
@@ -112,6 +118,8 @@ public:
     }
     bool Permill( int permill, const std::string &s="" )  // return true if abort
     {
+        return false;
+#if 0
         if( permill<0 || permill>1000 )
             permill = old_permill;
         bool abort = false;
@@ -125,6 +133,7 @@ public:
             }
         }
         return abort;
+#endif
     }
 
     bool Perfraction( int numerator, int denominator, const std::string &s="" )  // return true if abort
@@ -461,8 +470,8 @@ struct NonVolatile
 class Repository
 {
 public:
-    Repository( bool use_defaults=false );
-    ~Repository();
+    Repository( bool use_defaults=false ) {}
+    ~Repository() {}
     BookConfig      book;
     LogConfig       log;
     PlayerConfig    player;

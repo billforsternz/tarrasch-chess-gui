@@ -274,54 +274,85 @@ void BinDbClose()
     }
 }
 
-void Test()
+void Pgn2Tdb( std::vector<std::string> fin, std::string fout, bool generate_dup_pgn_file )
 {
-    TestBinaryBlock();
-    //Pgn2Tdb( "test.pgn", "test.tdb" );
-    //Tdb2Pgn( "test.tdb", "test-reconstituted.pgn" );
-    Pgn2Tdb( "extract.pgn", "extract.tdb" );
-    Tdb2Pgn( "extract.tdb", "extract-reconstituted.pgn" );
-    //Pgn2Tdb( "test3.pgn", "test3.tdb" );
-    //Tdb2Pgn( "test3.tdb", "test3-reconstituted.pgn" );
-}
+    bool ok=true;
+    bool created_new_db_file = false;
+    bool db_created_ok = false;
+    std::string error_msg;
+    // db_primitive_error_msg();   // clear error reporting mechanism
 
-void Pgn2Tdb( const char *infile, const char *outfile )
-{
-    FILE *fin = fopen( infile, "rt" );
-    if( fin )
+    BinDbReadBegin();
+    FILE *ofile = fopen( fout.c_str(), "wb" );
+    if( ofile )
     {
-        FILE *fout = fopen( outfile, "wb" );
-        if( outfile )
+        created_new_db_file = true;
+        ok = true;
+    }
+    if( !ok )
+    {
+        error_msg = "Cannot create ";
+        error_msg += fout;
+    }
+    size_t cnt = fin.size();
+    for( size_t i=0; ok && i<cnt; i++ )
+    {
+        FILE *ifile = fopen( fin[i].c_str(), "rt" );
+        if( !ifile )
         {
-            Pgn2Tdb( fin, fout );
-            fclose(fout);
+            error_msg = "Cannot open ";
+            error_msg += fin[i];
+            ok = false;
         }
-        fclose(fin);
+        else
+        {
+            std::string title( "Creating database, step 1 of 4");
+            std::string desc("Reading file #");
+            char buf[80];
+            sprintf( buf, "%d of %d", i+1, cnt );
+            desc += buf;
+            ProgressBar progress_bar( title, desc, true );
+            uint32_t begin = BinDbGetGamesSize();
+            PgnRead pgn('B',&progress_bar);
+            bool aborted = pgn.Process(ifile);
+            uint32_t end = BinDbGetGamesSize();
+            BinDbNormaliseOrder( begin, end );
+            if( aborted )
+            {
+                error_msg = "cancel";
+                ok = false;
+            }
+            fclose(ifile);
+        }
     }
+    if( ok )
+    {
+        std::string title( "Creating database");    // Step 2,3 and 4 of 4
+        int step=2;
+        ok = BinDbRemoveDuplicatesAndWrite(generate_dup_pgn_file,title,step,ofile,false,NULL);
+    }
+    if( ofile )
+    {
+        wxSafeYield();
+        fclose(ofile);
+        ofile = NULL;
+    }
+    if( ok )
+    {
+        wxSafeYield();
+        AcceptAndClose();
+        db_created_ok = true;
+    }
+    else
+    {
+        if( error_msg == "cancel" )
+            error_msg = "Database creation cancelled";
+        printf( "OnCreateDatabase() Fail: %s\n", error_msg.c_str() );
+    }
+    BinDbCreationEnd();
 }
 
-void Pgn2Tdb( FILE *fin, FILE *fout )
-{
-    #if 0
-    int game=0;  // some code to extract a partial .pgn
-    for(;;)
-    {
-        int typ;
-        char buf[2048];
-        PgnStateMachine(fin,typ,buf,sizeof(buf)-2);
-        if( typ == 'G' )
-            game++;
-        if( 630758<=game && game<=630791 )
-            fputs(buf,fout);
-        if( game > 630791 )
-            break;
-    }
-    #else
-    PgnRead pr('B',0);
-    pr.Process(fin);
-    BinDbWriteOutToFile(fout,0,false);
-    #endif
-}
+
 
 void Tdb2Pgn( const char *infile, const char *outfile )
 {
@@ -602,6 +633,7 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
                   const char *white, const char *black, const char *result, const char *white_elo, const char *black_elo, const char *eco,
                   int nbr_moves, thc::Move *moves )
 {
+    //cprintf( "bin_db_append(): In game %s-%s\n", white, black );
     bool aborted = false;
     if( (++game_counter % 10000) == 0 )
         cprintf( "%d games read from input .pgn so far\n", game_counter );
@@ -708,6 +740,7 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
     );
     make_smart_ptr( ListableGameBinDb, new_gb, gb );
     games.push_back( std::move(new_gb) );
+    //cprintf( "bin_db_append(): Out Added game %s-%s, %u games\n", white, black, games.size() );
     return aborted;
 }
 
@@ -1277,7 +1310,7 @@ static void replace_once( std::string &s, const std::string from, const std::str
 
 
 // New in V3.01a - incorporate write file so can do that before writing dups to TarraschDbDuplicate.pgn
-bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, bool locked, wxWindow *window )
+bool BinDbRemoveDuplicatesAndWrite( bool generate_dup_pgn_file, std::string &title, int step, FILE *ofile, bool locked, wxWindow *window )
 {
 #ifdef  EXTRA_DEDUP_DIAGNOSTIC_FILE
     wxFileName wfn2(objs.repository->log.m_file.c_str());
@@ -1486,7 +1519,7 @@ bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, b
         ok = BinDbWriteOutToFile(ofile,nbr_deleted,locked,&progress_bar);
     }
 
-    if( nbr_deleted )
+    if( nbr_deleted && generate_dup_pgn_file )
     {
         /* wxFileName wfn(objs.repository->log.m_file.c_str());
         if( !wfn.IsOk() )
@@ -1494,7 +1527,7 @@ bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, b
         wfn.SetExt("pgn");
         wfn.SetName("TarraschDbDuplicatesFile");
         wxString dups_filename = wfn.GetFullPath(); */
-        wxString dups_filename = "TarraschDbDuplicatesFile";
+        wxString dups_filename = "TarraschDbDuplicatesFile.pgn";
         FILE *pgn_dup = fopen(dups_filename.c_str(),"wb");
         if( pgn_dup )
         {
@@ -1503,6 +1536,8 @@ bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, b
             ProgressBar progress_bar(optional_title, desc, true, window);
             for( int i=games.size()-1; i>=0; i-- )
             {
+                if( (i%10000)==0 )
+                    cprintf( "%d games remaining\n", i );
                 if( games[i]->game_id != GAME_ID_SENTINEL )
                     break;
                 else
@@ -1533,6 +1568,25 @@ bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, b
         fclose(pgn_dup2);
 #endif
     return true;
+}
+
+void debug_helper( int idx, int nbr_games, int part, const char *white, const char *black, const void *ptr, size_t siz )
+{
+    static FILE *ofile;
+    if( idx==0 && part==1 )
+        ofile = fopen("pgn2tdb_debug.txt","wt");
+    if( !ofile )
+        return;
+    if( part == 1 )
+        fprintf( ofile, "%d: %s-%s\n", idx, white, black );
+    for( size_t i=0; i<siz; i++ )
+        fprintf( ofile, " %02x", ((unsigned char *)ptr)[i] );
+    fprintf(ofile,"\n");
+    if( idx+1==nbr_games && part==2 )
+    {
+        fclose(ofile);
+        ofile = NULL;
+    }
 }
 
 // Return bool okay
@@ -1664,9 +1718,11 @@ bool BinDbWriteOutToFile( FILE *ofile, int nbr_to_omit_from_end, bool locked, Pr
         bb.Write(8,ptr->WhiteEloBin());     // WhiteElo 12 bits (range 0..4095)
         bb.Write(9,ptr->BlackEloBin());     // BlackElo
         fwrite( bb.GetPtr(), bb_sz, 1, ofile );
+        // debug_helper( i, fh.nbr_games, 1, ptr->White(), ptr->Black(), bb.GetPtr(), bb_sz );
         int n = strlen(ptr->CompressedMoves()) + 1;
         const char *cstr = ptr->CompressedMoves();
         fwrite( cstr, n, 1, ofile );
+        // debug_helper( i, fh.nbr_games, 2, ptr->White(), ptr->Black(), cstr, n );
         if( (i % 10000) == 0 )
             cprintf( "%d games written to compressed file so far\n", i );
         nbr_strings_so_far++;

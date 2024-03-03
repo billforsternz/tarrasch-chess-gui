@@ -26,12 +26,11 @@ void BinDbCreationEnd();
 uint8_t BinDbReadBegin();
 uint32_t BinDbGetGamesSize();
 void BinDbNormaliseOrder( uint32_t begin, uint32_t end );
-bool BinDbRemoveDuplicatesAndWrite( std::string &title, int step, FILE *ofile, bool locked, wxWindow *window );
+bool BinDbRemoveDuplicatesAndWrite( bool generate_dup_pgn_file, std::string &title, int step, FILE *ofile, bool locked, wxWindow *window );
 bool BinDbWriteOutToFile( FILE *ofile, int nbr_to_omit_from_end, bool locked, ProgressBar *pb=NULL );
 bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen );
 
-void Pgn2Tdb( const char *infile, const char *outfile );
-void Pgn2Tdb( FILE *fin, FILE *fout );
+void Pgn2Tdb( std::vector<std::string> fin, std::string fout, bool generate_dup_pgn_file=false );
 void Tdb2Pgn( const char *infile, const char *outfile );
 void Tdb2Pgn( FILE *fin, FILE *fout );
 

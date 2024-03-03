@@ -14,8 +14,18 @@
 #include "shim.h"
 #include "Objects.h"
 
-int AutoTimer::instance_cnt;
-AutoTimer *AutoTimer::instance_ptr;
+static FILE *teefile;
+
+void shim_app_begin()
+{
+    // teefile = fopen( "/users/bill/documents/tarrasch/png2tdb_debuglog.txt", "wt" );
+}
+
+void shim_app_end()
+{
+    if( teefile )
+        fclose(teefile);
+}
 
 int cprintf( const char *fmt, ... )
 {
@@ -26,6 +36,8 @@ int cprintf( const char *fmt, ... )
     vsnprintf( buf, sizeof(buf)-2, fmt, args );
     buf[sizeof(buf)-1] = '\0';
     printf("%s",buf);
+    if( teefile )
+        fputs(buf,teefile);
     va_end(args);
     return ret;
 }
@@ -53,4 +65,6 @@ std::string md( const std::string &in )
     return "not needed or implemented";
 }
 
-Objects objs;
+void wxSafeYield() {}
+void AcceptAndClose() {}
+

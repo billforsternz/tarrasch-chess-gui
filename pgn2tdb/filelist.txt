@@ -1,0 +1,60 @@
+Where did the pgn2tdb files come from (mainly) ?
+
+ Volume in drive C is Windows-SSD
+ Volume Serial Number is 04F6-45C1
+
+ Directory of C:\Users\Bill\Documents\Github\tarrasch-chess-gui\pgn2tdb
+
+04/02/2024  09:13 pm            77,369 BinDb.cpp                                                    tarrasch-chess-gui
+04/02/2024  09:13 pm             2,800 CompactGame.cpp                       winged-spider
+04/02/2024  09:13 pm            46,763 CompressMoves.cpp                     winged-spider
+04/02/2024  09:13 pm            78,508 GameDocument.cpp                      winged-spider
+04/02/2024  09:13 pm            30,895 GamesCache.cpp                        winged-spider
+04/02/2024  09:13 pm            77,032 GameView.cpp                          winged-spider
+04/02/2024  09:13 pm             5,845 Lang.cpp                              winged-spider
+04/02/2024  09:13 pm            16,596 MoveTree.cpp                          winged-spider
+04/02/2024  09:13 pm            13,096 PackedGame.cpp                        winged-spider
+04/02/2024  09:13 pm             9,805 PackedGameBinDb.cpp                                          tarrasch-chess-gui
+04/02/2024  09:13 pm            13,829 PgnFiles.cpp                          winged-spider
+04/02/2024  09:13 pm            48,339 PgnRead.cpp                                                  ~ tarrasch-chess-gui
+04/02/2024  09:13 pm           492,095 thc.cpp                               winged-spider
+04/02/2024  09:13 pm             5,671 util.cpp                              winged-spider
+              16 File(s)        920,879 bytes
+               0 Dir(s)  182,779,269,120 bytes free
+ Volume in drive C is Windows-SSD
+ Volume Serial Number is 04F6-45C1
+
+ Directory of C:\Users\Bill\Documents\Github\tarrasch-chess-gui\pgn2tdb
+
+04/02/2024  09:13 pm                19 Appdefs.h                             ->shim.h
+04/02/2024  09:13 pm             2,400 AutoTimer.h                                                  tarrasch-chess-gui
+04/02/2024  09:13 pm             3,378 BinaryBlock.h                                                tarrasch-chess-gui
+04/02/2024  09:13 pm             1,520 BinaryConversions.h                   * winged-spider
+04/02/2024  09:13 pm             2,004 BinDb.h                                                      tarrasch-chess-gui
+04/02/2024  09:13 pm             1,931 CompactGame.h                         * winged-spider
+04/02/2024  09:13 pm             2,701 CompressMoves.h                       * winged-spider
+04/02/2024  09:13 pm                19 DebugPrintf.h                         ->shim.h
+04/02/2024  09:13 pm                19 defs.h                                ->shim.h
+04/02/2024  09:13 pm            11,420 GameDocument.h                        winged-spider
+04/02/2024  09:13 pm             1,559 GameLifecycle.h                       winged-spider
+04/02/2024  09:13 pm             2,189 GamesCache.h                          winged-spider
+04/02/2024  09:13 pm             3,964 GameView.h                            winged-spider
+04/02/2024  09:13 pm             1,512 Lang.h                                winged-spider
+04/02/2024  09:13 pm             6,269 ListableGame.h                        winged-spider
+04/02/2024  09:13 pm             4,474 ListableGameBinDb.h                                          tarrasch-chess-gui
+04/02/2024  09:13 pm             4,279 ListableGamePgn.h                     winged-spider
+04/02/2024  09:13 pm             3,097 MoveTree.h                            winged-spider
+04/02/2024  09:13 pm               659 NavigationKey.h                       winged-spider
+04/02/2024  09:13 pm             1,229 Objects.h                             winged-spider
+04/02/2024  09:13 pm             1,762 PackedGame.h                          winged-spider
+04/02/2024  09:13 pm             3,611 PackedGameBinDb.h                                            tarrasch-chess-gui
+04/02/2024  09:13 pm             2,307 PgnFiles.h                            winged-spider
+04/02/2024  09:13 pm             3,563 PgnRead.h                             ~ winged-spider
+04/02/2024  09:13 pm                19 Portability.h                         ->shim.h
+04/02/2024  09:13 pm                19 ProgressBar.h                         ->shim.h
+04/02/2024  09:13 pm                19 Repository.h                          ->shim.h
+04/02/2024  09:13 pm               789 Roster.h                              winged-spider
+04/02/2024  09:13 pm            26,491 thc.h                                 winged-spider
+04/02/2024  09:13 pm               984 util.h                                winged-spider
+              31 File(s)        108,629 bytes
+               0 Dir(s)  182,779,269,120 bytes free
