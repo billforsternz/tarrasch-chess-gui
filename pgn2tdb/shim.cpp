@@ -30,6 +30,7 @@ void shim_app_end()
 int cprintf( const char *fmt, ... )
 {
     int ret=0;
+#if 0
 	va_list args;
 	va_start( args, fmt );
     char buf[1000];
@@ -39,6 +40,7 @@ int cprintf( const char *fmt, ... )
     if( teefile )
         fputs(buf,teefile);
     va_end(args);
+#endif
     return ret;
 }
 

@@ -150,6 +150,8 @@ int main( int argc, const char *argv[] )
     }
     if( !ok )
     {
+        printf( "pgn2tdb V1.00 - Generate Tarrash database files from the command line\n" );
+        printf( " Published by Bill Forster, https://github.com/billforsternz/tarrasch-chess-gui\n" );
         printf( "Usage: pgn2tdb [-g] [-e2000] [-ufail|-upass|u1990] pgnfiles tdbfile\n" );
         printf( " -g       Generate TarraschDbDuplicates.pgn file (omitted by default)\n" );
         printf( " -e2000   Set Elo rating cutoff (at least one player) to 2000 (for example)\n" );

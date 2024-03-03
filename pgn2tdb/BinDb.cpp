@@ -311,6 +311,7 @@ void Pgn2Tdb( std::vector<std::string> fin, std::string fout, bool generate_dup_
             char buf[80];
             sprintf( buf, "%d of %d", i+1, cnt );
             desc += buf;
+            printf( "%s\n", desc.c_str() );
             ProgressBar progress_bar( title, desc, true );
             uint32_t begin = BinDbGetGamesSize();
             PgnRead pgn('B',&progress_bar);
@@ -328,6 +329,7 @@ void Pgn2Tdb( std::vector<std::string> fin, std::string fout, bool generate_dup_
     if( ok )
     {
         std::string title( "Creating database");    // Step 2,3 and 4 of 4
+        printf( "%s\n", title.c_str() );
         int step=2;
         ok = BinDbRemoveDuplicatesAndWrite(generate_dup_pgn_file,title,step,ofile,false,NULL);
     }
@@ -1340,6 +1342,7 @@ bool BinDbRemoveDuplicatesAndWrite( bool generate_dup_pgn_file, std::string &tit
     {
         BinDbShowDebugOrder( games, "Duplicate Removal - phase 1 before");
         std::string desc("Duplicate Removal - phase 1");
+        printf( "%s\n", desc.c_str() );
         ProgressBar progress_bar( dup_title, desc, true, window );
         progress_bar.DrawNow();
         sort_before( games.begin(), games.end(), predicate_sorts_by_game_moves, &progress_bar );
@@ -1350,6 +1353,7 @@ bool BinDbRemoveDuplicatesAndWrite( bool generate_dup_pgn_file, std::string &tit
     {
         BinDbShowDebugOrder( games, "Duplicate Removal - phase 2 before");
         std::string desc("Duplicate Removal - phase 2");
+        printf( "%s\n", desc.c_str() );
         ProgressBar progress_bar( dup_title, desc, true, window );
         progress_bar.DrawNow();
         ProgressBar *pb = &progress_bar;
@@ -1494,6 +1498,7 @@ bool BinDbRemoveDuplicatesAndWrite( bool generate_dup_pgn_file, std::string &tit
     {
         BinDbShowDebugOrder( games, "Duplicate Removal - phase 3 before");
         std::string desc("Duplicate Removal - phase 3");
+        printf( "%s\n", desc.c_str() );
         ProgressBar progress_bar( dup_title, desc, true, window );
         //progress_bar.DrawNow();
         sort_before( games.begin(), games.end(), predicate_sorts_by_id, &progress_bar );
@@ -1510,11 +1515,13 @@ bool BinDbRemoveDuplicatesAndWrite( bool generate_dup_pgn_file, std::string &tit
         }
         BinDbShowDebugOrder(games, "Duplicate Removal - phase 3 after");
     }
+    printf( "Duplicate Removal complete - %d duplicates removed\n", nbr_deleted );
 
     // New in V3.01a - incorporate write file so can do that before writing dups to TarraschDbDuplicate.pgn
     if( ofile )
     {
         std::string desc("Writing file");
+        printf( "%s\n", desc.c_str() );
         ProgressBar progress_bar( write_title, desc, true, window );
         ok = BinDbWriteOutToFile(ofile,nbr_deleted,locked,&progress_bar);
     }
@@ -1532,7 +1539,8 @@ bool BinDbRemoveDuplicatesAndWrite( bool generate_dup_pgn_file, std::string &tit
         if( pgn_dup )
         {
             BinDbShowDebugOrder(games, "Duplicate Removal - phase 4 before");
-            std::string desc("Saving duplicates to TarraschDbDuplicatesFile.pgn, cancel if not needed");
+            std::string desc("Saving duplicates to TarraschDbDuplicatesFile.pgn");
+            printf( "%s\n", desc.c_str() );
             ProgressBar progress_bar(optional_title, desc, true, window);
             for( int i=games.size()-1; i>=0; i-- )
             {
@@ -1629,7 +1637,7 @@ bool BinDbWriteOutToFile( FILE *ofile, int nbr_to_omit_from_end, bool locked, Pr
     fh.nbr_sites   = std::distance( set_site.begin(),   set_site.end() );
     fh.nbr_games   = games.size() - nbr_to_omit_from_end;
     fh.locked      = locked;
-    cprintf( "%d games, %d players, %d events, %d sites\n", fh.nbr_games, fh.nbr_players, fh.nbr_events, fh.nbr_sites );
+    printf( "%d games, %d players, %d events, %d sites\n", fh.nbr_games, fh.nbr_players, fh.nbr_events, fh.nbr_sites );
     int nbr_bits_player = BitsRequired(fh.nbr_players);
     int nbr_bits_event  = BitsRequired(fh.nbr_events);
     int nbr_bits_site   = BitsRequired(fh.nbr_sites);
@@ -1730,7 +1738,7 @@ bool BinDbWriteOutToFile( FILE *ofile, int nbr_to_omit_from_end, bool locked, Pr
             if( pb->Perfraction( nbr_strings_so_far, total_strings ) )
                 return false;   // abort
     }
-    cprintf( "%d games written to compressed file\n", fh.nbr_games );
+    printf( "%d games written to compressed file\n", fh.nbr_games );
     return true;
 }
 
