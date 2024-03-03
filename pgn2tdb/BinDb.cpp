@@ -1545,7 +1545,7 @@ bool BinDbRemoveDuplicatesAndWrite( bool generate_dup_pgn_file, std::string &tit
             for( int i=games.size()-1; i>=0; i-- )
             {
                 if( (i%10000)==0 )
-                    cprintf( "%d games remaining\n", i );
+                    printf( "%d games remaining\n", i );
                 if( games[i]->game_id != GAME_ID_SENTINEL )
                     break;
                 else

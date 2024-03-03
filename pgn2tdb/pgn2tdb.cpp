@@ -60,9 +60,9 @@ int main( int argc, const char *argv[] )
                 i_first_file = i;
                 break;
             }
-            if( arg == "-g" )
-                generate_dup_pgn_file = true;
-            else if( arg == "-ufail" )
+            //if( arg == "-g" )
+            //    generate_dup_pgn_file = true;
+            if( arg == "-ufail" )
                 elo_cutoff_fail = true;
             else if( arg == "-upass" )
                 elo_cutoff_pass = true;
@@ -153,7 +153,6 @@ int main( int argc, const char *argv[] )
         printf( "pgn2tdb V1.00 - Generate Tarrash database files from the command line\n" );
         printf( " Published by Bill Forster, https://github.com/billforsternz/tarrasch-chess-gui\n" );
         printf( "Usage: pgn2tdb [-g] [-e2000] [-ufail|-upass|u1990] pgnfiles tdbfile\n" );
-        printf( " -g       Generate TarraschDbDuplicates.pgn file (omitted by default)\n" );
         printf( " -e2000   Set Elo rating cutoff (at least one player) to 2000 (for example)\n" );
         printf( " -b2000   Set Elo rating cutoff (both players) to 2000 (for example)\n" );
         printf( " -upass   Unrated players pass cutoff (the default)\n" );
@@ -173,6 +172,8 @@ int main( int argc, const char *argv[] )
     objs.repository->database.m_elo_cutoff_pass_before = elo_cutoff_pass_before;
     objs.repository->database.m_elo_cutoff_before_year = elo_cutoff_before_year;
     shim_app_begin();
+    extern void compress_temp_lookup_gen_function();
+    compress_temp_lookup_gen_function();
     Pgn2Tdb( fin, fout, generate_dup_pgn_file );
     if( objs.repository ) delete objs.repository;
     shim_app_end();
