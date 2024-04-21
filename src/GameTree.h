@@ -87,6 +87,7 @@ class GameTree
 {
 private:
 public:
+
     std::string bytecode;
     int offset = 0;
 #if 1
@@ -98,6 +99,12 @@ public:
     void Init( thc::ChessPosition &start_position_ ) { start_position_ = start_position; bytecode.clear(); }
     void Init( thc::ChessPosition &start_position_, std::string &bytecode_ ) { start_position = start_position_; bytecode = bytecode_; }
     void Init( std::string &bytecode_ ) { start_position.Init(); bytecode = bytecode_; }
+
+    void IterateOver( void *utility, bool (*callback_func)(void *utility, const std::string& bc, size_t offset, Codepoint &cpt) )
+        { Bytecode press; press.IterateOver(bytecode, utility, callback_func); }
+    void PgnParse( const std::string str )
+        { Bytecode press; bytecode = press.PgnParse(str); }
+
 #else
 
     Bytecode press;

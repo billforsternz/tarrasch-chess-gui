@@ -15,8 +15,9 @@
 #include "Bytecode.h"
 
 int  game_tree_test();
-void summary_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt);
-void simple_expansion_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt);
+bool it_summary_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt);
+bool it_simple_expansion_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt);
+bool it_find_first_variation( void *offset_of_first_variation, const std::string& bc, size_t offset, Codepoint &cpt );
 
 int core_printf( const char *fmt, ... )
 {
@@ -49,9 +50,13 @@ int game_tree_test()
     std::vector<thc::Move> moves;
     thc::ChessPosition cp;
 
-    // Load from a start position plus a list of moves
-    // gt.Init( cp, moves );
-    gt.Init( moves );
+    // Load from PGN text
+    std::string txt2("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 {The exchange variation} ( {Alternatively} 4. Ba4 Nf6 5. O-O {is the main line} ) 4... dxc6");
+    gt.PgnParse( txt2 );
+
+    // Goto first variation
+    gt.IterateOver( &gt.offset, it_find_first_variation );
+    printf( "gt.offset = %d\n", gt.offset );
 
     // Promote a variation at current offset
     bool ok = gt.Promote();
@@ -83,7 +88,7 @@ int game_tree_test()
 
     std::string rough_out;
     Bytecode bc2;   // bc.Init() doesn't work, need a new Bytecode, fix this!
-    bc2.IterateOver( bytecode, &rough_out, simple_expansion_test );
+    bc2.IterateOver( bytecode, &rough_out, it_simple_expansion_test );
     printf( "Rough dump: %s\n", rough_out.c_str() );
     Bytecode bc3;
     std::string txt_out = bc3.PgnOut( bytecode, "*" );
@@ -93,7 +98,7 @@ int game_tree_test()
     Bytecode bc4;
     gt.bytecode = bytecode;
     std::string summary_output;
-    bc4.IterateOver( gt.bytecode, &summary_output, summary_test );
+    bc4.IterateOver( gt.bytecode, &summary_output, it_summary_test );
     std::ofstream fout("test_out.txt");
     printf( "GetSummary test output in test_out.txt\n" );
     fout.write( summary_output.c_str(), summary_output.length() );
@@ -224,11 +229,11 @@ void func()
 #endif
 }
 
-void summary_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt)
+bool it_summary_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt)
 {
     // Truncate byte by byte comment analysis
     if( cpt.ct == ct_comment_txt && cpt.comment_offset>1  )
-        return;
+        return false;
     std::string *ps = (std::string *)link;
     std::string &s = *ps;
     GameTree gt;
@@ -297,9 +302,10 @@ void summary_test(void *link, const std::string& bc, size_t offset, Codepoint &c
     s += util::sprintf( "nag1:        %d\n",         summary.nag1                   );
     s += util::sprintf( "nag2:        %d\n",         summary.nag2                   );
     s += "\n";
+    return false;
 }
 
-void simple_expansion_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt)
+bool it_simple_expansion_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt)
 {
     std::string s;
     if( cpt.is_move )
@@ -328,4 +334,15 @@ void simple_expansion_test(void *link, const std::string& bc, size_t offset, Cod
             t += " ";
         t += s;
     }
+    return false;
+}
+
+bool it_find_first_variation( void *offset_of_first_variation, const std::string& bc, size_t offset, Codepoint &cpt )
+{
+    if( cpt.depth > 0 )
+    {
+        *(static_cast<int *>(offset_of_first_variation)) = offset;
+        return true;
+    }
+    return false;
 }

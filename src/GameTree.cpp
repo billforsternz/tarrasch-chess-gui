@@ -96,6 +96,41 @@ MovePlus GameTree::GetMovePlus( int offset_parm )
 //  Return offset of promoted variation
 int GameTree::Promote( int offset_parm )
 {
+/*
+    Promote variation;
+
+    Before: (ghijklmn descends from abcdef)
+
+          abcdefghijklmnopqrst
+    0000001111112222222211111100000000
+                ^
+                |
+                Promote this variation
+
+    After:  (ghijklmn continues from abcdef)
+
+          abcdefopqrstghijklmn
+    0000001111112222221111111100000000
+
+    It's just a string swap!
+
+    Before: (ghi and jklmn are alternative variations)
+
+          abcdef ghi  jklmn opqrst
+    000000111111[222][22222]11111100000000
+                      ^
+                      |
+                      Promote this variation
+
+    After:
+
+          abcdef ghi  opqrst jklmn
+    000000111111[222][222222]1111100000000
+
+    Still a string swap!
+
+    */
+
     return 0;
 }
 

@@ -415,7 +415,7 @@ std::vector<thc::Move> Bytecode::Uncompress( std::string &moves_in )
 #endif
 #define WRAP_COLUMN 79
 
-void Bytecode::IterateOver( const std::string& bc, void *utility, void (*callback_func)(void *utility, const std::string& bc, size_t offset, Codepoint &cpt) )
+void Bytecode::IterateOver( const std::string& bc, void *utility, bool (*callback_func)(void *utility, const std::string& bc, size_t offset, Codepoint &cpt) )
 {
     enum
     {
@@ -441,7 +441,8 @@ void Bytecode::IterateOver( const std::string& bc, void *utility, void (*callbac
     size_t len = bc.size();
     Codepoint cpt;
     cpt.move_nbr_needed = true;
-    for( size_t i=0; i<len; i++)
+    bool end_early = false;
+    for( size_t i=0; !end_early && i<len; i++)
     {
         char code = bc[i];
         cpt.raw     = code;
@@ -597,8 +598,8 @@ void Bytecode::IterateOver( const std::string& bc, void *utility, void (*callbac
                     cr.PopMove(stk->mv);
                 }
                 cpt.is_move = true;
-                callback_func( utility, bc, i, cpt );   // callback before playing the move
-                cpt.move_nbr_needed = false;            // false during uninterrupted moves
+                end_early = callback_func( utility, bc, i, cpt );   // callback before playing the move
+                cpt.move_nbr_needed = false;                        // false during uninterrupted moves
                 cr.PlayMove(stk->mv);
                 stk->variation_move_count++;
                 break;
@@ -607,7 +608,7 @@ void Bytecode::IterateOver( const std::string& bc, void *utility, void (*callbac
 
         // If it was a move, callback has already been called
         if( !cpt.is_move )
-            callback_func( utility, bc, i, cpt );
+            end_early = callback_func( utility, bc, i, cpt );
     }
 }
 
