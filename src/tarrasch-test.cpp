@@ -58,6 +58,15 @@ int game_tree_test()
     gt.IterateOver( &gt.offset, it_find_first_variation );
     printf( "gt.offset = %d\n", gt.offset );
 
+    // Stepper needs work - testing and improved ergonomics
+    Stepper it(gt.bytecode);
+    while( it.cpt.running )
+    {
+        if( it.cpt.depth > 0 )
+            it.cpt.found = true;
+        it.Next();
+    }
+
     // Promote a variation at current offset
     bool ok = gt.Promote();
     printf( "GameTree::Promote() returns ok=%s\n", ok?"true":"false" );

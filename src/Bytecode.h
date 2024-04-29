@@ -13,6 +13,8 @@
 #include "thc.h"
 #include "GameViewElement.h"
 
+// Maximum variation depth, well beyond any practical application
+const int MAX_DEPTH=30;
 
 // Non move byte code values (0 reserved)
 #define BC_VARIATION_START  1 // variation start
@@ -90,6 +92,45 @@ struct Codepoint
     bool           move_nbr_needed; // true when next move needs number (even for Black)
 };
 
+struct CodepointPlus
+{
+    int     idx = 0;
+    bool    end_early = false;
+    bool    running = false;
+    bool    found = false;
+    enum
+    {
+        IN_MOVES,
+        IN_COMMENT,
+        IN_META,
+        AFTER_ESCAPE
+    } state = IN_MOVES;
+
+    // Allow stacking of the key state variables
+    struct STACK_ELEMENT
+    {
+        thc::ChessRules cr;
+        thc::Move       mv;
+        int             variation_move_count=0;
+    };
+    STACK_ELEMENT   stk_array[MAX_DEPTH+1];
+    STACK_ELEMENT   *stk = stk_array;
+    int             stk_idx = 0;
+    
+    // User can track progress with these
+    int             depth=0;                 // nesting depth
+    uint8_t         raw;                     // raw code
+    codepoint_type  ct;                      // type of code
+    bool            is_move=false;           // true if it's a ct_move
+    thc::Move       mv;                      // if is_move
+    std::string     san_move;                // if is_move
+    thc::ChessRules *cr;                     // The current position
+    size_t          comment_offset;          // if it's any of ct_comment _start, _end or _txt
+    std::string     comment_txt;             //  as above
+    bool            move_nbr_needed=true;    // true when next move needs number (even for Black)
+};
+
+
 class Bytecode
 {
 public:
@@ -121,6 +162,7 @@ public:
     std::string PgnOut( const std::string& bc_moves_in, const std::string& result );
     void GameViewOut( const std::string& bc_moves_in, const std::string& result, std::vector<GameViewElement> &expansion_out );
     void IterateOver( const std::string& bc, void *utility, bool (*callback_func)(void *utility, const std::string& bc, size_t offset, Codepoint &cpt) );
+    void Next( const std::string &bc, CodepointPlus &cpt );
     char      CompressMove( thc::Move mv );
     thc::Move UncompressMove( char c );
     Bytecode( const Bytecode& copy_from_me ) { cr=copy_from_me.cr; sides[0]=copy_from_me.sides[0]; sides[1]=copy_from_me.sides[1]; }
@@ -140,6 +182,20 @@ private:
     thc::Move UncompressSlowMode( char code );
     thc::Move UncompressFastMode( char code, Army *side, Army *other );
     thc::Move UncompressFastMode( char code, Army *side, Army *other, std::string &san_move );
+};
+
+struct Stepper
+{
+    Stepper( std::string& _bc ) : bc(_bc)
+    {
+    }
+    void Next()
+    {
+        press.Next( bc, cpt );
+    }
+    Bytecode        press;
+    std::string     bc;
+    CodepointPlus   cpt;
 };
 
 // Find the position and moves leading to this offset in the bytecode
@@ -164,5 +220,8 @@ std::string bc_comment( std::string &bc, size_t offset );
 // Find the index of a move within its variation
 //  eg 1. e4 e5 2. Nf3 (2. Nc3 Nf6 3.Bc4 Nxe4)  // idx of 2.Nc3 is 0, idx of 3...Nxe4 is 3)
 int bc_variation_idx( const std::string &bc, size_t offset );
+
+
+
 
 #endif // BYTECODE_H
