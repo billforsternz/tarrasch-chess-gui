@@ -17,7 +17,9 @@
 int  game_tree_test();
 bool it_summary_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt);
 bool it_simple_expansion_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt);
+void simple_expansion_test(const std::string& bc, std::string &s );
 bool it_find_first_variation( void *offset_of_first_variation, const std::string& bc, size_t offset, Codepoint &cpt );
+bool find_first_variation( const std::string &bc, int &offset );
 
 int core_printf( const char *fmt, ... )
 {
@@ -55,17 +57,11 @@ int game_tree_test()
     gt.PgnParse( txt2 );
 
     // Goto first variation
-    gt.IterateOver( &gt.offset, it_find_first_variation );
-    printf( "gt.offset = %d\n", gt.offset );
-
-    // Stepper needs work - testing and improved ergonomics
-    Stepper it(gt.bytecode);
-    while( it.cpt.running )
-    {
-        if( it.cpt.depth > 0 )
-            it.cpt.found = true;
-        it.Next();
-    }
+    int offset1, offset2;
+    gt.IterateOver( &offset1, it_find_first_variation );
+    find_first_variation( gt.bytecode, offset2 );
+    if( offset1 != offset2 )
+        printf( "find_first_variation() mismatch\r\n" );
 
     // Promote a variation at current offset
     bool ok = gt.Promote();
@@ -95,10 +91,13 @@ int game_tree_test()
     ok = (t == expected);
     printf( "Bytecode test #1: %s\n", ok?"pass":"fail" );
 
-    std::string rough_out;
+    std::string rough_out, rough_out2;
     Bytecode bc2;   // bc.Init() doesn't work, need a new Bytecode, fix this!
     bc2.IterateOver( bytecode, &rough_out, it_simple_expansion_test );
     printf( "Rough dump: %s\n", rough_out.c_str() );
+    simple_expansion_test(bytecode, rough_out2 );
+    printf( "Rough dump 2: %s\n", rough_out2.c_str() );
+
     Bytecode bc3;
     std::string txt_out = bc3.PgnOut( bytecode, "*" );
     printf( "Refined dump: %s\n", txt_out.c_str() );
@@ -346,6 +345,35 @@ bool it_simple_expansion_test(void *link, const std::string& bc, size_t offset, 
     return false;
 }
 
+void simple_expansion_test(const std::string& bc, std::string &s )
+{
+    s.clear();
+    Stepper it(bc);
+    while( !it.end )
+    {
+        it.Next();
+        if( it.is_move )
+        {
+            if( it.cr->white || it.move_nbr_needed )
+                s += util::sprintf( "%u%s ", it.cr->full_move_count, it.cr->white ? "." : "..." );
+            s += it.san_move;
+        }
+        else if( it.ct == ct_comment_end )
+        {
+            s += util::sprintf( "{%s}", it.comment_txt.c_str() );
+        }
+        else if( it.ct == ct_variation_start )
+        {
+            s += "(";
+        }
+        else if( it.ct == ct_variation_end )
+        {
+            s += ")";
+        }
+    }
+    return;
+}
+
 bool it_find_first_variation( void *offset_of_first_variation, const std::string& bc, size_t offset, Codepoint &cpt )
 {
     if( cpt.depth > 0 )
@@ -355,3 +383,21 @@ bool it_find_first_variation( void *offset_of_first_variation, const std::string
     }
     return false;
 }
+
+// Find start of first variation using Stepper
+bool find_first_variation( const std::string &bc, int &offset )
+{
+    offset = 0;
+    Stepper it(bc);
+    while( !it.end )
+    {
+        if( it.depth > 0 )
+        {
+            offset = it.idx-1;
+            return true;
+        }
+        it.Next();
+    }
+    return false;
+}
+    

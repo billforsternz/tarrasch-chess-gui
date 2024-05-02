@@ -80,7 +80,7 @@ const char *codepoint_type_txt( codepoint_type ct );
 
 struct Codepoint
 {
-    int            depth;           // nesting depth
+    int            depth=0;         // nesting depth
     uint8_t        raw;             // raw code
     codepoint_type ct;              // type of code
     bool           is_move;         // true if it's a ct_move
@@ -92,11 +92,11 @@ struct Codepoint
     bool           move_nbr_needed; // true when next move needs number (even for Black)
 };
 
-struct CodepointPlus
+struct CodepointPlus : Codepoint
 {
     int     idx = 0;
-    bool    end_early = false;
-    bool    running = false;
+    int     len;
+    bool    end = false;
     bool    found = false;
     enum
     {
@@ -116,20 +116,7 @@ struct CodepointPlus
     STACK_ELEMENT   stk_array[MAX_DEPTH+1];
     STACK_ELEMENT   *stk = stk_array;
     int             stk_idx = 0;
-    
-    // User can track progress with these
-    int             depth=0;                 // nesting depth
-    uint8_t         raw;                     // raw code
-    codepoint_type  ct;                      // type of code
-    bool            is_move=false;           // true if it's a ct_move
-    thc::Move       mv;                      // if is_move
-    std::string     san_move;                // if is_move
-    thc::ChessRules *cr;                     // The current position
-    size_t          comment_offset;          // if it's any of ct_comment _start, _end or _txt
-    std::string     comment_txt;             //  as above
-    bool            move_nbr_needed=true;    // true when next move needs number (even for Black)
 };
-
 
 class Bytecode
 {
@@ -184,18 +171,18 @@ private:
     thc::Move UncompressFastMode( char code, Army *side, Army *other, std::string &san_move );
 };
 
-struct Stepper
+struct Stepper : CodepointPlus
 {
-    Stepper( std::string& _bc ) : bc(_bc)
+    Stepper( const std::string& _bc ) : bc(_bc)
     {
+        len = static_cast<int>(bc.length());
     }
     void Next()
     {
-        press.Next( bc, cpt );
+        press.Next( bc, *this );
     }
-    Bytecode        press;
-    std::string     bc;
-    CodepointPlus   cpt;
+    Bytecode            press;
+    const std::string   bc;
 };
 
 // Find the position and moves leading to this offset in the bytecode

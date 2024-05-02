@@ -612,6 +612,9 @@ void Bytecode::IterateOver( const std::string& bc, void *utility, bool (*callbac
 
 void Bytecode::Next( const std::string &bc, CodepointPlus &cpt )
 {
+    cpt.end = (cpt.idx >= cpt.len);
+    if( cpt.end )
+        return;
     char code   = bc[cpt.idx++];
     cpt.raw     = code;
     cpt.is_move = false;
@@ -766,17 +769,12 @@ void Bytecode::Next( const std::string &bc, CodepointPlus &cpt )
                 cr.PopMove(cpt.stk->mv);
             }
             cpt.is_move = true;
-            //end_early = callback_func( utility, bc, i, cpt );   // callback before playing the move
-            cpt.move_nbr_needed = false;                        // false during uninterrupted moves
+            cpt.move_nbr_needed = false;
             cr.PlayMove(cpt.stk->mv);
             cpt.stk->variation_move_count++;
             break;
         }
     }
-
-    // If it was a move, callback has already been called
-    //if( !cpt.is_move )
-    //    end_early = callback_func( utility, bc, i, cpt );
 }
 
 std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string& result )
