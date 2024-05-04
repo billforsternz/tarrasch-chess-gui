@@ -83,13 +83,17 @@ struct Codepoint
     int            depth=0;         // nesting depth
     uint8_t        raw;             // raw code
     codepoint_type ct;              // type of code
-    bool           is_move;         // true if it's a ct_move
+    bool           is_move = false; // true if it's a ct_move
     thc::Move      mv;              // if is_move
     std::string    san_move;        // if is_move
     thc::ChessRules *cr;            // The current position
     size_t         comment_offset;  // if it's any of ct_comment _start, _end or _txt
     std::string    comment_txt;     //  as above
-    bool           move_nbr_needed; // true when next move needs number (even for Black)
+
+    // after a comment or variation, the next move text should have a number (even for Black)
+    bool           move_nbr_needed = false;
+    bool           move_nbr_needed_pending = true; // persists until move_nbr_needed set for
+                                                   //  a ct_move then cleared
 };
 
 struct CodepointPlus : Codepoint
@@ -101,6 +105,7 @@ struct CodepointPlus : Codepoint
     enum
     {
         IN_MOVES,
+        AFTER_MOVE,
         IN_COMMENT,
         IN_META,
         AFTER_ESCAPE

@@ -612,14 +612,19 @@ void Bytecode::IterateOver( const std::string& bc, void *utility, bool (*callbac
 
 void Bytecode::Next( const std::string &bc, CodepointPlus &cpt )
 {
+    cpt.is_move = false;
+    cpt.depth   = cpt.stk_idx;
+    cpt.cr      = &cr;
+    if( cpt.state == CodepointPlus::AFTER_MOVE )
+    {
+        cr.PlayMove(cpt.stk->mv);
+        cpt.state = CodepointPlus::IN_MOVES;
+    }
     cpt.end = (cpt.idx >= cpt.len);
     if( cpt.end )
         return;
     char code   = bc[cpt.idx++];
     cpt.raw     = code;
-    cpt.is_move = false;
-    cpt.depth   = cpt.stk_idx;
-    cpt.cr      = &cr;
     switch( cpt.state )
     {
         case CodepointPlus::AFTER_ESCAPE:
@@ -652,6 +657,7 @@ void Bytecode::Next( const std::string &bc, CodepointPlus &cpt )
             {
                 cpt.ct = ct_comment_end;
                 cpt.state = CodepointPlus::IN_MOVES;
+                cpt.move_nbr_needed_pending = true;
             }
             break;
         }
@@ -663,7 +669,7 @@ void Bytecode::Next( const std::string &bc, CodepointPlus &cpt )
 
                 // Push current state onto a stack
                 cpt.ct  = ct_variation_start;
-                cpt.move_nbr_needed = true;
+                cpt.move_nbr_needed_pending = true;
                 cpt.stk->cr = cr;
                 if( cpt.stk_idx+1 < MAX_DEPTH )
                 {
@@ -694,7 +700,7 @@ void Bytecode::Next( const std::string &bc, CodepointPlus &cpt )
             else if( code == BC_VARIATION_END )
             {
                 cpt.ct  = ct_variation_end;
-                cpt.move_nbr_needed = true;
+                cpt.move_nbr_needed_pending = true;
 
                 // Pop old state off stack
                 if( cpt.stk_idx > 0 )
@@ -715,7 +721,7 @@ void Bytecode::Next( const std::string &bc, CodepointPlus &cpt )
                 cpt.ct  = ct_comment_start;
                 cpt.comment_offset = 0;
                 cpt.comment_txt.clear();
-                cpt.move_nbr_needed = true;
+                cpt.move_nbr_needed_pending = true;
                 break;
             }
             else if( code == BC_META_START )
@@ -769,8 +775,9 @@ void Bytecode::Next( const std::string &bc, CodepointPlus &cpt )
                 cr.PopMove(cpt.stk->mv);
             }
             cpt.is_move = true;
-            cpt.move_nbr_needed = false;
-            cr.PlayMove(cpt.stk->mv);
+            cpt.move_nbr_needed = cr.white || cpt.move_nbr_needed_pending;
+            cpt.move_nbr_needed_pending = false;
+            cpt.state = CodepointPlus::AFTER_MOVE;
             cpt.stk->variation_move_count++;
             break;
         }

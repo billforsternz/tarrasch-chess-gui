@@ -354,17 +354,18 @@ void simple_expansion_test(const std::string& bc, std::string &s )
         it.Next();
         if( it.is_move )
         {
-            if( it.cr->white || it.move_nbr_needed )
+            s += " ";
+            if( it.move_nbr_needed )
                 s += util::sprintf( "%u%s ", it.cr->full_move_count, it.cr->white ? "." : "..." );
             s += it.san_move;
         }
         else if( it.ct == ct_comment_end )
         {
-            s += util::sprintf( "{%s}", it.comment_txt.c_str() );
+            s += util::sprintf( " {%s}", it.comment_txt.c_str() );
         }
         else if( it.ct == ct_variation_start )
         {
-            s += "(";
+            s += " (";
         }
         else if( it.ct == ct_variation_end )
         {
