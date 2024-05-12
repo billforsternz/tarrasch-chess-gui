@@ -167,7 +167,7 @@ public:
     thc::ChessRules cr;
     int is_interesting;
     int nbr_slow_moves;
-private:
+protected:
     Army sides[2];
     char CompressSlowMode( thc::Move mv );
     char CompressFastMode( thc::Move mv, Army *side, Army *other );
@@ -176,9 +176,9 @@ private:
     thc::Move UncompressFastMode( char code, Army *side, Army *other, std::string &san_move );
 };
 
-struct Stepper : CodepointPlus
+struct Stepper2 : CodepointPlus
 {
-    Stepper( const std::string& _bc ) : bc(_bc)
+    Stepper2( const std::string& _bc ) : bc(_bc)
     {
         len = static_cast<int>(bc.length());
     }

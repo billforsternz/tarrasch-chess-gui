@@ -13,6 +13,7 @@
 #include "util.h"
 #include "GameTree.h"
 #include "Bytecode.h"
+#include "Stepper.h"
 
 int  game_tree_test();
 bool it_summary_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt);
@@ -356,7 +357,7 @@ void simple_expansion_test(const std::string& bc, std::string &s )
         {
             s += " ";
             if( it.move_nbr_needed )
-                s += util::sprintf( "%u%s ", it.cr->full_move_count, it.cr->white ? "." : "..." );
+                s += util::sprintf( "%u%s ", it.cr.full_move_count, it.cr.white ? "." : "..." );
             s += it.san_move;
         }
         else if( it.ct == ct_comment_end )
@@ -389,7 +390,7 @@ bool it_find_first_variation( void *offset_of_first_variation, const std::string
 bool find_first_variation( const std::string &bc, int &offset )
 {
     offset = 0;
-    Stepper it(bc);
+    Stepper2 it(bc);
     while( !it.end )
     {
         if( it.depth > 0 )
