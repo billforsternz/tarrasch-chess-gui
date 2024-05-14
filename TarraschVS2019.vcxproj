@@ -194,6 +194,7 @@
     <ClCompile Include="src\thc.cpp" />
     <ClCompile Include="src\TrainingDialog.cpp" />
     <ClCompile Include="src\Undo.cpp" />
+    <ClCompile Include="src\util.cpp" />
     <ClCompile Include="src\WinUciInterface.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -284,6 +285,7 @@
     <ClInclude Include="src\thc.h" />
     <ClInclude Include="src\TrainingDialog.h" />
     <ClInclude Include="src\Undo.h" />
+    <ClInclude Include="src\util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

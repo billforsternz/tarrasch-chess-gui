@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <vector>
 #include <stdlib.h>
+#include "util.h"
 #include "Bytecode.h"
 #include "DebugPrintf.h"
 #include "Lang.h"
@@ -994,6 +995,141 @@ std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string&
     s += EOL;
     return s;
 }
+
+std::string Bytecode::OutlineOut( const std::string& bc_moves_in, const std::string& result )
+{
+    // Allow stacking of the key state variables
+    struct STACK_ELEMENT
+    {
+        int             move_nbr=1;
+        bool            white = true;
+    };
+    STACK_ELEMENT stk_array[MAX_DEPTH+1];
+    int     stk_idx = 0;
+    int     move_nbr=1;
+    bool    white = true;
+    bool    need_move_number = true;
+    int len = bc_moves_in.size();
+    std::string s;
+    std::string space;
+    for( int i=0; i<len; i++)
+    {
+        char code = bc_moves_in[i];
+        switch( code )
+        {
+            default:
+            {
+                s += space;
+                space = " ";
+                s += util::sprintf("[%02x]",(uint8_t)code);
+                if( white || need_move_number )
+                {
+                    s += util::sprintf( "%d", move_nbr );
+                    s += white ? "." : "...";
+                }
+                if( !white )
+                    move_nbr++;
+                white = !white;
+                need_move_number = false;
+                uint8_t piece = (uint8_t)(code&0xf0);
+                switch( piece )
+                {
+                    default:                s += "P-";  break;
+                    case CODE_KING        : s += "K-";  break;
+                    case CODE_KNIGHT      : s += "N-";  break;
+                    case CODE_ROOK_LO     : s += "R-";  break;
+                    case CODE_ROOK_HI     : s += "R-";  break;
+                    case CODE_BISHOP_DARK : s += "B-";  break;
+                    case CODE_BISHOP_LIGHT: s += "B-";  break;
+                    case CODE_QUEEN_ROOK  : s += "Q-";  break;
+                    case CODE_QUEEN_BISHOP: s += "Q-";  break;
+                }
+                break;
+            }
+            case BC_VARIATION_START:
+            {
+                if( stk_idx > MAX_DEPTH )
+                    s += "ERROR STACK OVERFLOW!";
+                else
+                {
+                    stk_idx++;
+                    STACK_ELEMENT *stk = &stk_array[stk_idx];
+                    stk->move_nbr = move_nbr;
+                    stk->white    = white;
+                    if( !white )
+                        white = true;
+                    else
+                    {
+                        white = false;
+                        move_nbr--;
+                    }
+                }
+                s += "\n";
+                for( int j=0; j<stk_idx; j++  )
+                    s += "  ";
+                s += "(";
+                need_move_number = true;
+                space = "";
+                break;
+            }
+            case BC_VARIATION_END:
+            {
+                s += ")\n";
+                if( stk_idx < 1 )
+                    s += "ERROR STACK UNDERFLOW!";
+                else
+                {
+                    STACK_ELEMENT *stk = &stk_array[stk_idx];
+                    move_nbr = stk->move_nbr;
+                    white    = stk->white;
+                    stk_idx--;
+                }
+                need_move_number = true;
+                space = "";
+                break;
+            }
+            case BC_COMMENT_START:
+            {
+                s += " \"";
+                for( ; i<len; i++)
+                {
+                    char c = bc_moves_in[i];
+                    if( c == BC_COMMENT_END )
+                    {
+                        s += "\"";
+                        break;
+                    }
+                    s += c;
+                }
+                need_move_number = true;
+                break;
+            }
+            case BC_META_START:
+            {
+                s += " META";
+                for( ; i<len; i++)
+                {
+                    char c = bc_moves_in[i];
+                    if( c == BC_META_END )
+                    {
+                        break;
+                    }
+                }
+                break;
+            }
+            case BC_ESCAPE:
+            {
+                s += util::sprintf( " $%02x", (uint8_t)bc_moves_in[i++] );
+                break;
+            }
+        }
+    }
+    s += " ";
+    s += result;
+    s += "\n";
+    return s;
+}
+
 
 void Bytecode::GameViewOut( const std::string& bc_moves_in, const std::string& result, std::vector<GameViewElement> &expansion )
 {

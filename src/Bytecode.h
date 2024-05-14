@@ -152,6 +152,7 @@ public:
     std::vector<thc::Move> Uncompress( std::string &moves_in );
     std::vector<thc::Move> Uncompress( thc::ChessPosition &cp, std::string &moves_in );
     std::string PgnOut( const std::string& bc_moves_in, const std::string& result );
+    std::string OutlineOut( const std::string& bc_moves_in, const std::string& result );
     void GameViewOut( const std::string& bc_moves_in, const std::string& result, std::vector<GameViewElement> &expansion_out );
     void IterateOver( const std::string& bc, void *utility, bool (*callback_func)(void *utility, const std::string& bc, size_t offset, Codepoint &cpt) );
     void Next( const std::string &bc, CodepointPlus &cpt );
