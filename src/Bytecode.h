@@ -160,8 +160,9 @@ public:
     thc::Move UncompressMove( char c );
     Bytecode( const Bytecode& copy_from_me ) { cr=copy_from_me.cr; sides[0]=copy_from_me.sides[0]; sides[1]=copy_from_me.sides[1]; }
     Bytecode & operator= (const Bytecode & copy_from_me ) { cr=copy_from_me.cr; sides[0]=copy_from_me.sides[0]; sides[1]=copy_from_me.sides[1]; return *this; }
-    void Init() { static_cast<thc::ChessPosition>(cr).Init(); TryFastMode( &sides[0]); TryFastMode( &sides[1]); }
-    void Init( const thc::ChessPosition &cp ) { cr = cp; TryFastMode( &sides[0]); TryFastMode( &sides[1]); }
+    void Init() { static_cast<thc::ChessPosition>(cr).Init(); start_position=cr; TryFastMode( &sides[0]); TryFastMode( &sides[1]); }
+    void Init( const thc::ChessPosition &cp ) {  start_position=cp; cr=cp; TryFastMode( &sides[0]); TryFastMode( &sides[1]); }
+    void Reset() { cr=start_position; TryFastMode( &sides[0]); TryFastMode( &sides[1]);  }
     std::string PgnParse( thc::ChessRules &cr2, const std::string str, bool use_semi, int &nbr_converted, bool use_current_language );
     std::string PgnParse( const std::string str );
 public:
@@ -175,6 +176,9 @@ protected:
     thc::Move UncompressSlowMode( char code );
     thc::Move UncompressFastMode( char code, Army *side, Army *other );
     thc::Move UncompressFastMode( char code, Army *side, Army *other, std::string &san_move );
+private:
+    thc::ChessPosition start_position;
+
 };
 
 struct Stepper2 : CodepointPlus

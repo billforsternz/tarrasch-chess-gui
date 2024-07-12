@@ -54,8 +54,8 @@ int game_tree_test()
     thc::ChessPosition cp;
 
     // Load from PGN text
-    std::string txt2("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 {The exchange variation} ( {Alternatively} 4. Ba4 Nf6 5. O-O {is the main line} ) 4... dxc6");
-    gt.PgnParse( txt2 );
+    std::string txt("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 {The exchange variation} ( {Alternatively} 4. Ba4 Nf6 5. O-O {is the main line} ) 4... dxc6");
+    gt.PgnParse( txt );
 
     // Goto first variation
     int offset1, offset2;
@@ -73,11 +73,11 @@ int game_tree_test()
     printf( "GameTree::Demote() returns ok=%s\n", ok?"true":"false" );
 
     // Bytecode type is intended to be increasingly the heart of Tarrasch
-    Bytecode bc;
-    std::string txt_in("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 {The exchange variation} ( {Alternatively} 4. Ba4 Nf6 5. O-O {is the main line} ) 4... dxc6");
-    std::string bytecode = bc.PgnParse(txt_in);
+    Bytecode press;
+    std::string txt2("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 {The exchange variation} ( {Alternatively} 4. Ba4 Nf6 5. O-O {is the main line} ) 4... dxc6");
+    std::string bc = press.PgnParse(txt2);
     thc::ChessRules cr;
-    std::string t = bc.cr.ToDebugStr();
+    std::string t = press.cr.ToDebugStr();
     printf( "%s", t.c_str() );
     std::string expected ="\n"
         "White to move\n"
@@ -93,10 +93,10 @@ int game_tree_test()
     printf( "Bytecode test #1: %s\n", ok?"pass":"fail" );
 
     std::string rough_out, rough_out2;
-    Bytecode bc2;   // bc.Init() doesn't work, need a new Bytecode, fix this!
-    bc2.IterateOver( bytecode, &rough_out, it_simple_expansion_test );
+    press.Reset();
+    press.IterateOver( bc, &rough_out, it_simple_expansion_test );
     printf( "Rough dump: %s\n", rough_out.c_str() );
-    simple_expansion_test(bytecode, rough_out2 );
+    simple_expansion_test(bc, rough_out2 );
     printf( "Rough dump 2: %s\n", rough_out2.c_str() );
 
 
@@ -134,30 +134,28 @@ int game_tree_test()
 "Rxe6 37. Kxh4 Ke5 38. Kg4 Rg6+ 39. Kf3 Kd4 40. Nb3+ Kc3 41. Nc5 a5 42. Ke2 Kc4\r\n"
 "43. Na4 Kb4 44. Nb2 Rg2+ 0-1\r\n";
 
-    Bytecode bc2a;
-    bytecode = bc2a.PgnParse(complex_example);
-    Bytecode bc2b;
-    std::string outline_out = bc2b.OutlineOut( bytecode, "0-1" );
+    press.Reset();
+    bc = press.PgnParse(complex_example);
+    std::string outline_out = press.OutlineOut( bc, "0-1" );
     printf( "Complex outline out:\n%s\n", outline_out.c_str() );
     std::string rough_out3;
-    Bytecode bc2c;
-    std::string pgn_out3 = bc2c.PgnOut( bytecode, "0-1" );
+    press.Reset();
+    std::string pgn_out3 = press.PgnOut( bc, "0-1" );
     printf( "Complex pgn out: %s\n", pgn_out3.c_str() );
-    Bytecode bc2d;
-    bc2d.IterateOver( bytecode, &rough_out3, it_simple_expansion_test );
+    press.Reset();
+    press.IterateOver( bc, &rough_out3, it_simple_expansion_test );
     printf( "Complex dump 1: %s\n", rough_out3.c_str() );
-    simple_expansion_test(bytecode, rough_out3 );
+    simple_expansion_test(bc, rough_out3 );
     printf( "Complex dump 2: %s\n", rough_out3.c_str() );
-
-    Bytecode bc3;
-    std::string txt_out = bc3.PgnOut( bytecode, "*" );
+    press.Reset();
+    std::string txt_out = press.PgnOut( bc, "*" );
     printf( "Refined dump: %s\n", txt_out.c_str() );
-    ok = ((txt_in+" *\n") == txt_out);
+    ok = ((complex_example+" *\n") == txt_out);
     printf( "Bytecode test #2: %s\n", ok?"pass":"fail" );
-    Bytecode bc4;
-    gt.bytecode = bytecode;
+    gt.bytecode = bc;
     std::string summary_output;
-    bc4.IterateOver( gt.bytecode, &summary_output, it_summary_test );
+    press.Reset();
+    press.IterateOver( gt.bytecode, &summary_output, it_summary_test );
     std::ofstream fout("test_out.txt");
     printf( "GetSummary test output in test_out.txt\n" );
     fout.write( summary_output.c_str(), summary_output.length() );

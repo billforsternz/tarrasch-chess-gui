@@ -85,7 +85,18 @@
 
 */
 
-// Get MovePlus at given offset
+//
+//   Utilities
+//
+
+// Create a readable view of a bytecode string
+std::string dbg_outline( const std::string &bc );
+
+// Extract the mainline from a bytecode string
+std::string mainline( const std::string &bc );
+
+
+// Get MovePlus at given offset TODO
 MovePlus GameTree::GetMovePlus( int offset_parm )
 {
     MovePlus ret;
@@ -356,6 +367,13 @@ struct Summary
     // Get a summary of the current situation
 void GameTree::GetSummary( Summary &summary )
 {
+    static int dbg_count = 0;
+    printf( "GetSummary() %d: In\n", ++dbg_count );
+    printf( "Outline = %s\n", dbg_outline(bytecode).c_str() ); 
+    std::string mainline_outline = dbg_outline(mainline(bytecode));
+    printf( "Mainline outline  = %s\n", mainline_outline.c_str() );
+    if( dbg_count == 16 )
+        ; //printf( "Debug\n" );
 #define MAX_DEPTH 30
     int most_recent_offset[MAX_DEPTH+1];
     most_recent_offset[0] = 0;
@@ -381,7 +399,7 @@ void GameTree::GetSummary( Summary &summary )
             escape = false;
             continue;
         }
-        char c = bytecode[idx];
+        uint8_t c = (uint8_t)bytecode[idx];
         if( c == BC_ESCAPE )
         {
             escape = true;
@@ -411,6 +429,7 @@ void GameTree::GetSummary( Summary &summary )
     bool just_finish_variation = false;
     stk_idx = 0;
     int in_meta=0, in_comment=0;
+    escape = false;
     for( idx=0; idx<len; idx++ )
     {
         if( (int)idx == offset )
@@ -464,11 +483,11 @@ void GameTree::GetSummary( Summary &summary )
         {
             in_meta++;
         }
-        else if( c == BC_VARIATION_END )
+        else if( c == BC_META_END )
         {
             in_meta--;
         }
-        else if( c>BC_MOVE_CODES && in_comment==0 && in_meta==0 && collect )
+        else if( c>=BC_MOVE_CODES && in_comment==0 && in_meta==0 && collect )
         {
             moves += c;
             last_move_offset = idx;
@@ -476,8 +495,136 @@ void GameTree::GetSummary( Summary &summary )
         }
     }
     Bytecode bc;
+    std::string variation_outline = dbg_outline(moves);
+    printf( "Variation outline = %s\n", variation_outline.c_str() ); 
+    if( mainline_outline != variation_outline )
+        printf( "Debug 2\n" );
     summary.start_position = start_position;
     summary.moves = bc.Uncompress( start_position, moves );
 }
 
+// Create a readable view of a bytecode string
+std::string dbg_outline( const std::string &bc )
+{
+    std::string s;
+    bool escape = false;
+    int  in_comment=0, in_meta=0, comment_len=0;
+    for( unsigned char c: bc )
+    {
+        if( escape )
+        {
+            s += '-';
+        }
+        else if( c == BC_ESCAPE )
+        {
+            s += '!';
+        }
+        else if( c == BC_VARIATION_START )
+        {
+            s += '(';
+        }
+        else if( c == BC_VARIATION_END )
+        {
+            s += ')';
+        }
+        else if( c == BC_COMMENT_START )
+        {
+            s += '"';
+            comment_len = 0;
+            in_comment++;
+        }
+        else if( c == BC_COMMENT_END )
+        {
+            s += '"';
+            in_comment--;
+        }
+        else if( c == BC_META_START )
+        {
+            s += 'M';
+            in_meta++;
+        }
+        else if( c == BC_META_END )
+        {
+            s += 'm';
+            in_meta--;
+        }
+        else if( c>=BC_MOVE_CODES && in_comment==0 && in_meta==0 )
+        {
+            switch( (c>>4) & 0x0f )
+            {
+                default: s += 'P';   break;  // 99.9% of time will be a pawn
+                case 0:  s += 'K';   break;
+                case 1:  s += 'N';   break;
+                case 2:
+                case 3:  s += 'R';   break;
+                case 4:
+                case 5:  s += 'B';   break;
+                case 6:
+                case 7:  s += 'Q';   break;
+            }
+        }
+        else if( in_comment > 0 )
+        {
+            comment_len++;
+            if( comment_len<5 )
+                s += c;
+            else if( comment_len==5 )
+                s += "...";
+            else
+                comment_len--;
+        }
+        else if( in_meta > 0 )
+        {
+            s += '-';
+        }
+    }
+    return s;
+}
 
+// Extract the mainline from a bytecode string
+std::string mainline( const std::string &bc )
+{
+    std::string s;
+    bool escape = false;
+    int  depth=0, in_comment=0, in_meta=0;
+    for( unsigned char c: bc )
+    {
+        if( escape )
+        {
+            escape = false;
+        }
+        else if( c == BC_ESCAPE )
+        {
+            escape = true;
+        }
+        else if( c == BC_VARIATION_START )
+        {
+            depth++;
+        }
+        else if( c == BC_VARIATION_END )
+        {
+            depth--;
+        }
+        else if( c == BC_COMMENT_START )
+        {
+            in_comment++;
+        }
+        else if( c == BC_COMMENT_END )
+        {
+            in_comment--;
+        }
+        else if( c == BC_META_START )
+        {
+            in_meta++;
+        }
+        else if( c == BC_META_END )
+        {
+            in_meta--;
+        }
+        else if( c>=BC_MOVE_CODES && depth==0 && in_comment==0 && in_meta==0 )
+        {
+            s += c;
+        }
+    }
+    return s;
+}
