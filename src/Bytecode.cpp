@@ -785,6 +785,40 @@ void Bytecode::Next( const std::string &bc, CodepointPlus &cpt )
     }
 }
 
+void white_space_word_wrap( std::string &s )
+{
+    int col=0;
+    char *p = &s[0];
+    char *last_space = NULL;
+    while( *p )
+    {
+        char c = *p;
+        col++;
+        bool is_white = (c==' '||c=='\t'||c=='\n'||c=='\r');
+        if( col < 80 )
+        {
+            if( is_white )
+                last_space = p;
+        }
+        else
+        {
+            if( is_white )
+            {
+                *p = '\n';
+                col = 0;
+                last_space = NULL;
+            }
+            else if( last_space != NULL )
+            {
+                *last_space = '\n';
+                col = (p-last_space);
+                last_space = NULL;
+            }
+        }
+        p++;
+    }
+}
+
 std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string& result )
 {
     // Allow stacking of the key state variables
@@ -799,9 +833,9 @@ std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string&
     int stk_idx = 0;
     STACK_ELEMENT *stk = &stk_array[stk_idx];
     bool need_move_number = true;
-    bool variation_start = false;
+    bool mainline_start   = true;
+    bool variation_start  = false;
     int state =0;
-    int col = 0;
     std::string s;
     sides[0].fast_mode = false;
     sides[1].fast_mode = false;
@@ -830,7 +864,7 @@ std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string&
                 if( code == BC_COMMENT_END )
                 {
                     state = 0;
-                    s += "} ";
+                    s += "}";
                 }
                 else
                 {
@@ -872,7 +906,7 @@ std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string&
                 }
                 else if( code == BC_VARIATION_END )
                 {
-                    s += ") ";
+                    s += ")";
                     need_move_number = true;
 
                     // Pop old state off stack
@@ -935,21 +969,13 @@ std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string&
                     _itoa(stk->move_nbr, buf, 10);
                     std::string t(buf);
                     t += (cr.white ? "." : "...");
-                    if( col + t.length() >= WRAP_COLUMN )
-                    {
-                        s += EOL;
-                        col = 0;
-                    }
-                    if( col != 0 && !variation_start )
-                    {
+                    if( !mainline_start && !variation_start )
                         s += ' ';
-                        col++;
-                    }
                     s += t;
-                    col += t.length();
                 }
                 need_move_number = false;
-                variation_start = false;
+                variation_start  = false;
+                mainline_start   = false;
                 if( !cr.white )
                     stk->move_nbr++;
 
@@ -966,37 +992,16 @@ std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string&
                     if( score_terminal == thc::TERMINAL_WCHECKMATE || score_terminal == thc::TERMINAL_BCHECKMATE )
                         t[san_move_len-1] = '#';
                 }
-
-                /* if( col + t.length() >= WRAP_COLUMN )
-                {
-                    s += EOL;
-                    col = 0;
-                }
-                if( col != 0 )
-                {
-                    s += ' ';
-                    col++;
-                }
-                col += t.length(); */
                 s += ' ';
                 s += t;
                 break;
             }
         }
     }
-    /* if( col + result.length() >= WRAP_COLUMN )
-    {
-        s += EOL;
-        col = 0;
-    }
-    if( col != 0 )
-    {
-        s += ' ';
-        col++;
-    }   */
     s += ' ';
     s += result;
     s += EOL;
+    white_space_word_wrap(s); 
     return s;
 }
 

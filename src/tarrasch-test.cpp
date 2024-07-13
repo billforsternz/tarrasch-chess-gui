@@ -69,36 +69,6 @@ std::string white_space_normalise( const std::string &in )
     return out;
 }
 
-std::string white_space_word_wrap( const std::string &in )
-{
-    std::string out;
-    int col=0;
-    bool was_white = false;
-    for( char c: in )
-    {
-        bool is_white = (c==' '||c=='\t'||c=='\n'||c=='\r');
-        if( !is_white )
-        {
-            if( was_white && col>0  )
-            {
-                out += ' ';
-                col++;
-            }
-            out += c;
-            col++;
-            if( col >= 79 )
-            {
-                out += '\n';
-                col = 0;
-            }
-        }
-        was_white = is_white;
-    }
-    if( col > 0  )
-        out += '\n';
-    return out;
-}
-
 int game_tree_test()
 {
     GameTree gt;
@@ -164,49 +134,77 @@ int game_tree_test()
 [BlackElo "1880"]
 [ECO "E20"] */
 
-"1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. f3 d5 5. a3 Bxc3+ 6. bxc3 dxc4 7. e4 e5 $2 8.\r\n"
-"Bxc4 Be6 9. Bxe6 fxe6 10. Qb3 O-O 11. Qxe6+ Kh8 12. Qxe5 {Objectively the\r\n"
-"opening has been a catastrophe and Black is quite lost, but he does have a lead\r\n"
-"in development...} 12... Nc6 13. Qg3 $2 {Diagram #Just one mistake is\r\n"
-"sufficient for a turnaround. This is not the best square and Black has a lot of\r\n"
-"fun for the rest of the game. Both White's proud extra centre pawns look\r\n"
-"securely defended but Black gives up both knights for them to tear the position\r\n"
-"open.} 13... Nxd4 $1 14. cxd4 Qxd4 15. Ra2 Qc4 {Fork!} 16. Ne2 Qxa2 17. Qxc7 $2\r\n"
-"{Inviting catastrophe}  (17. Qe5 {returns the Queen from exile and White can\r\n"
-"try to grovel an exchange down} ) 17... Rac8 18. Qxb7 {Diagram #} 18... Nxe4 $1\r\n"
-"19. fxe4 Rxc1+ $1 20. Nxc1 Qxg2 $1 {Leaving White completely helpless} 21. Nd3\r\n"
-"Qxh1+ 22. Kd2 Qxh2+ 23. Kc3 Qb8 24. Qe7 Re8 25. Qh4 Qc7+ 26. Kd2 Qa5+ 27. Ke2\r\n"
-"Qxa3 28. e5 Qa6 29. Kd2 Qh6+ $1 {A nice practical decision. White does not want\r\n"
-"to be accused of premature resignation. For anxious players like me in such\r\n"
-"circumstances it's a good idea to permanently prevent any possible queen plus\r\n"
-"knight shenanigans. A knight hates rook pawns, and here it faces three of them!\r\n"
-"Even so as a nervous finisher I wanted to give up my rook for the knight and\r\n"
-"eliminate the possibility of forks as well, but White never gave me a chance.}\r\n"
-"30. Qxh6 gxh6 31. Ke3 Kg7 32. Ke4 Kg6 33. Nc5 h5 34. Kf4 h4 35. e6 Kf6 36. Kg4\r\n"
-"Rxe6 37. Kxh4 Ke5 38. Kg4 Rg6+ 39. Kf3 Kd4 40. Nb3+ Kc3 41. Nc5 a5 42. Ke2 Kc4\r\n"
-"43. Na4 Kb4 44. Nb2 Rg2+ 0-1\r\n";
+// Tarrasch original
+#if 0
+"1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. f3 d5 5. a3 Bxc3+ 6. bxc3 dxc4 7. e4 e5 $2 8.\n"
+"Bxc4 Be6 9. Bxe6 fxe6 10. Qb3 O-O 11. Qxe6+ Kh8 12. Qxe5 {Objectively the\n"
+"opening has been a catastrophe and Black is quite lost, but he does have a lead\n"
+"in development...} 12... Nc6 13. Qg3 $2 {Diagram #Just one mistake is\n"
+"sufficient for a turnaround. This is not the best square and Black has a lot of\n"
+"fun for the rest of the game. Both White's proud extra centre pawns look\n"
+"securely defended but Black gives up both knights for them to tear the position\n"
+"open.} 13... Nxd4 $1 14. cxd4 Qxd4 15. Ra2 Qc4 {Fork!} 16. Ne2 Qxa2 17. Qxc7 $2\n"
+"{Inviting catastrophe}  (17. Qe5 {returns the Queen from exile and White can\n"
+"try to grovel an exchange down} ) 17... Rac8 18. Qxb7 {Diagram #} 18... Nxe4 $1\n"
+"19. fxe4 Rxc1+ $1 20. Nxc1 Qxg2 $1 {Leaving White completely helpless} 21. Nd3\n"
+"Qxh1+ 22. Kd2 Qxh2+ 23. Kc3 Qb8 24. Qe7 Re8 25. Qh4 Qc7+ 26. Kd2 Qa5+ 27. Ke2\n"
+"Qxa3 28. e5 Qa6 29. Kd2 Qh6+ $1 {A nice practical decision. White does not want\n"
+"to be accused of premature resignation. For anxious players like me in such\n"
+"circumstances it's a good idea to permanently prevent any possible queen plus\n"
+"knight shenanigans. A knight hates rook pawns, and here it faces three of them!\n"
+"Even so as a nervous finisher I wanted to give up my rook for the knight and\n"
+"eliminate the possibility of forks as well, but White never gave me a chance.}\n"
+"30. Qxh6 gxh6 31. Ke3 Kg7 32. Ke4 Kg6 33. Nc5 h5 34. Kf4 h4 35. e6 Kf6 36. Kg4\n"
+"Rxe6 37. Kxh4 Ke5 38. Kg4 Rg6+ 39. Kf3 Kd4 40. Nb3+ Kc3 41. Nc5 a5 42. Ke2 Kc4\n"
+"43. Na4 Kb4 44. Nb2 Rg2+ 0-1\n";
+
+// Proposed improvement, less unnecessary space
+#else
+"1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. f3 d5 5. a3 Bxc3+ 6. bxc3 dxc4 7. e4 e5 $2 8.\n"
+"Bxc4 Be6 9. Bxe6 fxe6 10. Qb3 O-O 11. Qxe6+ Kh8 12. Qxe5 {Objectively the\n"
+"opening has been a catastrophe and Black is quite lost, but he does have a lead\n"
+"in development...} 12... Nc6 13. Qg3 $2 {Diagram #Just one mistake is\n"
+"sufficient for a turnaround. This is not the best square and Black has a lot of\n"
+"fun for the rest of the game. Both White's proud extra centre pawns look\n"
+"securely defended but Black gives up both knights for them to tear the position\n"
+"open.} 13... Nxd4 $1 14. cxd4 Qxd4 15. Ra2 Qc4 {Fork!} 16. Ne2 Qxa2 17. Qxc7 $2\n"
+"{Inviting catastrophe} (17. Qe5 {returns the Queen from exile and White can try\n"
+"to grovel an exchange down}) 17... Rac8 18. Qxb7 {Diagram #} 18... Nxe4 $1 19.\n"
+"fxe4 Rxc1+ $1 20. Nxc1 Qxg2 $1 {Leaving White completely helpless} 21. Nd3\n"
+"Qxh1+ 22. Kd2 Qxh2+ 23. Kc3 Qb8 24. Qe7 Re8 25. Qh4 Qc7+ 26. Kd2 Qa5+ 27. Ke2\n"
+"Qxa3 28. e5 Qa6 29. Kd2 Qh6+ $1 {A nice practical decision. White does not want\n"
+"to be accused of premature resignation. For anxious players like me in such\n"
+"circumstances it's a good idea to permanently prevent any possible queen plus\n"
+"knight shenanigans. A knight hates rook pawns, and here it faces three of them!\n"
+"Even so as a nervous finisher I wanted to give up my rook for the knight and\n"
+"eliminate the possibility of forks as well, but White never gave me a chance.}\n"
+"30. Qxh6 gxh6 31. Ke3 Kg7 32. Ke4 Kg6 33. Nc5 h5 34. Kf4 h4 35. e6 Kf6 36. Kg4\n"
+"Rxe6 37. Kxh4 Ke5 38. Kg4 Rg6+ 39. Kf3 Kd4 40. Nb3+ Kc3 41. Nc5 a5 42. Ke2 Kc4\n"
+"43. Na4 Kb4 44. Nb2 Rg2+ 0-1\n";
+#endif
 
     press.Reset();
     bc = press.PgnParse(complex_example);
     std::string outline_out = press.OutlineOut( bc, "0-1" );
     printf( "Complex outline out:\n%s\n", outline_out.c_str() );
+    press.Reset();
     std::string rough_out3;
-    press.Reset();
-    std::string pgn_out3 = press.PgnOut( bc, "0-1" );
-    printf( "Complex pgn out: %s\n", pgn_out3.c_str() );
-    press.Reset();
     press.IterateOver( bc, &rough_out3, it_simple_expansion_test );
-    printf( "Complex dump 1: %s\n", rough_out3.c_str() );
+    printf( "Complex dump 1:\n%s\n", rough_out3.c_str() );
     simple_expansion_test(bc, rough_out3 );
-    printf( "Complex dump 2: %s\n", rough_out3.c_str() );
+    printf( "Complex dump 2:\n%s\n", rough_out3.c_str() );
     press.Reset();
     std::string txt_out = press.PgnOut( bc, "0-1" );
     std::string txt_out2 = white_space_normalise(txt_out);
-    printf( "Refined dump      : %s\n", txt_out2.c_str() );
+    printf( "Refined dump:\n%s\n", txt_out2.c_str() );
     std::string txt_out3 = white_space_normalise(complex_example);
-    printf( "Should match input: %s\n", txt_out3.c_str() );
+    printf( "Should match input:\n%s\n", txt_out3.c_str() );
     ok = (txt_out2 == txt_out3);
     printf( "Bytecode test #2: %s\n", ok?"pass":"fail" );
+    printf( "PgnOut():\n%s\n", txt_out.c_str() );
+    printf( "should match in:\n%s\n", complex_example.c_str() );
+    ok = (txt_out == complex_example);
+    printf( "Bytecode test #3:\n%s\n", ok?"pass":"fail" );
     gt.bytecode = bc;
     std::string summary_output;
     press.Reset();
