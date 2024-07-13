@@ -37,14 +37,66 @@ int core_printf( const char *fmt, ... )
 
 int main()
 {
+    extern void compress_temp_lookup_gen_function();
+    compress_temp_lookup_gen_function();
+
     thc::ChessRules cr;
 
     // Test internals, for porting to new environments etc
     bool ok = cr.TestInternals();
     printf( "TestInternals() returns %s\n", ok?"Success":"Fail" );
 
+
     game_tree_test();
     return 0;
+}
+
+std::string white_space_normalise( const std::string &in )
+{
+    std::string out;
+    bool was_white = false;
+    for( char c: in )
+    {
+        bool is_white = (c==' '||c=='\t'||c=='\n'||c=='\r');
+        if( !is_white )
+        {
+            if( was_white )
+                out += ' ';
+            out += c;
+        }
+        was_white = is_white;
+    }
+    return out;
+}
+
+std::string white_space_word_wrap( const std::string &in )
+{
+    std::string out;
+    int col=0;
+    bool was_white = false;
+    for( char c: in )
+    {
+        bool is_white = (c==' '||c=='\t'||c=='\n'||c=='\r');
+        if( !is_white )
+        {
+            if( was_white && col>0  )
+            {
+                out += ' ';
+                col++;
+            }
+            out += c;
+            col++;
+            if( col >= 79 )
+            {
+                out += '\n';
+                col = 0;
+            }
+        }
+        was_white = is_white;
+    }
+    if( col > 0  )
+        out += '\n';
+    return out;
 }
 
 int game_tree_test()
@@ -148,9 +200,12 @@ int game_tree_test()
     simple_expansion_test(bc, rough_out3 );
     printf( "Complex dump 2: %s\n", rough_out3.c_str() );
     press.Reset();
-    std::string txt_out = press.PgnOut( bc, "*" );
-    printf( "Refined dump: %s\n", txt_out.c_str() );
-    ok = ((complex_example+" *\n") == txt_out);
+    std::string txt_out = press.PgnOut( bc, "0-1" );
+    std::string txt_out2 = white_space_normalise(txt_out);
+    printf( "Refined dump      : %s\n", txt_out2.c_str() );
+    std::string txt_out3 = white_space_normalise(complex_example);
+    printf( "Should match input: %s\n", txt_out3.c_str() );
+    ok = (txt_out2 == txt_out3);
     printf( "Bytecode test #2: %s\n", ok?"pass":"fail" );
     gt.bytecode = bc;
     std::string summary_output;

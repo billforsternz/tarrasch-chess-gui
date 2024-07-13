@@ -799,6 +799,7 @@ std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string&
     int stk_idx = 0;
     STACK_ELEMENT *stk = &stk_array[stk_idx];
     bool need_move_number = true;
+    bool variation_start = false;
     int state =0;
     int col = 0;
     std::string s;
@@ -812,6 +813,7 @@ std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string&
         {
             case 4:
             {
+                s += util::sprintf( " $%u", (unsigned int)(code-8) );   // ESCAPE NAG+8
                 state = 0;
                 break;
             }
@@ -842,6 +844,7 @@ std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string&
                 {
                     s += " (";
                     need_move_number = true;
+                    variation_start = true;
 
                     // Push current state onto a stack
                     stk->cr    = cr;
@@ -937,7 +940,7 @@ std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string&
                         s += EOL;
                         col = 0;
                     }
-                    if( col != 0 )
+                    if( col != 0 && !variation_start )
                     {
                         s += ' ';
                         col++;
@@ -946,6 +949,7 @@ std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string&
                     col += t.length();
                 }
                 need_move_number = false;
+                variation_start = false;
                 if( !cr.white )
                     stk->move_nbr++;
 
