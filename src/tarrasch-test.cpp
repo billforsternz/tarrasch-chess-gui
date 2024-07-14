@@ -114,13 +114,12 @@ int game_tree_test()
     ok = (t == expected);
     printf( "Bytecode test #1: %s\n", ok?"pass":"fail" );
 
-    std::string rough_out, rough_out2;
+    std::string rough_out1, rough_out2;
     press.Reset();
-    press.IterateOver( bc, &rough_out, it_simple_expansion_test );
-    printf( "Rough dump: %s\n", rough_out.c_str() );
+    press.IterateOver( bc, &rough_out1, it_simple_expansion_test );
+    printf( "Rough dump 1) uses IterateOver():\n%s\n", rough_out1.c_str() );
     simple_expansion_test(bc, rough_out2 );
-    printf( "Rough dump 2: %s\n", rough_out2.c_str() );
-
+    printf( "Rough dump 2) uses Stepper:\n%s\n", rough_out2.c_str() );
 
     std::string complex_example =
 /*[Event "Waitakere Trust Open"]
@@ -205,6 +204,14 @@ int game_tree_test()
     printf( "should match in:\n%s\n", complex_example.c_str() );
     ok = (txt_out == complex_example);
     printf( "Bytecode test #3:\n%s\n", ok?"pass":"fail" );
+    std::string stepper_pgn_out;
+    simple_expansion_test(bc, stepper_pgn_out );
+    stepper_pgn_out += " 0-1\n";
+    extern void white_space_word_wrap( std::string &s );
+    white_space_word_wrap( stepper_pgn_out );
+    printf( "Stepper PGN out:\n%s\n", stepper_pgn_out.c_str() );
+    ok = (txt_out == stepper_pgn_out);
+    printf( "Bytecode test #4:\n%s\n", ok?"pass":"fail" );
     gt.bytecode = bc;
     std::string summary_output;
     press.Reset();
@@ -453,10 +460,10 @@ void simple_expansion_test(const std::string& bc, std::string &s )
     Stepper it(bc);
     while( !it.end )
     {
-        it.Next();
         if( it.is_move )
         {
-            s += " ";
+            if( it.stk->variation_move_count > 1 )
+                s += " ";
             if( it.move_nbr_needed )
                 s += util::sprintf( "%u%s ", it.cr.full_move_count, it.cr.white ? "." : "..." );
             s += it.san_move;
@@ -473,6 +480,11 @@ void simple_expansion_test(const std::string& bc, std::string &s )
         {
             s += ")";
         }
+        else if( it.ct == ct_escape_code )
+        {
+            s += util::sprintf( " $%u", it.raw-8 );
+        }
+        it.Next();
     }
     return;
 }
@@ -503,4 +515,3 @@ bool find_first_variation( const std::string &bc, int &offset )
     }
     return false;
 }
-    

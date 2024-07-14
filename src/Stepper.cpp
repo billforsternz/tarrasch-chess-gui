@@ -28,7 +28,6 @@ void Stepper::Next()
     {
         case AFTER_ESCAPE:
         {
-
             ct    = ct_escape_code;
             state = IN_MOVES;
             break;

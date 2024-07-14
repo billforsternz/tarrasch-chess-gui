@@ -18,25 +18,26 @@ public:
     Stepper( const std::string& _bc ) : bc(_bc)
     {
         len = static_cast<int>(bc.length());
+        Next();
     }
     void Next();
     const std::string   bc;
-    int            depth=0;         // nesting depth
-    uint8_t        raw;             // raw code
-    codepoint_type ct;              // type of code
-    bool           is_move = false; // true if it's a ct_move
-    thc::Move      mv;              // if is_move
-    std::string    san_move;        // if is_move
-    size_t         comment_offset;  // if it's any of ct_comment _start, _end or _txt
-    std::string    comment_txt;     //  as above
+    int             depth=0;         // nesting depth
+    uint8_t         raw;             // raw code
+    codepoint_type  ct;              // type of code
+    bool            is_move = false; // true if it's a ct_move
+    thc::Move       mv;              // if is_move
+    std::string     san_move;        // if is_move
+    size_t          comment_offset;  // if it's any of ct_comment _start, _end or _txt
+    std::string     comment_txt;     //  as above
 
     // after a comment or variation, the next move text should have a number (even for Black)
-    bool           move_nbr_needed = false;
-    bool           move_nbr_needed_pending = true; // persists until move_nbr_needed set for
-    int     idx = 0;
-    int     len;
-    bool    end = false;
-    bool    found = false;
+    bool            move_nbr_needed = false;
+    bool            move_nbr_needed_pending = true; // persists until move_nbr_needed set for
+    int             idx = 0;
+    int             len;
+    bool            end = false;
+    bool            found = false;
     enum
     {
         IN_MOVES,
