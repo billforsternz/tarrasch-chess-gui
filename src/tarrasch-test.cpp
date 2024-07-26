@@ -16,10 +16,11 @@
 #include "Stepper.h"
 
 int  game_tree_test();
-bool it_summary_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt);
+bool it_txt_view(void *link, const std::string& bc, size_t offset, Codepoint &cpt);
+std::string stepper_txt_view(const std::string& bc);
 bool it_simple_expansion_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt);
 void simple_expansion_test(const std::string& bc, std::string &s );
-bool it_find_first_variation( void *offset_of_first_variation, const std::string& bc, size_t offset, Codepoint &cpt );
+bool it_find_first_variation( const std::string& bc, int &offset );
 bool find_first_variation( const std::string &bc, int &offset );
 
 int core_printf( const char *fmt, ... )
@@ -81,7 +82,7 @@ int game_tree_test()
 
     // Goto first variation
     int offset1, offset2;
-    gt.IterateOver( &offset1, it_find_first_variation );
+    bool found = it_find_first_variation( gt.bytecode, offset1 );
     find_first_variation( gt.bytecode, offset2 );
     if( offset1 != offset2 )
         printf( "find_first_variation() mismatch\r\n" );
@@ -114,12 +115,10 @@ int game_tree_test()
     ok = (t == expected);
     printf( "Bytecode test #1: %s\n", ok?"pass":"fail" );
 
-    std::string rough_out1, rough_out2;
+    std::string stepper_simple_pgn_out;
     press.Reset();
-    press.IterateOver( bc, &rough_out1, it_simple_expansion_test );
-    printf( "Rough dump 1) uses IterateOver():\n%s\n", rough_out1.c_str() );
-    simple_expansion_test(bc, rough_out2 );
-    printf( "Rough dump 2) uses Stepper:\n%s\n", rough_out2.c_str() );
+    simple_expansion_test(bc, stepper_simple_pgn_out );
+    printf( "stepper_simple_pgn_out uses Stepper:\n%s\n", stepper_simple_pgn_out.c_str() );
 
     std::string complex_example =
 /*[Event "Waitakere Trust Open"]
@@ -187,11 +186,9 @@ int game_tree_test()
     std::string outline_out = press.OutlineOut( bc, "0-1" );
     printf( "Complex outline out:\n%s\n", outline_out.c_str() );
     press.Reset();
-    std::string rough_out3;
-    press.IterateOver( bc, &rough_out3, it_simple_expansion_test );
-    printf( "Complex dump 1:\n%s\n", rough_out3.c_str() );
-    simple_expansion_test(bc, rough_out3 );
-    printf( "Complex dump 2:\n%s\n", rough_out3.c_str() );
+    std::string rough_out;
+    simple_expansion_test(bc, rough_out );
+    printf( "Game 2 (complex) stepper PGN dump:\n%s\n", rough_out.c_str() );
     press.Reset();
     std::string txt_out = press.PgnOut( bc, "0-1" );
     std::string txt_out2 = white_space_normalise(txt_out);
@@ -213,12 +210,18 @@ int game_tree_test()
     ok = (txt_out == stepper_pgn_out);
     printf( "Bytecode test #4:\n%s\n", ok?"pass":"fail" );
     gt.bytecode = bc;
-    std::string summary_output;
-    press.Reset();
-    press.IterateOver( gt.bytecode, &summary_output, it_summary_test );
+    std::string txt_view = stepper_txt_view(gt.bytecode);
     std::ofstream fout("test_out.txt");
-    printf( "GetSummary test output in test_out.txt\n" );
-    fout.write( summary_output.c_str(), summary_output.length() );
+    printf( "txt_view test output in test_out.txt\n" );
+    fout.write( txt_view.c_str(), txt_view.length() );
+    std::string txt_view2;
+    press.Reset();
+    press.IterateOver( gt.bytecode, &txt_view2, it_txt_view );
+    std::ofstream fout2("test_out2.txt");
+    printf( "txt_view2 test output in test_out2.txt\n" );
+    fout2.write( txt_view2.c_str(), txt_view2.length() );
+    ok = (txt_view == txt_view2);
+    printf( "Bytecode test #5: %s\n", ok?"pass":"fail" );
 #if 0
 
     // Delete the rest of variation at current offset
@@ -346,7 +349,7 @@ void func()
 #endif
 }
 
-bool it_summary_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt)
+bool it_txt_view(void *link, const std::string& bc, size_t offset, Codepoint &cpt)
 {
     // Truncate byte by byte comment analysis
     if( cpt.ct == ct_comment_txt && cpt.comment_offset>1  )
@@ -422,6 +425,84 @@ bool it_summary_test(void *link, const std::string& bc, size_t offset, Codepoint
     return false;
 }
 
+
+std::string stepper_txt_view(const std::string& bc)
+{
+    std::string s;
+    Stepper it(bc);
+    while( !it.end )
+    {
+        GameTree gt;
+        gt.bytecode = bc;
+        gt.offset   = it.idx;
+        Summary summary;
+        gt.GetSummary(summary);
+        thc::ChessRules cr = summary.start_position;
+        s += codepoint_type_txt(it.ct);
+        s += " ";
+        if( it.is_move )
+        {
+            s += util::sprintf( "%u", it.cr.full_move_count );
+            s += it.cr.white? ". " : "... ";
+            s += it.san_move;
+        }
+        else if( it.ct == ct_comment_txt )
+        {
+            s += util::sprintf( "'%c'", (uint8_t)it.raw );
+        }
+        else if( it.ct == ct_comment_end )
+        {
+            s += util::sprintf( "\"%s\"", it.comment_txt.c_str() );
+        }
+        else
+        {
+            s += util::sprintf( "Raw code: %02x", (uint8_t)it.raw );
+        }
+        s += util::sprintf( " depth=%u", it.depth );
+        s += " [";
+        size_t i=0;
+        if( i == (summary.move_idx - summary.variation_idx) )
+            s +=  "variation_start_ptr-> ";
+        if( i == summary.move_idx )
+            s +=  "ptr-> ";
+        for( i=0; i<summary.moves.size(); i++ )
+        {
+            thc::Move mv = summary.moves[i];
+            if( cr.white || i==0 )
+            {
+                s += util::sprintf( "%d", cr.full_move_count );
+                if( cr.white )
+                    s += ".";
+                else
+                    s += "...";
+            }
+            s += util::sprintf( "%s", mv.NaturalOut(&cr).c_str() );
+            if( i+1 == (summary.move_idx - summary.variation_idx) )
+                s += " variation_ptr->";
+            if( i+1 == summary.move_idx )
+                s += " ptr->";
+            if( i+1 < summary.moves.size() )
+                s += " ";
+            cr.PlayMove(mv);
+        }
+        s += "]\n";
+        s += util::sprintf( "description: %s\n",         summary.description.c_str()    );
+        s += util::sprintf( "pre_comment: %s\n",         summary.pre_comment.c_str()    );
+        s += util::sprintf( "comment:     %s\n",         summary.comment.c_str()        );
+        s += util::sprintf( "empty:       %s\n",         summary.empty ? "true" : "false" );
+        s += util::sprintf( "at_move0:    %s\n",         summary.at_move0 ? "true" : "false" );
+        s += util::sprintf( "at_end_of_variation: %s\n", summary.at_end_of_variation ? "true" : "false" );
+        s += util::sprintf( "in_comment:  %s\n",         summary.in_comment ? "true" : "false" );
+        s += util::sprintf( "move_offset: %d\n",         summary.move_offset            );
+        s += util::sprintf( "depth:       %d\n",         summary.depth                  );
+        s += util::sprintf( "nag1:        %d\n",         summary.nag1                   );
+        s += util::sprintf( "nag2:        %d\n",         summary.nag2                   );
+        s += "\n";
+        it.Next();
+    }
+    return s;
+}
+
 bool it_simple_expansion_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt)
 {
     std::string s;
@@ -489,12 +570,18 @@ void simple_expansion_test(const std::string& bc, std::string &s )
     return;
 }
 
-bool it_find_first_variation( void *offset_of_first_variation, const std::string& bc, size_t offset, Codepoint &cpt )
+bool it_find_first_variation( const std::string& bc, int &offset )
 {
-    if( cpt.depth > 0 )
+    offset = 0;
+    Stepper it(bc);
+    while( !it.end )
     {
-        *(static_cast<int *>(offset_of_first_variation)) = offset;
-        return true;
+        if( it.depth > 0 )
+        {
+            offset = it.idx-1;
+            return true;
+        }
+        it.Next();
     }
     return false;
 }
