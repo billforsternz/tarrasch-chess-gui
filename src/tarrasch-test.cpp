@@ -16,11 +16,16 @@
 #include "Stepper.h"
 
 int  game_tree_test();
-bool it_txt_view(void *link, const std::string& bc, size_t offset, Codepoint &cpt);
-std::string stepper_txt_view(const std::string& bc);
-bool it_simple_expansion_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt);
-void simple_expansion_test(const std::string& bc, std::string &s );
+bool it_summary_view(void *link, const std::string& bc, size_t offset, Codepoint &cpt);
+std::string stepper_every_position_summary(const std::string& bc);
+void stepper_gen_pgn_unjustified(const std::string& bc, std::string &s, const std::string& result );
 bool it_find_first_variation( const std::string& bc, int &offset );
+bool find_first_variation( const std::string &bc, int &offset );
+
+// Find start of first variation using Stepper
+bool stepper_find_first_variation( const std::string& bc, int &offset );
+
+// Find start of first variation
 bool find_first_variation( const std::string &bc, int &offset );
 
 int core_printf( const char *fmt, ... )
@@ -76,15 +81,19 @@ int game_tree_test()
     std::vector<thc::Move> moves;
     thc::ChessPosition cp;
 
+ /*
+   Small (simple) PGN testing
+  */
+
     // Load from PGN text
     std::string txt("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 {The exchange variation} ( {Alternatively} 4. Ba4 Nf6 5. O-O {is the main line} ) 4... dxc6");
     gt.PgnParse( txt );
 
     // Goto first variation
     int offset1, offset2;
-    bool found = it_find_first_variation( gt.bytecode, offset1 );
-    find_first_variation( gt.bytecode, offset2 );
-    if( offset1 != offset2 )
+    bool found1 = stepper_find_first_variation( gt.bytecode, offset1 );
+    bool found2 = find_first_variation( gt.bytecode, offset2 );
+    if( found1 != found2 || offset1 != offset2 )
         printf( "find_first_variation() mismatch\r\n" );
 
     // Promote a variation at current offset
@@ -97,8 +106,8 @@ int game_tree_test()
 
     // Bytecode type is intended to be increasingly the heart of Tarrasch
     Bytecode press;
-    std::string txt2("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 {The exchange variation} ( {Alternatively} 4. Ba4 Nf6 5. O-O {is the main line} ) 4... dxc6");
-    std::string bc = press.PgnParse(txt2);
+    std::string simple_in("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 {The exchange variation} ( {Alternatively} 4. Ba4 Nf6 5. O-O {is the main line} ) 4... dxc6");
+    std::string bc = press.PgnParse(simple_in);
     thc::ChessRules cr;
     std::string t = press.cr.ToDebugStr();
     printf( "%s", t.c_str() );
@@ -115,10 +124,32 @@ int game_tree_test()
     ok = (t == expected);
     printf( "Bytecode test #1: %s\n", ok?"pass":"fail" );
 
-    std::string stepper_simple_pgn_out;
+    // Optimised PGN directly from Bytecode
     press.Reset();
-    simple_expansion_test(bc, stepper_simple_pgn_out );
-    printf( "stepper_simple_pgn_out uses Stepper:\n%s\n", stepper_simple_pgn_out.c_str() );
+    std::string pgn_direct = press.PgnOut( bc, "*" );
+    printf("direct:\n%s\n",pgn_direct.c_str());
+
+    // PGN from Stepper
+    press.Reset();
+    std::string pgn_stepper;
+    stepper_gen_pgn_unjustified( bc, pgn_stepper, "*" );
+    printf("stepper:\n%s\n",pgn_stepper.c_str());
+
+    // Compare
+    std::string s0 = white_space_normalise(simple_in+" *");
+    std::string s1 = white_space_normalise(pgn_direct);
+    std::string s2 = white_space_normalise(pgn_stepper);
+    printf( "s0:%s\n", s0.c_str() );
+    printf( "s1:%s\n", s1.c_str() );
+    bool simple_pgn_test = (s0==s1);
+    bool simple_direct_vs_stepper_test = (s1==s2);
+    printf( "Simple pgn test %s\n", simple_pgn_test?"pass":"fail" );
+    printf( "Simple direct vs stepper pgn test %s\n", simple_direct_vs_stepper_test?"pass":"fail" );
+
+
+ /*
+   Large (complicated) PGN testing
+  */
 
     std::string complex_example =
 /*[Event "Waitakere Trust Open"]
@@ -181,48 +212,46 @@ int game_tree_test()
 "43. Na4 Kb4 44. Nb2 Rg2+ 0-1\n";
 #endif
 
+    // Demo OutlineOut(), basically a debug device
     press.Reset();
     bc = press.PgnParse(complex_example);
     std::string outline_out = press.OutlineOut( bc, "0-1" );
     printf( "Complex outline out:\n%s\n", outline_out.c_str() );
+
+    // Optimised PGN directly from Bytecode
     press.Reset();
-    std::string rough_out;
-    simple_expansion_test(bc, rough_out );
-    printf( "Game 2 (complex) stepper PGN dump:\n%s\n", rough_out.c_str() );
+    pgn_direct = press.PgnOut( bc, "0-1" );
+
+    // PGN from Stepper
     press.Reset();
-    std::string txt_out = press.PgnOut( bc, "0-1" );
-    std::string txt_out2 = white_space_normalise(txt_out);
-    printf( "Refined dump:\n%s\n", txt_out2.c_str() );
-    std::string txt_out3 = white_space_normalise(complex_example);
-    printf( "Should match input:\n%s\n", txt_out3.c_str() );
-    ok = (txt_out2 == txt_out3);
-    printf( "Bytecode test #2: %s\n", ok?"pass":"fail" );
-    printf( "PgnOut():\n%s\n", txt_out.c_str() );
-    printf( "should match in:\n%s\n", complex_example.c_str() );
-    ok = (txt_out == complex_example);
-    printf( "Bytecode test #3:\n%s\n", ok?"pass":"fail" );
-    std::string stepper_pgn_out;
-    simple_expansion_test(bc, stepper_pgn_out );
-    stepper_pgn_out += " 0-1\n";
-    extern void white_space_word_wrap( std::string &s );
-    white_space_word_wrap( stepper_pgn_out );
-    printf( "Stepper PGN out:\n%s\n", stepper_pgn_out.c_str() );
-    ok = (txt_out == stepper_pgn_out);
-    printf( "Bytecode test #4:\n%s\n", ok?"pass":"fail" );
+    stepper_gen_pgn_unjustified( bc, pgn_stepper, "0-1" );
+
+    // Compare
+    s1 = white_space_normalise(pgn_direct);
+    s2 = white_space_normalise(pgn_stepper);
+    bool complex_pgn_test = (s1==s2);
+    printf( "Complex pgn test %s\n", complex_pgn_test?"pass":"fail" );
+
+/*
+    Summary testing
+
     gt.bytecode = bc;
-    std::string txt_view = stepper_txt_view(gt.bytecode);
+    std::string txt_view = stepper_every_position_summary(gt.bytecode);
     std::ofstream fout("test_out.txt");
     printf( "txt_view test output in test_out.txt\n" );
     fout.write( txt_view.c_str(), txt_view.length() );
     std::string txt_view2;
     press.Reset();
-    press.IterateOver( gt.bytecode, &txt_view2, it_txt_view );
+    press.IterateOver( gt.bytecode, &txt_view2, it_summary_view );
     std::ofstream fout2("test_out2.txt");
     printf( "txt_view2 test output in test_out2.txt\n" );
     fout2.write( txt_view2.c_str(), txt_view2.length() );
     ok = (txt_view == txt_view2);
     printf( "Bytecode test #5: %s\n", ok?"pass":"fail" );
-#if 0
+
+ */
+    
+    #if 0
 
     // Delete the rest of variation at current offset
     ok = gt.DeleteRestOfVariation();
@@ -349,7 +378,7 @@ void func()
 #endif
 }
 
-bool it_txt_view(void *link, const std::string& bc, size_t offset, Codepoint &cpt)
+bool it_summary_view(void *link, const std::string& bc, size_t offset, Codepoint &cpt)
 {
     // Truncate byte by byte comment analysis
     if( cpt.ct == ct_comment_txt && cpt.comment_offset>1  )
@@ -426,11 +455,10 @@ bool it_txt_view(void *link, const std::string& bc, size_t offset, Codepoint &cp
 }
 
 
-std::string stepper_txt_view(const std::string& bc)
+std::string stepper_every_position_summary(const std::string& bc)
 {
     std::string s;
-    Stepper it(bc);
-    while( !it.end )
+    for( Stepper it(bc); !it.End(); it.Next() )
     {
         GameTree gt;
         gt.bytecode = bc;
@@ -440,7 +468,7 @@ std::string stepper_txt_view(const std::string& bc)
         thc::ChessRules cr = summary.start_position;
         s += codepoint_type_txt(it.ct);
         s += " ";
-        if( it.is_move )
+        if( it.ct == ct_move )
         {
             s += util::sprintf( "%u", it.cr.full_move_count );
             s += it.cr.white? ". " : "... ";
@@ -498,107 +526,88 @@ std::string stepper_txt_view(const std::string& bc)
         s += util::sprintf( "nag1:        %d\n",         summary.nag1                   );
         s += util::sprintf( "nag2:        %d\n",         summary.nag2                   );
         s += "\n";
-        it.Next();
     }
     return s;
 }
 
-bool it_simple_expansion_test(void *link, const std::string& bc, size_t offset, Codepoint &cpt)
+void stepper_gen_pgn_unjustified(const std::string& bc, std::string &s, const std::string& result )
 {
-    std::string s;
-    if( cpt.is_move )
-    {
-        if( cpt.cr->white || cpt.move_nbr_needed )
-            s += util::sprintf( "%u%s ", cpt.cr->full_move_count, cpt.cr->white ? "." : "..." );
-        s += cpt.san_move;
-    }
-    else if( cpt.ct == ct_comment_end )
-    {
-        s += util::sprintf( "{%s}", cpt.comment_txt.c_str() );
-    }
-    else if( cpt.ct == ct_variation_start )
-    {
-        s += "(";
-    }
-    else if( cpt.ct == ct_variation_end )
-    {
-        s += ")";
-    }
-    if( s.length() > 0 )
-    {
-        std::string *ps = (std::string *)link;
-        std::string &t = *ps;
-        if( t.length() > 0 )
-            t += " ";
-        t += s;
-    }
-    return false;
-}
-
-void simple_expansion_test(const std::string& bc, std::string &s )
-{
+    std::string space;
+    bool move_nbr_needed = true;
     s.clear();
-    Stepper it(bc);
-    while( !it.end )
+    for( Stepper it(bc); !it.End(); it.Next() )
     {
-        if( it.is_move )
+        switch( it.ct )
         {
-            if( it.stk->variation_move_count > 1 )
-                s += " ";
-            if( it.move_nbr_needed )
-                s += util::sprintf( "%u%s ", it.cr.full_move_count, it.cr.white ? "." : "..." );
-            s += it.san_move;
+            case ct_move:
+            {
+                s += space;
+                if( move_nbr_needed )
+                    s += util::sprintf( "%u%s ", it.cr.full_move_count, it.cr.white ? "." : "..." );
+                s += it.san_move;
+                space= " ";
+                move_nbr_needed = !it.cr.white;
+                break;
+            }
+            case ct_comment_end:
+            {
+                s += space;
+                s += util::sprintf( "{%s}", it.comment_txt.c_str() );
+                space= " ";
+                move_nbr_needed = true;
+                break;
+            }
+            case ct_variation_start:
+            {
+                s += space;
+                s += "(";
+                space= "";
+                move_nbr_needed = true;
+                break;
+            }
+            case ct_variation_end:
+            {
+                s += ")";
+                space= " ";
+                move_nbr_needed = true;
+                break;
+            }
+            case ct_escape_code:
+            {
+                s += space;
+                s += util::sprintf( "$%u", it.raw-8 );
+                space= " ";
+                break;
+            }
         }
-        else if( it.ct == ct_comment_end )
-        {
-            s += util::sprintf( " {%s}", it.comment_txt.c_str() );
-        }
-        else if( it.ct == ct_variation_start )
-        {
-            s += " (";
-        }
-        else if( it.ct == ct_variation_end )
-        {
-            s += ")";
-        }
-        else if( it.ct == ct_escape_code )
-        {
-            s += util::sprintf( " $%u", it.raw-8 );
-        }
-        it.Next();
     }
-    return;
-}
-
-bool it_find_first_variation( const std::string& bc, int &offset )
-{
-    offset = 0;
-    Stepper it(bc);
-    while( !it.end )
-    {
-        if( it.depth > 0 )
-        {
-            offset = it.idx-1;
-            return true;
-        }
-        it.Next();
-    }
-    return false;
+    s += space;
+    s += result;
 }
 
 // Find start of first variation using Stepper
-bool find_first_variation( const std::string &bc, int &offset )
+bool stepper_find_first_variation( const std::string& bc, int &offset )
 {
     offset = 0;
-    Stepper2 it(bc);
-    while( !it.end )
+    for( Stepper it(bc); !it.End(); it.Next() )
     {
         if( it.depth > 0 )
         {
-            offset = it.idx-1;
+            offset = it.idx;
             return true;
         }
-        it.Next();
+    }
+    return false;
+}
+
+// Find start of first variation
+bool find_first_variation( const std::string &bc, int &offset )
+{
+    offset = 0;
+    for( char c: bc )
+    {
+        if( c == BC_VARIATION_START )
+            return true;
     }
     return false;
 }

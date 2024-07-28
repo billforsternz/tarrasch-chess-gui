@@ -82,6 +82,8 @@ struct Summary
     int  nag2=0;                            // annotation type 2 (+-, += etc)
 };
 
+enum Result {NO_RESULT,WHITE_WINS,BLACK_WINS,DRAW};
+
 // GameTree = experimental replacement for MoveTree class
 class GameTree
 {
@@ -90,6 +92,7 @@ public:
 
     std::string bytecode;
     int offset = 0;
+    Result result = NO_RESULT;
 #if 1
     thc::ChessPosition start_position;
     GameTree() {}

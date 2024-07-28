@@ -611,181 +611,7 @@ void Bytecode::IterateOver( const std::string& bc, void *utility, bool (*callbac
     }
 }
 
-void Bytecode::Next( const std::string &bc, CodepointPlus &cpt )
-{
-    cpt.is_move = false;
-    cpt.depth   = cpt.stk_idx;
-    cpt.cr      = &cr;
-    if( cpt.state == CodepointPlus::AFTER_MOVE )
-    {
-        cr.PlayMove(cpt.stk->mv);
-        cpt.state = CodepointPlus::IN_MOVES;
-    }
-    cpt.end = (cpt.idx >= cpt.len);
-    if( cpt.end )
-        return;
-    char code   = bc[cpt.idx++];
-    cpt.raw     = code;
-    switch( cpt.state )
-    {
-        case CodepointPlus::AFTER_ESCAPE:
-        {
-
-            cpt.ct    = ct_escape_code;
-            cpt.state = CodepointPlus::IN_MOVES;
-            break;
-        }
-        case CodepointPlus::IN_META:
-        {
-            if( code != BC_META_END )
-                cpt.ct = ct_meta_data;
-            else
-            {
-                cpt.ct = ct_meta_end;
-                cpt.state = CodepointPlus::IN_MOVES;
-            }
-            break;
-        }
-        case CodepointPlus::IN_COMMENT:
-        {
-            if( code != BC_COMMENT_END )
-            {
-                cpt.ct = ct_comment_txt;
-                cpt.comment_offset++;
-                cpt.comment_txt += code;
-            }
-            else
-            {
-                cpt.ct = ct_comment_end;
-                cpt.state = CodepointPlus::IN_MOVES;
-                cpt.move_nbr_needed_pending = true;
-            }
-            break;
-        }
-        case CodepointPlus::IN_MOVES:
-        {
-            cpt.ct = ct_move;
-            if( code == BC_VARIATION_START )
-            {
-
-                // Push current state onto a stack
-                cpt.ct  = ct_variation_start;
-                cpt.move_nbr_needed_pending = true;
-                cpt.stk->cr = cr;
-                if( cpt.stk_idx+1 < MAX_DEPTH )
-                {
-
-                    // Pop off most recent move
-                    if( cpt.stk->variation_move_count > 0 )
-                    {
-                        if( cr.white )
-                        {
-                            cr.full_move_count--;   // PushMove()/PopMove()
-                                                    //  don't touch move counts
-                                                    //  we have to since we are
-                                                    //  doing PopMove() without
-                                                    //  PushMove()
-                        }
-                        cr.PopMove( cpt.stk->mv );
-                    }
-                    cpt.stk_idx++;
-                    cpt.stk = &cpt.stk_array[cpt.stk_idx];
-                    cpt.stk->variation_move_count = 0;
-
-                    // Disrupting encoding, force rescan
-                    sides[0].fast_mode=false;
-                    sides[1].fast_mode=false;
-                }
-                break;
-            }
-            else if( code == BC_VARIATION_END )
-            {
-                cpt.ct  = ct_variation_end;
-                cpt.move_nbr_needed_pending = true;
-
-                // Pop old state off stack
-                if( cpt.stk_idx > 0 )
-                {
-                    cpt.stk_idx--;
-                    cpt.stk = &cpt.stk_array[cpt.stk_idx];
-                    cr  = cpt.stk->cr;
-
-                    // Disrupting encoding, force rescan
-                    sides[0].fast_mode=false;
-                    sides[1].fast_mode=false;
-                }
-                break;
-            }
-            else if( code == BC_COMMENT_START )
-            {
-                cpt.state = CodepointPlus::IN_COMMENT;
-                cpt.ct  = ct_comment_start;
-                cpt.comment_offset = 0;
-                cpt.comment_txt.clear();
-                cpt.move_nbr_needed_pending = true;
-                break;
-            }
-            else if( code == BC_META_START )
-            {
-                cpt.state = CodepointPlus::IN_META;
-                cpt.ct  = ct_meta_start;
-                break;
-            }
-            else if( code == BC_ESCAPE )
-            {
-                cpt.state = CodepointPlus::AFTER_ESCAPE;
-                cpt.ct = ct_escape;
-                break;
-            }
-
-            // Uncompress move
-            Army* side = cr.white ? &sides[0] : &sides[1];
-            Army* other = cr.white ? &sides[1] : &sides[0];
-            bool have_san_move = false;
-            size_t san_move_len = 0;
-            std::string san_move;
-            if( side->fast_mode )
-            {
-                cpt.stk->mv = UncompressFastMode(code, side, other, san_move);
-                san_move_len = san_move.length();
-                have_san_move = san_move_len > 0;
-            }
-            else if(TryFastMode(side))
-            {
-                cpt.stk->mv = UncompressFastMode(code, side, other, san_move);
-                san_move_len = san_move.length();
-                have_san_move = san_move_len > 0;
-            }
-            else
-            {
-                cpt.stk->mv = UncompressSlowMode(code);
-                other->fast_mode = false;   // force other side to reset and retry
-            }
-
-            cpt.san_move = have_san_move ? san_move : cpt.stk->mv.NaturalOut(&cr);
-
-            // Check, is it mate ? (UncompressFastMode() leaves this to the caller
-            //  in order to be as fast as possible)
-            if( have_san_move && san_move[san_move_len-1]=='+' )
-            {
-                cr.PushMove(cpt.stk->mv);   // need to temporarily play the move
-                thc::TERMINAL score_terminal;
-                cr.Evaluate( score_terminal );
-                if( score_terminal == thc::TERMINAL_WCHECKMATE || score_terminal == thc::TERMINAL_BCHECKMATE )
-                    cpt.san_move[san_move_len-1] = '#';
-                cr.PopMove(cpt.stk->mv);
-            }
-            cpt.is_move = true;
-            cpt.move_nbr_needed = cr.white || cpt.move_nbr_needed_pending;
-            cpt.move_nbr_needed_pending = false;
-            cpt.state = CodepointPlus::AFTER_MOVE;
-            cpt.stk->variation_move_count++;
-            break;
-        }
-    }
-}
-
-void white_space_word_wrap( std::string &s )
+void justify( std::string &s )
 {
     int col=0;
     char *p = &s[0];
@@ -1001,7 +827,7 @@ std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string&
     s += ' ';
     s += result;
     s += EOL;
-    white_space_word_wrap(s); 
+    justify(s); 
     return s;
 }
 
@@ -1030,7 +856,7 @@ std::string Bytecode::OutlineOut( const std::string& bc_moves_in, const std::str
             {
                 s += space;
                 space = " ";
-                s += util::sprintf("[%02x]",(uint8_t)code);
+                //s += util::sprintf("[%02x]",(uint8_t)code);
                 if( white || need_move_number )
                 {
                     s += util::sprintf( "%d", move_nbr );

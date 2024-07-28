@@ -74,7 +74,8 @@ enum codepoint_type
     ct_escape,
     ct_comment_txt,
     ct_meta_data,
-    ct_escape_code
+    ct_escape_code,
+    ct_unknown
 };
 const char *codepoint_type_txt( codepoint_type ct );
 
@@ -94,33 +95,6 @@ struct Codepoint
     bool           move_nbr_needed = false;
     bool           move_nbr_needed_pending = true; // persists until move_nbr_needed set for
                                                    //  a ct_move then cleared
-};
-
-struct CodepointPlus : Codepoint
-{
-    int     idx = 0;
-    int     len;
-    bool    end = false;
-    bool    found = false;
-    enum
-    {
-        IN_MOVES,
-        AFTER_MOVE,
-        IN_COMMENT,
-        IN_META,
-        AFTER_ESCAPE
-    } state = IN_MOVES;
-
-    // Allow stacking of the key state variables
-    struct STACK_ELEMENT
-    {
-        thc::ChessRules cr;
-        thc::Move       mv;
-        int             variation_move_count=0;
-    };
-    STACK_ELEMENT   stk_array[MAX_DEPTH+1];
-    STACK_ELEMENT   *stk = stk_array;
-    int             stk_idx = 0;
 };
 
 class Bytecode
@@ -155,7 +129,6 @@ public:
     std::string OutlineOut( const std::string& bc_moves_in, const std::string& result );
     void GameViewOut( const std::string& bc_moves_in, const std::string& result, std::vector<GameViewElement> &expansion_out );
     void IterateOver( const std::string& bc, void *utility, bool (*callback_func)(void *utility, const std::string& bc, size_t offset, Codepoint &cpt) );
-    void Next( const std::string &bc, CodepointPlus &cpt );
     char      CompressMove( thc::Move mv );
     thc::Move UncompressMove( char c );
     Bytecode( const Bytecode& copy_from_me ) { cr=copy_from_me.cr; sides[0]=copy_from_me.sides[0]; sides[1]=copy_from_me.sides[1]; }
@@ -179,20 +152,6 @@ protected:
 private:
     thc::ChessPosition start_position;
 
-};
-
-struct Stepper2 : CodepointPlus
-{
-    Stepper2( const std::string& _bc ) : bc(_bc)
-    {
-        len = static_cast<int>(bc.length());
-    }
-    void Next()
-    {
-        press.Next( bc, *this );
-    }
-    Bytecode            press;
-    const std::string   bc;
 };
 
 // Find the position and moves leading to this offset in the bytecode
