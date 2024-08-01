@@ -106,7 +106,7 @@ int game_tree_test()
 
     // Bytecode type is intended to be increasingly the heart of Tarrasch
     Bytecode press;
-    std::string simple_in("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 {The exchange variation} ( {Alternatively} 4. Ba4 Nf6 5. O-O {is the main line} ) 4... dxc6");
+    std::string simple_in("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 {The exchange variation} ({Alternatively} 4. Ba4 Nf6 5. O-O {is the main line}) 4... dxc6");
     std::string bc = press.PgnParse(simple_in);
     thc::ChessRules cr;
     std::string t = press.cr.ToDebugStr();
@@ -139,8 +139,8 @@ int game_tree_test()
     std::string s0 = white_space_normalise(simple_in+" *");
     std::string s1 = white_space_normalise(pgn_direct);
     std::string s2 = white_space_normalise(pgn_stepper);
-    printf( "s0:%s\n", s0.c_str() );
-    printf( "s1:%s\n", s1.c_str() );
+    printf( "s0:\n%s\n", s0.c_str() );
+    printf( "s1:\n%s\n", s1.c_str() );
     bool simple_pgn_test = (s0==s1);
     bool simple_direct_vs_stepper_test = (s1==s2);
     printf( "Simple pgn test %s\n", simple_pgn_test?"pass":"fail" );
@@ -221,16 +221,23 @@ int game_tree_test()
     // Optimised PGN directly from Bytecode
     press.Reset();
     pgn_direct = press.PgnOut( bc, "0-1" );
+    printf("direct:\n%s\n",pgn_direct.c_str());
 
     // PGN from Stepper
     press.Reset();
     stepper_gen_pgn_unjustified( bc, pgn_stepper, "0-1" );
+    printf("stepper:\n%s\n",pgn_stepper.c_str());
 
     // Compare
+    s0 = white_space_normalise(complex_example);
     s1 = white_space_normalise(pgn_direct);
     s2 = white_space_normalise(pgn_stepper);
-    bool complex_pgn_test = (s1==s2);
+    printf( "s0:\n%s\n", s0.c_str() );
+    printf( "s1:\n%s\n", s1.c_str() );
+    bool complex_pgn_test = (s0==s1);
+    bool complex_direct_vs_stepper_test = (s1==s2);
     printf( "Complex pgn test %s\n", complex_pgn_test?"pass":"fail" );
+    printf( "Complex direct vs stepper pgn test %s\n", complex_direct_vs_stepper_test?"pass":"fail" );
 
 /*
     Summary testing

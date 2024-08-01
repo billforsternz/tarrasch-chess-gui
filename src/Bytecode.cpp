@@ -659,52 +659,57 @@ std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string&
     int stk_idx = 0;
     STACK_ELEMENT *stk = &stk_array[stk_idx];
     bool need_move_number = true;
-    bool mainline_start   = true;
-    bool variation_start  = false;
-    int state =0;
+    enum { IN_MOVES, IN_COMMENT, IN_META,  AFTER_ESCAPE } state=IN_MOVES;
     std::string s;
     sides[0].fast_mode = false;
     sides[1].fast_mode = false;
-    int len = bc_moves_in.size();
-    for( int i = 0; i < len; i++)
+    size_t len = bc_moves_in.size();
+    std::string space;
+    for( size_t i=0; i<len; i++ )
     {
-        char code = bc_moves_in[i];
+        uint8_t code = (uint8_t)bc_moves_in[i];
         switch( state )
         {
-            case 4:
+            case AFTER_ESCAPE:
             {
-                s += util::sprintf( " $%u", (unsigned int)(code-8) );   // ESCAPE NAG+8
-                state = 0;
+                s += space;
+                s += util::sprintf( "$%u", (unsigned int)(code-8) );   // ESCAPE NAG+8
+                state = IN_MOVES;
+                space = " ";
+                // need_move_number  = true; // unchanged
                 break;
             }
-            case 3:
+            case IN_META:
             {
                 if( code == BC_META_END )
                 {
-                    state = 0;
+                    state = IN_MOVES;
+                    space = " ";
+                    need_move_number  = true;
                 }
                 break;
             }
-            case 2:
+            case IN_COMMENT:
             {
                 if( code == BC_COMMENT_END )
                 {
-                    state = 0;
+                    state = IN_MOVES;
                     s += "}";
+                    space = " ";
+                    need_move_number  = true;
                 }
                 else
                 {
-                    s += code;
+                    s += (char)code;
                 }
                 break;
             }
-            case 0:
+            case IN_MOVES:
             {
                 if( code == BC_VARIATION_START )
                 {
-                    s += " (";
-                    need_move_number = true;
-                    variation_start = true;
+                    s += space;
+                    s += "(";
 
                     // Push current state onto a stack
                     stk->cr    = cr;
@@ -712,28 +717,27 @@ std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string&
                     {
 
                         // Pop off most recent move
-                        int move_nbr = stk->move_nbr;
                         if( stk->variation_move_count > 0 )
                         {
                             if( cr.white )
-                                move_nbr--;
+                                cr.full_move_count--;
                             cr.PopMove( stk->mv );
                         }
                         stk_idx++;
                         stk = &stk_array[stk_idx];
                         stk->variation_move_count = 0;
-                        stk->move_nbr = move_nbr;
 
                         // Disrupting encoding, force rescan
                         sides[0].fast_mode=false;
                         sides[1].fast_mode=false;
                     }
+                    space = "";
+                    need_move_number = true;
                     break;
                 }
                 else if( code == BC_VARIATION_END )
                 {
                     s += ")";
-                    need_move_number = true;
 
                     // Pop old state off stack
                     if( stk_idx > 0 )
@@ -746,23 +750,27 @@ std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string&
                         sides[0].fast_mode=false;
                         sides[1].fast_mode=false;
                     }
+                    space = " ";
+                    need_move_number = true;
                     break;
                 }
                 else if( code == BC_COMMENT_START )
                 {
-                    state = 2;
-                    s += " {";
+                    state = IN_COMMENT;
+                    s += space;
+                    s += "{";
+                    space = " ";
                     need_move_number = true;
                     break;
                 }
                 else if( code == BC_META_START )
                 {
-                    state = 3;
+                    state = IN_META;
                     break;
                 }
                 else if( code == BC_ESCAPE )
                 {
-                    state = 4;
+                    state = AFTER_ESCAPE;
                     break;
                 }
 
@@ -789,22 +797,16 @@ std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string&
                     stk->mv = UncompressSlowMode(code);
                     other->fast_mode = false;   // force other side to reset and retry
                 }
-                if( cr.white || need_move_number )
+                s += space;
+                if( need_move_number )
                 {
                     char buf[40];
-                    _itoa(stk->move_nbr, buf, 10);
+                    _itoa(cr.full_move_count, buf, 10);
                     std::string t(buf);
-                    t += (cr.white ? "." : "...");
-                    if( !mainline_start && !variation_start )
-                        s += ' ';
+                    t += (cr.white ? ". " : "... ");
                     s += t;
                 }
-                need_move_number = false;
-                variation_start  = false;
-                mainline_start   = false;
-                if( !cr.white )
-                    stk->move_nbr++;
-
+                need_move_number = !cr.white;   // move number not needed for a Black move immediately following a White move
                 std::string t = have_san_move ? san_move : stk->mv.NaturalOut(&cr);
                 cr.PlayMove(stk->mv);
                 stk->variation_move_count++;
@@ -818,13 +820,13 @@ std::string Bytecode::PgnOut( const std::string& bc_moves_in, const std::string&
                     if( score_terminal == thc::TERMINAL_WCHECKMATE || score_terminal == thc::TERMINAL_BCHECKMATE )
                         t[san_move_len-1] = '#';
                 }
-                s += ' ';
                 s += t;
+                space = " ";
                 break;
             }
         }
     }
-    s += ' ';
+    s += space;
     s += result;
     s += EOL;
     justify(s); 
