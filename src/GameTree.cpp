@@ -174,6 +174,7 @@ int GameTree::Parent( int offset_parm )
 // Return true if move played okay
 bool GameTree::InsertMove( GAME_MOVE game_move, bool allow_overwrite )
 {
+    //$ TODO support all GAME_MOVE fields, perhaps using meta data
     // bool move_played = false;
     Summary summary;
     GetSummary( summary );
