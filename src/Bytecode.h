@@ -128,7 +128,6 @@ public:
     std::string PgnOut( const std::string& bc_moves_in, const std::string& result );
     std::string OutlineOut( const std::string& bc_moves_in, const std::string& result );
     void GameViewOut( const std::string& bc_moves_in, const std::string& result, std::vector<GameViewElement> &expansion_out );
-    void IterateOver( const std::string& bc, void *utility, bool (*callback_func)(void *utility, const std::string& bc, size_t offset, Codepoint &cpt) );
     char      CompressMove( thc::Move mv );
     thc::Move UncompressMove( char c );
     Bytecode( const Bytecode& copy_from_me ) { cr=copy_from_me.cr; sides[0]=copy_from_me.sides[0]; sides[1]=copy_from_me.sides[1]; }

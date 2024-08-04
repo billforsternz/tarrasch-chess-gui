@@ -65,10 +65,12 @@ struct GAME_MOVE
 // For GetSummary(), find the move corresponding to the current GameTree offset and get details as follows;
 struct Summary
 {
+    thc::ChessPosition pos;                 // The current position
     thc::ChessPosition start_position;      // If we start at this position
-    std::vector<thc::Move> moves;           // and play these moves, we will get to the current position
-    int  move_idx=0;                        // Idx of found move
-    int  variation_idx=0;                   // Idx of found move in variation
+    std::vector<thc::Move> moves;           // and play these moves, we will get to the current position...
+    int  move_idx=0;                        // after this many moves
+    int  variation_move_count=0;            // we are also this many moves into a variation
+    int  depth=0;                           // at this depth, depth = 0 is main line
     std::string description;                // eg "Position after 23. f4"
     std::string pre_comment;                // comment before 23. f4 if it is the start of a variation, of follows a variation
     std::string comment;                    // comment after 23. f4
@@ -77,7 +79,6 @@ struct Summary
     bool at_end_of_variation=false;         // After last move in this variation
     bool in_comment=false;                  // In a comment
     int  move_offset=0;                     // May be different to GameTree offset (eg if in_comment is true)
-    int  depth=0;                           // depth = 0 is main line
     int  nag1=0;                            // annotation type 1 (!, !!, ? etc)
     int  nag2=0;                            // annotation type 2 (+-, += etc)
 };
@@ -102,9 +103,6 @@ public:
     void Init( thc::ChessPosition &start_position_ ) { start_position_ = start_position; bytecode.clear(); }
     void Init( thc::ChessPosition &start_position_, std::string &bytecode_ ) { start_position = start_position_; bytecode = bytecode_; }
     void Init( std::string &bytecode_ ) { start_position.Init(); bytecode = bytecode_; }
-
-    void IterateOver( void *utility, bool (*callback_func)(void *utility, const std::string& bc, size_t offset, Codepoint &cpt) )
-        { Bytecode press; press.IterateOver(bytecode, utility, callback_func); }
     void PgnParse( const std::string str )
         { Bytecode press; bytecode = press.PgnParse(str); }
 

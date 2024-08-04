@@ -10,6 +10,7 @@
 #include "thc.h"
 #include "DebugPrintf.h"
 #include "Bytecode.h"
+#include "Stepper.h"
 #include "GameTree.h"
 
 //
@@ -173,121 +174,27 @@ int GameTree::Parent( int offset_parm )
 // Return true if move played okay
 bool GameTree::InsertMove( GAME_MOVE game_move, bool allow_overwrite )
 {
-    bool move_played = false;
-#if 0
-    GameTree *move_played=NULL;
-    unsigned long pos = GetInsertionPoint();
-    thc::ChessRules cr = start_position;
-    std::string title;
-    bool at_move0=true;
-    bool empty_with_comment = tree_bc.IsJustAComment();
-    bool found = Locate( pos, cr, title, at_move0 );
-    int ivar=0;
-    int imove=0;
-    if( found )
+    // bool move_played = false;
+    Summary summary;
+    GetSummary( summary );
+    Bytecode bc(summary.pos);
+    uint8_t c = bc.CompressMove(game_move.move);
+    size_t len = summary.moves.size();
+    if( summary.move_idx == (int)len )
     {
-        VARIATION &variation = parent->variations[ivar];
-        int sz = variation.size();
-
-        // If making a move from before start in existing main line
-        bool special_case = (at_move0 && parent==&tree_bc && sz>0 );
-
-        // Get into position
-        for( int i=0; i<imove; i++ )
-            cr.PlayMove( variation[i].game_move.move );
-        if( !at_move0 )
-            cr.PlayMove( variation[imove].game_move.move );
-        master_position = cr;
-
-        // Handle special case first
-        if( special_case )
-        {
-            VARIATION new_variation;
-            GameTree node;
-            if( game_move.flag_ingame )
-            {
-                game_move.pre_comment =  objs.repository->player.m_white;
-                game_move.pre_comment += "-";
-                game_move.pre_comment += objs.repository->player.m_black;
-            }
-            node.game_move = game_move;
-            new_variation.push_back(node);
-            variation[imove].variations.push_back( new_variation );
-            VARIATION &inplace_variation = variation[imove].variations[variation[imove].variations.size()-1];
-            move_played = &inplace_variation[inplace_variation.size()-1];
-        }
-
-        // New variation for parent
-        else if( at_move0 && parent!= &tree_bc )
-        {
-            VARIATION new_variation;
-            GameTree node;
-            if( game_move.flag_ingame )
-            {
-                game_move.pre_comment =  objs.repository->player.m_white;
-                game_move.pre_comment += "-";
-                game_move.pre_comment += objs.repository->player.m_black;
-            }
-            node.game_move = game_move;
-            new_variation.push_back(node);
-            parent->variations.push_back( new_variation );
-            VARIATION &inplace_variation = parent->variations[parent->variations.size()-1];
-            move_played = &inplace_variation[inplace_variation.size()-1];
-        }
-
-        // New variation
-        else if( sz > imove+1 )
-        {
-            bool last_move_of_main_line = false;
-            if( parent==&tree_bc && sz>1 )
-            {
-                if( imove == sz-2 )
-                    last_move_of_main_line = true;  // make a new variation at last move, even if it's the same
-                                                    //  move, so you can create a variation indicating rest of game
-            }
-            if( !last_move_of_main_line && game_move.move==variation[imove+1].game_move.move && allow_overwrite )
-                move_played = &variation[imove+1];
-            else
-            {
-                VARIATION new_variation;
-                GameTree node;
-                if( game_move.flag_ingame )
-                {
-                    game_move.pre_comment =  objs.repository->player.m_white;
-                    game_move.pre_comment += "-";
-                    game_move.pre_comment += objs.repository->player.m_black;
-                }
-                node.game_move = game_move;
-                new_variation.push_back( node );
-                GameTree &existing_node = variation[ imove + (at_move0?0:1) ];
-                existing_node.variations.push_back( new_variation );
-                VARIATION &inplace_variation = existing_node.variations[existing_node.variations.size()-1];
-                move_played = &inplace_variation[inplace_variation.size()-1];
-            }
-        }
-
-        // Append
-        else if( sz <= imove+1 )
-        {
-            GameTree node;
-            if( game_move.flag_ingame && sz>0 && !variation[sz-1].game_move.flag_ingame  )
-            {
-                game_move.pre_comment =  objs.repository->player.m_white;
-                game_move.pre_comment += "-";
-                game_move.pre_comment += objs.repository->player.m_black;
-            }
-            node.game_move = game_move;
-            variation.push_back( node );
-            move_played = &variation[variation.size()-1];
-        }
-        if( empty_with_comment && move_played )
-        {
-            move_played->game_move.pre_comment = tree_bc.game_move.comment;
-            tree_bc.game_move.comment = "";
-        }
+        bytecode.insert(summary.move_offset,1,(char)c);
+        offset = summary.move_offset+1;
     }
-#endif
-    return move_played;
+    else
+    {
+        std::string new_variation;
+        new_variation += (char)BC_VARIATION_START;
+        new_variation += (char)c;
+        new_variation += (char)BC_VARIATION_END;
+        bytecode.insert(summary.move_offset,new_variation);
+        offset = summary.move_offset+2;
+    }
+    return true;
 }
 
 // Load from a start position plus a list of moves
@@ -348,7 +255,8 @@ bool  GameTree::AreWeInMain(void)
 struct Summary
 {
     thc::ChessPosition start_position;      // If we start at this position
-    std::vector<thc::Move> moves;           // and play these moves, we will get to the current position
+    int move_idx;                           // and play this many moves
+    std::vector<thc::Move> moves;           // of this sequence, we will get to the current position (there may be more moves if the variation continues)
     std::string description;                // eg "Position after 23. f4"
     std::string pre_comment;                // comment before 23. f4 if it is the start of a variation, of follows a variation
     std::string comment;                    // comment after 23. f4
@@ -367,6 +275,8 @@ struct Summary
     // Get a summary of the current situation
 void GameTree::GetSummary( Summary &summary )
 {
+    //$ TODO, replace with Stepper based version
+#if 0
     static int dbg_count = 0;
     printf( "GetSummary() %d: In\n", ++dbg_count );
     printf( "Outline = %s\n", dbg_outline(bytecode).c_str() ); 
@@ -374,6 +284,7 @@ void GameTree::GetSummary( Summary &summary )
     printf( "Mainline outline  = %s\n", mainline_outline.c_str() );
     if( dbg_count == 16 )
         ; //printf( "Debug\n" );
+#endif
 #define MAX_DEPTH 30
     int most_recent_offset[MAX_DEPTH+1];
     most_recent_offset[0] = 0;
@@ -434,11 +345,11 @@ void GameTree::GetSummary( Summary &summary )
     {
         if( (int)idx == offset )
         {
-            summary.move_idx        = moves.length();
-            summary.variation_idx   = moves.length() - stk->variation_move_count;
-            summary.at_move0        = (stk->variation_move_count == 0);
-            summary.move_offset     = last_move_offset;
-            just_finish_variation   = true;
+            summary.move_idx             = moves.length();
+            summary.variation_move_count = stk->variation_move_count;
+            summary.at_move0             = (stk->variation_move_count == 0);
+            summary.move_offset          = last_move_offset;
+            just_finish_variation        = true; // keep going, until the end of the variation
         }
         if( escape )
         {
@@ -489,18 +400,24 @@ void GameTree::GetSummary( Summary &summary )
         }
         else if( c>=BC_MOVE_CODES && in_comment==0 && in_meta==0 && collect )
         {
-            moves += c;
             last_move_offset = idx;
+            moves += c;
             stk->variation_move_count++;
         }
     }
-    Bytecode bc;
+#if 0
     std::string variation_outline = dbg_outline(moves);
     printf( "Variation outline = %s\n", variation_outline.c_str() ); 
     if( mainline_outline != variation_outline )
         printf( "Debug 2\n" );
+#endif
+    Bytecode bc;
     summary.start_position = start_position;
+    thc::ChessRules cr = start_position;
     summary.moves = bc.Uncompress( start_position, moves );
+    for( size_t i=0; i<(int)summary.move_idx; i++ )
+        cr.PlayMove(summary.moves[i]);
+    summary.pos = cr;
 }
 
 // Create a readable view of a bytecode string

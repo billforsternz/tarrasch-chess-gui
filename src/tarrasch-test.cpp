@@ -16,10 +16,7 @@
 #include "Stepper.h"
 
 int  game_tree_test();
-bool it_summary_view(void *link, const std::string& bc, size_t offset, Codepoint &cpt);
-std::string stepper_every_position_summary(const std::string& bc);
 void stepper_gen_pgn_unjustified(const std::string& bc, std::string &s, const std::string& result );
-bool it_find_first_variation( const std::string& bc, int &offset );
 bool find_first_variation( const std::string &bc, int &offset );
 
 // Find start of first variation using Stepper
@@ -239,25 +236,6 @@ int game_tree_test()
     printf( "Complex pgn test %s\n", complex_pgn_test?"pass":"fail" );
     printf( "Complex direct vs stepper pgn test %s\n", complex_direct_vs_stepper_test?"pass":"fail" );
 
-/*
-    Summary testing
-
-    gt.bytecode = bc;
-    std::string txt_view = stepper_every_position_summary(gt.bytecode);
-    std::ofstream fout("test_out.txt");
-    printf( "txt_view test output in test_out.txt\n" );
-    fout.write( txt_view.c_str(), txt_view.length() );
-    std::string txt_view2;
-    press.Reset();
-    press.IterateOver( gt.bytecode, &txt_view2, it_summary_view );
-    std::ofstream fout2("test_out2.txt");
-    printf( "txt_view2 test output in test_out2.txt\n" );
-    fout2.write( txt_view2.c_str(), txt_view2.length() );
-    ok = (txt_view == txt_view2);
-    printf( "Bytecode test #5: %s\n", ok?"pass":"fail" );
-
- */
-    
     #if 0
 
     // Delete the rest of variation at current offset
@@ -383,158 +361,6 @@ void func()
     // Is the current move in the main line?
     bool AreWeInMain();
 #endif
-}
-
-bool it_summary_view(void *link, const std::string& bc, size_t offset, Codepoint &cpt)
-{
-    // Truncate byte by byte comment analysis
-    if( cpt.ct == ct_comment_txt && cpt.comment_offset>1  )
-        return false;
-    std::string *ps = (std::string *)link;
-    std::string &s = *ps;
-    GameTree gt;
-    gt.bytecode = bc;
-    gt.offset   = offset;
-    Summary summary;
-    gt.GetSummary(summary);
-    thc::ChessRules cr = summary.start_position;
-    s += codepoint_type_txt(cpt.ct);
-    s += " ";
-    if( cpt.is_move )
-    {
-        s += util::sprintf( "%u", cpt.cr->full_move_count );
-        s += cpt.cr->white? ". " : "... ";
-        s += cpt.san_move;
-    }
-    else if( cpt.ct == ct_comment_txt )
-    {
-        s += util::sprintf( "'%c'", (uint8_t)cpt.raw );
-    }
-    else if( cpt.ct == ct_comment_end )
-    {
-        s += util::sprintf( "\"%s\"", cpt.comment_txt.c_str() );
-    }
-    else
-    {
-        s += util::sprintf( "Raw code: %02x", (uint8_t)cpt.raw );
-    }
-    s += util::sprintf( " depth=%u", cpt.depth );
-    s += " [";
-    size_t i=0;
-    if( i == (summary.move_idx - summary.variation_idx) )
-        s +=  "variation_start_ptr-> ";
-    if( i == summary.move_idx )
-        s +=  "ptr-> ";
-    for( i=0; i<summary.moves.size(); i++ )
-    {
-        thc::Move mv = summary.moves[i];
-        if( cr.white || i==0 )
-        {
-            s += util::sprintf( "%d", cr.full_move_count );
-            if( cr.white )
-                s += ".";
-            else
-                s += "...";
-        }
-        s += util::sprintf( "%s", mv.NaturalOut(&cr).c_str() );
-        if( i+1 == (summary.move_idx - summary.variation_idx) )
-            s += " variation_ptr->";
-        if( i+1 == summary.move_idx )
-            s += " ptr->";
-        if( i+1 < summary.moves.size() )
-            s += " ";
-        cr.PlayMove(mv);
-    }
-    s += "]\n";
-    s += util::sprintf( "description: %s\n",         summary.description.c_str()    );
-    s += util::sprintf( "pre_comment: %s\n",         summary.pre_comment.c_str()    );
-    s += util::sprintf( "comment:     %s\n",         summary.comment.c_str()        );
-    s += util::sprintf( "empty:       %s\n",         summary.empty ? "true" : "false" );
-    s += util::sprintf( "at_move0:    %s\n",         summary.at_move0 ? "true" : "false" );
-    s += util::sprintf( "at_end_of_variation: %s\n", summary.at_end_of_variation ? "true" : "false" );
-    s += util::sprintf( "in_comment:  %s\n",         summary.in_comment ? "true" : "false" );
-    s += util::sprintf( "move_offset: %d\n",         summary.move_offset            );
-    s += util::sprintf( "depth:       %d\n",         summary.depth                  );
-    s += util::sprintf( "nag1:        %d\n",         summary.nag1                   );
-    s += util::sprintf( "nag2:        %d\n",         summary.nag2                   );
-    s += "\n";
-    return false;
-}
-
-
-std::string stepper_every_position_summary(const std::string& bc)
-{
-    std::string s;
-    for( Stepper it(bc); !it.End(); it.Next() )
-    {
-        GameTree gt;
-        gt.bytecode = bc;
-        gt.offset   = it.idx;
-        Summary summary;
-        gt.GetSummary(summary);
-        thc::ChessRules cr = summary.start_position;
-        s += codepoint_type_txt(it.ct);
-        s += " ";
-        if( it.ct == ct_move )
-        {
-            s += util::sprintf( "%u", it.cr.full_move_count );
-            s += it.cr.white? ". " : "... ";
-            s += it.san_move;
-        }
-        else if( it.ct == ct_comment_txt )
-        {
-            s += util::sprintf( "'%c'", (uint8_t)it.raw );
-        }
-        else if( it.ct == ct_comment_end )
-        {
-            s += util::sprintf( "\"%s\"", it.comment_txt.c_str() );
-        }
-        else
-        {
-            s += util::sprintf( "Raw code: %02x", (uint8_t)it.raw );
-        }
-        s += util::sprintf( " depth=%u", it.depth );
-        s += " [";
-        size_t i=0;
-        if( i == (summary.move_idx - summary.variation_idx) )
-            s +=  "variation_start_ptr-> ";
-        if( i == summary.move_idx )
-            s +=  "ptr-> ";
-        for( i=0; i<summary.moves.size(); i++ )
-        {
-            thc::Move mv = summary.moves[i];
-            if( cr.white || i==0 )
-            {
-                s += util::sprintf( "%d", cr.full_move_count );
-                if( cr.white )
-                    s += ".";
-                else
-                    s += "...";
-            }
-            s += util::sprintf( "%s", mv.NaturalOut(&cr).c_str() );
-            if( i+1 == (summary.move_idx - summary.variation_idx) )
-                s += " variation_ptr->";
-            if( i+1 == summary.move_idx )
-                s += " ptr->";
-            if( i+1 < summary.moves.size() )
-                s += " ";
-            cr.PlayMove(mv);
-        }
-        s += "]\n";
-        s += util::sprintf( "description: %s\n",         summary.description.c_str()    );
-        s += util::sprintf( "pre_comment: %s\n",         summary.pre_comment.c_str()    );
-        s += util::sprintf( "comment:     %s\n",         summary.comment.c_str()        );
-        s += util::sprintf( "empty:       %s\n",         summary.empty ? "true" : "false" );
-        s += util::sprintf( "at_move0:    %s\n",         summary.at_move0 ? "true" : "false" );
-        s += util::sprintf( "at_end_of_variation: %s\n", summary.at_end_of_variation ? "true" : "false" );
-        s += util::sprintf( "in_comment:  %s\n",         summary.in_comment ? "true" : "false" );
-        s += util::sprintf( "move_offset: %d\n",         summary.move_offset            );
-        s += util::sprintf( "depth:       %d\n",         summary.depth                  );
-        s += util::sprintf( "nag1:        %d\n",         summary.nag1                   );
-        s += util::sprintf( "nag2:        %d\n",         summary.nag2                   );
-        s += "\n";
-    }
-    return s;
 }
 
 void stepper_gen_pgn_unjustified(const std::string& bc, std::string &s, const std::string& result )

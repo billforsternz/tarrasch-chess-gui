@@ -19,6 +19,7 @@ public:
     {
         len = static_cast<int>(bc.length());
     }
+    void operator++() {idx++;}
     bool End();
     void Next();
     const std::string   bc;
