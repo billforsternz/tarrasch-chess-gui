@@ -19,17 +19,20 @@ public:
     {
         len = static_cast<int>(bc.length());
     }
-    void operator++() {idx++;}
+    Stepper( const thc::ChessPosition &start_position,  const std::string& _bc ) : Bytecode(start_position), bc(_bc) 
+    {
+        len = static_cast<int>(bc.length());
+    }
+    void operator++(int) {idx++;}   // it++ OR
+    void operator++()    {idx++;}   // ++it (no difference)
     bool End();
     void Next();
     const std::string   bc;
     int             depth=0;         // nesting depth
     uint8_t         raw;             // raw code
     codepoint_type  ct;              // type of code
-    thc::Move       mv;              // if ct == ct_move
     std::string     san_move;        // if ct == ct_move
     std::string     comment_txt;     // if ct == ct_comment_end above
-
     int             idx = 0;
     int             len;
     enum

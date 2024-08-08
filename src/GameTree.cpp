@@ -342,7 +342,7 @@ void GameTree::GetSummary( Summary &summary )
     stk_idx = 0;
     int in_meta=0, in_comment=0;
     escape = false;
-    for( idx=0; idx<len; idx++ )
+    for( idx=0; idx<len+1; idx++ )  // note len+1 in case offset == len, see below *
     {
         if( (int)idx == offset )
         {
@@ -352,6 +352,8 @@ void GameTree::GetSummary( Summary &summary )
             summary.move_offset          = last_move_offset;
             just_finish_variation        = true; // keep going, until the end of the variation
         }
+        if( idx >= len )            // * if idx<len stop
+            break;
         if( escape )
         {
             escape = false;

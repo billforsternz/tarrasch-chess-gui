@@ -79,24 +79,6 @@ enum codepoint_type
 };
 const char *codepoint_type_txt( codepoint_type ct );
 
-struct Codepoint
-{
-    int            depth=0;         // nesting depth
-    uint8_t        raw;             // raw code
-    codepoint_type ct;              // type of code
-    bool           is_move = false; // true if it's a ct_move
-    thc::Move      mv;              // if is_move
-    std::string    san_move;        // if is_move
-    thc::ChessRules *cr;            // The current position
-    size_t         comment_offset;  // if it's any of ct_comment _start, _end or _txt
-    std::string    comment_txt;     //  as above
-
-    // after a comment or variation, the next move text should have a number (even for Black)
-    bool           move_nbr_needed = false;
-    bool           move_nbr_needed_pending = true; // persists until move_nbr_needed set for
-                                                   //  a ct_move then cleared
-};
-
 class Bytecode
 {
 public:
@@ -110,7 +92,7 @@ public:
         nbr_slow_moves = 0;
         Init();
     }
-    Bytecode( thc::ChessPosition &cp )
+    Bytecode( const thc::ChessPosition &cp )
     {
         sides[0].white=true;
         sides[0].fast_mode=false;
@@ -175,8 +157,5 @@ std::string bc_comment( std::string &bc, size_t offset );
 // Find the index of a move within its variation
 //  eg 1. e4 e5 2. Nf3 (2. Nc3 Nf6 3.Bc4 Nxe4)  // idx of 2.Nc3 is 0, idx of 3...Nxe4 is 3)
 int bc_variation_idx( const std::string &bc, size_t offset );
-
-
-
 
 #endif // BYTECODE_H
