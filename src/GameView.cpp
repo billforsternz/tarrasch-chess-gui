@@ -66,6 +66,7 @@ void GameView::Build_bc( std::string &result_, GameTree &tree_bc_, thc::ChessPos
                     gve.level   = level;
                     gve.offset1 = offset;
                     gve.offset2 = offset;
+                    gve.offset_bc = it.idx;
                     gve.mv      = it.stk->mv;
                     expansion.push_back(gve);
                 }
@@ -98,6 +99,7 @@ void GameView::Build_bc( std::string &result_, GameTree &tree_bc_, thc::ChessPos
                 gve.offset2 = offset;
                 gve.str     = fragment;
                 gve.str_for_file_move_only = file_view;
+                gve.offset_bc = it.idx;
                 expansion.push_back(gve);
                 break;                                                                                                        
             }
@@ -116,7 +118,7 @@ void GameView::Build_bc( std::string &result_, GameTree &tree_bc_, thc::ChessPos
                     gve.offset1 = offset;
                     offset++;   // "\n"
                     gve.offset2 = offset;
-                    // gve.node    = NULL;
+                    gve.offset_bc = it.idx;
                     expansion.push_back(gve);
                 }
 
@@ -124,6 +126,7 @@ void GameView::Build_bc( std::string &result_, GameTree &tree_bc_, thc::ChessPos
                 gve.offset1 = offset;
                 offset++;   // "("
                 gve.offset2 = offset;
+                gve.offset_bc = it.idx;
                 expansion.push_back(gve);
                 break;
             }
@@ -140,6 +143,7 @@ void GameView::Build_bc( std::string &result_, GameTree &tree_bc_, thc::ChessPos
                     gve.offset1 = offset;
                     offset++;       // ")"
                     gve.offset2 = offset;
+                    gve.offset_bc = it.idx;
                     expansion.push_back(gve);
                     if( !another_variation_follows )
                     {
@@ -149,6 +153,7 @@ void GameView::Build_bc( std::string &result_, GameTree &tree_bc_, thc::ChessPos
                         offset++;       // "\n"
                         gve.offset2 = offset;
                         newline = true;
+                        gve.offset_bc = it.idx;
                         expansion.push_back(gve);
                     }
                 }
@@ -163,6 +168,7 @@ void GameView::Build_bc( std::string &result_, GameTree &tree_bc_, thc::ChessPos
                 std::string comment_ = it.comment_txt;
                 offset += comment_.length();
                 gve.offset2 = offset;
+                gve.offset_bc = it.idx;
                 expansion.push_back(gve);
                 break;
             }
@@ -241,45 +247,13 @@ void GameView::Build_bc( std::string &result_, GameTree &tree_bc_, thc::ChessPos
         gve.str = (add_space ? " " + result : result);
     offset += gve.str.length();
     gve.offset2 = offset;
+    gve.offset_bc = it.idx;
     expansion.push_back(gve);
 
     // Save a copy of the language as it was when we built the view
     memcpy( language_lookup, LangGet(), sizeof(language_lookup) );
 }
 
-// Can we delete this ?
-#if 0
-void GameView::Build( std::string &result_, MoveTree *tree_, thc::ChessPosition &start_position_ )
-{
-    this->result = result_;
-    final_position_node = NULL;
-    final_position_txt = "Initial position";
-    final_position.Init();
-    this->tree = tree_;
-    expansion.clear();
-    level = -1;
-    offset = 0;
-    newline = true;
-    comment = false;
-    this->start_position = start_position_;
-    cr = start_position_;
-/*  if( tree->game_move.comment.length() )
-    {
-        GameViewElement gve;
-        gve.type    = COMMENT;
-        gve.level   = level;
-        gve.offset1 = offset;
-        offset += ( (expansion.size()?2:1) + tree->game_move.comment.length());
-        gve.offset2 = offset;
-        gve.node    = tree;
-        expansion.push_back(gve);
-        comment = true;
-    } */
-    Crawler( tree_, true, false );
-
-    // Save a copy of the language as it was when we built the view
-    memcpy( language_lookup, LangGet(), sizeof(language_lookup) );
-}
 
 static const char *nag_array1[] =
 {   // no leading space on these so Nf3+! not Nf3+ !
@@ -341,234 +315,6 @@ static const char *pgn_result_array_file[] =
     " 0-1",          // PGN_RESULT_BLACK_WIN
 }; */
 
-void GameView::Crawler( MoveTree *node, bool move0, bool last_move )
-{
-    level++;
-    bool root = (level==0);
-
-    // No move for root, but it is allowed a comment
-    if( root )
-    {
-        if( node->game_move.comment.length() )
-        {
-            GameViewElement gve;
-            gve.type    = COMMENT;
-            gve.level   = level;
-            gve.offset1 = offset;
-            offset += (node->game_move.comment.length() + 1);
-            gve.offset2 = offset;
-            gve.node    = node;
-            expansion.push_back(gve);
-            comment = true;
-        }
-    }
-
-    // If we have a move (no move for root, only variations)
-    else
-    {
-
-        // Pre comment
-        if( node->game_move.pre_comment.length() )
-        {
-            GameViewElement gve;
-            gve.type    = PRE_COMMENT;
-            gve.level   = level;
-            gve.offset1 = offset;
-            offset += ((expansion.size()?2:1) + node->game_move.pre_comment.length());
-            gve.offset2 = offset;
-            gve.node    = node;
-            expansion.push_back(gve);
-        }
-
-        // Move0 (can move cursor to position before move0 of a variation)
-        if( move0 )
-        {
-            GameViewElement gve;
-            gve.type    = MOVE0;
-            gve.level   = level;
-            gve.offset1 = offset;
-            gve.offset2 = offset;
-            gve.node    = node;
-            expansion.push_back(gve);
-        }
-
-        // Body of move
-        char buf[80];
-        bool need_extra_space=true;
-        if( move0 || newline || comment )
-            sprintf( buf, "%d%s", cr.full_move_count, cr.white?".":"..." );
-        else
-        {
-            if( cr.white )
-                sprintf( buf, " %d.", cr.full_move_count );
-            else
-            {
-                strcpy( buf, " " );
-                need_extra_space = false;
-            }
-        }
-        newline = false;
-        comment = false;
-        string intro = buf;
-        string move_body = node->game_move.move.NaturalOut(&cr);
-        LangOut(move_body);
-        string fragment  = intro + move_body;
-        string file_view = need_extra_space ? (intro + " " + move_body) : fragment;
-        GameViewElement gve;
-        gve.nag_value1 = 0;
-        if( node->game_move.nag_value1 &&
-            node->game_move.nag_value1 < (sizeof(nag_array1)/sizeof(nag_array1[0]))
-          )
-        {
-            gve.nag_value1 = node->game_move.nag_value1;
-            fragment.append( nag_array1[node->game_move.nag_value1] );
-            char buf2[50];
-            sprintf(buf2," $%d",node->game_move.nag_value1);
-            file_view.append(buf2);
-        }
-        gve.nag_value2 = 0;
-        if( node->game_move.nag_value2 &&
-            node->game_move.nag_value2 < (sizeof(nag_array2)/sizeof(nag_array2[0]))
-          )
-        {
-            gve.nag_value2 = node->game_move.nag_value2;
-            fragment.append( nag_array2[node->game_move.nag_value2] );
-            char buf2[50];
-            sprintf(buf2," $%d",node->game_move.nag_value2);
-            file_view.append(buf2);
-        }
-        if( last_move )
-        {
-            if( level == 1 )
-            {
-                final_position = cr;
-                final_position.PlayMove( node->game_move.move );
-                final_position_node = node;
-                sprintf( buf, "Final position after %d%s", cr.full_move_count, cr.white?".":"..." );
-                final_position_txt  = buf + move_body;
-            }
-        }
-        gve.type    = MOVE;
-        gve.level   = level;
-        gve.offset1 = offset;
-        offset += (fragment.length());
-        gve.offset2 = offset;
-        gve.node    = node;
-        gve.str     = fragment;
-        gve.str_for_file_move_only = file_view;
-        expansion.push_back(gve);
-
-        // Comment
-        if( node->game_move.comment.length() )
-        {
-            GameViewElement gve2;
-            gve2.type    = COMMENT;
-            gve2.level   = level;
-            gve2.offset1 = offset;
-            offset += ((expansion.size()?2:1) + node->game_move.comment.length());
-            gve2.offset2 = offset;
-            gve2.node    = node;
-            expansion.push_back(gve2);
-            comment = true;
-        }
-    }
-
-    // Loop through the variations
-    int nbr_vars = node->variations.size();
-    if( nbr_vars )
-    {
-        thc::ChessRules cr_before_move = cr;
-        for( int i=0; i<nbr_vars; i++ )
-        {
-
-            // If not root variation, add "\n\t\t...\t(" prefix
-            if( !root )
-            {
-                GameViewElement gve;
-                gve.type    = NEWLINE;
-                newline     = true;
-                gve.level   = level+1;
-                gve.offset1 = offset;
-                offset++;   // "\n"
-                gve.offset2 = offset;
-                gve.node    = node;
-                expansion.push_back(gve);
-
-                gve.type   = START_OF_VARIATION;
-                gve.offset1 = offset;
-                offset++;   // "("
-                gve.offset2 = offset;
-                expansion.push_back(gve);
-            }
-
-            // Loop through the variation
-            vector<MoveTree> &var = node->variations[i];
-            int nbr_moves = var.size();
-            for( int j=0; j<nbr_moves; j++ )
-            {
-                Crawler( &var[j], j==0, j==nbr_moves-1 );
-            }
-
-            // If not root variation, add ")" or ")\n\t\t...\t" suffix
-            if( !root )
-            {
-                bool after_last_variation = (i==nbr_vars-1);
-                GameViewElement gve;
-                gve.type    = END_OF_VARIATION;
-                gve.level   = level+1;
-                gve.offset1 = offset;
-                offset++;       // ")"
-                gve.offset2 = offset;
-                gve.node    = node;
-                expansion.push_back(gve);
-                if( after_last_variation )
-                {
-                    gve.type    = NEWLINE;
-                    gve.level   = level;
-                    gve.offset1 = offset;
-                    offset++;       // "\n"
-                    gve.offset2 = offset;
-                    newline = true;
-                    expansion.push_back(gve);
-                }
-            }
-
-            // Go back to position before variation starts
-            cr = cr_before_move;
-        }
-    }
-
-    // If we have a move, play it
-    if( !root )
-        cr.PlayMove(node->game_move.move);
-
-    // After all root variations done add END_OF_GAME
-    else
-    {
-        GameViewElement gve;
-        gve.type    = END_OF_GAME;
-        gve.level   = level+1;
-        gve.offset1 = offset;
-
-        // Add space before result if not following comment and not following newline
-        //  (it would be END_OF_VARIATION rather than NEWLINE, except that the last
-        //   variation's END_OF_VARIATION is followed by NEWLINE)
-        int sz=expansion.size();
-        bool add_space = (sz==0 ? false : (expansion[sz-1].type!=NEWLINE && expansion[sz-1].type!=COMMENT) );
-        std::string temp = (result==""?"*":result); // in file case we make sure we DO write "*"
-        gve.str_for_file_move_only = (add_space ? " " + temp : temp);
-        gve.str = "";
-        int len = result.length();
-        if( len > 1 )   // not "*", in screen case we make sure we DON'T write "*"
-            gve.str = (add_space ? " " + result : result);
-        offset += gve.str.length();
-        gve.offset2 = offset;
-        gve.node    = node;
-        expansion.push_back(gve);
-    }
-    level--;
-}
-#endif
 
 #if 0
     #define gv_printf(...) cprintf ( __VA_ARGS__ ), cprintf("\n")
@@ -1106,446 +852,6 @@ void GameView::ToPublishString( std::string &str, int &diagram_base, int &mv_bas
 {
 
     // TODO - remove this feature altogether - deprecated, replaced by WingedSpider
-#if 0
-    #define DIAGRAM_SPACING 8
-    str = "";
-    //int col = 0;
-    int indent = 0;
-    int diagram_count = DIAGRAM_SPACING;
-    int diagram_idx = -1;
-    thc::ChessPosition tmp;
-    thc::ChessPosition diagram_cp=start_position;
-    bool needs_fen = (begin==0 && tmp!=start_position);
-    bool need_open = !(publish_options & SKIP_TO_FIRST_DIAGRAM);
-    if( needs_fen )
-        need_open = false;
-    bool need_close = false;
-    bool first_diagram = true;
-    bool after_diagram = false;
-    bool no_extra_whitespace_please = false;
-    for( int i=begin; i<end; i++ )
-    {
-        if( need_open )
-        {
-            if( need_close )
-            {
-                str +=
-                "</p>\n"
-                "</div>\n"
-                "<div style='clear:both;'></div>\n";
-            }
-            if( diagram_count==0 )
-            {
-                diagram_idx++;
-                diagram_count = DIAGRAM_SPACING;
-                str += "<div class='diagram_outer'>\n";
-                str += "<div class='diagram'";
-                str += " rel='";
-                str += compressPosition(diagram_cp.squares);
-                str += " ";
-                char buf[20];
-                int diagram_nbr = diagram_base + (diagram_idx<0?0:diagram_idx);
-                sprintf( buf, "%d", diagram_nbr  );
-                str += buf;
-                str += "'>";
-                //str += " onclick=\"javascript:posRestore('";
-                //str += compressPosition(diagram_cp.squares);
-                //str += "',";
-                //str += buf;
-                if( diagram_nbr < 6 )
-                {
-                    // Early diagrams are expanded, to avoid a visual glitch when the
-                    //  page loads. jQuery script detects empty div (other diagrams)
-                    //  at page load time and expands them then.
-                    str += "\n";
-                    std::string diag;
-                    ToPublishDiagram( diag, diagram_cp );
-                    str += diag;
-                }
-                str += "</div>\n";
-                str += "<div class='buttons' id='buttons";
-                str += buf;
-                str += "'>\n</div>\n";
-                str += "<div class='label'><p id='diagram";
-                str += buf;
-                str += "'>";
-                if( first_diagram )
-                    str += "Moves are clickable";
-                else
-                    str += "&nbsp;";
-                str +=
-                "</p></div>\n"
-                "</div>\n";
-                first_diagram = false;
-                after_diagram = true;
-            }
-            str +=
-            "<div class='moves'>\n"
-            "<p>\n";
-            need_open = false;
-            need_close = true;
-        }
-        std::string frag="";
-        GameViewElement &gve = expansion[i];
-        gve.published = false;
-        //bool make_comment = false;
-        switch( gve.type )
-        {
-            case COMMENT:
-            {
-                frag = gve.str;
-                if( frag.length()>=2 && frag[0]=='.' && frag[1]==' ' )
-                    frag = frag.substr(2);
-                if( str.length()>=1 && !after_diagram && str[str.length()-1]!='\n' )
-                    frag = "&nbsp;" + frag;
-                size_t found;
-                found = frag.find("#Diagram ");
-                bool want_diag=false; //needs_fen;
-                needs_fen = false;
-                if( found != std::string::npos )
-                {
-                    frag = frag.substr(found+9);
-                    want_diag = true;
-                }
-                else
-                {
-                    found = frag.find("#Diagram");
-                    if( found != std::string::npos )
-                    {
-                        frag = frag.substr(found+8);
-                        want_diag = true;
-                    }
-                    else
-                    {
-                        found = frag.find("Diagram # ");
-                        if( found != std::string::npos )
-                        {
-                            frag = frag.substr(found+10);
-                            want_diag = true;
-                        }
-                        else
-                        {
-                            found = frag.find("Diagram #");
-                            if( found != std::string::npos )
-                            {
-                                frag = frag.substr(found+9);
-                                want_diag = true;
-                            }
-                        }
-                    }
-                }
-                ReplaceAllInplace( frag," --- ", "\n\n" );
-                ReplaceAllInplace( frag," -- ", "\n\n" );
-                if( frag.length() > 0 )
-                    frag = frag + "&nbsp;";
-                if( want_diag )
-                {
-                    publish_options &= (~SKIP_TO_FIRST_DIAGRAM);
-                    if( need_close )
-                    {
-                        str +=
-                        "</p>\n"
-                        "</div>\n"
-                        "<div style='clear:both;'></div>\n";
-                    }
-                    diagram_idx++;
-                    diagram_count = DIAGRAM_SPACING;
-                    str += "<div class='diagram_outer'>\n";
-                    str += "<div class='diagram'";
-                    str += " rel='";
-                    str += compressPosition(diagram_cp.squares);
-                    str += " ";
-                    char buf[20];
-                    int diagram_nbr = diagram_base + (diagram_idx<0?0:diagram_idx);
-                    sprintf( buf, "%d", diagram_nbr );
-                    str += buf;
-                    str += "'>";
-                    //str += " onclick=\"javascript:posRestore('";
-                    //str += compressPosition(diagram_cp.squares);
-                    //str += "',";
-                    //str += buf;
-                    if( diagram_nbr < 6 )
-                    {
-                        // Early diagrams are expanded, to avoid a visual glitch when the
-                        //  page loads. jQuery script detects empty div (other diagrams)
-                        //  at page load time and expands them then.
-                        str += "\n";
-                        std::string diag;
-                        ToPublishDiagram( diag, diagram_cp );
-                        str += diag;
-                    }
-                    str += "</div>\n";
-                    str += "<div class='buttons' id='buttons";
-                    str += buf;
-                    str += "'>\n</div>\n";
-                    str += "<div class='label'><p id='diagram";
-                    str += buf;
-                    str += "'>";
-                    if( first_diagram )
-                        str += "Moves are clickable";
-                    else
-                        str += "&nbsp;";
-                    str +=
-                    "</p></div>\n"
-                    "</div>\n";
-                    first_diagram = false;
-                    str +=
-                    "<div class='moves'>\n"
-                    "<p>\n";
-                    need_open = false;
-                    need_close = true;
-                    after_diagram = true;
-                }
-                break;
-            }
-            case MOVE0:
-            {
-                break;
-            }
-            case MOVE:
-            {
-                thc::ChessRules cr2;
-                int ivar;
-                int imove;
-                MoveTree *parent = tree->Parent( gve.node, cr2, ivar, imove );
-                if( !parent )
-                    frag = gve.str;
-                else
-                {
-                    vector<MoveTree> &variation = parent->variations[ivar];
-                    int j=0;
-                    for( j=0; j<imove; j++ )
-                        cr2.PlayMove( variation[j].game_move.move );
-                    thc::Move mv = variation[j].game_move.move;
-                    char srcPiece = cr2.squares[mv.src];
-                    std::string nmove =  mv.NaturalOut(&cr2);
-                    LangOut(nmove);
-                    char buf[80];
-                    sprintf( buf, "%d%s%s",
-                            cr2.full_move_count,
-                            cr2.white?".":"...",
-                            nmove.c_str() );
-                    cr2.PlayMove( mv );
-                    char buf_diag_nbr[80];
-                    sprintf( buf_diag_nbr, "%d", diagram_base + (diagram_idx<0?0:diagram_idx) );
-                    char buf_mv_nbr[80];
-                    sprintf( buf_mv_nbr, "%d", mv_base );
-
-                    // Calculate previous move number
-                    int prev_move_nbr=-1;
-                    int move_rover=mv_base;
-                    int target_level = gve.level;
-                    int lookback_count = 1;
-                    bool detect_prev_move_in_parent = false;
-                    for( int k=i-1; k>=begin; k-- )
-                    {
-                        GameViewElement gve2 = expansion[k];
-                        if( gve2.type==MOVE )
-                            move_rover--;
-                        if( !gve2.published )
-                            break;
-                        if( gve2.level==gve.level && gve2.type==START_OF_VARIATION && !detect_prev_move_in_parent )
-                        {
-                            detect_prev_move_in_parent = true;
-                            if( target_level > 0 )
-                            {
-                                target_level--;
-                                lookback_count = 2; // don't want parent move, want one before that
-                            }
-                            else
-                                break;
-                        }
-                        if( gve2.level==target_level && gve2.type==MOVE )
-                        {
-                            lookback_count--;
-                            if( lookback_count <= 0 )
-                            {
-                                prev_move_nbr = move_rover;
-                                break;
-                            }
-                        }
-                    }
-
-                    // Calculate next move number
-                    int next_move_nbr=-1;
-                    move_rover=mv_base;
-                    for( int k=i+1; k<end; k++ )
-                    {
-                        GameViewElement gve2 = expansion[k];
-                        if( gve2.type==MOVE )
-                            move_rover++;
-                        if( gve2.type==END_OF_GAME )
-                            break;
-                        if( gve2.level == gve.level && gve2.type==END_OF_VARIATION )
-                            break;
-                        if( gve2.level == gve.level && gve2.type==MOVE )
-                        {
-                            next_move_nbr = move_rover;
-                            break;
-                        }
-                    }
-                    mv_base++;
-                    frag = "";
-                    if( prev_move_nbr==-1 && gve.level==1 )
-                    {
-                        prev_move_nbr = --neg_base;
-                        thc::ChessRules cr_before = cr2;
-                        cr_before.PopMove(mv);
-                        frag += "\n<span id='mv";
-                        char buf2[ 80 ];
-                        sprintf( buf2, "%d", neg_base );
-                        frag += buf2;
-                        frag += "' rel='";
-                        frag += buf_diag_nbr;
-                        frag += " ";
-                        cr_before.squares[64] = '\0';  // just in case
-                        frag += compressPosition(cr_before.squares);
-                        frag += " ";
-                        frag += "0.NoMove";
-                        frag += " -1";
-                        frag += " ";
-                        frag += buf_mv_nbr;
-                        frag += " ";
-
-                        // From PrivateChessDefs.h, avoids including whole file
-#define CHESS_FILE(sq)    ( (char) (  ((sq)&0x07) + 'a' ) )           // eg c5->'c'
-#define CHESS_RANK(sq)    ( (char) (  '8' - (((sq)>>3) & 0x07) ) )    // eg c5->'5'
-
-                        frag += srcPiece;
-                        frag += mv.TerseOut();
-                        frag += "' class='main'>";
-                        frag += "</span>\n";
-                    }
-                    if( no_extra_whitespace_please )
-                        frag += "<span id='mv";
-                    else
-                        frag += "\n<span id='mv";
-                    no_extra_whitespace_please = false;
-                    frag += buf_mv_nbr;
-                    //frag += "' rel='";
-                    //frag += buf_diag_nbr;
-                    frag += "' rel='";
-                    frag += buf_diag_nbr;
-                    frag += " ";
-                    //#define AUTODIAG
-                    #ifdef AUTODIAG
-                    if( diagram_count>0 && !(publish_options&SKIP_TO_FIRST_DIAGRAM) )
-                        diagram_count--;    // Comment this out to kill autodiag
-                    #endif
-                    //if( 0 == strcmp(nmove.c_str(),"Rxf7") )
-                    //    frag += " ";
-                    if( diagram_count==0 && indent==0 && ShouldDiagGoHere(i,end,indent) )
-                        need_open = true;
-                    else if( diagram_count == 0 )
-                        diagram_count++;    // try again next time
-                    diagram_cp = cr2;
-                    cr2.squares[64] = '\0';  // just in case
-                    frag += compressPosition(cr2.squares);
-                    frag += " ";
-                    frag += buf;
-                    char buf_var_moves[80];
-                    sprintf( buf_var_moves, "%d", prev_move_nbr );
-                    frag += " ";
-                    frag += buf_var_moves;
-                    sprintf( buf_var_moves, "%d", next_move_nbr );
-                    frag += " ";
-                    frag += buf_var_moves;
-                    frag += " ";
-                    frag += srcPiece;
-                    frag += mv.TerseOut();
-//                    frag += CHESS_FILE(mv.src);
-//                    frag += CHESS_RANK(mv.src);
-                    frag += gve.level>1 ? "' class='variation'>" : "' class='main'>";
-
-                    // Calculate the move text to display
-                    std::string move_txt = gve.str;
-                    if( after_diagram )
-                    {
-                        // After a diagram, show the whole move "3...a6" not the base move "a6"
-                        std::string s = gve.str;
-                        const char *whole_move = buf;
-                        size_t found;
-                        found = s.find(whole_move);
-                        if( found == std::string::npos )
-                        {
-                            const char *base_move = nmove.c_str();
-                            size_t found2;
-                            found2 = s.find(base_move);
-                            if( found2 != std::string::npos )
-                            {
-                                move_txt = s.substr(0,found2);                   // prefix
-                                move_txt += whole_move;                          // move
-                                move_txt += s.substr(found2+strlen(base_move));  // suffix
-                            }
-                        }
-                    }
-
-                    // Strip left space
-                    size_t pos = move_txt.find_first_not_of(' ');
-                    if( pos != std::string::npos && pos!=0 )
-                        move_txt = move_txt.substr(pos);
-                    frag += move_txt;
-                    if( no_extra_whitespace_please )
-                        frag += " </span>";
-                    else
-                        frag += " </span>\n";
-                    no_extra_whitespace_please = false;
-                    if( publish_options & SUPPRESS_NULL_MOVE )
-                    {
-                        if( mv.src == mv.dst )
-                            frag = "\n\n";
-                        else if( publish_options & SUPPRESS_MOVE )
-                            frag = "";
-                    }
-                    else if( publish_options & SUPPRESS_MOVE )
-                        frag = "";
-                }
-                after_diagram = false;
-                break;
-            }
-            case START_OF_VARIATION:
-            {
-                indent++;
-                if( indent == 2 )
-                    frag = "<i>("; //"<b>(</b>";
-                else
-                    frag = "("; //"<b>(</b>";
-                no_extra_whitespace_please = true;
-                break;
-            }
-            case END_OF_VARIATION:
-            {
-                if( indent == 2 )
-                    frag = ")</i> "; //"<b>(</b>";
-                else
-                    frag = ") "; //"<b>)</b>\n";
-                indent--;
-                no_extra_whitespace_please = true;
-                break;
-            }
-            case END_OF_GAME:
-            {
-                frag = "<b>" + gve.str + "</b>";
-                break;
-            }
-        }
-        if( !(publish_options & SKIP_TO_FIRST_DIAGRAM) )
-        {
-            str += frag;
-            gve.published = true;
-        }
-    }
-    if( need_close )
-    {
-        str +=
-        "</p>\n"
-        "</div>\n"
-        "<div style='clear:both;'></div>\n";
-    }
-    diagram_base += diagram_idx;
-    diagram_base++;
-    str = removeExtraLineFeeds(str);
-#endif
 }
 
 void GameView::ToCommentString( std::string &str )
@@ -1890,10 +1196,19 @@ unsigned long GameView::GetMoveOffset( MoveTree *node )
 }
 #endif
 
-// TEMP
 int GameView::GetMoveOffset( int bc_offset )
 {
-    return 0;
+    int nbr = expansion.size();
+    int ret = 0;
+    for( int i=0; i<nbr; i++ )
+    {
+        GameViewElement &gve = expansion[i];
+        if( gve.offset_bc > bc_offset )
+            return (ret == 0 ? gve.offset2 : ret);  // return the offset of the last matching element
+        if( gve.offset_bc >= bc_offset )
+            ret = gve.offset2;
+    }
+    return ret;
 }
 
 bool GameView::GetOffsetWithinComment( unsigned long pos, unsigned long &pos_within_comment )

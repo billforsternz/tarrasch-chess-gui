@@ -179,12 +179,18 @@ bool GameTree::InsertMove( GAME_MOVE game_move, bool allow_overwrite )
     Summary summary;
     GetSummary( summary );
     Bytecode bc(summary.pos);
+    cprintf( "# summary.pos %s\n", summary.pos.ToDebugStr("").c_str() );
+    cprintf( "# summary.move_idx %d\n", summary.move_idx );
+    cprintf( "# Outline before insertion %s\n", bc.OutlineOut(bytecode,"*").c_str() );
+    cprintf( "# offset before insertion %d\n", offset );
     uint8_t c = bc.CompressMove(game_move.move);
     size_t len = summary.moves.size();
-    if( summary.move_idx == (int)len )
+    if( len==0 || summary.move_idx == (int)(len-1) )
     {
         bytecode.insert(summary.move_offset,1,(char)c);
-        offset = summary.move_offset+1;
+        offset = summary.move_offset;
+        cprintf( "# Outline after insertion %s\n", bc.OutlineOut(bytecode,"*").c_str() );
+        cprintf( "# offset after insertion %d\n", offset );
     }
     else
     {
