@@ -689,6 +689,90 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
     mq.rank8_target = *mq.rank8_target_ptr;
     mq.rank1_target = *mq.rank1_target_ptr;
     mq.rank2_target = *mq.rank2_target_ptr;
+// #define CONSEC_CHECK
+#ifdef  CONSEC_CHECK
+    int nbr = source->size();
+    {
+        AutoTimer at("Search time");
+        int limit=10, best_so_far=3;  // <3 uninteresting
+        thc::MOVELIST list;
+        for( int i=0; i<nbr; i++ )
+        {
+            smart_ptr<ListableGame> p = (*source)[i];
+            thc::ChessRules cr;
+            CompressMoves comp;
+            std::string comp_moves = std::string(p->CompressedMoves());
+            std::vector<thc::Move> v = comp.Uncompress(cr,comp_moves);
+            int consec = 0;
+            if( limit < 10)
+            {
+                limit++;
+                cprintf("Game!: %s-%s %s %s %s %s", p->White(), p->Black(), p->Date(), p->Event(), p->Site(), p->Date() );
+                thc::ChessRules cr2;
+                for( int j=0; j<v.size(); j++ )
+                {
+                    thc::Move mv2 = v[j];
+                    cprintf( " %s", mv2.NaturalOut(&cr2).c_str() );
+                    cr2.PlayMove(mv2);
+                }
+                cprintf("\n");
+            }
+            for( int k=0; k<v.size(); k++ )
+            {
+                thc::Move mv = v[k];
+                cr.PlayMove(mv);
+                thc::Square our_king = cr.WhiteToPlay() ? cr.wking_square : cr.bking_square;
+                bool check = cr.AttackedPiece(our_king);
+                if( check )
+                {
+                    consec++;
+                    /* cprintf("Check!: %s-%s %s %s %s %s", p->White(), p->Black(), p->Date(), p->Event(), p->Site(), p->Date() );
+                    thc::ChessRules cr2;
+                    for( int j=0; j<v.size(); j++ )
+                    {
+                        thc::Move mv2 = v[j];
+                        cprintf( " %s", mv2.NaturalOut(&cr2).c_str() );
+                        cr2.PlayMove(mv2);
+                    }
+                    cprintf("\n"); */
+                }
+                else
+                {
+                    int temp = consec;
+                    consec = 0;
+                    if( temp => 5 /*best_so_far*/ )
+                    {
+                        best_so_far = temp;
+                        cprintf("%d checks in a row: %s-%s %s %s %s %s", temp, p->White(), p->Black(), p->Date(), p->Event(), p->Site(), p->Date() );
+                        thc::ChessRules cr2;
+                        for( int j=0; j<v.size(); j++ )
+                        {
+                            thc::Move mv2 = v[j];
+                            cprintf( " %s", mv2.NaturalOut(&cr2).c_str() );
+                            cr2.PlayMove(mv2);
+                        }
+                        cprintf("\n");
+                        DoSearchFoundGame dsfg;
+                        dsfg.idx = i;
+                        dsfg.game_id = p->game_id;
+                        dsfg.offset_first=k-temp+1;
+                        dsfg.offset_last=k-temp+1;
+                        stats.nbr_games++;
+                        if( 0 == strcmp(p->Result(),"1-0") )
+                            stats.white_wins++;
+                        else if( 0 == strcmp(p->Result(),"0-1") )
+                            stats.black_wins++;
+                        else
+                            stats.draws++;
+                        games_found.push_back( dsfg );
+                    }
+                }
+            }
+        }
+    }
+    return games_found.size();
+}
+#else
     int nbr = source->size();
     {
         AutoTimer at("Search time");
@@ -849,6 +933,7 @@ int  MemoryPositionSearch::DoPatternSearch( PatternMatch &pm, ProgressBar *progr
     }
     return games_found.size();
 }
+#endif
 
 thc::Move MemoryPositionSearch::UncompressSlowMode( char code )
 {
