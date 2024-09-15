@@ -10,6 +10,7 @@
 #include <vector>
 #include "Bytecode.h"
 #include "thc.h"
+#include "util.h"
 
 //
 // In branch "new-heart" I am starting out on an ambitious plan to transplant
@@ -81,6 +82,7 @@ struct Summary
     int  move_offset=0;                     // May be different to GameTree offset (eg if in_comment is true)
     int  nag1=0;                            // annotation type 1 (!, !!, ? etc)
     int  nag2=0;                            // annotation type 2 (+-, += etc)
+    std::string ToDebugStr();
 };
 
 enum Result {NO_RESULT,WHITE_WINS,BLACK_WINS,DRAW};

@@ -188,7 +188,7 @@ bool GameTree::InsertMove( GAME_MOVE game_move, bool allow_overwrite )
     if( len==0 || summary.move_idx == (int)(len-1) )
     {
         bytecode.insert(summary.move_offset,1,(char)c);
-        offset = summary.move_offset;
+        offset = summary.move_offset+1;
         cprintf( "# Outline after insertion %s\n", bc.OutlineOut(bytecode,"*").c_str() );
         cprintf( "# offset after insertion %d\n", offset );
     }
@@ -261,42 +261,36 @@ bool  GameTree::AreWeInMain(void)
 // For GetSummary(), find the move corresponding to the current GameTree offset and get details as follows;
 struct Summary
 {
+    thc::ChessPosition pos;                 // The current position
     thc::ChessPosition start_position;      // If we start at this position
-    int move_idx;                           // and play this many moves
-    std::vector<thc::Move> moves;           // of this sequence, we will get to the current position (there may be more moves if the variation continues)
+    std::vector<thc::Move> moves;           // and play these moves, we will get to the current position...
+    int  move_idx=0;                        // after this many moves
+    int  variation_move_count=0;            // we are also this many moves into a variation
+    int  depth=0;                           // at this depth, depth = 0 is main line
     std::string description;                // eg "Position after 23. f4"
     std::string pre_comment;                // comment before 23. f4 if it is the start of a variation, of follows a variation
     std::string comment;                    // comment after 23. f4
-    bool empty;                             // There aren't any moves
-    bool at_move0;                          // Before any moves in this variation
-    bool at_end_of_variation;               // After last move in this variation
-    bool in_comment;                        // In a comment
-    int  move_offset;                       // May be different to GameTree offset (eg if in_comment is true)
-    int  depth;                             // depth = 0 is main line
-    int  variation_offset;                  // If depth > 1 will not necessarily equal moves.length()
-    int  nag1;                              // annotation type 1 (!, !!, ? etc)
-    int  nag2;                              // annotation type 2 (+-, += etc)
+    bool empty=false;                       // There aren't any moves
+    bool at_move0=false;                    // Before any moves in this variation
+    bool at_end_of_variation=false;         // After last move in this variation
+    bool in_comment=false;                  // In a comment
+    int  move_offset=0;                     // May be different to GameTree offset (eg if in_comment is true)
+    int  nag1=0;                            // annotation type 1 (!, !!, ? etc)
+    int  nag2=0;                            // annotation type 2 (+-, += etc)
 };
 
   */
-    // Get a summary of the current situation
+
+
+// Get a summary of the current situation
 void GameTree::GetSummary( Summary &summary )
 {
     //$ TODO, replace with Stepper based version
-#if 0
-    static int dbg_count = 0;
-    printf( "GetSummary() %d: In\n", ++dbg_count );
-    printf( "Outline = %s\n", dbg_outline(bytecode).c_str() ); 
-    std::string mainline_outline = dbg_outline(mainline(bytecode));
-    printf( "Mainline outline  = %s\n", mainline_outline.c_str() );
-    if( dbg_count == 16 )
-        ; //printf( "Debug\n" );
-#endif
 #define MAX_DEPTH 30
     int most_recent_offset[MAX_DEPTH+1];
     most_recent_offset[0] = 0;
     bool escape = false;
-    size_t len = bytecode.length();
+    int len = (int)bytecode.length();
     std::string moves;
     int last_move_offset = 0;
     struct STACK_ELEMENT
@@ -309,8 +303,8 @@ void GameTree::GetSummary( Summary &summary )
     int stk_idx = 0;
 
     // Pass 1, calculate where variations start at each depth
-    size_t idx=0;
-    for( idx=0; idx<(size_t)offset && idx<len; idx++ )
+    int idx=0;
+    for( idx=0; idx<offset && idx<len; idx++ )
     {
         if( escape )
         {
@@ -350,9 +344,9 @@ void GameTree::GetSummary( Summary &summary )
     escape = false;
     for( idx=0; idx<len+1; idx++ )  // note len+1 in case offset == len, see below *
     {
-        if( (int)idx == offset )
+        if( idx == offset )
         {
-            summary.move_idx             = moves.length();
+            summary.move_idx             = (int)moves.length();
             summary.variation_move_count = stk->variation_move_count;
             summary.at_move0             = (stk->variation_move_count == 0);
             summary.move_offset          = last_move_offset;
@@ -414,17 +408,11 @@ void GameTree::GetSummary( Summary &summary )
             stk->variation_move_count++;
         }
     }
-#if 0
-    std::string variation_outline = dbg_outline(moves);
-    printf( "Variation outline = %s\n", variation_outline.c_str() ); 
-    if( mainline_outline != variation_outline )
-        printf( "Debug 2\n" );
-#endif
     Bytecode bc;
     summary.start_position = start_position;
     thc::ChessRules cr = start_position;
     summary.moves = bc.Uncompress( start_position, moves );
-    for( size_t i=0; i<(int)summary.move_idx; i++ )
+    for( int i=0; i<summary.move_idx; i++ )
         cr.PlayMove(summary.moves[i]);
     summary.pos = cr;
 }
@@ -504,6 +492,37 @@ std::string dbg_outline( const std::string &bc )
             s += '-';
         }
     }
+    return s;
+}
+
+std::string Summary::ToDebugStr()
+{
+    std::string s;
+    s += util::sprintf( "Start position =\n%s\n", start_position.ToDebugStr().c_str() );
+    s += "Moves: ";
+    thc::ChessRules cr=start_position;
+    for( int i=0; i<move_idx; i++ )
+    {
+        if( i == (move_idx-variation_move_count) )
+        {
+            s += "->";
+        }
+        s += moves[i].NaturalOut(&cr);
+        s += " ";
+        cr.PlayMove(moves[i]);
+    }
+    s += "\n";
+    s += util::sprintf( "Position =\n%s\n", pos.ToDebugStr().c_str() );
+    s += util::sprintf( "depth=%d\n", depth );
+    s += util::sprintf( "description=%s\n", description.c_str() );
+    s += util::sprintf( "pre_comment=%s\n", pre_comment.c_str() );
+    s += util::sprintf( "comment=%s\n", comment.c_str() );
+    s += util::sprintf( "empty=%s\n", empty?"true":"false" );
+    s += util::sprintf( "at_move0=%s\n", at_move0?"true":"false" );
+    s += util::sprintf( "at_end_of_variation=%s\n", at_end_of_variation?"true":"false" );
+    s += util::sprintf( "in_comment=%s\n", in_comment?"true":"false" );
+    s += util::sprintf( "nag1=%d\n", nag1 );
+    s += util::sprintf( "nag2=%d\n", nag2 );
     return s;
 }
 

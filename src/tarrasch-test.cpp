@@ -15,6 +15,7 @@
 #include "Bytecode.h"
 #include "Stepper.h"
 
+static void move_entry_testing();
 int  game_tree_test();
 void stepper_gen_pgn_unjustified(const std::string& bc, std::string &s, const std::string& result );
 bool find_first_variation( const std::string &bc, int &offset );
@@ -38,19 +39,36 @@ int core_printf( const char *fmt, ... )
     return ret;
 }
 
+static int total_passes;
+static int total_fails;
+
+static void results_count( bool ok )
+{
+    if( ok )
+        total_passes++;
+    else
+        total_fails++;
+}
+
+static void results_print()
+{
+    printf( "Total passes %d\n", total_passes );
+    printf( "Total fails %d\n", total_fails );
+}
+
 int main()
 {
     extern void compress_temp_lookup_gen_function();
     compress_temp_lookup_gen_function();
-
     thc::ChessRules cr;
 
     // Test internals, for porting to new environments etc
     bool ok = cr.TestInternals();
+    results_count( ok );
     printf( "TestInternals() returns %s\n", ok?"Success":"Fail" );
-
-
     game_tree_test();
+    move_entry_testing();
+    results_print();
     return 0;
 }
 
@@ -90,16 +108,21 @@ int game_tree_test()
     int offset1, offset2;
     bool found1 = stepper_find_first_variation( gt.bytecode, offset1 );
     bool found2 = find_first_variation( gt.bytecode, offset2 );
-    if( found1 != found2 || offset1 != offset2 )
-        printf( "find_first_variation() mismatch\r\n" );
+    printf( "found1=%s, found2=%s, offset1=%u, offset2=%u\n",
+             found1?"true":"false", found2?"true":"false", offset1, offset2 );
+    bool ok = (found1==found2 && offset1==offset2);
+    printf( "find_first_variation() %s\n", ok?"pass":"fail" );
+    results_count(ok);
 
     // Promote a variation at current offset
-    bool ok = gt.Promote();
+    ok = gt.Promote();
     printf( "GameTree::Promote() returns ok=%s\n", ok?"true":"false" );
+    //results_count(ok);
 
     // Demote a variation at current offset
     ok = gt.Demote();
     printf( "GameTree::Demote() returns ok=%s\n", ok?"true":"false" );
+    //results_count(ok);
 
     // Bytecode type is intended to be increasingly the heart of Tarrasch
     Bytecode press;
@@ -120,6 +143,7 @@ int game_tree_test()
         "RNBQK..R\n";
     ok = (t == expected);
     printf( "Bytecode test #1: %s\n", ok?"pass":"fail" );
+    results_count(ok);
 
     // Optimised PGN directly from Bytecode
     press.Reset();
@@ -138,11 +162,12 @@ int game_tree_test()
     std::string s2 = white_space_normalise(pgn_stepper);
     printf( "s0:\n%s\n", s0.c_str() );
     printf( "s1:\n%s\n", s1.c_str() );
-    bool simple_pgn_test = (s0==s1);
-    bool simple_direct_vs_stepper_test = (s1==s2);
-    printf( "Simple pgn test %s\n", simple_pgn_test?"pass":"fail" );
-    printf( "Simple direct vs stepper pgn test %s\n", simple_direct_vs_stepper_test?"pass":"fail" );
-
+    bool ok_simple_pgn_test = (s0==s1);
+    bool ok_simple_direct_vs_stepper_test = (s1==s2);
+    printf( "Simple pgn test %s\n", ok_simple_pgn_test?"pass":"fail" );
+    printf( "Simple direct vs stepper pgn test %s\n", ok_simple_direct_vs_stepper_test?"pass":"fail" );
+    results_count( ok_simple_pgn_test );
+    results_count( ok_simple_direct_vs_stepper_test );
 
  /*
    Large (complicated) PGN testing
@@ -231,10 +256,12 @@ int game_tree_test()
     s2 = white_space_normalise(pgn_stepper);
     printf( "s0:\n%s\n", s0.c_str() );
     printf( "s1:\n%s\n", s1.c_str() );
-    bool complex_pgn_test = (s0==s1);
-    bool complex_direct_vs_stepper_test = (s1==s2);
-    printf( "Complex pgn test %s\n", complex_pgn_test?"pass":"fail" );
-    printf( "Complex direct vs stepper pgn test %s\n", complex_direct_vs_stepper_test?"pass":"fail" );
+    bool ok_complex_pgn_test = (s0==s1);
+    bool ok_complex_direct_vs_stepper_test = (s1==s2);
+    printf( "Complex pgn test %s\n", ok_complex_pgn_test?"pass":"fail" );
+    printf( "Complex direct vs stepper pgn test %s\n", ok_complex_direct_vs_stepper_test?"pass":"fail" );
+    results_count( ok_complex_pgn_test );
+    results_count( ok_complex_direct_vs_stepper_test );
 
     #if 0
 
@@ -439,8 +466,39 @@ bool find_first_variation( const std::string &bc, int &offset )
     offset = 0;
     for( char c: bc )
     {
+        offset++;
         if( c == BC_VARIATION_START )
             return true;
     }
     return false;
 }
+
+
+static void move_entry_testing()
+{
+    GameTree gt;
+
+    // Load from PGN text
+    std::string txt("1. e4 e5 2. Nf3 Nc6");
+    gt.PgnParse( txt );
+    printf( "Moves=%s, Bytecode as hex:", txt.c_str() );
+    int len = (int)gt.bytecode.length();
+    for( int i=0; i<len; i++ )
+    {
+        printf( " %02x", (uint8_t)gt.bytecode[i] );
+    }
+    printf( "\n" );
+    int original_offset = gt.offset;
+    printf( "Summary at all possible offsets\n");
+    Summary summary;
+    for( int offset=0; offset<len+1; offset++ )
+    {
+        gt.offset = offset;
+        printf( "offset=%d%s\n", offset, offset==original_offset ? " (Original Offset) ":"" );
+        printf( "--------\n");
+        gt.GetSummary(summary);
+        std::string s = summary.ToDebugStr();
+        printf( "%s\n", s.c_str() );
+    }
+}
+
