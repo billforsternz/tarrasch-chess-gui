@@ -15,7 +15,7 @@
 #include "Bytecode.h"
 #include "Stepper.h"
 
-static void move_entry_testing();
+static bool move_entry_testing();
 int  game_tree_test();
 void stepper_gen_pgn_unjustified(const std::string& bc, std::string &s, const std::string& result );
 bool find_first_variation( const std::string &bc, int &offset );
@@ -58,16 +58,21 @@ static void results_print()
 
 int main()
 {
+    bool ok;
+#define SINGLE_TEST
+#ifndef SINGLE_TEST
     extern void compress_temp_lookup_gen_function();
     compress_temp_lookup_gen_function();
     thc::ChessRules cr;
 
     // Test internals, for porting to new environments etc
-    bool ok = cr.TestInternals();
+    ok = cr.TestInternals();
     results_count( ok );
     printf( "TestInternals() returns %s\n", ok?"Success":"Fail" );
     game_tree_test();
-    move_entry_testing();
+#endif
+    ok = move_entry_testing();
+    results_count( ok );
     results_print();
     return 0;
 }
@@ -474,12 +479,11 @@ bool find_first_variation( const std::string &bc, int &offset )
 }
 
 
-static void move_entry_testing()
+static bool move_entry_testing()
 {
-    GameTree gt;
-
     // Load from PGN text
     std::string txt("1. e4 e5 2. Nf3 Nc6");
+    GameTree gt;
     gt.PgnParse( txt );
     printf( "Moves=%s, Bytecode as hex:", txt.c_str() );
     int len = (int)gt.bytecode.length();
@@ -491,14 +495,31 @@ static void move_entry_testing()
     int original_offset = gt.offset;
     printf( "Summary at all possible offsets\n");
     Summary summary;
+    std::string s = summary.ToDebugStr();
     for( int offset=0; offset<len+1; offset++ )
     {
         gt.offset = offset;
         printf( "offset=%d%s\n", offset, offset==original_offset ? " (Original Offset) ":"" );
         printf( "--------\n");
         gt.GetSummary(summary);
-        std::string s = summary.ToDebugStr();
         printf( "%s\n", s.c_str() );
     }
-}
 
+    printf( "Start Reconstruction\n" );
+    std::vector<thc::Move> v = gt.GetMainVariation();
+    GameTree gt2;
+    for( thc::Move mv: v )
+    {
+        GAME_MOVE game_move;
+        game_move.move = mv;
+        gt2.InsertMove( game_move, false );
+    }
+
+    // Reconstructed
+    printf( "Reconstructed offset=%d\n", gt2.offset );
+    gt2.GetSummary(summary);
+    std::string t = summary.ToDebugStr();
+    printf( "%s\n", t.c_str() );
+    bool ok = (s==t);
+    return ok;
+}

@@ -184,16 +184,16 @@ bool GameTree::InsertMove( GAME_MOVE game_move, bool allow_overwrite )
     cprintf( "# Outline before insertion %s\n", bc.OutlineOut(bytecode,"*").c_str() );
     cprintf( "# offset before insertion %d\n", offset );
     uint8_t c = bc.CompressMove(game_move.move);
-    size_t len = summary.moves.size();
-    if( len==0 || summary.move_idx == (int)(len-1) )
+    int len = (int)summary.moves.size();
+    cprintf( "# summary.moves.size() = %d\n", len );
+    if( len==0 || summary.move_idx == len )
     {
         bytecode.insert(summary.move_offset,1,(char)c);
         offset = summary.move_offset+1;
-        cprintf( "# Outline after insertion %s\n", bc.OutlineOut(bytecode,"*").c_str() );
-        cprintf( "# offset after insertion %d\n", offset );
     }
     else
     {
+        cprintf("# new variation\n");
         std::string new_variation;
         new_variation += (char)BC_VARIATION_START;
         new_variation += (char)c;
@@ -201,6 +201,8 @@ bool GameTree::InsertMove( GAME_MOVE game_move, bool allow_overwrite )
         bytecode.insert(summary.move_offset,new_variation);
         offset = summary.move_offset+2;
     }
+    cprintf( "# Outline after insertion %s\n", bc.OutlineOut(bytecode,"*").c_str() );
+    cprintf( "# offset after insertion %d\n", offset );
     return true;
 }
 
@@ -232,10 +234,15 @@ bool  GameTree::Demote(void)
     return false;
 }
 
-std::vector<thc::Move>  GameTree::GetMainVariation(void)
+std::vector<thc::Move> GameTree::GetMainVariation(void)
 {
-    std::vector<thc::Move> dummy;
-    return dummy;
+    std::vector<thc::Move> v;
+    for( Stepper it(bytecode); !it.End(); it.Next() )
+    {
+        if( it.ct==ct_move && it.depth==0 )
+            v.push_back( it.stk->mv );
+    }
+    return v;
 }
 
 void GameTree::SetNonZeroStartPosition(int)
