@@ -495,28 +495,44 @@ static bool move_entry_testing()
     int original_offset = gt.offset;
     printf( "Summary at all possible offsets\n");
     Summary summary;
-    std::string s = summary.ToDebugStr();
+    std::string s;
     for( int offset=0; offset<len+1; offset++ )
     {
         gt.offset = offset;
         printf( "offset=%d%s\n", offset, offset==original_offset ? " (Original Offset) ":"" );
         printf( "--------\n");
         gt.GetSummary(summary);
+        s = summary.ToDebugStr();
         printf( "%s\n", s.c_str() );
     }
 
     printf( "Start Reconstruction\n" );
     std::vector<thc::Move> v = gt.GetMainVariation();
     GameTree gt2;
+    int nbr_operations=0;
     for( thc::Move mv: v )
     {
         GAME_MOVE game_move;
         game_move.move = mv;
         gt2.InsertMove( game_move, false );
+        printf( "After %d InsertMove() operations. Reconstructed bytecode as hex:", ++nbr_operations );
+        len = (int)gt2.bytecode.length();
+        for( int i=0; i<len; i++ )
+        {
+            printf( " %02x", (uint8_t)gt2.bytecode[i] );
+        }
+        printf("\n");
     }
 
     // Reconstructed
     printf( "Reconstructed offset=%d\n", gt2.offset );
+    printf( "Reconstructed bytecode as hex:" );
+    len = (int)gt2.bytecode.length();
+    for( int i=0; i<len; i++ )
+    {
+        printf( " %02x", (uint8_t)gt2.bytecode[i] );
+    }
+    printf("\n");
     gt2.GetSummary(summary);
     std::string t = summary.ToDebugStr();
     printf( "%s\n", t.c_str() );

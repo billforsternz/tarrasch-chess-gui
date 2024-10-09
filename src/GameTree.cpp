@@ -186,20 +186,23 @@ bool GameTree::InsertMove( GAME_MOVE game_move, bool allow_overwrite )
     uint8_t c = bc.CompressMove(game_move.move);
     int len = (int)summary.moves.size();
     cprintf( "# summary.moves.size() = %d\n", len );
-    if( len==0 || summary.move_idx == len )
+    if( len==0 )
     {
         bytecode.insert(summary.move_offset,1,(char)c);
         offset = summary.move_offset+1;
     }
+    else if( summary.move_idx == len )
+    {
+        bytecode.insert(summary.move_offset+1,1,(char)c);
+        offset = summary.move_offset+2;
+    }
     else
     {
         cprintf("# new variation\n");
-        std::string new_variation;
-        new_variation += (char)BC_VARIATION_START;
-        new_variation += (char)c;
-        new_variation += (char)BC_VARIATION_END;
-        bytecode.insert(summary.move_offset,new_variation);
-        offset = summary.move_offset+2;
+        bytecode.insert(summary.move_offset+1,1, (char)BC_VARIATION_START );
+        bytecode.insert(summary.move_offset+2,1, (char)c );
+        offset = summary.move_offset+3;
+        bytecode.insert(summary.move_offset+3,1, (char)BC_VARIATION_END );
     }
     cprintf( "# Outline after insertion %s\n", bc.OutlineOut(bytecode,"*").c_str() );
     cprintf( "# offset after insertion %d\n", offset );
