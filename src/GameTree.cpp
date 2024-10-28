@@ -178,12 +178,12 @@ bool GameTree::InsertMove( GAME_MOVE game_move, bool allow_overwrite )
     // bool move_played = false;
     Summary summary;
     GetSummary( summary );
-    Bytecode bc(summary.pos);
+    Bytecode press(summary.pos);
     cprintf( "# summary.pos %s\n", summary.pos.ToDebugStr("").c_str() );
     cprintf( "# summary.move_idx %d\n", summary.move_idx );
-    cprintf( "# Outline before insertion %s\n", bc.OutlineOut(bytecode,"*").c_str() );
+    cprintf( "# Outline before insertion %s\n", press.OutlineOut(bytecode,"*").c_str() );
     cprintf( "# offset before insertion %d\n", offset );
-    uint8_t c = bc.CompressMove(game_move.move);
+    uint8_t c = press.CompressMove(game_move.move);
     int len = (int)summary.moves.size();
     cprintf( "# summary.moves.size() = %d\n", len );
     if( len==0 )
@@ -204,7 +204,7 @@ bool GameTree::InsertMove( GAME_MOVE game_move, bool allow_overwrite )
         offset = summary.move_offset+3;
         bytecode.insert(summary.move_offset+3,1, (char)BC_VARIATION_END );
     }
-    cprintf( "# Outline after insertion %s\n", bc.OutlineOut(bytecode,"*").c_str() );
+    cprintf( "# Outline after insertion %s\n", press.OutlineOut(bytecode,"*").c_str() );
     cprintf( "# offset after insertion %d\n", offset );
     return true;
 }
@@ -418,10 +418,10 @@ void GameTree::GetSummary( Summary &summary )
             stk->variation_move_count++;
         }
     }
-    Bytecode bc;
+    Bytecode press;
     summary.start_position = start_position;
     thc::ChessRules cr = start_position;
-    summary.moves = bc.Uncompress( start_position, moves );
+    summary.moves = press.Uncompress( start_position, moves );
     for( int i=0; i<summary.move_idx; i++ )
         cr.PlayMove(summary.moves[i]);
     summary.pos = cr;

@@ -1089,12 +1089,25 @@ int GameView::GetInternalOffsetEndOfVariation( int start )
 
 bool GameView::Locate( unsigned long pos, thc::ChessRules &cr_, string &title, bool &at_move0 )
 {
-    std::vector<thc::Move> var;
-
-    // TODO properly match this !
-    bc_locate( tree_bc.bytecode, pos, start_position, var );
-    title = "TODO - describe location";
-    return false;
+    int nbr = expansion.size();
+    int offset_bc=0;
+    for( int i=0; i<nbr; i++ )
+    {
+        GameViewElement gve = expansion[i];
+        if( gve.type==MOVE0 || gve.type==MOVE )
+            offset_bc = gve.offset_bc;
+        if( gve.offset1<=pos && pos<=gve.offset2 )
+            break;
+        if( gve.offset2 <= pos )
+            break;
+    }
+    tree_bc.offset = offset_bc;
+    Summary summary;
+    tree_bc.GetSummary( summary );
+    cr_ = summary.pos;
+    title = summary.description;
+    at_move0 = summary.at_move0;
+    return true;
 }
 
 void GameView::Debug()
