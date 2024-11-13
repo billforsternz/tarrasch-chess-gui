@@ -604,7 +604,18 @@ bool bin_db_append( const char *fen, const char *event, const char *site, const 
 {
     bool aborted = false;
     if( (++game_counter % 10000) == 0 )
+    {
+        _CrtMemState heap_info;
+        _CrtMemCheckpoint( &heap_info );
+        _CrtMemDumpStatistics( &heap_info );
+        size_t z=0;
+        for( int i=0; i<_MAX_BLOCKS; i++ )
+        {
+            z += heap_info.lSizes[i];
+        }
+        cprintf( "[high water=%luM, total=%luM, calc=%luM] ", heap_info.lHighWaterCount/1000000, heap_info.lTotalCount/1000000, z/1000000 );
         cprintf( "%d games read from input .pgn so far\n", game_counter );
+    }
     if( fen )
         return false;
     if( nbr_moves < 3 )    // skip 'games' with zero, one or two moves
