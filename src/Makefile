@@ -1,6 +1,7 @@
 src := $(wildcard *.cpp)
 src := $(filter-out legal-move-generator.cpp, $(src))
 src := $(filter-out tabartmsw.cpp, $(src))
+src := $(filter-out tarrasch-test.cpp, $(src))
 obj := $(src:.cpp=.o)
 
 ../tarrasch: $(obj)
