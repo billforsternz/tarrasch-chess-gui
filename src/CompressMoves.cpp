@@ -414,7 +414,7 @@ std::string CompressMoves::ToNaturalMoves( const std::string& moves_in, const st
         if( cr.white )
         {
             char buf[40];
-            _itoa(nbr++, buf, 10);
+            std::snprintf(buf, sizeof(buf), "%d", nbr++);
             std::string t(buf);
             t += ".";
             if( col + t.length() >= WRAP_COLUMN )

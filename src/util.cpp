@@ -6,6 +6,7 @@
 */
 
 
+#include <cstring>
 #include <iostream>
 #include <string>
 #include <stdarg.h>  // For va_start, etc.
