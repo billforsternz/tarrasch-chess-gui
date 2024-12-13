@@ -22,7 +22,9 @@
          nested inline expansion of -> GeneratedLookupTables.h
  */
 
+#ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

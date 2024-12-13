@@ -1180,9 +1180,9 @@ static void sort_progress_probe()
             if( predicate_count>=predicate_nbr_expected || predicate_nbr_expected==0 )
                 permill = 1000;
             else if( predicate_nbr_expected > 1000000 )
-                permill = predicate_count / (predicate_nbr_expected/1000);
+                permill = (int) (predicate_count / (predicate_nbr_expected/1000));
             else
-                permill = (predicate_count*1000) / predicate_nbr_expected;
+                permill = (int) ((predicate_count*1000) / predicate_nbr_expected);
             predicate_pb->Permill( permill );
         }
     }
