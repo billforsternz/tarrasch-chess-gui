@@ -1094,11 +1094,9 @@ bool GameView::Locate( unsigned long pos, thc::ChessRules &cr_, string &title, b
     for( int i=0; i<nbr; i++ )
     {
         GameViewElement gve = expansion[i];
-        if( gve.type==MOVE0 || gve.type==MOVE )
+        if( gve.type==MOVE0 || gve.type==MOVE || gve.type==END_OF_GAME )
             offset_bc = gve.offset_bc;
-        if( gve.offset1<=pos && pos<=gve.offset2 )
-            break;
-        if( gve.offset2 <= pos )
+        if( gve.offset1 >= pos )
             break;
     }
     tree_bc.offset = offset_bc;

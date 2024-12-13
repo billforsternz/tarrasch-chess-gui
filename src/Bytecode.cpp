@@ -973,7 +973,7 @@ void Bytecode::GameViewOut( const std::string& bc_moves_in, const std::string& r
                 s += ' ';
                 s += t;
                 GameViewElement gve;
-                if( stk->variation_move_count == 0 )
+                if( stk->variation_move_count == 1 )
                 {
                     gve.type = MOVE0;
                     gve.level   = stk_idx;
