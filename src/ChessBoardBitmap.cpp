@@ -1847,20 +1847,31 @@ void ChessBoardBitmap::PutEx( char piece,
     //dbg_printf("%c%c\n", dst_file, dst_rank );
     if( density != 4 )
     {
+
         // 16 bit (and other) graphics code
-        unsigned int i, j;
+        int i, j;
         byte *src, *dst;
-//      byte *dst_min, *dst_max;
-//      dst_min = (byte *)&buf_board[0];
-//      dst_max = (byte *)&buf_board[height*width_bytes];
+        byte *dst_min, *dst_max;
+        dst_min = (byte *)&buf_board[0];
+        dst_max = (byte *)&buf_board[height*width_bytes];
         for( i=0; i < height/8; i++ )
         {
             src           =
                 (byte *)(buf_box   + Offset(src_file,src_rank) + i*width_bytes);
             dst           =
                 (byte *)(buf_board + Offset(dst_file,dst_rank) + i*width_bytes);
+            #if 0
+            // Fails because shift.y can be negative, so unsigned width_bytes * shift.y can be a
+            //  a massively positive uint32_t, which is not corrected on x64 because
+            //  ptrs are of course uint64_t
             dst += (width_bytes * shift.y);
-            dst += shift.x*density;
+            dst += (shift.x*density);
+            #endif
+            #if 1
+            // Works okay
+            dst += ((long)width_bytes * shift.y);
+            dst += (shift.x*(long)density);
+            #endif
             for( j=0; j < width_bytes/(8*density); j++ )
             {
                 if( *mask++ != '0' )
