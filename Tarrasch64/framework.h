@@ -1,3 +1,4 @@
+#if 0
 // header.h : include file for standard system include files,
 // or project specific include files
 //
@@ -13,3 +14,5 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
+#endif
+

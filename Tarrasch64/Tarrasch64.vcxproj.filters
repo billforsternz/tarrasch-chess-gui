@@ -32,6 +32,9 @@
     <ClCompile Include="Tarrasch64.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="caret.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Tarrasch64.rc">

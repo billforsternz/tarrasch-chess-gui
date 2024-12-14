@@ -4,6 +4,7 @@
 #include "framework.h"
 #include "Tarrasch64.h"
 
+#if 0
 #define MAX_LOADSTRING 100
 
 // Global Variables:
@@ -178,3 +179,5 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     }
     return (INT_PTR)FALSE;
 }
+
+#endif
