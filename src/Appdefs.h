@@ -2,7 +2,7 @@
  * Top level application definitions
  *  Author:  Bill Forster
  *  License: MIT license. Full text of license is in associated file LICENSE
- *  Copyright 2010-2014, Bill Forster <billforsternz at gmail dot com>
+ *  Copyright 2010-2024, Bill Forster <billforsternz at gmail dot com>
  ******************************************************************************/
 #ifndef APPDEFS_H
 #define APPDEFS_H
@@ -10,7 +10,7 @@
 #include "wx/wx.h"
 #include "Portability.h"
 
-#define MASTER_VERSION_BASE "V3.13b+"    //add '-' or '+' prefix between releases
+#define MASTER_VERSION_BASE "V3.20-"    //add '-' or '+' prefix between releases
 
 //#define USING_TARRASCH_BASE
 // no suffix indicates default .tdb is tarrasch-base
