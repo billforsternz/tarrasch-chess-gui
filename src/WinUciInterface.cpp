@@ -139,7 +139,7 @@ const char *str_pattern_smart( const char *str, const char *pattern );
 
 #define bzero(a) memset(a,0,sizeof(a)) //easier -- shortcut
 
-static void ErrorMessage( const char *filename_uci_exe, char *str )  //display detailed error info
+static void ErrorMessage( const char *filename_uci_exe, const char *str )  //display detailed error info
 {
     TCHAR *msg;   // wide characters
     FormatMessage(
