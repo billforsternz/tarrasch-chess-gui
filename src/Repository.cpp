@@ -22,6 +22,10 @@
     LPFN_ISWOW64PROCESS fnIsWow64Process;
     bool Is64BitWindows()
     {
+#ifdef _WIN64
+        return true;  // 64-bit programs run only on Win64
+#endif
+
         BOOL bIsWow64 = FALSE;
 
         //IsWow64Process is not available on all supported versions of Windows.
