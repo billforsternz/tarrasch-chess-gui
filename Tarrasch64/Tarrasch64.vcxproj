@@ -131,21 +131,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="framework.h" />
-    <ClInclude Include="Resource.h" />
-    <ClInclude Include="targetver.h" />
-    <ClInclude Include="Tarrasch64.h" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="caret.cpp" />
-    <ClCompile Include="Tarrasch64.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Tarrasch64.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="small.ico" />
     <Image Include="Tarrasch64.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Tarrasch64.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
