@@ -457,8 +457,14 @@ void Repository::SetDirectories()
 
     // Defaults to use in case of error
     wxString name = "Tarrasch";
+    wxString name1;
+    wxString name2;
 #ifdef WINDOWS_FIX_LATER
+#ifdef _WIN64
+    exe_dir = "C:/Program Files/Tarrasch";
+#else
     exe_dir = "C:/Program Files (x86)/Tarrasch";
+#endif
 #else
     exe_dir = ".";
 #endif
@@ -474,9 +480,16 @@ void Repository::SetDirectories()
     wxFileName exe(tmp);
     wxArrayString dirs = exe.GetDirs();
     exe_dir = exe.GetPath();
+    if( dirs.Count() > 2 )
+    {
+        name2 = dirs[dirs.Count()-2];
+        name1 = dirs[dirs.Count()-1];
+    }
     if( dirs.Count() > 1 )
         name = dirs[dirs.Count()-1];
     if( name=="vc_mswd" || name=="vc_msw" || name=="vc_mswud" || name=="vc_mswu" ) // during development
+        name = "Tarrasch";
+    if( name2=="x64" && (name1=="Release" || name1=="Debug") )                     // during development (64 bit)
         name = "Tarrasch";
     if( name.Len() == 0 )
         name = "Tarrasch";

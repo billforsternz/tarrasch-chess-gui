@@ -361,7 +361,7 @@ wxString GamesListCtrl::OnGetItemText( long item, long column) const
         case 7: txt =   info.r.round.c_str();         break;
         case 8: txt =   info.r.result.c_str();        break;
         case 9: txt =   info.r.eco.c_str();           break;
-        case 10: sprintf( buf,"%lu", info.moves.size() );
+        case 10: sprintf( buf,"%zu", info.moves.size() );
                  txt =  buf;                          break;
         case 11:
         {
