@@ -33,7 +33,11 @@ public:
         if( ifile )
         {
             fseek(ifile,0,SEEK_END);
-            file_len = ftell(ifile);
+            #ifdef THC_WINDOWS
+            file_len=_ftelli64(ifile);
+            #else
+            file_len=ftello(ifile);
+            #endif
             fseek(ifile,0,SEEK_SET);
         }
     }
@@ -44,7 +48,11 @@ public:
         {
             if( modulo_256 == 0 )
             {
-                unsigned long file_offset=ftell(ifile);
+                #ifdef THC_WINDOWS
+                int64_t file_offset=_ftelli64(ifile);
+                #else
+                int64_t file_offset=ftello(ifile);
+                #endif
                 int permill=0;
                 if( file_len == 0 )
                     permill = 1000;
@@ -88,7 +96,7 @@ private:
     int old_permill;
     wxProgressDialog progress;
     FILE *ifile;
-    unsigned long file_len;
+    int64_t file_len;
     void SetFocusChecked()
     {
 #if wxABI_VERSION > 28600
@@ -115,7 +123,11 @@ public:
         if( ifile )
         {
             fseek(ifile,0,SEEK_END);
-            file_len = ftell(ifile);
+            #ifdef THC_WINDOWS
+            file_len=_ftelli64(ifile);
+            #else
+            file_len=ftello(ifile);
+            #endif
             fseek(ifile,0,SEEK_SET);
         }
         modulo_256=0;
@@ -148,7 +160,11 @@ public:
         {
             if( modulo_256 == 0 )
             {
-                unsigned long file_offset=ftell(ifile);
+                #ifdef THC_WINDOWS
+                int64_t file_offset=_ftelli64(ifile);
+                #else
+                int64_t file_offset=ftello(ifile);
+                #endif
                 int permill=0;
                 if( file_len == 0 )
                     permill = 1000;
@@ -245,7 +261,7 @@ private:
     int old_permill;
     wxProgressDialog *progress;
     FILE *ifile;
-    unsigned long file_len;
+    int64_t file_len;
     AutoTimer timer;
     std::string title;
     std::string desc;
