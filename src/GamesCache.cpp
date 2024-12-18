@@ -87,8 +87,6 @@ static GamesCache *gc_fixme;
 bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen )
 {
     static enum {INIT,PREFIX,TAGLINES,PRE_MOVES,MOVES,SEARCH} state;
-    static int nbr_newlines_at_end=0;
-    bool newline = false;
     bool done=false;
     buf[0] = '\0';
     typ = ' ';  // no-op
@@ -98,7 +96,7 @@ bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen )
     }
     else
     {
-        char *null_if_eof = fgets( buf, buflen-8, pgn_file );
+        char *null_if_eof = fgets(buf,buflen-8,pgn_file);
         if( null_if_eof == NULL )
         {
             done = true;
@@ -108,9 +106,6 @@ bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen )
         else
         {
             const char *p = buf;
-            const char *end = p + strlen(p);
-            if( end > p && (*(end-1)=='\r'||*(end-1)=='\n') )
-                newline = true;
             while( *p==' ' || *p=='\t' )
                 p++;
             bool blank   = (*p=='\n'||*p=='\r'||*p=='\0');
@@ -235,20 +230,34 @@ bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen )
             }
         }
     }
-    if( typ=='M' || typ=='m' )
-        nbr_newlines_at_end = (newline?1:0);
-    if( typ=='G' )
-        nbr_newlines_at_end += (newline?1:0);
-    if( typ == 'G' && nbr_newlines_at_end<2 )
+
+    // There should be two blank lines at the end of every game, even if they're omitted
+    //  in the source file
+    if( typ=='M' || typ=='m' || typ=='G' )
     {
-        char *p = buf + strlen(buf);
-        while( nbr_newlines_at_end < 2 )
+        static int nbr_newlines_at_end;
+        bool newline = false;
+        char *end = buf + strlen(buf);
+        if( end>buf && (*(end-1)=='\r' || *(end-1)=='\n') )
+            newline = true;
+        if(  typ=='M' || typ=='m' )
+            nbr_newlines_at_end = (newline?1:0);
+        else // if( typ == 'G' )
         {
-            *p++ = '\r';
-            *p++ = '\n';
-            nbr_newlines_at_end++;
+            nbr_newlines_at_end += (newline?1:0);
+            if( nbr_newlines_at_end < 2 )
+            {
+                while( nbr_newlines_at_end < 2 )
+                {
+                    #ifdef THC_WINDOWS
+                    *end++ = '\r';
+                    #endif
+                    *end++ = '\n';
+                    nbr_newlines_at_end++;
+                }
+                *end++ = '\0';
+            }
         }
-        *p++ = '\0';
     }
     return done;
 }
