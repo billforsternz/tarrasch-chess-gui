@@ -87,7 +87,10 @@ static GamesCache *gc_fixme;
 bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen )
 {
     static enum {INIT,PREFIX,TAGLINES,PRE_MOVES,MOVES,SEARCH} state;
+    static int nbr_newlines_at_end=0;
+    bool newline = false;
     bool done=false;
+    buf[0] = '\0';
     typ = ' ';  // no-op
     if( pgn_file == NULL )
     {
@@ -95,19 +98,22 @@ bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen )
     }
     else
     {
-        char *null_if_eof = fgets( buf, buflen-2, pgn_file );
+        char *null_if_eof = fgets( buf, buflen-8, pgn_file );
         if( null_if_eof == NULL )
         {
             done = true;
-            if( state==MOVES )
+            if( state == MOVES )
                 typ = 'G';  // completed game;
         }
         else
         {
             const char *p = buf;
+            const char *end = p + strlen(p);
+            if( end > p && (*(end-1)=='\r'||*(end-1)=='\n') )
+                newline = true;
             while( *p==' ' || *p=='\t' )
                 p++;
-            bool blank   = (*p=='\n'||*p=='\r');
+            bool blank   = (*p=='\n'||*p=='\r'||*p=='\0');
             bool tagline = (*p=='[');
 
             // Check that it really is a tagline
@@ -228,6 +234,21 @@ bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen )
                 }
             }
         }
+    }
+    if( typ=='M' || typ=='m' )
+        nbr_newlines_at_end = (newline?1:0);
+    if( typ=='G' )
+        nbr_newlines_at_end += (newline?1:0);
+    if( typ == 'G' && nbr_newlines_at_end<2 )
+    {
+        char *p = buf + strlen(buf);
+        while( nbr_newlines_at_end < 2 )
+        {
+            *p++ = '\r';
+            *p++ = '\n';
+            nbr_newlines_at_end++;
+        }
+        *p++ = '\0';
     }
     return done;
 }
@@ -685,13 +706,10 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
                     while( !done )
                     {
                         done = PgnStateMachine( pgn_in2, typ,  buf2, sizeof(buf2) );
-                        if( !done )
-                        {
-                            fputs( buf2, pgn_out );
-                            game_len += strlen(buf2);
-                            if( typ == 'G' )
-                                break;
-                        }
+                        fputs( buf2, pgn_out );
+                        game_len += strlen(buf2);
+                        if( typ == 'G' )
+                            break;
                     }
                 }
             }
