@@ -178,16 +178,6 @@ void PgnDialog::GetCachedDocumentRaw( int idx, GameDocument &gd )
     mb->ConvertToGameDocument(gd);
 }
 
-GameDocument * PgnDialog::GetCachedDocument( int idx )
-{
-    static GameDocument gd;
-    CompactGame pact;
-    smart_ptr<ListableGame> &mb = gc->gds[idx];
-    mb->GetCompactGame(pact);
-    pact.Upscale( gd );
-    return &gd;
-}
-
 void PgnDialog::GdvReadItem( int item, CompactGame &info )
 {
     if( 0<=item && static_cast<unsigned int>(item)<gc->gds.size() )
