@@ -71,6 +71,7 @@ std::string CompactGame::Description()
 void CompactGame::Upscale( GameDocument &gd )
 {
     gd.r = r;
+    gd.extra_tags.clear();
     gd.game_id = game_id;
     bool have_start_position = HaveStartPosition();
     if( have_start_position )
