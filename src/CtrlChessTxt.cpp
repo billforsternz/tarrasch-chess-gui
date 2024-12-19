@@ -416,6 +416,10 @@ void CtrlChessTxt::Paste()
             }
             if( !gd->PromotePaste(txt_to_insert) )
                 gd->CommentEdit(this,txt_to_insert);
+            else
+            {
+
+            }
         }
         wxTheClipboard->Close();
     }

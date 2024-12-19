@@ -209,6 +209,19 @@ void GameView::Crawler( MoveTree *node, bool move0, bool last_move )
             {
                 final_position = cr;
                 final_position.PlayMove( node->game_move.move );
+                {
+                    thc::TERMINAL terminal;
+                    bool ok = final_position.Evaluate(terminal);
+                    if(ok)
+                    {
+                        if( terminal == thc::TERMINAL_BSTALEMATE ||  terminal == thc::TERMINAL_WSTALEMATE )
+                            result = "1/2-1/2";
+                        else if(  terminal == thc::TERMINAL_WCHECKMATE )
+                            result = "0-1";
+                        else if(  terminal == thc::TERMINAL_BCHECKMATE )
+                            result = "1-0";
+                    }
+                }
                 final_position_node = node;
                 sprintf( buf, "Final position after %d%s", cr.full_move_count, cr.white?".":"..." );
                 final_position_txt  = buf + move_body;

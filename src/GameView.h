@@ -54,6 +54,7 @@ public:
     bool IsAtEnd( unsigned long pos );
     unsigned long GetMoveOffset( MoveTree *node );
     void Debug();
+    std::string GetResult() {return result;}
 
 private:
     enum GAME_VIEW_ELEMENT_TYPE
