@@ -151,6 +151,12 @@ void CtrlChessBoard::OnMouseMove( wxMouseEvent &event )
     wxPoint point = event.GetPosition();
     if( cbb.sliding )
     {
+        if( !event.LeftIsDown() )
+        {
+            cbb.sliding = false;
+            objs.gl->MouseUp();
+            return;
+        }
         dbg_printf( "In board\n" );
         point.x -= cbb.pickup_point.x;
         point.y -= cbb.pickup_point.y;
