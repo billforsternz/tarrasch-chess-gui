@@ -144,7 +144,11 @@ void CtrlChessTxt::OnContext( wxContextMenuEvent &event )
 
 void CtrlChessTxt::OnMouseEvent( wxMouseEvent& ev )
 {
-    if( gl->IsManual() )
+    if( ev.Moving() )
+    {
+        ev.Skip();
+    }
+    else if( gl->IsManual() )
     {
         unsigned long pos = GetInsertionPoint();
         Goto(pos,true);
