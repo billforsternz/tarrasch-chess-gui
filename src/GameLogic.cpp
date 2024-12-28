@@ -785,6 +785,8 @@ void GameLogic::CmdFileOpenLog()
 void GameLogic::CmdFileOpenInner( std::string &filename )
 {
     Atomic begin;
+    bool cancelled = false;
+    GamesCache gc_pgn_undo_if_cancel = gc_pgn;
     bool is_empty = gd.IsEmpty();
     unsigned long insertion_point = gd.GetInsertionPoint();
     bool editing_log = objs.gl->EditingLog();
@@ -813,8 +815,12 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
                 selected_game = dialog.GetSelectedGame(&offset);
                 load_with_cancel = false;
             }
+            else
+            {
+                cancelled = true;
+            }
         }
-        if( offset>=0 && selected_game>=0 && static_cast<unsigned int>(selected_game)<gc_pgn.gds.size() )
+        if( !cancelled && offset>=0 && selected_game>=0 && static_cast<unsigned int>(selected_game)<gc_pgn.gds.size() )
         {
             objs.log->SaveGame(&gd,editing_log);
             objs.session->SaveGame(&gd);
@@ -849,6 +855,10 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
                 monitor_usage_pattern.FileOpenDialogCancel( initial_insertion_point );
             }
         }
+    }
+    if( cancelled )
+    {
+        gc_pgn = gc_pgn_undo_if_cancel;
     }
     atom.StatusUpdate();
 }
