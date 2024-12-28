@@ -247,12 +247,20 @@ public:
     GamesCache gc_clipboard;
     GamesCache gc_session;
     GamesCache gc_database;
+    int    gc_database_idx=0;
+    size_t gc_database_sz=0;
+    uint64_t gc_database_hash;
+    int    gc_clipboard_idx=0;
+    size_t gc_clipboard_sz=0;
+    uint32_t from_database_tag=0x40000000;
+    uint32_t from_clipboard_tag=0xc0000000;
     PgnFiles pf;
     wxFileHistory mru;
     GameClock chess_clock;
     bool db_clipboard;
     Undo undo;
     Atom atom;
+    enum {NP_NONE,NP_PGN,NP_DB,NP_CLIPBOARD} next_previous=NP_PGN, np_temp=NP_PGN;
 };
 
 #endif // GAMELOGIC_H

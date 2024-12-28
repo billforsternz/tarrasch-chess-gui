@@ -856,14 +856,52 @@ void GameLogic::CmdFileOpenInner( std::string &filename )
 
 bool GameLogic::CmdUpdateNextGame()
 {
-    int nbr = gc_pgn.gds.size();
-    return( nbr>1 && games_in_file_idx!=-1 && 0<=games_in_file_idx+1 && games_in_file_idx+1<nbr );
+    switch( next_previous )
+    {
+        default:
+        case NP_NONE:
+        {
+            return false;
+        }
+        case NP_PGN:
+        {
+            int nbr = gc_pgn.gds.size();
+            return( nbr>1 && games_in_file_idx!=-1 && 0<=games_in_file_idx+1 && games_in_file_idx+1<nbr );
+        }
+        case NP_DB:
+        {
+            return( gc_database_idx+1 < gc_database_sz );
+        }
+        case NP_CLIPBOARD:
+        {
+            return( gc_clipboard_idx+1 < gc_clipboard_sz );
+        }
+    }
 }
 
 bool GameLogic::CmdUpdatePreviousGame()
 {
-    int nbr = gc_pgn.gds.size();
-    return( nbr>1 && games_in_file_idx!=-1 && 0<=games_in_file_idx-1 && games_in_file_idx-1<nbr );
+    switch( next_previous )
+    {
+        default:
+        case NP_NONE:
+        {
+            return false;
+        }
+        case NP_PGN:
+        {
+            int nbr = gc_pgn.gds.size();
+            return( nbr>1 && games_in_file_idx!=-1 && 0<=games_in_file_idx-1 && games_in_file_idx-1<nbr );
+        }
+        case NP_DB:
+        {
+            return( gc_database_idx > 0 );
+        }
+        case NP_CLIPBOARD:
+        {
+            return( gc_clipboard_idx > 0 );
+        }
+    }
 }
 
 int GameLogic::GetCurrentGameInFileIndex()
@@ -879,47 +917,131 @@ void GameLogic::NextGamePreviousGame( int idx )
 {
     Atomic begin;
 
-    // Upgrade next/previous element of games cache to a GameDocument, if necessary
-    GameDocument *gd_file = gc_pgn.gds[idx]->IsGameDocument();
-    GameDocument new_gd;
-    if( !gd_file )
+    switch( next_previous )
     {
-        gc_pgn.gds[idx]->ConvertToGameDocument(new_gd);
-        make_smart_ptr(GameDocument, new_smart_ptr, new_gd);
-        gc_pgn.gds[idx] = std::move(new_smart_ptr);
-    }
-
-    // Check to see if the document is being edited in another tab
-    else
-    {
-        new_gd = *gd_file;
-        GameDocument *pd;
-        Undo *pu;
-        int handle = tabs->Iterate(0,pd,pu);
-        while( pd && pu )
+        default:
+        case NP_NONE:
         {
-
-            // If it is copy it over to this tab
-            if( gd_file->game_being_edited>0 && gd_file->game_being_edited==pd->game_being_edited )
+            break;
+        }
+        case NP_PGN:
+        {
+            // Upgrade next/previous element of games cache to a GameDocument, if necessary
+            GameDocument *gd_file = gc_pgn.gds[idx]->IsGameDocument();
+            GameDocument new_gd;
+            if( !gd_file )
             {
-                new_gd = *pd;
-                new_gd.non_zero_start_pos = tabs->GetIteratePos();
-                break;
+                gc_pgn.gds[idx]->ConvertToGameDocument(new_gd);
+                make_smart_ptr(GameDocument, new_smart_ptr, new_gd);
+                gc_pgn.gds[idx] = std::move(new_smart_ptr);
             }
-            tabs->Iterate(handle,pd,pu);
+
+            // Check to see if the document is being edited in another tab
+            else
+            {
+                new_gd = *gd_file;
+                GameDocument *pd;
+                Undo *pu;
+                int handle = tabs->Iterate(0,pd,pu);
+                while( pd && pu )
+                {
+
+                    // If it is copy it over to this tab
+                    if( gd_file->game_being_edited>0 && gd_file->game_being_edited==pd->game_being_edited )
+                    {
+                        new_gd = *pd;
+                        new_gd.non_zero_start_pos = tabs->GetIteratePos();
+                        break;
+                    }
+                    tabs->Iterate(handle,pd,pu);
+                }
+            }
+
+            bool editing_log = objs.gl->EditingLog();
+            PutBackDocument();
+            objs.log->SaveGame(&gd, editing_log);
+            objs.session->SaveGame(&gd);
+
+            // #Workflow)
+            // Set new edit correspondence, gd to next/previous game in file
+            gd = new_gd;
+            SetGameBeingEdited( gd, *gc_pgn.gds[idx] );
+            ShowNewDocument();
+            break;
+        }
+        case NP_DB:
+        {
+            bool editing_log = objs.gl->EditingLog();
+            objs.log->SaveGame(&gd,editing_log);
+            //objs.session->SaveGame(&gd);        //careful...
+            GameDocument temp = gd;
+
+            // #Workflow)  Pull in game from database, opens in new tab
+            // No edit correspondence to games in game caches except for pgn cache, i.e. current working file
+            if( 0<=idx && idx < gc_database_sz
+                && gc_database_sz == gc_database.gds.size() 
+               )
+            {
+                gc_database_idx = idx;
+                CompactGame info;
+                auto p = gc_database.gds[gc_database_idx];
+                p->GetCompactGame(info);
+                GameDocument new_gd;
+                new_gd.r = info.r;
+                new_gd.game_id = info.game_id;
+                int offset;
+                bool ok = info.FindPositionInGame(gc_database_hash,offset);
+                if( !ok )
+                    offset = 0;
+                new_gd.LoadFromMoveList( info.moves, offset );
+                bool modified = gd.IsModified() || undo.IsModified();
+                if( !modified )
+                    gd = new_gd;
+                else
+                    tabs->TabNew(new_gd);
+                gd.from_database_tag = ++from_database_tag;
+                ShowNewDocument();
+            }
+            objs.session->SaveGame(&temp);      // ...modify session only after loading old game
+            break;
+        }
+        case NP_CLIPBOARD:
+        {
+            bool editing_log = objs.gl->EditingLog();
+            objs.log->SaveGame(&gd,editing_log);
+            //objs.session->SaveGame(&gd);        //careful...
+            GameDocument temp = gd;
+
+            // #Workflow)  Pull in game from clipboard, may open in a new tab
+            // No edit correspondence to games in clipboard cache or database cache
+            if( 0<=idx && idx < gc_clipboard_sz
+                && gc_clipboard_sz == gc_clipboard.gds.size() 
+               )
+            {
+                gc_clipboard_idx = idx;
+                GameDocument new_gd;
+                GameDocument *p = gc_clipboard.gds[idx]->IsGameDocument();
+                if( p )
+                    new_gd = *p;
+                else
+                {
+                    gc_clipboard.gds[idx]->ConvertToGameDocument(new_gd);
+                    make_smart_ptr(GameDocument, new_smart_ptr, new_gd);
+                    gc_clipboard.gds[idx] = std::move(new_smart_ptr);
+                }
+                gc_clipboard_sz = gc_clipboard.gds.size();
+                bool modified = gd.IsModified() || undo.IsModified();
+                if( !modified )
+                    gd = new_gd;
+                else
+                    tabs->TabNew(new_gd);
+                gd.from_clipboard_tag = ++from_clipboard_tag;
+                ShowNewDocument();
+            }
+            objs.session->SaveGame(&temp);      // ...modify session only after loading old game
+            break;
         }
     }
-
-    bool editing_log = objs.gl->EditingLog();
-    PutBackDocument();
-    objs.log->SaveGame(&gd, editing_log);
-    objs.session->SaveGame(&gd);
-
-    // #Workflow)
-    // Set new edit correspondence, gd to next/previous game in file
-    gd = new_gd;
-    SetGameBeingEdited( gd, *gc_pgn.gds[idx] );
-    ShowNewDocument();
     atom.StatusUpdate();
 }
 
@@ -927,9 +1049,33 @@ void GameLogic::CmdNextGame()
 {
     if( CmdUpdateNextGame() )
     {
-        int idx = games_in_file_idx+1;
-        NextGamePreviousGame(idx);
-        StatusUpdate(idx);
+        switch( next_previous )
+        {
+            default:
+            case NP_NONE:
+            {
+                break;
+            }
+            case NP_PGN:
+            {
+                int idx = games_in_file_idx+1;
+                NextGamePreviousGame(idx);
+                StatusUpdate(idx);
+                break;
+            }
+            case NP_DB:
+            {
+                int idx = gc_database_idx+1;
+                NextGamePreviousGame(idx);
+                break;
+            }
+            case NP_CLIPBOARD:
+            {
+                int idx = gc_clipboard_idx+1;
+                NextGamePreviousGame(idx);
+                break;
+            }
+        }
     }
 }
 
@@ -937,9 +1083,33 @@ void GameLogic::CmdPreviousGame()
 {
     if( CmdUpdatePreviousGame() )
     {
-        int idx = games_in_file_idx-1;
-        NextGamePreviousGame(idx);
-        StatusUpdate(idx);
+        switch( next_previous )
+        {
+            default:
+            case NP_NONE:
+            {
+                break;
+            }
+            case NP_PGN:
+            {
+                int idx = games_in_file_idx-1;
+                NextGamePreviousGame(idx);
+                StatusUpdate(idx);
+                break;
+            }
+            case NP_DB:
+            {
+                int idx = gc_database_idx-1;
+                NextGamePreviousGame(idx);
+                break;
+            }
+            case NP_CLIPBOARD:
+            {
+                int idx = gc_clipboard_idx-1;
+                NextGamePreviousGame(idx);
+                break;
+            }
+        }
     }
 }
 
@@ -1171,6 +1341,8 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req, PatternParamete
             sz.y = (sz.y*9)/10;
             DbDialog dialog( objs.frame, &cr, &gc_database, &gc_clipboard, db_req, parm, ID_GAMES_DIALOG_DATABASE, pt, sz );   // GamesDialog instance
             DialogDetect detect;        // an instance of DialogDetect as a local variable allows tracking of open dialogs
+            gc_database_sz = 0;
+            gc_database_hash = cr.Hash64Calculate();
             if( dialog.ShowModalOk("Database games") )
             {
                 objs.log->SaveGame(&gd,editing_log);
@@ -1181,12 +1353,14 @@ void GameLogic::CmdDatabase( thc::ChessRules &cr, DB_REQ db_req, PatternParamete
 
                 // #Workflow)  Pull in game from database, opens in new tab
                 // No edit correspondence to games in game caches except for pgn cache, i.e. current working file
-                if( dialog.LoadGameFromPreview(new_gd) )
+                if( dialog.LoadGameFromPreview(new_gd,gc_database_idx) )
                 {
+                    gc_database_sz = gc_database.gds.size();
                     if( gd.IsEmpty() )
                         gd = new_gd;
                     else
                         tabs->TabNew(new_gd);
+                    gd.from_database_tag = ++from_database_tag;
                     ShowNewDocument();
                 }
                 objs.session->SaveGame(&temp2);      // ...modify session only after loading old game
@@ -1529,6 +1703,7 @@ void GameLogic::CmdGamesClipboard()
     bool ok=CmdUpdateGamesClipboard();
     if( ok )
     {
+        gc_clipboard_sz = 0;
         ClipboardDialog dialog( objs.frame, &gc_clipboard, &gc_clipboard, ID_PGN_DIALOG_CLIPBOARD );  // GamesDialog instance
         if( dialog.ShowModalOk("Clipboard") )
         {
@@ -1540,12 +1715,14 @@ void GameLogic::CmdGamesClipboard()
             // [No edit correspondence between new_gd and game in clipboard cache created inside LoadGame()
             //   since it's the clipboard cache not the file cache]
             GameDocument new_gd;
-            if( dialog.LoadGame(this,new_gd) )
+            if( dialog.LoadGame(this,new_gd,&gc_clipboard_idx) )
             {
+                gc_clipboard_sz = gc_clipboard.gds.size();
                 if( gd.IsEmpty() )
                     gd = new_gd;
                 else
                     tabs->TabNew(new_gd);
+                gd.from_clipboard_tag = ++from_clipboard_tag;
                 ShowNewDocument();
             }
         }
@@ -3310,6 +3487,7 @@ void GameLogic::StatusInit()
 void GameLogic::StatusUpdate( int idx )
 {
     cprintf( "*** StatusUpdate() called\n" );
+    np_temp = NP_PGN;
     games_in_file_idx = -1;
     int tabs_current_idx = tabs->GetCurrentIdx();
     bool tab_in_file=false;
@@ -3441,7 +3619,28 @@ void GameLogic::StatusUpdate( int idx )
             else
             {
                 tab_modified = gd.IsModified() || undo.IsModified();
-                sprintf( buf, " %s( this tab not in file ) ", tab_modified?"*":"" );
+                if( 0<=gc_database_idx && gc_database_idx<gc_database_sz &&
+                    gc_database_sz == gc_database.gds.size() &&
+                    gc_database.gds[gc_database_idx]->RefRoster() == gd.r &&
+                    gd.from_database_tag == from_database_tag
+                  )
+                {
+                    np_temp = NP_DB;
+                    sprintf( buf, "%sDb: %d of %zu", tab_modified?"* ":"", gc_database_idx+1, gc_database_sz );
+                }
+                else if( 0<=gc_clipboard_idx && gc_clipboard_idx<gc_clipboard_sz &&
+                    gc_clipboard_sz == gc_clipboard.gds.size() &&
+                    gc_clipboard.gds[gc_clipboard_idx]->RefRoster() == gd.r &&
+                    gd.from_clipboard_tag == from_clipboard_tag
+                  )
+                {
+                    np_temp = NP_CLIPBOARD;
+                    sprintf( buf, "%sClip: %d of %zu", tab_modified?"* ":"", gc_clipboard_idx+1, gc_clipboard_sz );
+                }
+                else
+                {
+                    sprintf( buf, "%s( tab not in file )", tab_modified?"*":"" );
+                }
             }
             str = buf;
         }
@@ -3502,6 +3701,7 @@ void GameLogic::StatusUpdate( int idx )
             objs.frame->SetStatusText( status_field4.c_str(), 3 );
         }
     }
+    next_previous = np_temp;
 }
 
 void GameLogic::DoPopup( wxPoint &point, vector<thc::Move> &target_moves,

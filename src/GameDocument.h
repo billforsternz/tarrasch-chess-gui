@@ -147,6 +147,8 @@ public:
     uint32_t    game_being_edited;
     int         pgn_handle;
     int         sort_idx;
+    uint32_t    from_database_tag=0;
+    uint32_t    from_clipboard_tag=0;
 
     thc::ChessPosition start_position;  // the start position
     unsigned long fposn0;       // offset of prefix in .pgn file
