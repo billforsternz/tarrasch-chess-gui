@@ -44,6 +44,8 @@ DbDialog::DbDialog
     const wxSize& size
  ) : GamesDialog( parent, cr, gc, gc_clipboard, id, pos, size )
 {
+    gc_db_displayed_games = gc;   
+    gc_db_displayed_games->gds.clear();
     this->db_req = db_req;
     if( db_req==REQ_PATTERN  && parm )
         this->pm.parm = *parm;
@@ -56,7 +58,7 @@ void DbDialog::GdvEnumerateGames()
 {
    // int nbr_games = gc_db_displayed_games.gds.size();
    // for( int i=0; i<nbr_games; i++ )
-   //     gc_db_displayed_games.gds[i]->game_id = i;
+   //     gc_db_displayed_games->gds[i]->game_id = i;
 }
 
 // Games Dialog Override - Add extra controls
@@ -238,11 +240,11 @@ bool DbDialog::ReadGameFromSearchResults( int item, CompactGame &pact )
 {
     bool in_memory = false;
     pact.transpo_nbr = 0;
-    int nbr_games = gc_db_displayed_games.gds.size();
+    int nbr_games = gc_db_displayed_games->gds.size();
     if( 0<=item && item<nbr_games )
     {
         in_memory = true;
-        gc_db_displayed_games.gds[item]->GetCompactGame(pact);
+        gc_db_displayed_games->gds[item]->GetCompactGame(pact);
         if( transpo_activated && transpositions.size() > 1 )
         {
             for( unsigned int j=0; j<transpositions.size(); j++ )
@@ -250,7 +252,7 @@ bool DbDialog::ReadGameFromSearchResults( int item, CompactGame &pact )
                 std::string &this_one = transpositions[j].blob;
                 const char *p = this_one.c_str();
                 size_t len = this_one.length();
-                std::string str_blob( gc_db_displayed_games.gds[item]->CompressedMoves() );
+                std::string str_blob( gc_db_displayed_games->gds[item]->CompressedMoves() );
                 if( str_blob.length()>=len && 0 == memcmp(p,str_blob.c_str(),len) )
                 {
                     pact.transpo_nbr = j+1;
@@ -310,7 +312,7 @@ void DbDialog::GdvListColClick( int compare_col_ )
 {
     if( db_req == REQ_PLAYERS )
         return; // not supported
-    ColumnSort( compare_col_, gc_db_displayed_games.gds );
+    ColumnSort( compare_col_, gc_db_displayed_games->gds );
 }
 
 // Games Dialog Override - Search feature
@@ -347,7 +349,7 @@ void DbDialog::GdvSaveAllToAFile()
         objs.repository->nv.m_doc_dir = dir2;
         wxString wx_filename = fd.GetPath();
         std::string filename( wx_filename.c_str() );
-        gc_db_displayed_games.FileSaveAllAsAFile( filename );
+        gc_db_displayed_games->FileSaveAllAsAFile( filename );
     }
 }
 
@@ -481,7 +483,7 @@ void DbDialog::GdvCheckBox( bool checked )
     // Clear back to the base position
     this->cr = cr_base;
     moves_from_base_position.clear();
-    gc_db_displayed_games.gds.clear();
+    gc_db_displayed_games->gds.clear();
 
     // Select PatternSearch() or StatsCalculate()
     if( db_req == REQ_PATTERN )
@@ -505,7 +507,7 @@ void DbDialog::GdvCheckBox( bool checked )
             // We have shown stats while db_clipboard was true. So to avoid going back to
             //  situation where stats must be requested, unconditionally load games into
             //  memory (Calculate Stats button loads games into memory)
-            gc->gds.clear();
+            // gc->gds.clear();
         }
         StatsCalculate();
         Goto(0); // list_ctrl->SetFocus();
@@ -556,8 +558,8 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
                     clear_clipboard = false;
                     gc_clipboard->gds.clear();
                 }
-                if( nbr == gc_db_displayed_games.gds.size() )
-                    gc_clipboard->gds.push_back( gc_db_displayed_games.gds[i] ); // assumes smart_ptr is std::shared_ptr
+                if( nbr == gc_db_displayed_games->gds.size() )
+                    gc_clipboard->gds.push_back( gc_db_displayed_games->gds[i] ); // assumes smart_ptr is std::shared_ptr
                 else
                 {
                     CompactGame pact2;
@@ -577,8 +579,8 @@ void DbDialog::CopyOrAdd( bool clear_clipboard )
                 clear_clipboard = false;
                 gc_clipboard->gds.clear();
             }
-            if( nbr == gc_db_displayed_games.gds.size() )
-                gc_clipboard->gds.push_back( gc_db_displayed_games.gds[idx_focus] ); // assumes smart_ptr is std::shared_ptr
+            if( nbr == gc_db_displayed_games->gds.size() )
+                gc_clipboard->gds.push_back( gc_db_displayed_games->gds[idx_focus] ); // assumes smart_ptr is std::shared_ptr
             else
             {
                 CompactGame pact2;
@@ -686,15 +688,6 @@ void DbDialog::StatsCalculate()
     objs.db->gbl_position = cr_to_match;
     MemoryPositionSearch partial;
     MemoryPositionSearch *mps = &partial;
-    std::vector< smart_ptr<ListableGame> > *source = &gc->gds;
-    bool do_partial_search = true;
-    if( objs.gl->db_clipboard )
-        source = &objs.gl->gc_clipboard.gds;
-    else
-    {
-        mps = &objs.db->tiny_db;
-        do_partial_search = false;
-    }
     int game_count = 0;
 
     // The fast MemoryPositionSearch facility was developed to scan all the games in a tiny database,
@@ -702,17 +695,19 @@ void DbDialog::StatsCalculate()
     //  list, in particular games from a disk based (i.e. not tiny) database and the clipboard. These
     //  latter types of search we are calling 'partial' search because they aren't of an entire, (albeit
     //  tiny) in memory database
-    if( do_partial_search )
+    if( objs.gl->db_clipboard )
     {
+        std::vector< smart_ptr<ListableGame> > *clipboard_source = &objs.gl->gc_clipboard.gds;
 
         // The promotion attribute is only set automatically for the tiny database games (at the moment)
-        for( size_t i=0; i<source->size(); i++ )
-            (*source)[i]->CalculatePromotionAttribute();
+        for( size_t i=0; i<clipboard_source->size(); i++ )
+            (*clipboard_source)[i]->CalculatePromotionAttribute();
         ProgressBar progress2("Searching Clipboard", "Searching",false);
-        game_count = mps->DoSearch(cr_to_match,&progress2,source);
+        game_count = mps->DoSearch(cr_to_match,&progress2,clipboard_source);
     }
     else
     {
+        mps = &objs.db->tiny_db;
         bool search_needed = !mps->IsThisSearchPosition(cr_to_match);
         cprintf( "search_needed = %s\n", search_needed?"true":"false" );
         if( search_needed )
@@ -932,8 +927,8 @@ void DbDialog::StatsCalculate()
             list_ctrl_stats->InsertItems( strings_stats, 0 );
         if( !strings_transpos.IsEmpty() )
             list_ctrl_transpo->InsertItems( strings_transpos, 0 );
-        gc_db_displayed_games = temp;
-        nbr_games_in_list_ctrl = gc_db_displayed_games.gds.size();
+        *gc_db_displayed_games = temp;
+        nbr_games_in_list_ctrl = gc_db_displayed_games->gds.size();
         dirty = true;
         list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
         bool have_games = (nbr_games_in_list_ctrl>0);
@@ -948,7 +943,7 @@ void DbDialog::StatsCalculate()
 // Search for patterns
 void DbDialog::PatternSearch()
 {
-    gc_db_displayed_games.gds.clear();
+    gc_db_displayed_games->gds.clear();
     cprintf( "Remove focus %d\n", track->focus_idx );
     list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_FOCUSED );
     list_ctrl->SetItemState( track->focus_idx, 0, wxLIST_STATE_SELECTED );
@@ -956,15 +951,6 @@ void DbDialog::PatternSearch()
     // hash to match
     MemoryPositionSearch partial;
     MemoryPositionSearch *mps = &partial;
-    std::vector< smart_ptr<ListableGame> > *source = &gc->gds;
-    bool do_partial_search = true;
-    if( objs.gl->db_clipboard )
-        source = &objs.gl->gc_clipboard.gds;
-    else
-    {
-        mps = &objs.db->tiny_db;
-        do_partial_search = false;
-    }
     int game_count = 0;
 
     // The fast MemoryPositionSearch facility was developed to scan all the games in a tiny database,
@@ -973,17 +959,19 @@ void DbDialog::PatternSearch()
     //  latter types of search we are calling 'partial' search because they aren't of an entire, (albeit
     //  tiny) in memory database
     PATTERN_STATS stats_;
-    if( do_partial_search )
+    if( objs.gl->db_clipboard )
     {
+        std::vector< smart_ptr<ListableGame> > *clipboard_source = &objs.gl->gc_clipboard.gds;
 
         // The promotion attribute is only set automatically for the tiny database games (at the moment)
-        for( size_t i=0; i<source->size(); i++ )
-            (*source)[i]->CalculatePromotionAttribute();
+        for( size_t i=0; i<clipboard_source->size(); i++ )
+            (*clipboard_source)[i]->CalculatePromotionAttribute();
         ProgressBar progress2(objs.gl->db_clipboard ? "Searching" : "Searching", "Searching",false);
-        game_count = mps->DoPatternSearch(pm,&progress2,stats_,source);
+        game_count = mps->DoPatternSearch(pm,&progress2,stats_,clipboard_source);
     }
     else
     {
+        mps = &objs.db->tiny_db;
         ProgressBar progress2("Searching", "Searching",false);
         game_count = mps->DoPatternSearch(pm,&progress2,stats_);
     }
@@ -995,10 +983,10 @@ void DbDialog::PatternSearch()
     for( size_t i=0; i<nbr_found_games; i++ )
     {
         int idx                     = found_games[i].idx;
-        gc_db_displayed_games.gds.push_back(db_games[idx]);
+        gc_db_displayed_games->gds.push_back(db_games[idx]);
     }
 
-    nbr_games_in_list_ctrl = gc_db_displayed_games.gds.size();
+    nbr_games_in_list_ctrl = gc_db_displayed_games->gds.size();
     dirty = true;
     list_ctrl->SetItemCount(nbr_games_in_list_ctrl);
     bool have_games = (nbr_games_in_list_ctrl>0);

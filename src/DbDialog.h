@@ -109,7 +109,7 @@ private:
     bool white_player_search;
     std::vector<thc::Move> moves_in_this_position;
     std::vector<thc::Move> moves_from_base_position;
-    GamesCache gc_db_displayed_games;
+    GamesCache *gc_db_displayed_games;
     PatternMatch pm;
 };
 
