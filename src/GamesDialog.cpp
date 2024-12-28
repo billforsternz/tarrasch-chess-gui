@@ -962,6 +962,7 @@ void GamesDialog::LoadGameForPreview( int idx, int focus_offset )
     gd.LoadFromMoveList( info.moves, focus_offset );
     preview_game = gd;
     preview_game_set = true;
+    preview_game_idx = idx;
 }
 
 void GamesDialog::OnListSelected( wxListEvent &event )
@@ -1200,10 +1201,13 @@ bool GamesDialog::ShowModalOk( std::string title )
 
 // LoadGameForPreview() LoadGameFromPreview() is a two step alternative to single LoadGame(). Loads the main variation
 //  only so suitable only for database cache which holds compact games not full games
-bool GamesDialog::LoadGameFromPreview( GameDocument &gd )
+bool GamesDialog::LoadGameFromPreview( GameDocument &gd, int &idx )
 {
     if( preview_game_set )
-        gd = preview_game;
+    {
+        gd  = preview_game;
+        idx = preview_game_idx;
+    }
     return preview_game_set;
 }
 

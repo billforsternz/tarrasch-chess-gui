@@ -263,7 +263,7 @@ public:
     bool ShowModalOk( std::string title );
 
     // Return true if a game has been selected
-    bool LoadGameFromPreview(  GameDocument &gd );
+    bool LoadGameFromPreview( GameDocument &gd, int &idx );
     void LoadGameForPreview( int idx, int focus_offset=0 );
 
     // Helpers
@@ -320,6 +320,7 @@ public:
 
 protected:
     bool preview_game_set;
+    int  preview_game_idx;
     GamesCache  *gc;
     GamesCache  *gc_clipboard;
     GameDocument preview_game;

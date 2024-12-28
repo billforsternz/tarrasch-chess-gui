@@ -333,7 +333,6 @@ void *ReadGameFromPgnInLoop( int pgn_handle, long fposn, CompactGame &pact, void
     else
     {
         pgn = new PgnRead('R');
-        cprintf( "new count = %d\n", ++new_count );
     }
     if( pgn_file && pgn_handle!=save_pgn_handle )
     {
@@ -365,7 +364,6 @@ void *ReadGameFromPgnInLoop( int pgn_handle, long fposn, CompactGame &pact, void
         pgn_file = NULL;
         save_pgn_handle = 0;
         delete pgn;
-        cprintf( "new count = %d\n", --new_count );
         pgn = 0;
     }
     //cprintf( "ReadGameFromPgnInLoop(%d,%s) %ld (%s-%s)\n", pgn_handle, end?"true":"false", fposn, pact.r.white.c_str(), pact.r.black.c_str() );

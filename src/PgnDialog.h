@@ -53,7 +53,7 @@ public:
     virtual void GdvNextMove( int idx );
 
     // Return true if a game has been selected
-    bool LoadGame( GameLogic *gl, GameDocument& gd );
+    bool LoadGame( GameLogic *gl, GameDocument& gd, int *idx=0 );
     int GetSelectedGame( int *offset );  // towards replacing LoadGame();
 };
 
