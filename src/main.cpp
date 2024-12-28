@@ -1284,8 +1284,8 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     menu_games->Append (ID_GAMES_SESSION,        "Session", "Show activity in this session as a list of games");
     menu_games->Append (ID_GAMES_CLIPBOARD,      "Clipboard", "Show the copied games as a list of games");
     menu_games->AppendSeparator();
-    menu_games->Append (ID_CMD_NEXT_GAME,       "Next game from file");
-    menu_games->Append (ID_CMD_PREVIOUS_GAME,   "Previous game from file");
+    menu_games->Append (ID_CMD_NEXT_GAME,       "Next game from file (or database or clipboard)");
+    menu_games->Append (ID_CMD_PREVIOUS_GAME,   "Previous game from file (or database or clipboard)");
 
     // Menu - Commands
     wxMenu *menu_commands = new wxMenu;
@@ -1433,8 +1433,8 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 #endif
     toolbar->AddSeparator();
     nbr_separators++;
-    ADD_TOOL( ID_CMD_NEXT_GAME,     bmp_next,      "Next game from file"     );
-    ADD_TOOL( ID_CMD_PREVIOUS_GAME, bmp_previous,  "Previous game from file" );
+    ADD_TOOL( ID_CMD_NEXT_GAME,     bmp_next,      "Next game from file (or database or clipboard)"     );
+    ADD_TOOL( ID_CMD_PREVIOUS_GAME, bmp_previous,  "Previous game from file (or database or clipboard)" );
 #ifdef THC_WINDOWS
     toolbar->AddSeparator();
     nbr_separators++;
