@@ -2,8 +2,10 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 [Setup]
+ArchitecturesInstallIn64BitMode=x64
+ArchitecturesAllowed=x64
 AppName=Tarrasch Chess GUI
-AppVerName=Tarrasch Chess GUI V3.13b-Windows
+AppVerName=Tarrasch Chess GUI V3.20aBeta64-Windows
 AppPublisher=Triple Happy Ltd.
 AppPublisherURL=http://www.triplehappy.com
 AppSupportURL=http://www.triplehappy.com
@@ -35,18 +37,31 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 
 [Files]
 Source: "Tarrasch.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "wxbase32u_vc14x_x64.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "wxmsw32u_core_vc14x_x64.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "wxmsw32u_html_vc14x_x64.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "wxbase32u_xml_vc14x_x64.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "wxmsw32u_aui_vc14x_x64.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "wxmsw32u_richtext_vc14x_x64.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "msvcp140.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "msvcp140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "msvcp140_2.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "msvcp140_atomic_wait.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "msvcp140_codecvt_ids.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "vcruntime140.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "vcruntime140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "vcruntime140_threads.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Engines\791556.pb.gz"; DestDir: "{app}\Engines"; Flags: ignoreversion
+Source: "Engines\lc0.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
+Source: "Engines\libopenblas.dll"; DestDir: "{app}\Engines"; Flags: ignoreversion
+Source: "Engines\mimalloc-override.dll"; DestDir: "{app}\Engines"; Flags: ignoreversion
+Source: "Engines\mimalloc-redirect.dll"; DestDir: "{app}\Engines"; Flags: ignoreversion
+Source: "Engines\stockfish-windows-x86-64-sse41-popcnt.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "Engines\TarraschToyEngine.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "Engines\Sargon-1978.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
-Source: "Engines\Rybka v2.3.2a.mp.w32.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
-Source: "Engines\komodo-12.1.1-32bit.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
-Source: "Engines\komodo-12.1.1-64bit.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
-Source: "Engines\stockfish_11_x64.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
-Source: "Engines\stockfish_11_x32.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
-Source: "Engines\Houdini_15a_w32.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
-Source: "Engines\Houdini_15a_x64.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "book.pgn"; DestDir: "{app}"; Flags: ignoreversion
 Source: "book.pgn_compiled"; DestDir: "{app}"; Flags: ignoreversion
-Source: "great-players-demo.tdb"; DestDir: "{app}"; Flags: ignoreversion
+Source: "tarrasch-base.tdb"; DestDir: "{app}"; Flags: ignoreversion
 Source: "web.zip"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
@@ -57,4 +72,3 @@ Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\Tarrasch"; Filenam
 
 [Run]
 Filename: "{app}\Tarrasch.exe"; Description: "{cm:LaunchProgram,Tarrasch}"; Flags: nowait postinstall skipifsilent
-
