@@ -68,6 +68,7 @@ BEGIN_EVENT_TABLE( GamesDialog, wxDialog )
     EVT_BUTTON( wxID_CUT,               GamesDialog::OnCut )
     EVT_BUTTON( wxID_DELETE,            GamesDialog::OnDelete )
     EVT_BUTTON( wxID_PASTE,             GamesDialog::OnPaste )
+    EVT_BUTTON( ID_PGN_DIALOG_PASTE_AFTER, GamesDialog::OnPasteAfter )
     EVT_BUTTON( wxID_SAVE,              GamesDialog::OnSave )
     EVT_BUTTON( wxID_HELP,              GamesDialog::OnHelpClick )
     EVT_MENU( wxID_SELECTALL,         GamesDialog::OnSelectAll )
@@ -1534,6 +1535,34 @@ void GamesDialog::OnPaste( wxCommandEvent& WXUNUSED(event) )
             gc_clipboard->gds[i]->SetGameBeingEdited(0);    // #Workflow, don't initially have edit relationships with pasted games
             gc->gds.insert( iter, gc_clipboard->gds[i] );
             iter = gc->gds.begin() + idx_focus;
+            gc->file_irrevocably_modified = true;
+        }
+        sz += sz2;
+        list_ctrl->SetItemCount(sz);
+        GdvEnableControlsIfGamesFound( sz > 0 );
+        Goto(idx_focus);
+        if( sz>0 )
+            list_ctrl->RefreshItems(0,sz-1);
+        char buf[80];
+        sprintf(buf,"%d games",sz);
+        title_ctrl->SetLabel( buf );
+    }
+}
+
+void GamesDialog::OnPasteAfter( wxCommandEvent& WXUNUSED(event) )
+{
+    dirty = true;
+    int idx_focus=focus_idx;
+    int sz=gc->gds.size();
+    if( list_ctrl && list_ctrl->GetItemCount()==sz && 0<=idx_focus && idx_focus<(sz>=1?sz:1) )
+    {
+        int sz2 = gc_clipboard->gds.size();
+        std::vector< smart_ptr<ListableGame> >::iterator iter = gc->gds.begin() + idx_focus + 1;
+        for( int i=sz2-1; i>=0; i-- )
+        {
+            gc_clipboard->gds[i]->SetGameBeingEdited(0);    // #Workflow, don't initially have edit relationships with pasted games
+            gc->gds.insert( iter, gc_clipboard->gds[i] );
+            iter = gc->gds.begin() + idx_focus + 1;
             gc->file_irrevocably_modified = true;
         }
         sz += sz2;

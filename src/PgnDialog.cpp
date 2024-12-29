@@ -81,6 +81,12 @@ wxSizer *PgnDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
         gdr.RegisterPanelWindow( paste );
         vsiz_panel_buttons->Add(paste, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
+        // Paste after
+        wxButton* paste_after = new wxButton ( this, ID_PGN_DIALOG_PASTE_AFTER, wxT("Paste after"),
+            wxDefaultPosition, wxDefaultSize, 0 );
+        gdr.RegisterPanelWindow( paste_after );
+        vsiz_panel_buttons->Add(paste_after, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+    
         // Publish
         wxButton* publish = new wxButton ( this, ID_PGN_DIALOG_PUBLISH, wxT("Publish"),
             wxDefaultPosition, wxDefaultSize, 0 );
@@ -99,8 +105,9 @@ wxSizer *PgnDialog::GdvAddExtraControls( bool WXUNUSED(big_display) )
         gdr.RegisterPanelWindow( tournament_games );
         vsiz_panel_buttons->Add(tournament_games, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-        // Spacer
-        vsiz_panel_buttons->Add(5, 5, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
+// Spacer not needed after adding an extra button (paste after)
+//        // Spacer
+//        vsiz_panel_buttons->Add(5, 5, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5);
     }
     else if( id == ID_PGN_DIALOG_CLIPBOARD )
     {

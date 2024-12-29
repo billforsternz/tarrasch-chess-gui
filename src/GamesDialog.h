@@ -51,6 +51,7 @@ enum
     ID_SITE_EVENT,
     ID_PGN_DIALOG_GAME_PREFIX,
     ID_PGN_DIALOG_PUBLISH    ,
+    ID_PGN_DIALOG_PASTE_AFTER ,
     ID_PGN_DIALOG_UTILITY1   ,
     ID_PGN_DIALOG_UTILITY2   ,
     ID_DIALOG_ECO
@@ -210,6 +211,7 @@ public:
     void OnCut( wxCommandEvent& event );
     void OnDelete( wxCommandEvent& event );
     void OnPaste( wxCommandEvent& event );
+    void OnPasteAfter( wxCommandEvent& event );
     void OnSave( wxCommandEvent& event );
     void OnPublish( wxCommandEvent& event );
     void OnEco( wxCommandEvent& event );
