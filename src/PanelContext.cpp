@@ -403,6 +403,7 @@ void PanelContext::ButtonCmd( int cmd )
         case ID_CMD_EXAMINE_GAME:   objs.gl->CmdExamineGame();  break;
         case ID_CMD_WHITE_RESIGNS:  objs.gl->CmdWhiteResigns(); break;
         case ID_CMD_BLACK_RESIGNS:  objs.gl->CmdBlackResigns(); break;
+        case ID_CMD_BARE_GAME:      objs.gl->CmdBareGame();     break;
         case ID_CMD_DRAW:           objs.gl->CmdDraw();         break;
         case ID_CMD_PLAY_WHITE:     objs.gl->CmdPlayWhite();    break;
         case ID_CMD_PLAY_BLACK:     objs.gl->CmdPlayBlack();    break;

@@ -106,6 +106,7 @@ public:
     void CmdPreviousGame();
     void NextGamePreviousGame( int idx );
 
+    void CmdBareGame();
     void CmdDraw();
     void CmdWhiteResigns();
     void CmdBlackResigns();
@@ -150,6 +151,7 @@ public:
     bool CmdUpdateGamesSession ();
     bool CmdUpdateNextGame();
     bool CmdUpdatePreviousGame();
+    bool CmdUpdateBareGame();
     bool CmdUpdateDraw     ();
     bool CmdUpdatePlayWhite();
     bool CmdUpdatePlayBlack();

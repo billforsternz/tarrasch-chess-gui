@@ -738,6 +738,8 @@ public:
         void OnUpdateTakeback(wxUpdateUIEvent &);
     void OnMoveNow    (wxCommandEvent &);
         void OnUpdateMoveNow(wxUpdateUIEvent &);
+    void OnBareGame    (wxCommandEvent &);
+        void OnUpdateBareGame(wxUpdateUIEvent &);
     void OnDraw       (wxCommandEvent &);
         void OnUpdateDraw(wxUpdateUIEvent &);
     void OnWhiteResigns(wxCommandEvent &);
@@ -1103,6 +1105,8 @@ BEGIN_EVENT_TABLE(ChessFrame, wxFrame)
         EVT_UPDATE_UI (ID_CMD_TAKEBACK,     ChessFrame::OnUpdateTakeback)
     EVT_MENU (ID_CMD_MOVENOW,      ChessFrame::OnMoveNow)
         EVT_UPDATE_UI (ID_CMD_MOVENOW,      ChessFrame::OnUpdateMoveNow)
+    EVT_MENU (ID_CMD_BARE_GAME,    ChessFrame::OnBareGame)
+        EVT_UPDATE_UI (ID_CMD_BARE_GAME,    ChessFrame::OnUpdateBareGame)
     EVT_MENU (ID_CMD_DRAW,         ChessFrame::OnDraw)
         EVT_UPDATE_UI (ID_CMD_DRAW,         ChessFrame::OnUpdateDraw)
     EVT_MENU (ID_CMD_PLAY_WHITE,   ChessFrame::OnPlayWhite)
@@ -1300,6 +1304,7 @@ ChessFrame::ChessFrame(const wxString& title, const wxPoint& pos, const wxSize& 
     menu_commands->Append (ID_CMD_CLEAR_KIBITZ, "Clear kibitz text");
     #endif
 
+    menu_commands->Append (ID_CMD_BARE_GAME,        "Strip comments, variations", "Remove comments and variations");
     menu_commands->Append (ID_CMD_DRAW,             "Draw", "Indicate game result, or claim draw when playing against engine");
     menu_commands->Append (ID_CMD_WHITE_RESIGNS,    "White resigns", "Indicate game result, or concede when playing White against engine");
     menu_commands->Append (ID_CMD_BLACK_RESIGNS,    "Black resigns", "Indicate game result, or concede when playing Black against engine");
@@ -2118,6 +2123,11 @@ void ChessFrame::OnUpdateEditPromoteRestToVariation( wxUpdateUIEvent &event )
     event.Enable(enabled);
 }
 
+void ChessFrame::OnBareGame(wxCommandEvent &)
+{
+    objs.gl->CmdBareGame();
+}
+
 void ChessFrame::OnDraw(wxCommandEvent &)
 {
     objs.gl->CmdDraw();
@@ -2154,6 +2164,12 @@ void ChessFrame::OnUpdateTakeback( wxUpdateUIEvent &event )
 void ChessFrame::OnUpdateMoveNow( wxUpdateUIEvent &event )
 {
     bool enabled = objs.gl ? objs.gl->CmdUpdateMoveNow()  : false;
+    event.Enable(enabled);
+}
+
+void ChessFrame::OnUpdateBareGame( wxUpdateUIEvent &event )
+{
+    bool enabled = objs.gl ? objs.gl->CmdUpdateBareGame()  : false;
     event.Enable(enabled);
 }
 

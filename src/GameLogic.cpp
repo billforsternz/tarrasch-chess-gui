@@ -2038,6 +2038,23 @@ void GameLogic::SetManual( MoveTree *mt, bool at_move0, bool from_mouse_move )
     atom.Focus();
 }
 
+void GameLogic::CmdBareGame()
+{
+    Atomic begin;
+    if( CmdUpdateBareGame() )
+    {
+        CompactGame pact;
+        auto temp = gd.extra_tags;
+        gd.GetCompactGame(pact);
+        pact.Upscale(gd);
+        gd.extra_tags = temp;
+        gd.Rebuild();
+        unsigned long pos = gd.gv.FindEnd();
+        atom.Redisplay( pos );
+        atom.Undo();
+        atom.StatusUpdate();
+    }
+}
 
 void GameLogic::CmdDraw()
 {
@@ -2359,6 +2376,12 @@ bool GameLogic::CmdUpdateGamesClipboard()
 bool GameLogic::CmdUpdateGamesSession()
 {
     bool enabled = (state==MANUAL || state==RESET || state==HUMAN || state==PONDERING || state==GAMEOVER);
+    return enabled;
+}
+
+bool GameLogic::CmdUpdateBareGame()
+{
+    bool enabled = (state==MANUAL || state==RESET || state==GAMEOVER);
     return enabled;
 }
 
