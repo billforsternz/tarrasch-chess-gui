@@ -3530,12 +3530,35 @@ void GameLogic::StatusUpdate( int idx )
         bool tab_modified = false;
         int  nbr_modified=0;
         bool refresh=false;
+        char buf[200];
+        buf[0] = '\0';
         std::string str;
         if( !file_loaded )
         {
             tab_modified = undo.IsModified();
-            if( tab_modified )
-                str = "*";
+            if( 0<=gc_database_idx && gc_database_idx<gc_database_sz &&
+                gc_database_sz == gc_database.gds.size() &&
+                gc_database.gds[gc_database_idx]->RefRoster() == gd.r &&
+                gd.from_database_tag == from_database_tag
+                )
+            {
+                np_temp = NP_DB;
+                sprintf( buf, "%sDb: %d of %zu", tab_modified?"* ":"", gc_database_idx+1, gc_database_sz );
+            }
+            else if( 0<=gc_clipboard_idx && gc_clipboard_idx<gc_clipboard_sz &&
+                gc_clipboard_sz == gc_clipboard.gds.size() &&
+                gc_clipboard.gds[gc_clipboard_idx]->RefRoster() == gd.r &&
+                gd.from_clipboard_tag == from_clipboard_tag
+                )
+            {
+                np_temp = NP_CLIPBOARD;
+                sprintf( buf, "%sClip: %d of %zu", tab_modified?"* ":"", gc_clipboard_idx+1, gc_clipboard_sz );
+            }
+            else
+            {
+                sprintf( buf, "%s", tab_modified?"*":"" );
+            }
+            str = buf;
         }
         else
         {
@@ -3634,7 +3657,6 @@ void GameLogic::StatusUpdate( int idx )
                 #endif
             }
             str = (nbr_modified > 0) ? "*" : "";
-            char buf[200];
             if( tab_in_file )
             {
                 games_in_file_idx = idx;
