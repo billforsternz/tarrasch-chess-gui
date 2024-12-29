@@ -396,19 +396,39 @@ void UciInterface::StartThinking( bool ponder, thc::ChessPosition &pos, const ch
     gbl_smoves = "";
     long wtime = wtime_ms;
     long btime = btime_ms;
+
+    // Lie to engine about how much time it has to discourage brinksmanship which can lead to silly
+    //  losses caused by UCI interface processing time
+    //  Actual -> reported (All times below millisecs)
+    //  5000 -> 4200
+    //  2000 -> 1200
+    //  1500 ->  700
+    //  1200 ->  400
+    //  1100 ->  300
+    //  1001 ->  201
+    //  1000 ->  200
+    //   900 ->  200
+    //   800 ->  200
+    //   500 ->  200
+    //   201 ->  200
+    //   200 ->  200
+    //   190 ->  190
+    //   100 ->  100
+    //    90 ->   90
+
     if( pos_engine_to_move.WhiteToPlay() )
     {
         if( wtime > 1000 )
-            wtime -= 900;   // hurry engine along, but don't reduce time to less than 100ms
-        else if( wtime > 100 )
-            wtime = 100;
+            wtime -= 800;   // hurry engine along, but don't reduce time to less than 200ms
+        else if( wtime > 200 )
+            wtime = 200;
     }
     else
     {
         if( btime > 1000 )
-            btime -= 900;
-        else if( btime > 100 )
-            btime = 100;
+            btime -= 800;
+        else if( btime > 200 )
+            btime = 200;
     }
     cprintf( "Condition times to avoid race when engine is almost out of time: wtime=%ld (wtime_ms=%ld), btime=%ld (btime_ms=%ld)\n",
             wtime, wtime_ms, btime, btime_ms );
