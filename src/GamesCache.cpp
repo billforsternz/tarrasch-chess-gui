@@ -937,6 +937,8 @@ void GamesCache::Eco(  GamesCache *UNUSED(gc_clipboard) )
         CompactGame pact;
         mptr->GetCompactGame( pact );
         bool needs_calc_elo = (pact.r.eco=="" || pact.r.eco=="A00" || (pact.r.eco.length()>0 && pact.r.eco[0]=='?'));
+        if( pact.moves.size() == 0 )
+            needs_calc_elo = false;
         if( pact.r.fen == "" && needs_calc_elo )
         {
             pact.r.eco = eco_calculate( pact.moves );
