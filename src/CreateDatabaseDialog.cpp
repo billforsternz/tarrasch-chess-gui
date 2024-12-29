@@ -290,10 +290,17 @@ void CreateDatabaseDialog::OnOk( wxCommandEvent& WXUNUSED(event) )
     objs.repository->database.m_elo_cutoff_pass   = pass->GetValue();
     objs.repository->database.m_elo_cutoff_pass_before = pass_before->GetValue();
     objs.repository->database.m_elo_cutoff_before_year = before_year->GetValue();
-    if( create_mode )
-        OnCreateDatabase();
-    else
-        OnAppendDatabase();
+    try
+    {
+        if( create_mode )
+            OnCreateDatabase();
+        else
+            OnAppendDatabase();
+    }
+    catch(const std::bad_alloc&)
+    {
+        wxMessageBox("Memory allocation error","Database creation failed",wxOK|wxICON_ERROR);        
+    }
 }
 
 // Create
