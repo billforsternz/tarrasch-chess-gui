@@ -30,8 +30,8 @@ public:
     virtual ~ListableGame() {}
     virtual GameDocument *IsGameDocument()  { return NULL; }        // return ptr to this if and only if this is type GameDocument
     virtual void ConvertToGameDocument(GameDocument &UNUSED(gd)) {}
-    virtual long GetFposn() { return 0; }
-    virtual void SetFposn( long UNUSED(posn) ) {}
+    virtual int64_t GetFposn() { return 0; }
+    virtual void SetFposn( int64_t UNUSED(posn) ) {}
     virtual bool GetPgnHandle( int &UNUSED(pgn_handle) ) { return false; }
     virtual void SetPgnHandle( int UNUSED(pgn_handle) )  {}
     virtual bool IsModified()        { return false; }

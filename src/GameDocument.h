@@ -29,8 +29,8 @@ public:
     GameDocument();
     virtual GameDocument  *IsGameDocument()   { return this; }
     virtual void ConvertToGameDocument(GameDocument &gd)   { gd = *this; }
-    virtual long GetFposn()                   { return fposn0; }
-    virtual void SetFposn(long posn)          { fposn0=posn; }
+    virtual int64_t GetFposn()                   { return fposn0; }
+    virtual void SetFposn(int64_t posn)          { fposn0=posn; }
     virtual Roster &RefRoster() { return r; }
     virtual void SetRoster( Roster &r_in ) { r=r_in; }
 
@@ -151,10 +151,10 @@ public:
     uint32_t    from_clipboard_tag=0;
 
     thc::ChessPosition start_position;  // the start position
-    unsigned long fposn0;       // offset of prefix in .pgn file
-    unsigned long fposn1;       // offset of tags in .pgn file
-    unsigned long fposn2;       // offset where moves are in .pgn file
-    unsigned long fposn3;       // offset where moves end in .pgn file
+    uint64_t fposn0;       // offset of prefix in .pgn file
+    uint64_t fposn1;       // offset of tags in .pgn file
+    uint64_t fposn2;       // offset where moves are in .pgn file
+    uint64_t fposn3;       // offset where moves end in .pgn file
     std::string prefix_txt;     // text between games
     std::string moves_txt;      // "1.e4 e5 2.Nf3.."
 

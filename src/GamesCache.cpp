@@ -322,7 +322,7 @@ void pgn_read_hook( const char *fen, const char *white, const char *black, const
     phook->moves       = std::vector<thc::Move>(moves,moves+nbr_moves);
 }
 
-void *ReadGameFromPgnInLoop( int pgn_handle, long fposn, CompactGame &pact, void *context, bool end )
+void *ReadGameFromPgnInLoop( int pgn_handle, uint64_t fposn, CompactGame &pact, void *context, bool end )
 {
     static int new_count;
     static FILE *pgn_file;
@@ -347,7 +347,7 @@ void *ReadGameFromPgnInLoop( int pgn_handle, long fposn, CompactGame &pact, void
     }
     if( pgn_file )
     {
-        fseek( pgn_file, fposn, SEEK_SET );
+        _fseeki64( pgn_file, fposn, SEEK_SET );
         phook = &pact;
         pgn->Process(pgn_file);
     }
@@ -370,7 +370,7 @@ void *ReadGameFromPgnInLoop( int pgn_handle, long fposn, CompactGame &pact, void
     return( pgn );
 }
 
-void ReadGameFromPgn( int pgn_handle, long fposn, GameDocument &new_doc )
+void ReadGameFromPgn( int pgn_handle, uint64_t fposn, GameDocument &new_doc )
 {
     //cprintf( "ReadGameFromPgn(%d) %ld\n", pgn_handle, fposn );
     GameDocument gd;
@@ -696,7 +696,7 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
             {
 
                 // Read data from a .pgn
-                long fposn = mptr->GetFposn();
+                int64_t fposn = mptr->GetFposn();
 
                 // If we are copying the file, update the position to be the new write position in the file
                 if( pgn_handle == pgn_handle2 )
@@ -706,7 +706,7 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
                 FILE *pgn_in2 = objs.gl->pf.ReopenRead( pgn_handle2);
                 if( pgn_in2 )
                 {
-                    fseek( pgn_in2, fposn, SEEK_SET );
+                    _fseeki64( pgn_in2, fposn, SEEK_SET );
                     char buf2[2048];
                     int typ;
                     bool done = PgnStateMachine( NULL, typ,  buf2, sizeof(buf2) );
