@@ -10,7 +10,7 @@ AppPublisher=Triple Happy Ltd.
 AppPublisherURL=http://www.triplehappy.com
 AppSupportURL=http://www.triplehappy.com
 AppUpdatesURL=http://www.triplehappy.com
-DefaultDirName={pf}\Tarrasch
+DefaultDirName={autopf}\Tarrasch
 DefaultGroupName=Tarrasch
 LicenseFile=licence.txt
 OutputDir=.
@@ -67,7 +67,7 @@ Source: "web.zip"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\Tarrasch"; Filename: "{app}\Tarrasch.exe"
-Name: "{userdesktop}\Tarrasch"; Filename: "{app}\Tarrasch"; Tasks: desktopicon
+Name: "{autodesktop}\Tarrasch"; Filename: "{app}\Tarrasch"; Tasks: desktopicon
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\Tarrasch"; Filename: "{app}\Tarrasch.exe"; Tasks: quicklaunchicon
 
 [Run]
