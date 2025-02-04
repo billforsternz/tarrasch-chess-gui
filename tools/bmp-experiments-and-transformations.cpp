@@ -143,22 +143,22 @@ int main()
 #ifdef STATIC_TEST
     StaticTest();
 #endif
-//#define ONE_FILE
+#define ONE_FILE
 #ifdef ONE_FILE
-    const char *filename = "pitch-070-batch2.bmp";
+    const char *filename = "C:\\Users\\Bill\\Documents\\Github\\tarrasch-chess-gui\\misc\\new-graphics\\bmp\\pitch-070-batch2.bmp";
     BmpHeader *in = ReadFile( buf, filename );
     if( in )
     {
         CompressedXpm compressed;
         if( Bmp2CompressedXpm(in,filename,compressed) )
         {
-            CompressedXpm2CHeader(compressed,"pitch-070-batch2-compressed-xpm.h",false);
-            //CompressedXpm2Xpm(compressed,filename);
+            CompressedXpm2CHeader(compressed,"test-pitch-070-batch2-compressed-xpm.h",false);
+            CompressedXpm2Xpm(compressed,"test-pitch-070-batch2.xpm");
             free(compressed.bin);
         }
     }
 #endif
-#define ONE_ICON
+//#define ONE_ICON
 #ifdef ONE_ICON
     const char *filename = "../icon.bmp";
     BmpHeader *in = ReadFile( buf, filename );
@@ -1437,15 +1437,15 @@ static void CompressedXpm2CHeader( CompressedXpm &compressed, const char *filena
     fclose(f);
 }
 
-static void CompressedXpm2Xpm( CompressedXpm &compressed, const char *filename )
+static void CompressedXpm2Xpm( CompressedXpm &compressed, const char *xpm_filename )
 {
     CompressedXpmProcessor processor( &compressed );
-    std::string s(filename);
-    std::string xpm_filename = "reconstituted/" + s.substr(0,s.length()-4) + ".xpm";
-    FILE *f = fopen(xpm_filename.c_str(),"wt");
+    //std::string s(filename);
+    //std::string xpm_filename = "reconstituted/" + s.substr(0,s.length()-4) + ".xpm";
+    FILE *f = fopen(xpm_filename,"wt");
     if( !f )
     {
-        printf( "Cannot open %s\n", xpm_filename.c_str() );
+        printf( "Cannot open %s\n", xpm_filename );
         return;
     }
 
@@ -1698,7 +1698,7 @@ CompressedXpmProcessor::~CompressedXpmProcessor()
 #endif
 }
 
-static uint8_t pitch_070_compressed_xpm_data[] =
+static char pitch_070_compressed_xpm_data[] =
 {
     '\xae', '\x4f', '\xc1', '\xc4', '\xa1', '\xa1', '\x0e', '\xa0',
     '\x8b', '\x0d', '\x81', '\x18', '\x0d', '\xa0', '\xbf', '\xc1',
@@ -2850,7 +2850,7 @@ static CompressedXpm pitch_070_compressed_xpm =
     16,  // nbr_other_colours
     {0x000000,0x393939,0x535353,0x686868,0x7a7a7a,0x8b8b8b,0x999999,0xa7a7a7,0xb4b4b4,0xc0c0c0,0xcccccc,0xd7d7d7,0xe1e1e1,0xececec,0xf5f5f5,0xffffff},
     9104,  // binary_len
-    pitch_070_compressed_xpm_data //bin
+    (uint8_t *)&pitch_070_compressed_xpm_data[0] //bin
 };
 
 static void StaticTest()
