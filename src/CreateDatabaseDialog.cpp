@@ -388,7 +388,7 @@ void CreateDatabaseDialog::OnCreateDatabase()
     }
     for( int i=0; ok && i<cnt; i++ )
     {
-        FILE *ifile = fopen( files[i].c_str(), "rt" );
+        FILE *ifile = fopen( files[i].c_str(), "rb" );
         if( !ifile )
         {
             error_msg = "Cannot open ";
