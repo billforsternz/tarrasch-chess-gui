@@ -236,6 +236,7 @@
     <ClInclude Include="..\src\DialogDetect.h" />
     <ClInclude Include="..\src\Eco.h" />
     <ClInclude Include="..\src\EngineDialog.h" />
+    <ClInclude Include="..\src\fseek64.h" />
     <ClInclude Include="..\src\GameClock.h" />
     <ClInclude Include="..\src\GameClockHalf.h" />
     <ClInclude Include="..\src\GameDetails.h" />
