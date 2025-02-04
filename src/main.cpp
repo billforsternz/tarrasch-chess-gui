@@ -951,6 +951,26 @@ bool ChessApp::OnInit()
     gbl_spelling_us = (lang==wxLANGUAGE_ENGLISH_US);
     gbl_spell_colour = gbl_spelling_us ? "color" : "colour";
     cprintf( "Spelling uses US English? %s\n", gbl_spelling_us?"Yes":"No" );
+
+    extern bool test_is_player_match( const char *player1, const char *player2 );
+    const char *player1;
+    const char *player2;
+    player1="Smith, Bob"; player2="Smith, Robert";
+    bool match = test_is_player_match(player1,player2);
+    cprintf( "[%s] [%s] %s\n", player1, player2, match?"matches":"doesn't match" );
+    player1="Smythe"; player2="Smith";
+    match = test_is_player_match(player1,player2);
+    cprintf( "[%s] [%s] %s\n", player1, player2, match?"matches":"doesn't match" );
+    player1="Smythe"; player2="Smithe";
+    match = test_is_player_match(player1,player2);
+    cprintf( "[%s] [%s] %s\n", player1, player2, match?"matches":"doesn't match" );
+    player1="Philippe"; player2="Phillips, Harold Meyer";
+    match = test_is_player_match(player1,player2);
+    cprintf( "[%s] [%s] %s\n", player1, player2, match?"matches":"doesn't match" );
+    player1="Matisons, Hermanis"; player2="Mattison, Herman";
+    match = test_is_player_match(player1,player2);
+    cprintf( "[%s] [%s] %s\n", player1, player2, match?"matches":"doesn't match" );
+
     wxString error_msg;
     int disp_width, disp_height;
     wxDisplaySize(&disp_width, &disp_height);

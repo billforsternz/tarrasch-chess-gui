@@ -20,6 +20,7 @@
 #include "GameLogic.h"
 #include "Tabs.h"
 #include "CentralWorkSaver.h"
+#include "fseek64.h"
 
 /*
 Some use cases;
@@ -689,7 +690,7 @@ bool CentralWorkSaver::FileSaveGameAs()
         if( file )
         {
             objs.gl->mru.AddFileToHistory( wx_filename );
-            fseek(file,0,SEEK_END);
+            fseek64(file,0,SEEK_END);
             if( append )
             {
                 std::string eol =

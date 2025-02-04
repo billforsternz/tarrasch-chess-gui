@@ -12,8 +12,8 @@
 #include "CompressMoves.h"
 
 
-void ReadGameFromPgn( int pgn_handle, uint64_t fposn, GameDocument &gd );
-void *ReadGameFromPgnInLoop( int pgn_handle, uint64_t fposn, CompactGame &pact, void *context, bool end=true );
+void ReadGameFromPgn( int pgn_handle, int64_t fposn, GameDocument &gd );
+void *ReadGameFromPgnInLoop( int pgn_handle, int64_t fposn, CompactGame &pact, void *context, bool end=true );
 
 class ListableGamePgn : public ListableGame
 {
@@ -23,7 +23,7 @@ private:
     PackedGame pack;
     bool in_memory;
 public:
-    ListableGamePgn( int pgn_handle, long fposn ) { this->pgn_handle=pgn_handle, this->fposn = fposn; in_memory=false;  }
+    ListableGamePgn( int pgn_handle, int64_t fposn ) { this->pgn_handle=pgn_handle, this->fposn = fposn; in_memory=false;  }
     virtual int64_t GetFposn() { return fposn; }
     virtual void SetFposn( int64_t posn ) { fposn=posn; }
     virtual bool GetPgnHandle( int &pgn_handle_ ) { pgn_handle_=this->pgn_handle; return true; }

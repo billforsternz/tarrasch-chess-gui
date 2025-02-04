@@ -13,7 +13,7 @@
 #include "DebugPrintf.h"
 #include "Objects.h"
 #include "wx/progdlg.h"
-
+#include "fseek64.h"
 
 class ProgressBarLegacy
 {
@@ -32,13 +32,9 @@ public:
         this->ifile = ifile;
         if( ifile )
         {
-            fseek(ifile,0,SEEK_END);
-            #ifdef THC_WINDOWS
-            file_len=_ftelli64(ifile);
-            #else
-            file_len=ftello(ifile);
-            #endif
-            fseek(ifile,0,SEEK_SET);
+            fseek64(ifile,0,SEEK_END);
+            file_len=ftell64(ifile);
+            fseek64(ifile,0,SEEK_SET);
         }
     }
 
@@ -48,11 +44,7 @@ public:
         {
             if( modulo_256 == 0 )
             {
-                #ifdef THC_WINDOWS
-                int64_t file_offset=_ftelli64(ifile);
-                #else
-                int64_t file_offset=ftello(ifile);
-                #endif
+                int64_t file_offset=ftell64(ifile);
                 int permill=0;
                 if( file_len == 0 )
                     permill = 1000;
@@ -122,13 +114,9 @@ public:
         this->ifile = ifile;
         if( ifile )
         {
-            fseek(ifile,0,SEEK_END);
-            #ifdef THC_WINDOWS
-            file_len=_ftelli64(ifile);
-            #else
-            file_len=ftello(ifile);
-            #endif
-            fseek(ifile,0,SEEK_SET);
+            fseek64(ifile,0,SEEK_END);
+            file_len = ftell64(ifile);
+            fseek64(ifile,0,SEEK_SET);
         }
         modulo_256=0;
         old_permill=0;
@@ -160,11 +148,7 @@ public:
         {
             if( modulo_256 == 0 )
             {
-                #ifdef THC_WINDOWS
-                int64_t file_offset=_ftelli64(ifile);
-                #else
-                int64_t file_offset=ftello(ifile);
-                #endif
+                int64_t file_offset = ftell64(ifile);
                 int permill=0;
                 if( file_len == 0 )
                     permill = 1000;
@@ -275,8 +259,5 @@ private:
         progress->SetFocus();
     }
 };
-
-
-
 
 #endif    // PROGRESS_BAR_H

@@ -26,7 +26,7 @@ private:
     std::string body;
     FILE *emergency_file;
     time_t emergency_filetime_before;
-    long emergency_filelen_before, emergency_filelen_delta;
+    int64_t emergency_filelen_before, emergency_filelen_delta;
 };
 
 #endif // LOG_H

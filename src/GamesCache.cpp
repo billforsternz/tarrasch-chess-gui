@@ -28,6 +28,7 @@
 #include "Log.h"
 #include "Eco.h"
 #include "GamesCache.h"
+#include "fseek64.h"
 using namespace std;
 
 bool PgnStateMachine( FILE *pgn_file, int &typ, char *buf, int buflen );
@@ -271,7 +272,7 @@ bool GamesCache::Load( FILE *pgn_file )
     file_irrevocably_modified = false;
     int typ;
     std::string str;
-    long fposn = ftell(pgn_file);
+    int64_t fposn = ftell64(pgn_file);
     char buf[2048];
     std::string title("Scanning .pgn file for games");
     std::string desc("Reading .pgn file");
@@ -288,7 +289,7 @@ bool GamesCache::Load( FILE *pgn_file )
             make_smart_ptr( ListableGamePgn, new_doc, pgn_document );
             gds.push_back( std::move(new_doc) );
             if( !done )
-                fposn = ftell(pgn_file);
+                fposn = ftell64(pgn_file);
             game_count++;
         }
         pb.ProgressFile();
@@ -322,7 +323,7 @@ void pgn_read_hook( const char *fen, const char *white, const char *black, const
     phook->moves       = std::vector<thc::Move>(moves,moves+nbr_moves);
 }
 
-void *ReadGameFromPgnInLoop( int pgn_handle, uint64_t fposn, CompactGame &pact, void *context, bool end )
+void *ReadGameFromPgnInLoop( int pgn_handle, int64_t fposn, CompactGame &pact, void *context, bool end )
 {
     static int new_count;
     static FILE *pgn_file;
@@ -347,7 +348,7 @@ void *ReadGameFromPgnInLoop( int pgn_handle, uint64_t fposn, CompactGame &pact, 
     }
     if( pgn_file )
     {
-        _fseeki64( pgn_file, fposn, SEEK_SET );
+        fseek64( pgn_file, fposn, SEEK_SET );
         phook = &pact;
         pgn->Process(pgn_file);
     }
@@ -370,7 +371,7 @@ void *ReadGameFromPgnInLoop( int pgn_handle, uint64_t fposn, CompactGame &pact, 
     return( pgn );
 }
 
-void ReadGameFromPgn( int pgn_handle, uint64_t fposn, GameDocument &new_doc )
+void ReadGameFromPgn( int pgn_handle, int64_t fposn, GameDocument &new_doc )
 {
     //cprintf( "ReadGameFromPgn(%d) %ld\n", pgn_handle, fposn );
     GameDocument gd;
@@ -386,7 +387,7 @@ void ReadGameFromPgn( int pgn_handle, uint64_t fposn, GameDocument &new_doc )
         objs.gl->pf.Close();
         return;
     }
-    fseek( pgn_file, fposn, SEEK_SET );
+    fseek64( pgn_file, fposn, SEEK_SET );
     char buf[2048];
     bool done = PgnStateMachine( NULL, typ,  buf, sizeof(buf) );
     while( !done )
@@ -706,7 +707,7 @@ void GamesCache::FileSaveInner( FILE *pgn_out )
                 FILE *pgn_in2 = objs.gl->pf.ReopenRead( pgn_handle2);
                 if( pgn_in2 )
                 {
-                    _fseeki64( pgn_in2, fposn, SEEK_SET );
+                    fseek64( pgn_in2, fposn, SEEK_SET );
                     char buf2[2048];
                     int typ;
                     bool done = PgnStateMachine( NULL, typ,  buf2, sizeof(buf2) );

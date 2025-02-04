@@ -151,10 +151,10 @@ public:
     uint32_t    from_clipboard_tag=0;
 
     thc::ChessPosition start_position;  // the start position
-    uint64_t fposn0;       // offset of prefix in .pgn file
-    uint64_t fposn1;       // offset of tags in .pgn file
-    uint64_t fposn2;       // offset where moves are in .pgn file
-    uint64_t fposn3;       // offset where moves end in .pgn file
+    int64_t fposn0;       // offset of prefix in .pgn file
+    int64_t fposn1;       // offset of tags in .pgn file
+    int64_t fposn2;       // offset where moves are in .pgn file
+    int64_t fposn3;       // offset where moves end in .pgn file
     std::string prefix_txt;     // text between games
     std::string moves_txt;      // "1.e4 e5 2.Nf3.."
 

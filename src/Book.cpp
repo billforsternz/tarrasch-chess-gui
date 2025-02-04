@@ -12,6 +12,7 @@
 #include "Book.h"
 #include "Repository.h"
 #include "Objects.h"
+#include "fseek64.h"
 #define nbrof(array) ( sizeof(array) / sizeof((array)[0]) )
 
 //#define REGENERATE
@@ -193,8 +194,8 @@ bool Book::Process( FILE *infile, wxProgressDialog &progress )
     int ch, comment_ch=0, previous_ch=0, push_back=0, len=0, move_number=0;
     STATE state=INIT, old_state, save_state=INIT;
     static int nag_value;
-    fseek(infile,0,SEEK_END);
-    unsigned long file_len=ftell(infile);
+    fseek64(infile,0,SEEK_END);
+    int64_t file_len = ftell64(infile);
     rewind(infile);
 
     // Loop through characters
@@ -205,7 +206,7 @@ bool Book::Process( FILE *infile, wxProgressDialog &progress )
     {
         if( modulo_256 == 0 )
         {
-            unsigned long file_offset=ftell(infile);
+            int64_t file_offset = ftell64(infile);
             int percent;
             if( file_len == 0 )
                 percent = 100;

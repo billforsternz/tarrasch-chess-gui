@@ -12,6 +12,7 @@
 #include "Repository.h"
 #include "Objects.h"
 #include "Log.h"
+#include "fseek64.h"
 using namespace std;
 using namespace thc;
 
@@ -47,8 +48,8 @@ void Log::SaveGame( GameDocument *gd, bool editing_log )
             if( file )
             {
                 std::string filename( objs.repository->log.m_file.c_str() );
-                fseek(file,0,SEEK_END);
-                long filelen_before = ftell(file);
+                fseek64(file,0,SEEK_END);
+                int64_t filelen_before = ftell64(file);
                 fwrite( head2.c_str(), 1, head2.length(), file );
                 fwrite( body2.c_str(), 1, body2.length(), file );
                 fclose( file );
@@ -97,9 +98,9 @@ void Log::EmergencySaveGame( GameDocument *gd, bool first, bool last, std::strin
         gd->ToFileTxtGameDetails( head2 );
         std::string body2;
         gd->ToFileTxtGameBody( body2 );
-        fseek(emergency_file,0,SEEK_END);
+        fseek64(emergency_file,0,SEEK_END);
         if( first )
-            emergency_filelen_before = ftell(emergency_file);
+            emergency_filelen_before = ftell64(emergency_file);
         fwrite( head2.c_str(), 1, head2.length(), emergency_file );
         fwrite( body2.c_str(), 1, body2.length(), emergency_file );
         emergency_filelen_delta += (head2.length()+body2.length());

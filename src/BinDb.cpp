@@ -19,7 +19,7 @@
 #include "PackedGameBinDb.h"
 #include "ListableGameBinDb.h"
 #include "BinDb.h"
-
+#include "fseek64.h"
 /*
 
 Some Design notes:
@@ -993,6 +993,14 @@ static bool IsPlayerMatch( const char *player, std::vector<std::string> &tokens 
     return false;
 }
 
+bool test_is_player_match( const char *player1, const char *player2 )
+{
+    std::vector<std::string> tokens2;
+    Split( player2, tokens2 );
+    return IsPlayerMatch( player1, tokens2 );
+}
+
+
 //  match only if years are present and match
 static bool IsYearMatch( const char *date1, const char *date2 )
 {
@@ -1725,7 +1733,7 @@ bool BinDbLoadAllGames( bool &locked, bool for_append, std::vector< smart_ptr<Li
     PackedGameBinDbControlBlock& cb = PackedGameBinDb::GetControlBlock(cb_idx);
     FileHeader fh;
     FILE *fin = bin_file;
-    fseek(fin,compatibility_header_size,SEEK_SET);   // skip over compatibility header
+    fseek64(fin,compatibility_header_size,SEEK_SET);   // skip over compatibility header
     fread( &fh, sizeof(fh), 1, fin );
     cprintf( "%d games, %d players, %d events, %d sites\n", fh.nbr_games, fh.nbr_players, fh.nbr_events, fh.nbr_sites );
     int nbr_bits_player = BitsRequired(fh.nbr_players);
@@ -1739,7 +1747,7 @@ bool BinDbLoadAllGames( bool &locked, bool for_append, std::vector< smart_ptr<Li
     }
     if( hdr_len != sizeof(FileHeader) )
     {
-        fseek(fin,compatibility_header_size+hdr_len,SEEK_SET);  // if necessary skip to a different point than
+        fseek64(fin,compatibility_header_size+hdr_len,SEEK_SET);  // if necessary skip to a different point than
                                                                 //  beyond header
     }
     ReadStrings( fin, fh.nbr_players, cb.players );

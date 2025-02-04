@@ -8,6 +8,7 @@
 #include "wx/filefn.h"
 #include "GamesCache.h"
 #include "PgnFiles.h"
+#include "fseek64.h"
 
 // Skip over the Unicode BOM at the start of some text files
 static void UnicodeBomSkip( FILE *in )
@@ -17,7 +18,7 @@ static void UnicodeBomSkip( FILE *in )
     if( len==3 && 0==memcmp(buf,"\xef\xbb\xbf",3)  )
         ;  // File starts with UNICODE BOM, I think ChessBase does this sometimes, so skip over it
     else
-        fseek(in,0,SEEK_SET); //rewind to start
+        fseek64(in,0,SEEK_SET); //rewind to start
 }
 
 // Start reading a file and introduce it into the system
@@ -49,9 +50,9 @@ FILE *PgnFiles::OpenRead( std::string filename, int &handle )
         if( pgn_file )
         {
             pf.file_read = pgn_file;
-            fseek(pgn_file,0,SEEK_END);
-            pf.filelen = ftell(pgn_file);
-            fseek(pgn_file,0,SEEK_SET);
+            fseek64(pgn_file,0,SEEK_END);
+            pf.filelen = ftell64(pgn_file);
+            fseek64(pgn_file,0,SEEK_SET);
             pf.mode = PgnFile::reading;
             std::pair<int,PgnFile> elem(handle,pf);
             files.insert(elem);
@@ -63,7 +64,7 @@ FILE *PgnFiles::OpenRead( std::string filename, int &handle )
 }
 
 // If a modified file is known, update length and time
-void PgnFiles::UpdateKnownFile( std::string &filename, time_t filetime_before, long filelen_before, long delta )
+void PgnFiles::UpdateKnownFile( std::string &filename, time_t filetime_before, int64_t filelen_before, int64_t delta )
 {
     std::map<int,PgnFile>::iterator it;
     for( it=files.begin(); it!=files.end(); ++it )
@@ -150,9 +151,9 @@ bool PgnFiles::IsAvailable( std::map<int,PgnFile>::iterator it )
         FILE *pgn_file = fopen( pf.filename.c_str(), "rb" );
         if( pgn_file )
         {
-            fseek(pgn_file,0,SEEK_END);
-            long len = ftell(pgn_file);
-            fseek(pgn_file,0,SEEK_SET);
+            fseek64(pgn_file,0,SEEK_END);
+            int64_t len = ftell64(pgn_file);
+            fseek64(pgn_file,0,SEEK_SET);
             fclose(pgn_file);
             available = (len==pf.filelen);
         }
@@ -288,7 +289,7 @@ void PgnFiles::Close( GamesCache *gc_clipboard )
             fclose(it->second.file_read);
         if( creating )
         {
-            it->second.filelen = ftell(it->second.file_write);
+            it->second.filelen = ftell64(it->second.file_write);
             fclose(it->second.file_write);
             wxString wx_filename = it->second.filename.c_str();
             it->second.file_modification_time = ::wxFileModificationTime(wx_filename);
@@ -315,7 +316,7 @@ void PgnFiles::Close( GamesCache *gc_clipboard )
                     }
                 }
             }
-            it->second.filelen = ftell(it->second.file_write);
+            it->second.filelen = ftell64(it->second.file_write);
             fclose(it->second.file_write);
             if( copying )
             {

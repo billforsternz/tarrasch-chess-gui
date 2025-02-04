@@ -22,7 +22,7 @@ struct PgnFile
     FILE   *file_read;
     FILE   *file_write;
     time_t  file_modification_time;
-    long    filelen;
+    int64_t filelen;
 };
 
 class PgnFiles
@@ -56,7 +56,7 @@ public:
     void Close( GamesCache *gc_clipboard=NULL );
 
     // If a modified file is known, update length and time
-    void UpdateKnownFile( std::string &filename, time_t filetime_before, long filelen_before, long delta );
+    void UpdateKnownFile( std::string &filename, time_t filetime_before, int64_t filelen_before, int64_t delta );
 
 private:
     bool IsAvailable( std::map<int,PgnFile>::iterator it );
