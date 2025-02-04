@@ -13,7 +13,7 @@
 #include "thc.h"
 #include "PgnRead.h"
 #include "DebugPrintf.h"
-
+#include "fseek64.h"
 
 using namespace std;
 using namespace thc;
@@ -349,7 +349,7 @@ void PgnRead::GameParse( std::string &str )
                             comment_buf[len++] = (char)ch;
                         else
                         {
-                            if( ch!=';' || previous_ch!='\n' )
+                            if( ch!=';' || (previous_ch!='\n' || previous_ch!='\r') )
                                 comment_buf[len++] = (char)ch;
                         }
                     }
@@ -358,7 +358,7 @@ void PgnRead::GameParse( std::string &str )
 
                 case MOVE_NUMBER:
                 {
-                    if( ch=='.' || ch==' ' || ch=='\t' || ch=='\n' )
+                    if( ch=='.' || ch==' ' || ch=='\t' || ch=='\n' || ch=='\r' )
                     {
                         buf[len] = '\0';
                         len = 0;
@@ -394,7 +394,7 @@ void PgnRead::GameParse( std::string &str )
                 {
                     if( ch == '.' )
                         state = POST_MOVE_NUMBER_HAVE_PERIOD;
-                    else if( ch!=' ' && ch!='\t' && ch!='\n' )
+                    else if( ch!=' ' && ch!='\t' && ch!='\n'  && ch!='\r' )
                     {
                         Error( "Bad move number" );
                         cprintf( "debugging 1: %s\n", str.c_str( ));
@@ -433,7 +433,7 @@ void PgnRead::GameParse( std::string &str )
                         push_back = ch;
                         state = MOVE_NUMBER;
                     }
-                    else if( ch!=' ' && ch!='\t' && ch!='\n' )
+                    else if( ch!=' ' && ch!='\t' && ch!='\n'  && ch!='\r' )
                     {
                         push_back = ch;
                         state = (state==PRE_MOVE_WHITE?IN_MOVE_WHITE:IN_MOVE_BLACK);
@@ -444,7 +444,7 @@ void PgnRead::GameParse( std::string &str )
                 case IN_MOVE_WHITE:
                 case IN_MOVE_BLACK:
                 {
-                    if( ch==' ' || ch=='\t' || ch=='\n' || ch=='(' || ch==')' || ch=='{' || ch=='}' || ch=='$' )
+                    if( ch==' ' || ch=='\t' || ch=='\r' || ch=='\n' || ch=='(' || ch==')' || ch=='{' || ch=='}' || ch=='$' )
                     {
                         buf[len] = '\0';
                         len = 0;
@@ -524,8 +524,8 @@ bool PgnRead::Process( FILE *infile )
     int ch, comment_ch=0, previous_ch=0, push_back=0, len=0, move_number=0;
     STATE state=INIT, old_state, save_state=INIT;
     static int nag_value;
-    //fseek(infile,0,SEEK_END);
-    //unsigned long file_len=ftell(infile);
+    //fseek64(infile,0,SEEK_END);
+    //int64_t file_len=ftell64(infile);
     //rewind(infile);
 
     // Loop through characters
@@ -536,7 +536,7 @@ bool PgnRead::Process( FILE *infile )
     {
     /*  if( modulo_256 == 0 )
         {
-            unsigned long file_offset=ftell(infile);
+            int64_t file_offset=ftell64(infile);
             int percent;
             if( file_len == 0 )
                 percent = 100;
