@@ -984,22 +984,31 @@ static bool IsPlayerMatch( const char *player, std::vector<std::string> &tokens 
             if( tokens[i] == tokens2[j] )
                 return true;
             int dist = lev_distance(tokens[i],tokens2[j]);
-            if( tokens[i].length()>8 && tokens2[j].length()>8 && dist <= 2 )
+            size_t leng1 = tokens[i].length();
+            size_t leng2 = tokens2[j].length();
+            size_t min = leng1<leng2 ? leng1 : leng2;
+            if( leng1>=8 && leng2>=8 && dist <= 3 )
                 return true;
-            if( tokens[i].length()>4 && tokens2[j].length()>4 && dist <= 1 )
+            if( leng1>=4 && leng2>=4 && dist <= 2 )
+                return true;
+            if( leng1>=4 && leng2>=4 &&
+                0 == memcmp(tokens[i].c_str(),tokens2[i].c_str(), min ) )
                 return true;
         }
     }
     return false;
 }
 
+// We added a little test in ChessApp::OnInit() search for DUPLICATE_PLAYER_TEST
+#define DUPLICATE_PLAYER_TEST
+#ifdef DUPLICATE_PLAYER_TEST
 bool test_is_player_match( const char *player1, const char *player2 )
 {
     std::vector<std::string> tokens2;
     Split( player2, tokens2 );
     return IsPlayerMatch( player1, tokens2 );
 }
-
+#endif
 
 //  match only if years are present and match
 static bool IsYearMatch( const char *date1, const char *date2 )
