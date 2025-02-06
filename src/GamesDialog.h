@@ -137,7 +137,6 @@ class GamesDialog: public wxDialog
 protected:
     thc::ChessRules cr;
     thc::ChessRules cr_base;
-    wxStaticText *title_ctrl;
     GamesDialogResizer gdr;
 
 public:
@@ -145,6 +144,7 @@ public:
     // Track the game presented on the mini board
     MiniBoardGame mini_board_game;
     MiniBoardGame *track;
+    wxStaticText *title_ctrl;
 
     // Constructors
     GamesDialog

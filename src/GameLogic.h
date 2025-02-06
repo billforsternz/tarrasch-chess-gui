@@ -57,6 +57,7 @@ public:
     void SetGameBeingEdited( GameDocument &first, ListableGame &second ) { int tag = ++game_being_edited_tag;
         first.game_being_edited=tag; second.SetGameBeingEdited(tag); }
     int GetCurrentGameInFileIndex();
+    int GetCurrentGameInClipboardIndex();
 
     // Idle routine
     void OnIdle();

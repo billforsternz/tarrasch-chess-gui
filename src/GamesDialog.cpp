@@ -257,6 +257,13 @@ void GamesListCtrl::ReceiveFocus( int focus_idx )
             {
                 desc += "  (use right arrow key to browse)";
             }
+            wxString s = parent->title_ctrl->GetLabel();
+            if( s.length()>=4 && s.substr(0,4)=="Game" )
+            {
+                char buf[80];
+                sprintf( buf, "Game %d of %d", focus_idx+1, nbr_items );
+                parent->title_ctrl->SetLabel(buf);
+            }
             parent->player_names->SetLabel(wxString(desc.c_str()));
         }
     }
@@ -481,8 +488,11 @@ GamesDialog::GamesDialog
     col_last_time = -1;
     col_consecutive = 0;
     sort_order_first = true;
-    focus_idx = (id==ID_PGN_DIALOG_CURRENT_FILE ? objs.gl->GetCurrentGameInFileIndex() : 0);
-
+    focus_idx = 0;
+    if( id == ID_PGN_DIALOG_CURRENT_FILE )
+        focus_idx = objs.gl->GetCurrentGameInFileIndex();
+    else if( id == ID_PGN_DIALOG_CLIPBOARD )
+        focus_idx = objs.gl->GetCurrentGameInClipboardIndex();
     if( cr )
     {
         this->cr = *cr;
@@ -680,7 +690,7 @@ void GamesDialog::CreateControls()
     if( !db_search )
     {
         nbr_games_in_list_ctrl = gc->gds.size();
-        sprintf(buf,"%d games",nbr_games_in_list_ctrl);
+        sprintf(buf,"Game 1 of %d",nbr_games_in_list_ctrl);
     }
     else if( objs.gl->db_clipboard && db_req==REQ_POSITION )
     {
@@ -693,7 +703,7 @@ void GamesDialog::CreateControls()
         if( db_req == REQ_POSITION )
             nbr_games_in_list_ctrl = 0;     // message will be calculated later
         else
-            sprintf(buf,"%d games",nbr_games_in_list_ctrl);
+            sprintf(buf,"Game 1 of %d",nbr_games_in_list_ctrl);
     }
 
     title_ctrl = new wxStaticText( this, wxID_STATIC,
@@ -829,7 +839,7 @@ void GamesDialog::OnSize( wxSizeEvent &evt )
     if(list_ctrl)
     {
         if( gdr.Layout( this, list_ctrl, line_ctrl ) )
-            Goto(focus_idx);    // If first time through, establish starting index (normally 0 but see ID_PGN_DIALOG_CURRENT_FILE)
+            Goto(focus_idx);    // If first time through, establish starting index (normally 0 but see ID_PGN_DIALOG_CURRENT_FILE and now ID_PGN_DIALOG_CLIPBOARD )
         else
             list_ctrl->SetFocus();
     }

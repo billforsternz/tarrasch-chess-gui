@@ -923,6 +923,15 @@ int GameLogic::GetCurrentGameInFileIndex()
     return idx;
 }
 
+int GameLogic::GetCurrentGameInClipboardIndex()
+{
+    int nbr = gc_clipboard.gds.size();
+    int idx = 0;
+    if( gc_clipboard_idx!=-1 && 0<=gc_clipboard_idx && gc_clipboard_idx<nbr )
+        idx = gc_clipboard_idx;
+    return idx;
+}
+
 void GameLogic::NextGamePreviousGame( int idx )
 {
     Atomic begin;
