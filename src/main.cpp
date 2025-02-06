@@ -952,7 +952,7 @@ bool ChessApp::OnInit()
     gbl_spell_colour = gbl_spelling_us ? "color" : "colour";
     cprintf( "Spelling uses US English? %s\n", gbl_spelling_us?"Yes":"No" );
 
-    #define DUPLICATE_PLAYER_TEST
+    //#define DUPLICATE_PLAYER_TEST
     #ifdef DUPLICATE_PLAYER_TEST    // investigate some undetected Capablanca duplicates from Caissabase + Millionbase
     extern bool test_is_player_match( const char *player1, const char *player2 );
     const char *player1;
