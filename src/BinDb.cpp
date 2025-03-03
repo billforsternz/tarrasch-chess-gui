@@ -992,7 +992,7 @@ static bool IsPlayerMatch( const char *player, std::vector<std::string> &tokens 
             if( leng1>=4 && leng2>=4 && dist <= 2 )
                 return true;
             if( leng1>=4 && leng2>=4 &&
-                0 == memcmp(tokens[i].c_str(),tokens2[i].c_str(), min ) )
+                0 == memcmp(tokens[i].c_str(),tokens2[j].c_str(), min ) )
                 return true;
         }
     }
