@@ -6160,6 +6160,11 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
      N2xf3
      O-O
      O-O-O
+
+     And now (sadly only since March 2025), double disambiguation (for the
+     rare case of three pieces of the same type on vertices of the same
+     rectangle that can go to the same destination eg Ns on f6, h6, h2)
+     Nh2xg4
      */
 
 //
@@ -6375,7 +6380,7 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                 case 'B':   if( f=='B' )    ray_lookup = bishop_lookup;     // fall through
                 case 'N':
                 {
-                    char piece = f;
+                    char piece = f;     // White pieces are upper case, 'K',Q','R' etc in squares[] array
                     f = *natural_in++;
                     char src_file='\0';
                     char src_rank='\0';
@@ -6429,7 +6434,38 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                             err = true;
                         if( !err )
                         {
-                            if( capture_ ? IsBlack(cr->squares[mv.dst]) : cr->squares[mv.dst]==' ' )
+                            bool expected_colour_piece_on_dst_square = (capture_ ? IsBlack(cr->squares[mv.dst]) : cr->squares[mv.dst]==' ');
+                            if( !expected_colour_piece_on_dst_square )
+                            {
+
+                                // Check for a corner case, eg Qh1g2 or Qh1xg2, so far we have set mv.dst to h1
+                                // (because if src_rank=='\0' the move looked like Qh1, but then we found h1 was
+                                // not occupied in a way compatible with Qh1), natural_in points at "xg2" or "g2"
+                                // Double disambiguation like this most often occurs with three queens, but can
+                                // also happen with 3 bishops or 3 knights, basically whenever three identical
+                                // pieces on three vertices of a rectangle can all go to the same destination.
+                                if( !capture_ && !src_rank )
+                                {
+                                    char f2 = *natural_in++;
+                                    if( f2=='x' )
+                                    {
+                                        capture_ = true;
+                                        f2 = *natural_in++;
+                                    }
+                                    if( 'a'<=f2 && f2<='h' )
+                                    {
+                                        char r2 = *natural_in++;
+                                        if( '1'<=r2 && r2<='8' )
+                                        {
+                                            mv.src = mv.dst;
+                                            mv.dst = SQ(f2,r2);
+                                            mv.capture = cr->squares[mv.dst];
+                                            found = ( capture_ ? IsBlack(mv.capture) : cr->squares[mv.dst]==' ' );
+                                        }
+                                    }
+                                }
+                            }
+                            else
                             {
                                 mv.capture = cr->squares[mv.dst];
                                 if( piece == 'N' )
@@ -6729,7 +6765,7 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                 case 'B':   if( f=='B' )    ray_lookup = bishop_lookup;     // fall through
                 case 'N':
                 {
-                    char piece = static_cast<char>(tolower(f));
+                    char piece = static_cast<char>(tolower(f));     // Black pieces are lower case 'k','q','r' etc in squares[] array
                     f = *natural_in++;
                     char src_file='\0';
                     char src_rank='\0';
@@ -6783,7 +6819,38 @@ bool Move::NaturalInFast( ChessRules *cr, const char *natural_in )
                             err = true;
                         if( !err )
                         {
-                            if( capture_ ? IsWhite(cr->squares[mv.dst]) : cr->squares[mv.dst]==' ' )
+                            bool expected_colour_piece_on_dst_square = (capture_ ? IsWhite(cr->squares[mv.dst]) : cr->squares[mv.dst]==' ');
+                            if( !expected_colour_piece_on_dst_square )
+                            {
+
+                                // Check for a corner case, eg Qh1g2 or Qh1xg2, so far we have set mv.dst to h1
+                                // (because if src_rank=='\0' the move looked like Qh1, but then we found h1 was
+                                // not occupied in a way compatible with Qh1), natural_in points at "xg2" or "g2"
+                                // Double disambiguation like this most often occurs with three queens, but can
+                                // also happen with 3 bishops or 3 knights, basically whenever three identical
+                                // pieces on three vertices of a rectangle can all go to the same destination.
+                                if( !capture_ && !src_rank )
+                                {
+                                    char f2 = *natural_in++;
+                                    if( f2=='x' )
+                                    {
+                                        capture_ = true;
+                                        f2 = *natural_in++;
+                                    }
+                                    if( 'a'<=f2 && f2<='h' )
+                                    {
+                                        char r2 = *natural_in++;
+                                        if( '1'<=r2 && r2<='8' )
+                                        {
+                                            mv.src = mv.dst;
+                                            mv.dst = SQ(f2,r2);
+                                            mv.capture = cr->squares[mv.dst];
+                                            found = ( capture_ ? IsWhite(mv.capture) : cr->squares[mv.dst]==' ' );
+                                        }
+                                    }
+                                }
+                            }
+                            else
                             {
                                 mv.capture = cr->squares[mv.dst];
                                 if( piece == 'n' )
