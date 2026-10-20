@@ -447,8 +447,9 @@ void PgnRead::GameParse( std::string &str )
                     if( ch==' ' || ch=='\t' || ch=='\r' || ch=='\n' || ch=='(' || ch==')' || ch=='{' || ch=='}' || ch=='$' )
                     {
                         buf[len] = '\0';
-                        len = 0;
-                        if( TestResult(buf) )
+                        if( state==IN_MOVE_WHITE && len==3 && buf[0]=='.' && buf[1]=='.' && buf[2]=='.')
+                            state = PRE_MOVE_BLACK;
+                        else if( TestResult(buf) )
                             state = PREFIX;
                         else if( !DoMove(state==IN_MOVE_WHITE,move_number,buf) )
                         {
@@ -457,6 +458,7 @@ void PgnRead::GameParse( std::string &str )
                         }
                         else
                             state = (state==IN_MOVE_WHITE?PRE_MOVE_BLACK:BETWEEN_MOVES);
+                        len = 0;
                         if( ch=='(' || ch==')' || ch=='{' || ch=='}' || ch=='?' )
                             push_back = ch;
                     }
@@ -1030,7 +1032,7 @@ void PgnRead::Header( char *buf )
                     case 12:  // FEN
                     case 13:  // FENreptor
                             {
-                                if( i==13 || fen[0]=='\0' )
+                                if( (i==13 || fen[0]=='\0') && 0!=strcmp(src,"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") )
                                 {
                                     dst = fen;
                                     fen_flag = true;
@@ -1276,8 +1278,9 @@ bool PgnRead::DoMove( bool white_, int move_number, char *buf )
         okay = move.NaturalInFast( &chess_rules, buf2 );
         if( !okay )
         {
-            Error( white_ ? "Cannot convert white move"
-                          : "Cannot convert black move" );
+            char buf3[80];
+            sprintf( buf3, "Cannot convert %s move [%s]", white_ ?"white":"black", buf2 );
+            Error( buf3 );
         }
         else
         {
