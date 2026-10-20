@@ -5,7 +5,7 @@
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
 AppName=Tarrasch Chess GUI
-AppVerName=Tarrasch Chess GUI V3.20aBeta64-Windows
+AppVerName=Tarrasch Chess GUI V3.20bBeta64-Windows
 AppPublisher=Triple Happy Ltd.
 AppPublisherURL=http://www.triplehappy.com
 AppSupportURL=http://www.triplehappy.com
@@ -37,20 +37,6 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 
 [Files]
 Source: "Tarrasch.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "wxbase32u_vc14x_x64.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "wxmsw32u_core_vc14x_x64.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "wxmsw32u_html_vc14x_x64.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "wxbase32u_xml_vc14x_x64.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "wxmsw32u_aui_vc14x_x64.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "wxmsw32u_richtext_vc14x_x64.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "msvcp140.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "msvcp140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "msvcp140_2.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "msvcp140_atomic_wait.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "msvcp140_codecvt_ids.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "vcruntime140.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "vcruntime140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "vcruntime140_threads.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Engines\791556.pb.gz"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "Engines\lc0.exe"; DestDir: "{app}\Engines"; Flags: ignoreversion
 Source: "Engines\libopenblas.dll"; DestDir: "{app}\Engines"; Flags: ignoreversion
